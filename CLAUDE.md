@@ -71,7 +71,8 @@ Voir l'en-tête de `.github/workflows/release.yml` : version dans `apps/desktop/
 - Mascotte (esprit à capuche, besace, fil) : illustrations **PNG/WebP**, jamais vectorisées.
 - Palette (tokens Tailwind) :
   - `canard` #0F4B58 — texte principal, fonds sombres
-  - `eau` #63D1B1 / `eau-soutenu` #2FA88A — fil du logo, boutons (principal : soutenu + texte blanc ; secondaire : eau + texte canard)
+  - `eau` #63D1B1 — boutons secondaires (texte canard, 5,2) ; `eau-soutenu` #2FA88A — fil du logo uniquement (texte blanc dessus : 2,96, interdit)
+  - `eau-fonce` #1B7F67 — boutons principaux, texte blanc (4,9)
   - `ambre` #FFB347 — **illustrations et pastilles d'alerte uniquement**
   - `corail` #FF6B6B — erreurs, suppression
   - `creme` #F7EFE3 — fond
