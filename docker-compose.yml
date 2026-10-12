@@ -1,0 +1,23 @@
+# Environnement local uniquement : PostgreSQL + Mailpit (capture les emails envoyés,
+# interface sur http://localhost:8025). En production : PostgreSQL sur le VPS,
+# envoi via Scaleway Transactional Email.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: simloom
+      POSTGRES_PASSWORD: simloom
+      POSTGRES_DB: simloom
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  mail:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  pgdata:

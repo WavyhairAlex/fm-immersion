@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-label="Mascotte icône Simloom fond transparent"><defs>
+<linearGradient id="back" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0F5263"/><stop offset="1" stop-color="#072B3A"/></linearGradient>
+<linearGradient id="hood" x1="0.05" y1="0.1" x2="0.8" y2="1"><stop stop-color="#137386"/><stop offset="0.6" stop-color="#0D4B62"/><stop offset="1" stop-color="#062D3E"/></linearGradient>
+<linearGradient id="face" x1="0" y1="0" x2="0.72" y2="1"><stop stop-color="#FFFDF3"/><stop offset="1" stop-color="#F1DCC1"/></linearGradient>
+<linearGradient id="thread" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#FFDD7A"/><stop offset="1" stop-color="#FF922A"/></linearGradient>
+</defs><path d="M19 73 C18 47 31 35 44 23 C49 16 47 11 52 11 C62 11 65 21 70 24 C94 24 109 48 109 77 C110 102 90 112 65 112 C38 112 19 97 19 73 Z" fill="url(#hood)" stroke="#082D3E" stroke-width="3"/>
+<path d="M45 24 Q40 13 24 17 Q23 30 36 33" fill="#0E5565" stroke="#073646" stroke-width="2"/>
+<path d="M29 65 Q35 37 64 36 Q99 34 102 69 Q106 98 75 103 Q43 108 30 88 Q25 78 29 65 Z" fill="#052E40"/>
+<ellipse cx="65" cy="72" rx="33" ry="29" fill="url(#face)" stroke="#E6C5A1" stroke-width="1"/>
+<ellipse cx="53" cy="69" rx="8" ry="11" fill="#231A22"/><ellipse cx="78" cy="69" rx="8" ry="11" fill="#231A22"/>
+<ellipse cx="56" cy="65" rx="2.5" ry="3" fill="white"/><ellipse cx="80.5" cy="65" rx="2.5" ry="3" fill="white"/>
+<path d="M62 87 Q65 91 69 87" fill="none" stroke="#6B3B2E" stroke-width="2.7" stroke-linecap="round"/>
+<path d="M33 96 Q65 116 95 96" fill="none" stroke="url(#thread)" stroke-width="5.5" stroke-linecap="round"/>
+</svg>

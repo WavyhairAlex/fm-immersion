@@ -1,0 +1,38 @@
+{
+  "nav": { "login": "Sign in", "dashboard": "My dashboard", "logout": "Sign out", "language": "Français" },
+  "landing": {
+    "title": "The companion for your management games",
+    "subtitle": "One dashboard to follow all your playthroughs. No more 36 spreadsheets.",
+    "cta": "Get started, it's free",
+    "gamesTitle": "Modules",
+    "for": "for {{game}}",
+    "soon": "Coming soon",
+    "available": "Available",
+    "disclaimer": "Simloom is an independent project, not affiliated with the publishers of the games mentioned. Game names belong to their respective owners."
+  },
+  "login": {
+    "title": "Sign in",
+    "intro": "No password: we email you a code.",
+    "email": "Email address",
+    "send": "Send me a code",
+    "codeSent": "Code sent to {{email}}. It is valid for 10 minutes.",
+    "code": "6-digit code",
+    "verify": "Sign in",
+    "changeEmail": "Use another address",
+    "resend": "Resend code",
+    "invalidCode": "Wrong or expired code.",
+    "error": "Something went wrong, please try again."
+  },
+  "dashboard": {
+    "title": "Your playthroughs",
+    "empty": "No playthrough yet. Add your first one!",
+    "add": "New playthrough",
+    "name": "Playthrough name",
+    "game": "Game",
+    "version": "Game version (optional)",
+    "create": "Create",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "updated": "Updated {{date}}"
+  }
+}
