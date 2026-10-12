@@ -29,8 +29,11 @@ export interface GameModuleManifest {
   supportedVersions: string[];
 }
 
-/** Côté serveur, chaque module expose au moins ceci. */
-export interface GameModuleServer {
+/**
+ * Ce que chaque module expose à l'appli. Tout tourne en local : les données
+ * du module sont dans la base SQLite du joueur (tables préfixées par l'id du jeu).
+ */
+export interface GameModule {
   manifest: GameModuleManifest;
   /** Calcule la carte de résumé d'une partie. */
   dashboardCard(saveId: string): Promise<DashboardCard>;

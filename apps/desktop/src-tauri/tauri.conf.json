@@ -1,0 +1,58 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Simloom",
+  "version": "../package.json",
+  "identifier": "app.simloom.desktop",
+  "build": {
+    "beforeDevCommand": "pnpm dev:web",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Simloom",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 960,
+        "minHeight": 640
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' data:; style-src 'self'; font-src 'self'; connect-src ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "createUpdaterArtifacts": true,
+    "publisher": "Simloom",
+    "copyright": "Simloom — licence MIT",
+    "category": "Utility",
+    "shortDescription": "Le compagnon de tes parties de jeux de gestion",
+    "longDescription": "Simloom regroupe le suivi de tes parties de jeux de gestion dans un seul tableau de bord. Toutes les données restent sur ton PC.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": ["French", "English"],
+        "displayLanguageSelector": false
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEVDMDNFMkM1MDZGQzFDRkYKUldUL0hQd0d4ZUlEN0pLV2Vja3EwRzNlc2dPcGhodGRCa1lId0I3c3VxRVlpVS94YVNZQTdtN2UK",
+      "endpoints": ["https://github.com/amnesix-nt/simloom/releases/latest/download/latest.json"],
+      "windows": { "installMode": "passive" }
+    }
+  }
+}

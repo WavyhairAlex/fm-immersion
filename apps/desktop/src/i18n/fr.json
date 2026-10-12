@@ -1,0 +1,28 @@
+{
+  "nav": { "language": "English" },
+  "update": {
+    "checking": "Recherche de mises à jour…",
+    "installing": "Installation de la version {{version}}…"
+  },
+  "home": {
+    "title": "Tes parties",
+    "empty": "Aucune partie pour l'instant. Ajoute ta première partie pour commencer à la suivre.",
+    "add": "Nouvelle partie",
+    "name": "Nom de la partie",
+    "game": "Jeu",
+    "version": "Version du jeu (facultatif)",
+    "create": "Créer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "error": "Impossible d'enregistrer la partie.",
+    "updated": "Mise à jour le {{date}}",
+    "modules": "Les modules",
+    "for": "pour {{game}}",
+    "available": "Disponible",
+    "soon": "Bientôt"
+  },
+  "footer": {
+    "disclaimer": "Simloom est un projet indépendant, sans lien avec les éditeurs des jeux cités. Les noms des jeux appartiennent à leurs propriétaires.",
+    "privacy": "Tes données restent sur ton PC. Simloom ne collecte ni n'envoie aucune donnée personnelle ; seule la recherche de mises à jour contacte GitHub au démarrage."
+  }
+}

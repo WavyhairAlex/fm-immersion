@@ -1,0 +1,28 @@
+{
+  "nav": { "language": "Français" },
+  "update": {
+    "checking": "Checking for updates…",
+    "installing": "Installing version {{version}}…"
+  },
+  "home": {
+    "title": "Your playthroughs",
+    "empty": "No playthrough yet. Add your first one to start tracking it.",
+    "add": "New playthrough",
+    "name": "Playthrough name",
+    "game": "Game",
+    "version": "Game version (optional)",
+    "create": "Create",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "error": "Could not save the playthrough.",
+    "updated": "Updated {{date}}",
+    "modules": "Modules",
+    "for": "for {{game}}",
+    "available": "Available",
+    "soon": "Coming soon"
+  },
+  "footer": {
+    "disclaimer": "Simloom is an independent project, not affiliated with the publishers of the games mentioned. Game names belong to their respective owners.",
+    "privacy": "Your data stays on your PC. Simloom does not collect or send any personal data; only the update check contacts GitHub at startup."
+  }
+}

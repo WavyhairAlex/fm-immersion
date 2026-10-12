@@ -1,61 +1,73 @@
 # Simloom — contexte pour Claude Code
 
-Simloom est une plateforme web gratuite : le **tableau de bord personnel des jeux de gestion** d'un joueur.
-On remplace les « 36 feuilles Excel » qu'on tient à côté de ses parties par un cockpit unique, avec un module par jeu.
-Projet loisir, publié à titre personnel (pas via une société), financé par dons (Buy Me a Coffee).
+Simloom est une **application de bureau Windows gratuite et open source (MIT)** : le tableau de bord personnel
+des jeux de gestion d'un joueur. On remplace les « 36 feuilles Excel » qu'on tient à côté de ses parties par
+un cockpit unique, avec un module par jeu. Projet loisir, publié à titre personnel, financé par dons (Buy Me a Coffee).
 
 Le cadrage complet est dans le document « Simloom — Cadrage » (Claude Docs). Ce fichier en reprend l'essentiel pour le code.
 
+## Choix structurants
+
+- **Appli de bureau, pas de site web** : aucun serveur à payer ni à maintenir. (Une première version web avec
+  comptes et API a été abandonnée en octobre 2026 pour cette raison.)
+- **Tout est local** : pas de compte, pas de connexion, aucune donnée envoyée. Les parties sont dans une base
+  SQLite sur le PC (`%APPDATA%\app.simloom.desktop\simloom.db`). La seule requête réseau est la recherche de
+  mise à jour au démarrage (GitHub Releases).
+- **Mises à jour automatiques** au lancement (`UpdateGate`) via `tauri-plugin-updater`. Les fichiers de mise à
+  jour sont signés avec une clé minisign (secret GitHub `TAURI_SIGNING_PRIVATE_KEY`, clé publique dans
+  `tauri.conf.json`). **Perdre cette clé = plus aucune mise à jour possible pour les installations existantes.**
+- **Signature Windows** : visée via SignPath Foundation (gratuit pour l'open source). Conditions : licence OSI,
+  build entièrement fait par la CI depuis le dépôt, approbation manuelle de chaque release, pas de composant
+  propriétaire, réputation vérifiable avant candidature, section « Code signing policy » et déclaration de
+  confidentialité (dans le README). Tant que ce n'est pas accepté, l'installeur n'est pas signé.
+- **Lecture des sauvegardes** des jeux : côté Rust, en local. Jamais d'envoi des fichiers.
+- Windows uniquement pour l'instant (Tauri permettra macOS plus tard).
+
 ## Feuille de route
 
-1. Socle : comptes, parties (saves), tableau de bord. ← on est ici
+1. Socle : appli Tauri, base locale, parties, mise à jour automatique, release Windows. ← on est ici
 2. Modules **Transport Fever 3** (`modules/tf3`) et **Planet Zoo 2** (`modules/pz2`).
 3. Module **Football Manager** (`fm`) en novembre/décembre (sortie du jeu le 10 novembre).
-4. Plus tard, en option : lecture des fichiers de sauvegarde **dans le navigateur** (Rust → WASM), jamais côté serveur.
+4. Lecture des fichiers de sauvegarde (Rust), puis candidature SignPath une fois des utilisateurs réels.
 
 ## Architecture
 
-Monorepo pnpm + Turborepo, même pile que Caelio.
+Monorepo pnpm + Turborepo.
 
 | Dossier | Rôle |
 |---|---|
-| `apps/api` | API Fastify 5 (TypeScript), sous `/api/v1` |
-| `apps/web` | Front React 18 + Vite + Tailwind, TanStack Query (données serveur), Zustand (état d'interface), i18next FR/EN |
+| `apps/desktop` | Interface React 18 + Vite + Tailwind, TanStack Query, Zustand, i18next FR/EN |
+| `apps/desktop/src-tauri` | Cœur Rust Tauri 2 : fenêtre, base SQLite (rusqlite), mise à jour, futur lecteur de sauvegardes |
+| `apps/desktop/src-tauri/migrations` | Migrations SQL générées par drizzle-kit, embarquées dans l'exe par `build.rs` |
+| `packages/db` | Schéma Drizzle (dialecte SQLite) du socle ; les modules ajoutent le leur |
 | `packages/shared` | Schémas zod, types partagés, liste des jeux, contrat des modules |
-| `packages/db` | Schéma Drizzle (PostgreSQL 16), migrations, client |
-| `modules/<jeu>` | Un module par jeu : manifeste, routes, tables, carte de tableau de bord |
-| `brand/source` | Sources de l'identité (PNG mascottes, SVG logo) — ne pas servir directement |
+| `modules/<jeu>` | Un module par jeu : manifeste, `src/schema.ts` (tables préfixées `<jeu>_`), carte de tableau de bord |
+| `brand/source` | Sources de l'identité (PNG mascottes, SVG logo) — ne pas embarquer directement |
+
+### Accès aux données
+- Les requêtes sont écrites en TypeScript avec Drizzle (`drizzle-orm/sqlite-proxy`, `src/lib/db.ts`) et
+  exécutées par Rust (`db_query`, `db_batch` dans `src-tauri/src/db.rs`), qui renvoie les lignes en tableaux.
+- Modifier un schéma : éditer `packages/db/src/schema/*.ts` ou `modules/<jeu>/src/schema.ts`, puis
+  `pnpm db:generate`. **Ne jamais modifier ni renommer une migration déjà publiée** : l'ordre des fichiers
+  et `PRAGMA user_version` déterminent ce qui est appliqué chez les joueurs.
+- Dates en texte ISO 8601, identifiants en UUID texte, JSON en texte (`mode: 'json'`).
+- Tests : `apps/desktop/test` rejoue les migrations et les requêtes Drizzle sur `node:sqlite` avec le même
+  protocole que Rust ; `cargo test` couvre l'exécution réelle.
 
 ### Contrat d'un module
-Défini dans `packages/shared/src/module.ts` (`GameModuleManifest`, `GameModuleServer`). Chaque module :
-- a son propre schéma Postgres (`pgSchema('<id>')`), le socle vit dans `core` ;
+Défini dans `packages/shared/src/module.ts` (`GameModuleManifest`, `GameModule`). Chaque module :
+- a ses tables SQLite préfixées par l'id du jeu, qui référencent `saves.id` ;
 - fournit une **carte de tableau de bord** qui montre des **alertes actionnables**, pas des totaux
   (« 3 lignes déficitaires », pas « 42 lignes ») ;
 - déclare les versions du jeu prises en charge.
 
-## Comptes et sécurité
-
-- **Email uniquement, sans mot de passe** : code à 6 chiffres envoyé par mail, valable 10 min, usage unique,
-  5 essais max, 5 codes/heure/adresse, limitation par IP. Pas de connexion Steam, pas de mot de passe.
-- Codes stockés en **HMAC(AUTH_SECRET, email:code)**, jetons de session stockés en **SHA-256** : rien en clair en base.
-- Session : cookie `simloom_session` httpOnly, Secure en prod, SameSite=Lax, 30 jours glissants.
-  L'utilisateur peut lister et révoquer ses appareils (`/auth/sessions`).
-- CSRF : SameSite + refus des écritures dont l'en-tête `Origin` ≠ `WEB_ORIGIN`.
-- `/auth/request-code` répond **toujours 204** (ne pas révéler si un compte existe).
-- **Les parties sont privées** : toute requête sur `saves` (et les tables des modules) filtre par `user_id`.
-- Pas de mode invité : une **démo par module** avec des données fictives (non sauvegardées, remises à zéro au rechargement).
-
-## Emails
-Nodemailer. Local : Mailpit (docker compose, interface sur http://localhost:8025). Prod : Scaleway Transactional Email
-depuis `noreply@simloom.app` (SPF/DKIM/DMARC). Contact humain : `contact@simloom.app` (Zimbra OVH).
-
-## Hébergement
-VPS OVH dédié (séparé de Caelio : dépôt, secrets et bucket distincts), Postgres sur la machine,
-sauvegardes `pg_dump` vers OVH Object Storage. Domaine principal `simloom.app`.
+## Publier une version
+Voir l'en-tête de `.github/workflows/release.yml` : version dans `apps/desktop/package.json` **et**
+`src-tauri/Cargo.toml`, tag `vX.Y.Z`, puis publication manuelle du brouillon de release.
 
 ## Identité visuelle — règles strictes
 - **Rester loin d'Amazon** : aucune courbe orange sous le mot, **pas d'orange dans le logo ni dans l'interface**.
-- Logo : vrai SVG (`apps/web/public/brand/logo.svg`), fil vert `#2FA88A`, point du i = pelote, « oo » remplacé par un infini incliné.
+- Logo : vrai SVG (`apps/desktop/public/brand/logo.svg`), fil vert `#2FA88A`, point du i = pelote, « oo » remplacé par un infini incliné.
 - Mascotte (esprit à capuche, besace, fil) : illustrations **PNG/WebP**, jamais vectorisées.
 - Palette (tokens Tailwind) :
   - `canard` #0F4B58 — texte principal, fonds sombres
@@ -65,24 +77,24 @@ sauvegardes `pg_dump` vers OVH Object Storage. Domaine principal `simloom.app`.
   - `creme` #F7EFE3 — fond
   - `brun` #8B5E3C — texte secondaire
   - Le texte est toujours en canard ou brun.
-- Polices auto-hébergées (`@fontsource`, RGPD) : **Fraunces** pour les titres, **Nunito** pour le texte.
+- Polices embarquées (`@fontsource`) : **Fraunces** pour les titres, **Nunito** pour le texte.
 - Jeux : toujours écrire « pour <Jeu> », mention de non-affiliation, **aucun logo ni visuel des jeux**.
 
 ## Conventions
-- Interface et textes : **français et anglais dès le départ**. Aucune chaîne en dur dans les composants :
-  tout passe par `apps/web/src/i18n/{fr,en}.json` (mêmes clés dans les deux).
+- Interface : **français et anglais dès le départ**. Aucune chaîne en dur dans les composants :
+  tout passe par `apps/desktop/src/i18n/{fr,en}.json` (mêmes clés dans les deux).
 - Commentaires et messages de commit en français.
-- Validation des entrées avec les schémas zod de `@simloom/shared`, côté API comme côté front.
-- Imports internes sans extension (`./games`, pas `./games.js`) : résolution `Bundler`, build API par tsup.
-- Pas de données de jeu propriétaires dans le dépôt.
+- Validation des entrées avec les schémas zod de `@simloom/shared`.
+- Imports internes sans extension (`./games`, pas `./games.js`).
+- Pas de données de jeu propriétaires dans le dépôt, pas de dépendance propriétaire (condition SignPath).
+- CSP stricte dans `tauri.conf.json` : aucun contenu distant dans la webview.
 
 ## Commandes
 ```bash
-cp .env.example .env          # puis renseigner AUTH_SECRET (openssl rand -hex 32)
-docker compose up -d          # Postgres 16 + Mailpit
 pnpm install
-pnpm db:migrate               # applique les migrations Drizzle
-pnpm dev                      # API :3001 + front :5173 (proxy /api)
+pnpm app                 # appli en mode développement (Vite + fenêtre Tauri)
 pnpm typecheck && pnpm test && pnpm build
-pnpm db:generate              # après modification du schéma
+cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml
+pnpm db:generate         # après modification d'un schéma
+pnpm app:bundle          # installeur local (sous Windows)
 ```

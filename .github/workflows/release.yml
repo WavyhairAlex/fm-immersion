@@ -1,0 +1,50 @@
+name: Release
+
+# Publier une version :
+#   1. passer "version" à X.Y.Z dans apps/desktop/package.json et apps/desktop/src-tauri/Cargo.toml ;
+#   2. pousser un tag vX.Y.Z ;
+#   3. relire le brouillon de release créé sur GitHub, puis le publier.
+# Une fois publiée, les applis installées la récupèrent à leur prochain démarrage.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+      - run: pnpm install --frozen-lockfile
+
+      - name: Vérifier que le tag correspond à la version
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./apps/desktop/package.json').version")
+          test "v$VERSION" = "$GITHUB_REF_NAME" || { echo "Tag $GITHUB_REF_NAME différent de la version $VERSION"; exit 1; }
+
+      # Signature Windows (Authenticode) : à brancher ici avec SignPath une fois le projet accepté.
+      # Les fichiers de mise à jour, eux, sont déjà signés avec la clé TAURI_SIGNING_PRIVATE_KEY.
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: Simloom ${{ github.ref_name }}
+          releaseBody: Notes de version à compléter avant publication.
+          releaseDraft: true
+          prerelease: false
