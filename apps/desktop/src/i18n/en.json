@@ -36,7 +36,6 @@
     "import": "Import from FM27",
     "importError": "Import failed: {{reason}}",
     "empty": "No squad imported yet. Start FM27 with the plugin, load your save, then click “Import from FM27”.",
-    "squad": "Squad",
     "alert": {
       "injured_one": "{{count}} injured",
       "injured_other": "{{count}} injured",
@@ -62,6 +61,43 @@
       "contract": "Contract ends",
       "wage": "Wage",
       "status": "Status"
+    },
+    "tabs": {
+      "squad": "Squad",
+      "analysis": "Analysis"
+    },
+    "an": {
+      "xi": "First XI level",
+      "xiSub": "best player in each position, out of 20",
+      "bench": "Bench level",
+      "gap": "gap with the XI: {{gap}}",
+      "xiAge": "First XI average age",
+      "squadAge": "squad: {{age}} years",
+      "lines": "Strongest unit",
+      "weakest": "weakest: {{line}}",
+      "todo": "Priorities",
+      "byLine": "By unit",
+      "lineDetail": "starters {{starters}} · backups {{bench}} · {{age}} yrs",
+      "ages": "Age profile",
+      "age": {
+        "u21": "21 and under",
+        "u25": "22 to 25",
+        "u30": "26 to 29",
+        "o30": "30 and over"
+      },
+      "depth": "Depth by position",
+      "depthHelp": "Natural players in each position. Red: nobody in a key position; amber: only one player.",
+      "ageXi_one": "{{count}} player, {{xi}} in the XI",
+      "ageXi_other": "{{count}} players, {{xi}} in the XI"
+    },
+    "todo": {
+      "doublePos": "Add cover at {{pos}}",
+      "secondKeeper": "Find a second goalkeeper",
+      "extend_one": "Extend a starter's contract",
+      "extend_other": "Extend {{count}} starters' contracts",
+      "payroll": "Free up wage budget",
+      "youngXi_one": "One young starter to develop",
+      "youngXi_other": "{{count}} young starters to develop"
     }
   }
 }

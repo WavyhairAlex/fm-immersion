@@ -36,7 +36,6 @@
     "import": "Importer depuis FM27",
     "importError": "Import impossible : {{reason}}",
     "empty": "Aucun effectif importé. Lance FM27 avec le plugin, charge ta partie, puis clique sur « Importer depuis FM27 ».",
-    "squad": "Effectif",
     "alert": {
       "injured_one": "{{count}} blessé",
       "injured_other": "{{count}} blessés",
@@ -62,6 +61,43 @@
       "contract": "Fin de contrat",
       "wage": "Salaire",
       "status": "Statut"
+    },
+    "tabs": {
+      "squad": "Effectif",
+      "analysis": "Analyse"
+    },
+    "an": {
+      "xi": "Niveau du onze",
+      "xiSub": "meilleur joueur de chaque poste, sur 20",
+      "bench": "Niveau du banc",
+      "gap": "écart avec le onze : {{gap}}",
+      "xiAge": "Âge moyen du onze",
+      "squadAge": "effectif : {{age}} ans",
+      "lines": "Ligne la plus forte",
+      "weakest": "la plus faible : {{line}}",
+      "todo": "Priorités",
+      "byLine": "Par ligne",
+      "lineDetail": "titulaires {{starters}} · remplaçants {{bench}} · {{age}} ans",
+      "ages": "Pyramide des âges",
+      "age": {
+        "u21": "21 ans et moins",
+        "u25": "22 à 25 ans",
+        "u30": "26 à 29 ans",
+        "o30": "30 ans et plus"
+      },
+      "depth": "Profondeur par poste",
+      "depthHelp": "Joueurs naturels à chaque poste. Rouge : personne à un poste clé ; ambre : un seul joueur.",
+      "ageXi_one": "{{count}} joueur, {{xi}} dans le onze",
+      "ageXi_other": "{{count}} joueurs, {{xi}} dans le onze"
+    },
+    "todo": {
+      "doublePos": "Doubler le poste {{pos}}",
+      "secondKeeper": "Trouver un deuxième gardien",
+      "extend_one": "Prolonger un titulaire",
+      "extend_other": "Prolonger {{count}} titulaires",
+      "payroll": "Libérer de la masse salariale",
+      "youngXi_one": "Un jeune titulaire à faire progresser",
+      "youngXi_other": "{{count}} jeunes titulaires à faire progresser"
     }
   }
 }
