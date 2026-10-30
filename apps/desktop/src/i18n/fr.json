@@ -1,5 +1,7 @@
 {
-  "nav": { "language": "English" },
+  "nav": {
+    "language": "English"
+  },
   "update": {
     "checking": "Recherche de mises à jour…",
     "installing": "Installation de la version {{version}}…"
@@ -19,10 +21,47 @@
     "modules": "Les modules",
     "for": "pour {{game}}",
     "available": "Disponible",
-    "soon": "Bientôt"
+    "soon": "Bientôt",
+    "open": "Ouvrir"
   },
   "footer": {
     "disclaimer": "Simloom est un projet indépendant, sans lien avec les éditeurs des jeux cités. Les noms des jeux appartiennent à leurs propriétaires.",
     "privacy": "Tes données restent sur ton PC. Simloom ne collecte ni n'envoie aucune donnée personnelle ; seule la recherche de mises à jour contacte GitHub au démarrage."
+  },
+  "fm": {
+    "back": "Mes parties",
+    "context": "{{club}} · {{date}} · {{count}} joueurs",
+    "folder": "Dossier du plugin Archivix",
+    "folderHelp": "Le plugin écrit archivix-snapshot.json dans ce dossier (par exemple D:\\Sports Interactive\\Football Manager 27\\archivix). Simloom le lit seulement, sans toucher à ta sauvegarde.",
+    "import": "Importer depuis FM27",
+    "importError": "Import impossible : {{reason}}",
+    "empty": "Aucun effectif importé. Lance FM27 avec le plugin, charge ta partie, puis clique sur « Importer depuis FM27 ».",
+    "squad": "Effectif",
+    "alert": {
+      "injured_one": "{{count}} blessé",
+      "injured_other": "{{count}} blessés",
+      "expiring_one": "{{count}} contrat à régler",
+      "expiring_other": "{{count}} contrats à régler",
+      "tired_one": "{{count}} joueur à ménager",
+      "tired_other": "{{count}} joueurs à ménager",
+      "none": "Rien à signaler."
+    },
+    "line": {
+      "all": "Tous",
+      "GB": "Gardiens",
+      "DEF": "Défense",
+      "MIL": "Milieu",
+      "ATT": "Attaque"
+    },
+    "col": {
+      "name": "Joueur",
+      "positions": "Postes",
+      "age": "Âge",
+      "level": "Niveau",
+      "condition": "Condition",
+      "contract": "Fin de contrat",
+      "wage": "Salaire",
+      "status": "Statut"
+    }
   }
 }

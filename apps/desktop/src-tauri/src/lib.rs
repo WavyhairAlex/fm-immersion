@@ -1,4 +1,5 @@
 mod db;
+mod fm;
 
 use std::sync::Mutex;
 use tauri::Manager;
@@ -16,7 +17,7 @@ pub fn run() {
             app.manage(db::Db(Mutex::new(conn)));
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![db::db_query, db::db_batch])
+        .invoke_handler(tauri::generate_handler![db::db_query, db::db_batch, fm::fm_read_snapshot, fm::fm_default_folder])
         .run(tauri::generate_context!())
         .expect("impossible de démarrer Simloom");
 }

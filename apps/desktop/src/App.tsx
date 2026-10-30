@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Header } from './components/Header';
 import { UpdateGate } from './components/UpdateGate';
+import { FmSave } from './pages/FmSave';
 import { Home } from './pages/Home';
 
 export function App() {
@@ -11,6 +12,7 @@ export function App() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/fm/:saveId" element={<FmSave />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
