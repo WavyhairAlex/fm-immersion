@@ -1,4 +1,4 @@
-import { alertGroups, gameFormationOf, normalizePlayer, type FmPlayer, type Line } from '@simloom/module-fm';
+import { gameFormationOf, normalizePlayer, type FmPlayer, type Line } from '@simloom/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useState } from 'react';
@@ -7,10 +7,35 @@ import { Link, useParams } from 'react-router-dom';
 import { fmData, savesData } from '../lib/data';
 import { FmAnalysis } from './FmAnalysis';
 import { FmBridge } from './FmBridge';
-import { FmSummary } from './FmSummary';
+import { FmContracts } from './FmContracts';
+import { FmDressing } from './FmDressing';
+import { FmFinances } from './FmFinances';
+import { FmHome } from './FmHome';
+import { FmLoans } from './FmLoans';
 import { FmTactic } from './FmTactic';
+import { FmWages } from './FmWages';
 
 const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
+
+/** Les écrans de la page Archivix, rangés en 5 sections. Ceux qui ne sont pas encore portés sont marqués « bientôt ». */
+const SECTIONS = [
+  { id: 'home', views: ['home'] },
+  { id: 'squad', views: ['squad', 'analysis', 'compare', 'dressing', 'loans'] },
+  { id: 'tactic', views: ['tactic', 'roles', 'calendar', 'depth', 'style', 'effectiveness'] },
+  { id: 'project', views: ['project', 'targets'] },
+  { id: 'club', views: ['finances', 'wages', 'contracts', 'progression'] },
+] as const;
+type View = (typeof SECTIONS)[number]['views'][number];
+const READY = new Set<View>(['home', 'squad', 'analysis', 'dressing', 'loans', 'tactic', 'finances', 'wages', 'contracts']);
+const VIEW_KEY = 'simloom.fm.view';
+const readView = (): View => {
+  try {
+    const v = localStorage.getItem(VIEW_KEY) as View | null;
+    return v && SECTIONS.some((s) => (s.views as readonly string[]).includes(v)) ? v : 'home';
+  } catch {
+    return 'home';
+  }
+};
 
 /** Partie Football Manager : import depuis le plugin, alertes, effectif. */
 export function FmSave() {
@@ -31,7 +56,16 @@ export function FmSave() {
     queryFn: () => invoke<string | null>('fm_default_folder'),
   });
 
-  const [tab, setTab] = useState<'squad' | 'analysis' | 'tactic'>('squad');
+  const [view, setView] = useState<View>(readView);
+  const go = (v: string) => {
+    setView(v as View);
+    try {
+      localStorage.setItem(VIEW_KEY, v);
+    } catch {
+      /* stockage indisponible : l'écran n'est pas retenu */
+    }
+  };
+  const section = SECTIONS.find((s) => (s.views as readonly string[]).includes(view)) ?? SECTIONS[0];
   const [folder, setFolder] = useState('');
   useEffect(() => {
     setFolder(settings?.fmFolder ?? defaultFolder ?? '');
@@ -50,7 +84,6 @@ export function FmSave() {
   });
 
   const players = useMemo(() => snapshot?.data.players.map(normalizePlayer) ?? [], [snapshot]);
-  const groups = snapshot ? alertGroups(players, snapshot.gameDate) : null;
   const dateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' });
 
   return (
@@ -98,53 +131,57 @@ export function FmSave() {
         </div>
       )}
 
-      {snapshot && players.length > 0 && <FmSummary snap={snapshot.data} players={players} />}
-
-      {groups && (
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <AlertTile title={t('fm.alert.injured', { count: groups.injured.length })} list={groups.injured} urgent />
-          <AlertTile title={t('fm.alert.expiring', { count: groups.expiring.length })} list={groups.expiring} />
-          <AlertTile title={t('fm.alert.tired', { count: groups.tired.length })} list={groups.tired} />
-        </div>
-      )}
-
       {snapshot && players.length > 0 && (
         <>
-          <div className="mt-8 flex gap-2" role="tablist">
-            {(['squad', 'analysis', 'tactic'] as const).map((k) => (
+          <nav className="mt-8 flex flex-wrap gap-2" role="tablist" aria-label={t('fm.nav')}>
+            {SECTIONS.map((s) => (
               <button
-                key={k}
+                key={s.id}
                 type="button"
                 role="tab"
-                aria-selected={tab === k}
-                onClick={() => setTab(k)}
-                className={`rounded-full px-4 py-1.5 font-bold ${tab === k ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
+                aria-selected={s === section}
+                onClick={() => go(s.views[0])}
+                className={`rounded-full px-4 py-1.5 font-bold ${s === section ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
               >
-                {t(`fm.tabs.${k}`)}
+                {t(`fm.sections.${s.id}`)}
               </button>
             ))}
+          </nav>
+          {section.views.length > 1 && (
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-b border-canard/10 pb-2 text-sm">
+              {section.views.map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  aria-current={v === view ? 'page' : undefined}
+                  onClick={() => go(v)}
+                  className={`font-bold ${v === view ? 'text-canard underline decoration-eau-soutenu decoration-2 underline-offset-8' : 'text-canard/60 hover:text-canard'}`}
+                >
+                  {t(`fm.views.${v}`)}
+                  {!READY.has(v) && <span className="ml-1 text-xs font-normal text-brun">· {t('fm.soon')}</span>}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="mt-4">
+            {view === 'home' && <FmHome snap={snapshot.data} players={players} folder={folder} go={go} />}
+            {view === 'squad' && <SquadTable players={players} />}
+            {view === 'analysis' && <FmAnalysis players={players} gameDate={snapshot.gameDate} />}
+            {view === 'dressing' && <FmDressing players={players} />}
+            {view === 'loans' && <FmLoans snap={snapshot.data} />}
+            {view === 'tactic' && <FmTactic players={players} folder={folder} gameFormation={gameFormationOf(snapshot.data.tactic)} />}
+            {view === 'finances' && <FmFinances snap={snapshot.data} players={players} />}
+            {view === 'wages' && <FmWages players={players} gameDate={snapshot.gameDate} />}
+            {view === 'contracts' && <FmContracts players={players} gameDate={snapshot.gameDate} />}
+            {!READY.has(view) && (
+              <div className="card flex flex-col items-center gap-2 py-10 text-center">
+                <p className="font-display text-lg font-semibold">{t(`fm.views.${view}`)}</p>
+                <p className="max-w-md text-sm text-brun">{t('fm.soonText')}</p>
+              </div>
+            )}
           </div>
-          {tab === 'squad' && <SquadTable players={players} />}
-          {tab === 'analysis' && <FmAnalysis players={players} gameDate={snapshot.gameDate} />}
-          {tab === 'tactic' && <FmTactic players={players} folder={folder} gameFormation={gameFormationOf(snapshot.data.tactic)} />}
         </>
       )}
-    </div>
-  );
-}
-
-function AlertTile({ title, list, urgent }: { title: string; list: FmPlayer[]; urgent?: boolean }) {
-  const { t } = useTranslation();
-  const dot = list.length === 0 ? 'bg-eau' : urgent ? 'bg-corail' : 'bg-ambre';
-  return (
-    <div className="card p-5">
-      <p className="flex items-center gap-2 font-display font-semibold">
-        <span className={`h-2.5 w-2.5 rounded-full ${dot}`} aria-hidden />
-        {title}
-      </p>
-      <p className="mt-2 text-sm text-brun">
-        {list.length ? list.slice(0, 4).map((p) => p.name).join(', ') + (list.length > 4 ? '…' : '') : t('fm.alert.none')}
-      </p>
     </div>
   );
 }

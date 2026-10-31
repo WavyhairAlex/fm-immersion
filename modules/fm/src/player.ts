@@ -45,6 +45,11 @@ export interface FmPlayer {
   avgRating: number | null;
   injury: string | null;
   injuryDays: number | null;
+  /** Moral tel qu'écrit par le jeu (« Très bon »…), s'il est connu. */
+  morale: string | null;
+  personality: string | null;
+  /** Équipe du club quand ce n'est pas l'équipe première (réserve, U19…). */
+  team: string | null;
   /** Pied fort tel qu'écrit par le jeu (« Gauche », « Droit uniquement », « Les deux »…). */
   foot: string | null;
   /** Attributs connus (milieu de fourchette si le recrutement ne les a pas affinés), sans le préfixe « Attribute ». */
@@ -88,6 +93,9 @@ export function normalizePlayer(p: FmPlayerRaw): FmPlayer {
     injury: injury || null,
     injuryDays,
     foot: p.foot ?? null,
+    morale: p.morale ?? null,
+    personality: typeof p.personality === 'string' ? p.personality : null,
+    team: typeof p.team === 'string' ? p.team : null,
     attributes,
   };
 }

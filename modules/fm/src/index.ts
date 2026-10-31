@@ -18,3 +18,4 @@ export * from './analysis';
 export * from './summary';
 export * from './tactic';
 export * from './tactic-defaults';
+export * from './club';

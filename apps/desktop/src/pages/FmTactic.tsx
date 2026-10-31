@@ -54,14 +54,20 @@ async function loadLocalReference(folder: string): Promise<{ ref: TacticReferenc
   }
 }
 
+/** Moteur tactique avec les repères maison, remplacés par les repères locaux du joueur s'il en a. */
+export function useTacticEngine(folder: string) {
+  const { data: local } = useQuery({ queryKey: ['fm', 'reference', folder], queryFn: () => loadLocalReference(folder), staleTime: 60_000 });
+  const engine = useMemo(() => new TacticEngine(mergeReference(local?.ref)), [local?.ref]);
+  return { engine, local };
+}
+
 const DOT: Record<BalanceCheck['status'], string> = { good: 'bg-eau', warn: 'bg-ambre', bad: 'bg-corail' };
 
 /** Tactique : style conseillé, schéma, onze par rôles, formes avec et sans ballon, équilibre. */
 export function FmTactic({ players, folder, gameFormation }: { players: FmPlayer[]; folder: string; gameFormation: string | null }) {
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
-  const { data: local } = useQuery({ queryKey: ['fm', 'reference', folder], queryFn: () => loadLocalReference(folder), staleTime: 60_000 });
-  const engine = useMemo(() => new TacticEngine(mergeReference(local?.ref)), [local?.ref]);
+  const { engine, local } = useTacticEngine(folder);
   const [prefs, setPrefs] = useState<Prefs>(readPrefs);
   const update = (p: Prefs) => {
     const next = { ...prefs, ...p };

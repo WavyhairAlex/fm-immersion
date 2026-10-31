@@ -1,6 +1,7 @@
 {
   "nav": {
-    "language": "English"
+    "language": "English",
+    "version": "version {{version}}"
   },
   "update": {
     "checking": "Recherche de mises à jour…",
@@ -61,11 +62,6 @@
       "contract": "Fin de contrat",
       "wage": "Salaire",
       "status": "Statut"
-    },
-    "tabs": {
-      "squad": "Effectif",
-      "analysis": "Analyse",
-      "tactic": "Tactique"
     },
     "an": {
       "xi": "Niveau du onze",
@@ -232,6 +228,170 @@
           "tip": "Fais tourner ces joueurs."
         }
       }
+    },
+    "nav": "Sections de la partie",
+    "soon": "bientôt",
+    "soonText": "Cet écran de la page Archivix arrive dans une prochaine mise à jour de Simloom.",
+    "sections": {
+      "home": "Accueil",
+      "squad": "Effectif",
+      "tactic": "Tactique",
+      "project": "Mon projet",
+      "club": "Club"
+    },
+    "views": {
+      "home": "Accueil",
+      "squad": "Effectif",
+      "analysis": "Analyse",
+      "compare": "Comparateur",
+      "dressing": "Vestiaire",
+      "loans": "Prêtés",
+      "tactic": "Composition",
+      "roles": "Postes et rôles",
+      "calendar": "Calendrier et rotation",
+      "depth": "Titulaires et remplaçants",
+      "style": "Style de jeu",
+      "effectiveness": "Efficacité",
+      "project": "Recrutement et entraînement",
+      "targets": "Cibles du mercato",
+      "finances": "Finances et board",
+      "wages": "Masse salariale",
+      "contracts": "Contrats",
+      "progression": "Progression"
+    },
+    "home": {
+      "todo": "À traiter",
+      "see": "Voir",
+      "contracts_one": "{{count}} fin de contrat d'ici 6 mois",
+      "contracts_other": "{{count}} fins de contrat d'ici 6 mois",
+      "kind": {
+        "injured": "Blessé",
+        "contract": "Contrat",
+        "condition": "Condition",
+        "status": "Statut"
+      },
+      "endsIn_one": "fin dans {{count}} mois",
+      "endsIn_other": "fin dans {{count}} mois",
+      "nothing": "Rien d'urgent.",
+      "more_one": "+ {{count}} autre",
+      "more_other": "+ {{count}} autres",
+      "styles": "Styles adaptés à l'effectif",
+      "leastFit": "Le moins adapté : {{name}}.",
+      "best": "Meilleurs joueurs",
+      "young": "Jeunes à suivre",
+      "noYoung": "Aucun joueur de 21 ans ou moins."
+    },
+    "contracts": {
+      "byYear": "Salaires mensuels libérés par année de fin de contrat",
+      "soon": "Échéances à traiter (18 mois ou moins)",
+      "age_one": "{{count}} an",
+      "age_other": "{{count}} ans",
+      "expired": "Échu",
+      "months_one": "{{count}} mois",
+      "months_other": "{{count}} mois",
+      "none": "Aucune échéance proche."
+    },
+    "wages": {
+      "none": "Aucun salaire dans l'instantané.",
+      "total": "Masse salariale",
+      "perYear": "par mois · {{amount}} par an",
+      "avg": "Salaire moyen",
+      "players_one": "{{count}} joueur",
+      "players_other": "{{count}} joueurs",
+      "top3": "Poids des 3 plus gros salaires",
+      "perMonth": "{{amount}} par mois",
+      "ending": "Contrats finissant d'ici 6 mois",
+      "endingSub_one": "{{count}} joueur, libéré s'il n'est pas prolongé",
+      "endingSub_other": "{{count}} joueurs, libérés s'ils ne sont pas prolongés",
+      "byStatus": "Par statut",
+      "status": "Statut",
+      "count": "Joueurs",
+      "share": "Part de la masse",
+      "average": "Moyenne",
+      "level": "Niveau moy.",
+      "byStatusHelp": "Statuts classés du plus haut au plus bas. Une masse saine paie davantage les statuts élevés : la moyenne doit baisser avec le statut.",
+      "review": "À revoir",
+      "flag": {
+        "over": "Surpayé",
+        "under": "Sous-payé",
+        "release": "À libérer"
+      },
+      "overText": "{{wage}} par mois, plus qu'un « {{status}} » type ({{ref}})",
+      "underText": "{{wage}} par mois pour un « {{status}} », moins qu'un « {{other}} » type ({{ref}})",
+      "releaseText": "{{wage}} par mois économisés s'il part",
+      "coherent": "Salaires cohérents avec les statuts.",
+      "detail": "Détail par statut",
+      "value": "Rapport qualité / salaire",
+      "valueHelp": "Salaire mensuel par point de niveau : les plus chers d'abord.",
+      "perPoint": "{{amount}} / pt",
+      "bargains": "Les meilleures affaires : {{names}}."
+    },
+    "fin": {
+      "bill": "Masse salariale",
+      "perMonth": "par mois",
+      "budget": "Budget salarial",
+      "unknown": "pas encore lu par le plugin",
+      "room": "Marge",
+      "over": "budget dépassé",
+      "transfer": "Budget transferts",
+      "balance": "solde du club {{amount}}",
+      "sim": "Simulateur de prolongations",
+      "simHelp": "Contrats finissant dans 12 mois ou moins. Saisis le salaire que tu proposerais (0 = laisser partir) : la marge se recalcule. Rien n'est enregistré.",
+      "ends": "fin {{date}}",
+      "offer": "Salaire proposé à {{name}}",
+      "noExt": "Aucun contrat à prolonger.",
+      "effect": "Effet sur la masse : {{delta}} par mois",
+      "after": "marge après : {{room}}",
+      "afterUnknown": "la marge s'affichera avec le budget du board",
+      "board": "Objectifs du board",
+      "confidence": "Confiance :",
+      "noBoard": "Les attentes du board (classement, jeu, jeunes, finances) ne sont pas encore lues par le plugin."
+    },
+    "loans": {
+      "title_one": "Joueurs prêtés ({{count}})",
+      "title_other": "Joueurs prêtés ({{count}})",
+      "none": "Aucun prêt dans l'instantané. Le plugin ne lit pas encore les joueurs prêtés.",
+      "help": "Un jeune qui ne joue pas en prêt progresse peu : à rappeler ou à replacer au prochain mercato.",
+      "col": {
+        "player": "Joueur",
+        "age": "Âge",
+        "club": "Club d'accueil",
+        "apps": "Matchs",
+        "goals": "Buts",
+        "rating": "Note",
+        "level": "Niveau",
+        "end": "Fin du prêt",
+        "verdict": "Verdict"
+      },
+      "verdict": {
+        "idle": "Ne joue pas",
+        "shines": "Brille",
+        "plays": "Joue"
+      }
+    },
+    "dressing": {
+      "avg": "Moral moyen",
+      "unknown": "pas encore lu par le plugin",
+      "unhappy": "Mécontents",
+      "unhappySub": "moral médiocre ou pire",
+      "leaders": "Leaders",
+      "leadersSub": "Leadership 12 ou plus",
+      "moraleTitle": "Moral",
+      "morale": {
+        "0": "Mauvais",
+        "1": "Médiocre",
+        "2": "Correct",
+        "3": "Bon",
+        "4": "Très bon",
+        "5": "Superbe"
+      },
+      "reassure": "À rassurer",
+      "noMorale": "Le moral des joueurs n'est pas encore lu par le plugin. On verra alors les mécontents et l'effet sur l'adhésion à ta tactique.",
+      "leadersTitle": "Leaders du vestiaire",
+      "lead": "Lead.",
+      "det": "Dét.",
+      "leadersHelp": "Classés par Leadership puis Détermination. Un leader au moral bas pèse sur tout le groupe.",
+      "hierarchy": "Hiérarchie et personnalités"
     }
   }
 }

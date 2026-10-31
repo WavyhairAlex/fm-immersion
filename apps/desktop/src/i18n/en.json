@@ -1,6 +1,7 @@
 {
   "nav": {
-    "language": "Français"
+    "language": "Français",
+    "version": "version {{version}}"
   },
   "update": {
     "checking": "Checking for updates…",
@@ -61,11 +62,6 @@
       "contract": "Contract ends",
       "wage": "Wage",
       "status": "Status"
-    },
-    "tabs": {
-      "squad": "Squad",
-      "analysis": "Analysis",
-      "tactic": "Tactics"
     },
     "an": {
       "xi": "First XI level",
@@ -232,6 +228,170 @@
           "tip": "Rotate these players."
         }
       }
+    },
+    "nav": "Save sections",
+    "soon": "soon",
+    "soonText": "This screen from the Archivix page is coming in a future Simloom update.",
+    "sections": {
+      "home": "Home",
+      "squad": "Squad",
+      "tactic": "Tactics",
+      "project": "My project",
+      "club": "Club"
+    },
+    "views": {
+      "home": "Home",
+      "squad": "Squad",
+      "analysis": "Analysis",
+      "compare": "Compare",
+      "dressing": "Dressing room",
+      "loans": "On loan",
+      "tactic": "Line-up",
+      "roles": "Positions and roles",
+      "calendar": "Fixtures and rotation",
+      "depth": "Starters and backups",
+      "style": "Playing style",
+      "effectiveness": "Effectiveness",
+      "project": "Recruitment and training",
+      "targets": "Transfer targets",
+      "finances": "Finances and board",
+      "wages": "Wage bill",
+      "contracts": "Contracts",
+      "progression": "Progression"
+    },
+    "home": {
+      "todo": "To deal with",
+      "see": "See",
+      "contracts_one": "{{count}} contract ending within 6 months",
+      "contracts_other": "{{count}} contracts ending within 6 months",
+      "kind": {
+        "injured": "Injured",
+        "contract": "Contract",
+        "condition": "Condition",
+        "status": "Status"
+      },
+      "endsIn_one": "ends in {{count}} month",
+      "endsIn_other": "ends in {{count}} months",
+      "nothing": "Nothing urgent.",
+      "more_one": "+ {{count}} more",
+      "more_other": "+ {{count}} more",
+      "styles": "Styles that suit the squad",
+      "leastFit": "Least suited: {{name}}.",
+      "best": "Best players",
+      "young": "Young players to watch",
+      "noYoung": "No players aged 21 or under."
+    },
+    "contracts": {
+      "byYear": "Monthly wages freed by contract end year",
+      "soon": "Contracts to deal with (18 months or less)",
+      "age_one": "{{count}} year old",
+      "age_other": "{{count}} years old",
+      "expired": "Expired",
+      "months_one": "{{count}} month",
+      "months_other": "{{count}} months",
+      "none": "No contract ending soon."
+    },
+    "wages": {
+      "none": "No wages in the snapshot.",
+      "total": "Wage bill",
+      "perYear": "per month · {{amount}} per year",
+      "avg": "Average wage",
+      "players_one": "{{count}} player",
+      "players_other": "{{count}} players",
+      "top3": "Share of the 3 highest wages",
+      "perMonth": "{{amount}} per month",
+      "ending": "Contracts ending within 6 months",
+      "endingSub_one": "{{count}} player, freed unless extended",
+      "endingSub_other": "{{count}} players, freed unless extended",
+      "byStatus": "By status",
+      "status": "Status",
+      "count": "Players",
+      "share": "Share of the bill",
+      "average": "Average",
+      "level": "Avg level",
+      "byStatusHelp": "Statuses from highest to lowest. A healthy wage bill pays higher statuses more: the average should drop with the status.",
+      "review": "To review",
+      "flag": {
+        "over": "Overpaid",
+        "under": "Underpaid",
+        "release": "To release"
+      },
+      "overText": "{{wage}} per month, more than a typical “{{status}}” ({{ref}})",
+      "underText": "{{wage}} per month for a “{{status}}”, less than a typical “{{other}}” ({{ref}})",
+      "releaseText": "{{wage}} per month saved if he leaves",
+      "coherent": "Wages match the statuses.",
+      "detail": "Detail by status",
+      "value": "Value for money",
+      "valueHelp": "Monthly wage per level point: most expensive first.",
+      "perPoint": "{{amount}} / pt",
+      "bargains": "Best value: {{names}}."
+    },
+    "fin": {
+      "bill": "Wage bill",
+      "perMonth": "per month",
+      "budget": "Wage budget",
+      "unknown": "not read by the plugin yet",
+      "room": "Room",
+      "over": "over budget",
+      "transfer": "Transfer budget",
+      "balance": "club balance {{amount}}",
+      "sim": "Contract extension simulator",
+      "simHelp": "Contracts ending within 12 months. Enter the wage you would offer (0 = let him go): the room is recalculated. Nothing is saved.",
+      "ends": "ends {{date}}",
+      "offer": "Wage offered to {{name}}",
+      "noExt": "No contract to extend.",
+      "effect": "Effect on the wage bill: {{delta}} per month",
+      "after": "room after: {{room}}",
+      "afterUnknown": "the room will show once the board budget is known",
+      "board": "Board expectations",
+      "confidence": "Confidence:",
+      "noBoard": "Board expectations (league position, style, youth, finances) are not read by the plugin yet."
+    },
+    "loans": {
+      "title_one": "Players on loan ({{count}})",
+      "title_other": "Players on loan ({{count}})",
+      "none": "No loans in the snapshot. The plugin does not read loaned players yet.",
+      "help": "A young player who doesn't play on loan barely progresses: recall him or find another club next window.",
+      "col": {
+        "player": "Player",
+        "age": "Age",
+        "club": "Loan club",
+        "apps": "Apps",
+        "goals": "Goals",
+        "rating": "Rating",
+        "level": "Level",
+        "end": "Loan ends",
+        "verdict": "Verdict"
+      },
+      "verdict": {
+        "idle": "Not playing",
+        "shines": "Shining",
+        "plays": "Playing"
+      }
+    },
+    "dressing": {
+      "avg": "Average morale",
+      "unknown": "not read by the plugin yet",
+      "unhappy": "Unhappy",
+      "unhappySub": "poor morale or worse",
+      "leaders": "Leaders",
+      "leadersSub": "Leadership 12 or more",
+      "moraleTitle": "Morale",
+      "morale": {
+        "0": "Very poor",
+        "1": "Poor",
+        "2": "Okay",
+        "3": "Good",
+        "4": "Very good",
+        "5": "Superb"
+      },
+      "reassure": "To reassure",
+      "noMorale": "Player morale is not read by the plugin yet. Once it is, you will see who is unhappy and how it affects buy-in to your tactics.",
+      "leadersTitle": "Dressing room leaders",
+      "lead": "Lead.",
+      "det": "Det.",
+      "leadersHelp": "Sorted by Leadership then Determination. A leader with low morale weighs on the whole group.",
+      "hierarchy": "Hierarchy and personalities"
     }
   }
 }
