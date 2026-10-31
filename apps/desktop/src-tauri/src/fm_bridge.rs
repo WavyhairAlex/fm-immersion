@@ -239,13 +239,49 @@ pub async fn fm_bridge_install(game_dir: String, data_dir: String) -> Result<Bri
     .map_err(|e| BridgeError::Network(e.to_string()))?
 }
 
-/// Emplacement Steam par défaut de FM27 (le joueur peut le modifier).
+/// Bibliothèques Steam déclarées dans `libraryfolders.vdf` (le jeu peut être sur un autre disque).
+pub fn steam_libraries(vdf: &str) -> Vec<PathBuf> {
+    vdf.lines()
+        .filter_map(|l| {
+            let mut parts = l.split('"').filter(|x| !x.trim().is_empty());
+            if parts.next()? != "path" {
+                return None;
+            }
+            Some(PathBuf::from(parts.next()?.replace("\\\\", "\\")))
+        })
+        .collect()
+}
+
+/// Dossier de FM27 : emplacements Steam habituels, puis chaque bibliothèque Steam.
+pub fn find_game_dir() -> Option<PathBuf> {
+    let steams = [r"C:\Program Files (x86)\Steam", r"C:\Program Files\Steam"];
+    let mut libs: Vec<PathBuf> = steams.iter().map(PathBuf::from).collect();
+    for steam in steams {
+        if let Ok(vdf) = std::fs::read_to_string(Path::new(steam).join("steamapps").join("libraryfolders.vdf")) {
+            libs.extend(steam_libraries(&vdf));
+        }
+    }
+    libs.into_iter()
+        .map(|l| l.join("steamapps").join("common").join("Football Manager 27"))
+        .find(|g| g.join("fm.exe").is_file())
+}
+
+/// Dossier des instantanés tel que réglé dans le plugin (`BepInEx\config\fr.archivix.bridge.cfg`).
+pub fn configured_data_dir(cfg: &str) -> Option<String> {
+    cfg.lines()
+        .find_map(|l| l.trim().strip_prefix("Dossier")?.trim_start().strip_prefix('=').map(|v| v.trim().to_owned()))
+        .filter(|v| !v.is_empty())
+}
+
+pub fn plugin_data_dir(game: &Path) -> Option<String> {
+    let cfg = std::fs::read_to_string(game.join("BepInEx").join("config").join("fr.archivix.bridge.cfg")).ok()?;
+    configured_data_dir(&cfg)
+}
+
+/// Emplacement de FM27 trouvé sur le PC (le joueur peut le modifier).
 #[tauri::command]
 pub fn fm_bridge_default_game_dir() -> Option<String> {
-    [r"C:\Program Files (x86)\Steam\steamapps\common\Football Manager 27", r"C:\Program Files\Steam\steamapps\common\Football Manager 27"]
-        .iter()
-        .find(|p| Path::new(p).join("fm.exe").is_file())
-        .map(|p| p.to_string())
+    find_game_dir().map(|p| p.to_string_lossy().into_owned())
 }
 
 #[cfg(test)]
@@ -287,6 +323,14 @@ mod tests {
     fn statut_sans_jeu() {
         let st = status(Path::new("pas-un-chemin-absolu"));
         assert!(!st.game_found && !st.running && st.installed_version.is_none());
+    }
+
+    #[test]
+    fn lit_les_bibliotheques_steam_et_le_reglage_du_plugin() {
+        let vdf = "\"libraryfolders\"\n{\n\t\"0\"\n\t{\n\t\t\"path\"\t\t\"C:\\\\Program Files (x86)\\\\Steam\"\n\t}\n\t\"1\"\n\t{\n\t\t\"path\"\t\t\"G:\\\\Steam\"\n\t}\n}";
+        assert_eq!(steam_libraries(vdf), vec![PathBuf::from(r"C:\Program Files (x86)\Steam"), PathBuf::from(r"G:\Steam")]);
+        assert_eq!(configured_data_dir(&config_text(r"D:\FM\archivix")).as_deref(), Some(r"D:\FM\archivix"));
+        assert_eq!(configured_data_dir("[Archivix]\nDossier = \n"), None);
     }
 
     #[test]
