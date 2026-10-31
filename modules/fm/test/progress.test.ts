@@ -1,0 +1,90 @@
+import { describe, expect, it } from 'vitest';
+import { bestOf, depthAlerts, depthChart, formationKey, growthAt, progression, projectLevel, rotation, seasonStart, upcomingFixtures } from '../src';
+import { normalizePlayer } from '../src/player';
+import type { FmSnapshot } from '../src/snapshot';
+
+const p = (id: number, pos: string, level: number, extra: Record<string, unknown> = {}) => normalizePlayer({ id, name: `J${id}`, positions: pos, level, ...extra });
+
+describe('progression et profondeur', () => {
+  it('projette selon l’âge sans historique, selon la tendance avec', () => {
+    const young = p(1, 'BT', 10, { age: 18 });
+    expect(projectLevel(young, 2)).toBeCloseTo(10 + growthAt(18) + growthAt(19));
+    const old = p(2, 'BT', 10, { age: 33 });
+    expect(projectLevel(old, 1)).toBeLessThan(10);
+    // Un an d'écart, +2 points : la tendance réelle l'emporte sur la courbe d'âge.
+    const history = [
+      { gameDate: '2026-01-01', players: [p(2, 'BT', 8, { age: 32 })] },
+      { gameDate: '2027-01-01', players: [old] },
+    ];
+    expect(projectLevel(old, 1, history)).toBeCloseTo(12, 0);
+  });
+
+  it('repère la saison en cours (début en juillet)', () => {
+    expect(seasonStart('2026-08-29')).toBe(2026);
+    expect(seasonStart('2027-03-01')).toBe(2026);
+  });
+
+  it('reconnaît le schéma du jeu', () => {
+    expect(formationKey('4-4-2')).toBe('4-4-2');
+    expect(formationKey('Mon plan')).toBe('4-2-3-1');
+    expect(formationKey(null)).toBe('4-2-3-1');
+  });
+
+  it('place titulaires et doublures, et signale qui peut passer devant', () => {
+    const players = [
+      p(1, 'BT', 13, { age: 30 }),
+      p(2, 'BT', 12, { age: 31 }),
+      p(3, 'BT', 11, { age: 18 }),
+      p(4, 'BT', 12.5, { age: 25, injury: 'Entorse' }),
+      p(5, 'GB', 12),
+    ];
+    const rows = depthChart(players, '4-4-2');
+    const bt = rows.find((r) => r.pos === 'BT')!;
+    expect(bt.count).toBe(2);
+    // Le blessé n'est pas titulaire tant qu'un joueur valide existe.
+    expect(bt.starters.map((s) => s.player.id)).toEqual(['1', '2']);
+    expect(bt.subs.map((s) => [s.player.id, s.when])).toEqual([
+      ['4', 0],
+      ['3', 1],
+    ]);
+    expect(rows.find((r) => r.pos === 'DC')!.starters).toEqual([]);
+    expect(depthAlerts(rows).map((a) => a.sub.player.id)).toEqual(['4', '3']);
+  });
+
+  it('suit l’évolution entre le premier et le dernier instantané', () => {
+    const rows = progression([
+      { gameDate: '2026-08-01', players: [p(1, 'BT', 10), p(2, 'MC', 12)] },
+      { gameDate: '2026-10-01', players: [p(1, 'BT', 11.2), p(2, 'MC', 11.5), p(3, 'DC', 9)] },
+    ]);
+    expect(rows.map((r) => [r.player.id, r.delta])).toEqual([
+      ['1', 1.2],
+      ['3', 0],
+      ['2', -0.5],
+    ]);
+    expect(rows[0]!.series).toEqual([10, 11.2]);
+  });
+
+  it('liste les prochains matchs avec l’écart entre eux, et la rotation', () => {
+    const snap = {
+      gameDate: '2026-09-01',
+      fixtures: [
+        { date: '2026-09-06', opponent: 'B', home: false },
+        { date: '2026-08-20', opponent: 'Passé' },
+        { date: '2026-09-03', opponent: 'A', competition: 'Coupe', home: true },
+      ],
+    } as unknown as FmSnapshot;
+    expect(upcomingFixtures(snap).map((f) => [f.opponent, f.gap])).toEqual([
+      ['A', null],
+      ['B', 3],
+    ]);
+    const r = rotation([p(1, 'BT', 12, { condition: 80, sharpness: 60 }), p(2, 'BT', 6, { sharpness: 50 }), p(3, 'BT', 12, { condition: 95 })]);
+    expect(r.tired.map((x) => x.id)).toEqual(['1']);
+    expect(r.rusty.map((x) => x.id)).toEqual(['1']);
+  });
+
+  it('repère la meilleure valeur d’une ligne', () => {
+    expect(bestOf([12, null, 15])).toBe(15);
+    expect(bestOf([12, null])).toBeNull();
+    expect(bestOf([12, 12])).toBeNull();
+  });
+});

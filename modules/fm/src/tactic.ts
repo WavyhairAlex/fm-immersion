@@ -110,7 +110,7 @@ export const avg = (xs: (number | null | undefined)[]): number | null => {
   return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
 };
 /** Clé d'attribut des repères (« offTheBall », « firstTouch ») vers celle du jeu (« Movement », « FirstTouch »). */
-const attrKey = (k: string) => (k === 'offTheBall' ? 'Movement' : k.charAt(0).toUpperCase() + k.slice(1));
+export const attrKey = (k: string) => (k === 'offTheBall' ? 'Movement' : k.charAt(0).toUpperCase() + k.slice(1));
 export const attrOf = (p: FmPlayer, k: string): number | null => p.attributes[k] ?? null;
 
 export const sideOf = (pos: PosCode): 'L' | 'R' | null => (/^(DG|DLG|MG|MOG)$/.test(pos) ? 'L' : /^(DD|DLD|MD|MOD)$/.test(pos) ? 'R' : null);
@@ -182,6 +182,20 @@ export class TacticEngine {
     }
     const foot = pos ? footAdj(p, code, pos) : 0;
     return Math.max(1, Math.min(20, s / t + foot));
+  }
+
+  /** Meilleur rôle avec ballon du joueur sur l'un de ses postes naturels. */
+  bestRole(p: FmPlayer): { role: RoleRef; pos: PosCode; fit: number } | null {
+    let best: { role: RoleRef; pos: PosCode; fit: number } | null = null;
+    for (const role of this.ref.roles) {
+      if (role.phase === 'oop') continue;
+      for (const pos of this.rolePositions(role)) {
+        if (!p.positions.includes(pos)) continue;
+        const fit = this.roleFit(p, role.code, 'ip', pos);
+        if (fit != null && (!best || fit > best.fit)) best = { role, pos, fit };
+      }
+    }
+    return best;
   }
 
   squadSignals(list: FmPlayer[]): Record<string, number | null> {
