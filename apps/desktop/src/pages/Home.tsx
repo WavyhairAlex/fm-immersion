@@ -2,6 +2,7 @@ import { GAME_IDS, GAMES, type GameId } from '@simloom/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { savesData } from '../lib/data';
 import { useUi } from '../lib/ui-store';
 
@@ -59,12 +60,19 @@ export function Home() {
                 <p className="mt-3 text-xs text-canard/60">
                   {t('home.updated', { date: dateFmt.format(new Date(s.updatedAt)) })}
                 </p>
-                <button
-                  className="mt-4 text-sm font-bold text-corail hover:underline"
-                  onClick={() => remove.mutate(s.id)}
-                >
-                  {t('home.delete')}
-                </button>
+                <div className="mt-4 flex items-center gap-4">
+                  {s.gameId === 'fm' && (
+                    <Link to={`/fm/${s.id}`} className="btn-secondary px-4 py-1.5 text-sm">
+                      {t('home.open')}
+                    </Link>
+                  )}
+                  <button
+                    className="text-sm font-bold text-corail hover:underline"
+                    onClick={() => remove.mutate(s.id)}
+                  >
+                    {t('home.delete')}
+                  </button>
+                </div>
               </div>
             </article>
           );

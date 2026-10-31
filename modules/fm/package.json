@@ -1,0 +1,25 @@
+{
+  "name": "@simloom/module-fm",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Module Simloom pour Football Manager : effectif, contrats, état de forme.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@simloom/db": "workspace:*",
+    "@simloom/shared": "workspace:*",
+    "drizzle-orm": "^0.38.3",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

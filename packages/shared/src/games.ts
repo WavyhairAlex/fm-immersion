@@ -22,5 +22,5 @@ export interface GameInfo {
 export const GAMES: Record<GameId, GameInfo> = {
   tf3: { id: 'tf3', name: 'Transport Fever 3', status: 'available', accent: '#FF6B6B' },
   pz2: { id: 'pz2', name: 'Planet Zoo 2', status: 'available', accent: '#63D1B1' },
-  fm: { id: 'fm', name: 'Football Manager', status: 'soon', accent: '#0F4B58' },
+  fm: { id: 'fm', name: 'Football Manager', status: 'available', accent: '#0F4B58' },
 };

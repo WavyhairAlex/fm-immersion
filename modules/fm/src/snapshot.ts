@@ -1,0 +1,53 @@
+import { z } from 'zod';
+
+/**
+ * Instantané écrit par le plugin BepInEx (format « archivix/1 ») dans
+ * `<dossier FM>\archivix\archivix-snapshot.json`. Le plugin ne fait que lire le jeu ;
+ * toute l'analyse se fait ici, pour que les évolutions passent par les mises à jour
+ * de Simloom sans toucher au plugin.
+ *
+ * Schéma volontairement tolérant : les champs inconnus sont conservés et les
+ * valeurs du jeu peuvent arriver en nombre ou en texte (« 1,2 M€ », « 85 % »).
+ */
+const loose = z.union([z.number(), z.string()]).nullish();
+const range = z.object({ min: loose, max: loose }).passthrough();
+
+export const fmPlayerSchema = z
+  .object({
+    id: z.union([z.number(), z.string()]),
+    name: z.string(),
+    age: z.number().nullish(),
+    positions: z.union([z.string(), z.array(z.string())]).nullish(),
+    positionsText: z.string().nullish(),
+    foot: z.string().nullish(),
+    level: z.number().nullish(),
+    condition: loose,
+    sharpness: loose,
+    morale: z.string().nullish(),
+    contractEnd: z.string().nullish(),
+    wage: loose,
+    wageText: z.string().nullish(),
+    value: loose,
+    valueText: z.string().nullish(),
+    squadStatus: z.string().nullish(),
+    apps: z.number().nullish(),
+    goals: z.number().nullish(),
+    avgRating: z.number().nullish(),
+    injury: z.union([z.string(), z.object({ description: z.string().nullish(), returnDays: z.number().nullish() }).passthrough()]).nullish(),
+    injuryReturnDays: z.number().nullish(),
+    attributes: z.record(z.union([z.number(), range])).nullish(),
+  })
+  .passthrough();
+
+export const fmSnapshotSchema = z
+  .object({
+    schema: z.literal('archivix/1'),
+    game: z.string(),
+    club: z.string(),
+    gameDate: z.string(),
+    players: z.array(fmPlayerSchema),
+  })
+  .passthrough();
+
+export type FmPlayerRaw = z.infer<typeof fmPlayerSchema>;
+export type FmSnapshot = z.infer<typeof fmSnapshotSchema>;

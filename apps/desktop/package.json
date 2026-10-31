@@ -16,6 +16,7 @@
     "@fontsource-variable/fraunces": "^5.1.1",
     "@fontsource-variable/nunito": "^5.1.1",
     "@simloom/db": "workspace:*",
+    "@simloom/module-fm": "workspace:*",
     "@simloom/shared": "workspace:*",
     "@tanstack/react-query": "^5.62.8",
     "@tauri-apps/api": "^2.2.0",
