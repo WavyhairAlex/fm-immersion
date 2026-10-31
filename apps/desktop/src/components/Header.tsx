@@ -6,7 +6,7 @@ export function Header() {
   const otherLang = i18n.resolvedLanguage === 'fr' ? 'en' : 'fr';
 
   return (
-    <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+    <header className="mx-auto flex w-full max-w-screen-2xl items-center justify-between px-6 py-4">
       <div className="flex items-end gap-2">
         <Link to="/" aria-label="Simloom">
           <img src="/brand/logo.svg" alt="Simloom" className="h-9 w-auto" />

@@ -28,7 +28,7 @@ export function Home() {
   const dateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium' });
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-6">
+    <div className="mx-auto max-w-screen-2xl px-6 py-6">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-3xl font-semibold">{t('home.title')}</h1>
         <button className="btn-primary" onClick={() => setCreateSaveOpen(true)}>
