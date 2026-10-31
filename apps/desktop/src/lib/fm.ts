@@ -1,7 +1,7 @@
 import { saves } from '@simloom/db';
 import { fmSnapshotSchema, type FmSnapshot } from '@simloom/module-fm';
 import { fmSnapshots } from '@simloom/module-fm/schema';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq } from 'drizzle-orm';
 import type { Db } from './db';
 
 /** Réglages FM rangés dans saves.extra. */
@@ -31,6 +31,15 @@ export function fmRepo(db: Db) {
         .from(fmSnapshots)
         .where(eq(fmSnapshots.saveId, saveId))
         .orderBy(desc(fmSnapshots.gameDate));
+    },
+
+    /** Tous les instantanés de la partie, du plus ancien au plus récent, pour les courbes et projections. */
+    async all(saveId: string) {
+      return db
+        .select({ gameDate: fmSnapshots.gameDate, data: fmSnapshots.data })
+        .from(fmSnapshots)
+        .where(eq(fmSnapshots.saveId, saveId))
+        .orderBy(asc(fmSnapshots.gameDate));
     },
 
     /** Valide le JSON du plugin puis l'enregistre. Lève une erreur zod si le fichier n'est pas reconnu. */

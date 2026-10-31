@@ -32,6 +32,10 @@ describe('instantanés Football Manager', () => {
     ]);
     const latest = await fm.latest(save.id);
     expect(latest?.data.players.map((p) => p.name)).toEqual(['A', 'B', 'C']);
+    expect((await fm.all(save.id)).map((h) => [h.gameDate, h.data.players.length])).toEqual([
+      ['2026-08-29', 1],
+      ['2026-09-05', 3],
+    ]);
   });
 
   it('refuse un fichier inconnu sans rien enregistrer', async () => {

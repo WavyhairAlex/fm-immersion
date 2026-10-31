@@ -6,7 +6,7 @@ import type { FmSnapshot } from './snapshot';
 /** Familles d'attributs des joueurs de champ, comme sur la fiche du jeu. */
 export const ATTR_FAMILIES = {
   technical: ['Corners', 'Crossing', 'Dribbling', 'Finishing', 'FirstTouch', 'FreeKicks', 'Heading', 'LongShots', 'LongThrows', 'Marking', 'Passing', 'PenaltyTaking', 'Tackling', 'Technique'],
-  mental: ['Aggression', 'Anticipation', 'Bravery', 'Composure', 'Concentration', 'Decisions', 'Determination', 'Flair', 'Leadership', 'OffTheBall', 'Positioning', 'Teamwork', 'Vision', 'WorkRate'],
+  mental: ['Aggression', 'Anticipation', 'Bravery', 'Composure', 'Concentration', 'Decisions', 'Determination', 'Flair', 'Leadership', 'Movement', 'Positioning', 'Teamwork', 'Vision', 'WorkRate'],
   physical: ['Acceleration', 'Agility', 'Balance', 'JumpingReach', 'NaturalFitness', 'Pace', 'Stamina', 'Strength'],
 } as const;
 export type AttrFamily = keyof typeof ATTR_FAMILIES;

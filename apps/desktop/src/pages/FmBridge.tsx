@@ -37,6 +37,7 @@ export function FmBridge({ dataFolder }: { dataFolder: string }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [gameDir, setGameDir] = useState(read(GAME_DIR_KEY) ?? '');
+  const [open, setOpen] = useState(false);
 
   const { data: defaultDir } = useQuery({ queryKey: ['fm', 'bridge', 'default-dir'], queryFn: () => invoke<string | null>('fm_bridge_default_game_dir') });
   useEffect(() => {
@@ -70,9 +71,30 @@ export function FmBridge({ dataFolder }: { dataFolder: string }) {
     <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${ok ? 'bg-eau' : warn ? 'bg-ambre' : 'bg-corail'}`} aria-hidden />
   );
 
+  // Tout va bien : une seule ligne discrète. La carte complète reste affichée dès qu'il y a quelque chose à faire.
+  const healthy = !!status?.gameFound && status.bepinex && !!installed && (upToDate || latest.isError);
+  if (gameDir && !status) return null;
+  if (healthy && !open)
+    return (
+      <p className="mt-3 flex items-center gap-2 text-xs text-brun">
+        <span className="h-2 w-2 rounded-full bg-eau" aria-hidden />
+        {t('fm.bridge.compact', { version: installed })}
+        <button type="button" className="font-bold text-eau-fonce hover:underline" onClick={() => setOpen(true)}>
+          {t('fm.bridge.details')}
+        </button>
+      </p>
+    );
+
   return (
     <section className="card mt-6 p-5">
-      <h2 className="font-display text-lg font-semibold">{t('fm.bridge.title')}</h2>
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="font-display text-lg font-semibold">{t('fm.bridge.title')}</h2>
+        {healthy && (
+          <button type="button" className="text-sm font-bold text-eau-fonce hover:underline" onClick={() => setOpen(false)}>
+            {t('fm.bridge.hide')}
+          </button>
+        )}
+      </div>
       <p className="mt-1 text-sm text-brun">{t('fm.bridge.intro')}</p>
 
       <label className="mt-4 block text-sm font-bold">

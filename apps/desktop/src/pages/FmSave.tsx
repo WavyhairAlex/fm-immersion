@@ -1,4 +1,4 @@
-import { gameFormationOf, normalizePlayer, type FmPlayer, type Line } from '@simloom/module-fm';
+import { gameFormationOf, normalizePlayer, type FmPlayer, type FmSnapshot, type Line, type SquadAt } from '@simloom/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useState } from 'react';
@@ -7,11 +7,15 @@ import { Link, useParams } from 'react-router-dom';
 import { fmData, savesData } from '../lib/data';
 import { FmAnalysis } from './FmAnalysis';
 import { FmBridge } from './FmBridge';
+import { FmCalendar } from './FmCalendar';
+import { FmCompare } from './FmCompare';
 import { FmContracts } from './FmContracts';
+import { FmDepth } from './FmDepth';
 import { FmDressing } from './FmDressing';
 import { FmFinances } from './FmFinances';
 import { FmHome } from './FmHome';
 import { FmLoans } from './FmLoans';
+import { FmProgression } from './FmProgression';
 import { FmTactic } from './FmTactic';
 import { FmWages } from './FmWages';
 
@@ -26,7 +30,7 @@ const SECTIONS = [
   { id: 'club', views: ['finances', 'wages', 'contracts', 'progression'] },
 ] as const;
 type View = (typeof SECTIONS)[number]['views'][number];
-const READY = new Set<View>(['home', 'squad', 'analysis', 'dressing', 'loans', 'tactic', 'finances', 'wages', 'contracts']);
+const READY = new Set<View>(['home', 'squad', 'analysis', 'compare', 'dressing', 'loans', 'tactic', 'calendar', 'depth', 'finances', 'wages', 'contracts', 'progression']);
 const VIEW_KEY = 'simloom.fm.view';
 const readView = (): View => {
   try {
@@ -50,6 +54,7 @@ export function FmSave() {
     select: (rows) => rows.find((s) => s.id === saveId),
   });
   const { data: snapshot, isLoading } = useQuery({ queryKey: [...key, 'latest'], queryFn: () => fmData.latest(saveId) });
+  const { data: all } = useQuery({ queryKey: [...key, 'all'], queryFn: () => fmData.all(saveId) });
   const { data: settings } = useQuery({ queryKey: [...key, 'settings'], queryFn: () => fmData.settings(saveId) });
   const { data: defaultFolder } = useQuery({
     queryKey: ['fm', 'default-folder'],
@@ -84,10 +89,15 @@ export function FmSave() {
   });
 
   const players = useMemo(() => snapshot?.data.players.map(normalizePlayer) ?? [], [snapshot]);
+  const history = useMemo<SquadAt[]>(
+    () => (all ?? []).map((h) => ({ gameDate: h.gameDate, players: (h.data as FmSnapshot).players.map(normalizePlayer) })),
+    [all],
+  );
+  const gameFormation = gameFormationOf(snapshot?.data.tactic);
   const dateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' });
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-6">
+    <div className="mx-auto max-w-screen-2xl px-6 py-6">
       <Link to="/" className="text-sm font-bold text-canard/70 hover:text-canard">
         ← {t('fm.back')}
       </Link>
@@ -167,12 +177,16 @@ export function FmSave() {
             {view === 'home' && <FmHome snap={snapshot.data} players={players} folder={folder} go={go} />}
             {view === 'squad' && <SquadTable players={players} />}
             {view === 'analysis' && <FmAnalysis players={players} gameDate={snapshot.gameDate} />}
+            {view === 'compare' && <FmCompare snap={snapshot.data} players={players} folder={folder} history={history} />}
             {view === 'dressing' && <FmDressing players={players} />}
             {view === 'loans' && <FmLoans snap={snapshot.data} />}
-            {view === 'tactic' && <FmTactic players={players} folder={folder} gameFormation={gameFormationOf(snapshot.data.tactic)} />}
+            {view === 'tactic' && <FmTactic players={players} folder={folder} gameFormation={gameFormation} />}
+            {view === 'calendar' && <FmCalendar snap={snapshot.data} players={players} />}
+            {view === 'depth' && <FmDepth players={players} gameFormation={gameFormation} gameDate={snapshot.gameDate} history={history} />}
             {view === 'finances' && <FmFinances snap={snapshot.data} players={players} />}
             {view === 'wages' && <FmWages players={players} gameDate={snapshot.gameDate} />}
             {view === 'contracts' && <FmContracts players={players} gameDate={snapshot.gameDate} />}
+            {view === 'progression' && <FmProgression history={history} />}
             {!READY.has(view) && (
               <div className="card flex flex-col items-center gap-2 py-10 text-center">
                 <p className="font-display text-lg font-semibold">{t(`fm.views.${view}`)}</p>
