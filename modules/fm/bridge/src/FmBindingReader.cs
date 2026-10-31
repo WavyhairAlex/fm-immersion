@@ -447,6 +447,10 @@ public class FmBindingReader : IGameReader
             public bool Failed;
             public bool Deep;
             public int Signalled;
+            // Requête en cours au niveau courant : gardée pour la désinscrire si le jeu ne répond pas à temps.
+            public Bindings.Key Key;
+            public Bindings.ValueChangedCallback? Cb;
+            public bool Bound;
         }
 
         // Résout chaque chemin niveau par niveau : toutes les requêtes d'un niveau partent dans la même frame.
@@ -555,21 +559,43 @@ public class FmBindingReader : IGameReader
                         Bindings.ValueChangedCallback? cb = null;
                         cb = (Action<Bindings.Key, TypedValue>)((k, v) =>
                         {
+                            // Toujours se désinscrire, même pour une réponse arrivée après le délai :
+                            // une liaison oubliée reste active dans le jeu et s'ajoute à chaque instantané.
+                            var key = k;
+                            MainThread.Enqueue(() => { try { b.Unbind(ref key, cb!); } catch { } });
                             if (Interlocked.Exchange(ref st.Signalled, 1) != 0) return;
+                            st.Bound = false;
                             if (v == null || v.IsNull) { st.Failed = true; st.Cur = null; }
                             else if (last) { st.Result = st.Deep ? Dump(v, 3) : Simple(v); st.Cur = TypedValue.CreateCopyFrom(v); }
                             else st.Cur = TypedValue.CreateCopyFrom(v);
-                            var key = k;
-                            MainThread.Enqueue(() => { try { b.Unbind(ref key, cb!); } catch { } });
                             try { done.Signal(); } catch (ObjectDisposedException) { }
                         });
-                        try { BindingUtils.Request(b, src, st.Segs[lvl], _owner, cb); }
+                        try
+                        {
+                            st.Cb = cb;
+                            st.Key = BindingUtils.Request(b, src, st.Segs[lvl], _owner, cb);
+                            st.Bound = st.Signalled == 0;   // réponse immédiate : déjà désinscrite par le callback
+                        }
                         catch { if (Interlocked.Exchange(ref st.Signalled, 1) == 0) { st.Failed = true; done.Signal(); } }
                     }
                 });
                 done.Wait(timeoutMs);
+                var expired = new List<State>();
                 foreach (var s in active)
-                    if (Interlocked.Exchange(ref s.Signalled, 1) == 0) s.Failed = true;   // timeout
+                    if (Interlocked.Exchange(ref s.Signalled, 1) == 0) { s.Failed = true; if (s.Bound) expired.Add(s); }   // timeout
+                // Délai dépassé : on retire les requêtes restées en attente, pour ne pas encombrer le jeu
+                // (cause probable des gels de l'écran Tactique en 0.2.0 / 0.2.1).
+                if (expired.Count > 0)
+                    MainThread.Enqueue(() =>
+                    {
+                        var b = GameSubsystems.Get<BindingSubsystem>();
+                        foreach (var s in expired)
+                        {
+                            var key = s.Key;
+                            try { b.Unbind(ref key, s.Cb!); } catch { }
+                            s.Bound = false;
+                        }
+                    });
             }
         }
 

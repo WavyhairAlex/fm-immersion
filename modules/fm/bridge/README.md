@@ -22,8 +22,20 @@ le club et le prochain match via le système de bindings de l'interface du jeu, 
 `BepInEx\config\fr.archivix.bridge.cfg`, clé `Dossier` : dossier où écrire les instantanés.
 Par défaut `Documents\Sports Interactive\Football Manager 27\archivix`. Simloom le renseigne à l'installation.
 
-Autres clés : `LireTactique` (oui par défaut), `LireEfficacite` (non par défaut, expérimental),
+Autres clés : `LireTactique` (non par défaut), `LireEfficacite` (non par défaut, expérimental),
 `RelectureSecondes` (300 par défaut, 60 au minimum : relecture complète même sans changement de date).
+
+## Requêtes au jeu : règles
+
+- Chaque requête de binding est **désinscrite** dès sa réponse, même tardive, et **au délai dépassé** (0.2.2).
+  Avant, une requête sans réponse restait active dans le jeu et s'ajoutait à chaque instantané : cause probable des gels
+  de l'écran Tactique du 31/10 (FM27 figé ou arrêté pendant que des lectures de la tactique attendaient).
+- Certaines propriétés sont « de contexte » : le jeu ne les résout que si la requête fournit un contexte
+  (`BindingUtils.BuildRequest(...).AddContext(nom, valeur).BindOneShot(propriété, …)` ;
+  `BindingUtils.RequiresContext(référence, propriété)` permet de le savoir). Sans contexte, elles ne répondent jamais.
+  C'est le cas des pistes pour la compo (joueur par poste, rôles « Personnalisée ») : `PlayerFromTeamSelectionIndex`,
+  `PositionFromTeamSelectionIndex`, `PlayerTeamSelectionIndex`, `TeamSelection`… À tester avec un contexte d'index de
+  sélection, jamais pendant que l'écran Tactique est ouvert.
 
 ## Mises à jour
 
