@@ -11,8 +11,9 @@ Le cadrage complet est dans le document « Simloom — Cadrage » (Claude Docs).
 - **Appli de bureau, pas de site web** : aucun serveur à payer ni à maintenir. (Une première version web avec
   comptes et API a été abandonnée en octobre 2026 pour cette raison.)
 - **Tout est local** : pas de compte, pas de connexion, aucune donnée envoyée. Les parties sont dans une base
-  SQLite sur le PC (`%APPDATA%\app.simloom.desktop\simloom.db`). La seule requête réseau est la recherche de
-  mise à jour au démarrage (GitHub Releases).
+  SQLite sur le PC (`%APPDATA%\app.simloom.desktop\simloom.db`). Les seules requêtes réseau vont vers GitHub
+  Releases : la recherche de mise à jour au démarrage, et, à la demande du joueur, le téléchargement du plugin FM27
+  (`modules/fm/bridge`, vérifié par SHA-256, voir son README).
 - **Mises à jour automatiques** au lancement (`UpdateGate`) via `tauri-plugin-updater`. Les fichiers de mise à
   jour sont signés avec une clé minisign (secret GitHub `TAURI_SIGNING_PRIVATE_KEY`, clé publique dans
   `tauri.conf.json`). **Perdre cette clé = plus aucune mise à jour possible pour les installations existantes.**

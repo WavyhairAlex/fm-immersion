@@ -49,10 +49,14 @@ pub fn fm_read_snapshot(folder: String) -> Result<String, FmError> {
     read_snapshot(Path::new(&folder))
 }
 
-/// Dossier par défaut : Documents\Sports Interactive\Football Manager 27\archivix.
+/// Dossier par défaut : celui réglé dans le plugin s'il est installé, sinon
+/// Documents\Sports Interactive\Football Manager 27\archivix.
 /// Le joueur peut le changer s'il a déplacé ses données de jeu (autre disque…).
 #[tauri::command]
 pub fn fm_default_folder(app: tauri::AppHandle) -> Option<String> {
+    if let Some(dir) = crate::fm_bridge::find_game_dir().and_then(|g| crate::fm_bridge::plugin_data_dir(&g)) {
+        return Some(dir);
+    }
     let docs: PathBuf = app.path().document_dir().ok()?;
     Some(
         docs.join("Sports Interactive")

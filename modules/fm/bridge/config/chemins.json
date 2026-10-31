@@ -1,0 +1,19 @@
+{
+  "_aide": "Données supplémentaires lues dans FM27 à chaque instantané, sans recompiler ni réinstaller le plugin. Clé = nom dans l'instantané (bloc custom), valeur = chemin de propriétés FM27 séparées par /. Racines : partie (game.), equipe (équipe du club), club, tactique, joueur (chaque joueur). profond = clés dont la valeur composée (liste, objet) est convertie en JSON.",
+  "partie": {},
+  "equipe": {
+    "formationLaPlusUtilisee": "MostUsedFormation",
+    "joursAvantProchainMatch": "NextMatchDaysText"
+  },
+  "club": {
+    "reputationDivision": "DivisionReputation"
+  },
+  "tactique": {
+    "nomTactique": "Name"
+  },
+  "joueur": {
+    "risqueBlessureGlobal": "InjuryRiskLevel",
+    "etatAffutage": "SharpnessStatusDescription"
+  },
+  "profond": []
+}

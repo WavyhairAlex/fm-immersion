@@ -1,5 +1,6 @@
 mod db;
 mod fm;
+mod fm_bridge;
 
 use std::sync::Mutex;
 use tauri::Manager;
@@ -17,7 +18,16 @@ pub fn run() {
             app.manage(db::Db(Mutex::new(conn)));
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![db::db_query, db::db_batch, fm::fm_read_snapshot, fm::fm_default_folder])
+        .invoke_handler(tauri::generate_handler![
+            db::db_query,
+            db::db_batch,
+            fm::fm_read_snapshot,
+            fm::fm_default_folder,
+            fm_bridge::fm_bridge_status,
+            fm_bridge::fm_bridge_latest,
+            fm_bridge::fm_bridge_install,
+            fm_bridge::fm_bridge_default_game_dir
+        ])
         .run(tauri::generate_context!())
         .expect("impossible de démarrer Simloom");
 }

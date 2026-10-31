@@ -45,16 +45,22 @@ export interface FmPlayer {
   avgRating: number | null;
   injury: string | null;
   injuryDays: number | null;
+  /** Attributs connus (milieu de fourchette si le recrutement ne les a pas affinés), sans le préfixe « Attribute ». */
+  attributes: Record<string, number>;
 }
 
 export function normalizePlayer(p: FmPlayerRaw): FmPlayer {
   const positions = parsePositions(p.positionsText ?? p.positions);
   const isGK = positions[0] === 'GB';
   const skip = isGK ? GK_SKIP : GK_ONLY;
-  const values = Object.entries(p.attributes ?? {})
-    .filter(([k]) => !skip.has(k.replace(/^Attribute/, '')))
-    .map(([, v]) => attrValue(v))
-    .filter((x): x is number => x != null);
+  const attributes: Record<string, number> = {};
+  for (const [k, v] of Object.entries(p.attributes ?? {})) {
+    const n = attrValue(v);
+    if (n != null) attributes[k.replace(/^Attribute/, '')] = n;
+  }
+  const values = Object.entries(attributes)
+    .filter(([k]) => !skip.has(k))
+    .map(([, v]) => v);
   const level = p.level ?? (values.length ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10 : null);
   const injury = typeof p.injury === 'string' ? p.injury : (p.injury?.description ?? null);
   const injuryDays = p.injuryReturnDays ?? (typeof p.injury === 'object' ? p.injury?.returnDays : null) ?? null;
@@ -79,5 +85,6 @@ export function normalizePlayer(p: FmPlayerRaw): FmPlayer {
     avgRating: p.avgRating ?? null,
     injury: injury || null,
     injuryDays,
+    attributes,
   };
 }

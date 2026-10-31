@@ -26,7 +26,7 @@
   },
   "footer": {
     "disclaimer": "Simloom is an independent project, not affiliated with the publishers of the games mentioned. Game names belong to their respective owners.",
-    "privacy": "Your data stays on your PC. Simloom does not collect or send any personal data; only the update check contacts GitHub at startup."
+    "privacy": "Your data stays on your PC. Simloom does not collect or send any personal data; it only contacts GitHub to check for updates at startup and, when you ask, to download the FM27 plugin."
   },
   "fm": {
     "back": "My saves",
@@ -36,7 +36,6 @@
     "import": "Import from FM27",
     "importError": "Import failed: {{reason}}",
     "empty": "No squad imported yet. Start FM27 with the plugin, load your save, then click “Import from FM27”.",
-    "squad": "Squad",
     "alert": {
       "injured_one": "{{count}} injured",
       "injured_other": "{{count}} injured",
@@ -62,6 +61,98 @@
       "contract": "Contract ends",
       "wage": "Wage",
       "status": "Status"
+    },
+    "tabs": {
+      "squad": "Squad",
+      "analysis": "Analysis"
+    },
+    "an": {
+      "xi": "First XI level",
+      "xiSub": "best player in each position, out of 20",
+      "bench": "Bench level",
+      "gap": "gap with the XI: {{gap}}",
+      "xiAge": "First XI average age",
+      "squadAge": "squad: {{age}} years",
+      "lines": "Strongest unit",
+      "weakest": "weakest: {{line}}",
+      "todo": "Priorities",
+      "byLine": "By unit",
+      "lineDetail": "starters {{starters}} · backups {{bench}} · {{age}} yrs",
+      "ages": "Age profile",
+      "age": {
+        "u21": "21 and under",
+        "u25": "22 to 25",
+        "u30": "26 to 29",
+        "o30": "30 and over"
+      },
+      "depth": "Depth by position",
+      "depthHelp": "Natural players in each position. Red: nobody in a key position; amber: only one player.",
+      "ageXi_one": "{{count}} player, {{xi}} in the XI",
+      "ageXi_other": "{{count}} players, {{xi}} in the XI"
+    },
+    "todo": {
+      "doublePos": "Add cover at {{pos}}",
+      "secondKeeper": "Find a second goalkeeper",
+      "extend_one": "Extend a starter's contract",
+      "extend_other": "Extend {{count}} starters' contracts",
+      "payroll": "Free up wage budget",
+      "youngXi_one": "One young starter to develop",
+      "youngXi_other": "{{count}} young starters to develop"
+    },
+    "sum": {
+      "players": "Players",
+      "avgAge": "Average age",
+      "wages": "Wages / month",
+      "wageRoom": "Wage room",
+      "transfer": "Transfer budget",
+      "next": "Next match",
+      "home": "at home",
+      "away": "away",
+      "inDays_zero": "today",
+      "inDays_one": "tomorrow",
+      "inDays_other": "in {{count}} days",
+      "noMatch": "Available with the latest plugin version.",
+      "all": "All indicators",
+      "under21": "21 and under",
+      "over30": "30 and over",
+      "condition": "Average condition",
+      "sharpness": "Average sharpness",
+      "injured": "Injured",
+      "goals": "Goals",
+      "rating": "Average rating",
+      "topScorer": "Top scorer",
+      "expiring": "Contracts ≤ 6 months",
+      "avgWage": "Average wage",
+      "topEarner": "Highest wage",
+      "technical": "Technical",
+      "mental": "Mental",
+      "physical": "Physical",
+      "g": {
+        "squad": "Squad",
+        "form": "Form",
+        "season": "Season",
+        "contracts": "Contracts",
+        "profile": "Profile (/20, outfield)"
+      }
+    },
+    "bridge": {
+      "title": "FM27 plugin",
+      "intro": "The plugin reads your squad in FM27 (read-only) and hands it to Simloom. Simloom installs and updates it for you.",
+      "gameDir": "FM27 folder (the one containing fm.exe)",
+      "gameFound": "FM27 found",
+      "gameMissing": "fm.exe not found in this folder",
+      "bepinex": "BepInEx installed",
+      "bepinexMissing": "BepInEx 6 (IL2CPP) is not installed: the plugin needs it.",
+      "running": "FM27 is running: close the game to install or update.",
+      "installed": "Installed version: {{version}}",
+      "notInstalled": "Plugin not installed yet",
+      "latest": "Latest version: {{version}}",
+      "upToDate": "Up to date",
+      "install": "Install the plugin",
+      "update": "Update to {{version}}",
+      "done": "Plugin installed. Start FM27 and load your save.",
+      "error": "Installation failed: {{reason}}",
+      "offline": "Could not check the latest version (offline?)."
     }
   }
 }

@@ -5,6 +5,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { fmData, savesData } from '../lib/data';
+import { FmAnalysis } from './FmAnalysis';
+import { FmBridge } from './FmBridge';
+import { FmSummary } from './FmSummary';
 
 const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
 
@@ -27,6 +30,7 @@ export function FmSave() {
     queryFn: () => invoke<string | null>('fm_default_folder'),
   });
 
+  const [tab, setTab] = useState<'squad' | 'analysis'>('squad');
   const [folder, setFolder] = useState('');
   useEffect(() => {
     setFolder(settings?.fmFolder ?? defaultFolder ?? '');
@@ -65,23 +69,26 @@ export function FmSave() {
         </div>
       </div>
 
+
       <form
-        className="card mt-6 flex flex-wrap items-end gap-3"
+        className="mt-4 flex flex-wrap items-center gap-3"
         onSubmit={(e) => {
           e.preventDefault();
           importSnap.mutate();
         }}
       >
-        <label className="min-w-[18rem] flex-1 text-sm font-bold">
-          {t('fm.folder')}
-          <input className="input mt-1 font-normal" required value={folder} onChange={(e) => setFolder(e.target.value)} />
-        </label>
         <button className="btn-primary" disabled={importSnap.isPending || !folder}>
           {t('fm.import')}
         </button>
-        <p className="w-full text-xs text-canard/60">{t('fm.folderHelp')}</p>
+        <details className="text-sm" open={!snapshot}>
+          <summary className="cursor-pointer font-bold text-canard/70">{t('fm.folder')}</summary>
+          <input className="input mt-2 min-w-[24rem]" required value={folder} onChange={(e) => setFolder(e.target.value)} aria-label={t('fm.folder')} />
+          <p className="mt-1 max-w-xl text-xs text-canard/60">{t('fm.folderHelp')}</p>
+        </details>
         {importSnap.isError && <p className="w-full text-sm text-corail">{t('fm.importError', { reason: String(importSnap.error?.message ?? importSnap.error) })}</p>}
       </form>
+
+      <FmBridge dataFolder={folder} />
 
       {!isLoading && !snapshot && (
         <div className="card mt-6 flex flex-col items-center gap-3 py-10 text-center">
@@ -89,6 +96,8 @@ export function FmSave() {
           <p className="max-w-md text-brun">{t('fm.empty')}</p>
         </div>
       )}
+
+      {snapshot && players.length > 0 && <FmSummary snap={snapshot.data} players={players} />}
 
       {groups && (
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
@@ -98,7 +107,25 @@ export function FmSave() {
         </div>
       )}
 
-      {players.length > 0 && <SquadTable players={players} />}
+      {snapshot && players.length > 0 && (
+        <>
+          <div className="mt-8 flex gap-2" role="tablist">
+            {(['squad', 'analysis'] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                role="tab"
+                aria-selected={tab === k}
+                onClick={() => setTab(k)}
+                className={`rounded-full px-4 py-1.5 font-bold ${tab === k ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
+              >
+                {t(`fm.tabs.${k}`)}
+              </button>
+            ))}
+          </div>
+          {tab === 'squad' ? <SquadTable players={players} /> : <FmAnalysis players={players} gameDate={snapshot.gameDate} />}
+        </>
+      )}
     </div>
   );
 }
@@ -126,6 +153,7 @@ function SquadTable({ players }: { players: FmPlayer[] }) {
   const [line, setLine] = useState<Line | null>(null);
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'level', desc: true });
   const money = new Intl.NumberFormat(i18n.resolvedLanguage, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
+  const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium' });
 
   const rows = useMemo(() => {
     const list = line ? players.filter((p) => p.line === line) : players;
@@ -154,9 +182,8 @@ function SquadTable({ players }: { players: FmPlayer[] }) {
   );
 
   return (
-    <section className="mt-8">
+    <section className="mt-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold">{t('fm.squad')}</h2>
         <div className="flex flex-wrap gap-2">
           {[null, ...LINES].map((l) => (
             <button
@@ -203,7 +230,7 @@ function SquadTable({ players }: { players: FmPlayer[] }) {
                 <td className="px-3 py-2">{p.age ?? '–'}</td>
                 <td className="px-3 py-2 font-bold">{p.level?.toFixed(1) ?? '–'}</td>
                 <td className="px-3 py-2">{p.condition != null ? `${Math.round(p.condition)} %` : '–'}</td>
-                <td className="px-3 py-2">{p.contractEnd ?? '–'}</td>
+                <td className="px-3 py-2">{p.contractEnd ? date.format(new Date(p.contractEnd)) : '–'}</td>
                 <td className="px-3 py-2">{p.wage != null ? money.format(p.wage) : '–'}</td>
                 <td className="px-3 py-2 text-brun">{p.squadStatus ?? '–'}</td>
               </tr>

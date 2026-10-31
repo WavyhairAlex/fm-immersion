@@ -20,9 +20,9 @@ Tes données sont dans `%APPDATA%\app.simloom.desktop\simloom.db` : supprime ce 
 ## Confidentialité
 
 Simloom ne collecte, ne stocke à distance ni n'envoie aucune donnée personnelle. Tes parties restent dans
-une base SQLite sur ton PC. La seule connexion réseau est la recherche de mise à jour au démarrage, qui
-interroge GitHub (`github.com/amnesix-nt/simloom/releases`) ; GitHub voit alors ton adresse IP, comme pour
-toute visite de son site.
+une base SQLite sur ton PC. Simloom ne se connecte qu'à GitHub (`github.com/amnesix-nt/simloom/releases`) :
+pour chercher ses mises à jour au démarrage et, seulement si tu le demandes, pour télécharger le plugin FM27.
+GitHub voit alors ton adresse IP, comme pour toute visite de son site.
 
 ## Politique de signature du code
 
@@ -31,7 +31,9 @@ la SignPath Foundation. La mention officielle sera alors :
 *Free code signing provided by [SignPath.io](https://signpath.io), certificate by [SignPath Foundation](https://signpath.org).*
 
 Seuls les binaires construits par GitHub Actions à partir de ce dépôt sont signés, et chaque signature
-est approuvée manuellement.
+est approuvée manuellement. Le plugin FM27 (`modules/fm/bridge`) n'en fait pas partie : il se compile contre des
+fichiers du jeu qui ne peuvent pas être publiés, il est donc compilé en local et distribué à part, non signé,
+avec une empreinte SHA-256 vérifiée par Simloom avant installation.
 
 | Rôle | Membres |
 |---|---|
