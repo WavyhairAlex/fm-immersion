@@ -39,8 +39,10 @@ public class Plugin : BasePlugin
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sports Interactive", "Football Manager 27", "archivix"),
             "Dossier où écrire archivix-snapshot.json (en général <données FM27>\\archivix).").Value;
         // Réglages de prudence : chaque lecture passe par le système d'affichage du jeu, qui doit rester fluide.
-        ReadTactic = Config.Bind("Archivix", "LireTactique", true,
-            "Lire la tactique active (nom, mentalité, postes, consignes).").Value;
+        // Désactivé par défaut : lire la tactique pendant que l'écran Tactique est ouvert a figé puis planté FM27
+        // (31/10/2026, erreur TacticalPlannerTool « Out of bounds index: -1 »).
+        ReadTactic = Config.Bind("Archivix", "LireTactique", false,
+            "Lire la tactique active (nom, mentalité, postes, consignes). Risqué : peut figer FM27 si l'écran Tactique est ouvert.").Value;
         ReadEffectiveness = Config.Bind("Archivix", "LireEfficacite", false,
             "Lire l'efficacité tactique FM27 (expérimental : le jeu ne répond pas encore à ces lectures).").Value;
         RereadSeconds = Math.Max(60, Config.Bind("Archivix", "RelectureSecondes", 300,
