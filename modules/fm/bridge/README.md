@@ -22,6 +22,9 @@ le club et le prochain match via le système de bindings de l'interface du jeu, 
 `BepInEx\config\fr.archivix.bridge.cfg`, clé `Dossier` : dossier où écrire les instantanés.
 Par défaut `Documents\Sports Interactive\Football Manager 27\archivix`. Simloom le renseigne à l'installation.
 
+Autres clés : `LireTactique` (oui par défaut), `LireEfficacite` (non par défaut, expérimental),
+`RelectureSecondes` (300 par défaut, 60 au minimum : relecture complète même sans changement de date).
+
 ## Mises à jour
 
 1. **Données à lire** : modifier `config/chemins.json`. Simloom le redéploie avec le plugin ; le plugin le relit à chaque
