@@ -90,7 +90,7 @@ const POS_BASE: Record<string, string[]> = {
 const POS_BASE_OF: Record<PosCode, string> = { GB: 'GK', DC: 'CB', DD: 'FB', DG: 'FB', DLD: 'WB', DLG: 'WB', MDF: 'DM', MC: 'CM', MD: 'WM', MG: 'WM', MOD: 'W', MOG: 'W', MOC: 'AM', BT: 'ST' };
 const ENGINE_KEYS = ['Acceleration', 'Pace', 'Anticipation', 'Decisions'];
 const FIT_W = { keys: 0.7, base: 0.2, engine: 0.1 };
-const INVERTED = new Set(['IFB', 'IWB', 'IF', 'IW', 'IOW']);
+export const INVERTED = new Set(['IFB', 'IWB', 'IF', 'IW', 'IOW']);
 
 /** Signaux agrégés de l'effectif, comparés aux exigences des styles. */
 const SIGNALS: Record<string, string[]> = {
@@ -115,7 +115,7 @@ export const attrOf = (p: FmPlayer, k: string): number | null => p.attributes[k]
 
 export const sideOf = (pos: PosCode): 'L' | 'R' | null => (/^(DG|DLG|MG|MOG)$/.test(pos) ? 'L' : /^(DD|DLD|MD|MOD)$/.test(pos) ? 'R' : null);
 
-function footInfo(p: FmPlayer) {
+export function footInfo(p: FmPlayer) {
   const f = (p.foot ?? '').toLowerCase();
   if (/deux|ambi|both|either/.test(f)) return { strong: 'B' as const, only: false };
   const strong = /gauch|left/.test(f) ? ('L' as const) : /droit|right/.test(f) ? ('R' as const) : null;

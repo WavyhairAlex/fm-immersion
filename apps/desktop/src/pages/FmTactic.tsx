@@ -6,6 +6,7 @@ import {
   knownFormation,
   mergeReference,
   phaseXY,
+  playerInstructions,
   rolePos,
   shapeOf,
   spreadXY,
@@ -245,9 +246,61 @@ export function FmTactic({ players, folder, gameFormation }: { players: FmPlayer
           </ol>
         </section>
       </div>
+
+      <section className="card">
+        <h2 className="text-xl font-semibold">{t('fm.pi.title')}</h2>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {plan.slots
+            .filter((sl) => sl.player)
+            .map((sl, i) => {
+              const adv = playerInstructions(engine, sl, style, plan.slots);
+              return (
+                <div key={i} className="rounded-xl bg-creme/50 px-3 py-2 text-sm">
+                  <div className="flex items-baseline gap-2">
+                    <span className="rounded-full bg-eau/20 px-2 py-0.5 text-xs font-bold text-canard">{POS_LABEL[sl.pos]}</span>
+                    <b className="text-canard">{sl.player!.name}</b>
+                  </div>
+                  <p className="mb-1 mt-0.5 text-xs text-brun">
+                    {roleName(sl.ip)} · {roleName(sl.oop)}
+                  </p>
+                  {adv.list.length ? (
+                    adv.list.map((x) => (
+                      <div key={x.id} className="py-0.5">
+                        <span className={`mr-1 rounded-full px-2 py-0.5 text-xs font-bold ${x.phase === 'ip' ? 'bg-eau/30 text-canard' : 'bg-canard/10 text-canard'}`}>
+                          {t(`fm.pi.${x.phase}`)}
+                        </span>
+                        <b className="text-canard">{t(`fm.pi.id.${x.id}`)}</b>{' '}
+                        <span className="text-xs text-brun">{t(`fm.pi.why.${x.why}`, fmtVals(x.vals, nf1))}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-brun">{t('fm.pi.nothing')}</p>
+                  )}
+                  {adv.switches.map((w) => (
+                    <p key={w.to} className="mt-1 text-xs text-canard">
+                      →{' '}
+                      {t('fm.pi.switch', {
+                        phase: t(w.phase === 'ip' ? 'fm.pi.phaseIp' : 'fm.pi.phaseOop'),
+                        from: roleName(w.from),
+                        to: roleName(w.to),
+                        what: t(`fm.pi.id.${w.unlocks}`),
+                      })}
+                    </p>
+                  ))}
+                </div>
+              );
+            })}
+        </div>
+        <p className="mt-3 text-xs text-brun">{t('fm.pi.help')}</p>
+        <p className="mt-1 text-xs text-brun">{t('fm.pi.locks')}</p>
+      </section>
     </div>
   );
 }
+
+/** Valeurs d'une raison : les notes sur 20 au format de la langue. */
+const fmtVals = (vals: Record<string, number | string>, nf: Intl.NumberFormat) =>
+  Object.fromEntries(Object.entries(vals).map(([k, v]) => [k, typeof v === 'number' ? nf.format(v) : v]));
 
 /** Détail d'un contrôle d'équilibre, avec ses valeurs. */
 function checkText(t: (k: string, o?: Record<string, unknown>) => string, c: BalanceCheck, fmt: (x: number) => string): string {

@@ -21,3 +21,4 @@ export * from './tactic-defaults';
 export * from './club';
 export * from './progress';
 export * from './project';
+export * from './instructions';
