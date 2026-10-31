@@ -135,6 +135,32 @@ pub fn config_text(data_dir: &str) -> String {
     )
 }
 
+/// Réglage à écrire lors d'une installation : on remplace seulement « Dossier » et on garde les autres
+/// réglages du joueur (LireTactique, RelectureSecondes…) s'il en a déjà.
+pub fn merged_config_text(existing: Option<&str>, data_dir: &str) -> String {
+    let Some(cfg) = existing.filter(|c| configured_data_dir(c).is_some() || c.contains("[Archivix]")) else {
+        return config_text(data_dir);
+    };
+    let mut found = false;
+    let mut out: Vec<String> = cfg
+        .lines()
+        .map(|l| {
+            let is_dossier = l.trim().strip_prefix("Dossier").is_some_and(|r| r.trim_start().starts_with('='));
+            if is_dossier {
+                found = true;
+                format!("Dossier = {data_dir}")
+            } else {
+                l.to_owned()
+            }
+        })
+        .collect();
+    if !found {
+        return config_text(data_dir);
+    }
+    out.push(String::new());
+    out.join("\n")
+}
+
 fn get(url: &str) -> Result<Vec<u8>, BridgeError> {
     let resp = ureq::get(url)
         .set("User-Agent", "Simloom")
@@ -209,7 +235,9 @@ pub fn install(game: &Path, data_dir: &Path) -> Result<BridgeStatus, BridgeError
         write_atomic(&dest, bytes)?;
     }
     write_atomic(&plugin_dir(game).join("version.json"), serde_json::json!({ "version": manifest.version, "tag": tag }).to_string().as_bytes())?;
-    write_atomic(&game.join("BepInEx").join("config").join("fr.archivix.bridge.cfg"), config_text(&data_dir.to_string_lossy()).as_bytes())?;
+    let cfg_path = game.join("BepInEx").join("config").join("fr.archivix.bridge.cfg");
+    let existing = std::fs::read_to_string(&cfg_path).ok();
+    write_atomic(&cfg_path, merged_config_text(existing.as_deref(), &data_dir.to_string_lossy()).as_bytes())?;
     Ok(status(game))
 }
 
@@ -366,5 +394,16 @@ mod tests {
     #[test]
     fn reglage_bepinex() {
         assert!(config_text(r"D:\FM\archivix").contains(r"Dossier = D:\FM\archivix"));
+    }
+
+    #[test]
+    fn installation_garde_les_reglages_du_joueur() {
+        let cfg = "[Archivix]\r\n\r\nDossier = C:\\ancien\r\n\r\nLireTactique = false\r\nRelectureSecondes = 300\r\n";
+        let merged = merged_config_text(Some(cfg), r"D:\FM\archivix");
+        assert_eq!(configured_data_dir(&merged).as_deref(), Some(r"D:\FM\archivix"));
+        assert!(merged.contains("LireTactique = false"));
+        assert!(merged.contains("RelectureSecondes = 300"));
+        assert!(!merged.contains("ancien"));
+        assert_eq!(merged_config_text(None, r"D:\x"), config_text(r"D:\x"));
     }
 }
