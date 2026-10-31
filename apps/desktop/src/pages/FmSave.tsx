@@ -102,40 +102,40 @@ export function FmSave() {
   const dateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' });
 
   return (
-    <div className="w-full px-6 py-6 xl:px-10">
-      <Link to="/" className="text-sm font-bold text-canard/70 hover:text-canard">
-        ← {t('fm.back')}
-      </Link>
-      <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{t('home.for', { game: 'Football Manager' })}</p>
-          <h1 className="text-3xl font-semibold">{save?.name ?? '…'}</h1>
+    <div className="w-full px-6 py-4 xl:px-10">
+      {/* En-tête compact : partie et contexte à gauche, import et plugin à droite. */}
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+        <div className="flex min-w-0 flex-wrap items-baseline gap-x-3">
+          <Link to="/" className="text-sm font-bold text-canard/70 hover:text-canard" title={t('fm.back')}>
+            ←
+          </Link>
+          <h1 className="text-2xl font-semibold">{save?.name ?? '…'}</h1>
           {snapshot && (
-            <p className="mt-1 text-sm text-brun">
+            <span className="text-sm text-brun">
               {t('fm.context', { club: snapshot.club, date: dateFmt.format(new Date(snapshot.gameDate)), count: snapshot.playerCount })}
-            </p>
+            </span>
           )}
         </div>
+        <form
+          className="flex flex-wrap items-center gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            importSnap.mutate();
+          }}
+        >
+          <details className="relative text-sm" open={!snapshot}>
+            <summary className="cursor-pointer font-bold text-canard/70">{t('fm.folder')}</summary>
+            <div className={snapshot ? 'absolute right-0 z-20 mt-2 w-[28rem] rounded-xl bg-white p-3 shadow-lg ring-1 ring-canard/10' : 'mt-2'}>
+              <input className="input w-full" required value={folder} onChange={(e) => setFolder(e.target.value)} aria-label={t('fm.folder')} />
+              <p className="mt-1 text-xs text-canard/60">{t('fm.folderHelp')}</p>
+            </div>
+          </details>
+          <button className="btn-primary px-4 py-1.5 text-sm" disabled={importSnap.isPending || !folder}>
+            {t('fm.import')}
+          </button>
+        </form>
       </div>
-
-
-      <form
-        className="mt-4 flex flex-wrap items-center gap-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          importSnap.mutate();
-        }}
-      >
-        <button className="btn-primary" disabled={importSnap.isPending || !folder}>
-          {t('fm.import')}
-        </button>
-        <details className="text-sm" open={!snapshot}>
-          <summary className="cursor-pointer font-bold text-canard/70">{t('fm.folder')}</summary>
-          <input className="input mt-2 min-w-[24rem]" required value={folder} onChange={(e) => setFolder(e.target.value)} aria-label={t('fm.folder')} />
-          <p className="mt-1 max-w-xl text-xs text-canard/60">{t('fm.folderHelp')}</p>
-        </details>
-        {importSnap.isError && <p className="w-full text-sm text-corail">{t('fm.importError', { reason: String(importSnap.error?.message ?? importSnap.error) })}</p>}
-      </form>
+      {importSnap.isError && <p className="mt-2 text-sm text-corail">{t('fm.importError', { reason: String(importSnap.error?.message ?? importSnap.error) })}</p>}
 
       <FmBridge dataFolder={folder} />
 
@@ -147,8 +147,31 @@ export function FmSave() {
       )}
 
       {snapshot && players.length > 0 && (
-        <>
-          <nav className="mt-8 flex flex-wrap gap-2" role="tablist" aria-label={t('fm.nav')}>
+        <div className="mt-4 lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-6">
+          {/* Navigation : colonne à gauche sur grand écran, onglets au-dessus sinon. */}
+          <nav className="hidden lg:block" aria-label={t('fm.nav')}>
+            <div className="sticky top-4 space-y-3">
+              {SECTIONS.map((s) => (
+                <div key={s.id}>
+                  {s.views.length > 1 && <p className="px-2 text-xs font-bold uppercase tracking-wide text-canard/50">{t(`fm.sections.${s.id}`)}</p>}
+                  {s.views.map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      aria-current={v === view ? 'page' : undefined}
+                      onClick={() => go(v)}
+                      className={`block w-full rounded-lg px-2 py-1 text-left text-sm font-bold ${v === view ? 'bg-canard text-white' : 'text-canard hover:bg-white'}`}
+                    >
+                      {t(`fm.views.${v}`)}
+                    </button>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </nav>
+          <div className="min-w-0">
+          <div className="lg:hidden">
+          <nav className="flex flex-wrap gap-2" role="tablist" aria-label={t('fm.nav')}>
             {SECTIONS.map((s) => (
               <button
                 key={s.id}
@@ -177,7 +200,8 @@ export function FmSave() {
               ))}
             </div>
           )}
-          <div className="mt-4">
+          </div>
+          <div className="mt-4 lg:mt-0">
             {view === 'home' && <FmHome snap={snapshot.data} players={players} folder={folder} go={go} />}
             {view === 'squad' && <SquadTable players={players} />}
             {view === 'analysis' && <FmAnalysis players={players} gameDate={snapshot.gameDate} />}
@@ -197,7 +221,8 @@ export function FmSave() {
             {view === 'contracts' && <FmContracts players={players} gameDate={snapshot.gameDate} />}
             {view === 'progression' && <FmProgression history={history} />}
           </div>
-        </>
+          </div>
+        </div>
       )}
     </div>
   );

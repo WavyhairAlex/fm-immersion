@@ -76,7 +76,7 @@ export function FmBridge({ dataFolder }: { dataFolder: string }) {
   if (gameDir && !status) return null;
   if (healthy && !open)
     return (
-      <p className="mt-3 flex items-center gap-2 text-xs text-brun">
+      <p className="mt-1 flex items-center gap-2 text-xs text-brun">
         <span className="h-2 w-2 rounded-full bg-eau" aria-hidden />
         {t('fm.bridge.compact', { version: installed })}
         <button type="button" className="font-bold text-eau-fonce hover:underline" onClick={() => setOpen(true)}>

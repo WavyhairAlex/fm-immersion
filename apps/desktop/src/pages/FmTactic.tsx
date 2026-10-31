@@ -120,11 +120,11 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
   const other: Phase = phase === 'ip' ? 'oop' : 'ip';
 
   return (
-    <div className="mt-6 space-y-6">
-      <div className="flex flex-wrap items-end gap-4">
-        <label className="text-sm font-bold">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="flex items-center gap-2 whitespace-nowrap text-sm font-bold" title={style.summary ?? undefined}>
           {t('fm.tac.style')}
-          <select className="input mt-1 block font-normal" value={style.id} onChange={(e) => update({ style: e.target.value, form: undefined })}>
+          <select className="input py-1.5 font-normal" value={style.id} onChange={(e) => update({ style: e.target.value, form: undefined })}>
             {ranked.map((r) => (
               <option key={r.style.id} value={r.style.id}>
                 {styleName(r.style)} · {pct(r.fit)}
@@ -132,9 +132,9 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
             ))}
           </select>
         </label>
-        <label className="text-sm font-bold">
+        <label className="flex items-center gap-2 whitespace-nowrap text-sm font-bold">
           {t('fm.tac.formation')}
-          <select className="input mt-1 block font-normal" value={form} disabled={fromGame} onChange={(e) => update({ form: e.target.value })}>
+          <select className="input py-1.5 font-normal" value={form} disabled={fromGame} onChange={(e) => update({ form: e.target.value })}>
             {fromGame && !FORMATIONS[form] && <option value={form}>{form || gameFormation}</option>}
             {plans.map((p) => (
               <option key={p.form} value={p.form}>
@@ -144,7 +144,7 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
           </select>
         </label>
         {gamePlan && (
-          <div className="flex gap-1 self-end" role="tablist">
+          <div className="flex gap-1" role="tablist">
             {(['game', 'simloom'] as const).map((src) => (
               <button
                 key={src}
@@ -159,11 +159,11 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
             ))}
           </div>
         )}
-        {gameFormation && <span className="rounded-full bg-eau/20 px-3 py-1 text-sm text-canard">{t('fm.tac.inGame', { form: gameFormation })}</span>}
-        {local?.ref && <span className="rounded-full bg-eau/20 px-3 py-1 text-sm text-canard">{t('fm.tac.localRef')}</span>}
+        {gameFormation && <span className="rounded-full bg-eau/20 px-2.5 py-0.5 text-xs text-canard">{t('fm.tac.inGame', { form: gameFormation })}</span>}
+        {local?.ref && <span className="rounded-full bg-eau/20 px-2.5 py-0.5 text-xs text-canard">{t('fm.tac.localRef')}</span>}
         {local?.error && <span className="rounded-full bg-corail/15 px-3 py-1 text-sm text-canard">{t('fm.tac.localRefError')}</span>}
       </div>
-      {style.summary && <p className="text-sm text-brun">{style.summary}</p>}
+      
 
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr] 2xl:grid-cols-2">
         <section className="card">

@@ -18,7 +18,7 @@ export function FmAnalysis({ players, gameDate }: { players: FmPlayer[]; gameDat
   const total = a.ages.reduce((s, b) => s + b.squad, 0) || 1;
 
   return (
-    <div className="mt-6 space-y-6">
+    <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-4">
         <Kpi label={t('fm.an.xi')} value={f(a.xiLevel)} sub={t('fm.an.xiSub')} />
         <Kpi
