@@ -149,7 +149,10 @@
       "update": "Update to {{version}}",
       "done": "Plugin installed. Start FM27 and load your save.",
       "error": "Installation failed: {{reason}}",
-      "offline": "Could not check the latest version (offline?)."
+      "offline": "Could not check the latest version (offline?).",
+      "compact": "FM27 plugin {{version}} · up to date",
+      "details": "Details",
+      "hide": "Hide"
     },
     "tac": {
       "noAttributes": "Player attributes are needed: import again from FM27.",

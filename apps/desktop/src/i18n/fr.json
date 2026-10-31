@@ -149,7 +149,10 @@
       "update": "Mettre à jour vers {{version}}",
       "done": "Plugin installé. Lance FM27 et charge ta partie.",
       "error": "Installation impossible : {{reason}}",
-      "offline": "Impossible de vérifier la dernière version (hors ligne ?)."
+      "offline": "Impossible de vérifier la dernière version (hors ligne ?).",
+      "compact": "Plugin FM27 {{version}} · à jour",
+      "details": "Détails",
+      "hide": "Masquer"
     },
     "tac": {
       "noAttributes": "Il faut les attributs des joueurs : réimporte depuis FM27.",
