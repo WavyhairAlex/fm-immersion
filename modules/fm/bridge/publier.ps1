@@ -1,4 +1,4 @@
-# Publie une version du plugin FM27 (Archivix Bridge) sur GitHub Releases, dans le dépôt public
+﻿# Publie une version du plugin FM27 (Archivix Bridge) sur GitHub Releases, dans le dépôt public
 # amnesix-nt/simloom (le code reste privé ; Simloom ne peut télécharger que depuis un dépôt public).
 #
 #   .\publier.ps1 -FMDir "G:\Steam\steamapps\common\Football Manager 27"
@@ -36,9 +36,11 @@ $manifest = [ordered]@{ version = $version; game = 'FM27'; bepinex = '6.0.0-be';
 [IO.File]::WriteAllText((Join-Path $dist 'fm-bridge.json'), ($manifest | ConvertTo-Json -Depth 4), [Text.UTF8Encoding]::new($false))
 
 $tag = "fm-bridge-v$version"
-$notes = "Plugin FM27 (Archivix Bridge) $version, installé et mis à jour par Simloom. Lecture seule : ne modifie ni le jeu ni les sauvegardes."
+# Notes passées par fichier UTF-8 : Windows PowerShell 5.1 transmet mal les accents en argument (« installÃ© »).
+$notes = Join-Path $dist 'notes.md'
+[IO.File]::WriteAllText($notes, "Plugin FM27 (Archivix Bridge) $version, installé et mis à jour par Simloom. Lecture seule : ne modifie ni le jeu ni les sauvegardes.", [Text.UTF8Encoding]::new($false))
 $ghArgs = @('release', 'create', $tag, '--repo', 'amnesix-nt/simloom', (Join-Path $dist 'ArchivixBridge.dll'), (Join-Path $dist 'chemins.json'), (Join-Path $dist 'fm-bridge.json'),
-  '--title', "Plugin FM27 $version", '--notes', $notes, '--latest=false')
+  '--title', "Plugin FM27 $version", '--notes-file', $notes, '--latest=false')
 if ($Brouillon) { $ghArgs += '--draft' }
 gh @ghArgs
 Write-Host "Publié : $tag"
