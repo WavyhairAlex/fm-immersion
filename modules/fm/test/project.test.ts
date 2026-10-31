@@ -98,3 +98,19 @@ describe('projet du coach', () => {
     expect(ranked[1]!.best!.gain).toBeLessThan(0);
   });
 });
+
+describe('titulaires et remplaçants', () => {
+  it('reprend le onze et le schéma choisis en Tactique', async () => {
+    const { depthFromPlan } = await import('../src');
+    const style = engine.ref.styles.find((s) => s.id === 'possession')!;
+    const bench = [p(12, 'BT', 14), p(13, 'D (C)', 9, { injury: 'Genou' })];
+    const plan = engine.formationPlan('4-3-3', style, squad.concat(bench[0]!));
+    const rows = depthFromPlan(plan, squad.concat(bench));
+    expect(rows.reduce((n, r) => n + r.count, 0)).toBe(11);
+    const xi = plan.slots.map((s) => s.player?.id).filter(Boolean).sort();
+    expect(rows.flatMap((r) => r.starters.map((e) => e.player.id)).sort()).toEqual(xi);
+    // Aucun titulaire n'apparaît en doublure ; le blessé naturel au poste reste listé.
+    expect(rows.flatMap((r) => r.subs.map((e) => e.player.id)).some((id) => xi.includes(id))).toBe(false);
+    expect(rows.find((r) => r.pos === 'DC')!.subs.map((e) => e.player.id)).toContain('13');
+  });
+});

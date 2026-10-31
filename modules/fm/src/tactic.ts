@@ -362,6 +362,8 @@ export interface Slot {
   player: FmPlayer | null;
   /** Adéquation moyenne avec et sans ballon, sur 20. */
   fit: number | null;
+  /** Lu dans le jeu (onze du jeu) : rôle personnalisé et consignes individuelles réelles. */
+  game?: { custom: boolean; instructions: { ip: string[]; oop: string[] } };
 }
 
 export interface FormationPlan {

@@ -22,3 +22,4 @@ export * from './club';
 export * from './progress';
 export * from './project';
 export * from './instructions';
+export * from './lineup';

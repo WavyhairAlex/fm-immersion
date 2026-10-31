@@ -1,7 +1,7 @@
 import type { FmPlayer } from './player';
 import type { PosCode } from './positions';
 import type { FmSnapshot } from './snapshot';
-import { FORMATIONS } from './tactic';
+import { FORMATIONS, type FormationPlan } from './tactic';
 
 /**
  * Progression, projection et profondeur d'effectif (portées de la page Archivix).
@@ -95,6 +95,47 @@ export function depthChart(players: FmPlayer[], form: string | null | undefined,
         return { ...e, when };
       });
     return { pos, count, starters, subs, weakest: weakest?.player ?? null };
+  });
+}
+
+/**
+ * Titulaires et remplaçants du onze choisi en Tactique (même style, même schéma, mêmes joueurs),
+ * regroupés par poste. Les doublures sont celles du plan, puis les joueurs naturels du poste
+ * (blessés compris) jusqu'à trois.
+ */
+export function depthFromPlan(plan: FormationPlan, players: FmPlayer[], history: SquadAt[] = []): DepthRow[] {
+  const entry = (p: FmPlayer): DepthEntry => ({ player: p, in1: projectLevel(p, 1, history), in2: projectLevel(p, 2, history) });
+  const xi = new Set(plan.slots.flatMap((s) => (s.player ? [s.player.id] : [])));
+  const positions = [...new Set(plan.slots.map((s) => s.pos))];
+  const shown = new Set<string>();
+  return positions.map((pos) => {
+    const idx = plan.slots.flatMap((s, i) => (s.pos === pos ? [i] : []));
+    const starters = idx.flatMap((i) => (plan.slots[i]!.player ? [entry(plan.slots[i]!.player!)] : []));
+    const pool: FmPlayer[] = [];
+    const push = (p: FmPlayer) => {
+      if (!xi.has(p.id) && !pool.some((x) => x.id === p.id) && p.level != null) pool.push(p);
+    };
+    for (const i of idx) for (const p of plan.subs[i] ?? []) push(p);
+    players
+      .filter((p) => p.positions.includes(pos) && !shown.has(p.id))
+      .sort((a, b) => (b.level ?? 0) - (a.level ?? 0))
+      .forEach(push);
+    const weakest = starters.length && starters.every((x) => x.player.level != null) ? starters.reduce((m, x) => (x.player.level! < m.player.level! ? x : m)) : null;
+    const subs = pool.slice(0, 3).map((p) => {
+      shown.add(p.id);
+      const e = entry(p);
+      const when: 0 | 1 | 2 | null = !weakest
+        ? null
+        : p.level! >= weakest.player.level!
+          ? 0
+          : e.in1 != null && weakest.in1 != null && e.in1 >= weakest.in1
+            ? 1
+            : e.in2 != null && weakest.in2 != null && e.in2 >= weakest.in2
+              ? 2
+              : null;
+      return { ...e, when };
+    });
+    return { pos, count: idx.length, starters, subs, weakest: weakest?.player ?? null };
   });
 }
 

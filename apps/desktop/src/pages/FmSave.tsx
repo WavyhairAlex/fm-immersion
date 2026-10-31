@@ -1,4 +1,4 @@
-import { gameFormationOf, normalizePlayer, type FmPlayer, type FmSnapshot, type Line, type SquadAt } from '@simloom/module-fm';
+import { gameFormationOf, gameLineup, normalizePlayer, type FmPlayer, type FmSnapshot, type Line, type SquadAt } from '@simloom/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useState } from 'react';
@@ -98,6 +98,7 @@ export function FmSave() {
     [all],
   );
   const gameFormation = gameFormationOf(snapshot?.data.tactic);
+  const lineup = useMemo(() => gameLineup(snapshot?.data), [snapshot?.data]);
   const dateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' });
 
   return (
@@ -183,14 +184,14 @@ export function FmSave() {
             {view === 'compare' && <FmCompare snap={snapshot.data} players={players} folder={folder} history={history} />}
             {view === 'dressing' && <FmDressing players={players} />}
             {view === 'loans' && <FmLoans snap={snapshot.data} />}
-            {view === 'tactic' && <FmTactic players={players} folder={folder} gameFormation={gameFormation} />}
+            {view === 'tactic' && <FmTactic players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} lineupStatus={(snapshot.data as { collecte?: { compo?: string } }).collecte?.compo ?? null} />}
             {view === 'calendar' && <FmCalendar snap={snapshot.data} players={players} />}
             {view === 'roles' && <FmRoles players={players} folder={folder} />}
             {view === 'style' && <FmStyle players={players} folder={folder} />}
             {view === 'effectiveness' && <FmEffectiveness snap={snapshot.data} history={history} go={go} />}
             {view === 'project' && <FmProject snap={snapshot.data} players={players} folder={folder} history={history} />}
             {view === 'targets' && <FmTargets snap={snapshot.data} players={players} folder={folder} go={go} />}
-            {view === 'depth' && <FmDepth players={players} gameFormation={gameFormation} gameDate={snapshot.gameDate} history={history} />}
+            {view === 'depth' && <FmDepth players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameDate={snapshot.gameDate} history={history} />}
             {view === 'finances' && <FmFinances snap={snapshot.data} players={players} />}
             {view === 'wages' && <FmWages players={players} gameDate={snapshot.gameDate} />}
             {view === 'contracts' && <FmContracts players={players} gameDate={snapshot.gameDate} />}

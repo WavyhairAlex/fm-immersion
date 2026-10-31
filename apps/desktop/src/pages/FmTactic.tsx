@@ -6,6 +6,7 @@ import {
   knownFormation,
   mergeReference,
   phaseXY,
+  planFromLineup,
   playerInstructions,
   rolePos,
   shapeOf,
@@ -14,6 +15,7 @@ import {
   tacticReferenceSchema,
   type BalanceCheck,
   type FmPlayer,
+  type GameSlot,
   type Phase,
   type TacticReference,
 } from '@simloom/module-fm';
@@ -27,6 +29,8 @@ interface Prefs {
   style?: string;
   form?: string;
   phase?: Phase;
+  /** Onze affiché : celui lu dans le jeu (par défaut quand il existe) ou celui calculé par Simloom. */
+  source?: 'game' | 'simloom';
 }
 const readPrefs = (): Prefs => {
   try {
@@ -62,12 +66,11 @@ export function useTacticEngine(folder: string) {
   return { engine, local };
 }
 
-const DOT: Record<BalanceCheck['status'], string> = { good: 'bg-eau', warn: 'bg-ambre', bad: 'bg-corail' };
-
-/** Tactique : style conseillé, schéma, onze par rôles, formes avec et sans ballon, équilibre. */
-export function FmTactic({ players, folder, gameFormation }: { players: FmPlayer[]; folder: string; gameFormation: string | null }) {
-  const { t, i18n } = useTranslation();
-  const en = i18n.resolvedLanguage === 'en';
+/**
+ * Style, schéma et onze choisis en Tactique > Composition (retenus d'une vue à l'autre) :
+ * les autres vues de l'effectif s'appuient dessus pour rester cohérentes.
+ */
+export function useTacticChoice(players: FmPlayer[], folder: string, gameFormation: string | null, lineup: GameSlot[] | null = null) {
   const { engine, local } = useTacticEngine(folder);
   const [prefs, setPrefs] = useState<Prefs>(readPrefs);
   const update = (p: Prefs) => {
@@ -75,7 +78,6 @@ export function FmTactic({ players, folder, gameFormation }: { players: FmPlayer
     setPrefs(next);
     writePrefs(next);
   };
-
   const avail = useMemo(() => players.filter((p) => !p.injury && Object.keys(p.attributes).length > 0), [players]);
   const ranked = useMemo(() => engine.rankStyles(avail), [engine, avail]);
   const style = ranked.find((r) => r.style.id === prefs.style)?.style ?? ranked[0]?.style;
@@ -86,7 +88,19 @@ export function FmTactic({ players, folder, gameFormation }: { players: FmPlayer
     () => (style ? Object.keys(FORMATIONS).map((f) => engine.formationPlan(f, style, avail)).sort((a, b) => b.score - a.score) : []),
     [engine, style, avail],
   );
-  const plan = plans.find((p) => p.form === form);
+  const gamePlan = useMemo(() => (lineup ? planFromLineup(engine, lineup, players, gameForm ?? gameFormation) : null), [engine, lineup, players, gameForm, gameFormation]);
+  const fromGame = !!gamePlan && prefs.source !== 'simloom';
+  const plan = fromGame ? gamePlan : plans.find((p) => p.form === form);
+  return { engine, local, prefs, update, avail, ranked, style, natural, form: fromGame ? gamePlan.form || form : form, plans, plan, gamePlan, fromGame };
+}
+
+const DOT: Record<BalanceCheck['status'], string> = { good: 'bg-eau', warn: 'bg-ambre', bad: 'bg-corail' };
+
+/** Tactique : style conseillé, schéma, onze par rôles, formes avec et sans ballon, équilibre. */
+export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus }: { players: FmPlayer[]; folder: string; gameFormation: string | null; lineup: GameSlot[] | null; lineupStatus?: string | null }) {
+  const { t, i18n } = useTranslation();
+  const en = i18n.resolvedLanguage === 'en';
+  const { engine, local, prefs, update, avail, ranked, style, natural, form, plans, plan, gamePlan, fromGame } = useTacticChoice(players, folder, gameFormation, lineup);
   const phase: Phase = prefs.phase ?? 'ip';
 
   if (!avail.length || !style || !plan) return <p className="card mt-6 text-brun">{t('fm.tac.noAttributes')}</p>;
@@ -120,7 +134,8 @@ export function FmTactic({ players, folder, gameFormation }: { players: FmPlayer
         </label>
         <label className="text-sm font-bold">
           {t('fm.tac.formation')}
-          <select className="input mt-1 block font-normal" value={form} onChange={(e) => update({ form: e.target.value })}>
+          <select className="input mt-1 block font-normal" value={form} disabled={fromGame} onChange={(e) => update({ form: e.target.value })}>
+            {fromGame && !FORMATIONS[form] && <option value={form}>{form || gameFormation}</option>}
             {plans.map((p) => (
               <option key={p.form} value={p.form}>
                 {p.form} · {pct(p.score)}
@@ -128,6 +143,22 @@ export function FmTactic({ players, folder, gameFormation }: { players: FmPlayer
             ))}
           </select>
         </label>
+        {gamePlan && (
+          <div className="flex gap-1 self-end" role="tablist">
+            {(['game', 'simloom'] as const).map((src) => (
+              <button
+                key={src}
+                type="button"
+                role="tab"
+                aria-selected={(src === 'game') === fromGame}
+                onClick={() => update({ source: src })}
+                className={`rounded-full px-3 py-1.5 text-sm font-bold ${(src === 'game') === fromGame ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
+              >
+                {t(`fm.tac.source.${src}`)}
+              </button>
+            ))}
+          </div>
+        )}
         {gameFormation && <span className="rounded-full bg-eau/20 px-3 py-1 text-sm text-canard">{t('fm.tac.inGame', { form: gameFormation })}</span>}
         {local?.ref && <span className="rounded-full bg-eau/20 px-3 py-1 text-sm text-canard">{t('fm.tac.localRef')}</span>}
         {local?.error && <span className="rounded-full bg-corail/15 px-3 py-1 text-sm text-canard">{t('fm.tac.localRefError')}</span>}
@@ -140,9 +171,10 @@ export function FmTactic({ players, folder, gameFormation }: { players: FmPlayer
             {form} · {styleName(style)} <span className="text-sm font-normal text-brun">{t('fm.tac.fit', { value: pct(plan.score) })}</span>
           </h2>
           <p className="mt-1 text-sm text-brun">
-            <span className="mr-2 rounded-full bg-eau/20 px-2 py-0.5 text-xs font-bold text-canard">{t('fm.tac.suggested')}</span>
-            {t('fm.tac.suggestedHelp')}
+            <span className="mr-2 rounded-full bg-eau/20 px-2 py-0.5 text-xs font-bold text-canard">{t(fromGame ? 'fm.tac.fromGame' : 'fm.tac.suggested')}</span>
+            {t(fromGame ? 'fm.tac.fromGameHelp' : gamePlan ? 'fm.tac.suggestedHelpGame' : 'fm.tac.suggestedHelp')}
           </p>
+          {!gamePlan && lineupStatus && lineupStatus !== 'lue' && <p className="mt-1 text-xs text-brun">{t('fm.tac.lineupStatus', { status: lineupStatus })}</p>}
           <div className="mt-3 flex flex-wrap items-center gap-2" role="tablist">
             {(['ip', 'oop'] as const).map((ph) => (
               <button
@@ -204,7 +236,7 @@ export function FmTactic({ players, folder, gameFormation }: { players: FmPlayer
               );
             })}
           </div>
-          <p className="mt-2 text-xs text-brun">{t('fm.tac.pitchHelp')}</p>
+          <p className="mt-2 text-xs text-brun">{t(fromGame ? 'fm.tac.pitchHelpGame' : 'fm.tac.pitchHelp')}</p>
         </section>
 
         <section className="card">
@@ -231,7 +263,7 @@ export function FmTactic({ players, folder, gameFormation }: { players: FmPlayer
               <li key={p.form}>
                 <button
                   type="button"
-                  onClick={() => update({ form: p.form })}
+                  onClick={() => update({ form: p.form, source: 'simloom' })}
                   className={`flex w-full items-center justify-between rounded-lg px-2 py-1 text-left ${p.form === form ? 'bg-eau/20' : 'hover:bg-creme'}`}
                 >
                   <span className="font-bold text-canard">
@@ -262,7 +294,13 @@ export function FmTactic({ players, folder, gameFormation }: { players: FmPlayer
                   </div>
                   <p className="mb-1 mt-0.5 text-xs text-brun">
                     {roleName(sl.ip)} · {roleName(sl.oop)}
+                    {sl.game?.custom && <span className="ml-1 rounded-full bg-canard/10 px-1.5 text-canard">{t('fm.pi.custom')}</span>}
                   </p>
+                  {sl.game && (sl.game.instructions.ip.length > 0 || sl.game.instructions.oop.length > 0) && (
+                    <p className="mb-1 text-xs text-canard">
+                      <b>{t('fm.pi.inGame')}</b> {[...sl.game.instructions.ip, ...sl.game.instructions.oop].join(' · ')}
+                    </p>
+                  )}
                   {adv.list.length ? (
                     adv.list.map((x) => (
                       <div key={x.id} className="py-0.5">

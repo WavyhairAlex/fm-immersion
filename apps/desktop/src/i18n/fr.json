@@ -230,7 +230,16 @@
           "tired": "{{names}} sous 90 % de condition",
           "tip": "Fais tourner ces joueurs."
         }
-      }
+      },
+      "source": {
+        "game": "Onze du jeu",
+        "simloom": "Onze Simloom"
+      },
+      "fromGame": "Compo du jeu",
+      "fromGameHelp": "Joueurs et postes lus dans ta tactique FM27. Rôles et consignes : ceux du jeu quand le plugin les lit, sinon le meilleur rôle de chaque joueur à son poste.",
+      "suggestedHelpGame": "Placement calculé par Simloom selon le style choisi. « Onze du jeu » affiche ta vraie compo FM27.",
+      "pitchHelpGame": "Ta compo FM27. Les pointillés montrent le déplacement depuis l'autre phase. Survole un joueur pour voir ses remplaçants ; clique un schéma à droite pour comparer avec un onze calculé par Simloom.",
+      "lineupStatus": "Lecture de la compo par le plugin : {{status}}."
     },
     "nav": "Sections de la partie",
     "sections": {
@@ -496,7 +505,9 @@
       "noSub": "Pas de doublure",
       "starter": "Titulaire",
       "nobody": "Personne",
-      "level": "Au niveau"
+      "level": "Au niveau",
+      "fromTactic": "Mêmes style, schéma et onze que Tactique > Composition : change-les là-bas, cette vue suit.",
+      "fromGame": "Onze lu dans ta tactique FM27 (ou celui de Simloom si tu le choisis dans Tactique > Composition)."
     },
     "cal": {
       "next": "Prochains matchs",
@@ -803,7 +814,9 @@
         "tackleHarder": "tacles {{a}}, agressivité {{b}}",
         "tackleLess": "tacles faibles : éviter fautes et cartons",
         "markTighter": "marquage {{a}}, puissance {{b}}"
-      }
+      },
+      "custom": "perso",
+      "inGame": "Dans le jeu :"
     }
   }
 }

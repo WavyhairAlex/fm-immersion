@@ -230,7 +230,16 @@
           "tired": "{{names}} below 90% condition",
           "tip": "Rotate these players."
         }
-      }
+      },
+      "source": {
+        "game": "Game XI",
+        "simloom": "Simloom XI"
+      },
+      "fromGame": "Game line-up",
+      "fromGameHelp": "Players and positions read from your FM27 tactic. Roles and instructions: the game's when the plugin reads them, otherwise each player's best role in that position.",
+      "suggestedHelpGame": "Placement computed by Simloom for the chosen style. “Game XI” shows your real FM27 line-up.",
+      "pitchHelpGame": "Your FM27 line-up. Dotted lines show movement from the other phase. Hover a player for their substitutes; click a formation on the right to compare with an XI computed by Simloom.",
+      "lineupStatus": "Plugin line-up reading: {{status}}."
     },
     "nav": "Save sections",
     "sections": {
@@ -496,7 +505,9 @@
       "noSub": "No cover",
       "starter": "Starter",
       "nobody": "Nobody",
-      "level": "Same level"
+      "level": "Same level",
+      "fromTactic": "Same style, formation and XI as Tactics > Line-up: change them there and this view follows.",
+      "fromGame": "XI read from your FM27 tactic (or Simloom's if you pick it in Tactics > Line-up)."
     },
     "cal": {
       "next": "Next matches",
@@ -803,7 +814,9 @@
         "tackleHarder": "tackling {{a}}, aggression {{b}}",
         "tackleLess": "weak tackling: avoid fouls and cards",
         "markTighter": "marking {{a}}, strength {{b}}"
-      }
+      },
+      "custom": "custom",
+      "inGame": "In game:"
     }
   }
 }
