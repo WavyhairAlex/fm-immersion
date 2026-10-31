@@ -88,7 +88,8 @@ public class FmBindingReader : IGameReader
     };
 
     const string Tactic = "tactic.";
-    const string TE = Tactic + "TacticalEffectiveness";
+    // Propriété de contexte : sans {human}, le jeu ne répond jamais (decouverte.json, TeamTacticReference).
+    const string TE = Tactic + "TacticalEffectiveness{human=@human}";
     static readonly string[] UnderstandingAreas =
         { "BuildUpStrategy", "ChanceCreation", "InPossessionShape", "OutOfPossessionShape", "LineOfEngagement", "PassingStyle", "PressingIntensity", "PressingTrap" };
     static readonly string[] StatusFlags =
@@ -155,6 +156,13 @@ public class FmBindingReader : IGameReader
         Block("tactique", Plugin.ReadTactic, () => tactic = ReadTactic(head[2] as string));
         Block("efficacite", Plugin.ReadEffectiveness, () => effectiveness = ReadEffectiveness());
         Block("compo", Plugin.ReadLineup, () => lineup = ReadLineup());
+
+        // Moral, satisfaction, hiérarchie, étoiles du staff : lectures de contexte par joueur (sans lien avec la tactique).
+        Dictionary<string, Dictionary<string, object?>>? extended = null;
+        if (!Plugin.ReadExtended) collecte["joueursEtendus"] = "désactivée (réglage)";
+        else
+            try { extended = ReadExtended(count); collecte["joueursEtendus"] = extended == null ? "pas de réponse" : "lue"; }
+            catch (Exception e) { collecte["joueursEtendus"] = "erreur : " + e.Message; Plugin.Log.LogWarning($"joueursEtendus : {e.Message}"); }
         tactic ??= new TacticDto(head[2] as string, "MostUsedFormation", null, new(), new());
 
         // Club et prochain match : blocs optionnels
@@ -182,6 +190,7 @@ public class FmBindingReader : IGameReader
             ClubInfo = clubInfo is { Count: > 0 } ? clubInfo : null,
             NextMatch = nextMatch is { Count: > 0 } ? nextMatch : null,
             Lineup = lineup,
+            PlayersExtended = extended,
             Collecte = collecte,
         };
     }
@@ -189,30 +198,86 @@ public class FmBindingReader : IGameReader
     bool _tacticsAllowed;
     const int SelectionSlots = 11;
 
-    // Compo : joueur et poste pour chaque index de sélection (0-10). Propriétés « de contexte » : sans
-    // TeamSelectionIndex, le jeu ne répond jamais. Noms à confirmer avec decouverte.json ; chemins.json peut
-    // aussi les lire avec la même syntaxe "Propriete{Contexte=n}".
+    // Compo : pour chaque index de sélection (0-10), joueur, poste et rôles (y compris le rôle personnalisé).
+    // Propriétés « de contexte » de TeamTacticReference, d'après decouverte.json :
+    //   PlayerFromTeamSelectionIndex, IPRole, OOPRole, PositionRoleOverride {TeamSelectionIndex} ;
+    //   PositionFromTeamSelectionIndex, PlayerUsesPersonalisedInstructions {TeamSelectionIndex, InPossession}.
+    static readonly (string Key, string Path, bool Deep)[] LineupFields =
+    {
+        ("playerId", "PlayerFromTeamSelectionIndex{TeamSelectionIndex=#}/UniqueId", false),
+        ("playerName", "PlayerFromTeamSelectionIndex{TeamSelectionIndex=#}/Name", false),
+        ("positionIP", "PositionFromTeamSelectionIndex{TeamSelectionIndex=#,InPossession=true}", false),
+        ("positionOOP", "PositionFromTeamSelectionIndex{TeamSelectionIndex=#,InPossession=false}", false),
+        ("ipRole", "IPRole{TeamSelectionIndex=#}", false),
+        ("oopRole", "OOPRole{TeamSelectionIndex=#}", false),
+        ("roleOverride", "PositionRoleOverride{TeamSelectionIndex=#}", true),
+        ("personalisedIP", "PlayerUsesPersonalisedInstructions{TeamSelectionIndex=#,InPossession=true}", false),
+        ("personalisedOOP", "PlayerUsesPersonalisedInstructions{TeamSelectionIndex=#,InPossession=false}", false),
+    };
+
+    // Par joueur de l'effectif (propriétés de PersonReference, contextes d'après decouverte.json).
+    static readonly (string Key, string Path, bool Deep)[] ExtendedFields =
+    {
+        ("morale", "Morale{team=@team,human=@human}", false),
+        ("moraleText", "MoraleString{team=@team,human=@human}", false),
+        ("happinessClub", "HappinessClub{human=@human,team=@team}", false),
+        ("happinessManagement", "HappinessManagement{human=@human,team=@team}", false),
+        ("happinessPlayingTime", "HappinessPlayingTime{human=@human,team=@team}", false),
+        ("happinessTraining", "HappinessTraining{human=@human,team=@team}", false),
+        ("hierarchy", "HierarchyInfluenceCategoryString{team=@team}", false),
+        ("currentStars", "CurrentAbilityStarRange{team=@team,human=@human}", true),
+        ("potentialStars", "PotentialAbilityStarRange{team=@team,human=@human}", true),
+        ("personality", "Personality", false),
+        ("mediaHandling", "MediaHandling{human=@human}", false),
+        ("currentAbility", "PlayerCurrentAbility", false),
+        ("potentialAbility", "PlayerPotentialAbility", false),
+    };
+
+    Dictionary<string, Dictionary<string, object?>>? ReadExtended(int count)
+    {
+        var reqs = new List<Req>();
+        for (int i = 0; i < count; i++)
+        {
+            reqs.Add(new Req(i, "UniqueId"));
+            foreach (var f in ExtendedFields) reqs.Add(new Req(i, f.Path, f.Deep));
+        }
+        var v = Batch.Run(reqs, TimeoutMs * 2);
+        int stride = ExtendedFields.Length + 1;
+        var res = new Dictionary<string, Dictionary<string, object?>>();
+        for (int i = 0; i < count; i++)
+        {
+            if (Num(v[i * stride]) is not double id) continue;
+            var row = new Dictionary<string, object?>();
+            for (int f = 0; f < ExtendedFields.Length; f++)
+            {
+                var x = v[i * stride + 1 + f];
+                if (x != null) row[ExtendedFields[f].Key] = x is string s ? CleanName(s) : x;
+            }
+            if (row.Count > 0) res[((long)id).ToString(CultureInfo.InvariantCulture)] = row;
+        }
+        return res.Count > 0 ? res : null;
+    }
+
     List<Dictionary<string, object?>>? ReadLineup()
     {
         var reqs = new List<Req>();
         for (int i = 0; i < SelectionSlots; i++)
-        {
-            string ctx = $"{{TeamSelectionIndex={i}}}";
-            reqs.Add(new Req(null, $"{Tactic}PlayerFromTeamSelectionIndex{ctx}/UniqueId"));
-            reqs.Add(new Req(null, $"{Tactic}PlayerFromTeamSelectionIndex{ctx}/Name"));
-            reqs.Add(new Req(null, $"{Tactic}PositionFromTeamSelectionIndex{ctx}", true));
-        }
+            foreach (var f in LineupFields)
+                reqs.Add(new Req(null, Tactic + f.Path.Replace("#", i.ToString(CultureInfo.InvariantCulture)), f.Deep));
         var v = Batch.Run(reqs, TimeoutMs);
         if (v.All(x => x == null)) return null;
         var res = new List<Dictionary<string, object?>>();
         for (int i = 0; i < SelectionSlots; i++)
-            res.Add(new Dictionary<string, object?>
+        {
+            var row = new Dictionary<string, object?> { ["index"] = i };
+            for (int f = 0; f < LineupFields.Length; f++)
             {
-                ["index"] = i,
-                ["playerId"] = Num(v[3 * i]) is double d ? (long)d : null,
-                ["playerName"] = v[3 * i + 1] is string s ? CleanName(s) : null,
-                ["position"] = v[3 * i + 2],
-            });
+                var x = v[i * LineupFields.Length + f];
+                row[LineupFields[f].Key] = LineupFields[f].Key == "playerId" ? (Num(x) is double d ? (long)d : null)
+                    : x is string s ? CleanName(s) : x;
+            }
+            res.Add(row);
+        }
         return res;
     }
 
@@ -489,6 +554,8 @@ public class FmBindingReader : IGameReader
             public Bindings.Key Key;
             public Bindings.ValueChangedCallback? Cb;
             public bool Bound;
+            // Références utilisables comme contexte (@team, @human, @person)
+            public TypedValue? Team, Human, Person;
         }
 
         // Résout chaque chemin niveau par niveau : toutes les requêtes d'un niveau partent dans la même frame.
@@ -497,7 +564,14 @@ public class FmBindingReader : IGameReader
             var states = reqs.Select(r => new State { Deep = r.Deep }).ToArray();
             TypedValue? squad = null, team = null;
             bool needSquad = reqs.Any(r => r.Item != null || r.Path.StartsWith(Squad));
-            bool needTactic = reqs.Any(r => r.Path.StartsWith(Tactic));
+            bool needTactic = reqs.Any(r => r.Path.StartsWith(Tactic)) || reqs.Any(r => r.Path.Contains("@team"));
+            TypedValue? human = null;
+            if (reqs.Any(r => r.Path.Contains("@human")))
+            {
+                var h = new State { Segs = new[] { "GameCurrentManager" } };
+                Resolve(new[] { h }, () => Root(), timeoutMs);
+                human = h.Cur;
+            }
 
             if (needSquad)
             {
@@ -517,12 +591,14 @@ public class FmBindingReader : IGameReader
                 for (int k = 0; k < reqs.Count; k++)
                 {
                     var r = reqs[k]; var st = states[k];
+                    st.Team = team; st.Human = human;
                     if (r.Path == Squad + "/#count") { st.Result = (double?)Count(squad); st.Failed = true; continue; }
                     if (r.Item != null)
                     {
                         var el = ItemAt(squad, r.Item.Value);
                         if (el == null) { st.Failed = true; continue; }
                         st.Cur = el;
+                        st.Person = el;
                         st.Segs = r.Path.Split('/');
                     }
                     else if (r.Path.StartsWith(Tactic))
@@ -611,10 +687,16 @@ public class FmBindingReader : IGameReader
                         try
                         {
                             st.Cb = cb;
-                            var ctx = ContextRequest.Parse(st.Segs[lvl]);   // "Prop{Contexte=n}" : propriété de contexte
-                            st.Key = ctx is { } c
-                                ? ContextRequest.Bind(b, src, c.Prop, c.Ctx, c.Value, _owner, cb)
-                                : BindingUtils.Request(b, src, st.Segs[lvl], _owner, cb);
+                            var ctx = ContextRequest.Parse(st.Segs[lvl]);   // "Prop{Contexte=n,…}" : propriété de contexte
+                            if (ctx is { } c)
+                            {
+                                var key = ContextRequest.Bind(b, src, c.Prop, c.Ctxs,
+                                    name => name switch { "team" => st.Team, "human" => st.Human, "person" => st.Person, _ => null },
+                                    _owner, cb);
+                                if (key == null) { if (Interlocked.Exchange(ref st.Signalled, 1) == 0) { st.Failed = true; done.Signal(); } continue; }
+                                st.Key = key.Value;
+                            }
+                            else st.Key = BindingUtils.Request(b, src, st.Segs[lvl], _owner, cb);
                             st.Bound = st.Signalled == 0;   // réponse immédiate : déjà désinscrite par le callback
                         }
                         catch { if (Interlocked.Exchange(ref st.Signalled, 1) == 0) { st.Failed = true; done.Signal(); } }

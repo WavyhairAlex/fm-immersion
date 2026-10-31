@@ -17,12 +17,12 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.3.0";
+    public const string Version = "0.3.1";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que Simloom renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
     internal static string DataDir = null!;
-    internal static bool ReadTactic = true, ReadEffectiveness, ReadLineup, WriteDiscovery = true;
+    internal static bool ReadTactic = true, ReadEffectiveness, ReadLineup, ReadExtended, WriteDiscovery = true;
     bool _discovered;
     internal static int RereadSeconds = 300;
     const string Prefix = "http://localhost:8727/";
@@ -48,6 +48,8 @@ public class Plugin : BasePlugin
             "Lire l'efficacité tactique FM27 (expérimental : le jeu ne répond pas encore à ces lectures).").Value;
         ReadLineup = Config.Bind("Archivix", "LireCompo", false,
             "Lire la compo (joueur à chaque poste) et les rôles personnalisés. Expérimental ; jamais pendant que l'écran Tactique est ouvert.").Value;
+        ReadExtended = Config.Bind("Archivix", "LireJoueursEtendus", false,
+            "Lire moral, satisfaction, hiérarchie, étoiles du staff et niveau des joueurs (expérimental).").Value;
         WriteDiscovery = Config.Bind("Archivix", "Decouverte", true,
             "Écrire archivix\\config\\decouverte.json (propriétés et contextes du jeu, sans requête au jeu) une fois par lancement.").Value;
         RereadSeconds = Math.Max(60, Config.Bind("Archivix", "RelectureSecondes", 300,
@@ -199,6 +201,9 @@ public record Snapshot(string Schema, string Game, string Club, string GameDate,
     public Dictionary<string, object?>? NextMatch { get; init; }
     // Compo (réglage LireCompo) : un élément par index de sélection 0-10 {index, playerId, playerName, position, raw} ; null si non lue
     public List<Dictionary<string, object?>>? Lineup { get; init; }
+    // Réglage LireJoueursEtendus : par id de joueur {morale, moraleText, happiness*, hierarchy, currentStars, potentialStars,
+    // personality, mediaHandling, currentAbility, potentialAbility} (champs absents si le jeu ne répond pas)
+    public Dictionary<string, Dictionary<string, object?>>? PlayersExtended { get; init; }
     // État de la collecte : blocs lus ou sautés et pourquoi (ex. {"tactique":"sautée : écran Tactique ouvert"})
     public Dictionary<string, string>? Collecte { get; init; }
 }
