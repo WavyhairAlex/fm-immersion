@@ -20,3 +20,4 @@ export * from './tactic';
 export * from './tactic-defaults';
 export * from './club';
 export * from './progress';
+export * from './project';

@@ -233,8 +233,6 @@
       }
     },
     "nav": "Save sections",
-    "soon": "soon",
-    "soonText": "This screen from the Archivix page is coming in a future Simloom update.",
     "sections": {
       "home": "Home",
       "squad": "Squad",
@@ -514,6 +512,219 @@
       "sharpness": "Sharpness",
       "nobody": "Nobody.",
       "rustyHelp": "Give them minutes in cup games or late in matches to regain sharpness."
+    },
+    "signal": {
+      "technical": "Technique",
+      "creators": "Creators",
+      "physical": "Physical",
+      "pace": "Pace",
+      "press": "Pressing",
+      "aerial": "Aerial",
+      "wide": "Flanks",
+      "finishing": "Finishing",
+      "defense": "Defending"
+    },
+    "area": {
+      "buildUpStrategy": "Build-up",
+      "chanceCreation": "Chance creation",
+      "inPossessionShape": "In-possession shape",
+      "outOfPossessionShape": "Out-of-possession shape",
+      "lineOfEngagement": "Line of engagement",
+      "passingStyle": "Passing style",
+      "pressingIntensity": "Pressing intensity",
+      "pressingTrap": "Pressing trap"
+    },
+    "areaSession": {
+      "buildUpStrategy": "Build Up",
+      "chanceCreation": "Chance Creation",
+      "inPossessionShape": "In Possession Shape",
+      "outOfPossessionShape": "Out Of Possession Shape",
+      "lineOfEngagement": "Line of Engagement",
+      "passingStyle": "Passing Style",
+      "pressingIntensity": "Pressing Intensity",
+      "pressingTrap": "Pressing Trap"
+    },
+    "roles": {
+      "help": "Each cell shows the fit for the best {{phase}} role at that position. Pills: natural positions. Grey numbers: out of position (the game adds a familiarity penalty). Dashed circle: out of position but better than at his own, worth a try. Hover a cell to see the role.",
+      "natOnly": "Natural positions only",
+      "off": "out of position",
+      "try": "worth a try",
+      "bestNat": "Best natural",
+      "nobody": "nobody",
+      "howTitle": "How the fit is calculated",
+      "how": {
+        "keys": "70%: the role's key attributes, weighted by importance.",
+        "base": "20%: the position's basic attributes (for a centre-back: marking, tackling, heading, positioning…).",
+        "engine": "10%: \"match engine\" attributes (acceleration, pace, anticipation, decisions), useful everywhere outfield.",
+        "foot": "Stronger foot: on a flank, −0.5 if the foot does not match (−1 if one-footed). Inverted roles want the foot opposite to the flank."
+      }
+    },
+    "style": {
+      "which": "Which style suits my squad?",
+      "whichHelp": "Each style's requirements compared with the profile of the 16 best available outfield players. Pick a style for details.",
+      "profile": "Squad profile",
+      "profileHelp": "Average out of 20. Highlighted: what the selected style needs.",
+      "pros": "Strengths",
+      "cons": "Weaknesses",
+      "mentality": "Suggested mentality: {{value}}",
+      "needs": "Needs: {{list}}",
+      "ip": "In-possession instructions",
+      "oop": "Out-of-possession instructions",
+      "roles": "Typical roles and best players",
+      "rolesHelp": "Fit = weighted average of the role's key attributes. Injured players excluded.",
+      "nobody": "Nobody for this position",
+      "effTitle": "Tactical effectiveness (estimate)",
+      "effHelp": "New in FM27: a gauge tells whether the team will carry out your instructions. Simloom estimates it here; the game's real gauges are under \"Effectiveness\" once the plugin reads them.",
+      "complexity": "Style complexity",
+      "cx": {
+        "1": "very simple",
+        "2": "simple",
+        "3": "medium",
+        "4": "high",
+        "5": "very high"
+      },
+      "ability": "Tactical ability",
+      "abilitySub": "target ≈ {{value}} · mental attributes",
+      "verdict": "Verdict",
+      "v": {
+        "ok": "Suitable",
+        "slow": "Slow to learn",
+        "hard": "Too complex for the squad"
+      },
+      "simplify": "Simplify instructions or plan training time."
+    },
+    "eff": {
+      "none": "The game's effectiveness gauges are not in this snapshot yet. Meanwhile, Simloom's estimate is under \"Playing style\".",
+      "toStyle": "See playing style",
+      "overall": "Overall effectiveness",
+      "complexity": "Complexity",
+      "comprehension": "understanding {{value}}",
+      "snaps": "Snapshots",
+      "snapsSub": "import every week to track progress",
+      "flag": {
+        "noTacticError": "No active tactic",
+        "noUpcomingMatchError": "No upcoming match",
+        "noLineupWarning": "No line-up",
+        "incompleteLineupWarning": "Incomplete line-up",
+        "playerBelowThresholdWarning": "One player below threshold",
+        "multiplePlayersBelowThresholdWarning": "Several players below threshold",
+        "playerNotFullyScoutedWarning": "Player not fully scouted",
+        "playerNotInTeamWarning": "Player not in the team",
+        "playerNotSelectedWarning": "Player not selected"
+      },
+      "components": "The 4 components",
+      "comp": {
+        "tacticalUnderstanding": "Tactical understanding",
+        "playerAbility": "Player ability",
+        "playerBuyIn": "Player buy-in",
+        "nextMatchInformation": "Next match information"
+      },
+      "detail": "Detail",
+      "sub": {
+        "capability": "Capability",
+        "roleSuitability": "Role suitability",
+        "managerSupport": "Manager support",
+        "relationships": "Relationships"
+      },
+      "areas": "Understanding by area",
+      "session": "\"{{name}}\" session",
+      "noAreas": "Areas not read.",
+      "thisWeek": "Schedule this week: {{list}}.",
+      "advice": "Staff advice",
+      "group": {
+        "tacticalAreas": "Tactics",
+        "playerAbility": "Ability",
+        "playerBuyIn": "Buy-in",
+        "nextMatch": "Next match"
+      }
+    },
+    "proj": {
+      "coach": "My coach",
+      "style": "Style I like",
+      "target": "Target level",
+      "targetOpt": "{{value}}% fit",
+      "help": "Simloom measures the gap between your squad and this style, then derives the positions to sign and each player's work. Natural formations for this style: {{forms}}.",
+      "ready": "Positions ready",
+      "readySub": "fit ≥ {{value}}%",
+      "develop": "To develop",
+      "developSub": "23 or younger, close to the level",
+      "recruit": "To sign",
+      "recruitSub": "positions in the target XI",
+      "switch": "When to switch to {{style}}?",
+      "verdict": {
+        "go": "You can switch to {{target}} now.",
+        "step": "Gradual switch possible: keep {{rec}} and add instructions from your project.",
+        "no": "Not yet: stay with {{rec}} for now."
+      },
+      "recNow": "Recommended today",
+      "yourProject": "Your project",
+      "c": {
+        "fit": "Style fit",
+        "ready": "XI ready",
+        "ability": "Tactical ability",
+        "fitHelp": "gap with the recommended style",
+        "readyHelp": "positions at target level (7 of 11 advised)",
+        "abilityHelp": "reading of the game vs. style complexity"
+      },
+      "conditions": "Switch conditions",
+      "timeline": "Projection",
+      "when": "When",
+      "verdictCol": "Verdict",
+      "today": "Today",
+      "short": {
+        "go": "Switch",
+        "step": "Gradual",
+        "no": "Not yet"
+      },
+      "eta": "With the same squad, a safe switch around {{date}}.",
+      "etaNever": "With the same squad, the switch does not happen within 3 years: you need to sign players.",
+      "etaStep": "Gradual switch possible from {{date}}.",
+      "tipRecruit_one": "Signing speeds everything up: {{count}} more ready position needed to reach 7 of 11.",
+      "tipRecruit_other": "Signing speeds everything up: {{count}} more ready positions needed to reach 7 of 11.",
+      "tipBridge": "Bridge style: {{bridge}} is almost as suitable as {{rec}} and closer to your project.",
+      "tipGauge": "In match, check the game's tactical effectiveness gauge before switching: it has the final say.",
+      "switchHelp": "Projection: each player progresses along the age curve (or his real trend), attributes shifted accordingly. Ignores departures and signings.",
+      "xi": "Target XI · {{form}}",
+      "status": {
+        "ready": "Ready",
+        "develop": "To develop",
+        "recruit": "To sign"
+      },
+      "profiles": "Profiles to sign",
+      "priorities": "Priorities: {{list}}",
+      "current": "Current: {{name}} {{fit}}",
+      "currentNone": "Current: nobody",
+      "noRecruit": "No position to sign at this target level.",
+      "recruitAll": "For all signings, the style needs: {{list}}.",
+      "training": "Training plan",
+      "collective": "Team, sessions to prioritise:",
+      "collectiveMore": "Also: team cohesion for buy-in, match preparation for the opposition report.",
+      "role": "Target role",
+      "fit": "Fit",
+      "axes": "Areas to work on",
+      "inProject": "Project",
+      "rotation": "Rotation",
+      "trainingHelp": "Target role: his position's role for a starter in the target XI, otherwise the project role he fits best. Areas: his 3 weakest key attributes for that role, for individual training."
+    },
+    "targets": {
+      "title": "Transfer targets · {{style}} {{form}}",
+      "help": "Your in-game shortlist, ranked by what each player would add to your target XI (\"Recruitment and training\"): fit for the position's role and gain over the current starter. Click a row to compare.",
+      "col": {
+        "player": "Player",
+        "age": "Age",
+        "club": "Club",
+        "pos": "Target position",
+        "fit": "Fit",
+        "gain": "Gain",
+        "level": "Level",
+        "eff": "Proj. effectiveness",
+        "wage": "Wage",
+        "value": "Value"
+      },
+      "compare": "Compare",
+      "outside": "outside target XI",
+      "none": "Your in-game shortlist is not in the snapshot yet. Meanwhile, the profiles to look for are under \"Recruitment and training\".",
+      "toProject": "See profiles to sign"
     }
   }
 }

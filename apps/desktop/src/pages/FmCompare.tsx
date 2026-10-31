@@ -1,4 +1,4 @@
-import { ATTR_GROUPS, attrKey, attrOf, bestOf, fmPlayerSchema, normalizePlayer, POS_LABEL, projectLevel, type FmPlayer, type FmSnapshot, type SquadAt } from '@simloom/module-fm';
+import { ATTR_GROUPS, attrKey, attrOf, bestOf, POS_LABEL, projectLevel, shortlist, type FmPlayer, type FmSnapshot, type SquadAt } from '@simloom/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
@@ -24,16 +24,8 @@ const write = (key: string, v: unknown) => {
 };
 
 /** Joueurs du club et de la liste de cibles du jeu, quand le plugin la fournit. */
-function pool(snap: FmSnapshot, players: FmPlayer[]): Person[] {
-  const raw = Array.isArray(snap.shortlist) ? (snap.shortlist as unknown[]) : [];
-  const targets = raw.flatMap((x) => {
-    const r = fmPlayerSchema.safeParse(x);
-    if (!r.success) return [];
-    const club = (x as Record<string, unknown>).club;
-    return [{ ...normalizePlayer(r.data), id: `t${r.data.id}`, target: true, club: typeof club === 'string' ? club : null }];
-  });
-  return [...players, ...targets].filter((p) => Object.keys(p.attributes).length);
-}
+const pool = (snap: FmSnapshot, players: FmPlayer[]): Person[] =>
+  [...players, ...shortlist(snap).map((t) => ({ ...t, target: true }))].filter((p) => Object.keys(p.attributes).length);
 
 /** Comparateur : deux ou trois joueurs côte à côte, du club ou de la liste de cibles. */
 export function FmCompare({ snap, players, folder, history }: { snap: FmSnapshot; players: FmPlayer[]; folder: string; history: SquadAt[] }) {

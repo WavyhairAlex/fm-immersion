@@ -30,7 +30,7 @@ export function FmDressing({ players }: { players: FmPlayer[] }) {
                     <span className="w-24">{label(c.level)}</span>
                     <span className="mx-3 flex-1">
                       <span
-                        className={`block h-2 rounded-full ${c.level <= 1 ? 'bg-corail' : c.level === 2 ? 'bg-ambre' : 'bg-eau-fonce'}`}
+                        className={`block h-2 rounded-full ${c.level <= 1 ? 'bg-corail' : c.level === 2 ? 'bg-eau' : 'bg-eau-fonce'}`}
                         style={{ width: `${(100 * c.count) / players.length}%` }}
                       />
                     </span>

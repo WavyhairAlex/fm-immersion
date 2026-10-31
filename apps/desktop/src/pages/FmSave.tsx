@@ -12,16 +12,21 @@ import { FmCompare } from './FmCompare';
 import { FmContracts } from './FmContracts';
 import { FmDepth } from './FmDepth';
 import { FmDressing } from './FmDressing';
+import { FmEffectiveness } from './FmEffectiveness';
 import { FmFinances } from './FmFinances';
 import { FmHome } from './FmHome';
 import { FmLoans } from './FmLoans';
 import { FmProgression } from './FmProgression';
+import { FmProject } from './FmProject';
+import { FmRoles } from './FmRoles';
+import { FmStyle } from './FmStyle';
 import { FmTactic } from './FmTactic';
+import { FmTargets } from './FmTargets';
 import { FmWages } from './FmWages';
 
 const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
 
-/** Les écrans de la page Archivix, rangés en 5 sections. Ceux qui ne sont pas encore portés sont marqués « bientôt ». */
+/** Les écrans de la page Archivix, rangés en 5 sections. */
 const SECTIONS = [
   { id: 'home', views: ['home'] },
   { id: 'squad', views: ['squad', 'analysis', 'compare', 'dressing', 'loans'] },
@@ -30,7 +35,6 @@ const SECTIONS = [
   { id: 'club', views: ['finances', 'wages', 'contracts', 'progression'] },
 ] as const;
 type View = (typeof SECTIONS)[number]['views'][number];
-const READY = new Set<View>(['home', 'squad', 'analysis', 'compare', 'dressing', 'loans', 'tactic', 'calendar', 'depth', 'finances', 'wages', 'contracts', 'progression']);
 const VIEW_KEY = 'simloom.fm.view';
 const readView = (): View => {
   try {
@@ -168,7 +172,6 @@ export function FmSave() {
                   className={`font-bold ${v === view ? 'text-canard underline decoration-eau-soutenu decoration-2 underline-offset-8' : 'text-canard/60 hover:text-canard'}`}
                 >
                   {t(`fm.views.${v}`)}
-                  {!READY.has(v) && <span className="ml-1 text-xs font-normal text-brun">· {t('fm.soon')}</span>}
                 </button>
               ))}
             </div>
@@ -182,17 +185,16 @@ export function FmSave() {
             {view === 'loans' && <FmLoans snap={snapshot.data} />}
             {view === 'tactic' && <FmTactic players={players} folder={folder} gameFormation={gameFormation} />}
             {view === 'calendar' && <FmCalendar snap={snapshot.data} players={players} />}
+            {view === 'roles' && <FmRoles players={players} folder={folder} />}
+            {view === 'style' && <FmStyle players={players} folder={folder} />}
+            {view === 'effectiveness' && <FmEffectiveness snap={snapshot.data} history={history} go={go} />}
+            {view === 'project' && <FmProject snap={snapshot.data} players={players} folder={folder} history={history} />}
+            {view === 'targets' && <FmTargets snap={snapshot.data} players={players} folder={folder} go={go} />}
             {view === 'depth' && <FmDepth players={players} gameFormation={gameFormation} gameDate={snapshot.gameDate} history={history} />}
             {view === 'finances' && <FmFinances snap={snapshot.data} players={players} />}
             {view === 'wages' && <FmWages players={players} gameDate={snapshot.gameDate} />}
             {view === 'contracts' && <FmContracts players={players} gameDate={snapshot.gameDate} />}
             {view === 'progression' && <FmProgression history={history} />}
-            {!READY.has(view) && (
-              <div className="card flex flex-col items-center gap-2 py-10 text-center">
-                <p className="font-display text-lg font-semibold">{t(`fm.views.${view}`)}</p>
-                <p className="max-w-md text-sm text-brun">{t('fm.soonText')}</p>
-              </div>
-            )}
           </div>
         </>
       )}

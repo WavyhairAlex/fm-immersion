@@ -1,5 +1,5 @@
-import { POS_LABEL, type FmPlayer } from '@simloom/module-fm';
-import type { ReactNode } from 'react';
+import { POS_LABEL, type CoachPrefs, type FmPlayer } from '@simloom/module-fm';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /** Petits éléments communs aux écrans du module Football Manager. */
@@ -85,4 +85,65 @@ export function useFormat() {
     date: (x: string | null | undefined) => (x ? date.format(new Date(x)) : '–'),
     pct: (x: number) => pct.format(x),
   };
+}
+
+/** Noms des rôles et des styles dans la langue de l'interface (les repères n'ont parfois que le français). */
+export function useNames() {
+  const { i18n } = useTranslation();
+  const en = i18n.resolvedLanguage === 'en';
+  return {
+    role: (r: { fr: string; en?: string } | null | undefined) => (r ? (en && r.en) || r.fr : '–'),
+    style: (s: { name: string; nameEn?: string } | null | undefined) => (s ? (en && s.nameEn) || s.name : '–'),
+  };
+}
+
+/** Adéquation sur 20 affichée en pourcentage. */
+export const fitPct = (f: number | null | undefined) => (f == null ? '–' : `${Math.round((f / 20) * 100)} %`);
+
+/** Pastille d'adéquation : vert au-dessus de 65 %, neutre au milieu, corail sous 45 %. */
+export function Fit({ value }: { value: number | null | undefined }) {
+  if (value == null) return <span className="text-canard/40">–</span>;
+  const pc = (value / 20) * 100;
+  const cls = pc >= 65 ? 'bg-eau-fonce text-white' : pc >= 55 ? 'bg-eau/40 text-canard' : pc >= 45 ? 'bg-canard/10 text-canard' : 'bg-corail/20 text-canard';
+  return <span className={`inline-block min-w-[3rem] rounded-full px-2 py-0.5 text-center text-xs font-bold tabular-nums ${cls}`}>{fitPct(value)}</span>;
+}
+
+/** Choix du coach (style aimé, schéma, niveau visé), partagés entre « Mon projet » et « Cibles ». */
+const COACH_KEY = 'simloom.fm.coach';
+export function useCoach() {
+  const [coach, setCoach] = useState<CoachPrefs>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(COACH_KEY) ?? '{}') as CoachPrefs;
+    } catch {
+      return {};
+    }
+  });
+  const update = (p: CoachPrefs) => {
+    const next = { ...coach, ...p };
+    setCoach(next);
+    try {
+      localStorage.setItem(COACH_KEY, JSON.stringify(next));
+    } catch {
+      /* stockage indisponible : les choix ne sont pas retenus */
+    }
+  };
+  return [coach, update] as const;
+}
+
+/** Puces de choix (une seule active). */
+export function Chips<T extends string>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {options.map(([v, label]) => (
+        <button
+          key={v}
+          type="button"
+          onClick={() => onChange(v)}
+          className={`rounded-full px-3 py-1 text-sm font-bold ${v === value ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
 }

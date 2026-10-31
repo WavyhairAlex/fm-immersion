@@ -233,8 +233,6 @@
       }
     },
     "nav": "Sections de la partie",
-    "soon": "bientôt",
-    "soonText": "Cet écran de la page Archivix arrive dans une prochaine mise à jour de Simloom.",
     "sections": {
       "home": "Accueil",
       "squad": "Effectif",
@@ -514,6 +512,219 @@
       "sharpness": "Affûtage",
       "nobody": "Personne.",
       "rustyHelp": "Donne-leur du temps de jeu en coupe ou en fin de match pour retrouver le rythme."
+    },
+    "signal": {
+      "technical": "Technique",
+      "creators": "Créateurs",
+      "physical": "Physique",
+      "pace": "Vitesse",
+      "press": "Pressing",
+      "aerial": "Jeu aérien",
+      "wide": "Couloirs",
+      "finishing": "Finition",
+      "defense": "Défense"
+    },
+    "area": {
+      "buildUpStrategy": "Construction",
+      "chanceCreation": "Création d'occasions",
+      "inPossessionShape": "Animation avec ballon",
+      "outOfPossessionShape": "Animation sans ballon",
+      "lineOfEngagement": "Ligne d'engagement",
+      "passingStyle": "Style de passes",
+      "pressingIntensity": "Intensité du pressing",
+      "pressingTrap": "Piège de pressing"
+    },
+    "areaSession": {
+      "buildUpStrategy": "Construction",
+      "chanceCreation": "Création d'occasions",
+      "inPossessionShape": "Animation avec ballon",
+      "outOfPossessionShape": "Animation sans ballon",
+      "lineOfEngagement": "Ligne d'engagement",
+      "passingStyle": "Style de passes",
+      "pressingIntensity": "Intensité du pressing",
+      "pressingTrap": "Piège de pressing"
+    },
+    "roles": {
+      "help": "Chaque case donne l'adéquation au meilleur rôle {{phase}} à ce poste. Pastilles : postes naturels. Chiffres gris : hors poste (le jeu y ajoute une pénalité de familiarité). Cerclé en pointillé : hors poste mais meilleur qu'à son poste, à essayer. Survole une case pour voir le rôle.",
+      "natOnly": "Postes naturels seulement",
+      "off": "hors poste",
+      "try": "à essayer",
+      "bestNat": "Meilleur naturel",
+      "nobody": "personne",
+      "howTitle": "Comment l'adéquation est calculée",
+      "how": {
+        "keys": "70 % : attributs clés du rôle, pondérés selon leur importance.",
+        "base": "20 % : attributs de base du poste (pour un défenseur central : marquage, tacle, jeu de tête, placement…).",
+        "engine": "10 % : « moteur de match » (accélération, vitesse, anticipation, décisions), utile à tous les postes de champ.",
+        "foot": "Pied fort : sur un côté, −0,5 point si le pied fort ne correspond pas (−1 s'il n'utilise qu'un pied). Les rôles rentrants veulent le pied opposé au côté."
+      }
+    },
+    "style": {
+      "which": "Quel style pour mon effectif ?",
+      "whichHelp": "Exigences de chaque style comparées au profil des 16 meilleurs joueurs de champ disponibles. Choisis un style pour le détailler.",
+      "profile": "Profil de l'effectif",
+      "profileHelp": "Moyenne sur 20. En couleur : ce que demande le style choisi.",
+      "pros": "Avantages",
+      "cons": "Inconvénients",
+      "mentality": "Mentalité conseillée : {{value}}",
+      "needs": "Exige : {{list}}",
+      "ip": "Consignes avec ballon",
+      "oop": "Consignes sans ballon",
+      "roles": "Rôles typiques et meilleurs joueurs",
+      "rolesHelp": "Adéquation = moyenne pondérée des attributs clés du rôle. Blessés exclus.",
+      "nobody": "Personne à ce poste",
+      "effTitle": "Efficacité tactique (estimation)",
+      "effHelp": "Nouveauté FM27 : une jauge dit si l'équipe exécutera bien tes consignes. Simloom l'estime ici ; les vraies jauges du jeu sont dans « Efficacité » quand le plugin les lit.",
+      "complexity": "Complexité du style",
+      "cx": {
+        "1": "très simple",
+        "2": "simple",
+        "3": "moyenne",
+        "4": "élevée",
+        "5": "très élevée"
+      },
+      "ability": "Capacité tactique",
+      "abilitySub": "souhaitée ≈ {{value}} · attributs mentaux",
+      "verdict": "Verdict",
+      "v": {
+        "ok": "Adapté",
+        "slow": "Long à assimiler",
+        "hard": "Trop complexe pour l'effectif"
+      },
+      "simplify": "Simplifie les consignes ou prévois du temps d'entraînement."
+    },
+    "eff": {
+      "none": "Les jauges d'efficacité du jeu ne sont pas encore dans cet instantané. En attendant, l'estimation de Simloom est dans « Style de jeu ».",
+      "toStyle": "Voir le style de jeu",
+      "overall": "Efficacité globale",
+      "complexity": "Complexité",
+      "comprehension": "compréhension {{value}}",
+      "snaps": "Instantanés",
+      "snapsSub": "importe après chaque semaine pour suivre l'évolution",
+      "flag": {
+        "noTacticError": "Aucune tactique active",
+        "noUpcomingMatchError": "Pas de match à venir",
+        "noLineupWarning": "Pas de composition",
+        "incompleteLineupWarning": "Composition incomplète",
+        "playerBelowThresholdWarning": "Un joueur sous le seuil",
+        "multiplePlayersBelowThresholdWarning": "Plusieurs joueurs sous le seuil",
+        "playerNotFullyScoutedWarning": "Joueur pas assez supervisé",
+        "playerNotInTeamWarning": "Joueur absent de l'équipe",
+        "playerNotSelectedWarning": "Joueur non sélectionné"
+      },
+      "components": "Les 4 composantes",
+      "comp": {
+        "tacticalUnderstanding": "Compréhension tactique",
+        "playerAbility": "Aptitude des joueurs",
+        "playerBuyIn": "Adhésion des joueurs",
+        "nextMatchInformation": "Infos prochain match"
+      },
+      "detail": "Détail",
+      "sub": {
+        "capability": "Capacité",
+        "roleSuitability": "Adéquation aux rôles",
+        "managerSupport": "Soutien au manager",
+        "relationships": "Relations"
+      },
+      "areas": "Compréhension par zone",
+      "session": "séance « {{name}} »",
+      "noAreas": "Zones non lues.",
+      "thisWeek": "À programmer cette semaine : {{list}}.",
+      "advice": "Conseils du staff",
+      "group": {
+        "tacticalAreas": "Tactique",
+        "playerAbility": "Aptitude",
+        "playerBuyIn": "Adhésion",
+        "nextMatch": "Prochain match"
+      }
+    },
+    "proj": {
+      "coach": "Mon coach",
+      "style": "Style que j'aime",
+      "target": "Niveau visé",
+      "targetOpt": "{{value}} % d'adéquation",
+      "help": "Simloom mesure l'écart entre ton effectif et ce style, puis en tire les postes à recruter et le travail de chaque joueur. Schémas naturels du style : {{forms}}.",
+      "ready": "Postes prêts",
+      "readySub": "adéquation ≥ {{value}} %",
+      "develop": "À faire progresser",
+      "developSub": "23 ans ou moins, proches du niveau",
+      "recruit": "À recruter",
+      "recruitSub": "postes du onze cible",
+      "switch": "Quand passer à {{style}} ?",
+      "verdict": {
+        "go": "Tu peux basculer en {{target}} maintenant.",
+        "step": "Bascule progressive possible : garde {{rec}} et introduis des consignes du projet.",
+        "no": "Pas encore : reste en {{rec}} pour l'instant."
+      },
+      "recNow": "Conseillé aujourd'hui",
+      "yourProject": "Ton projet",
+      "c": {
+        "fit": "Adéquation au style",
+        "ready": "Onze prêt",
+        "ability": "Capacité tactique",
+        "fitHelp": "écart avec le style conseillé",
+        "readyHelp": "postes au niveau visé (7 sur 11 conseillé)",
+        "abilityHelp": "lecture du jeu face à la complexité du style"
+      },
+      "conditions": "Conditions de bascule",
+      "timeline": "Projection",
+      "when": "Quand",
+      "verdictCol": "Verdict",
+      "today": "Aujourd'hui",
+      "short": {
+        "go": "Bascule",
+        "step": "Progressive",
+        "no": "Pas encore"
+      },
+      "eta": "À effectif constant, bascule sans risque vers {{date}}.",
+      "etaNever": "À effectif constant, la bascule n'arrive pas dans les 3 ans : il faut recruter.",
+      "etaStep": "Bascule progressive possible dès {{date}}.",
+      "tipRecruit_one": "Recruter accélère tout : il manque {{count}} poste prêt pour atteindre 7 sur 11.",
+      "tipRecruit_other": "Recruter accélère tout : il manque {{count}} postes prêts pour atteindre 7 sur 11.",
+      "tipBridge": "Style passerelle : {{bridge}} est presque aussi adapté que {{rec}} et plus proche de ton projet.",
+      "tipGauge": "En match, vérifie la jauge Efficacité tactique du jeu avant de basculer : c'est elle qui tranche.",
+      "switchHelp": "Projection : chaque joueur progresse selon la courbe d'âge (ou sa tendance réelle), attributs décalés d'autant. Ne tient compte ni des départs ni des recrues.",
+      "xi": "Onze cible · {{form}}",
+      "status": {
+        "ready": "Prêt",
+        "develop": "À faire progresser",
+        "recruit": "À recruter"
+      },
+      "profiles": "Profils à recruter",
+      "priorities": "Priorités : {{list}}",
+      "current": "Actuel : {{name}} {{fit}}",
+      "currentNone": "Actuel : personne",
+      "noRecruit": "Aucun poste à recruter à ce niveau visé.",
+      "recruitAll": "Pour tout le recrutement, exigences du style : {{list}}.",
+      "training": "Plan d'entraînement",
+      "collective": "Collectif, séances à prioriser :",
+      "collectiveMore": "En plus : cohésion d'équipe pour l'adhésion, préparation de match pour le rapport adverse.",
+      "role": "Rôle visé",
+      "fit": "Adéq.",
+      "axes": "Axes de travail",
+      "inProject": "Projet",
+      "rotation": "Rotation",
+      "trainingHelp": "Rôle visé : celui de son poste pour un titulaire du onze cible, sinon le rôle du projet où il est le plus adapté. Axes : ses 3 attributs clés les plus faibles pour ce rôle, à cibler en entraînement individuel."
+    },
+    "targets": {
+      "title": "Cibles du mercato · {{style}} {{form}}",
+      "help": "Ta liste de suivi du jeu, classée par ce que chaque joueur apporterait à ton onze cible (« Recrutement et entraînement ») : adéquation au rôle du poste et gain face au titulaire actuel. Clique une ligne pour le comparer.",
+      "col": {
+        "player": "Joueur",
+        "age": "Âge",
+        "club": "Club",
+        "pos": "Poste visé",
+        "fit": "Adéq.",
+        "gain": "Gain",
+        "level": "Niveau",
+        "eff": "Efficacité proj.",
+        "wage": "Salaire",
+        "value": "Valeur"
+      },
+      "compare": "Comparer",
+      "outside": "hors onze cible",
+      "none": "Ta liste de suivi du jeu n'est pas encore dans l'instantané. En attendant, les profils à chercher sont dans « Recrutement et entraînement ».",
+      "toProject": "Voir les profils à recruter"
     }
   }
 }

@@ -184,6 +184,17 @@ export class TacticEngine {
     return Math.max(1, Math.min(20, s / t + foot));
   }
 
+  /** Meilleur rôle d'une phase pour le joueur à un poste donné (naturel ou non). */
+  bestAtPos(p: FmPlayer, pos: PosCode, phase: Phase): { role: RoleRef; fit: number } | null {
+    let best: { role: RoleRef; fit: number } | null = null;
+    for (const role of this.ref.roles) {
+      if (!(role.phase === phase || role.phase === 'both') || !this.rolePositions(role).includes(pos)) continue;
+      const fit = this.roleFit(p, role.code, phase, pos);
+      if (fit != null && (!best || fit > best.fit)) best = { role, fit };
+    }
+    return best;
+  }
+
   /** Meilleur rôle avec ballon du joueur sur l'un de ses postes naturels. */
   bestRole(p: FmPlayer): { role: RoleRef; pos: PosCode; fit: number } | null {
     let best: { role: RoleRef; pos: PosCode; fit: number } | null = null;
