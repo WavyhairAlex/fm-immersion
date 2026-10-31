@@ -1,4 +1,4 @@
-import { alertGroups, normalizePlayer, type FmPlayer, type Line } from '@simloom/module-fm';
+import { alertGroups, gameFormationOf, normalizePlayer, type FmPlayer, type Line } from '@simloom/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useState } from 'react';
@@ -126,7 +126,7 @@ export function FmSave() {
           </div>
           {tab === 'squad' && <SquadTable players={players} />}
           {tab === 'analysis' && <FmAnalysis players={players} gameDate={snapshot.gameDate} />}
-          {tab === 'tactic' && <FmTactic players={players} folder={folder} gameFormation={snapshot.data.tactic?.formation ?? null} />}
+          {tab === 'tactic' && <FmTactic players={players} folder={folder} gameFormation={gameFormationOf(snapshot.data.tactic)} />}
         </>
       )}
     </div>

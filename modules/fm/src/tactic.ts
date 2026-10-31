@@ -463,3 +463,13 @@ export function knownFormation(name: string | null | undefined): string | null {
   if (!name) return null;
   return Object.keys(FORMATIONS).find((k) => name.startsWith(k)) ?? null;
 }
+
+/** Schéma de la tactique active lue par le plugin. « formation » peut n'être que la formation la plus
+ *  utilisée de la saison (formationSource = MostUsedFormation) : on préfère alors le nom de la tactique,
+ *  s'il désigne un schéma connu. */
+export function gameFormationOf(tactic: { name?: string | null; formation?: string | null; formationSource?: unknown } | null | undefined): string | null {
+  if (!tactic) return null;
+  if (knownFormation(tactic.name)) return tactic.name!;
+  if (tactic.formationSource === 'MostUsedFormation') return null;
+  return tactic.formation ?? null;
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_TACTIC_REFERENCE, FORMATIONS, TacticEngine, knownFormation, mergeReference, phaseXY, shapeOf, tacticReferenceSchema, zonePos } from '../src';
+import { DEFAULT_TACTIC_REFERENCE, FORMATIONS, TacticEngine, gameFormationOf, knownFormation, mergeReference, phaseXY, shapeOf, tacticReferenceSchema, zonePos } from '../src';
 import { normalizePlayer } from '../src/player';
 
 const ATTRS = ['Passing', 'FirstTouch', 'Technique', 'Composure', 'Vision', 'Decisions', 'Teamwork', 'WorkRate', 'Stamina', 'Strength', 'Pace', 'Acceleration', 'Tackling', 'Marking', 'Positioning', 'Anticipation', 'Heading', 'JumpingReach', 'Finishing', 'Movement', 'Crossing', 'Dribbling', 'Flair', 'Concentration', 'Agility', 'Aggression'];
@@ -67,6 +67,10 @@ describe('moteur tactique', () => {
     expect(zonePos(50, 12)).toBe('BT');
     expect(zonePos(10, 72)).toBe('DG');
     expect(knownFormation('4-2-3-1 DM Wide')).toBe('4-2-3-1');
+    // La formation la plus utilisée de la saison n'est pas la tactique active.
+    expect(gameFormationOf({ name: '4-4-2', formation: '4-2-3-1 MD MO Jeu large', formationSource: 'MostUsedFormation' })).toBe('4-4-2');
+    expect(gameFormationOf({ name: 'Ma tactique', formation: '4-2-3-1 MD MO Jeu large', formationSource: 'MostUsedFormation' })).toBeNull();
+    expect(gameFormationOf({ name: 'Ma tactique', formation: '4-3-3' })).toBe('4-3-3');
   });
 
   it('laisse un fichier local remplacer les repères maison', () => {
