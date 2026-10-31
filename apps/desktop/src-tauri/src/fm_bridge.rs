@@ -252,12 +252,39 @@ pub fn steam_libraries(vdf: &str) -> Vec<PathBuf> {
         .collect()
 }
 
-/// Dossier de FM27 : emplacements Steam habituels, puis chaque bibliothèque Steam.
+/// Dossier d'installation de Steam déclaré dans le registre (`SteamPath`, ex. « g:/steam »).
+#[cfg(windows)]
+fn registry_steam_path() -> Option<PathBuf> {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+    let out = std::process::Command::new("reg")
+        .args(["query", r"HKCU\Software\Valve\Steam", "/v", "SteamPath"])
+        .creation_flags(CREATE_NO_WINDOW)
+        .output()
+        .ok()?;
+    steam_path_from_reg(&String::from_utf8_lossy(&out.stdout))
+}
+
+#[cfg(not(windows))]
+fn registry_steam_path() -> Option<PathBuf> {
+    None
+}
+
+/// Valeur de `SteamPath` dans la sortie de `reg query` (« SteamPath    REG_SZ    g:/steam »).
+pub fn steam_path_from_reg(out: &str) -> Option<PathBuf> {
+    out.lines()
+        .find_map(|l| l.trim().strip_prefix("SteamPath")?.trim_start().strip_prefix("REG_SZ").map(str::trim))
+        .filter(|v| !v.is_empty())
+        .map(|v| PathBuf::from(v.replace('/', "\\")))
+}
+
+/// Dossier de FM27 : Steam du registre et emplacements habituels, puis chaque bibliothèque Steam.
 pub fn find_game_dir() -> Option<PathBuf> {
-    let steams = [r"C:\Program Files (x86)\Steam", r"C:\Program Files\Steam"];
-    let mut libs: Vec<PathBuf> = steams.iter().map(PathBuf::from).collect();
-    for steam in steams {
-        if let Ok(vdf) = std::fs::read_to_string(Path::new(steam).join("steamapps").join("libraryfolders.vdf")) {
+    let mut steams: Vec<PathBuf> = registry_steam_path().into_iter().collect();
+    steams.extend([r"C:\Program Files (x86)\Steam", r"C:\Program Files\Steam"].map(PathBuf::from));
+    let mut libs = steams.clone();
+    for steam in &steams {
+        if let Ok(vdf) = std::fs::read_to_string(steam.join("steamapps").join("libraryfolders.vdf")) {
             libs.extend(steam_libraries(&vdf));
         }
     }
@@ -329,6 +356,9 @@ mod tests {
     fn lit_les_bibliotheques_steam_et_le_reglage_du_plugin() {
         let vdf = "\"libraryfolders\"\n{\n\t\"0\"\n\t{\n\t\t\"path\"\t\t\"C:\\\\Program Files (x86)\\\\Steam\"\n\t}\n\t\"1\"\n\t{\n\t\t\"path\"\t\t\"G:\\\\Steam\"\n\t}\n}";
         assert_eq!(steam_libraries(vdf), vec![PathBuf::from(r"C:\Program Files (x86)\Steam"), PathBuf::from(r"G:\Steam")]);
+        let reg = "\r\nHKEY_CURRENT_USER\\Software\\Valve\\Steam\r\n    SteamPath    REG_SZ    g:/steam\r\n\r\n";
+        assert_eq!(steam_path_from_reg(reg), Some(PathBuf::from(r"g:\steam")));
+        assert_eq!(steam_path_from_reg("ERREUR : clé introuvable"), None);
         assert_eq!(configured_data_dir(&config_text(r"D:\FM\archivix")).as_deref(), Some(r"D:\FM\archivix"));
         assert_eq!(configured_data_dir("[Archivix]\nDossier = \n"), None);
     }

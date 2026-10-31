@@ -49,6 +49,10 @@ export function FmBridge({ dataFolder }: { dataFolder: string }) {
     enabled: !!gameDir,
     refetchInterval: 5000,
   });
+  // Mémorise le dossier dès qu'il est reconnu (fm.exe trouvé), pour ne pas le redemander au prochain démarrage.
+  useEffect(() => {
+    if (status?.gameFound && gameDir) write(GAME_DIR_KEY, gameDir);
+  }, [status?.gameFound, gameDir]);
   const latest = useQuery({ queryKey: ['fm', 'bridge', 'latest'], queryFn: () => invoke<string>('fm_bridge_latest'), retry: false, staleTime: 10 * 60_000 });
 
   const install = useMutation({
