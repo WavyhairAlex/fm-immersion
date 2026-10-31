@@ -101,7 +101,7 @@ export function FmSave() {
   const dateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' });
 
   return (
-    <div className="mx-auto max-w-screen-2xl px-6 py-6">
+    <div className="w-full px-6 py-6 xl:px-10">
       <Link to="/" className="text-sm font-bold text-canard/70 hover:text-canard">
         ← {t('fm.back')}
       </Link>

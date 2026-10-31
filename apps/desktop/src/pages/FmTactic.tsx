@@ -133,7 +133,7 @@ export function FmTactic({ players, folder, gameFormation }: { players: FmPlayer
       </div>
       {style.summary && <p className="text-sm text-brun">{style.summary}</p>}
 
-      <div className="grid gap-6 lg:grid-cols-[3fr_2fr]">
+      <div className="grid gap-6 lg:grid-cols-[3fr_2fr] 2xl:grid-cols-2">
         <section className="card">
           <h2 className="text-xl font-semibold">
             {form} · {styleName(style)} <span className="text-sm font-normal text-brun">{t('fm.tac.fit', { value: pct(plan.score) })}</span>
@@ -157,7 +157,8 @@ export function FmTactic({ players, folder, gameFormation }: { players: FmPlayer
             ))}
           </div>
 
-          <div className="relative mt-4 aspect-[3/4] w-full overflow-hidden rounded-2xl bg-eau-fonce/90">
+          {/* Le terrain tient dans la hauteur de la fenêtre, sans défiler. */}
+          <div className="relative mx-auto mt-4 aspect-[3/4] w-full overflow-hidden rounded-2xl bg-eau-fonce/90" style={{ maxWidth: 'max(20rem, calc((100vh - 12rem) * 0.75))' }}>
             <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden>
               <g fill="none" stroke="white" strokeOpacity="0.35" strokeWidth="0.4">
                 <rect x="3" y="2" width="94" height="96" />

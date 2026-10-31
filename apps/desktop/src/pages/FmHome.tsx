@@ -35,7 +35,7 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
   return (
     <div className="space-y-4">
       <FmSummary snap={snap} players={players} />
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-4">
         <Panel title={t('fm.home.todo')} action={link('squad', t('fm.views.squad'))}>
           {h.contracts && (
             <button type="button" className="mb-1 w-full text-left" onClick={() => go('contracts')}>
