@@ -192,20 +192,32 @@ static class Probe
     static TypedValue? Fetch(Func<TypedValue> source, string path)
     {
         var tcs = new TaskCompletionSource<TypedValue?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Bindings.Key pending = default;
+        Bindings.ValueChangedCallback? cb = null;
+        bool bound = false;
         MainThread.Enqueue(() =>
         {
             var b = GameSubsystems.Get<BindingSubsystem>();
             _owner ??= new Il2CppSystem.Object();
-            Bindings.ValueChangedCallback? cb = null;
             cb = (Action<Bindings.Key, TypedValue>)((k, v) =>
             {
-                if (!tcs.TrySetResult(v == null ? null : TypedValue.CreateCopyFrom(v))) return;
+                // Toujours se désinscrire, même pour une réponse tardive.
                 var key = k;
                 MainThread.Enqueue(() => { try { b.Unbind(ref key, cb!); } catch { } });
+                tcs.TrySetResult(v == null ? null : TypedValue.CreateCopyFrom(v));
             });
-            BindingUtils.Request(b, source(), path, _owner, cb);
+            pending = BindingUtils.Request(b, source(), path, _owner, cb);
+            bound = !tcs.Task.IsCompleted;
         });
-        return tcs.Task.Wait(TimeoutMs) ? tcs.Task.Result : null;
+        if (tcs.Task.Wait(TimeoutMs)) return tcs.Task.Result;
+        // Délai dépassé : retirer la requête restée en attente dans le jeu.
+        MainThread.Enqueue(() =>
+        {
+            if (!bound || !tcs.TrySetResult(null)) return;
+            var key = pending;
+            try { GameSubsystems.Get<BindingSubsystem>().Unbind(ref key, cb!); } catch { }
+        });
+        return null;
     }
 
     static TypedValue Wrap(Il2CppSystem.Object o)
