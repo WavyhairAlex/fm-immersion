@@ -16,3 +16,5 @@ export * from './player';
 export * from './alerts';
 export * from './analysis';
 export * from './summary';
+export * from './tactic';
+export * from './tactic-defaults';

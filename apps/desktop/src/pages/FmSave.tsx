@@ -8,6 +8,7 @@ import { fmData, savesData } from '../lib/data';
 import { FmAnalysis } from './FmAnalysis';
 import { FmBridge } from './FmBridge';
 import { FmSummary } from './FmSummary';
+import { FmTactic } from './FmTactic';
 
 const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
 
@@ -30,7 +31,7 @@ export function FmSave() {
     queryFn: () => invoke<string | null>('fm_default_folder'),
   });
 
-  const [tab, setTab] = useState<'squad' | 'analysis'>('squad');
+  const [tab, setTab] = useState<'squad' | 'analysis' | 'tactic'>('squad');
   const [folder, setFolder] = useState('');
   useEffect(() => {
     setFolder(settings?.fmFolder ?? defaultFolder ?? '');
@@ -110,7 +111,7 @@ export function FmSave() {
       {snapshot && players.length > 0 && (
         <>
           <div className="mt-8 flex gap-2" role="tablist">
-            {(['squad', 'analysis'] as const).map((k) => (
+            {(['squad', 'analysis', 'tactic'] as const).map((k) => (
               <button
                 key={k}
                 type="button"
@@ -123,7 +124,9 @@ export function FmSave() {
               </button>
             ))}
           </div>
-          {tab === 'squad' ? <SquadTable players={players} /> : <FmAnalysis players={players} gameDate={snapshot.gameDate} />}
+          {tab === 'squad' && <SquadTable players={players} />}
+          {tab === 'analysis' && <FmAnalysis players={players} gameDate={snapshot.gameDate} />}
+          {tab === 'tactic' && <FmTactic players={players} folder={folder} gameFormation={snapshot.data.tactic?.formation ?? null} />}
         </>
       )}
     </div>

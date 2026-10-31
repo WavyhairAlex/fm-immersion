@@ -22,6 +22,7 @@ pub fn run() {
             db::db_query,
             db::db_batch,
             fm::fm_read_snapshot,
+            fm::fm_read_reference,
             fm::fm_default_folder,
             fm_bridge::fm_bridge_status,
             fm_bridge::fm_bridge_latest,

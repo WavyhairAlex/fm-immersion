@@ -64,7 +64,8 @@
     },
     "tabs": {
       "squad": "Effectif",
-      "analysis": "Analyse"
+      "analysis": "Analyse",
+      "tactic": "Tactique"
     },
     "an": {
       "xi": "Niveau du onze",
@@ -153,6 +154,84 @@
       "done": "Plugin installé. Lance FM27 et charge ta partie.",
       "error": "Installation impossible : {{reason}}",
       "offline": "Impossible de vérifier la dernière version (hors ligne ?)."
+    },
+    "tac": {
+      "noAttributes": "Il faut les attributs des joueurs : réimporte depuis FM27.",
+      "style": "Style de jeu",
+      "formation": "Schéma",
+      "inGame": "Dans le jeu : {{form}}",
+      "localRef": "Repères locaux utilisés",
+      "localRefError": "Fichier de repères local illisible : repères maison utilisés",
+      "fit": "adéquation {{value}}",
+      "suggested": "Compo suggérée",
+      "suggestedHelp": "Placement calculé par Simloom. Le plugin ne lit pas encore quel joueur occupe chaque poste dans ta tactique FM27.",
+      "phase": {
+        "ip": "Avec ballon",
+        "oop": "Sans ballon"
+      },
+      "otherPhase": "{{phase}} : {{role}}",
+      "subs": "Remplaçants : {{names}}",
+      "nobody": "Personne",
+      "pitchHelp": "Onze choisi par adéquation aux rôles du style, blessés exclus. Les pointillés montrent le déplacement depuis l'autre phase. Survole un joueur pour voir ses remplaçants.",
+      "balance": "Équilibre de l'équipe",
+      "balanceHelp": "Vitesse, pressing et jeu aérien sont comparés au niveau moyen de ton onze : vert = point fort, rouge = point faible.",
+      "forms": "Schémas pour ce style",
+      "natural": "naturel",
+      "holes_one": "{{count}} poste vide",
+      "holes_other": "{{count}} postes vides",
+      "check": {
+        "width": {
+          "title": "Largeur",
+          "ok": "un joueur donne de la largeur de chaque côté",
+          "missing": {
+            "L": "aucun rôle large à gauche",
+            "R": "aucun rôle large à droite",
+            "both": "aucun rôle large d'un côté comme de l'autre"
+          },
+          "tip": "Mets un rôle large (latéral, ailier) sur ce côté ou demande « Jouer plus large »."
+        },
+        "creation": {
+          "title": "Création",
+          "text_one": "{{count}} meneur de jeu dans le onze",
+          "text_other": "{{count}} meneurs de jeu dans le onze",
+          "tip": "Vise 2 à 4 rôles créateurs (meneur reculé, meneur avancé…)."
+        },
+        "cover": {
+          "title": "Couverture",
+          "text_one": "{{count}} joueur pour protéger la défense",
+          "text_other": "{{count}} joueurs pour protéger la défense",
+          "tip": "Garde un milieu défensif ou un rôle « écran » sans ballon."
+        },
+        "box": {
+          "title": "Présence offensive",
+          "text_one": "{{count}} joueur attaque la surface",
+          "text_other": "{{count}} joueurs attaquent la surface",
+          "finisher": " · meilleur finisseur {{name}} ({{value}})",
+          "tip": "Ajoute un rôle qui attaque la surface (attaquant intérieur, second attaquant…)."
+        },
+        "pace": {
+          "title": "Vitesse de la défense",
+          "text": "{{value}} de moyenne",
+          "textHigh": "{{value}} de moyenne pour une ligne haute",
+          "tip": "Ligne trop lente pour monter haut : baisse-la d'un cran."
+        },
+        "press": {
+          "title": "Pressing",
+          "text": "{{value}} (volume de jeu, endurance, collectif)",
+          "tip": "Déclenche le pressing un peu moins souvent pour tenir 90 minutes."
+        },
+        "aerial": {
+          "title": "Jeu aérien défensif",
+          "text": "{{value}} chez les défenseurs centraux",
+          "tip": "Évite de défendre bas face aux équipes qui centrent."
+        },
+        "fitness": {
+          "title": "Fraîcheur",
+          "ok": "tout le onze est frais",
+          "tired": "{{names}} sous 90 % de condition",
+          "tip": "Fais tourner ces joueurs."
+        }
+      }
     }
   }
 }

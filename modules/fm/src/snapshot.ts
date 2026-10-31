@@ -46,6 +46,8 @@ export const fmSnapshotSchema = z
     club: z.string(),
     gameDate: z.string(),
     players: z.array(fmPlayerSchema),
+    /** Tactique active lue dans le jeu (provisoire : le plugin ne donne pas encore le joueur par poste). */
+    tactic: z.object({ name: z.string().nullish(), formation: z.string().nullish() }).passthrough().nullish(),
   })
   .passthrough();
 

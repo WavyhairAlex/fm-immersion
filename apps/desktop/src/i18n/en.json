@@ -64,7 +64,8 @@
     },
     "tabs": {
       "squad": "Squad",
-      "analysis": "Analysis"
+      "analysis": "Analysis",
+      "tactic": "Tactics"
     },
     "an": {
       "xi": "First XI level",
@@ -153,6 +154,84 @@
       "done": "Plugin installed. Start FM27 and load your save.",
       "error": "Installation failed: {{reason}}",
       "offline": "Could not check the latest version (offline?)."
+    },
+    "tac": {
+      "noAttributes": "Player attributes are needed: import again from FM27.",
+      "style": "Playing style",
+      "formation": "Formation",
+      "inGame": "In game: {{form}}",
+      "localRef": "Using local reference",
+      "localRefError": "Local reference file unreadable: using built-in reference",
+      "fit": "fit {{value}}",
+      "suggested": "Suggested line-up",
+      "suggestedHelp": "Placement worked out by Simloom. The plugin can't yet read which player holds each position in your FM27 tactic.",
+      "phase": {
+        "ip": "In possession",
+        "oop": "Out of possession"
+      },
+      "otherPhase": "{{phase}}: {{role}}",
+      "subs": "Backups: {{names}}",
+      "nobody": "Nobody",
+      "pitchHelp": "Eleven picked by fit to the style's roles, injured players left out. Dotted lines show the move from the other phase. Hover a player to see backups.",
+      "balance": "Team balance",
+      "balanceHelp": "Pace, pressing and aerial play are compared to your eleven's average level: green = strength, red = weakness.",
+      "forms": "Formations for this style",
+      "natural": "natural",
+      "holes_one": "{{count}} empty position",
+      "holes_other": "{{count}} empty positions",
+      "check": {
+        "width": {
+          "title": "Width",
+          "ok": "someone provides width on each side",
+          "missing": {
+            "L": "no wide role on the left",
+            "R": "no wide role on the right",
+            "both": "no wide role on either side"
+          },
+          "tip": "Put a wide role (full-back, winger) on that side or use “Play wider”."
+        },
+        "creation": {
+          "title": "Creativity",
+          "text_one": "{{count}} playmaker in the eleven",
+          "text_other": "{{count}} playmakers in the eleven",
+          "tip": "Aim for 2 to 4 creative roles (deep-lying or advanced playmaker…)."
+        },
+        "cover": {
+          "title": "Cover",
+          "text_one": "{{count}} player shielding the defence",
+          "text_other": "{{count}} players shielding the defence",
+          "tip": "Keep a defensive midfielder or a screening role out of possession."
+        },
+        "box": {
+          "title": "Box presence",
+          "text_one": "{{count}} player attacks the box",
+          "text_other": "{{count}} players attack the box",
+          "finisher": " · best finisher {{name}} ({{value}})",
+          "tip": "Add a role that attacks the box (inside forward, second striker…)."
+        },
+        "pace": {
+          "title": "Defensive pace",
+          "text": "{{value}} on average",
+          "textHigh": "{{value}} on average for a high line",
+          "tip": "Too slow for a high line: drop it a notch."
+        },
+        "press": {
+          "title": "Pressing",
+          "text": "{{value}} (work rate, stamina, teamwork)",
+          "tip": "Trigger the press a little less often to last 90 minutes."
+        },
+        "aerial": {
+          "title": "Defensive aerial play",
+          "text": "{{value}} for the centre-backs",
+          "tip": "Avoid defending deep against crossing teams."
+        },
+        "fitness": {
+          "title": "Freshness",
+          "ok": "the whole eleven is fresh",
+          "tired": "{{names}} below 90% condition",
+          "tip": "Rotate these players."
+        }
+      }
     }
   }
 }

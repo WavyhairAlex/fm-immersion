@@ -10,6 +10,8 @@ use tauri::Manager;
 
 /// Nom fixe : la commande ne peut lire aucun autre fichier.
 pub const SNAPSHOT_FILE: &str = "archivix-snapshot.json";
+/// Repères de rôles et de styles fournis par le joueur (facultatif) : ils remplacent les repères maison.
+pub const REFERENCE_FILE: &str = "simloom-roles.json";
 /// Un effectif complet pèse quelques centaines de Ko ; au-delà, ce n'est pas notre fichier.
 const MAX_BYTES: u64 = 20 * 1024 * 1024;
 
@@ -32,10 +34,14 @@ impl Serialize for FmError {
 }
 
 pub fn read_snapshot(folder: &Path) -> Result<String, FmError> {
+    read_fixed(folder, SNAPSHOT_FILE)
+}
+
+fn read_fixed(folder: &Path, name: &str) -> Result<String, FmError> {
     if !folder.is_absolute() {
         return Err(FmError::InvalidFolder);
     }
-    let path = folder.join(SNAPSHOT_FILE);
+    let path = folder.join(name);
     let meta = std::fs::metadata(&path).map_err(|_| FmError::NotFound)?;
     if meta.len() > MAX_BYTES {
         return Err(FmError::TooLarge);
@@ -47,6 +53,16 @@ pub fn read_snapshot(folder: &Path) -> Result<String, FmError> {
 #[tauri::command]
 pub fn fm_read_snapshot(folder: String) -> Result<String, FmError> {
     read_snapshot(Path::new(&folder))
+}
+
+/// Repères locaux (`simloom-roles.json` dans le dossier du plugin), ou rien s'il n'y en a pas.
+#[tauri::command]
+pub fn fm_read_reference(folder: String) -> Result<Option<String>, FmError> {
+    match read_fixed(Path::new(&folder), REFERENCE_FILE) {
+        Ok(s) => Ok(Some(s)),
+        Err(FmError::NotFound) => Ok(None),
+        Err(e) => Err(e),
+    }
 }
 
 /// Dossier par défaut : celui réglé dans le plugin s'il est installé, sinon
@@ -85,5 +101,16 @@ mod tests {
         assert!(matches!(read_snapshot(Path::new("archivix")), Err(FmError::InvalidFolder)));
         let dir = std::env::temp_dir().join("simloom-fm-vide");
         assert!(matches!(read_snapshot(&dir), Err(FmError::NotFound)));
+    }
+
+    #[test]
+    fn reperes_locaux_facultatifs() {
+        let dir = std::env::temp_dir().join(format!("simloom-fm-ref-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let folder = dir.to_string_lossy().into_owned();
+        assert_eq!(fm_read_reference(folder.clone()).unwrap(), None);
+        std::fs::write(dir.join(REFERENCE_FILE), r#"{"roles":[],"styles":[]}"#).unwrap();
+        assert_eq!(fm_read_reference(folder).unwrap().as_deref(), Some(r#"{"roles":[],"styles":[]}"#));
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

@@ -45,6 +45,8 @@ export interface FmPlayer {
   avgRating: number | null;
   injury: string | null;
   injuryDays: number | null;
+  /** Pied fort tel qu'écrit par le jeu (« Gauche », « Droit uniquement », « Les deux »…). */
+  foot: string | null;
   /** Attributs connus (milieu de fourchette si le recrutement ne les a pas affinés), sans le préfixe « Attribute ». */
   attributes: Record<string, number>;
 }
@@ -85,6 +87,7 @@ export function normalizePlayer(p: FmPlayerRaw): FmPlayer {
     avgRating: p.avgRating ?? null,
     injury: injury || null,
     injuryDays,
+    foot: p.foot ?? null,
     attributes,
   };
 }

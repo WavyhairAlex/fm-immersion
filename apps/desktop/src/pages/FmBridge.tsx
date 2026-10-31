@@ -108,9 +108,11 @@ export function FmBridge({ dataFolder }: { dataFolder: string }) {
       )}
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <button type="button" className="btn-primary" disabled={!canInstall || install.isPending} onClick={() => install.mutate()}>
-          {installed && latest.data ? t('fm.bridge.update', { version: latest.data }) : t('fm.bridge.install')}
-        </button>
+        {!upToDate && (
+          <button type="button" className="btn-primary" disabled={!canInstall || install.isPending} onClick={() => install.mutate()}>
+            {installed && latest.data ? t('fm.bridge.update', { version: latest.data }) : t('fm.bridge.install')}
+          </button>
+        )}
         {install.isSuccess && <p className="text-sm text-canard">{t('fm.bridge.done')}</p>}
         {install.isError && <p className="text-sm text-corail">{t('fm.bridge.error', { reason: String(install.error?.message ?? install.error) })}</p>}
       </div>
