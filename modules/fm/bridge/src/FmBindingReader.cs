@@ -139,16 +139,22 @@ public class FmBindingReader : IGameReader
 
         var players = rows.Select(ToPlayer).Where(p => p != null).Cast<PlayerDto>().ToList();
         TacticDto? tactic = null; Dictionary<string, object?>? effectiveness = null;
-        if (Plugin.ReadTactic)
+        List<Dictionary<string, object?>>? lineup = null;
+        var collecte = new Dictionary<string, string>();
+        // Toute lecture liée à la tactique attend que l'écran Tactique soit fermé (null = état inconnu : on s'abstient aussi).
+        var screen = TacticsScreen.IsOpen();
+        _tacticsAllowed = screen == false;
+        string why = screen == true ? "sautée : écran Tactique ouvert" : "sautée : état de l'écran Tactique inconnu";
+        void Block(string key, bool enabled, Action read)
         {
-            try { tactic = ReadTactic(head[2] as string); }
-            catch (Exception e) { Plugin.Log.LogWarning($"Tactique illisible : {e.Message}"); }
+            if (!enabled) { collecte[key] = "désactivée (réglage)"; return; }
+            if (!_tacticsAllowed) { collecte[key] = why; return; }
+            try { read(); collecte[key] = "lue"; }
+            catch (Exception e) { collecte[key] = "erreur : " + e.Message; Plugin.Log.LogWarning($"{key} : {e.Message}"); }
         }
-        if (Plugin.ReadEffectiveness)
-        {
-            try { effectiveness = ReadEffectiveness(); }
-            catch (Exception e) { Plugin.Log.LogWarning($"Efficacité tactique illisible : {e.Message}"); }
-        }
+        Block("tactique", Plugin.ReadTactic, () => tactic = ReadTactic(head[2] as string));
+        Block("efficacite", Plugin.ReadEffectiveness, () => effectiveness = ReadEffectiveness());
+        Block("compo", Plugin.ReadLineup, () => lineup = ReadLineup());
         tactic ??= new TacticDto(head[2] as string, "MostUsedFormation", null, new(), new());
 
         // Club et prochain match : blocs optionnels
@@ -175,7 +181,39 @@ public class FmBindingReader : IGameReader
             Effectiveness = effectiveness,
             ClubInfo = clubInfo is { Count: > 0 } ? clubInfo : null,
             NextMatch = nextMatch is { Count: > 0 } ? nextMatch : null,
+            Lineup = lineup,
+            Collecte = collecte,
         };
+    }
+
+    bool _tacticsAllowed;
+    const int SelectionSlots = 11;
+
+    // Compo : joueur et poste pour chaque index de sélection (0-10). Propriétés « de contexte » : sans
+    // TeamSelectionIndex, le jeu ne répond jamais. Noms à confirmer avec decouverte.json ; chemins.json peut
+    // aussi les lire avec la même syntaxe "Propriete{Contexte=n}".
+    List<Dictionary<string, object?>>? ReadLineup()
+    {
+        var reqs = new List<Req>();
+        for (int i = 0; i < SelectionSlots; i++)
+        {
+            string ctx = $"{{TeamSelectionIndex={i}}}";
+            reqs.Add(new Req(null, $"{Tactic}PlayerFromTeamSelectionIndex{ctx}/UniqueId"));
+            reqs.Add(new Req(null, $"{Tactic}PlayerFromTeamSelectionIndex{ctx}/Name"));
+            reqs.Add(new Req(null, $"{Tactic}PositionFromTeamSelectionIndex{ctx}", true));
+        }
+        var v = Batch.Run(reqs, TimeoutMs);
+        if (v.All(x => x == null)) return null;
+        var res = new List<Dictionary<string, object?>>();
+        for (int i = 0; i < SelectionSlots; i++)
+            res.Add(new Dictionary<string, object?>
+            {
+                ["index"] = i,
+                ["playerId"] = Num(v[3 * i]) is double d ? (long)d : null,
+                ["playerName"] = v[3 * i + 1] is string s ? CleanName(s) : null,
+                ["position"] = v[3 * i + 2],
+            });
+        return res;
     }
 
     // --- Tactique active et efficacité tactique (blocs optionnels : null si le jeu ne répond pas) ---
@@ -279,7 +317,7 @@ public class FmBindingReader : IGameReader
 
         var reqs = new List<Req>(); var keys = new List<(string Section, string Key, int? Item)>();
         foreach (var (section, prefix) in prefixes)
-            foreach (var (key, path) in Section(section)) { reqs.Add(new Req(null, prefix + path, deep.Contains(key))); keys.Add((section, key, null)); }
+            foreach (var (key, path) in section == "tactique" && !_tacticsAllowed ? new() : Section(section)) { reqs.Add(new Req(null, prefix + path, deep.Contains(key))); keys.Add((section, key, null)); }
         var perPlayer = Section("joueur");
         if (perPlayer.Count > 0) perPlayer.TryAdd("id", "UniqueId");   // pour relier chaque ligne au joueur (players[].id)
         for (int i = 0; i < squadCount; i++)
@@ -573,7 +611,10 @@ public class FmBindingReader : IGameReader
                         try
                         {
                             st.Cb = cb;
-                            st.Key = BindingUtils.Request(b, src, st.Segs[lvl], _owner, cb);
+                            var ctx = ContextRequest.Parse(st.Segs[lvl]);   // "Prop{Contexte=n}" : propriété de contexte
+                            st.Key = ctx is { } c
+                                ? ContextRequest.Bind(b, src, c.Prop, c.Ctx, c.Value, _owner, cb)
+                                : BindingUtils.Request(b, src, st.Segs[lvl], _owner, cb);
                             st.Bound = st.Signalled == 0;   // réponse immédiate : déjà désinscrite par le callback
                         }
                         catch { if (Interlocked.Exchange(ref st.Signalled, 1) == 0) { st.Failed = true; done.Signal(); } }

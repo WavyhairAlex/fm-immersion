@@ -17,12 +17,13 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.2.2";
+    public const string Version = "0.3.0";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que Simloom renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
     internal static string DataDir = null!;
-    internal static bool ReadTactic = true, ReadEffectiveness;
+    internal static bool ReadTactic = true, ReadEffectiveness, ReadLineup, WriteDiscovery = true;
+    bool _discovered;
     internal static int RereadSeconds = 300;
     const string Prefix = "http://localhost:8727/";
     static readonly JsonSerializerOptions Json = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
@@ -45,6 +46,10 @@ public class Plugin : BasePlugin
             "Lire la tactique active (nom, mentalité, postes, consignes). Risqué : peut figer FM27 si l'écran Tactique est ouvert.").Value;
         ReadEffectiveness = Config.Bind("Archivix", "LireEfficacite", false,
             "Lire l'efficacité tactique FM27 (expérimental : le jeu ne répond pas encore à ces lectures).").Value;
+        ReadLineup = Config.Bind("Archivix", "LireCompo", false,
+            "Lire la compo (joueur à chaque poste) et les rôles personnalisés. Expérimental ; jamais pendant que l'écran Tactique est ouvert.").Value;
+        WriteDiscovery = Config.Bind("Archivix", "Decouverte", true,
+            "Écrire archivix\\config\\decouverte.json (propriétés et contextes du jeu, sans requête au jeu) une fois par lancement.").Value;
         RereadSeconds = Math.Max(60, Config.Bind("Archivix", "RelectureSecondes", 300,
             "Relecture complète au plus tard toutes les N secondes même sans changement de date (60 au minimum).").Value);
         _http = new HttpListener();
@@ -90,6 +95,12 @@ public class Plugin : BasePlugin
         var json = JsonSerializer.Serialize(snap, Json);
         WriteAtomic(Path.Combine(dir, "archivix-snapshot.json"), json);
         WriteAtomic(Path.Combine(dir, $"archivix-{snap.GameDate}.json"), json);
+        if (WriteDiscovery && !_discovered)
+        {
+            _discovered = true;
+            try { Discovery.Write(dir); }
+            catch (Exception e) { Log.LogWarning($"Rapport de découverte impossible : {e.Message}"); }
+        }
     }
 
     // Écriture atomique : fichier .tmp puis remplacement, pour qu'un lecteur ne voie jamais un JSON à moitié écrit.
@@ -128,6 +139,10 @@ public class Plugin : BasePlugin
             case "/api/discover":
                 var q = ctx.Request.QueryString["q"] ?? "Player";
                 Write(ctx, 200, "application/json", JsonSerializer.Serialize(Discover(q), Json));
+                break;
+            case "/api/probe" or "/api/squad" when TacticsScreen.IsOpen() != false:
+                // Sondes refusées tant que l'écran Tactique est ouvert (ou son état inconnu) : risque de figer FM27.
+                Write(ctx, 409, "application/json", "{\"error\":\"Écran Tactique ouvert (ou état inconnu) : sonde refusée\"}");
                 break;
             case "/api/probe":
                 var qs = ctx.Request.QueryString;
@@ -182,6 +197,10 @@ public record Snapshot(string Schema, string Game, string Club, string GameDate,
     // Club (finances, direction, formation) et prochain match / calendrier ; null si non lisibles
     public Dictionary<string, object?>? ClubInfo { get; init; }
     public Dictionary<string, object?>? NextMatch { get; init; }
+    // Compo (réglage LireCompo) : un élément par index de sélection 0-10 {index, playerId, playerName, position, raw} ; null si non lue
+    public List<Dictionary<string, object?>>? Lineup { get; init; }
+    // État de la collecte : blocs lus ou sautés et pourquoi (ex. {"tactique":"sautée : écran Tactique ouvert"})
+    public Dictionary<string, string>? Collecte { get; init; }
 }
 
 // Ca/Pa : null, le jeu ne les expose pas à l'interface (voir StarRating).

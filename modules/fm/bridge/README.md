@@ -23,7 +23,32 @@ le club et le prochain match via le système de bindings de l'interface du jeu, 
 Par défaut `Documents\Sports Interactive\Football Manager 27\archivix`. Simloom le renseigne à l'installation.
 
 Autres clés : `LireTactique` (non par défaut), `LireEfficacite` (non par défaut, expérimental),
-`RelectureSecondes` (300 par défaut, 60 au minimum : relecture complète même sans changement de date).
+`LireCompo` (non par défaut, expérimental : joueur à chaque poste), `Decouverte` (oui par défaut : rapport
+`archivix\config\decouverte.json`), `RelectureSecondes` (300 par défaut, 60 au minimum : relecture complète même sans
+changement de date).
+
+## Garde-fou « écran Tactique » (0.3.0)
+
+Toute lecture liée à la tactique (`LireTactique`, `LireEfficacite`, `LireCompo`, section `tactique` de `chemins.json`,
+sondes `/api/probe` et `/api/squad`) est **sautée tant que l'écran Tactique de FM27 est ouvert**, ou si son état est
+inconnu. L'état est lu dans le fil d'événements de l'interface que le jeu tient pour son rapporteur de plantage
+(`LocalLow\Sports Interactive\Football Manager 27\backtrace\bt-breadcrumbs-*`, événements `Panel Opened/Closed` de
+`TacticalPlannerTool` du lancement en cours) : aucune requête au jeu. L'instantané indique ce qui a été lu ou sauté
+dans `collecte` (ex. `{"tactique": "sautée : écran Tactique ouvert"}`).
+
+## Propriétés « de contexte »
+
+Syntaxe de chemin `Propriete{Contexte=n}`, utilisable aussi dans `chemins.json`, par exemple
+`"joueurPoste3": "PlayerFromTeamSelectionIndex{TeamSelectionIndex=3}/Name"` dans la section `tactique`.
+Le rapport `decouverte.json` liste, pour les principaux types de référence, chaque propriété et les contextes qu'elle
+exige (`null` = aucun), ainsi que tous les noms de contexte connus du jeu. Il est écrit une fois par lancement, à partir
+des tables statiques de l'interface (aucune requête au jeu).
+
+## Instantané : blocs ajoutés en 0.3.0
+
+- `lineup` (si `LireCompo`) : `[{ "index": 0-10, "playerId": long|null, "playerName": string|null, "position": … }]`,
+  `null` si le jeu ne répond pas.
+- `collecte` : `{ "tactique" | "efficacite" | "compo": "lue" | "désactivée (réglage)" | "sautée : …" | "erreur : …" }`.
 
 ## Requêtes au jeu : règles
 
