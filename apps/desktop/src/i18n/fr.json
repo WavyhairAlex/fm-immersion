@@ -26,7 +26,7 @@
   },
   "footer": {
     "disclaimer": "Simloom est un projet indépendant, sans lien avec les éditeurs des jeux cités. Les noms des jeux appartiennent à leurs propriétaires.",
-    "privacy": "Tes données restent sur ton PC. Simloom ne collecte ni n'envoie aucune donnée personnelle ; seule la recherche de mises à jour contacte GitHub au démarrage."
+    "privacy": "Tes données restent sur ton PC. Simloom ne collecte ni n'envoie aucune donnée personnelle ; il contacte GitHub seulement pour chercher ses mises à jour au démarrage et, si tu le demandes, pour télécharger le plugin FM27."
   },
   "fm": {
     "back": "Mes parties",
@@ -134,6 +134,25 @@
         "contracts": "Contrats",
         "profile": "Profil (/20, joueurs de champ)"
       }
+    },
+    "bridge": {
+      "title": "Plugin FM27",
+      "intro": "Le plugin lit ton effectif dans FM27 (lecture seule) et le dépose pour Simloom. Simloom l'installe et le met à jour pour toi.",
+      "gameDir": "Dossier de FM27 (celui qui contient fm.exe)",
+      "gameFound": "FM27 trouvé",
+      "gameMissing": "fm.exe introuvable dans ce dossier",
+      "bepinex": "BepInEx installé",
+      "bepinexMissing": "BepInEx 6 (IL2CPP) n'est pas installé : il est nécessaire au plugin.",
+      "running": "FM27 est lancé : ferme le jeu pour installer ou mettre à jour.",
+      "installed": "Version installée : {{version}}",
+      "notInstalled": "Plugin pas encore installé",
+      "latest": "Dernière version : {{version}}",
+      "upToDate": "À jour",
+      "install": "Installer le plugin",
+      "update": "Mettre à jour vers {{version}}",
+      "done": "Plugin installé. Lance FM27 et charge ta partie.",
+      "error": "Installation impossible : {{reason}}",
+      "offline": "Impossible de vérifier la dernière version (hors ligne ?)."
     }
   }
 }

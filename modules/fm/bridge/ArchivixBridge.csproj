@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Plugin BepInEx 6 (IL2CPP) en lecture seule pour Football Manager 27.
+    Se compile contre les DLL d'interop générées par BepInEx dans le dossier du jeu : elles appartiennent à
+    l'éditeur et ne sont jamais versionnées ni publiées. Compilation locale uniquement (voir README.md) :
+      dotnet build -c Release -p:FMDir="G:\Steam\steamapps\common\Football Manager 27"
+  -->
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>ArchivixBridge</AssemblyName>
+    <RootNamespace>Archivix</RootNamespace>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <Version>0.2.0</Version>
+    <FMDir Condition="'$(FMDir)' == ''">$(FM27_DIR)</FMDir>
+    <FMDir Condition="'$(FMDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Football Manager 27</FMDir>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="src\*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="$(FMDir)\BepInEx\core\BepInEx.Core.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\core\BepInEx.Unity.IL2CPP.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\core\Il2CppInterop.Runtime.dll" Private="false" />
+    <!-- Alias : cette DLL expose publiquement System.Runtime.CompilerServices.NullableAttribute (conflit CS0656). -->
+    <Reference Include="$(FMDir)\BepInEx\interop\UnityEngine.CoreModule.dll" Private="false" Aliases="UnityCore" />
+    <Reference Include="$(FMDir)\BepInEx\interop\Il2Cppmscorlib.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\SI.Core.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\SI.Bindable.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\SI.Bindable.Reference.Core.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\SI.Interop.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\FM.UI.dll" Private="false" />
+  </ItemGroup>
+</Project>

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { fmData, savesData } from '../lib/data';
 import { FmAnalysis } from './FmAnalysis';
+import { FmBridge } from './FmBridge';
 import { FmSummary } from './FmSummary';
 
 const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
@@ -86,6 +87,8 @@ export function FmSave() {
         </details>
         {importSnap.isError && <p className="w-full text-sm text-corail">{t('fm.importError', { reason: String(importSnap.error?.message ?? importSnap.error) })}</p>}
       </form>
+
+      <FmBridge dataFolder={folder} />
 
       {!isLoading && !snapshot && (
         <div className="card mt-6 flex flex-col items-center gap-3 py-10 text-center">

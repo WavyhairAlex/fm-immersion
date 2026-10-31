@@ -1,0 +1,233 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Text.Json;
+using System.Threading;
+using BepInEx;
+using BepInEx.Logging;
+using BepInEx.Unity.IL2CPP;
+
+namespace Archivix;
+
+// Pont en lecture seule entre FM27 et le compagnon Archivix.
+// GET / (archivix.html à côté de la DLL), GET /api/snapshot, GET /api/discover?q=
+[BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
+public class Plugin : BasePlugin
+{
+    public const string Version = "0.2.0";
+    internal static ManualLogSource Log = null!;
+    // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
+    // que Simloom renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
+    internal static string DataDir = null!;
+    const string Prefix = "http://localhost:8727/";
+    static readonly JsonSerializerOptions Json = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
+    HttpListener? _http;
+    IGameReader _reader = new FmBindingReader();
+    Snapshot? _last;
+    readonly object _lock = new();
+
+    public override void Load()
+    {
+        Log = base.Log;
+        DataDir = Config.Bind("Archivix", "Dossier",
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sports Interactive", "Football Manager 27", "archivix"),
+            "Dossier où écrire archivix-snapshot.json (en général <données FM27>\\archivix).").Value;
+        _http = new HttpListener();
+        _http.Prefixes.Add(Prefix);
+        _http.Start();
+        AddComponent<MainThread>();
+        new Thread(Serve) { IsBackground = true, Name = "ArchivixHttp" }.Start();
+        new Thread(RefreshLoop) { IsBackground = true, Name = "ArchivixRefresh" }.Start();
+        Log.LogInfo($"Archivix Bridge {Version} à l'écoute sur {Prefix}, instantanés dans {DataDir}");
+    }
+
+    // Vérifie la date de jeu toutes les 10 s ; instantané complet au chargement d'une partie, à chaque nouveau
+    // jour de jeu, et au plus tard toutes les 60 s. Les lectures IL2CPP sont exécutées sur le thread principal
+    // par MainThread ; ce thread-ci ne fait qu'attendre les réponses et écrire les fichiers.
+    void RefreshLoop()
+    {
+        string? lastDate = null;
+        var lastFull = DateTime.MinValue;
+        while (true)
+        {
+            Thread.Sleep(10_000);
+            try
+            {
+                var date = FmBindingReader.CurrentDate();
+                if (date == null) { lastDate = null; continue; }   // pas de partie chargée
+                if (date == lastDate && DateTime.UtcNow - lastFull < TimeSpan.FromSeconds(60)) continue;
+                Refresh();
+                lastDate = date;
+                lastFull = DateTime.UtcNow;
+            }
+            catch (Exception e) { Log.LogWarning($"Instantané impossible : {e.Message}"); }
+        }
+    }
+
+    internal void Refresh()
+    {
+        var snap = _reader.Read();
+        // Jamais d'instantané vide : il écraserait le dernier effectif valide (ex. partie en cours de chargement)
+        if (snap.Players.Count == 0 || string.IsNullOrEmpty(snap.Club)) return;
+        lock (_lock) _last = snap;
+        var dir = DataDir;
+        Directory.CreateDirectory(dir);
+        var json = JsonSerializer.Serialize(snap, Json);
+        WriteAtomic(Path.Combine(dir, "archivix-snapshot.json"), json);
+        WriteAtomic(Path.Combine(dir, $"archivix-{snap.GameDate}.json"), json);
+    }
+
+    // Écriture atomique : fichier .tmp puis remplacement, pour qu'un lecteur ne voie jamais un JSON à moitié écrit.
+    static void WriteAtomic(string path, string content)
+    {
+        var tmp = path + ".tmp";
+        File.WriteAllText(tmp, content, new UTF8Encoding(false));
+        File.Move(tmp, path, overwrite: true);
+    }
+
+    void Serve()
+    {
+        while (_http is { IsListening: true })
+        {
+            HttpListenerContext ctx;
+            try { ctx = _http.GetContext(); } catch { break; }
+            try { Handle(ctx); }
+            catch (Exception e) { Log.LogError(e); Write(ctx, 500, "text/plain", e.Message); }
+        }
+    }
+
+    void Handle(HttpListenerContext ctx)
+    {
+        ctx.Response.AddHeader("Access-Control-Allow-Origin", "*");
+        switch (ctx.Request.Url!.AbsolutePath)
+        {
+            case "/":
+                var html = Path.Combine(Path.GetDirectoryName(typeof(Plugin).Assembly.Location)!, "archivix.html");
+                Write(ctx, 200, "text/html; charset=utf-8", File.Exists(html) ? File.ReadAllText(html) : "archivix.html introuvable");
+                break;
+            case "/api/snapshot":
+                Snapshot? s; lock (_lock) s = _last;
+                if (s == null) Write(ctx, 503, "application/json", "{\"error\":\"Aucun instantané : charge une partie\"}");
+                else Write(ctx, 200, "application/json", JsonSerializer.Serialize(s, Json));
+                break;
+            case "/api/discover":
+                var q = ctx.Request.QueryString["q"] ?? "Player";
+                Write(ctx, 200, "application/json", JsonSerializer.Serialize(Discover(q), Json));
+                break;
+            case "/api/probe":
+                var qs = ctx.Request.QueryString;
+                int? item = int.TryParse(qs["item"], out var n) ? n : null;
+                Write(ctx, 200, "application/json", JsonSerializer.Serialize(Probe.Path(qs["path"] ?? "game.GameCurrentManagerClubTeam", item, qs["prop"]), Json));
+                break;
+            case "/api/squad":
+                var max = int.TryParse(ctx.Request.QueryString["max"], out var m) ? m : 3;
+                Write(ctx, 200, "application/json", JsonSerializer.Serialize(Probe.Squad(max, ctx.Request.QueryString["path"], ctx.Request.QueryString["props"]), Json));
+                break;
+            case "/api/properties":
+                Write(ctx, 200, "application/json", JsonSerializer.Serialize(Probe.Properties(ctx.Request.QueryString["q"] ?? ""), Json));
+                break;
+            case "/api/refprops":
+                Write(ctx, 200, "application/json", JsonSerializer.Serialize(Probe.RefProps(ctx.Request.QueryString["type"] ?? "PersonReference"), Json));
+                break;
+            default:
+                Write(ctx, 404, "text/plain", "Introuvable");
+                break;
+        }
+    }
+
+    static object Discover(string q) =>
+        AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(a => { try { return a.GetTypes(); } catch { return Array.Empty<Type>(); } })
+            .Where(t => t.Name.Contains(q, StringComparison.OrdinalIgnoreCase))
+            .Take(200)
+            .Select(t => new
+            {
+                assembly = t.Assembly.GetName().Name,
+                type = t.FullName,
+                members = t.GetProperties().Select(p => $"{p.PropertyType.Name} {p.Name}")
+                    .Concat(t.GetFields().Select(f => $"{f.FieldType.Name} {f.Name}")).Take(80).ToList()
+            }).ToList();
+
+    static void Write(HttpListenerContext ctx, int code, string type, string body)
+    {
+        var bytes = Encoding.UTF8.GetBytes(body);
+        ctx.Response.StatusCode = code;
+        ctx.Response.ContentType = type;
+        ctx.Response.OutputStream.Write(bytes);
+        ctx.Response.Close();
+    }
+}
+
+public record Snapshot(string Schema, string Game, string Club, string GameDate, List<PlayerDto> Players, TacticDto? Tactic = null)
+{
+    // Efficacité tactique FM27 (null si non lisible) : overall, components, understandingAreas, complexity, … (voir FmBindingReader.ReadTactic)
+    public Dictionary<string, object?>? Effectiveness { get; init; }
+    // Données ajoutées par archivix\config\chemins.json (sans recompiler) ; joueurs indexés par rang dans l'effectif
+    public Dictionary<string, object?>? Custom { get; init; }
+    // Club (finances, direction, formation) et prochain match / calendrier ; null si non lisibles
+    public Dictionary<string, object?>? ClubInfo { get; init; }
+    public Dictionary<string, object?>? NextMatch { get; init; }
+}
+
+// Ca/Pa : null, le jeu ne les expose pas à l'interface (voir StarRating).
+// Wage : montant du contrat dans l'unité affichée par le jeu (voir WageText, ex. "95 € p/m").
+// Attributes : fourchette {min,max} ; min == max quand l'attribut est connu précisément.
+public record PlayerDto(
+    int Id, string Name, int Age, string[] Positions, string? Foot,
+    int? Ca, int? Pa, int? Condition, string? Morale,
+    string? ContractEnd, long? Wage, long? Value, string? SquadStatus,
+    int? Apps, int? Goals, double? AvgRating, string? Injury,
+    Dictionary<string, object>? Attributes)   // valeur exacte (int) ou fourchette AttrRange {min,max}
+{
+    public string? PositionsText { get; init; }   // libellé FR du jeu, ex. "MO (DGC), BT (C)"
+    public Dictionary<string, int>? PositionRatings { get; init; }   // familiarité 1-20 par poste, ex. {"D (C)":20,"D (D)":18}
+    // Suivi : risque de blessure, hiérarchie, groupe social, satisfaction, promesses, clubs intéressés, statut de transfert…
+    public Dictionary<string, object?>? Tracking { get; init; }
+    public int? SquadNumber { get; init; }
+    public string? Nationality { get; init; }
+    public string? BestPosition { get; init; }
+    public int? Sharpness { get; init; }
+    public string? WageText { get; init; }
+    public string? ValueText { get; init; }
+    public long? ValueMin { get; init; }
+    public int? InjuryReturnDays { get; init; }
+    public AttrRange? StarRating { get; init; }   // à remplir : étoiles CA/PA du staff (propriété à confirmer)
+}
+
+public record AttrRange(int Min, int Max);
+
+// Formation : pour l'instant MostUsedFormation de l'équipe ; mentalité, postes et instructions à remplir
+// une fois la référence de tactique validée en jeu.
+public record TacticDto(string? Formation, string? FormationSource, string? Mentality,
+    List<TacticSlotDto> Slots, List<string> TeamInstructions)
+{
+    // Champs lus sur la référence de tactique (null si le jeu ne répond pas). Les valeurs composées sont brutes (JSON du jeu).
+    public string? Name { get; init; }
+    public object? FormationIP { get; init; }
+    public object? FormationOOP { get; init; }
+    public object? MentalityRaw { get; init; }
+    public object? Style { get; init; }
+    public object? Complexity { get; init; }
+    public object? Intensity { get; init; }
+    public string? ComplexityLabel { get; init; }
+    public string? IntensityLabel { get; init; }
+    public string? ActiveSlot { get; init; }
+    public string?[]? SlotNames { get; init; }
+    public object? InPossessionInstructions { get; init; }
+    public object? OutOfPossessionInstructions { get; init; }
+    public Dictionary<string, object?>? Recommended { get; init; }
+    public List<Dictionary<string, object?>>? Positions { get; init; }
+    public object? PositionsCombined { get; init; }   // 11 postes, JSON brut du jeu (poste, rôles avec / sans ballon, joueur…)
+}
+public record TacticSlotDto(string Position, int? PlayerId, string? Role, string? Duty);
+
+public interface IGameReader { Snapshot Read(); }
+
+class PlaceholderReader : IGameReader
+{
+    public Snapshot Read() => new("archivix/1", "FM27", "À cartographier", DateTime.Today.ToString("yyyy-MM-dd"), new());
+}

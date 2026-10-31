@@ -26,7 +26,7 @@
   },
   "footer": {
     "disclaimer": "Simloom is an independent project, not affiliated with the publishers of the games mentioned. Game names belong to their respective owners.",
-    "privacy": "Your data stays on your PC. Simloom does not collect or send any personal data; only the update check contacts GitHub at startup."
+    "privacy": "Your data stays on your PC. Simloom does not collect or send any personal data; it only contacts GitHub to check for updates at startup and, when you ask, to download the FM27 plugin."
   },
   "fm": {
     "back": "My saves",
@@ -134,6 +134,25 @@
         "contracts": "Contracts",
         "profile": "Profile (/20, outfield)"
       }
+    },
+    "bridge": {
+      "title": "FM27 plugin",
+      "intro": "The plugin reads your squad in FM27 (read-only) and hands it to Simloom. Simloom installs and updates it for you.",
+      "gameDir": "FM27 folder (the one containing fm.exe)",
+      "gameFound": "FM27 found",
+      "gameMissing": "fm.exe not found in this folder",
+      "bepinex": "BepInEx installed",
+      "bepinexMissing": "BepInEx 6 (IL2CPP) is not installed: the plugin needs it.",
+      "running": "FM27 is running: close the game to install or update.",
+      "installed": "Installed version: {{version}}",
+      "notInstalled": "Plugin not installed yet",
+      "latest": "Latest version: {{version}}",
+      "upToDate": "Up to date",
+      "install": "Install the plugin",
+      "update": "Update to {{version}}",
+      "done": "Plugin installed. Start FM27 and load your save.",
+      "error": "Installation failed: {{reason}}",
+      "offline": "Could not check the latest version (offline?)."
     }
   }
 }

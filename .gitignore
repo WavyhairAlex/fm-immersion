@@ -7,3 +7,8 @@ dist/
 .DS_Store
 coverage/
 target/
+
+# Plugin FM27 : sorties de compilation locale
+modules/fm/bridge/bin/
+modules/fm/bridge/obj/
+modules/fm/bridge/dist/
