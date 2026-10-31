@@ -50,6 +50,9 @@ jobs:
           owner: amnesix-nt
           repo: simloom
           tagName: ${{ github.ref_name }}
+          # Le tag est créé dans amnesix-nt/simloom : il doit pointer sur une branche de ce dépôt-là,
+          # pas sur le commit du dépôt privé (sinon « target_commitish invalid »).
+          releaseCommitish: main
           releaseName: Simloom ${{ github.ref_name }}
           releaseBody: Notes de version à compléter avant publication.
           releaseDraft: true
