@@ -98,6 +98,42 @@
       "payroll": "Libérer de la masse salariale",
       "youngXi_one": "Un jeune titulaire à faire progresser",
       "youngXi_other": "{{count}} jeunes titulaires à faire progresser"
+    },
+    "sum": {
+      "players": "Joueurs",
+      "avgAge": "Âge moyen",
+      "wages": "Salaires / mois",
+      "wageRoom": "Marge salaires",
+      "transfer": "Budget transferts",
+      "next": "Prochain match",
+      "home": "à domicile",
+      "away": "à l'extérieur",
+      "inDays_zero": "aujourd'hui",
+      "inDays_one": "demain",
+      "inDays_other": "dans {{count}} jours",
+      "noMatch": "Disponible avec la dernière version du plugin.",
+      "all": "Tous les indicateurs",
+      "under21": "21 ans et moins",
+      "over30": "30 ans et plus",
+      "condition": "Condition moyenne",
+      "sharpness": "Affûtage moyen",
+      "injured": "Blessés",
+      "goals": "Buts",
+      "rating": "Note moyenne",
+      "topScorer": "Meilleur buteur",
+      "expiring": "Contrats ≤ 6 mois",
+      "avgWage": "Salaire moyen",
+      "topEarner": "Plus gros salaire",
+      "technical": "Technique",
+      "mental": "Mental",
+      "physical": "Physique",
+      "g": {
+        "squad": "Effectif",
+        "form": "Forme",
+        "season": "Saison",
+        "contracts": "Contrats",
+        "profile": "Profil (/20, joueurs de champ)"
+      }
     }
   }
 }

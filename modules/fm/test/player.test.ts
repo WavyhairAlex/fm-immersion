@@ -64,3 +64,30 @@ describe('alertes', () => {
     expect(fmSnapshotSchema.safeParse({ schema: 'autre', players: [] }).success).toBe(false);
   });
 });
+
+describe('résumé', () => {
+  it('lit les blocs club et prochain match quand ils sont là', async () => {
+    const { summarize } = await import('../src');
+    const snap = fmSnapshotSchema.parse({
+      schema: 'archivix/1',
+      game: 'FM27',
+      club: 'Vänersborgs IF',
+      gameDate: '2026-08-29',
+      clubInfo: { transferBudget: 0, remainingWageBudget: '-310 €' },
+      nextMatch: { opponent: 'Grebbestads IF', location: 'Domicile', inDays: 0, threatLevel: 'Match disputé', next5: [{ x: 1 }] },
+      players: [
+        { id: 1, name: 'A', age: 20, wage: 1000 },
+        { id: 2, name: 'B', age: 30, wage: '450 €' },
+      ],
+    });
+    const s = summarize(snap, snap.players.map(normalizePlayer));
+    expect(s).toMatchObject({ players: 2, avgAge: 25, wages: 1450, wageRoom: -310, transferBudget: 0 });
+    expect(s.nextMatch).toEqual({ opponent: 'Grebbestads IF', home: true, inDays: 0, competition: null, staffView: 'Match disputé' });
+  });
+
+  it('reste vide sans les blocs du plugin récent', async () => {
+    const { summarize } = await import('../src');
+    const snap = fmSnapshotSchema.parse({ schema: 'archivix/1', game: 'FM27', club: 'X', gameDate: '2026-08-29', players: [] });
+    expect(summarize(snap, [])).toMatchObject({ wageRoom: null, transferBudget: null, nextMatch: null });
+  });
+});

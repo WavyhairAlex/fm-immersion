@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { fmData, savesData } from '../lib/data';
 import { FmAnalysis } from './FmAnalysis';
+import { FmSummary } from './FmSummary';
 
 const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
 
@@ -67,21 +68,22 @@ export function FmSave() {
         </div>
       </div>
 
+
       <form
-        className="card mt-6 flex flex-wrap items-end gap-3"
+        className="mt-4 flex flex-wrap items-center gap-3"
         onSubmit={(e) => {
           e.preventDefault();
           importSnap.mutate();
         }}
       >
-        <label className="min-w-[18rem] flex-1 text-sm font-bold">
-          {t('fm.folder')}
-          <input className="input mt-1 font-normal" required value={folder} onChange={(e) => setFolder(e.target.value)} />
-        </label>
         <button className="btn-primary" disabled={importSnap.isPending || !folder}>
           {t('fm.import')}
         </button>
-        <p className="w-full text-xs text-canard/60">{t('fm.folderHelp')}</p>
+        <details className="text-sm" open={!snapshot}>
+          <summary className="cursor-pointer font-bold text-canard/70">{t('fm.folder')}</summary>
+          <input className="input mt-2 min-w-[24rem]" required value={folder} onChange={(e) => setFolder(e.target.value)} aria-label={t('fm.folder')} />
+          <p className="mt-1 max-w-xl text-xs text-canard/60">{t('fm.folderHelp')}</p>
+        </details>
         {importSnap.isError && <p className="w-full text-sm text-corail">{t('fm.importError', { reason: String(importSnap.error?.message ?? importSnap.error) })}</p>}
       </form>
 
@@ -91,6 +93,8 @@ export function FmSave() {
           <p className="max-w-md text-brun">{t('fm.empty')}</p>
         </div>
       )}
+
+      {snapshot && players.length > 0 && <FmSummary snap={snapshot.data} players={players} />}
 
       {groups && (
         <div className="mt-6 grid gap-4 sm:grid-cols-3">

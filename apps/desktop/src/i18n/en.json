@@ -98,6 +98,42 @@
       "payroll": "Free up wage budget",
       "youngXi_one": "One young starter to develop",
       "youngXi_other": "{{count}} young starters to develop"
+    },
+    "sum": {
+      "players": "Players",
+      "avgAge": "Average age",
+      "wages": "Wages / month",
+      "wageRoom": "Wage room",
+      "transfer": "Transfer budget",
+      "next": "Next match",
+      "home": "at home",
+      "away": "away",
+      "inDays_zero": "today",
+      "inDays_one": "tomorrow",
+      "inDays_other": "in {{count}} days",
+      "noMatch": "Available with the latest plugin version.",
+      "all": "All indicators",
+      "under21": "21 and under",
+      "over30": "30 and over",
+      "condition": "Average condition",
+      "sharpness": "Average sharpness",
+      "injured": "Injured",
+      "goals": "Goals",
+      "rating": "Average rating",
+      "topScorer": "Top scorer",
+      "expiring": "Contracts ≤ 6 months",
+      "avgWage": "Average wage",
+      "topEarner": "Highest wage",
+      "technical": "Technical",
+      "mental": "Mental",
+      "physical": "Physical",
+      "g": {
+        "squad": "Squad",
+        "form": "Form",
+        "season": "Season",
+        "contracts": "Contracts",
+        "profile": "Profile (/20, outfield)"
+      }
     }
   }
 }
