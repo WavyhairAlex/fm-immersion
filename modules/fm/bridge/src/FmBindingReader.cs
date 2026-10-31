@@ -96,7 +96,6 @@ public class FmBindingReader : IGameReader
         "NoTacticError", "NoUpcomingMatchError", "NoLineupWarning", "IncompleteLineupWarning", "PlayerBelowThresholdWarning",
         "MultiplePlayersBelowThresholdWarning", "PlayerNotFullyScoutedWarning", "PlayerNotInTeamWarning", "PlayerNotSelectedWarning",
     };
-    const int MaxTacticPositions = 22;   // 11 avec ballon + 11 sans ballon au plus
 
     // Les attributs changent peu : relus seulement quand la date de jeu change.
     string? _attrDate;
@@ -140,8 +139,16 @@ public class FmBindingReader : IGameReader
 
         var players = rows.Select(ToPlayer).Where(p => p != null).Cast<PlayerDto>().ToList();
         TacticDto? tactic = null; Dictionary<string, object?>? effectiveness = null;
-        try { (tactic, effectiveness) = ReadTactic(head[2] as string); }
-        catch (Exception e) { Plugin.Log.LogWarning($"Tactique illisible : {e.Message}"); }
+        if (Plugin.ReadTactic)
+        {
+            try { tactic = ReadTactic(head[2] as string); }
+            catch (Exception e) { Plugin.Log.LogWarning($"Tactique illisible : {e.Message}"); }
+        }
+        if (Plugin.ReadEffectiveness)
+        {
+            try { effectiveness = ReadEffectiveness(); }
+            catch (Exception e) { Plugin.Log.LogWarning($"Efficacité tactique illisible : {e.Message}"); }
+        }
         tactic ??= new TacticDto(head[2] as string, "MostUsedFormation", null, new(), new());
 
         // Club et prochain match : blocs optionnels
@@ -173,7 +180,7 @@ public class FmBindingReader : IGameReader
 
     // --- Tactique active et efficacité tactique (blocs optionnels : null si le jeu ne répond pas) ---
 
-    (TacticDto, Dictionary<string, object?>?) ReadTactic(string? mostUsed)
+    TacticDto ReadTactic(string? mostUsed)
     {
         var reqs = new List<Req>();
         int Add(string path, bool deep = false) { reqs.Add(new Req(null, path, deep)); return reqs.Count - 1; }
@@ -187,15 +194,27 @@ public class FmBindingReader : IGameReader
             rec = Add(Tactic + "RecommendedFormations", true), recIP = Add(Tactic + "RecommendedIPFormations", true), recOOP = Add(Tactic + "RecommendedOOPFormations", true),
             // Les 11 postes (avec et sans ballon combinés) : liste de Records, convertie telle quelle
             combined = Add(Tactic + "TacticalPositionsCombined", true);
+        // (TacticalPositions/#i n'a jamais répondu en jeu : 154 lectures en délai dépassé à chaque instantané, retirées en 0.2.1.)
 
-        // Postes : chaque élément de TacticalPositions (TacticsPositionReference)
-        var posIdx = new List<(int i, int pos, int role, int roleName, int ipFlag, int id, int pname)>();
-        for (int i = 0; i < MaxTacticPositions; i++)
+        var v = Batch.Run(reqs, TimeoutMs);
+        string? S(int k) => v[k] as string is { } s ? CleanName(s) : null;
+
+        return new TacticDto(S(fName) ?? mostUsed, S(fName) != null ? "Tactic" : "MostUsedFormation", S(ment), new(), new())
         {
-            string p = $"{Tactic}TacticalPositions/#{i}/";
-            posIdx.Add((i, Add(p + "Position"), Add(p + "PositionRole", true), Add(p + "PositionRole/TacticsRoleName"),
-                Add(p + "IsInPossession"), Add(p + "Person/UniqueId"), Add(p + "Person/Name")));
-        }
+            Name = S(name), FormationIP = v[fIP], FormationOOP = v[fOOP], MentalityRaw = v[mentRaw], Style = v[style],
+            Complexity = v[cx], Intensity = v[it], ComplexityLabel = S(cxS), IntensityLabel = S(itS),
+            ActiveSlot = S(slotName), SlotNames = new[] { S(s1), S(s2), S(s3) },
+            InPossessionInstructions = v[ip], OutOfPossessionInstructions = v[oop],
+            Recommended = new Dictionary<string, object?> { ["all"] = v[rec], ["inPossession"] = v[recIP], ["outOfPossession"] = v[recOOP] },
+            PositionsCombined = v[combined],
+        };
+    }
+
+    // Efficacité tactique : désactivée par défaut (réglage LireEfficacite), le jeu ne répond pas encore à ces lectures.
+    Dictionary<string, object?>? ReadEffectiveness()
+    {
+        var reqs = new List<Req>();
+        int Add(string path, bool deep = false) { reqs.Add(new Req(null, path, deep)); return reqs.Count - 1; }
 
         // Efficacité : note globale, 4 composantes, zones de compréhension, sous-scores, alertes, conseils
         (int, int) Range(string p) => (Add(p + "/MinValue"), Add(p + "/MaxValue"));
@@ -220,28 +239,8 @@ public class FmBindingReader : IGameReader
             advNext = Add(TE + "/NextMatchInformation/AdviceForComponent", true);
 
         var v = Batch.Run(reqs, TimeoutMs);
-        string? S(int k) => v[k] as string is { } s ? CleanName(s) : null;
         object? R((int min, int max) r) => Num(v[r.min]) is double a && Num(v[r.max]) is double b ? new Dictionary<string, object?> { ["min"] = a, ["max"] = b } : null;
         bool? B(int k) => v[k] is string s ? string.Equals(s, "True", StringComparison.OrdinalIgnoreCase) : null;
-
-        var positions = posIdx.Where(p => v[p.pos] != null || v[p.id] != null).Select(p => new Dictionary<string, object?>
-        {
-            ["index"] = p.i, ["position"] = S(p.pos), ["role"] = S(p.roleName), ["roleRaw"] = v[p.role], ["inPossession"] = B(p.ipFlag),
-            ["playerId"] = Num(v[p.id]) is double d ? (long)d : null, ["playerName"] = S(p.pname),
-        }).ToList();
-
-        var tactic = new TacticDto(S(fName) ?? mostUsed, S(fName) != null ? "Tactic" : "MostUsedFormation", S(ment),
-            positions.Select(p => new TacticSlotDto((string?)p["position"] ?? "?", p["playerId"] is long l ? (int)l : null, (string?)p["role"], null)).ToList(),
-            new())
-        {
-            Name = S(name), FormationIP = v[fIP], FormationOOP = v[fOOP], MentalityRaw = v[mentRaw], Style = v[style],
-            Complexity = v[cx], Intensity = v[it], ComplexityLabel = S(cxS), IntensityLabel = S(itS),
-            ActiveSlot = S(slotName), SlotNames = new[] { S(s1), S(s2), S(s3) },
-            InPossessionInstructions = v[ip], OutOfPossessionInstructions = v[oop],
-            Recommended = new Dictionary<string, object?> { ["all"] = v[rec], ["inPossession"] = v[recIP], ["outOfPossession"] = v[recOOP] },
-            Positions = positions,
-            PositionsCombined = v[combined],
-        };
 
         var eff = new Dictionary<string, object?>
         {
@@ -257,7 +256,7 @@ public class FmBindingReader : IGameReader
             ["advice"] = new Dictionary<string, object?> { ["tacticalAreas"] = v[advAreas], ["playerAbility"] = v[advAbility], ["playerBuyIn"] = v[advBuyIn], ["nextMatch"] = v[advNext] },
         };
         bool anyEff = eff["overall"] != null || ((Dictionary<string, object?>)eff["components"]!).Values.Any(x => x != null);
-        return (tactic, anyEff ? eff : null);
+        return anyEff ? eff : null;
     }
 
     static string Camel(string s) => char.ToLowerInvariant(s[0]) + s[1..];

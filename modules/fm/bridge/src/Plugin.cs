@@ -17,11 +17,13 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.2.0";
+    public const string Version = "0.2.1";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que Simloom renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
     internal static string DataDir = null!;
+    internal static bool ReadTactic = true, ReadEffectiveness;
+    internal static int RereadSeconds = 300;
     const string Prefix = "http://localhost:8727/";
     static readonly JsonSerializerOptions Json = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
@@ -36,6 +38,13 @@ public class Plugin : BasePlugin
         DataDir = Config.Bind("Archivix", "Dossier",
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Sports Interactive", "Football Manager 27", "archivix"),
             "Dossier où écrire archivix-snapshot.json (en général <données FM27>\\archivix).").Value;
+        // Réglages de prudence : chaque lecture passe par le système d'affichage du jeu, qui doit rester fluide.
+        ReadTactic = Config.Bind("Archivix", "LireTactique", true,
+            "Lire la tactique active (nom, mentalité, postes, consignes).").Value;
+        ReadEffectiveness = Config.Bind("Archivix", "LireEfficacite", false,
+            "Lire l'efficacité tactique FM27 (expérimental : le jeu ne répond pas encore à ces lectures).").Value;
+        RereadSeconds = Math.Max(60, Config.Bind("Archivix", "RelectureSecondes", 300,
+            "Relecture complète au plus tard toutes les N secondes même sans changement de date (60 au minimum).").Value);
         _http = new HttpListener();
         _http.Prefixes.Add(Prefix);
         _http.Start();
@@ -46,7 +55,7 @@ public class Plugin : BasePlugin
     }
 
     // Vérifie la date de jeu toutes les 10 s ; instantané complet au chargement d'une partie, à chaque nouveau
-    // jour de jeu, et au plus tard toutes les 60 s. Les lectures IL2CPP sont exécutées sur le thread principal
+    // jour de jeu, et au plus tard toutes les RelectureSecondes (300 s par défaut). Les lectures IL2CPP sont exécutées sur le thread principal
     // par MainThread ; ce thread-ci ne fait qu'attendre les réponses et écrire les fichiers.
     void RefreshLoop()
     {
@@ -59,7 +68,7 @@ public class Plugin : BasePlugin
             {
                 var date = FmBindingReader.CurrentDate();
                 if (date == null) { lastDate = null; continue; }   // pas de partie chargée
-                if (date == lastDate && DateTime.UtcNow - lastFull < TimeSpan.FromSeconds(60)) continue;
+                if (date == lastDate && DateTime.UtcNow - lastFull < TimeSpan.FromSeconds(RereadSeconds)) continue;
                 Refresh();
                 lastDate = date;
                 lastFull = DateTime.UtcNow;
