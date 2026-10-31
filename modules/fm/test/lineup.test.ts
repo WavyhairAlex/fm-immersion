@@ -57,4 +57,23 @@ describe('compo lue dans le jeu', () => {
     expect(plan.slots[5]!.pos).toBe('MDF');
     expect(plan.slots.every((s) => s.ip && s.oop)).toBe(true);
   });
+
+  it('lit le format du plugin 0.3.1 (postes et rôles en noms anglais, rôle personnalisé, joueurs étendus)', async () => {
+    const { withExtended } = await import('../src');
+    const raw = [
+      { index: 0, playerId: 1, positionIP: 'GoalKeeper', ipRole: 'IPGoalkeeper', oopRole: 'OPGoalkeeper' },
+      ...[2, 3, 4, 5, 7, 8, 9, 10, 11].map((id, k) => ({ index: k + 1, playerId: id, positionIP: null })),
+      { index: 10, playerId: 6, positionIP: 'DefensiveMidfielder', ipRole: 'IPDeepLyingPlaymaker', oopRole: 'OPScreeningDefensiveMidfielder', roleOverride: { Role: 'B2B' } },
+    ];
+    const l = gameLineup({ lineup: raw } as unknown as FmSnapshot)!;
+    expect(l[0]!.pos).toBe('GB');
+    expect(l[10]!.pos).toBe('MDF');
+    expect(l[10]!.custom).toBe(true);
+    const plan = planFromLineup(engine, l, players, null);
+    expect([plan.slots[10]!.ip, plan.slots[10]!.oop]).toEqual(['DLP', 'SCRDM']);
+    const snap2 = withExtended({ players: [{ id: 6, name: 'J6' }], playersExtended: { '6': { moraleText: 'Bon', currentStars: 2.5, potentialStars: 4 } } } as unknown as FmSnapshot);
+    const p6 = normalizePlayer(snap2.players[0]!);
+    expect(p6.morale).toBe('Bon');
+    expect(p6.stars).toEqual({ current: 2.5, potential: 4 });
+  });
 });

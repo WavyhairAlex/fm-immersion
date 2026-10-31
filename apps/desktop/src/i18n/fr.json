@@ -61,7 +61,8 @@
       "condition": "Condition",
       "contract": "Fin de contrat",
       "wage": "Salaire",
-      "status": "Statut"
+      "status": "Statut",
+      "starsHelp": "Étoiles de niveau actuel / potentiel selon ton staff"
     },
     "an": {
       "xi": "Niveau du onze",

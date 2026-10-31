@@ -1,4 +1,4 @@
-import { gameFormationOf, gameLineup, normalizePlayer, type FmPlayer, type FmSnapshot, type Line, type SquadAt } from '@simloom/module-fm';
+import { gameFormationOf, gameLineup, normalizePlayer, withExtended, type FmPlayer, type FmSnapshot, type Line, type SquadAt } from '@simloom/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useState } from 'react';
@@ -92,7 +92,7 @@ export function FmSave() {
     },
   });
 
-  const players = useMemo(() => snapshot?.data.players.map(normalizePlayer) ?? [], [snapshot]);
+  const players = useMemo(() => (snapshot ? withExtended(snapshot.data).players.map(normalizePlayer) : []), [snapshot]);
   const history = useMemo<SquadAt[]>(
     () => (all ?? []).map((h) => ({ gameDate: h.gameDate, players: (h.data as FmSnapshot).players.map(normalizePlayer) })),
     [all],
@@ -310,7 +310,15 @@ function SquadTable({ players }: { players: FmPlayer[] }) {
                   </span>
                 </td>
                 <td className="px-3 py-2">{p.age ?? '–'}</td>
-                <td className="px-3 py-2 font-bold">{p.level?.toFixed(1) ?? '–'}</td>
+                <td className="px-3 py-2 font-bold">
+                  {p.level?.toFixed(1) ?? '–'}
+                  {p.stars?.current != null && (
+                    <span className="ml-2 text-xs font-normal text-brun" title={t('fm.col.starsHelp')}>
+                      ★ {p.stars.current}
+                      {p.stars.potential != null ? ` / ${p.stars.potential}` : ''}
+                    </span>
+                  )}
+                </td>
                 <td className="px-3 py-2">{p.condition != null ? `${Math.round(p.condition)} %` : '–'}</td>
                 <td className="px-3 py-2">{p.contractEnd ? date.format(new Date(p.contractEnd)) : '–'}</td>
                 <td className="px-3 py-2">{p.wage != null ? money.format(p.wage) : '–'}</td>

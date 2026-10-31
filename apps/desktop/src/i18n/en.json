@@ -61,7 +61,8 @@
       "condition": "Condition",
       "contract": "Contract ends",
       "wage": "Wage",
-      "status": "Status"
+      "status": "Status",
+      "starsHelp": "Current / potential ability stars according to your staff"
     },
     "an": {
       "xi": "First XI level",

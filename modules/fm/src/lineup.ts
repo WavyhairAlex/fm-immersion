@@ -35,10 +35,39 @@ const pick = (o: Raw, ...keys: string[]) => {
 };
 const list = (v: unknown): string[] => (Array.isArray(v) ? v.map(str).filter((x): x is string => !!x) : []);
 
+/** Rôle lu : texte, ou premier texte d'un objet brut du jeu. */
+function roleText(v: unknown, depth = 2): string | null {
+  const s = str(v);
+  if (s && !/^\d+$/.test(s)) return s;
+  if (v && typeof v === 'object' && depth > 0) for (const x of Array.isArray(v) ? v : Object.values(v as Raw)) {
+    const r = roleText(x, depth - 1);
+    if (r) return r;
+  }
+  return null;
+}
+
 /** Premier poste reconnu dans une valeur du jeu : texte (« MD (C) ») ou objet brut dont un champ texte le contient. */
+// Noms anglais des postes du jeu (masques PositionMask), du plus précis au plus général.
+const EN_POS: [RegExp, PosCode][] = [
+  [/goal ?keeper|^gk$/i, 'GB'],
+  [/wing ?back.*left|left.*wing ?back/i, 'DLG'],
+  [/wing ?back.*right|right.*wing ?back/i, 'DLD'],
+  [/defensive ?midfield/i, 'MDF'],
+  [/attacking ?midfield.*left|left.*(winger|attacking)/i, 'MOG'],
+  [/attacking ?midfield.*right|right.*(winger|attacking)/i, 'MOD'],
+  [/attacking ?midfield/i, 'MOC'],
+  [/midfield.*left|left.*midfield/i, 'MG'],
+  [/midfield.*right|right.*midfield/i, 'MD'],
+  [/midfield/i, 'MC'],
+  [/(defender|back).*left|left.*(defender|back)/i, 'DG'],
+  [/(defender|back).*right|right.*(defender|back)/i, 'DD'],
+  [/defender|centre ?back|center ?back/i, 'DC'],
+  [/striker|forward/i, 'BT'],
+];
+
 function posOf(v: unknown, depth = 2): PosCode | null {
   const s = str(v);
-  if (s) return parsePositions(s)[0] ?? null;
+  if (s) return parsePositions(s)[0] ?? EN_POS.find(([re]) => re.test(s))?.[1] ?? null;
   if (v && typeof v === 'object' && depth > 0)
     for (const x of Array.isArray(v) ? v : Object.values(v as Raw)) {
       const p = posOf(x, depth - 1);
@@ -56,7 +85,7 @@ export function gameLineup(snap: FmSnapshot | null | undefined): GameSlot[] | nu
   for (const r of rows) {
     if (!r || typeof r !== 'object') continue;
     const o = r as Raw;
-    const pos = posOf(pick(o, 'position', 'pos', 'positionText'));
+    const pos = posOf(pick(o, 'position', 'positionIP', 'pos', 'positionText'));
     const playerId = str(pick(o, 'playerId', 'player_id', 'id'));
     const playerName = str(pick(o, 'playerName', 'name'));
     if (!pos && !playerId && !playerName) continue;
@@ -68,9 +97,9 @@ export function gameLineup(snap: FmSnapshot | null | undefined): GameSlot[] | nu
       pos,
       playerId,
       playerName,
-      roleIP: str(pick(o, 'roleIP', 'ipRole', 'roleInPossession', 'role')),
-      roleOOP: str(pick(o, 'roleOOP', 'oopRole', 'roleOutOfPossession')),
-      custom: pick(o, 'customRole', 'custom') === true,
+      roleIP: roleText(pick(o, 'roleIP', 'ipRole', 'roleInPossession', 'role')),
+      roleOOP: roleText(pick(o, 'roleOOP', 'oopRole', 'roleOutOfPossession')),
+      custom: pick(o, 'customRole', 'custom') === true || (o.roleOverride != null && o.roleOverride !== '' && o.roleOverride !== false),
       instructions: { ip: insObj ? list(insObj.ip ?? insObj.inPossession) : list(ins), oop: insObj ? list(insObj.oop ?? insObj.outOfPossession) : [] },
     });
   }
@@ -174,4 +203,28 @@ export function planFromLineup(engine: TacticEngine, lineup: GameSlot[], players
   );
   const fits = slots.map((s) => s.fit ?? 0);
   return { form: form ?? '', slots, subs, score: fits.reduce((a, b) => a + b, 0) / (fits.length || 1), holes: slots.filter((s) => !s.player).length };
+}
+
+/**
+ * Données joueurs étendues du plugin 0.3.1 (`playersExtended[playerId]`) : moral, satisfaction,
+ * hiérarchie, étoiles de niveau et de potentiel vues par le staff. Fusionnées dans chaque joueur brut.
+ */
+export function withExtended(snap: FmSnapshot): FmSnapshot {
+  const ext = (snap as Raw).playersExtended;
+  if (!ext || typeof ext !== 'object') return snap;
+  const byId = ext as Record<string, Raw | undefined>;
+  return {
+    ...snap,
+    players: snap.players.map((p) => {
+      const x = byId[String(p.id)];
+      if (!x) return p;
+      return {
+        ...p,
+        morale: p.morale ?? str(x.moraleText) ?? str(x.morale),
+        personality: (p as Raw).personality ?? str(x.personality),
+        stars: { current: typeof x.currentStars === 'number' ? x.currentStars : null, potential: typeof x.potentialStars === 'number' ? x.potentialStars : null },
+        extended: x,
+      };
+    }),
+  };
 }

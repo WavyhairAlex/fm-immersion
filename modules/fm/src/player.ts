@@ -52,6 +52,8 @@ export interface FmPlayer {
   team: string | null;
   /** Pied fort tel qu'écrit par le jeu (« Gauche », « Droit uniquement », « Les deux »…). */
   foot: string | null;
+  /** Étoiles de niveau et de potentiel vues par le staff (plugin 0.3.1), sur 5. */
+  stars: { current: number | null; potential: number | null } | null;
   /** Attributs connus (milieu de fourchette si le recrutement ne les a pas affinés), sans le préfixe « Attribute ». */
   attributes: Record<string, number>;
 }
@@ -96,6 +98,7 @@ export function normalizePlayer(p: FmPlayerRaw): FmPlayer {
     morale: p.morale ?? null,
     personality: typeof p.personality === 'string' ? p.personality : null,
     team: typeof p.team === 'string' ? p.team : null,
+    stars: p.stars && typeof p.stars === 'object' ? (p.stars as FmPlayer['stars']) : null,
     attributes,
   };
 }
