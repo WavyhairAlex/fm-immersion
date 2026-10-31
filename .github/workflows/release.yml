@@ -5,6 +5,10 @@ name: Release
 #   2. pousser un tag vX.Y.Z ;
 #   3. relire le brouillon de release créé sur GitHub, puis le publier.
 # Une fois publiée, les applis installées la récupèrent à leur prochain démarrage.
+#
+# Le code reste dans ce dépôt privé ; les versions sont publiées dans le dépôt public amnesix-nt/simloom,
+# seul endroit que l'appli installée peut lire sans compte (tauri.conf.json, fm_bridge.rs).
+# Secret requis : SIMLOOM_RELEASES_TOKEN, jeton à grain fin limité à amnesix-nt/simloom, droit « Contents : écriture ».
 on:
   push:
     tags: ['v*']
@@ -38,11 +42,13 @@ jobs:
       # Les fichiers de mise à jour, eux, sont déjà signés avec la clé TAURI_SIGNING_PRIVATE_KEY.
       - uses: tauri-apps/tauri-action@v0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SIMLOOM_RELEASES_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ''
         with:
           projectPath: apps/desktop
+          owner: amnesix-nt
+          repo: simloom
           tagName: ${{ github.ref_name }}
           releaseName: Simloom ${{ github.ref_name }}
           releaseBody: Notes de version à compléter avant publication.
