@@ -1233,10 +1233,11 @@
         "club": "Club",
         "caPa": "CA / PA",
         "positions": "Positions",
-        "wage": "Wage (raw)",
+        "wage": "Wage (weekly, raw)",
         "contractEnd": "Contract end",
         "value": "Value (raw)"
-      }
+      },
+      "loan": "on loan at {{club}} until {{end}}"
     },
     "merc": {
       "help": "Based on the imported squad, in two elevens: the one to play today ({{form}}) and the project one ({{style}} {{projectForm}}). At each position we keep the starters plus one backup per slot (two backup keepers); anyone beyond that is surplus. Stars are the staff's (current → potential, relative to the club); level is projected two seasons ahead.",

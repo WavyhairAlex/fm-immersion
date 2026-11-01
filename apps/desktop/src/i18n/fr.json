@@ -1233,10 +1233,11 @@
         "club": "Club",
         "caPa": "CA / PA",
         "positions": "Postes",
-        "wage": "Salaire (brut)",
+        "wage": "Salaire (par semaine, brut)",
         "contractEnd": "Fin de contrat",
         "value": "Valeur (brute)"
-      }
+      },
+      "loan": "prêté à {{club}} jusqu’au {{end}}"
     },
     "merc": {
       "help": "Calculé sur l'effectif importé, dans deux onze : celui à jouer aujourd'hui ({{form}}) et celui du projet ({{style}} {{projectForm}}). À chaque poste, on garde les titulaires et une doublure par place (deux gardiens remplaçants) ; au-delà, le joueur est en trop. Les étoiles sont celles du staff (niveau → potentiel, par rapport au club) ; le niveau est projeté dans deux saisons.",

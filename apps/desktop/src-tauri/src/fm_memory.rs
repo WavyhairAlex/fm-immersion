@@ -140,12 +140,12 @@ pub struct Globals {
     pub database: u64,
     /// Pointeur vers le gestionnaire des managers humains.
     pub humans: u64,
-    /// Pointeur vers l'objet qui porte la date du jeu.
+    /// Date courante du jeu (date de 4 octets, statique).
     pub date: u64,
 }
 
 /// Valeurs trouvées dans FM27 du 29/10/2026 (game_plugin.dll, SHA-256 bc940e47…0fe057f).
-pub const KNOWN: Globals = Globals { database: 0x57036D0, humans: 0x56F3008, date: 0x5709280 };
+pub const KNOWN: Globals = Globals { database: 0x57036D0, humans: 0x56F3008, date: 0x56AD378 };
 
 struct Sig {
     pattern: &'static str,
@@ -162,7 +162,8 @@ const SIG_PERSONS: Sig = Sig {
     minus: 0x68,
 };
 const SIG_HUMANS: Sig = Sig { pattern: "4C 8B 25 ?? ?? ?? ?? 49 8B 44 24 18 49 8B 54 24 20 48 39 C2 74 4D", disp: 3, minus: 0 };
-const SIG_DATE: Sig = Sig { pattern: "41 B8 64 01 00 00 4C 03 05 ?? ?? ?? ?? 3C 02", disp: 9, minus: 0 };
+/// `lea rdx, [date courante]` dans le calcul d'âge du jeu.
+const SIG_DATE: Sig = Sig { pattern: "48 8D 15 ?? ?? ?? ?? 49 0F 42 D0 0F B7 42 02", disp: 3, minus: 0 };
 
 fn parse_pattern(p: &str) -> Vec<Option<u8>> {
     p.split_whitespace().map(|t| if t == "??" { None } else { u8::from_str_radix(t, 16).ok() }).collect()
@@ -276,8 +277,6 @@ mod off {
     pub const HUMANS_VEC: u64 = 0x18;
     pub const HUMAN_PERSON: u64 = 0x440;
     pub const HUMAN_ACTUAL_PERSON: u64 = 0x468;
-    /// Date du jeu dans l'objet pointé par le global `date`.
-    pub const DATE: u64 = 0x164;
 
     // ACTUAL_PLAYER
     pub const AP_VBPTR: u64 = 0x8;
@@ -302,15 +301,19 @@ mod off {
     pub const A_COMMON_NAME: u64 = 0x38;
     pub const A_BIRTH: u64 = 0x60;
     pub const A_CONTRACT: u64 = 0x80;
+    /// Pointeur X (nul sans prêt) ; `[X+0]` = contrat de prêt.
+    pub const A_LOAN: u64 = 0x88;
 
     // CONTRACT
     pub const C_TEAM: u64 = 0x10;
     pub const C_WAGE: u64 = 0x20;
     pub const C_FLAGS: u64 = 0x2B;
     pub const C_END: u64 = 0x48;
+    /// Contrat de prêt : équipe d'accueil `+0x10`, fin du prêt `+0x48` (sans condition).
+    pub const L_TEAM: u64 = 0x10;
+    pub const L_END: u64 = 0x48;
 
-    // TEAM
-    pub const T_NAME: u64 = 0x18;
+    // TEAM (ses noms sont vides en partie : on prend celui du club)
     pub const T_NATIONAL: u64 = 0x2F;
     pub const T_CONTAINER: u64 = 0x30;
 
@@ -403,17 +406,18 @@ impl SiDate {
     fn from_bytes(b: [u8; 4]) -> Self {
         SiDate { day: u16::from_le_bytes([b[0], b[1]]) & 0x1FF, year: u16::from_le_bytes([b[2], b[3]]) }
     }
+    /// Le jour 1 de 1900 est la date « non renseignée » du jeu.
     fn plausible(&self) -> bool {
-        (1900..=2200).contains(&self.year) && self.day < 366
+        (1901..=2200).contains(&self.year) && (1..=366).contains(&self.day)
     }
-    /// Date ISO, en comptant le jour de l'année à partir de 0 (à confirmer en jeu).
+    /// Date ISO ; le jour de l'année est compté à partir de 1 (vérifié en jeu).
     pub fn iso(&self) -> Option<String> {
         if !self.plausible() {
             return None;
         }
         let leap = |y: u16| (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
         let months = [31, if leap(self.year) { 29 } else { 28 }, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        let mut d = self.day;
+        let mut d = self.day - 1;
         for (m, len) in months.iter().enumerate() {
             if d < *len {
                 return Some(format!("{:04}-{:02}-{:02}", self.year, m + 1, d + 1));
@@ -447,10 +451,14 @@ pub struct DbPlayer {
     pub common_name: Option<String>,
     pub birth_date: Option<String>,
     pub age: Option<u16>,
+    /// Club propriétaire (contrat principal), même pour un joueur prêté.
     pub club: Option<String>,
     pub club_short: Option<String>,
     pub club_id: Option<i32>,
-    pub team: Option<String>,
+    /// Club où le joueur est prêté, et fin du prêt.
+    pub loan_club: Option<String>,
+    pub loan_club_id: Option<i32>,
+    pub loan_end: Option<String>,
     /// Capacité actuelle et potentielle réelles (0-200 ; potentiel négatif = fourchette du jeu).
     pub ca: i16,
     pub pa: i16,
@@ -461,10 +469,11 @@ pub struct DbPlayer {
     pub attributes: BTreeMap<&'static str, u8>,
     /// Échelle de stockage des attributs (`100` : convertis en 1-20 comme le fait le jeu).
     pub attribute_scale: u8,
-    /// Salaire brut lu dans le contrat (unité à confirmer en jeu).
-    pub wage: Option<i32>,
+    /// Salaire du contrat principal, par semaine, dans la monnaie de base du jeu (l'affichage en € par mois
+    /// vaut environ × 52/12 × le taux de change du jeu, 1,165 dans la partie d'essai).
+    pub wage_weekly: Option<i32>,
     pub contract_end: Option<String>,
-    /// Valeur stockée par le jeu (la valeur affichée est recalculée selon le manager : à comparer).
+    /// Valeur stockée par le jeu, monnaie de base (le jeu affiche une fourchette estimée autour de cette valeur).
     pub value_raw: Option<i32>,
 }
 
@@ -550,21 +559,22 @@ impl<M: Mem> Ctx<'_, M> {
         let birth = date_at(&self.r, actual + off::A_BIRTH);
 
         let contract = self.r.ptr(actual + off::A_CONTRACT);
-        let wage = contract.and_then(|c| self.r.i32(c + off::C_WAGE)).filter(|&w| w >= 0);
+        let wage_weekly = contract.and_then(|c| self.r.i32(c + off::C_WAGE)).filter(|&w| w >= 0);
         let contract_end = contract
             .filter(|&c| self.r.u8(c + off::C_FLAGS).is_some_and(|f| f & 0x08 == 0))
             .and_then(|c| date_at(&self.r, c + off::C_END))
             .and_then(|d| d.iso());
 
+        // Club propriétaire : celui du contrat principal ; à défaut, celui où le joueur évolue (+0x130).
         let team = le_u64(&b, off::AP_TEAM as usize);
         let team = valid(team).then_some(team);
-        let mut club = team.and_then(|t| self.club_of_team(t));
-        if club.is_none() {
-            // Joueur en sélection ou sans équipe lisible : on passe par l'équipe de son contrat.
-            if let Some(t) = contract.and_then(|c| self.r.ptr(c + off::C_TEAM)) {
-                club = self.club_of_team(t);
-            }
-        }
+        let club = match contract.and_then(|c| self.r.ptr(c + off::C_TEAM)).and_then(|t| self.club_of_team(t)) {
+            Some(c) => Some(c),
+            None => team.and_then(|t| self.club_of_team(t)),
+        };
+        let loan = self.r.ptr(actual + off::A_LOAN).and_then(|x| self.r.ptr(x));
+        let loan_club = loan.and_then(|l| self.r.ptr(l + off::L_TEAM)).and_then(|t| self.club_of_team(t));
+        let loan_end = loan.and_then(|l| date_at(&self.r, l + off::L_END)).and_then(|d| d.iso());
         let value = le_i32(&b, off::AP_VALUE);
 
         Some(DbPlayer {
@@ -581,7 +591,9 @@ impl<M: Mem> Ctx<'_, M> {
             club_id: club.as_ref().map(|c| c.id),
             club_short: club.as_ref().and_then(|c| c.short.clone()),
             club: club.and_then(|c| c.name),
-            team: team.and_then(|t| self.r.string(t + off::T_NAME)),
+            loan_club_id: loan_club.as_ref().map(|c| c.id),
+            loan_club: loan_club.and_then(|c| c.name),
+            loan_end,
             ca,
             pa,
             reputation: [le_i16(&b, off::AP_REP_HOME), le_i16(&b, off::AP_REP_CURRENT), le_i16(&b, off::AP_REP_WORLD)],
@@ -589,7 +601,7 @@ impl<M: Mem> Ctx<'_, M> {
             position_ratings,
             attributes,
             attribute_scale: if scale100 { 100 } else { 20 },
-            wage,
+            wage_weekly,
             contract_end,
             value_raw: (value >= 0).then_some(value),
         })
@@ -631,7 +643,7 @@ const MAX_PLAYERS: usize = 3_000_000;
 impl<'a, M: Mem> Database<'a, M> {
     pub fn open(mem: &'a M, module_base: u64, globals: Globals) -> Result<Self, MemError> {
         let r = R(mem);
-        let today = r.ptr(module_base + globals.date).and_then(|p| date_at(&r, p + off::DATE));
+        let today = date_at(&r, module_base + globals.date);
         let players = pointer_vec(&r, module_base + globals.database + off::DB_PLAYERS, MAX_PLAYERS)
             .ok_or_else(|| MemError::Unexpected("liste des joueurs illisible".into()))?;
         if players.is_empty() {
@@ -897,7 +909,7 @@ fn probe() -> Result<Probe, MemError> {
         let (plausible, checked) = db.check()?;
         let humans = db.humans();
         let squad = match humans.iter().find_map(|h| h.club_id) {
-            Some(club) => db.players(80, |p| p.club_id == Some(club)),
+            Some(club) => db.players(80, |p| p.club_id == Some(club) || p.loan_club_id == Some(club)),
             None => Vec::new(),
         };
         let today = db.today();
@@ -1020,12 +1032,10 @@ mod tests {
         let contract = 0x2200_0000u64;
         let team = 0x2300_0000u64;
         let club = 0x2400_0000u64;
-        let rgm = 0x2500_0000u64;
         let list = 0x2600_0000u64;
 
-        // Date du jeu : 1er novembre 2026 (jour 304 compté depuis 0).
-        m.put_u64(BASE + KNOWN.date, rgm);
-        m.put(rgm + off::DATE, date(304, 2026));
+        // Date du jeu : 1er novembre 2026 (jour 305, compté depuis 1).
+        m.put(BASE + KNOWN.date, date(305 | 0x2000, 2026));
         // Liste des joueurs : un pointeur nul (trou) et notre joueur.
         m.put_u64(BASE + KNOWN.database + off::DB_PLAYERS, list);
         m.put_u64(BASE + KNOWN.database + off::DB_PLAYERS + 8, list + 16);
@@ -1058,14 +1068,14 @@ mod tests {
         m.put_u64(0x2700_0200, 0x2700_0300);
         m.put_str(0x2700_0300, "Edh");
         m.put_u64(actual + 0x38, 0);
-        m.put(actual + 0x60, date(150, 2000)); // 30 mai 2000 (année bissextile)
+        m.put(actual + 0x60, date(151, 2000)); // 30 mai 2000 (année bissextile)
         m.put_u64(actual + 0x80, contract);
         m.put(contract, vec![0u8; 0x60]);
+        m.put_u64(contract + 0x10, team);
+        m.put_u64(actual + 0x88, 0);
         m.put_i32(contract + 0x20, 4_500);
-        m.put(contract + 0x48, date(364, 2027));
+        m.put(contract + 0x48, date(365, 2027));
         m.put(team, vec![0u8; 0x40]);
-        m.put_u64(team + 0x18, 0x2700_0400);
-        m.put_str(0x2700_0400, "Vänersborgs IF");
         m.put_u64(team + 0x30, club);
         m.put_i32(club + 0xC, 7_001);
         m.put_u64(club + 0xC0, 0x2700_0500);
@@ -1090,7 +1100,8 @@ mod tests {
         assert_eq!(p.club.as_deref(), Some("Vänersborgs IF"));
         assert_eq!(p.club_short.as_deref(), Some("Vänersborg"));
         assert_eq!(p.club_id, Some(7_001));
-        assert_eq!(p.wage, Some(4_500));
+        assert_eq!(p.wage_weekly, Some(4_500));
+        assert_eq!((p.loan_club.as_deref(), p.loan_end.as_deref()), (None, None));
         assert_eq!(p.contract_end.as_deref(), Some("2027-12-31"));
         assert_eq!(p.positions_text, "DC, MC");
         assert_eq!(p.attributes.len(), 47);
@@ -1098,6 +1109,32 @@ mod tests {
         assert_eq!(p.attributes["NaturalFitness"], 47 % 20);
         assert_eq!(p.value_raw, Some(1_250_000));
         assert_eq!(db.check().unwrap(), (1, 1));
+    }
+
+    #[test]
+    fn joueur_prete() {
+        let mut m = world();
+        let ap = 0x2000_0000u64;
+        let actual = ap + 0x2B0;
+        let (x, loan, team2, club2) = (0x2800_0000u64, 0x2800_1000u64, 0x2800_2000u64, 0x2800_3000u64);
+        // Il joue ailleurs (+0x130), mais son contrat principal reste au club propriétaire.
+        m.put_u64(ap + 0x130, team2);
+        m.put_u64(actual + 0x88, x);
+        m.put_u64(x, loan);
+        m.put(loan, vec![0u8; 0x60]);
+        m.put_u64(loan + 0x10, team2);
+        m.put(loan + 0x48, date(151, 2027));
+        m.put(team2, vec![0u8; 0x40]);
+        m.put_u64(team2 + 0x30, club2);
+        m.put_i32(club2 + 0xC, 9_002);
+        m.put_u64(club2 + 0xC0, 0x2800_4000);
+        m.put_str(0x2800_4000, "MFK Košice");
+        let mut db = Database::open(&m, BASE, KNOWN).unwrap();
+        let p = db.players(1, |_| true).pop().unwrap();
+        assert_eq!(p.club.as_deref(), Some("Vänersborgs IF"));
+        assert_eq!(p.loan_club.as_deref(), Some("MFK Košice"));
+        assert_eq!(p.loan_club_id, Some(9_002));
+        assert_eq!(p.loan_end.as_deref(), Some("2027-05-31"));
     }
 
     #[test]
@@ -1131,12 +1168,17 @@ mod tests {
 
     #[test]
     fn dates_du_jeu() {
-        assert_eq!(SiDate { day: 0, year: 2026 }.iso().as_deref(), Some("2026-01-01"));
-        assert_eq!(SiDate { day: 59, year: 2028 }.iso().as_deref(), Some("2028-02-29"));
-        assert_eq!(SiDate { day: 365, year: 2027 }.iso(), None);
-        let birth = SiDate { day: 150, year: 2000 };
-        assert_eq!(birth.age_at(&SiDate { day: 149, year: 2026 }), Some(25));
-        assert_eq!(birth.age_at(&SiDate { day: 150, year: 2026 }), Some(26));
+        assert_eq!(SiDate { day: 1, year: 2026 }.iso().as_deref(), Some("2026-01-01"));
+        assert_eq!(SiDate { day: 60, year: 2028 }.iso().as_deref(), Some("2028-02-29"));
+        assert_eq!(SiDate { day: 329, year: 2026 }.iso().as_deref(), Some("2026-11-25"));
+        assert_eq!(SiDate { day: 366, year: 2027 }.iso(), None);
+        // Date « non renseignée » du jeu.
+        assert_eq!(SiDate { day: 1, year: 1900 }.iso(), None);
+        // Bits hauts du premier mot ignorés (valeur lue en jeu : 9033 → jour 329).
+        assert_eq!(SiDate::from_bytes([0x49, 0x23, 0xEA, 0x07]), SiDate { day: 329, year: 2026 });
+        let birth = SiDate { day: 151, year: 2000 };
+        assert_eq!(birth.age_at(&SiDate { day: 150, year: 2026 }), Some(25));
+        assert_eq!(birth.age_at(&SiDate { day: 151, year: 2026 }), Some(26));
     }
 
     #[test]

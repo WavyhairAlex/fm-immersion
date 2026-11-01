@@ -1,6 +1,6 @@
 [package]
 name = "simloom"
-version = "0.1.54"
+version = "0.1.55"
 description = "Simloom — le compagnon de tes parties de jeux de gestion"
 authors = ["Simloom"]
 license = "MIT"

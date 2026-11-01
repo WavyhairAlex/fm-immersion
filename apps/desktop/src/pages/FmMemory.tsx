@@ -10,14 +10,15 @@ type DbPlayer = {
   age: number | null;
   birthDate: string | null;
   club: string | null;
-  team: string | null;
+  loanClub: string | null;
+  loanEnd: string | null;
   ca: number;
   pa: number;
   positionsText: string;
   positionRatings: Record<string, number>;
   attributes: Record<string, number>;
   attributeScale: number;
-  wage: number | null;
+  wageWeekly: number | null;
   contractEnd: string | null;
   valueRaw: number | null;
 };
@@ -77,12 +78,15 @@ function PlayerRows({ players }: { players: DbPlayer[] }) {
                 </details>
               </td>
               <td className="py-1 pr-3">{p.age ?? '?'}</td>
-              <td className="py-1 pr-3">{p.club ?? p.team ?? '?'}</td>
+              <td className="py-1 pr-3">
+                {p.club ?? '?'}
+                {p.loanClub && <span className="block text-xs text-brun">{t('fm.memory.loan', { club: p.loanClub, end: p.loanEnd ?? '?' })}</span>}
+              </td>
               <td className="py-1 pr-3">
                 {p.ca} / {p.pa}
               </td>
               <td className="py-1 pr-3">{p.positionsText || '?'}</td>
-              <td className="py-1 pr-3">{p.wage ?? '?'}</td>
+              <td className="py-1 pr-3">{p.wageWeekly ?? '?'}</td>
               <td className="py-1 pr-3">{p.contractEnd ?? '?'}</td>
               <td className="py-1 pr-3">{p.valueRaw ?? '?'}</td>
             </tr>
