@@ -10,6 +10,7 @@ import { FmSaveScopeContext, type FmSaveScope } from '../lib/save-store';
 import { FmAnalysis } from './FmAnalysis';
 import { FmBridge } from './FmBridge';
 import { FmMemory } from './FmMemory';
+import { FmMercato } from './FmMercato';
 import { FmCalendar } from './FmCalendar';
 import { FmCompare } from './FmCompare';
 import { FmContracts } from './FmContracts';
@@ -40,7 +41,7 @@ const SECTIONS = [
   { id: 'home', views: ['home'] },
   { id: 'squad', views: ['squad', 'analysis', 'compare', 'dressing', 'loans'] },
   { id: 'tactic', views: ['tactic', 'opponent', 'depth', 'calendar', 'roles', 'effectiveness'] },
-  { id: 'project', views: ['style', 'project', 'training', 'targets'] },
+  { id: 'project', views: ['style', 'project', 'training', 'mercato', 'targets'] },
   { id: 'club', views: ['finances', 'wages', 'contracts', 'progression'] },
 ] as const;
 /** Sections dont les écrans s'enchaînent comme des étapes (numérotées, avec « étape suivante »). */
@@ -334,6 +335,7 @@ export function FmSave() {
             {view === 'effectiveness' && <FmEffectiveness snap={snapshot.data} history={history} go={go} />}
             {view === 'project' && <FmProject snap={snapshot.data} players={players} folder={folder} history={history} />}
             {view === 'training' && <FmTraining snap={snapshot.data} players={players} folder={folder} />}
+            {view === 'mercato' && <FmMercato players={players} folder={folder} gameDate={snapshot.gameDate} history={history} />}
             {view === 'targets' && <FmTargets saveId={saveId} snap={snapshot.data} players={players} folder={folder} go={go} />}
             {view === 'depth' && <FmDepth players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameDate={snapshot.gameDate} history={history} />}
             {view === 'finances' && <FmFinances snap={snapshot.data} players={players} />}
