@@ -347,8 +347,6 @@
       "noYoung": "No players aged 21 or under.",
       "training": "This week's training",
       "trainingPreset": "Game schedule to load: \"{{preset}}\".",
-      "lowerIntensity_one": "{{count}} player to set to Half Intensity",
-      "lowerIntensity_other": "{{count}} players to set to Half Intensity",
       "rusty_one": "{{count}} player lacking sharpness",
       "rusty_other": "{{count}} players lacking sharpness",
       "setupChanges_one": "{{count}} individual training to change",
@@ -1053,6 +1051,7 @@
       "individual": "Individual training",
       "intensity": "Intensity",
       "intensityLevel": {
+        "team": "Team intensity (auto)",
         "noWork": "No pitch or gym work",
         "rest": "Rest",
         "half": "Half Intensity",
@@ -1061,16 +1060,16 @@
       },
       "note": "Why",
       "reason": {
-        "injured": "injured",
-        "veryTired": "condition below 80%",
-        "tired": "condition below 90%",
-        "busyWeek": "young, but a two-match week",
-        "young": "21 or under and fully fit: improves the most",
-        "veteran": "32 or older, manage load",
-        "normal": "no reason to double the load"
+        "injured": "injured: the game rests him",
+        "veryTired": "condition below 80%: the game lowers the intensity",
+        "tired": "condition below 90%: the game adjusts the intensity",
+        "busyWeek": "young, but two-match week",
+        "young": "21 or under and fully fit: double intensity, he improves the most",
+        "veteran": "32 or over: let the game manage him",
+        "normal": "nothing to force: the game sets it by condition"
       },
       "rusty": "lacking sharpness: reserve minutes or late appearances",
-      "individualHelp": "Like the game's Individual Training screen. IP and OOP roles: his position's in the target XI, otherwise the project role he fits best. Focus: the one that works his weakest key attribute for that role (his 3 weak points below). Double Intensity: only for fully fit players aged 21 or under, outside two-match weeks; normal intensity for the rest. The whole squad on Double Intensity with an \"Intensive\" workload means a lot of fatigue and injury risk.",
+      "individualHelp": "Matches the game's Individual Training screen. IP and OOP roles: those of his slot in the target XI, otherwise the project role he fits best. Focus: the one that works his weakest key attribute for that role (below, his 3 weak points). Intensity: the team's, set by the game according to condition; the only exception is double intensity for fully fit players aged 21 or under outside two-match weeks.",
       "mentoring": "Mentoring groups",
       "mentor": "Mentor",
       "mentees": "Mentored youngsters",
@@ -1115,7 +1114,16 @@
       },
       "winterBreak": "Winter break",
       "winterFrom": "Break starts",
-      "winterTo": "League restarts"
+      "winterTo": "League restarts",
+      "teamIntensity": "Team intensity",
+      "condition": {
+        "veryPoor": "Very poor condition",
+        "poor": "Poor condition",
+        "fair": "Fair condition",
+        "good": "Good condition",
+        "excellent": "Excellent condition"
+      },
+      "teamIntensityHelp": "Recommended setting in Training > Team Intensity: the game then adjusts each player's intensity and rest by condition. No need to touch individual intensity, except for exceptions (a fully fit youngster on double intensity)."
     },
     "intro": {
       "home": "What needs your attention today, the styles that suit the squad, your best players and your youngsters.",
