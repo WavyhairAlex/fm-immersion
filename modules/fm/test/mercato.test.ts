@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildProject, mercatoAdvice, mergeReference, projectCompat, TacticEngine } from '../src';
+import { buildProject, contractDecisions, mercatoAdvice, mergeReference, projectCompat, TacticEngine } from '../src';
 import { normalizePlayer } from '../src/player';
 
 const ATTRS = ['Passing', 'FirstTouch', 'Technique', 'Composure', 'Vision', 'Decisions', 'Teamwork', 'WorkRate', 'Stamina', 'Strength', 'Pace', 'Acceleration', 'Tackling', 'Marking', 'Positioning', 'Anticipation', 'Heading', 'JumpingReach', 'Finishing', 'Movement', 'Crossing', 'Dribbling', 'Flair', 'Concentration', 'Agility', 'Aggression', 'Reflexes', 'Handling', 'OneOnOnes', 'AerialReach', 'CommandOfArea', 'Kicking', 'RushingOut'];
@@ -39,10 +39,44 @@ describe('mercato : départs et jeunes', () => {
     expect(r.income).toBe(r.byVerdict.sell.reduce((s, a) => s + (a.player.value ?? 0), 0));
   });
 
-  it('laisse partir en fin de contrat plutôt que vendre quand il reste moins de six mois', () => {
-    const squad = [...eleven, p(12, 'D (C)', 11), p(13, 'D (C)', 10.5), p(14, 'D (C)', 6, { contractEnd: '2027-03-31' })];
+  it('laisse partir sans valeur marchande, vend sinon, même en fin de contrat', () => {
+    const squad = [...eleven, p(12, 'D (C)', 11), p(13, 'D (C)', 10.5), p(14, 'D (C)', 6, { contractEnd: '2027-03-31', value: 0 }), p(15, 'D (C)', 5, { contractEnd: '2027-03-31' })];
     const r = mercatoAdvice(engine, squad, DATE, { style: 'possession' })!;
     expect(r.advice.find((a) => a.player.id === '14')!.verdict).toBe('release');
+    expect(r.advice.find((a) => a.player.id === '15')!.verdict).toBe('sell');
+  });
+
+  it('décide de chaque contrat qui finit dans six mois', () => {
+    const end = '2027-05-31';
+    const squad = [
+      ...eleven.map((x) => (x.id === '3' ? { ...x, contractEnd: end } : x.id === '11' ? { ...x, age: 33, contractEnd: end } : x)),
+      p(12, 'D (C)', 11, { contractEnd: end }),
+      p(13, 'D (C)', 10.5),
+      p(14, 'D (C)', 6, { contractEnd: end }),
+      p(15, 'D (C)', 5, { contractEnd: end, value: 0 }),
+      p(20, 'M (C)', 9, { age: 19, contractEnd: end, stars: { current: 1, potential: 4 } }),
+      p(21, 'M (C)', 9, { contractEnd: '2027-12-31' }),
+    ];
+    const r = mercatoAdvice(engine, squad, DATE, { style: 'possession' })!;
+    const d = contractDecisions(r);
+    const call = (id: number) => d.find((x) => x.advice.player.id === String(id));
+    // Seuls les contrats à six mois ou moins.
+    expect(call(21)).toBeUndefined();
+    expect(call(13)).toBeUndefined();
+    // Titulaire de 26 ans : prolonger longtemps ; titulaire de 33 ans : un an.
+    expect(call(3)!.advice.compat?.compat).not.toBe('no');
+    expect(call(3)!.call).toBe('extend');
+    expect(call(11)!.call).toBe('extendShort');
+    // Doublure de 26 ans : prolonger.
+    expect(call(12)!.call).toBe('extend');
+    // En trop : vendre s'il a une valeur, sinon le laisser partir.
+    expect(call(14)!.call).toBe('sellNow');
+    expect(call(15)!.call).toBe('letGo');
+    // Jeune prometteur : prolonger au moins trois ans.
+    expect(call(20)!.call).toBe('extend');
+    expect(call(20)!.years).toBeGreaterThanOrEqual(3);
+    // Les prolongations d'abord.
+    expect(d[0]!.call).toBe('extend');
   });
 
   it('repère les jeunes qui valent le coup : prêt s’ils sont bloqués, prolongation si le contrat finit', () => {
