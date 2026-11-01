@@ -1141,9 +1141,26 @@
         "counter": "Attacking mentality: they will leave space behind, prepare quick counters.",
         "patience": "Cautious mentality: expect a low block, move the ball and stretch the play.",
         "markCreator": "{{name}} makes them tick: tight marking on him and cut his passing lanes.",
-        "watchScorer": "{{name}} is their goalscorer: give him no space in the box."
+        "watchScorer": "{{name}} is their goalscorer: give him no space in the box.",
+        "screened": "Out of possession, two defensive midfielders close the middle: attack down the flanks and behind their full-backs.",
+        "leaky": "Their defence concedes a clear-cut chance every {{name}} minutes: be ambitious and get bodies in the box."
       },
-      "pressShort": "pressing {{value}}"
+      "pressShort": "pressing {{value}}",
+      "formsTitle": "Formations used this season",
+      "phase": "Phase",
+      "share": "Share of time",
+      "minutes": "Minutes",
+      "chances": "Clear-cut chances",
+      "every": "Frequency",
+      "created_one": "{{count}} created",
+      "created_other": "{{count}} created",
+      "conceded_one": "{{count}} conceded",
+      "conceded_other": "{{count}} conceded",
+      "everyMin_one": "every {{count}} min",
+      "everyMin_other": "every {{count}} min",
+      "formsHelp": "Read from the formation analysis of the game's team report. Out of possession, chances are those they concede.",
+      "withBall": "{{value}} in possession",
+      "withoutBall": "{{value}} out of possession"
     }
   },
   "pz2": {

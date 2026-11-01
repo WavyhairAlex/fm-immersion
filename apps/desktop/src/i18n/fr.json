@@ -1141,9 +1141,26 @@
         "counter": "Mentalité offensive : ils laisseront de l'espace dans leur dos, prépare des contres rapides.",
         "patience": "Mentalité prudente : attends-toi à un bloc bas, fais circuler et élargis le jeu.",
         "markCreator": "{{name}} fait jouer l'équipe : marquage serré sur lui et coupe ses lignes de passe.",
-        "watchScorer": "{{name}} est leur buteur : ne lui laisse pas d'espace dans la surface."
+        "watchScorer": "{{name}} est leur buteur : ne lui laisse pas d'espace dans la surface.",
+        "screened": "Sans ballon, deux milieux défensifs ferment l'axe : attaque par les côtés et dans le dos de leurs latéraux.",
+        "leaky": "Leur défense concède une occasion franche toutes les {{name}} minutes : sois ambitieux, avec du monde dans la surface."
       },
-      "pressShort": "pressing {{value}}"
+      "pressShort": "pressing {{value}}",
+      "formsTitle": "Formations jouées cette saison",
+      "phase": "Phase",
+      "share": "Temps de jeu",
+      "minutes": "Minutes",
+      "chances": "Occasions franches",
+      "every": "Fréquence",
+      "created_one": "{{count}} créée",
+      "created_other": "{{count}} créées",
+      "conceded_one": "{{count}} concédée",
+      "conceded_other": "{{count}} concédées",
+      "everyMin_one": "toutes les {{count}} min",
+      "everyMin_other": "toutes les {{count}} min",
+      "formsHelp": "Lu dans l'analyse de formation du rapport d'équipe du jeu. Sans ballon, les occasions sont celles qu'ils concèdent.",
+      "withBall": "{{value}} avec ballon",
+      "withoutBall": "{{value}} sans ballon"
     }
   },
   "pz2": {

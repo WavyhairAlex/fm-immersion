@@ -22,6 +22,11 @@ const snap = {
       advEff0Nom: 'Rickard Johansson',
       advEff0Postes: 'D (C), MD, M (C)',
       advEff0Etoiles: -1,
+      advFormationsAvec: [{ ChancesCreated: 27, FormationChancesFrequency: 38, FormationType: '4-4-2', FormationUsedMinutes: 1033, FormationUsedPercentage: 100, TacticalPositions: ['SI.Bindable.DynamicReference'] }],
+      advFormationsSans: [
+        { ChancesCreated: 5, FormationChancesFrequency: 58, FormationType: '4-4-2', FormationUsedMinutes: 292, FormationUsedPercentage: 28.267183303833008 },
+        { ChancesCreated: 30, FormationChancesFrequency: 24, FormationType: '4-4-2 2MD', FormationUsedMinutes: 741, FormationUsedPercentage: 71.73281860351562 },
+      ],
     },
   },
 } as unknown as FmSnapshot;
@@ -39,7 +44,17 @@ describe('rapport adverse', () => {
 
   it('donne des conseils qui répondent aux données lues', () => {
     const ids = opponentReport(snap)!.advice.map((a) => a.id + (a.name ? `:${a.name}` : ''));
-    expect(ids).toEqual(['buildShort', 'rotate', 'twoStrikers', 'betweenLines', 'markCreator:Sylejman Hoxhaj', 'watchScorer:Anton Engelbrektsson']);
+    expect(ids).toEqual(['buildShort', 'rotate', 'twoStrikers', 'screened', 'leaky:24', 'markCreator:Sylejman Hoxhaj', 'watchScorer:Anton Engelbrektsson']);
+  });
+
+  it('lit les formations avec et sans ballon, la plus jouée en tête', () => {
+    const f = opponentReport(snap)!.formations;
+    expect(f.ip).toEqual([{ form: '4-4-2', pct: 100, minutes: 1033, chances: 27, every: 38 }]);
+    expect(f.oop.map((x) => x.form)).toEqual(['4-4-2 2MD', '4-4-2']);
+    expect(f.oop[0]!.chances).toBe(30);
+    // Formation lue en texte JSON : même résultat.
+    const s2 = { custom: { equipe: { advFormationsAvec: JSON.stringify([{ FormationType: '4-2-3-1', FormationUsedPercentage: 60 }]) } } } as unknown as FmSnapshot;
+    expect(opponentReport(s2)!.formations.ip[0]!.form).toBe('4-2-3-1');
   });
 
   it('sans lecture adverse, pas de rapport', () => {

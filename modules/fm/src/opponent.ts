@@ -23,6 +23,8 @@ export type OpponentAdviceId =
   | 'twoStrikers'
   | 'oneStriker'
   | 'betweenLines'
+  | 'screened'
+  | 'leaky'
   | 'counter'
   | 'patience'
   | 'markCreator'
@@ -33,6 +35,18 @@ export interface OpponentAdvice {
   name?: string;
 }
 
+/** Formation adverse vue par le rapport d'équipe (ExpectedFormations/FormationsUsed). */
+export interface OpponentFormation {
+  form: string;
+  /** Part du temps de jeu, en %. */
+  pct: number | null;
+  minutes: number | null;
+  /** Occasions franches créées (avec ballon) ou concédées (sans ballon : le jeu les range aussi sous ChancesCreated). */
+  chances: number | null;
+  /** Minutes par occasion franche. */
+  every: number | null;
+}
+
 export interface OpponentReport {
   name: string | null;
   position: string | null;
@@ -41,6 +55,7 @@ export interface OpponentReport {
   assister: { name: string; value: number | null } | null;
   rated: { name: string; value: number | null } | null;
   squad: OpponentPlayer[];
+  formations: { ip: OpponentFormation[]; oop: OpponentFormation[] };
   advice: OpponentAdvice[];
 }
 
@@ -52,6 +67,23 @@ const num = (v: unknown) => (typeof v === 'number' ? v : typeof v === 'string' &
 export function strikersOf(formation: string | null): number | null {
   const parts = formation?.match(/\d/g)?.map(Number);
   return parts && parts.length >= 3 ? parts.at(-1)! : null;
+}
+
+/** Liste de formations lue en JSON (clé « profond » de chemins.json) ; TacticalPositions est ignoré (références opaques). */
+function formationsOf(v: unknown): OpponentFormation[] {
+  let list = v;
+  if (typeof list === 'string') {
+    try {
+      list = JSON.parse(list);
+    } catch {
+      return [];
+    }
+  }
+  const rows = (Array.isArray(list) ? list : list && typeof list === 'object' ? [list] : []) as Raw[];
+  return rows
+    .map((r) => ({ form: str(r.FormationType) ?? '', pct: num(r.FormationUsedPercentage), minutes: num(r.FormationUsedMinutes), chances: num(r.ChancesCreated), every: num(r.FormationChancesFrequency) }))
+    .filter((f) => f.form)
+    .sort((a, b) => (b.pct ?? 0) - (a.pct ?? 0));
 }
 
 export function opponentReport(snap: FmSnapshot): OpponentReport | null {
@@ -84,6 +116,7 @@ export function opponentReport(snap: FmSnapshot): OpponentReport | null {
     assister: who('advPasseur', 'advPasses'),
     rated: who('advMeilleureNoteJoueur', 'advMeilleureNote'),
     squad,
+    formations: { ip: formationsOf(team.advFormationsAvec), oop: formationsOf(team.advFormationsSans) },
     advice: [],
   };
   r.advice = opponentAdvice(r);
@@ -103,11 +136,18 @@ export function opponentAdvice(r: OpponentReport): OpponentAdvice[] {
   const mark = m.marking?.toLowerCase() ?? '';
   if (/indiv|man/.test(mark)) out.push({ id: 'rotate' });
   else if (/zon/.test(mark)) out.push({ id: 'overloadZone' });
-  const strikers = strikersOf(m.formation);
+  // Formations réellement jouées d'abord, la formation préférée de l'entraîneur à défaut.
+  const ip = r.formations.ip[0]?.form ?? m.formation;
+  const oop = r.formations.oop[0]?.form ?? m.formation;
+  const strikers = strikersOf(ip);
   if (strikers != null && strikers >= 2) out.push({ id: 'twoStrikers' });
   else if (strikers === 1) out.push({ id: 'oneStriker' });
-  // Deux lignes de quatre sans milieu offensif : l'espace entre elles est à prendre.
-  if (m.formation && /^\d-4-\d$/.test(m.formation.replace(/\s/g, ''))) out.push({ id: 'betweenLines' });
+  // Sans ballon : deux milieux défensifs ferment l'axe, sinon deux lignes de quatre laissent l'espace entre elles.
+  if (oop && /MD|DM/.test(oop)) out.push({ id: 'screened' });
+  else if (oop && /^\d-4-\d$/.test(oop.replace(/\s/g, ''))) out.push({ id: 'betweenLines' });
+  // Défense qui concède une occasion franche toutes les 30 minutes ou moins.
+  const leak = r.formations.oop[0]?.every;
+  if (leak != null && leak <= 30) out.push({ id: 'leaky', name: String(Math.round(leak)) });
   const ment = m.mentality?.toLowerCase() ?? '';
   if (/offens|attack|positi/.test(ment)) out.push({ id: 'counter' });
   else if (/défens|defens|prud|caut/.test(ment)) out.push({ id: 'patience' });

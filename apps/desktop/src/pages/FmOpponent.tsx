@@ -8,6 +8,7 @@ export function FmOpponent({ snap }: { snap: FmSnapshot }) {
   const { t, i18n } = useTranslation();
   const r = useMemo(() => opponentReport(snap), [snap]);
   const nf = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 2 });
+  const nf0 = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 0 });
   if (!r) return <Empty>{t('fm.opp.none')}</Empty>;
   const dash = (v: string | null) => v ?? '–';
   const keyPlayers = [
@@ -24,6 +25,40 @@ export function FmOpponent({ snap }: { snap: FmSnapshot }) {
         <Kpi label={t('fm.opp.mentality')} value={dash(r.manager.mentality)} />
         <Kpi label={t('fm.opp.pressMark')} value={dash(r.manager.pressing)} sub={r.manager.marking ? t('fm.opp.marking', { value: r.manager.marking }) : undefined} />
       </div>
+
+      {(r.formations.ip.length > 0 || r.formations.oop.length > 0) && (
+        <Panel title={t('fm.opp.formsTitle')}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase text-canard/60">
+                <tr>
+                  <th className="py-1 pr-3">{t('fm.opp.phase')}</th>
+                  <th className="py-1 pr-3">{t('fm.opp.formation')}</th>
+                  <th className="py-1 pr-3 text-right">{t('fm.opp.share')}</th>
+                  <th className="py-1 pr-3 text-right">{t('fm.opp.minutes')}</th>
+                  <th className="py-1 pr-3 text-right">{t('fm.opp.chances')}</th>
+                  <th className="py-1 text-right">{t('fm.opp.every')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(['ip', 'oop'] as const).flatMap((ph) =>
+                  r.formations[ph].map((f, i) => (
+                    <tr key={`${ph}-${f.form}`} className="border-t border-canard/10">
+                      <td className="py-1 pr-3 text-brun">{i === 0 ? t(`fm.style.${ph}`) : ''}</td>
+                      <td className="py-1 pr-3 font-bold">{f.form}</td>
+                      <td className="py-1 pr-3 text-right tabular-nums">{f.pct != null ? `${nf0.format(f.pct)} %` : '–'}</td>
+                      <td className="py-1 pr-3 text-right tabular-nums">{f.minutes != null ? nf0.format(f.minutes) : '–'}</td>
+                      <td className="py-1 pr-3 text-right tabular-nums">{f.chances != null ? t(ph === 'ip' ? 'fm.opp.created' : 'fm.opp.conceded', { count: f.chances }) : '–'}</td>
+                      <td className="py-1 text-right tabular-nums">{f.every != null ? t('fm.opp.everyMin', { count: Math.round(f.every) }) : '–'}</td>
+                    </tr>
+                  )),
+                )}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs text-brun">{t('fm.opp.formsHelp')}</p>
+        </Panel>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title={t('fm.opp.adviceTitle')}>

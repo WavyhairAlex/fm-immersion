@@ -321,7 +321,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
           {opp ? (
             <>
               <p className="mt-1 text-sm text-brun">
-                {[opp.manager.formation, opp.manager.mentality, opp.manager.pressing && t('fm.opp.pressShort', { value: opp.manager.pressing }), opp.manager.marking && t('fm.opp.marking', { value: opp.manager.marking })]
+                {[opp.formations.ip[0] ? t('fm.opp.withBall', { value: opp.formations.ip[0].form }) : opp.manager.formation, opp.formations.oop[0] && t('fm.opp.withoutBall', { value: opp.formations.oop[0].form }), opp.manager.mentality, opp.manager.pressing && t('fm.opp.pressShort', { value: opp.manager.pressing }), opp.manager.marking && t('fm.opp.marking', { value: opp.manager.marking })]
                   .filter(Boolean)
                   .join(' · ')}
               </p>
