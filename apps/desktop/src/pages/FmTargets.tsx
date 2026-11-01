@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { fmData } from '../lib/data';
+import { useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticEngine } from './FmTactic';
 import { Empty, Fit, Level, Panel, Tag, useCoach, useFormat, useNames } from './FmUi';
 
@@ -14,6 +15,7 @@ type Filter = 'list' | 'all' | 'dismissed';
  */
 export function FmTargets({ saveId, snap, players, folder, go }: { saveId: string; snap: FmSnapshot; players: FmPlayer[]; folder: string; go: (view: string) => void }) {
   const { t } = useTranslation();
+  const scope = useFmSaveScope();
   const names = useNames();
   const f = useFormat();
   const qc = useQueryClient();
@@ -48,11 +50,7 @@ export function FmTargets({ saveId, snap, players, folder, go }: { saveId: strin
   const read = (snap as { collecte?: Record<string, string> }).collecte?.cibles;
 
   const compare = (id: string) => {
-    try {
-      localStorage.setItem('simloom.fm.compare', JSON.stringify([id]));
-    } catch {
-      /* stockage indisponible : le comparateur choisira lui-même */
-    }
+    writeScoped('simloom.fm.compare', scope, [id]);
     go('compare');
   };
 

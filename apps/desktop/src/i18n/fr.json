@@ -37,6 +37,15 @@
     "import": "Importer depuis FM27",
     "autoImport": "mise à jour automatique chaque minute",
     "importError": "Import impossible : {{reason}}",
+    "saveFile": {
+      "label": "Sauvegarde FM27",
+      "help": "Sauvegarde du jeu suivie par cette partie (dossier games, à côté du dossier du plugin). Simloom ne lit que son nom et sa date.",
+      "none": "non liée",
+      "missing": "{{name}} (introuvable)",
+      "saved": "enregistrée le {{date}}",
+      "other": "FM27 a chargé une sauvegarde de {{club}}, alors que cette partie suit {{expected}} : rien n'est importé ici. Ouvre la partie Simloom de cette sauvegarde, ou importe quand même si tu as changé de club.",
+      "importAnyway": "Importer quand même ({{club}})"
+    },
     "empty": "Aucun effectif importé. Lance FM27 avec le plugin, charge ta partie, puis clique sur « Importer depuis FM27 ».",
     "alert": {
       "injured_one": "{{count}} blessé",

@@ -5,6 +5,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { fmData, savesData } from '../lib/data';
+import { FmOtherSaveError, type FmSaveFile } from '../lib/fm';
+import { FmSaveScopeContext, type FmSaveScope } from '../lib/save-store';
 import { FmAnalysis } from './FmAnalysis';
 import { FmBridge } from './FmBridge';
 import { FmCalendar } from './FmCalendar';
@@ -60,11 +62,14 @@ export function FmSave() {
   const qc = useQueryClient();
   const key = ['fm', saveId] as const;
 
-  const { data: save } = useQuery({
-    queryKey: ['saves'],
-    queryFn: savesData.list,
-    select: (rows) => rows.find((s) => s.id === saveId),
-  });
+  const { data: allSaves } = useQuery({ queryKey: ['saves'], queryFn: savesData.list });
+  const save = allSaves?.find((s) => s.id === saveId);
+  // Les réglages d'écran d'avant le lien partie ↔ sauvegarde reviennent à la plus ancienne partie FM.
+  const scope = useMemo<FmSaveScope | null>(() => {
+    if (!allSaves) return null;
+    const oldest = allSaves.filter((s) => s.gameId === 'fm').sort((a, b) => a.createdAt.localeCompare(b.createdAt))[0];
+    return { saveId, inheritsLegacy: oldest?.id === saveId };
+  }, [allSaves, saveId]);
   const { data: snapshot, isLoading } = useQuery({ queryKey: [...key, 'latest'], queryFn: () => fmData.latest(saveId) });
   const { data: all } = useQuery({ queryKey: [...key, 'all'], queryFn: () => fmData.all(saveId) });
   const { data: settings } = useQuery({ queryKey: [...key, 'settings'], queryFn: () => fmData.settings(saveId) });
@@ -88,16 +93,34 @@ export function FmSave() {
     setFolder(settings?.fmFolder ?? defaultFolder ?? '');
   }, [settings?.fmFolder, defaultFolder]);
 
+  // Sauvegardes .fm du joueur (dossier games, à côté de celui du plugin), pour lier la partie à l'une d'elles.
+  const { data: saveFiles } = useQuery({
+    queryKey: ['fm', 'save-files', folder],
+    queryFn: () => invoke<FmSaveFile[]>('fm_list_saves', { folder }),
+    enabled: !!folder,
+    refetchInterval: 60_000,
+  });
+  const linked = settings?.fmSaveFile ?? '';
+  const linkedFile = saveFiles?.find((f) => f.name === linked);
+  const link = useMutation({
+    mutationFn: (name: string) => fmData.linkSave(saveId, name || null),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...key, 'settings'] }),
+  });
+
+  // Instantané d'une autre sauvegarde chargée dans FM27 : rien n'est importé tant que le joueur ne le confirme pas.
+  const [other, setOther] = useState<FmOtherSaveError | null>(null);
   const importSnap = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (opts: { force?: boolean } = {}) => {
       const text = await invoke<string>('fm_read_snapshot', { folder });
       if (folder !== settings?.fmFolder) await fmData.setFolder(saveId, folder);
-      return fmData.importSnapshot(saveId, JSON.parse(text));
+      return fmData.importSnapshot(saveId, JSON.parse(text), opts);
     },
     onSuccess: () => {
+      setOther(null);
       qc.invalidateQueries({ queryKey: key });
       qc.invalidateQueries({ queryKey: ['saves'] });
     },
+    onError: (e) => setOther(e instanceof FmOtherSaveError ? e : null),
   });
 
   // Import automatique : le plugin réécrit son instantané toutes les 5 minutes ; on le relit chaque minute et
@@ -112,10 +135,12 @@ export function FmSave() {
         if (stop || text === lastText.current) return;
         lastText.current = text;
         await fmData.importSnapshot(saveId, JSON.parse(text));
+        setOther(null);
         qc.invalidateQueries({ queryKey: key });
         qc.invalidateQueries({ queryKey: ['saves'] });
-      } catch {
-        /* fichier absent ou en cours d'écriture : nouvel essai à la prochaine minute */
+      } catch (e) {
+        // Autre sauvegarde chargée : on le signale ; sinon fichier absent ou en cours d'écriture, nouvel essai dans une minute.
+        if (e instanceof FmOtherSaveError) setOther(e);
       }
     };
     void tick();
@@ -135,6 +160,7 @@ export function FmSave() {
   const gameFormation = gameFormationOf(snapshot?.data.tactic);
   const lineup = useMemo(() => gameLineup(snapshot?.data), [snapshot?.data]);
   const dateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' });
+  const stampFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'short', timeStyle: 'short' });
 
   return (
     <div className="w-full px-6 py-4 xl:px-10">
@@ -155,7 +181,7 @@ export function FmSave() {
           className="flex flex-wrap items-center gap-3"
           onSubmit={(e) => {
             e.preventDefault();
-            importSnap.mutate();
+            importSnap.mutate({});
           }}
         >
           <details className="relative text-sm" open={!snapshot}>
@@ -165,13 +191,43 @@ export function FmSave() {
               <p className="mt-1 text-xs text-canard/60">{t('fm.folderHelp')}</p>
             </div>
           </details>
+          <label className="flex items-center gap-2 text-sm">
+            <span className="font-bold text-canard/70">{t('fm.saveFile.label')}</span>
+            <select
+              className="input max-w-[16rem] py-1 text-sm"
+              value={linked}
+              disabled={link.isPending}
+              onChange={(e) => link.mutate(e.target.value)}
+              title={t('fm.saveFile.help')}
+            >
+              <option value="">{t('fm.saveFile.none')}</option>
+              {linked && !linkedFile && <option value={linked}>{t('fm.saveFile.missing', { name: linked })}</option>}
+              {saveFiles?.map((f) => (
+                <option key={f.name} value={f.name}>
+                  {f.name.replace(/\.fm$/i, '')}
+                </option>
+              ))}
+            </select>
+          </label>
+          {linkedFile?.modifiedMs != null && (
+            <span className="text-xs text-brun">{t('fm.saveFile.saved', { date: stampFmt.format(new Date(linkedFile.modifiedMs)) })}</span>
+          )}
           <span className="text-xs text-brun">{t('fm.autoImport')}</span>
           <button className="btn-primary px-4 py-1.5 text-sm" disabled={importSnap.isPending || !folder}>
             {t('fm.import')}
           </button>
         </form>
       </div>
-      {importSnap.isError && <p className="mt-2 text-sm text-corail">{t('fm.importError', { reason: String(importSnap.error?.message ?? importSnap.error) })}</p>}
+      {other && (
+        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-white px-4 py-3 text-sm ring-1 ring-corail/40" role="alert">
+          <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-full bg-ambre" aria-hidden />
+          <span className="text-canard">{t('fm.saveFile.other', { club: other.club, expected: other.expected })}</span>
+          <button type="button" className="btn-secondary px-3 py-1 text-xs" disabled={importSnap.isPending} onClick={() => importSnap.mutate({ force: true })}>
+            {t('fm.saveFile.importAnyway', { club: other.club })}
+          </button>
+        </div>
+      )}
+      {importSnap.isError && !other && <p className="mt-2 text-sm text-corail">{t('fm.importError', { reason: String(importSnap.error?.message ?? importSnap.error) })}</p>}
 
       <FmBridge dataFolder={folder} />
 
@@ -182,7 +238,8 @@ export function FmSave() {
         </div>
       )}
 
-      {snapshot && players.length > 0 && (
+      {snapshot && players.length > 0 && scope && (
+        <FmSaveScopeContext.Provider value={scope}>
         <div className="mt-4 lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-6">
           {/* Navigation : colonne à gauche sur grand écran, onglets au-dessus sinon. */}
           <nav className="hidden lg:block" aria-label={t('fm.nav')}>
@@ -265,6 +322,7 @@ export function FmSave() {
           </div>
           </div>
         </div>
+        </FmSaveScopeContext.Provider>
       )}
     </div>
   );

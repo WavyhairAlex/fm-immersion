@@ -29,6 +29,7 @@ import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { fitPct, setFitScale, useCoach } from './FmUi';
 
 // v2 : le choix automatique (meilleure tactique applicable) devient la valeur par défaut.
@@ -40,20 +41,6 @@ interface Prefs {
   /** Onze affiché : celui lu dans le jeu (par défaut quand il existe) ou celui calculé par Simloom. */
   source?: 'game' | 'simloom';
 }
-const readPrefs = (): Prefs => {
-  try {
-    return JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') as Prefs;
-  } catch {
-    return {};
-  }
-};
-const writePrefs = (p: Prefs) => {
-  try {
-    localStorage.setItem(PREFS_KEY, JSON.stringify(p));
-  } catch {
-    /* stockage indisponible : les choix ne sont pas retenus */
-  }
-};
 
 /** Repères locaux (`simloom-roles.json` dans le dossier du plugin) s'ils existent et sont valides. */
 async function loadLocalReference(folder: string): Promise<{ ref: TacticReference | null; error: boolean }> {
@@ -85,11 +72,13 @@ export function useTacticEngine(folder: string, players: FmPlayer[] = []) {
  */
 export function useTacticChoice(players: FmPlayer[], folder: string, gameFormation: string | null, lineup: GameSlot[] | null = null) {
   const { engine, local } = useTacticEngine(folder, players);
-  const [prefs, setPrefs] = useState<Prefs>(readPrefs);
+  // Choix retenus par partie : chaque carrière a son style et son schéma.
+  const scope = useFmSaveScope();
+  const [prefs, setPrefs] = useState<Prefs>(() => readScoped<Prefs>(PREFS_KEY, scope, {}));
   const update = (p: Prefs) => {
     const next = { ...prefs, ...p };
     setPrefs(next);
-    writePrefs(next);
+    writeScoped(PREFS_KEY, scope, next);
   };
   const avail = useMemo(() => players.filter((p) => !unavailable(p) && Object.keys(p.attributes).length > 0), [players]);
   // Classement commun à tous les onglets : chaque style avec la note d'équipe de son meilleur onze.

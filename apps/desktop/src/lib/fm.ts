@@ -7,6 +7,31 @@ import type { Db } from './db';
 /** Réglages FM rangés dans saves.extra. */
 export interface FmSaveSettings {
   fmFolder?: string;
+  /** Sauvegarde FM27 liée à la partie (nom du fichier .fm dans le dossier games). */
+  fmSaveFile?: string;
+  /** Club suivi par la partie : un instantané d'un autre club vient d'une autre sauvegarde. */
+  fmClub?: string;
+}
+
+/** Fichier .fm listé par Rust (métadonnées seulement). */
+export interface FmSaveFile {
+  name: string;
+  modifiedMs: number | null;
+  bytes: number;
+}
+
+/**
+ * Le plugin écrit un seul instantané pour la sauvegarde chargée dans FM27 : celui d'une autre
+ * sauvegarde ne doit pas se mélanger à cette partie. On la reconnaît à son club.
+ */
+export class FmOtherSaveError extends Error {
+  constructor(
+    readonly club: string,
+    readonly expected: string,
+  ) {
+    super(`instantané de ${club}, la partie suit ${expected}`);
+    this.name = 'FmOtherSaveError';
+  }
 }
 
 /**
@@ -42,11 +67,20 @@ export function fmRepo(db: Db) {
         .orderBy(asc(fmSnapshots.gameDate));
     },
 
-    /** Valide le JSON du plugin puis l'enregistre. Lève une erreur zod si le fichier n'est pas reconnu. */
-    async importSnapshot(saveId: string, raw: unknown): Promise<FmSnapshot> {
+    /**
+     * Valide le JSON du plugin puis l'enregistre. Lève une erreur zod si le fichier n'est pas reconnu,
+     * et `FmOtherSaveError` s'il vient d'un autre club que celui de la partie (sauf `force`, après un
+     * changement de club dans la même carrière : le nouveau club devient celui de la partie).
+     */
+    async importSnapshot(saveId: string, raw: unknown, opts: { force?: boolean } = {}): Promise<FmSnapshot> {
+      const parsed = fmSnapshotSchema.parse(raw);
+      const settings = await this.settings(saveId);
       // Les étoiles des rôles sont lues un poste à la fois : on garde les tables lues avant.
       const prev = await this.latest(saveId);
-      const snap = carryRoleStars(fmSnapshotSchema.parse(raw), prev?.data);
+      const expected = settings.fmClub ?? prev?.club;
+      if (expected && parsed.club !== expected && !opts.force) throw new FmOtherSaveError(parsed.club, expected);
+      if (settings.fmClub !== parsed.club) await this.updateSettings(saveId, { fmClub: parsed.club });
+      const snap = carryRoleStars(parsed, prev?.club === parsed.club ? prev?.data : undefined);
       const values = { saveId, gameDate: snap.gameDate, club: snap.club, playerCount: snap.players.length, data: snap };
       await db
         .delete(fmSnapshots)
@@ -93,9 +127,19 @@ export function fmRepo(db: Db) {
       return (row?.extra ?? {}) as FmSaveSettings;
     },
 
-    async setFolder(saveId: string, fmFolder: string) {
-      const current = await this.settings(saveId);
-      await db.update(saves).set({ extra: { ...current, fmFolder } }).where(eq(saves.id, saveId));
+    async updateSettings(saveId: string, patch: Partial<FmSaveSettings>) {
+      const next: Record<string, unknown> = { ...(await this.settings(saveId)), ...patch };
+      for (const k of Object.keys(next)) if (next[k] === undefined) delete next[k];
+      await db.update(saves).set({ extra: next }).where(eq(saves.id, saveId));
+    },
+
+    setFolder(saveId: string, fmFolder: string) {
+      return this.updateSettings(saveId, { fmFolder });
+    },
+
+    /** Lie la partie à une sauvegarde FM27 (ou défait le lien avec `null`). */
+    linkSave(saveId: string, fmSaveFile: string | null) {
+      return this.updateSettings(saveId, { fmSaveFile: fmSaveFile ?? undefined });
     },
   };
 }

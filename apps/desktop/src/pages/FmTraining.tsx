@@ -35,6 +35,7 @@ import {
 } from '@simloom/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticEngine } from './FmTactic';
 import { Chips, Fit, Panel, Pos, Tag, useCoach, useNames } from './FmUi';
 
@@ -55,24 +56,17 @@ function Session({ id }: { id: SessionId }) {
   return <span className={`block rounded-lg px-2 py-1 text-xs font-bold leading-tight ${CAT_CLS[sessionCategory(id)]}`}>{t(`fm.train.session.${id}`)}</span>;
 }
 
-/** Réglages individuels notés comme faits en jeu, par partie (retenus sur ce PC). */
-const setupKey = (folder: string) => `simloom.fm.individual.${folder}`;
-function readSetups(folder: string): Record<string, IndividualSetup> {
-  try {
-    return JSON.parse(localStorage.getItem(setupKey(folder)) ?? '{}') as Record<string, IndividualSetup>;
-  } catch {
-    return {};
-  }
-}
+/**
+ * Réglages individuels notés comme faits en jeu, par partie (retenus sur ce PC).
+ * Ils étaient rangés par dossier du plugin, commun à toutes les parties : la plus ancienne partie les reprend.
+ */
+const SETUP_KEY = 'simloom.fm.individual';
 export function useAppliedSetups(folder: string) {
-  const [applied, setApplied] = useState(() => readSetups(folder));
+  const scope = useFmSaveScope();
+  const [applied, setApplied] = useState(() => readScoped<Record<string, IndividualSetup>>(SETUP_KEY, scope, {}, `${SETUP_KEY}.${folder}`));
   const save = (next: Record<string, IndividualSetup>) => {
     setApplied(next);
-    try {
-      localStorage.setItem(setupKey(folder), JSON.stringify(next));
-    } catch {
-      /* stockage indisponible : la checklist n'est pas retenue */
-    }
+    writeScoped(SETUP_KEY, scope, next);
   };
   return [applied, save] as const;
 }

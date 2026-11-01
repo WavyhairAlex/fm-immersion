@@ -1,6 +1,7 @@
 import { abilityNeeded, teamInstructionOf, keyAttrs, styleComplexity, tactAbility, type FmPlayer, type Phase } from '@simloom/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { readScoped, scopedKey, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticChoice } from './FmTactic';
 import { Empty, Fit, Kpi, Panel, Tag, useNames } from './FmUi';
 
@@ -13,21 +14,20 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
   // Même classement et même style par défaut que l'onglet Composition.
   const { engine, avail: list, ranked, style: chosen } = useTacticChoice(players, folder, null);
   const sig = useMemo(() => engine.squadSignals(list), [engine, list]);
+  const scope = useFmSaveScope();
   const [sel, setSel] = useState<string | null>(() => {
+    // Ancienne valeur commune : un id brut, pas du JSON.
     try {
-      return localStorage.getItem(STYLE_KEY);
+      if (localStorage.getItem(scopedKey(STYLE_KEY, scope.saveId)) == null && scope.inheritsLegacy) return localStorage.getItem(STYLE_KEY);
     } catch {
       return null;
     }
+    return readScoped<string | null>(STYLE_KEY, { ...scope, inheritsLegacy: false }, null);
   });
   if (!list.length || !ranked.length) return <Empty>{t('fm.tac.noAttributes')}</Empty>;
   const choose = (id: string) => {
     setSel(id);
-    try {
-      localStorage.setItem(STYLE_KEY, id);
-    } catch {
-      /* stockage indisponible : le style affiché n'est pas retenu */
-    }
+    writeScoped(STYLE_KEY, scope, id);
   };
   const cur = ranked.find((r) => r.style.id === sel)?.style ?? chosen ?? ranked[0]!.style;
   const fits = ranked.map((r) => r.fit ?? 0);

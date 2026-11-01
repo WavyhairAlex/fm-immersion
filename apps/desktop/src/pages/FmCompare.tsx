@@ -3,28 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { fmData } from '../lib/data';
+import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticEngine } from './FmTactic';
 import { Level, Panel, Tag, useFormat } from './FmUi';
 
 type Person = FmPlayer & { target?: boolean; club?: string | null };
 
 const CMP_KEY = 'simloom.fm.compare';
-const read = <T,>(key: string, fallback: T): T => {
-  try {
-    const v = localStorage.getItem(key);
-    return v ? (JSON.parse(v) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-};
-const write = (key: string, v: unknown) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(v));
-  } catch {
-    /* stockage indisponible : la sélection n'est pas retenue */
-  }
-};
-
 /** Joueurs du club et cibles du mercato gardées dans la base (sauf celles écartées). */
 const pool = (players: FmPlayer[], targets: FmPlayer[]): Person[] =>
   [...players, ...targets.map((t) => ({ ...t, target: true }))].filter((p) => Object.keys(p.attributes).length);
@@ -37,8 +22,10 @@ export function FmCompare({ saveId, snap, players, folder, history }: { saveId: 
   const { engine } = useTacticEngine(folder, players);
   const { data: rows } = useQuery({ queryKey: ['fm', saveId, 'targets', snap.gameDate], queryFn: () => fmData.targets(saveId) });
   const people = useMemo(() => pool(players, storedTargets(rows ?? []).filter((t) => !t.dismissed)), [players, rows]);
-  const [ids, setIds] = useState<string[]>(() => read(CMP_KEY, []));
-  const [roleCode, setRoleCode] = useState<string | null>(() => read(`${CMP_KEY}.role`, null));
+  // Sélection retenue par partie : les joueurs d'une carrière n'existent pas dans une autre.
+  const scope = useFmSaveScope();
+  const [ids, setIds] = useState<string[]>(() => readScoped<string[]>(CMP_KEY, scope, []));
+  const [roleCode, setRoleCode] = useState<string | null>(() => readScoped<string | null>(`${CMP_KEY}.role`, scope, null));
 
   // Deux joueurs au minimum : on complète avec les meilleurs niveaux.
   const chosen = ids.filter((id) => people.some((p) => p.id === id));
@@ -53,7 +40,7 @@ export function FmCompare({ saveId, snap, players, folder, history }: { saveId: 
     else next.splice(i, 1);
     const clean = [...new Set(next.filter(Boolean))].slice(0, 3);
     setIds(clean);
-    write(CMP_KEY, clean);
+    writeScoped(CMP_KEY, scope, clean);
   };
 
   const allGk = sel.every((p) => p.positions.includes('GB'));
@@ -110,7 +97,7 @@ export function FmCompare({ saveId, snap, players, folder, history }: { saveId: 
               value={rc}
               onChange={(e) => {
                 setRoleCode(e.target.value);
-                write(`${CMP_KEY}.role`, e.target.value);
+                writeScoped(`${CMP_KEY}.role`, scope, e.target.value);
               }}
             >
               {roles.map((r) => (

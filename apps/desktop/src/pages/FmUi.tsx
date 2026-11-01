@@ -1,6 +1,7 @@
 import { POS_LABEL, type CoachPrefs, type FmPlayer } from '@simloom/module-fm';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 
 /** Petits éléments communs aux écrans du module Football Manager. */
 
@@ -120,24 +121,15 @@ export function Fit({ value }: { value: number | null | undefined }) {
   return <span className={`inline-block min-w-[3rem] rounded-full px-2 py-0.5 text-center text-xs font-bold tabular-nums ${cls}`}>{fitPct(value)}</span>;
 }
 
-/** Choix du coach (style aimé, schéma, niveau visé), partagés entre « Mon projet » et « Cibles ». */
+/** Choix du coach (style aimé, schéma, niveau visé), partagés entre « Mon projet » et « Cibles », par partie. */
 const COACH_KEY = 'simloom.fm.coach';
 export function useCoach() {
-  const [coach, setCoach] = useState<CoachPrefs>(() => {
-    try {
-      return JSON.parse(localStorage.getItem(COACH_KEY) ?? '{}') as CoachPrefs;
-    } catch {
-      return {};
-    }
-  });
+  const scope = useFmSaveScope();
+  const [coach, setCoach] = useState<CoachPrefs>(() => readScoped<CoachPrefs>(COACH_KEY, scope, {}));
   const update = (p: CoachPrefs) => {
     const next = { ...coach, ...p };
     setCoach(next);
-    try {
-      localStorage.setItem(COACH_KEY, JSON.stringify(next));
-    } catch {
-      /* stockage indisponible : les choix ne sont pas retenus */
-    }
+    writeScoped(COACH_KEY, scope, next);
   };
   return [coach, update] as const;
 }

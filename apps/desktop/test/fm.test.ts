@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { fmRepo } from '../src/lib/fm';
+import { FmOtherSaveError, fmRepo } from '../src/lib/fm';
 import { savesRepo } from '../src/lib/saves';
 import { memoryDb } from './memory-db';
 
@@ -67,5 +67,39 @@ describe('instantanés Football Manager', () => {
 
     await fm.dismissTarget(save.id, '10', true);
     expect((await fm.targets(save.id)).find((t) => t.playerId === '10')?.dismissed).toBe(true);
+  });
+
+  it("lie la partie à une sauvegarde FM27 et défait le lien", async () => {
+    const save = await saves.create({ gameId: 'fm', name: 'V' });
+    await fm.setFolder(save.id, 'D:\\FM\\archivix');
+    await fm.linkSave(save.id, 'Vänersborgs.fm');
+    expect(await fm.settings(save.id)).toEqual({ fmFolder: 'D:\\FM\\archivix', fmSaveFile: 'Vänersborgs.fm' });
+    await fm.linkSave(save.id, null);
+    expect(await fm.settings(save.id)).toEqual({ fmFolder: 'D:\\FM\\archivix' });
+  });
+
+  it("refuse l'instantané d'une autre sauvegarde (autre club), sauf confirmation", async () => {
+    const save = await saves.create({ gameId: 'fm', name: 'V' });
+    await fm.importSnapshot(save.id, snap('2026-08-29', ['A']));
+    expect((await fm.settings(save.id)).fmClub).toBe('Vänersborgs IF');
+
+    const autre = { ...snap('2031-03-01', ['Z']), club: 'IFK Göteborg' };
+    const err = await fm.importSnapshot(save.id, autre).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(FmOtherSaveError);
+    expect([(err as FmOtherSaveError).club, (err as FmOtherSaveError).expected]).toEqual(['IFK Göteborg', 'Vänersborgs IF']);
+    expect((await fm.latest(save.id))?.club).toBe('Vänersborgs IF');
+
+    // Changement de club dans la même carrière : confirmé, le nouveau club devient celui de la partie.
+    await fm.importSnapshot(save.id, autre, { force: true });
+    expect((await fm.settings(save.id)).fmClub).toBe('IFK Göteborg');
+    await fm.importSnapshot(save.id, { ...autre, gameDate: '2031-03-02' });
+    expect((await fm.history(save.id)).length).toBe(3);
+  });
+
+  it('reprend le club des instantanés déjà importés avant le lien', async () => {
+    const save = await saves.create({ gameId: 'fm', name: 'V' });
+    await fm.importSnapshot(save.id, snap('2026-08-29', ['A']));
+    await fm.updateSettings(save.id, { fmClub: undefined });
+    await expect(fm.importSnapshot(save.id, { ...snap('2026-09-01', ['A']), club: 'GAIS' })).rejects.toBeInstanceOf(FmOtherSaveError);
   });
 });

@@ -83,6 +83,55 @@ pub fn fm_default_folder(app: tauri::AppHandle) -> Option<String> {
     )
 }
 
+/// Fichier de sauvegarde FM27 (`.fm`) : seulement son nom et ses métadonnées, jamais son contenu.
+#[derive(Debug, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct FmSaveFile {
+    pub name: String,
+    /// Dernière écriture par le jeu, en millisecondes depuis 1970.
+    pub modified_ms: Option<u64>,
+    pub bytes: u64,
+}
+
+/// Dossier des sauvegardes : `games`, à côté du dossier `archivix` du plugin
+/// (ex. D:\Sports Interactive\Football Manager 27\games).
+pub fn games_dir(plugin_folder: &Path) -> Option<PathBuf> {
+    if !plugin_folder.is_absolute() {
+        return None;
+    }
+    Some(plugin_folder.parent()?.join("games"))
+}
+
+/// Liste les sauvegardes `.fm`, la plus récente d'abord.
+pub fn list_saves(games: &Path) -> Vec<FmSaveFile> {
+    let Ok(entries) = std::fs::read_dir(games) else { return Vec::new() };
+    let mut out: Vec<FmSaveFile> = entries
+        .flatten()
+        .filter_map(|e| {
+            let meta = e.metadata().ok()?;
+            let name = e.file_name().to_string_lossy().into_owned();
+            let is_fm = Path::new(&name).extension().is_some_and(|x| x.eq_ignore_ascii_case("fm"));
+            if !meta.is_file() || !is_fm {
+                return None;
+            }
+            let modified_ms = meta
+                .modified()
+                .ok()
+                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                .map(|d| d.as_millis() as u64);
+            Some(FmSaveFile { name, modified_ms, bytes: meta.len() })
+        })
+        .collect();
+    out.sort_by(|a, b| b.modified_ms.cmp(&a.modified_ms).then_with(|| a.name.cmp(&b.name)));
+    out
+}
+
+/// Sauvegardes FM27 du joueur, pour lier une partie Simloom à l'une d'elles.
+#[tauri::command]
+pub fn fm_list_saves(folder: String) -> Vec<FmSaveFile> {
+    games_dir(Path::new(&folder)).map(|g| list_saves(&g)).unwrap_or_default()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -112,5 +161,22 @@ mod tests {
         std::fs::write(dir.join(REFERENCE_FILE), r#"{"roles":[],"styles":[]}"#).unwrap();
         assert_eq!(fm_read_reference(folder).unwrap().as_deref(), Some(r#"{"roles":[],"styles":[]}"#));
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn liste_les_sauvegardes_a_cote_du_dossier_du_plugin() {
+        let root = std::env::temp_dir().join(format!("simloom-fm-saves-{}", std::process::id()));
+        let games = root.join("games");
+        std::fs::create_dir_all(&games).unwrap();
+        std::fs::write(games.join("Vänersborgs.fm"), b"x").unwrap();
+        std::fs::write(games.join("Autre.FM"), b"xy").unwrap();
+        std::fs::write(games.join("notes.txt"), b"").unwrap();
+        std::fs::create_dir_all(games.join("dossier.fm")).unwrap();
+        let folder = root.join("archivix").to_string_lossy().into_owned();
+        let mut names: Vec<String> = fm_list_saves(folder).into_iter().map(|s| s.name).collect();
+        names.sort();
+        assert_eq!(names, vec!["Autre.FM".to_string(), "Vänersborgs.fm".to_string()]);
+        assert!(fm_list_saves("archivix".into()).is_empty());
+        std::fs::remove_dir_all(&root).unwrap();
     }
 }
