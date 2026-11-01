@@ -162,7 +162,7 @@
       "inGame": "In game: {{form}}",
       "localRef": "Using local reference",
       "localRefError": "Local reference file unreadable: using built-in reference",
-      "fit": "fit {{value}}",
+      "fit": "team rating {{value}}",
       "suggested": "Suggested line-up",
       "suggestedHelp": "Placement worked out by Simloom. The plugin can't yet read which player holds each position in your FM27 tactic.",
       "phase": {
@@ -174,7 +174,7 @@
       "nobody": "Nobody",
       "pitchHelp": "Eleven picked by fit to the style's roles, injured players left out. Dotted lines show the move from the other phase. Hover a player to see backups.",
       "balance": "Team balance",
-      "balanceHelp": "Pace, pressing and aerial play are compared to your eleven's average level: green = strength, red = weakness.",
+      "balanceHelp": "Pace, pressing and aerial play are compared to your eleven's average level: green = strength, red = weakness. Each weakness lowers the team rating, which picks the formation and style: the eleven is judged as a whole, not only position by position.",
       "forms": "Formations for this style",
       "natural": "natural",
       "holes_one": "{{count}} empty position",

@@ -66,8 +66,8 @@ Défini dans `packages/shared/src/module.ts` (`GameModuleManifest`, `GameModule`
 
 ## Publier une version
 Voir l'en-tête de `.github/workflows/release.yml` : version dans `apps/desktop/package.json` **et**
-`src-tauri/Cargo.toml`, fusion sur main (la CI crée le tag et le brouillon dans amnesix-nt/simloom),
-puis publication manuelle du brouillon de release.
+`src-tauri/Cargo.toml`, fusion sur main : la CI crée le tag et la release dans amnesix-nt/simloom,
+la publie et la marque « Latest » une fois latest.json envoyé. Plus de publication manuelle.
 
 ## Identité visuelle — règles strictes
 - **Rester loin d'Amazon** : aucune courbe orange sous le mot, **pas d'orange dans le logo ni dans l'interface**.

@@ -3,9 +3,11 @@ name: Release
 # Publier une version :
 #   1. passer "version" à X.Y.Z dans apps/desktop/package.json et apps/desktop/src-tauri/Cargo.toml,
 #      puis fusionner sur main : le workflow démarre seul (pas de tag à pousser à la main) ;
-#   2. relire le brouillon de release « Simloom vX.Y.Z » créé dans amnesix-nt/simloom, puis le publier.
+#   2. c'est tout : la release « Simloom vX.Y.Z » est créée dans amnesix-nt/simloom, publiée et marquée
+#      « Latest » automatiquement, et les applis installées la récupèrent à leur prochain démarrage.
+# La release reste en brouillon le temps d'envoyer tous les fichiers, puis n'est publiée que si
+# latest.json (lu par le système de mise à jour) est bien présent : jamais de « Latest » incomplète.
 # Si une release vX.Y.Z existe déjà dans amnesix-nt/simloom, le workflow ne fait rien.
-# Une fois publiée, les applis installées la récupèrent à leur prochain démarrage.
 #
 # Le code reste dans ce dépôt privé ; les versions sont publiées dans le dépôt public amnesix-nt/simloom,
 # seul endroit que l'appli installée peut lire sans compte (tauri.conf.json, fm_bridge.rs).
@@ -73,6 +75,24 @@ jobs:
           # pas sur le commit du dépôt privé (sinon « target_commitish invalid »).
           releaseCommitish: main
           releaseName: Simloom ${{ steps.version.outputs.tag }}
-          releaseBody: Notes de version à compléter avant publication.
+          releaseBody: Simloom ${{ steps.version.outputs.tag }}. Mise à jour installée automatiquement au prochain démarrage de l'appli.
+          # Brouillon pendant l'envoi des fichiers ; publié à l'étape suivante.
           releaseDraft: true
           prerelease: false
+
+      # Publication et statut « Latest » : les applis installées lisent
+      # releases/latest/download/latest.json (tauri.conf.json). On vérifie d'abord que latest.json
+      # et l'installeur sont bien attachés, sinon la release reste en brouillon et le job échoue.
+      - name: Publier la release et la marquer « Latest »
+        if: steps.version.outputs.skip != 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.SIMLOOM_RELEASES_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          ASSETS=$(gh release view "$TAG" --repo amnesix-nt/simloom --json assets --jq '.assets[].name')
+          echo "$ASSETS"
+          echo "$ASSETS" | grep -qx 'latest.json' || { echo "latest.json absent : release laissée en brouillon."; exit 1; }
+          echo "$ASSETS" | grep -q -- '-setup\.exe$' || { echo "Installeur absent : release laissée en brouillon."; exit 1; }
+          gh release edit "$TAG" --repo amnesix-nt/simloom --draft=false --latest
+          echo "Release $TAG publiée et marquée Latest."
