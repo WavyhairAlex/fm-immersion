@@ -243,7 +243,7 @@ export function FmSave() {
             {view === 'style' && <FmStyle players={players} folder={folder} />}
             {view === 'effectiveness' && <FmEffectiveness snap={snapshot.data} history={history} go={go} />}
             {view === 'project' && <FmProject snap={snapshot.data} players={players} folder={folder} history={history} />}
-            {view === 'training' && <FmTraining snap={snapshot.data} folder={folder} />}
+            {view === 'training' && <FmTraining snap={snapshot.data} players={players} folder={folder} />}
             {view === 'targets' && <FmTargets snap={snapshot.data} players={players} folder={folder} go={go} />}
             {view === 'depth' && <FmDepth players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameDate={snapshot.gameDate} history={history} />}
             {view === 'finances' && <FmFinances snap={snapshot.data} players={players} />}

@@ -846,14 +846,14 @@
         "pressingIntensity": "Intensité du pressing",
         "pressingTrap": "Piège du pressing",
         "outOfPossessionShape": "Positionnement sans le ballon",
-        "pressAvoidance": "Éviter le pressing",
-        "ballProgression": "Progression avec le ballon",
-        "finalThird": "30 derniers mètres",
-        "defensiveBlock": "Bloc défensif",
-        "defensivePositioning": "Placement défensif",
-        "defensiveEngagement": "Engagement défensif",
-        "corners": "Corners",
-        "freeKicks": "Coups francs",
+        "pressAvoidance": "Avec le ballon - Éviter le pressing",
+        "ballProgression": "Avec le ballon - Progression du ballon",
+        "finalThird": "Avec le ballon - trente derniers mètres",
+        "defensiveBlock": "Sans le ballon - Bloc défensif",
+        "defensivePositioning": "Sans le ballon - Placement défensif",
+        "defensiveEngagement": "Sans le ballon - Engagement défensif",
+        "corners": "Coups de pied arrêtés - Corners",
+        "freeKicks": "Coups de pied arrêtés - Coups francs",
         "possessionBallWork": "Travail de possession",
         "attackingBalanced": "Attaque - Équilibrée",
         "attackingPatient": "Attaque - Patience",
@@ -963,7 +963,41 @@
         "amateur": "Amateur"
       },
       "trainingDays": "Jours d'entraînement",
-      "trainingDaysHelp": "Un club à temps partiel ne s'entraîne que certains soirs : coche les jours proposés dans l'écran Entraînement du jeu. Les autres jours sans match restent libres ; la dernière séance avant un match sert de préparation."
+      "trainingDaysHelp": "Un club à temps partiel ne s'entraîne que certains soirs : coche les jours proposés dans l'écran Entraînement du jeu. Les autres jours sans match restent libres ; la dernière séance avant un match sert de préparation.",
+      "presetHint": "Point de départ dans le jeu : charge le programme « {{preset}} », puis ajuste les séances comme ci-dessous.",
+      "preset": {
+        "preSeason": "Pré-saison",
+        "tacticalBalanced": "Priorité tactique - Équilibrée",
+        "tacticalIP": "Priorité tactique - Avec le ballon",
+        "tacticalOOP": "Priorité tactique - Sans le ballon",
+        "match": "Priorité de match",
+        "mix": "Mix de priorités tactiques et de match",
+        "devBalanced": "Priorité de développement - Équilibré",
+        "devIP": "Priorité de développement - Avec le ballon",
+        "devOOP": "Priorité de développement - Sans le ballon",
+        "congestion": "Enchaînement des matchs"
+      },
+      "weakest": "Zones les moins comprises d'après le jeu (Efficacité), ajoutées aux priorités : {{list}}.",
+      "individual": "Entraînement individuel",
+      "intensity": "Intensité",
+      "intensityLevel": {
+        "none": "Pas d'intensité",
+        "low": "Faible intensité",
+        "medium": "Intensité moyenne",
+        "high": "Haute intensité",
+        "veryHigh": "Intensité très élevée"
+      },
+      "note": "Pourquoi",
+      "reason": {
+        "injured": "blessé",
+        "veryTired": "condition sous 80 %",
+        "tired": "condition sous 90 %",
+        "young": "jeune, progresse le plus",
+        "veteran": "32 ans ou plus, ménager",
+        "normal": "intensité standard"
+      },
+      "rusty": "manque de rythme : temps de jeu en réserve ou en fin de match",
+      "individualHelp": "Rôle et axes : ceux du projet (rôle de son poste dans le onze cible, sinon le rôle où il est le plus adapté) et ses 3 attributs clés les plus faibles, à mettre en priorité de l'entraînement individuel. Intensité : à régler dans « Intensité de l'entraînement individuel » ; jamais très élevée d'office (risque de blessure)."
     }
   },
   "pz2": {
