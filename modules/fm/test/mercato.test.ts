@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mercatoAdvice, mergeReference, TacticEngine } from '../src';
+import { buildProject, mercatoAdvice, mergeReference, projectCompat, TacticEngine } from '../src';
 import { normalizePlayer } from '../src/player';
 
 const ATTRS = ['Passing', 'FirstTouch', 'Technique', 'Composure', 'Vision', 'Decisions', 'Teamwork', 'WorkRate', 'Stamina', 'Strength', 'Pace', 'Acceleration', 'Tackling', 'Marking', 'Positioning', 'Anticipation', 'Heading', 'JumpingReach', 'Finishing', 'Movement', 'Crossing', 'Dribbling', 'Flair', 'Concentration', 'Agility', 'Aggression', 'Reflexes', 'Handling', 'OneOnOnes', 'AerialReach', 'CommandOfArea', 'Kicking', 'RushingOut'];
@@ -73,5 +73,32 @@ describe('mercato : départs et jeunes', () => {
 
   it('ne conseille rien sans attributs', () => {
     expect(mercatoAdvice(engine, [normalizePlayer({ id: 1, name: 'X', positions: 'BT' })], DATE)).toBeNull();
+  });
+});
+
+describe('compatibilité avec le projet de jeu', () => {
+  it('juge le profil, pas le niveau : un faible fait pour le style reste compatible', () => {
+    const pr = buildProject(engine, eleven, { style: 'possession' })!;
+    // Milieu technique faible : profil de possession.
+    const tech = p(30, 'M (C)', 8, { attributes: { ...Object.fromEntries(ATTRS.map((k) => [k, 6])), Passing: 12, FirstTouch: 12, Technique: 12, Vision: 12, Decisions: 12, Composure: 12, Teamwork: 12 } });
+    // Milieu tout en impact : physique et récupération, aucune technique.
+    const brute = p(31, 'M (C)', 8, { attributes: { ...Object.fromEntries(ATTRS.map((k) => [k, 4])), Tackling: 18, Aggression: 18, Strength: 18, Stamina: 18, WorkRate: 18, Marking: 18, Positioning: 16, Heading: 18, JumpingReach: 18 } });
+    const a = projectCompat(engine, pr, tech);
+    const b = projectCompat(engine, pr, brute);
+    expect(a.gap!).toBeLessThan(b.gap!);
+    expect(a.compat).not.toBe('no');
+    // Pivot tout en puissance, sans technique : hors projet.
+    expect(projectCompat(engine, pr, p(34, 'BT', 6, { attributes: { ...Object.fromEntries(ATTRS.map((k) => [k, 6])), Strength: 18, Heading: 18, JumpingReach: 18, Finishing: 14 } })).compat).toBe('no');
+    // Aucun poste du schéma du projet (milieu gauche dans un 4-3-3) : hors projet.
+    const wide = projectCompat(engine, pr, p(33, 'M (G)', 12));
+    expect(wide.noPosition).toBe(true);
+    expect(wide.compat).toBe('no');
+    const advice = mercatoAdvice(engine, [...eleven, tech, brute], DATE, { style: 'possession' })!;
+    const off = advice.advice.filter((x) => x.compat?.compat === 'no');
+    for (const x of off) {
+      expect(x.prospect).toBe(false);
+      expect(x.verdict).not.toBe('extend');
+      expect(x.reasons.some((r) => r.id === 'offProject')).toBe(true);
+    }
   });
 });

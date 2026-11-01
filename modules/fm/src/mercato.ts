@@ -1,4 +1,5 @@
 import { monthsBetween } from './alerts';
+import { projectCompat, type ProjectCompat } from './compat';
 import { isUnwanted } from './club';
 import type { FmPlayer } from './player';
 import { POS_ORDER, type PosCode } from './positions';
@@ -43,7 +44,9 @@ export type MercatoReason =
   | { id: 'lowPotential' }
   | { id: 'overtakes'; years: number; starter: string }
   | { id: 'decline'; age: number }
-  | { id: 'youthTeam' };
+  | { id: 'youthTeam' }
+  /** Profil qui ne colle pas au projet de jeu : ne pas y investir de temps. */
+  | { id: 'offProject' };
 
 export interface MercatoAdvice {
   player: FmPlayer;
@@ -59,6 +62,8 @@ export interface MercatoAdvice {
   prospect: boolean;
   /** Saisons avant d'atteindre le niveau du titulaire le plus faible à son poste (0 = déjà), null = pas en vue. */
   overtakes: number | null;
+  /** Compatibilité de son profil avec le projet de jeu (null sans projet). */
+  compat: ProjectCompat | null;
 }
 
 export interface MercatoReport {
@@ -175,7 +180,10 @@ export function mercatoAdvice(engine: TacticEngine, players: FmPlayer[], gameDat
         overtakes = y < 0 ? null : y + 1;
       }
     }
-    const prospect = young && ((pot != null && pot >= PROSPECT_STARS) || (overtakes != null && overtakes <= 3) || tier === 0);
+    const compat = project ? projectCompat(engine, project, p) : null;
+    const off = compat?.compat === 'no';
+    // Un jeune dont le profil ne colle pas au projet ne vaut pas le temps qu'on y mettrait, même avec du potentiel.
+    const prospect = young && !off && ((pot != null && pot >= PROSPECT_STARS) || (overtakes != null && overtakes <= 3) || tier === 0);
     const reasons: MercatoReason[] = [];
     if (now.tier === 0 && now.pos) reasons.push({ id: 'starterNow', pos: now.pos });
     if (proj.tier === 0 && proj.pos) reasons.push({ id: 'starterProject', pos: proj.pos });
@@ -191,6 +199,7 @@ export function mercatoAdvice(engine: TacticEngine, players: FmPlayer[], gameDat
     if (young && overtakes != null && overtakes > 0 && starter) reasons.push({ id: 'overtakes', years: overtakes, starter: starter.name });
     if (months != null && months <= 12) reasons.push({ id: 'contract', months });
     if (isUnwanted(p.squadStatus)) reasons.push({ id: 'unwanted', status: p.squadStatus! });
+    if (off) reasons.push({ id: 'offProject' });
 
     let verdict: MercatoVerdict;
     if (young) {
@@ -205,9 +214,10 @@ export function mercatoAdvice(engine: TacticEngine, players: FmPlayer[], gameDat
       else verdict = months != null && months <= 12 ? 'release' : 'sell';
     } else if (tier === 0) {
       // Titulaire aujourd'hui mais hors du onze du projet, et plus en âge de s'y adapter : à remplacer à terme.
-      if (proj.tier > 0 && project && age >= 27) {
+      // Profil hors projet : il joue tant qu'il est le meilleur, mais on ne prolonge pas et on prépare sa succession.
+      if (off || (proj.tier > 0 && project && age >= 27)) {
         verdict = 'replace';
-        if (now.pos) reasons.push({ id: 'misfit', pos: now.pos });
+        if (now.pos && !off) reasons.push({ id: 'misfit', pos: now.pos });
       } else verdict = months != null && months <= 12 && age <= 30 ? 'extend' : 'core';
     } else if (tier === 1) {
       if (age >= 31 && months != null && months <= 6) {
@@ -220,7 +230,7 @@ export function mercatoAdvice(engine: TacticEngine, players: FmPlayer[], gameDat
     }
     // Statut « indésirable » donné en jeu : il part, sauf s'il est titulaire (le statut est alors à revoir).
     if (isUnwanted(p.squadStatus) && tier > 0 && verdict !== 'release') verdict = 'sell';
-    return { player: p, verdict, reasons, now, project: proj, months, proj: levels, young, prospect, overtakes };
+    return { player: p, verdict, reasons, now, project: proj, months, proj: levels, young, prospect, overtakes, compat };
   });
 
   const order = (a: MercatoAdvice, b: MercatoAdvice) =>

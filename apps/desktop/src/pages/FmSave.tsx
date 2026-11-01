@@ -1,4 +1,4 @@
-import { gameFormationOf, gameLineup, normalizePlayer, squadSnapshot, withExtended, type FmPlayer, type FmSnapshot, type Line, type SquadAt } from '@simloom/module-fm';
+import { buildProject, compatMap, gameFormationOf, gameLineup, normalizePlayer, squadSnapshot, withExtended, type FmPlayer, type FmSnapshot, type Line, type SquadAt } from '@simloom/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -26,10 +26,11 @@ import { FmProject } from './FmProject';
 import { FmRoles } from './FmRoles';
 import { FmStats } from './FmStats';
 import { FmStyle } from './FmStyle';
-import { FmTactic } from './FmTactic';
+import { FmTactic, useTacticEngine } from './FmTactic';
 import { FmTargets } from './FmTargets';
 import { FmTraining } from './FmTraining';
 import { FmWages } from './FmWages';
+import { CompatTag, useCoach } from './FmUi';
 
 const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
 
@@ -204,7 +205,7 @@ export function FmSave() {
       case 'home':
         return <FmHome snap={snapshot.data} players={players} folder={folder} go={go} />;
       case 'squad':
-        return <SquadTable players={players} />;
+        return <SquadTable players={players} folder={folder} />;
       case 'analysis':
         return <FmAnalysis players={players} gameDate={snapshot.gameDate} />;
       case 'stats':
@@ -460,8 +461,15 @@ function NextStep({ views, view, go }: { views: readonly string[]; view: string;
 
 type SortKey = 'name' | 'age' | 'level' | 'condition' | 'contractEnd' | 'wage';
 
-function SquadTable({ players }: { players: FmPlayer[] }) {
+function SquadTable({ players, folder }: { players: FmPlayer[]; folder: string }) {
   const { t, i18n } = useTranslation();
+  // Compatibilité de chaque profil avec le projet de jeu (style visé dans « Mon projet »).
+  const { engine } = useTacticEngine(folder, players);
+  const [coach] = useCoach();
+  const compat = useMemo(() => {
+    const list = players.filter((p) => Object.keys(p.attributes).length);
+    return compatMap(engine, buildProject(engine, list, coach), list);
+  }, [engine, players, coach]);
   const [line, setLine] = useState<Line | null>(null);
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'level', desc: true });
   const money = new Intl.NumberFormat(i18n.resolvedLanguage, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
@@ -521,6 +529,9 @@ function SquadTable({ players }: { players: FmPlayer[] }) {
               {head('contractEnd', t('fm.col.contract'))}
               {head('wage', t('fm.col.wage'))}
               <th className="px-3 py-2 text-left font-bold">{t('fm.col.status')}</th>
+              <th className="px-3 py-2 text-left font-bold" title={t('fm.compat.help')}>
+                {t('fm.col.compat')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -554,6 +565,9 @@ function SquadTable({ players }: { players: FmPlayer[] }) {
                 <td className="px-3 py-2">{p.contractEnd ? date.format(new Date(p.contractEnd)) : '–'}</td>
                 <td className="px-3 py-2">{p.wage != null ? money.format(p.wage) : '–'}</td>
                 <td className="px-3 py-2 text-brun">{p.squadStatus ?? '–'}</td>
+                <td className="px-3 py-2">
+                  <CompatTag c={compat.get(p.id)} />
+                </td>
               </tr>
             ))}
           </tbody>

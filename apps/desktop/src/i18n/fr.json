@@ -73,7 +73,8 @@
       "contract": "Fin de contrat",
       "wage": "Salaire",
       "status": "Statut",
-      "starsHelp": "Étoiles de niveau actuel / potentiel selon ton staff"
+      "starsHelp": "Étoiles de niveau actuel / potentiel selon ton staff",
+      "compat": "Projet"
     },
     "an": {
       "xi": "Niveau du onze",
@@ -1267,12 +1268,14 @@
         "prospects": "Jeunes qui valent le coup",
         "prospectsSub": "dont {{loan}} à prêter",
         "extend": "Contrats à prolonger",
-        "extendSub": "titulaires et jeunes prometteurs à moins d'un an de la fin"
+        "extendSub": "titulaires et jeunes prometteurs à moins d'un an de la fin",
+        "off": "Hors projet",
+        "offSub": "profils qui ne collent pas au style visé"
       },
       "youth_one": "Les jeunes (21 ans ou moins) · {{count}}",
       "youth_other": "Les jeunes (21 ans ou moins) · {{count}}",
       "noYouth": "Aucun joueur de 21 ans ou moins dans l'effectif importé.",
-      "youthHelp": "Un jeune vaut le coup quand le staff lui donne au moins 3 étoiles de potentiel, qu'il rattrape le titulaire de son poste d'ici trois saisons, ou qu'il est déjà dans un des deux onze. Bloqué à 19 ans ou plus : prêt pour qu'il joue. À 18 ans ou moins : il progresse avec les jeunes du club.",
+      "youthHelp": "Un jeune vaut le coup quand son profil colle au projet de jeu et que le staff lui donne au moins 3 étoiles de potentiel, qu'il rattrape le titulaire de son poste d'ici trois saisons, ou qu'il est déjà dans un des deux onze. Bloqué à 19 ans ou plus : prêt pour qu'il joue. À 18 ans ou moins : il progresse avec les jeunes du club. Un profil hors projet ne vaut pas le temps qu'on y mettrait, même avec du potentiel.",
       "stay": "Ceux qui restent",
       "verdict": {
         "sell": "À vendre",
@@ -1301,7 +1304,7 @@
         "release": "Contrat qui finit dans moins de six mois, ou sans valeur marchande : ne pas prolonger, ou résilier pour libérer le salaire.",
         "loan": "Jeunes prometteurs bloqués derrière les titulaires et les doublures : un prêt leur donne du temps de jeu.",
         "extend": "Contrat qui finit dans moins d'un an : à prolonger avant qu'ils ne partent libres.",
-        "replace": "Titulaires aujourd'hui, mais hors du onze du projet et âgés de 27 ans ou plus : à garder jusqu'à l'arrivée d'un remplaçant qui colle au style visé.",
+        "replace": "Titulaires aujourd'hui, mais dont le profil ne colle pas au projet (ou hors du onze du projet à 27 ans ou plus) : ils jouent tant qu'ils sont les meilleurs, sans prolongation, en attendant un remplaçant qui colle au style visé.",
         "develop": "jeunes à garder et à faire jouer.",
         "backup": "doublures utiles, à garder.",
         "core": "titulaires du onze du jour ou du projet."
@@ -1321,7 +1324,8 @@
         "overtakes_one": "au niveau de {{starter}} dans {{count}} saison",
         "overtakes_other": "au niveau de {{starter}} dans {{count}} saisons",
         "decline": "{{age}} ans, en déclin",
-        "youthTeam": "progresse avec les jeunes"
+        "youthTeam": "progresse avec les jeunes",
+        "offProject": "profil hors projet de jeu"
       }
     },
     "stats": {
@@ -1437,6 +1441,14 @@
       "opponent": "L'adversaire du prochain match, puis le calendrier et qui faire tourner selon la fatigue.",
       "mercato": "Étape 4 : qui faire partir, quels jeunes garder, puis ta liste de suivi classée selon ce que chaque joueur apporterait au projet.",
       "finances": "Budgets et attentes du board, masse salariale, puis les fins de contrat à anticiper."
+    },
+    "compat": {
+      "yes": "Projet ✓",
+      "partial": "Projet ~",
+      "no": "Hors projet",
+      "title": "Au meilleur rôle du projet : {{fit}} · à son meilleur rôle : {{best}}",
+      "noPosition": "Aucun poste du schéma du projet dans ses cordes",
+      "help": "Le profil colle-t-il au projet de jeu ? On compare sa note au meilleur rôle du onze du projet à sa meilleure note possible à ses postes. Projet ✓ : écart d'au plus 0,3 étoile ; Projet ~ : jusqu'à 0,8 étoile ; Hors projet : au-delà, ou aucun poste du schéma. Ne mesure pas le niveau, seulement le profil : inutile d'investir du temps (entraînement, prolongation, transfert) sur un joueur hors projet."
     }
   },
   "pz2": {
