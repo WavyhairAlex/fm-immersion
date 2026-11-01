@@ -40,7 +40,7 @@ const g = (ip?: string, oop?: string) => ({ game: { ...(ip ? { ip } : {}), ...(o
  * Attaquant pivot excentré, Arrière latéral strict) ne figurent pas ici.
  * Les poids des attributs (3 = essentiel, 2 = important, 1 = utile) restent des repères maison.
  */
-const ROLES: RoleRef[] = [
+const ROLES_FM27: RoleRef[] = [
   // Gardiens — GB
   { ...role('GK', 'Gardien de but', 'Goalkeeper', 'both', GK, 'GK', { reflexes: 3, handling: 3, oneOnOnes: 2, positioning: 2, aerialReach: 2, commandOfArea: 2, concentration: 1, agility: 1 }), ...g('Goalkeeper', 'Goalkeeper') },
   { ...role('BPGK', 'Gardien à l’aise au pied', 'Ball-Playing Goalkeeper', 'ip', GK, 'GK', { passing: 3, kicking: 3, composure: 2, firstTouch: 2, vision: 1, reflexes: 2, decisions: 1 }), ...g('BallPlayingGoalkeeper') },
@@ -120,6 +120,20 @@ const ROLES: RoleRef[] = [
   { ...role('SOCF', 'Attaquant central de contre-attaque de couloir', 'Splitting Outlet Centre Forward', 'oop', ST, 'ST', { acceleration: 3, pace: 2, offTheBall: 2, stamina: 1 }), ...g(undefined, 'SplittingOutletCentreForward'), cond: 'wide' },
 ];
 
+/** Mission avec ballon que FM27 attribue à chaque rôle (relevée dans le code du jeu ; elle ne se choisit plus). */
+const DUTY: Record<string, 'd' | 's' | 'a'> = {
+  GK: 'd', NNGK: 'd', BPGK: 's',
+  CB: 'd', ADCB: 'd', BPCB: 'd', NNCB: 'd', WCB: 'd', OCB: 'a',
+  IFB: 'd', IWB: 'd', FB: 's', WB: 's', PMWB: 's', AWB: 'a',
+  DM: 'd', HB: 'd', DLP: 's', BBM: 's', B2BPM: 's',
+  CM: 's', MFPM: 's', WCM: 's', CHM: 'a',
+  WM: 's', W: 's', WP: 's', IW: 's', IF: 'a', WF: 'a',
+  AM: 'a', AP: 'a', FREE: 'a', SS: 'a',
+  CF: 'a', POA: 'a', TF: 'a', DLF: 'a', F9: 'a', CHF: 'a',
+};
+
+const ROLES: RoleRef[] = ROLES_FM27.map((r) => (DUTY[r.code] && r.phase !== 'oop' ? { ...r, duty: DUTY[r.code] } : r));
+
 const style = (s: StyleRef): StyleRef => s;
 
 const STYLES: StyleRef[] = [
@@ -132,7 +146,7 @@ const STYLES: StyleRef[] = [
     outOfPossession: ['Ligne défensive plus haute', 'Pressing haut', 'Déclencher le pressing plus souvent', 'Contre-pressing en transition'],
     weights: { technical: 3, creators: 2, press: 1 },
     mentality: 'Équilibré',
-    signatureRoles: { ip: ['BPGK', 'BPCB', 'IFB', 'IWB', 'DLP', 'MFPM', 'AP', 'WP', 'IW', 'F9', 'DLF'], oop: ['SK', 'PFB', 'PRSCM', 'SCRDM', 'TW', 'TAM', 'CF'] },
+    signatureRoles: { ip: ['BPGK', 'BPCB', 'CB', 'IFB', 'IWB', 'PMWB', 'B2BPM', 'DLP', 'HB', 'MFPM', 'AP', 'IW', 'WP', 'F9', 'DLF'], oop: ['SK', 'STCB', 'CB', 'PFB', 'PWB', 'SCRDM', 'PRSDM', 'PRSCM', 'SCRCM', 'TWM', 'TW', 'TAM', 'CF'] },
   }),
   style({
     id: 'gegenpress',
@@ -143,7 +157,7 @@ const STYLES: StyleRef[] = [
     outOfPossession: ['Ligne défensive plus haute', 'Pressing haut', 'Déclencher le pressing beaucoup plus souvent', 'Contre-pressing en transition'],
     weights: { press: 3, physical: 2, pace: 1, technical: 1 },
     mentality: 'Positif',
-    signatureRoles: { ip: ['GK', 'CB', 'FB', 'WB', 'BBM', 'CM', 'IF', 'W', 'AM', 'CF', 'POA'], oop: ['SK', 'STCB', 'PFB', 'PWB', 'PRSDM', 'PRSCM', 'TW', 'TAM', 'TCF'] },
+    signatureRoles: { ip: ['GK', 'BPCB', 'CB', 'FB', 'WB', 'AWB', 'BBM', 'DM', 'CM', 'CHM', 'AM', 'IF', 'W', 'CF', 'POA'], oop: ['SK', 'STCB', 'CB', 'PFB', 'PWB', 'PRSDM', 'PRSCM', 'TWM', 'TW', 'TAM', 'CF'] },
   }),
   style({
     id: 'counter-fluid',
@@ -154,7 +168,7 @@ const STYLES: StyleRef[] = [
     outOfPossession: ['Bloc médian', 'Ligne défensive normale'],
     weights: { pace: 3, finishing: 2, defense: 2, physical: 1 },
     mentality: 'Équilibré',
-    signatureRoles: { ip: ['GK', 'CB', 'FB', 'WB', 'DM', 'BBM', 'IF', 'WF', 'W', 'SS', 'CHF', 'POA'], oop: ['GK', 'CCB', 'HFB', 'SCRDM', 'SCRCM', 'WOW', 'COAM', 'COCF'] },
+    signatureRoles: { ip: ['GK', 'CB', 'NNCB', 'FB', 'WB', 'BBM', 'DM', 'CM', 'CHM', 'WM', 'IF', 'WF', 'W', 'SS', 'CHF', 'POA'], oop: ['GK', 'CCB', 'CB', 'HFB', 'HWB', 'SCRDM', 'SCRCM', 'WOM', 'WOW', 'IOW', 'COAM', 'COCF'] },
   }),
   style({
     id: 'wings',
@@ -165,7 +179,7 @@ const STYLES: StyleRef[] = [
     outOfPossession: ['Bloc médian'],
     weights: { wide: 3, aerial: 2, finishing: 1, physical: 1 },
     mentality: 'Positif',
-    signatureRoles: { ip: ['GK', 'CB', 'WB', 'AWB', 'FB', 'CM', 'BBM', 'W', 'WM', 'TF', 'CF'], oop: ['GK', 'CB', 'HWB', 'TWM', 'TW', 'CF'] },
+    signatureRoles: { ip: ['GK', 'OCB', 'CB', 'WB', 'AWB', 'FB', 'BBM', 'DM', 'CM', 'WCM', 'WM', 'W', 'AM', 'TF', 'CF'], oop: ['GK', 'CB', 'HWB', 'FB', 'DM', 'CM', 'TWM', 'TW', 'AM', 'CF'] },
   }),
   style({
     id: 'longball',
@@ -176,7 +190,7 @@ const STYLES: StyleRef[] = [
     outOfPossession: ['Bloc médian', 'Ligne défensive normale'],
     weights: { aerial: 3, physical: 2, defense: 1 },
     mentality: 'Équilibré',
-    signatureRoles: { ip: ['GK', 'CB', 'FB', 'DM', 'BBM', 'WM', 'W', 'TF', 'POA'], oop: ['LHK', 'STCB', 'HFB', 'TWM', 'CF'] },
+    signatureRoles: { ip: ['NNGK', 'NNCB', 'CB', 'FB', 'WB', 'BBM', 'DM', 'CM', 'WM', 'W', 'AM', 'TF', 'POA'], oop: ['LHK', 'STCB', 'CB', 'HFB', 'HWB', 'DM', 'CM', 'TWM', 'TW', 'AM', 'TCF', 'CF'] },
   }),
   style({
     id: 'ultra-def',
@@ -187,7 +201,7 @@ const STYLES: StyleRef[] = [
     outOfPossession: ['Bloc bas', 'Ligne défensive plus basse', 'Rester en place en transition'],
     weights: { defense: 3, aerial: 2, physical: 1, pace: 1 },
     mentality: 'Défensif',
-    signatureRoles: { ip: ['GK', 'CB', 'FB', 'WB', 'DM', 'CM', 'WM', 'TF', 'CF'], oop: ['LHK', 'CCB', 'HFB', 'HWB', 'DROPDM', 'SCRCM', 'TWM', 'TCF'] },
+    signatureRoles: { ip: ['NNGK', 'NNCB', 'CB', 'WCB', 'FB', 'WB', 'HB', 'DM', 'CM', 'WM', 'TF', 'CF'], oop: ['LHK', 'CCB', 'CB', 'CWCB', 'HFB', 'HWB', 'DROPDM', 'SCRDM', 'SCRCM', 'TWM', 'TW', 'TAM', 'TCF'] },
   }),
 ];
 

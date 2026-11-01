@@ -240,7 +240,12 @@
       "fromGameHelp": "Players and positions read from your FM27 tactic. Roles and instructions: the game's when the plugin reads them, otherwise each player's best role in that position.",
       "suggestedHelpGame": "Placement computed by Simloom for the chosen style. “Game XI” shows your real FM27 line-up.",
       "pitchHelpGame": "Your FM27 line-up. Dotted lines show movement from the other phase. Hover a player for their substitutes; click a formation on the right to compare with an XI computed by Simloom.",
-      "lineupStatus": "Plugin line-up reading: {{status}}."
+      "lineupStatus": "Plugin line-up reading: {{status}}.",
+      "duty": {
+        "d": "Defend",
+        "s": "Support",
+        "a": "Attack"
+      }
     },
     "nav": "Save sections",
     "sections": {

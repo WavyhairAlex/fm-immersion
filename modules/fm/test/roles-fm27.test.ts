@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_TACTIC_REFERENCE, TacticEngine, slotContexts, type PosCode } from '../src';
+import { DEFAULT_TACTIC_REFERENCE, FORMATIONS, TacticEngine, slotContexts, type PosCode } from '../src';
 import { matchRole } from '../src/lineup';
 
 const engine = new TacticEngine(DEFAULT_TACTIC_REFERENCE);
@@ -68,5 +68,35 @@ describe('rôles FM27 par poste', () => {
     expect(matchRole(engine, 'BoxToBoxMidfielder', 'MDF', 'ip')?.code).toBe('BBM');
     expect(matchRole(engine, 'OPWinger', 'MOG', 'oop')?.code).toBe('W');
     expect(matchRole(engine, 'OPCentralOutletCentreForward', 'BT', 'oop')?.code).toBe('COCF');
+  });
+});
+
+describe('tactique avec les rôles FM27', () => {
+  const style = (id: string) => DEFAULT_TACTIC_REFERENCE.styles.find((s) => s.id === id)!;
+
+  it('n’attribue que des rôles proposés par le jeu au créneau', () => {
+    for (const s of DEFAULT_TACTIC_REFERENCE.styles)
+      for (const form of Object.keys(FORMATIONS)) {
+        const slots = engine.formationPlan(form, s, []).slots;
+        const ctx = slotContexts(slots);
+        slots.forEach((sl, i) => {
+          for (const ph of ['ip', 'oop'] as const) {
+            const r = engine.roles.get(ph === 'ip' ? sl.ip : sl.oop);
+            expect(r && engine.availableAt(r, sl.pos, ph, ctx[i]), `${s.id} ${form} ${sl.pos} ${ph}`).toBeTruthy();
+          }
+        });
+      }
+  });
+
+  it('donne au double pivot ses rôles excentrés', () => {
+    const dm = (form: string) => engine.formationPlan(form, style('possession'), []).slots.filter((s) => s.pos === 'MDF').map((s) => s.ip);
+    expect(dm('4-3-3')).toEqual(['DLP']);
+    expect(dm('4-2-3-1')).toEqual(['B2BPM', 'DLP']);
+  });
+
+  it('porte la mission fixée par le jeu', () => {
+    expect(engine.roles.get('DLP')?.duty).toBe('s');
+    expect(engine.roles.get('OCB')?.duty).toBe('a');
+    expect(engine.roles.get('SCRDM')?.duty).toBeUndefined();
   });
 });

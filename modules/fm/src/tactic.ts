@@ -24,6 +24,8 @@ export const roleRefSchema = z
      * centraux gauche/droit…), « wide3 » = idem dans une défense à trois centraux ou plus.
      */
     cond: z.enum(['wide', 'wide3']).nullish(),
+    /** Mission avec ballon, fixée par le rôle dans FM27 : Défense, Soutien ou Attaque. */
+    duty: z.enum(['d', 's', 'a']).nullish(),
     group: z.string(),
     weights: z.record(z.number()),
     weightsOOP: z.record(z.number()).nullish(),
@@ -276,14 +278,17 @@ export class TacticEngine {
   /** Rôles typiques du style sur chaque poste du schéma, puis meilleur onze (joueurs naturels au poste). */
   formationPlan(form: string, style: StyleRef, list: FmPlayer[]): FormationPlan {
     const used: Record<Phase, Record<string, number>> = { ip: {}, oop: {} };
+    // Rôles du style proposés à ce créneau ; un créneau excentré prend d'abord les rôles qui lui sont réservés.
     const pickRole = (pos: PosCode, ph: Phase, ctx: SlotCtx) => {
       const opts = style.signatureRoles[ph].filter((c) => {
         const r = this.roles.get(c);
         return r && this.availableAt(r, pos, ph, ctx);
       });
+      if (ctx.wide) opts.sort((a, b) => Number(!!this.roles.get(b)?.cond) - Number(!!this.roles.get(a)?.cond));
       if (!opts.length) return DEFAULT_ROLE[pos];
-      used[ph][pos] = (used[ph][pos] ?? -1) + 1;
-      return opts[used[ph][pos] % opts.length] ?? DEFAULT_ROLE[pos];
+      const key = `${pos}${ctx.wide ? '+' : ''}`;
+      used[ph][key] = (used[ph][key] ?? -1) + 1;
+      return opts[used[ph][key] % opts.length] ?? DEFAULT_ROLE[pos];
     };
     const base = FORMATIONS[form] ?? FORMATIONS['4-3-3']!;
     const ctxs = slotContexts(base.map(([pos, x]) => ({ pos, x })));

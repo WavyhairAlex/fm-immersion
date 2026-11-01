@@ -106,9 +106,11 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
   if (!avail.length || !style || !plan) return <p className="card mt-6 text-brun">{t('fm.tac.noAttributes')}</p>;
 
   const block = styleBlock(style);
-  const roleName = (code: string) => {
+  // Rôle avec ballon : FM27 fixe la mission d'après le rôle, on l'affiche à côté (« Milieu axial (Soutien) »).
+  const roleName = (code: string, ph?: Phase) => {
     const r = engine.roles.get(code);
-    return (en ? r?.en : r?.fr) ?? r?.fr ?? code;
+    const name = (en ? r?.en : r?.fr) ?? r?.fr ?? code;
+    return ph === 'ip' && r?.duty ? `${name} (${t(`fm.tac.duty.${r.duty}`)})` : name;
   };
   const styleName = (s: typeof style) => (en && s.nameEn ? s.nameEn : s.name);
   const nf = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 0 });
@@ -214,7 +216,7 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
               const fit = sl.player ? engine.roleFit(sl.player, code, phase, sl.pos) : null;
               const subs = plan.subs[i] ?? [];
               const title = [
-                t('fm.tac.otherPhase', { phase: t(`fm.tac.phase.${other}`), role: roleName(phase === 'ip' ? sl.oop : sl.ip) }),
+                t('fm.tac.otherPhase', { phase: t(`fm.tac.phase.${other}`), role: roleName(phase === 'ip' ? sl.oop : sl.ip, other) }),
                 subs.length ? t('fm.tac.subs', { names: subs.map((p) => p.name).join(', ') }) : '',
               ]
                 .filter(Boolean)
@@ -230,7 +232,7 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
                     <span className="font-bold text-canard">{POS_LABEL[rolePos(sl, phase)]}</span>
                     {fit != null && <span className="text-brun">{pct(fit)}</span>}
                   </div>
-                  <div className="truncate text-brun">{roleName(code)}</div>
+                  <div className="truncate text-brun">{roleName(code, phase)}</div>
                   <div className="truncate font-bold text-canard">{sl.player?.name ?? t('fm.tac.nobody')}</div>
                 </div>
               );
@@ -293,7 +295,7 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
                     <b className="text-canard">{sl.player!.name}</b>
                   </div>
                   <p className="mb-1 mt-0.5 text-xs text-brun">
-                    {roleName(sl.ip)} · {roleName(sl.oop)}
+                    {roleName(sl.ip, 'ip')} · {roleName(sl.oop)}
                     {sl.game?.custom && <span className="ml-1 rounded-full bg-canard/10 px-1.5 text-canard">{t('fm.pi.custom')}</span>}
                   </p>
                   {sl.game && (sl.game.instructions.ip.length > 0 || sl.game.instructions.oop.length > 0) && (
