@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { moraleLevel } from './club';
 import type { FmPlayer } from './player';
 import type { PosCode } from './positions';
+import { gameRoleRating, roleThreshold } from './role-ratings-fm27';
 
 /*
  * Tactique : rôles avec et sans ballon, schémas, onze conseillé et équilibre de l'équipe.
@@ -174,6 +175,19 @@ function wmean(p: FmPlayer, w: Record<string, number>) {
 }
 
 /**
+ * Rôles exigeants de FM27 (Attaquant désaxé, Rôle libre, Faux neuf…) : le jeu divise la valeur par 2 quand
+ * la capacité actuelle du joueur est sous le seuil du rôle. Avec la capacité (`ca`), on applique la règle ;
+ * sans elle (cas actuel, le plugin ne la lit pas), on retient un quart de moins, pour ne choisir ces rôles
+ * que s'ils dépassent nettement les autres.
+ */
+function thresholdFactor(p: FmPlayer, gameCode: string): number {
+  const t = roleThreshold(gameCode);
+  if (t == null) return 1;
+  const ca = (p as FmPlayer & { ca?: number | null }).ca;
+  return ca == null ? 0.75 : ca < t ? 0.5 : 1;
+}
+
+/**
  * Forme du jour, sur l'échelle des notes (/20) : fatigue (condition sous 95 %), rythme de match
  * (sous 90 %), moral et place de leader pèsent sur le choix du titulaire, sans changer
  * l'adéquation au rôle affichée.
@@ -212,12 +226,17 @@ export class TacticEngine {
   }
 
   /**
-   * Adéquation d'un joueur à un rôle, sur 20 : 70 % attributs-clés du rôle, 20 % base du poste,
+   * Adéquation d'un joueur à un rôle, sur 20. Pour les rôles de FM27, c'est la note du jeu
+   * (role-ratings-fm27.ts). Sinon (repères locaux) : 70 % attributs-clés du rôle, 20 % base du poste,
    * 10 % « moteur de match » (vitesse, accélération, anticipation, décisions), puis correction du pied.
    */
   roleFit(p: FmPlayer, code: string, phase: Phase, pos?: PosCode): number | null {
     const r = this.roles.get(code);
     if (!r) return null;
+    // Rôle connu du jeu : note de FM27 (attributs clés, secondaires, à éviter, familiarité), puis pied.
+    const gameCode = phase === 'oop' ? r.game?.oop : r.game?.ip;
+    const game = gameCode ? gameRoleRating(p, gameCode, pos) : null;
+    if (game != null) return Math.max(1, Math.min(20, game * thresholdFactor(p, gameCode!) + (pos ? footAdj(p, code, pos) : 0)));
     const keys = wmean(p, phase === 'oop' && r.weightsOOP ? r.weightsOOP : r.weights);
     if (keys == null) return null;
     const p0 = pos ?? this.rolePositions(r, phase)[0];

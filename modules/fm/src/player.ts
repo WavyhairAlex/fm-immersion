@@ -61,6 +61,8 @@ export interface FmPlayer {
   foot: string | null;
   /** Étoiles de niveau et de potentiel vues par le staff (plugin 0.3.1), sur 5. */
   stars: { current: number | null; potential: number | null } | null;
+  /** Familiarité au poste lue dans le jeu (1-20), si le plugin la donne (`positionRatings`). */
+  familiarity: Partial<Record<PosCode, number>> | null;
   /** Attributs connus (milieu de fourchette si le recrutement ne les a pas affinés), sans le préfixe « Attribute ». */
   attributes: Record<string, number>;
 }
@@ -109,7 +111,19 @@ export function normalizePlayer(p: FmPlayerRaw): FmPlayer {
     team: typeof p.team === 'string' ? p.team : null,
     stars: p.stars && typeof p.stars === 'object' ? (p.stars as FmPlayer['stars']) : null,
     attributes,
+    familiarity: familiarityOf(p.positionRatings),
   };
+}
+
+function familiarityOf(raw: unknown): Partial<Record<PosCode, number>> | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const out: Partial<Record<PosCode, number>> = {};
+  for (const [label, v] of Object.entries(raw as Record<string, unknown>)) {
+    const n = toNumber(v);
+    if (n == null) continue;
+    for (const c of parsePositions(label)) out[c] = Math.max(out[c] ?? 0, n);
+  }
+  return Object.keys(out).length ? out : null;
 }
 
 /** Joueur indisponible pour le prochain match : blessé ou suspendu. */
