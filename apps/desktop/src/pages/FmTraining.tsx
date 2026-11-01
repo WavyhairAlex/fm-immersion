@@ -421,7 +421,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
                       <td className="px-2 py-1.5">
                         <label className="flex items-center gap-1.5">
                           <input type="checkbox" checked={status === 'ok'} onChange={(e) => setups.mark([x.player.id], e.target.checked)} />
-                          {status === 'change' ? <Tag tone="warn">{t('fm.train.setupStatus.change')}</Tag> : status === 'todo' ? <span className="text-xs text-brun">{t('fm.train.setupStatus.todo')}</span> : null}
+                          {status === 'change' ? <Tag tone="warn">{t('fm.train.setupStatus.change')}</Tag> : status === 'todo' ? <span className="whitespace-nowrap text-xs text-brun">{t('fm.train.setupStatus.todo')}</span> : null}
                         </label>
                       </td>
                       <td className="px-2 py-1.5 font-bold">

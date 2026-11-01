@@ -207,41 +207,7 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
         <p className="text-sm">
           <b>{t('fm.proj.collective')}</b> {trainingFor(pr.style).map((a, i) => `${i + 1}. ${t(`fm.areaSession.${a}`)}`).join(' · ')}. {t('fm.proj.collectiveMore')}
         </p>
-        <div className="mt-3 overflow-x-auto">
-          <table className="data-table">
-            <thead className="text-left text-canard/70">
-              <tr>
-                <th className="px-2 py-1">{t('fm.prog.player')}</th>
-                <th className="px-2 py-1 text-right">{t('fm.prog.age')}</th>
-                <th className="px-2 py-1">{t('fm.proj.role')}</th>
-                <th className="px-2 py-1 text-right">{t('fm.proj.fit')}</th>
-                <th className="px-2 py-1">{t('fm.proj.axes')}</th>
-                <th className="px-2 py-1">{t('fm.proj.inProject')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pr.plans.map((x) => (
-                <tr key={x.player.id} className="border-t border-canard/5">
-                  <td className="px-2 py-1.5 font-bold">
-                    {x.player.name} <Pos player={x.player} />
-                  </td>
-                  <td className="px-2 py-1.5 text-right tabular-nums">{x.player.age ?? '–'}</td>
-                  <td className="px-2 py-1.5">
-                    {names.role(x.role)} <span className="text-xs text-brun">{t(`fm.tac.phase.${x.phase}`).toLowerCase()}</span>
-                  </td>
-                  <td className="px-2 py-1.5 text-right">
-                    <Fit value={x.fit} />
-                  </td>
-                  <td className="px-2 py-1.5">{x.weak.map((w) => `${attr(w.key)} ${Math.round(w.value)}`).join(', ')}</td>
-                  <td className="px-2 py-1.5">
-                    {x.slot ? <Tag tone={x.slot.status === 'recruit' ? x.slot.tone : STATUS_TONE[x.slot.status]}>{t(`fm.proj.status.${x.slot.status}`)}</Tag> : <span className="text-xs text-brun">{t('fm.proj.rotation')}</span>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <p className="mt-2 text-xs text-brun">{t('fm.proj.trainingHelp')}</p>
+        <p className="mt-2 text-sm text-brun">{t('fm.proj.trainingDetail')}</p>
       </Panel>
     </div>
   );

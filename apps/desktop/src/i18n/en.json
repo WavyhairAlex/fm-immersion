@@ -781,7 +781,8 @@
       "axes": "Areas to work on",
       "inProject": "Project",
       "rotation": "Rotation",
-      "trainingHelp": "Target role: his position's role for a starter in the target XI, otherwise the project role he fits best. Areas: his 3 weakest key attributes for that role, for individual training."
+      "trainingHelp": "Target role: his position's role for a starter in the target XI, otherwise the project role he fits best. Areas: his 3 weakest key attributes for that role, for individual training.",
+      "trainingDetail": "The player-by-player detail (target role, attributes to work on, intensity) is in the next step, Training."
     },
     "targets": {
       "title": "Transfer targets · {{style}} {{form}}",
