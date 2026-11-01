@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, scopedKey, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticChoice } from './FmTactic';
-import { Chips, Empty, Fit, Kpi, Panel, Tag, useNames } from './FmUi';
+import { Chips, Empty, Fit, fitGap, Kpi, Panel, Tag, useNames } from './FmUi';
 
 const STYLE_KEY = 'simloom.fm.styleView';
 
@@ -35,6 +35,9 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
   const fits = ranked.map((r) => r.fit ?? 0);
   const lo = Math.min(...fits);
   const hi = Math.max(...fits);
+  // Styles à moins d'un quart d'étoile les uns des autres : l'effectif n'en impose aucun. Barres à l'échelle réelle
+  // (sinon un écart de 0,05 ★ ressemble à un gouffre) et message pour choisir selon le projet.
+  const close = hi - lo < 0.5;
   const sigMax = Math.max(...Object.values(sig).map((v) => v ?? 0));
   const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const cx = styleComplexity(cur);
@@ -82,6 +85,7 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title={t('fm.style.which')}>
           <p className="help">{t('fm.style.whichHelp')}</p>
+          {close && <p className="mb-3 rounded-xl bg-eau/15 px-3 py-2 text-sm text-canard">{t('fm.style.allClose', { gap: fitGap(hi - lo) })}</p>}
           {ranked.map(({ style, fit }) => (
             <button
               key={style.id}
@@ -93,8 +97,9 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
                 <b>{names.style(style)}</b> {style.mentality && <span className="text-xs text-brun">{style.mentality}</span>}
               </span>
               <span className="flex-1">
-                <span className="block h-2 rounded-full bg-eau-fonce" style={{ width: `${hi > lo ? Math.round(15 + (85 * ((fit ?? 0) - lo)) / (hi - lo)) : 100}%` }} />
+                <span className="block h-2 rounded-full bg-eau-fonce" style={{ width: `${close || hi <= lo ? Math.round((100 * (fit ?? 0)) / (hi || 1)) : Math.round(15 + (85 * ((fit ?? 0) - lo)) / (hi - lo))}%` }} />
               </span>
+              <span className="w-14 text-right text-xs tabular-nums text-brun">{fit != null && fit < hi ? `−${fitGap(hi - fit)}` : ''}</span>
               <Fit value={fit} />
             </button>
           ))}
