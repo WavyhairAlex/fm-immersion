@@ -314,7 +314,15 @@ export class TacticEngine {
       .sort((a, b) => (b.fit ?? 0) - (a.fit ?? 0));
   }
 
-  /** Rôles typiques du style sur chaque poste du schéma, puis meilleur onze (joueurs naturels au poste). */
+  /**
+   * Onze et rôles d'un schéma pour un style, choisis pour la meilleure note d'équipe :
+   * 1. chaque joueur est jugé à chaque créneau de son poste naturel, avec le rôle du style qui lui va le mieux
+   *    et sa forme du jour (fatigue, rythme, moral) ;
+   * 2. l'attribution joueurs ↔ créneaux est optimale pour l'ensemble du onze (méthode hongroise), et non
+   *    plus poste par poste : un joueur bon à deux postes va là où l'équipe y gagne le plus ;
+   * 3. les rôles sont ensuite ajustés tant que la note d'équipe monte. Un rôle hors du style n'est pris que
+   *    s'il corrige un déséquilibre (couverture, largeur, création, présence dans la surface).
+   */
   formationPlan(form: string, style: StyleRef, list: FmPlayer[]): FormationPlan {
     const used: Record<Phase, Record<string, number>> = { ip: {}, oop: {} };
     // Rôles du style proposés à ce créneau ; un créneau excentré prend d'abord les rôles qui lui sont réservés.
@@ -332,51 +340,87 @@ export class TacticEngine {
     const base = FORMATIONS[form] ?? FORMATIONS['4-3-3']!;
     const ctxs = slotContexts(base.map(([pos, x]) => ({ pos, x })));
     const slots: Slot[] = base.map(([pos, x, y], i) => ({ pos, x, y, ip: pickRole(pos, 'ip', ctxs[i]!), oop: pickRole(pos, 'oop', ctxs[i]!), player: null, fit: null }));
-    const pairs: { i: number; p: FmPlayer; f: number; r: number }[] = [];
-    slots.forEach((sl, i) =>
-      list.forEach((p) => {
-        if (!p.positions.includes(sl.pos)) return;
-        const a = this.roleFit(p, sl.ip, 'ip', sl.pos);
-        const b = this.roleFit(p, sl.oop, 'oop', sl.pos);
-        if (a != null && b != null) pairs.push({ i, p, f: (a + b) / 2, r: (a + b) / 2 + readiness(p) });
-      }),
-    );
-    // Le titulaire est le meilleur au poste ce jour-là : adéquation au rôle, fatigue et moral.
-    pairs.sort((a, b) => b.r - a.r);
-    const taken = new Set<string>();
-    for (const pr of pairs) {
-      const sl = slots[pr.i]!;
-      if (sl.player || taken.has(pr.p.id)) continue;
-      sl.player = pr.p;
-      sl.fit = pr.f;
-      taken.add(pr.p.id);
-    }
-    // Rôle du titulaire : parmi les rôles du style que le jeu propose à ce créneau, on garde celui qui
-    // rend l'équipe meilleure (un ailier droitier à droite plutôt qu'un ailier intérieur, par exemple).
-    slots.forEach((sl, i) => {
-      const p = sl.player;
-      if (!p) return;
-      const best = (ph: Phase, cur: string) => {
-        let code = cur;
-        let f = this.roleFit(p, cur, ph, sl.pos) ?? 0;
-        for (const c of [...style.signatureRoles[ph], DEFAULT_ROLE[sl.pos]]) {
-          const r = this.roles.get(c);
-          if (!r || !this.availableAt(r, sl.pos, ph, ctxs[i])) continue;
-          const g = this.roleFit(p, c, ph, sl.pos) ?? 0;
-          if (g > f + 0.3) [code, f] = [c, g];
-        }
-        return [code, f] as const;
-      };
-      const [ip, a] = best('ip', sl.ip);
-      const [oop, b] = best('oop', sl.oop);
-      Object.assign(sl, { ip, oop, fit: (a + b) / 2 });
+    const PH: Phase[] = ['ip', 'oop'];
+
+    const memo = new Map<string, number>();
+    const fitOf = (p: FmPlayer, code: string, ph: Phase, pos: PosCode) => {
+      const k = `${p.id}|${code}|${ph}|${pos}`;
+      let v = memo.get(k);
+      if (v === undefined) memo.set(k, (v = this.roleFit(p, code, ph, pos) ?? 0));
+      return v;
+    };
+    const ready = new Map(list.map((p) => [p.id, readiness(p)]));
+    // Rôles du style (et rôle par défaut du poste) que le jeu propose à chaque créneau, puis tous les rôles proposés.
+    const avail = slots.map((sl, i) => {
+      const of = (ph: Phase, codes: string[]) => [...new Set(codes)].filter((c) => {
+        const r = this.roles.get(c);
+        return r && this.availableAt(r, sl.pos, ph, ctxs[i]);
+      });
+      const inStyle = { ip: of('ip', [...style.signatureRoles.ip, DEFAULT_ROLE[sl.pos]]), oop: of('oop', [...style.signatureRoles.oop, DEFAULT_ROLE[sl.pos]]) };
+      const all = { ip: of('ip', this.ref.roles.map((r) => r.code)), oop: of('oop', this.ref.roles.map((r) => r.code)) };
+      return { inStyle, all };
     });
+    // Meilleur rôle du style pour ce joueur à ce créneau (on garde le rôle prévu sauf gain net).
+    const styleRole = (p: FmPlayer, i: number, ph: Phase): [string, number] => {
+      const sl = slots[i]!;
+      let code = sl[ph];
+      let f = fitOf(p, code, ph, sl.pos);
+      for (const c of avail[i]!.inStyle[ph]) {
+        const g = fitOf(p, c, ph, sl.pos);
+        if (g > f + 0.3) [code, f] = [c, g];
+      }
+      return [code, f];
+    };
+
+    // 1-2. Attribution optimale : somme maximale de (adéquation au rôle + forme du jour) sur le onze.
+    const pool = list.filter((p) => slots.some((sl) => p.positions.includes(sl.pos)));
+    const value = slots.map((sl, i) => pool.map((p) => (p.positions.includes(sl.pos) ? (styleRole(p, i, 'ip')[1] + styleRole(p, i, 'oop')[1]) / 2 + ready.get(p.id)! : null)));
+    const assign = assignMax(value);
+    const taken = new Set<string>();
+    slots.forEach((sl, i) => {
+      const p = assign[i]! >= 0 ? pool[assign[i]!]! : null;
+      if (!p) return;
+      const [ip, a] = styleRole(p, i, 'ip');
+      const [oop, b] = styleRole(p, i, 'oop');
+      Object.assign(sl, { player: p, ip, oop, fit: (a + b) / 2 });
+      taken.add(p.id);
+    });
+
+    // 3. Rôles : on garde chaque changement qui fait monter la note d'équipe.
+    const meanFit = () => slots.reduce((a, s) => a + (s.fit ?? 0), 0) / slots.length;
+    const rolePen = () => balancePenalty(this.roleChecks(slots));
+    let pen = rolePen();
+    let team = meanFit() - pen;
+    for (let pass = 0; pass < 3; pass++) {
+      let moved = false;
+      slots.forEach((sl, i) => {
+        const p = sl.player;
+        if (!p) return;
+        for (const ph of PH)
+          for (const c of avail[i]!.all[ph]) {
+            if (c === sl[ph]) continue;
+            const [old, oldFit] = [sl[ph], sl.fit];
+            sl[ph] = c;
+            sl.fit = (fitOf(p, sl.ip, 'ip', sl.pos) + fitOf(p, sl.oop, 'oop', sl.pos)) / 2;
+            const pn = rolePen();
+            const t = meanFit() - pn;
+            if (t > team + 0.01 && (avail[i]!.inStyle[ph].includes(c) || pn < pen - 1e-9)) {
+              [team, pen, moved] = [t, pn, true];
+            } else {
+              sl[ph] = old;
+              sl.fit = oldFit;
+            }
+          }
+      });
+      if (!moved) break;
+    }
+
     // Remplaçants : chaque joueur hors du onze au plus une fois en premier choix.
     const bench = list.filter((p) => !taken.has(p.id));
     const cands = slots.map((sl) =>
       bench
         .filter((p) => p.positions.includes(sl.pos))
-        .map((p) => ({ p, f: ((this.roleFit(p, sl.ip, 'ip', sl.pos) ?? 0) + (this.roleFit(p, sl.oop, 'oop', sl.pos) ?? 0)) / 2 + readiness(p) }))
+        .map((p) => ({ p, f: (fitOf(p, sl.ip, 'ip', sl.pos) + fitOf(p, sl.oop, 'oop', sl.pos)) / 2 + ready.get(p.id)! }))
         .sort((a, b) => b.f - a.f),
     );
     const subs: FmPlayer[][] = slots.map(() => []);
@@ -395,13 +439,42 @@ export class TacticEngine {
       const c = cands[i]!.find((x) => !subs[i]!.includes(x.p));
       if (c) subs[i]!.push(c.p);
     });
-    const score = slots.reduce((a, s) => a + (s.fit ?? 0), 0) / slots.length;
-    return { form, slots, subs, score, holes: slots.filter((s) => !s.player).length };
+
+    const fit = meanFit();
+    const form1 = slots.filter((s) => s.player).reduce((a, s) => a + ready.get(s.player!.id)!, 0) / slots.length;
+    const penalty = pen + balancePenalty(this.playerChecks(slots, style));
+    return { form, slots, subs, score: fit + form1 - penalty, fit, penalty, holes: slots.filter((s) => !s.player).length };
   }
 
   /** Équilibre du onze : largeur, création, couverture, présence offensive, vitesse, pressing, jeu aérien, fraîcheur. */
   balance(plan: FormationPlan, style: StyleRef): BalanceCheck[] {
-    const xi = plan.slots;
+    return [...this.roleChecks(plan.slots), ...this.playerChecks(plan.slots, style)];
+  }
+
+  /** Équilibre qui dépend des rôles : largeur, création, couverture, présence dans la surface. */
+  roleChecks(slots: Slot[]): BalanceCheck[] {
+    // Seuls les créneaux occupés comptent : un poste vide ne couvre ni ne crée rien.
+    const xi = slots.filter((x) => x.player);
+    const box = xi.filter((x) => BOX.has(x.ip));
+    const finisher = box
+      .filter((x) => x.player)
+      .map((x) => ({ p: x.player!, v: avg(['Finishing', 'Composure', 'Movement'].map((k) => attrOf(x.player!, k))) ?? 0 }))
+      .sort((a, b) => b.v - a.v)[0];
+    const nCreate = xi.filter((x) => CREATE.has(x.ip)).length;
+    const nHold = xi.filter((x) => HOLD.has(x.ip) || ['SCRDM', 'SCRCM', 'DROPDM'].includes(x.oop)).length;
+    const wide = (side: 'L' | 'R') => xi.some((sl) => sideOf(sl.pos) === side && WIDE.has(sl.ip));
+    const wideL = wide('L');
+    const wideR = wide('R');
+    return [
+      { id: 'width', status: wideL && wideR ? 'good' : wideL || wideR ? 'warn' : 'bad', params: { side: !wideL && !wideR ? 'both' : !wideL ? 'L' : !wideR ? 'R' : null } },
+      { id: 'creation', status: nCreate > 4 ? 'warn' : nCreate >= 2 ? 'good' : nCreate === 1 ? 'warn' : 'bad', params: { count: nCreate } },
+      { id: 'cover', status: nHold >= 1 ? 'good' : 'bad', params: { count: nHold } },
+      { id: 'box', status: box.length >= 2 ? 'good' : box.length === 1 ? 'warn' : 'bad', params: { count: box.length, finisher: finisher?.p.name ?? null, value: r1(finisher?.v ?? null) } },
+    ];
+  }
+
+  /** Équilibre qui dépend des joueurs : vitesse de la défense, pressing, jeu aérien, fraîcheur. */
+  playerChecks(xi: Slot[], style: StyleRef): BalanceCheck[] {
     const P = xi.filter((x): x is Slot & { player: FmPlayer } => !!x.player);
     const lvl = avg(P.map((x) => x.player.level)) ?? 10;
     const grp = (sls: Slot[], keys: string[]) => avg(sls.filter((x) => x.player).map((x) => avg(keys.map((k) => attrOf(x.player!, k)))));
@@ -414,23 +487,8 @@ export class TacticEngine {
     const vPace = grp(back, ['Pace', 'Acceleration']);
     const vPress = grp(outf, ['WorkRate', 'Stamina', 'Teamwork']);
     const vAir = grp(dcs, ['Heading', 'JumpingReach', 'Strength']);
-    const box = xi.filter((x) => BOX.has(x.ip));
-    const finisher = box
-      .filter((x) => x.player)
-      .map((x) => ({ p: x.player!, v: avg(['Finishing', 'Composure', 'Movement'].map((k) => attrOf(x.player!, k))) ?? 0 }))
-      .sort((a, b) => b.v - a.v)[0];
-    const nCreate = xi.filter((x) => CREATE.has(x.ip)).length;
-    const nHold = xi.filter((x) => HOLD.has(x.ip) || ['SCRDM', 'SCRCM', 'DROPDM'].includes(x.oop)).length;
-    const wide = (side: 'L' | 'R') => xi.some((sl) => sideOf(sl.pos) === side && WIDE.has(sl.ip));
-    const wideL = wide('L');
-    const wideR = wide('R');
     const lowCond = P.filter((x) => x.player.condition != null && x.player.condition < 90).map((x) => x.player.name);
-    const r1 = (v: number | null) => (v == null ? null : Math.round(v * 10) / 10);
     return [
-      { id: 'width', status: wideL && wideR ? 'good' : wideL || wideR ? 'warn' : 'bad', params: { side: !wideL && !wideR ? 'both' : !wideL ? 'L' : !wideR ? 'R' : null } },
-      { id: 'creation', status: nCreate > 4 ? 'warn' : nCreate >= 2 ? 'good' : nCreate === 1 ? 'warn' : 'bad', params: { count: nCreate } },
-      { id: 'cover', status: nHold >= 1 ? 'good' : 'bad', params: { count: nHold } },
-      { id: 'box', status: box.length >= 2 ? 'good' : box.length === 1 ? 'warn' : 'bad', params: { count: box.length, finisher: finisher?.p.name ?? null, value: r1(finisher?.v ?? null) } },
       { id: 'pace', status: rel(vPace, highLine ? 1 : 0, highLine ? -0.5 : -1.5), params: { value: r1(vPace), highLine } },
       { id: 'press', status: rel(vPress, highPress ? 1 : 0, highPress ? -0.5 : -1.5), params: { value: r1(vPress), highPress } },
       { id: 'aerial', status: rel(vAir, 0, -1.5), params: { value: r1(vAir) } },
@@ -439,6 +497,85 @@ export class TacticEngine {
   }
 }
 
+const r1 = (v: number | null) => (v == null ? null : Math.round(v * 10) / 10);
+
+/**
+ * Coût d'un point faible dans la note d'équipe (sur 20) : [à surveiller, problème]. Repère : 0,4 vaut
+ * 4,4 points d'adéquation perdus par un seul joueur (la note est une moyenne sur onze). Une équipe sans
+ * couverture devant la défense accepte donc qu'un milieu prenne un rôle un peu moins adapté pour la donner,
+ * mais pas qu'il joue à contre-emploi. La forme du jour est déjà comptée joueur par joueur, d'où 0 pour la fraîcheur.
+ */
+const PENALTY: Record<BalanceCheck['id'], [number, number]> = {
+  width: [0.1, 0.3],
+  creation: [0.05, 0.2],
+  cover: [0.15, 0.4],
+  box: [0.1, 0.3],
+  pace: [0.05, 0.2],
+  press: [0.05, 0.2],
+  aerial: [0.05, 0.2],
+  fitness: [0, 0],
+};
+
+/** Baisse de la note d'équipe due aux déséquilibres. */
+export function balancePenalty(checks: BalanceCheck[]): number {
+  return checks.reduce((a, c) => a + (c.status === 'bad' ? PENALTY[c.id][1] : c.status === 'warn' ? PENALTY[c.id][0] : 0), 0);
+}
+
+/**
+ * Attribution de somme maximale (méthode hongroise) : `value[i][j]` est la valeur du joueur j au créneau i,
+ * null s'il ne peut pas y jouer. Renvoie, pour chaque créneau, l'index du joueur, ou -1 (créneau vide).
+ * Un créneau n'est laissé vide que si aucun joueur restant ne peut l'occuper.
+ */
+export function assignMax(value: (number | null)[][]): number[] {
+  const n = value.length;
+  const m0 = n ? value[0]!.length : 0;
+  const m = m0 + n; // un créneau vide par créneau
+  const HOLE = 1e5;
+  const NO = 1e7;
+  const cost = (i: number, j: number) => (j >= m0 ? HOLE : value[i]![j] == null ? NO : -value[i]![j]!);
+  const u = new Array<number>(n + 1).fill(0);
+  const v = new Array<number>(m + 1).fill(0);
+  const p = new Array<number>(m + 1).fill(0);
+  const way = new Array<number>(m + 1).fill(0);
+  for (let i = 1; i <= n; i++) {
+    p[0] = i;
+    let j0 = 0;
+    const minv = new Array<number>(m + 1).fill(Infinity);
+    const usedCol = new Array<boolean>(m + 1).fill(false);
+    do {
+      usedCol[j0] = true;
+      const i0 = p[j0]!;
+      let delta = Infinity;
+      let j1 = 0;
+      for (let j = 1; j <= m; j++)
+        if (!usedCol[j]) {
+          const cur = cost(i0 - 1, j - 1) - u[i0]! - v[j]!;
+          if (cur < minv[j]!) {
+            minv[j] = cur;
+            way[j] = j0;
+          }
+          if (minv[j]! < delta) {
+            delta = minv[j]!;
+            j1 = j;
+          }
+        }
+      for (let j = 0; j <= m; j++)
+        if (usedCol[j]) {
+          u[p[j]!]! += delta;
+          v[j]! -= delta;
+        } else minv[j]! -= delta;
+      j0 = j1;
+    } while (p[j0] !== 0);
+    do {
+      const j1 = way[j0]!;
+      p[j0] = p[j1]!;
+      j0 = j1;
+    } while (j0);
+  }
+  const res = new Array<number>(n).fill(-1);
+  for (let j = 1; j <= m0; j++) if (p[j] && value[p[j]! - 1]![j - 1] != null) res[p[j]! - 1] = j - 1;
+  return res;
+}
 const avgWeighted = (xs: [number | null, number][]) => {
   let s = 0;
   let t = 0;
@@ -475,7 +612,12 @@ export interface FormationPlan {
   slots: Slot[];
   /** Remplaçants par poste, du meilleur au suivant. */
   subs: FmPlayer[][];
+  /** Note d'équipe sur 20 : adéquation moyenne + forme du jour moyenne − déséquilibres. Sert à choisir schéma et style. */
   score: number;
+  /** Adéquation moyenne des joueurs à leurs rôles (créneau vide = 0). */
+  fit: number;
+  /** Baisse due aux déséquilibres (voir balancePenalty). */
+  penalty: number;
   holes: number;
 }
 

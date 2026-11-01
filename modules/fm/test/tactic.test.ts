@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_TACTIC_REFERENCE, FORMATIONS, TacticEngine, gameFormationOf, knownFormation, mergeReference, phaseXY, shapeOf, tacticReferenceSchema, zonePos } from '../src';
+import { DEFAULT_TACTIC_REFERENCE, FORMATIONS, TacticEngine, assignMax, balancePenalty, readiness, gameFormationOf, knownFormation, mergeReference, phaseXY, shapeOf, tacticReferenceSchema, zonePos } from '../src';
 import { normalizePlayer } from '../src/player';
 
 const ATTRS = ['Passing', 'FirstTouch', 'Technique', 'Composure', 'Vision', 'Decisions', 'Teamwork', 'WorkRate', 'Stamina', 'Strength', 'Pace', 'Acceleration', 'Tackling', 'Marking', 'Positioning', 'Anticipation', 'Heading', 'JumpingReach', 'Finishing', 'Movement', 'Crossing', 'Dribbling', 'Flair', 'Concentration', 'Agility', 'Aggression'];
@@ -98,9 +98,41 @@ describe('rôle qui améliore l’équipe', () => {
     const engine = new TacticEngine(DEFAULT_TACTIC_REFERENCE);
     const style = DEFAULT_TACTIC_REFERENCE.styles.find((s) => s.id === 'possession')!;
     const right = p(1, 'MO (D)', 13, {}, { foot: 'Droit uniquement' });
-    const sl = engine.formationPlan('4-3-3', style, [right]).slots.find((s) => s.pos === 'MOD')!;
+    const team = ['GB', 'D (G)', 'D (C)', 'D (C)', 'D (D)', 'MD', 'M (C)', 'M (C)', 'MO (G)', 'BT'].map((pos, i) => p(30 + i, pos, 12));
+    const sl = engine.formationPlan('4-3-3', style, [right, ...team]).slots.find((s) => s.pos === 'MOD')!;
     expect(sl.player?.id).toBe(right.id);
     expect(engine.roleFit(right, sl.ip, 'ip', 'MOD')).toBeGreaterThanOrEqual(engine.roleFit(right, 'IW', 'ip', 'MOD')!);
     expect(sl.ip).not.toBe('IW');
+  });
+});
+
+describe('note d’équipe', () => {
+  const engine = new TacticEngine(DEFAULT_TACTIC_REFERENCE);
+  const style = DEFAULT_TACTIC_REFERENCE.styles.find((s) => s.id === 'possession')!;
+
+  it('attribue les postes pour le meilleur onze, pas poste par poste', () => {
+    // Le tri glouton mettrait le premier en (0,0) et laisserait le second créneau vide.
+    expect(assignMax([[10, 9], [8, null]])).toEqual([1, 0]);
+    expect(assignMax([[null], [5]])).toEqual([-1, 0]);
+    // A joue MD ou MC ; B seulement MD. Le meilleur onze met B en MD et A en MC, et laisse D (faible) dehors.
+    const others = ['GB', 'D (G)', 'D (C)', 'D (C)', 'D (D)', 'MO (G)', 'MO (D)', 'BT'].map((pos, i) => p(40 + i, pos, 12));
+    const A = p(1, 'MD, M (C)', 15);
+    const B = p(2, 'MD', 13);
+    const C = p(3, 'M (C)', 12);
+    const D = p(4, 'M (C)', 8);
+    const plan = engine.formationPlan('4-3-3', style, [A, B, C, D, ...others]);
+    const xi = plan.slots.map((s) => s.player?.id);
+    expect(xi).toContain(B.id);
+    expect(xi).not.toContain(D.id);
+    expect(plan.slots.find((s) => s.pos === 'MDF')!.player?.id).toBe(B.id);
+  });
+
+  it('compte l’équilibre et la forme du jour dans la note', () => {
+    const plan = engine.formationPlan('4-2-3-1', style, squad);
+    const pen = balancePenalty(engine.balance(plan, style));
+    expect(plan.penalty).toBeCloseTo(pen);
+    const form = plan.slots.reduce((a, s) => a + (s.player ? readiness(s.player) : 0), 0) / plan.slots.length;
+    expect(plan.score).toBeCloseTo(plan.fit + form - plan.penalty);
+    expect(balancePenalty([{ id: 'cover', status: 'bad', params: {} }])).toBeGreaterThan(balancePenalty([{ id: 'creation', status: 'warn', params: {} }]));
   });
 });
