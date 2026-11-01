@@ -107,6 +107,8 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   const { engine, local, prefs, update, avail, ranked, style, natural, form, plans, plan, gamePlan, fromGame, auto, pick } = useTacticChoice(players, folder, gameFormation, lineup);
   const phase: Phase = prefs.phase ?? 'ip';
   const opp = useMemo(() => (snap ? opponentReport(snap) : null), [snap]);
+  // Poste survolé : mis en évidence à la fois sur le terrain et dans la liste.
+  const [hover, setHover] = useState<number | null>(null);
 
   if (!avail.length || !style || !plan) return <p className="card mt-6 text-brun">{t('fm.tac.noAttributes')}</p>;
 
@@ -124,7 +126,8 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   const note = fitPct;
   const field = plan.slots.filter((s) => s.pos !== 'GB');
   const shape = (ph: Phase) => shapeOf(field.map((s) => phaseXY(s, ph, block)));
-  const shown = spreadXY(plan.slots.map((s) => phaseXY(s, phase, block)));
+  // Écarts minimum entre deux joueurs (en % du terrain) à la taille des pastilles, gardées dans le terrain.
+  const shown = spreadXY(plan.slots.map((s) => phaseXY(s, phase, block)), 23, 14).map(([x, y]) => [Math.min(88, Math.max(12, x)), Math.min(91, Math.max(7, y))] as [number, number]);
   const other: Phase = phase === 'ip' ? 'oop' : 'ip';
 
   return (
@@ -177,8 +180,8 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
       </div>
       
 
-      <div className="grid gap-6 lg:grid-cols-[3fr_2fr] 2xl:grid-cols-2">
-        <section className="card">
+      {/* Le onze : terrain compact à gauche, liste prête à appliquer dans FM27 à droite. Survoler l'un met l'autre en évidence. */}
+      <section className="card">
           <h2 className="text-xl font-semibold">
             {form} · {styleName(style)} <span className="text-sm font-normal text-brun">{t('fm.tac.fit', { value: note(plan.score) })}</span>
           </h2>
@@ -187,71 +190,115 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
             {t(fromGame ? 'fm.tac.fromGameHelp' : gamePlan ? 'fm.tac.suggestedHelpGame' : 'fm.tac.suggestedHelp')}
           </p>
           {!gamePlan && lineupStatus && lineupStatus !== 'lue' && <p className="mt-1 text-xs text-brun">{t('fm.tac.lineupStatus', { status: lineupStatus })}</p>}
-          <div className="mt-3 flex flex-wrap items-center gap-2" role="tablist">
-            {(['ip', 'oop'] as const).map((ph) => (
-              <button
-                key={ph}
-                type="button"
-                role="tab"
-                aria-selected={phase === ph}
-                onClick={() => update({ phase: ph })}
-                className={`rounded-full px-3 py-1 text-sm font-bold ${phase === ph ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
-              >
-                {t(`fm.tac.phase.${ph}`)} {shape(ph)}
-              </button>
-            ))}
-          </div>
 
-          {/* Le terrain tient dans la hauteur de la fenêtre, sans défiler. */}
-          <div className="relative mx-auto mt-4 aspect-[3/4] w-full overflow-hidden rounded-2xl bg-eau-fonce/90" style={{ maxWidth: 'max(20rem, calc((100vh - 12rem) * 0.75))' }}>
-            <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden>
-              <g fill="none" stroke="white" strokeOpacity="0.35" strokeWidth="0.4">
-                <rect x="3" y="2" width="94" height="96" />
-                <line x1="3" y1="50" x2="97" y2="50" />
-                <circle cx="50" cy="50" r="9" />
-                <rect x="25" y="2" width="50" height="15" />
-                <rect x="25" y="83" width="50" height="15" />
-              </g>
-              <g stroke="white" strokeOpacity="0.6" strokeWidth="0.35" strokeDasharray="1 1">
-                {plan.slots.map((sl, i) => {
-                  const [x1, y1] = phaseXY(sl, other, block);
-                  const [x2, y2] = shown[i] ?? [x1, y1];
-                  return Math.hypot(x1 - x2, y1 - y2) > 2 ? <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} /> : null;
-                })}
-              </g>
-            </svg>
-            {plan.slots.map((sl, i) => {
-              const [x, y] = shown[i] ?? [sl.x, sl.y];
-              const code = phase === 'ip' ? sl.ip : sl.oop;
-              const fit = sl.player ? engine.roleFit(sl.player, code, phase, sl.pos) : null;
-              const subs = plan.subs[i] ?? [];
-              const title = [
-                t('fm.tac.otherPhase', { phase: t(`fm.tac.phase.${other}`), role: roleName(phase === 'ip' ? sl.oop : sl.ip, other) }),
-                subs.length ? t('fm.tac.subs', { names: subs.map((p) => p.name).join(', ') }) : '',
-              ]
-                .filter(Boolean)
-                .join(' · ');
-              return (
-                <div
-                  key={i}
-                  title={title}
-                  className="absolute w-[24%] -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white/95 px-2 py-1 text-center text-xs shadow transition-all duration-500"
-                  style={{ left: `${x}%`, top: `${y}%` }}
+        <div className="mt-4 grid gap-6 xl:grid-cols-[minmax(18rem,26rem)_minmax(0,1fr)]">
+          <div>
+            <div className="relative mx-auto aspect-[3/4] w-full max-w-[26rem] overflow-hidden rounded-2xl bg-eau-fonce/90">
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden>
+                <g fill="none" stroke="white" strokeOpacity="0.35" strokeWidth="0.4">
+                  <rect x="3" y="2" width="94" height="96" />
+                  <line x1="3" y1="50" x2="97" y2="50" />
+                  <circle cx="50" cy="50" r="9" />
+                  <rect x="25" y="2" width="50" height="15" />
+                  <rect x="25" y="83" width="50" height="15" />
+                </g>
+                <g stroke="white" strokeOpacity="0.6" strokeWidth="0.35" strokeDasharray="1 1">
+                  {plan.slots.map((sl, i) => {
+                    const [x1, y1] = phaseXY(sl, other, block);
+                    const [x2, y2] = shown[i] ?? [x1, y1];
+                    return Math.hypot(x1 - x2, y1 - y2) > 2 ? <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} /> : null;
+                  })}
+                </g>
+              </svg>
+              {plan.slots.map((sl, i) => {
+                const [x, y] = shown[i] ?? [sl.x, sl.y];
+                const code = phase === 'ip' ? sl.ip : sl.oop;
+                const fit = sl.player ? engine.roleFit(sl.player, code, phase, sl.pos) : null;
+                const off = !!sl.player && !sl.player.positions.includes(sl.pos);
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    title={`${roleName(code, phase)}${off ? ` · ${t('fm.tac.offPos')}` : ''}`}
+                    onMouseEnter={() => setHover(i)}
+                    onMouseLeave={() => setHover(null)}
+                    onFocus={() => setHover(i)}
+                    onBlur={() => setHover(null)}
+                    className="absolute flex w-[23%] -translate-x-1/2 -translate-y-1/2 flex-col items-center transition-all duration-500"
+                    style={{ left: `${x}%`, top: `${y}%` }}
+                  >
+                    <span
+                      className={`whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-xs font-bold text-canard shadow ring-2 ${hover === i ? 'ring-ambre' : off ? 'ring-corail' : 'ring-white/0'}`}
+                    >
+                      {POS_LABEL[rolePos(sl, phase)]}
+                    </span>
+                    <span className="mt-0.5 max-w-full truncate rounded bg-canard/85 px-1.5 text-xs font-bold text-white">{sl.player ? shortName(sl.player.name) : t('fm.tac.nobody')}</span>
+                    {fit != null && <span className="text-xs font-bold text-white/90">{note(fit)}</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-3 flex flex-wrap justify-center gap-2" role="tablist">
+              {(['ip', 'oop'] as const).map((ph) => (
+                <button
+                  key={ph}
+                  type="button"
+                  role="tab"
+                  aria-selected={phase === ph}
+                  onClick={() => update({ phase: ph })}
+                  className={`rounded-full px-3 py-1 text-sm font-bold ${phase === ph ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
                 >
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="font-bold text-canard">{POS_LABEL[rolePos(sl, phase)]}</span>
-                    {fit != null && <span className="text-brun">{note(fit)}</span>}
-                  </div>
-                  <div className="truncate text-brun">{roleName(code, phase)}</div>
-                  <div className="truncate font-bold text-canard">{sl.player?.name ?? t('fm.tac.nobody')}</div>
-                  {sl.player && !sl.player.positions.includes(sl.pos) && <div className="truncate text-[10px] text-brun">{t('fm.tac.offPos')}</div>}
-                </div>
-              );
-            })}
+                  {t(`fm.tac.phase.${ph}`)} {shape(ph)}
+                </button>
+              ))}
+            </div>
           </div>
-          <p className="mt-2 text-xs text-brun">{t(fromGame ? 'fm.tac.pitchHelpGame' : 'fm.tac.pitchHelp')}</p>
-        </section>
 
+          <div className="min-w-0">
+            <h3 className="font-semibold">{t('fm.tac.xi.title')}</h3>
+            <div className="mt-2 overflow-x-auto">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>{t('fm.tac.xi.pos')}</th>
+                    <th>{t('fm.tac.xi.player')}</th>
+                    <th>{t('fm.tac.phase.ip')}</th>
+                    <th>{t('fm.tac.phase.oop')}</th>
+                    <th>{t('fm.tac.xi.backup')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {plan.slots.map((sl, i) => {
+                    const p = sl.player;
+                    const fitOf = (ph: Phase) => (p ? engine.roleFit(p, ph === 'ip' ? sl.ip : sl.oop, ph, sl.pos) : null);
+                    return (
+                      <tr key={i} className={hover === i ? 'bg-creme/70' : ''} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
+                        <td>
+                          <span className="pill">{POS_LABEL[sl.pos]}</span>
+                        </td>
+                        <td className="font-bold text-canard">
+                          {p?.name ?? <span className="text-corail">{t('fm.tac.nobody')}</span>}
+                          {p && !p.positions.includes(sl.pos) && <span className="ml-2 text-xs font-normal text-brun">{t('fm.tac.offPos')}</span>}
+                        </td>
+                        {(['ip', 'oop'] as const).map((ph) => (
+                          <td key={ph}>
+                            <span className="text-canard">{roleName(ph === 'ip' ? sl.ip : sl.oop, ph)}</span>
+                            {p && <span className="ml-2 text-xs font-bold text-brun">{note(fitOf(ph))}</span>}
+                          </td>
+                        ))}
+                        <td className="text-brun">{(plan.subs[i] ?? [])[0]?.name ?? '–'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="mt-2 text-xs text-brun">{t(fromGame ? 'fm.tac.pitchHelpGame' : 'fm.tac.pitchHelp')}</p>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
         <section className="card">
           <h2 className="text-xl font-semibold">{t('fm.tac.balance')}</h2>
           <ul className="mt-3 space-y-3">
@@ -290,9 +337,6 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
             ))}
           </ol>
         </section>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2">
         <section className="card">
           <h2 className="text-xl font-semibold">{t('fm.tac.teamTitle', { style: styleName(style) })}</h2>
           {style.mentality && <p className="mt-1 text-sm">{t('fm.style.mentality', { value: style.mentality })}</p>}
@@ -398,6 +442,12 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
     </div>
   );
 }
+
+/** Nom court pour le terrain : « A. Guardado Navarrete » plutôt que le nom complet. */
+const shortName = (name: string) => {
+  const parts = name.trim().split(/\s+/);
+  return parts.length > 1 ? `${parts[0]![0]}. ${parts.slice(1).join(' ')}` : name;
+};
 
 /** Valeurs d'une raison : les notes sur 20 au format de la langue. */
 const fmtVals = (vals: Record<string, number | string>, nf: Intl.NumberFormat) =>

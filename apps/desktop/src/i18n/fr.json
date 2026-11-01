@@ -183,7 +183,7 @@
       "subs": "Remplaçants : {{names}}",
       "offPos": "hors poste naturel (accompli)",
       "nobody": "Personne",
-      "pitchHelp": "Onze choisi par adéquation aux rôles du style, blessés exclus. Les pointillés montrent le déplacement depuis l'autre phase. Survole un joueur pour voir ses remplaçants.",
+      "pitchHelp": "Onze choisi par adéquation aux rôles du style, blessés exclus. Les pointillés montrent le déplacement depuis l'autre phase ; survole un joueur pour le retrouver dans la liste.",
       "balance": "Équilibre de l'équipe",
       "balanceHelp": "Vitesse, pressing et jeu aérien sont comparés au niveau moyen de ton onze : vert = point fort, rouge = point faible. Chaque point faible baisse la note d'équipe, qui choisit le schéma et le style : le calcul juge le onze dans son ensemble, pas seulement poste par poste.",
       "forms": "Schémas pour ce style",
@@ -250,7 +250,7 @@
       "fromGame": "Compo du jeu",
       "fromGameHelp": "Joueurs et postes lus dans ta tactique FM27. Rôles et consignes : ceux du jeu quand le plugin les lit, sinon le meilleur rôle de chaque joueur à son poste.",
       "suggestedHelpGame": "Placement calculé par Simloom selon le style choisi. « Onze du jeu » affiche ta vraie compo FM27.",
-      "pitchHelpGame": "Ta compo FM27. Les pointillés montrent le déplacement depuis l'autre phase. Survole un joueur pour voir ses remplaçants ; clique un schéma à droite pour comparer avec un onze calculé par Simloom.",
+      "pitchHelpGame": "Ta compo FM27. Les pointillés montrent le déplacement depuis l'autre phase ; survole un joueur pour le retrouver dans la liste. Clique un schéma plus bas pour comparer avec un onze calculé par Simloom.",
       "lineupStatus": "Lecture de la compo par le plugin : {{status}}.",
       "duty": {
         "d": "Défense",
@@ -263,7 +263,13 @@
       "teamTitle": "Consignes d'équipe · {{style}}",
       "teamHelp": "À régler dans l'écran Tactique du jeu, avec la mentalité. Libellés exacts de FM27.",
       "oppTitle": "Contre {{name}}",
-      "oppMore": "Rapport complet"
+      "oppMore": "Rapport complet",
+      "xi": {
+        "title": "Le onze à appliquer dans FM27",
+        "pos": "Poste",
+        "player": "Joueur",
+        "backup": "Doublure"
+      }
     },
     "nav": "Sections de la partie",
     "sections": {
