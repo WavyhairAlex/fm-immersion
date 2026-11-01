@@ -13,7 +13,7 @@ const snap = {
       { position: 'D (C)', playerId: 3 },
       { position: 'D (C)', playerId: 4 },
       { position: 'D (G)', playerId: 5 },
-      { position: 'MD (C)', playerName: 'J6', roleIP: 'Meneur reculé', roleOOP: 'OPScreeningDefensiveMidfielder', customRole: true, instructions: { ip: ['Passes plus courtes'], oop: [] } },
+      { position: 'MD (C)', playerName: 'J6', roleIP: 'Meneur de jeu en retrait', roleOOP: 'OPScreeningDefensiveMidfielder', customRole: true, instructions: { ip: ['Passes plus courtes'], oop: [] } },
       { position: 'M (C)', playerId: 7 },
       { position: 'M (C)', playerId: 8 },
       { position: 'MO (D)', playerId: 9 },
@@ -29,7 +29,7 @@ describe('compo lue dans le jeu', () => {
     expect(l).toHaveLength(11);
     expect(l[10]!.pos).toBe('BT');
     expect(matchRole(engine, 'OPScreeningDefensiveMidfielder', 'MDF', 'oop')?.code).toBe('SCRDM');
-    expect(matchRole(engine, 'Meneur reculé', 'MDF', 'ip')?.code).toBe('DLP');
+    expect(matchRole(engine, 'Meneur de jeu en retrait', 'MDF', 'ip')?.code).toBe('DLP');
     expect(gameLineup({} as FmSnapshot)).toBeNull();
   });
 

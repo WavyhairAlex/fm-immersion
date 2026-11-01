@@ -50,7 +50,7 @@ export interface RoleLocks {
 
 const tag = (r: RoleRef) => `${r.code} ${r.en}`;
 // Rôles qui restent en couverture, en retrait ou haut en point d'appui : le jeu verrouille le pressing en « Moins souvent ».
-const PRESS_LESS = /Screening|Covering|Dropping|Holding|Outlet|Line Keeper|Defensive Wing-Back|\b(SCRDM|SCRCM|CCB|DROPDM|HFB|DWB|LHK|WOM|WOW|IOW|COAM|SOAM|COCF)\b/;
+const PRESS_LESS = /Screening|(?<!Wide )Covering|Dropping|Holding|Outlet|\b(SCRDM|SCRCM|CCB|CWCB|DROPDM|HFB|HWB|LHK|WOM|WOW|IOW|COAM|SOAM|COCF|SOCF)\b/;
 // Rôles de pressing : le jeu verrouille le pressing en « Plus souvent ».
 const PRESS_MORE = /Pressing|\b(PFB|PWB|PRSDM|PRSCM)\b/;
 
@@ -66,10 +66,10 @@ export function roleLocks(r: RoleRef | undefined): RoleLocks {
   if (press === 'less') blocked.push('pressMore');
   if (press === 'more') blocked.push('pressLess');
   // Le défenseur couvreur défend sa zone : le marquage serré va contre son rôle.
-  if (/Covering Centre-Back|\bCCB\b/.test(s)) blocked.push('markTighter');
+  if (/Covering (Wide )?Centre-Back|\b(CCB|CWCB)\b/.test(s)) blocked.push('markTighter');
   // Rôles qui se déplacent déjà librement ou restent déjà en place.
   if (/Free Role|False Nine|\b(FREE|F9)\b/.test(s)) blocked.push('roam');
-  if (/Half-Back|Holding|\bHB\b/.test(s)) blocked.push('holdPosition');
+  if (/Half[- ]Back|Holding|\bHB\b/.test(s)) blocked.push('holdPosition');
   return { press, blocked };
 }
 
@@ -198,7 +198,7 @@ function unlockingRole(engine: TacticEngine, slot: Slot, phase: Phase, id: Instr
   const pos: PosCode = slot.pos;
   let best: { r: RoleRef; f: number } | null = null;
   for (const r of engine.ref.roles) {
-    if (!(r.phase === phase || r.phase === 'both') || !engine.rolePositions(r).includes(pos) || !roleAllows(r, id)) continue;
+    if (!engine.availableAt(r, pos, phase) || !roleAllows(r, id)) continue;
     // Pour presser plus, on vise un vrai rôle de pressing quand le poste en a un.
     const bonus = id === 'pressMore' && roleLocks(r).press === 'more' ? 1 : 0;
     const f = (engine.roleFit(p, r.code, phase, pos) ?? 0) + bonus;

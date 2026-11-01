@@ -29,77 +29,95 @@ const AMW = ['AML', 'AMR'];
 const AMC = ['AMC'];
 const ST = ['ST'];
 
+/** Codes du jeu (énumérations InPossessionRole / OutOfPossessionRole) et condition de créneau. */
+const g = (ip?: string, oop?: string) => ({ game: { ...(ip ? { ip } : {}), ...(oop ? { oop: `OP${oop}` } : {}) } });
+
+/*
+ * Rôles de FM27 et postes où le jeu les propose, relevés dans le code du jeu (game_plugin.dll,
+ * table poste → rôles et filtres de créneau) le 01/11/2026 ; libellés FR/EN du jeu (languages.fmf).
+ * Les rôles des anciennes versions que FM27 ne propose plus (Mezzala, Regista, Enganche,
+ * Segundo Volante, Milieu récupérateur, Milieu sentinelle, Attaquant complet, Ailier défensif,
+ * Attaquant pivot excentré, Arrière latéral strict) ne figurent pas ici.
+ * Les poids des attributs (3 = essentiel, 2 = important, 1 = utile) restent des repères maison.
+ */
 const ROLES: RoleRef[] = [
-  // Gardiens
-  role('GK', 'Gardien', 'Goalkeeper', 'both', GK, 'GK', { reflexes: 3, handling: 3, oneOnOnes: 2, positioning: 2, aerialReach: 2, commandOfArea: 2, concentration: 1, agility: 1 }),
-  role('BPGK', 'Gardien relanceur', 'Ball-Playing Goalkeeper', 'ip', GK, 'GK', { passing: 3, kicking: 3, composure: 2, firstTouch: 2, vision: 1, reflexes: 2, decisions: 1 }),
-  role('SK', 'Gardien qui sort', 'Sweeper Keeper', 'oop', GK, 'GK', { rushingOut: 3, oneOnOnes: 3, anticipation: 2, acceleration: 2, reflexes: 2, decisions: 1, composure: 1 }),
-  role('LHK', 'Gardien sur sa ligne', 'Line Keeper', 'oop', GK, 'GK', { reflexes: 3, handling: 3, positioning: 2, agility: 2, concentration: 1 }),
-  // Défenseurs centraux
-  role('CB', 'Défenseur central', 'Centre-Back', 'both', CB, 'CB', { marking: 3, tackling: 3, heading: 2, positioning: 2, strength: 2, jumpingReach: 1, concentration: 1 }),
-  role('BPCB', 'Défenseur relanceur', 'Ball-Playing Centre-Back', 'ip', CB, 'CB', { passing: 3, composure: 3, firstTouch: 2, vision: 2, technique: 1, decisions: 1 }),
-  role('ADCB', 'Défenseur qui monte', 'Advanced Centre-Back', 'ip', CB, 'CB', { dribbling: 2, passing: 2, firstTouch: 2, composure: 2, acceleration: 1, stamina: 1, decisions: 1 }),
-  role('STCB', 'Défenseur stoppeur', 'Stopping Centre-Back', 'oop', CB, 'CB', { tackling: 3, aggression: 2, bravery: 2, strength: 2, anticipation: 2, acceleration: 1 }),
-  role('CCB', 'Défenseur couvreur', 'Covering Centre-Back', 'oop', CB, 'CB', { positioning: 3, anticipation: 3, pace: 2, concentration: 2, marking: 1 }),
-  // Latéraux et pistons
-  role('FB', 'Arrière latéral', 'Full-Back', 'both', FB, 'FB', { tackling: 3, marking: 2, positioning: 2, stamina: 2, crossing: 1, pace: 1, teamwork: 1 }),
-  role('IFB', 'Latéral rentrant', 'Inverted Full-Back', 'ip', FB, 'FB', { passing: 3, composure: 2, firstTouch: 2, decisions: 2, positioning: 1, technique: 1 }),
-  role('WB', 'Piston', 'Wing-Back', 'both', WB, 'FB', { stamina: 3, crossing: 3, pace: 2, workRate: 2, tackling: 1, dribbling: 1 }),
-  role('IWB', 'Piston rentrant', 'Inverted Wing-Back', 'ip', [...FB, ...WB], 'FB', { passing: 3, vision: 2, firstTouch: 2, decisions: 2, stamina: 1, technique: 1 }),
-  role('AWB', 'Piston offensif', 'Advanced Wing-Back', 'ip', WB, 'FB', { crossing: 3, dribbling: 2, acceleration: 2, stamina: 3, offTheBall: 1, technique: 1 }),
-  role('PMWB', 'Piston meneur', 'Playmaking Wing-Back', 'ip', WB, 'FB', { passing: 3, vision: 3, technique: 2, crossing: 1, stamina: 2, decisions: 1 }),
-  role('PFB', 'Latéral qui presse', 'Pressing Full-Back', 'oop', FB, 'FB', { workRate: 3, aggression: 2, tackling: 2, acceleration: 2, stamina: 1 }),
-  role('HFB', 'Latéral qui reste', 'Holding Full-Back', 'oop', FB, 'FB', { positioning: 3, marking: 2, concentration: 2, tackling: 2, teamwork: 1 }),
-  role('PWB', 'Piston qui presse', 'Pressing Wing-Back', 'oop', WB, 'FB', { workRate: 3, stamina: 2, aggression: 2, tackling: 2, acceleration: 1 }),
-  role('DWB', 'Piston défensif', 'Defensive Wing-Back', 'oop', WB, 'FB', { positioning: 3, tackling: 2, marking: 2, stamina: 2, teamwork: 1 }),
-  // Milieux défensifs
-  role('DM', 'Milieu défensif', 'Defensive Midfielder', 'both', DM, 'DM', { tackling: 3, positioning: 3, anticipation: 2, teamwork: 2, passing: 1, concentration: 1 }),
-  role('HB', 'Demi-défenseur', 'Half-Back', 'ip', DM, 'DM', { positioning: 3, passing: 2, composure: 2, marking: 2, decisions: 1, anticipation: 1 }),
-  role('DLP', 'Meneur reculé', 'Deep-Lying Playmaker', 'ip', [...DM, ...CM], 'DM', { passing: 3, vision: 3, composure: 2, firstTouch: 2, decisions: 2, technique: 1 }),
-  role('DROPDM', 'Milieu qui décroche', 'Dropping Midfielder', 'oop', DM, 'DM', { positioning: 3, marking: 2, heading: 1, concentration: 2, anticipation: 2 }),
-  role('SCRDM', 'Milieu écran', 'Screening Midfielder', 'oop', DM, 'DM', { positioning: 3, anticipation: 3, concentration: 2, teamwork: 2, tackling: 1 }),
-  role('PRSDM', 'Milieu défensif qui presse', 'Pressing Defensive Midfielder', 'oop', DM, 'DM', { workRate: 3, aggression: 2, tackling: 2, stamina: 2, acceleration: 1 }),
-  role('WCDM', 'Milieu défensif couvrant le côté', 'Wide-Cover Defensive Midfielder', 'oop', DM, 'DM', { stamina: 3, positioning: 2, pace: 2, tackling: 2, teamwork: 1 }),
-  // Milieux centraux
-  role('CM', 'Milieu central', 'Central Midfielder', 'both', CM, 'CM', { passing: 3, teamwork: 2, stamina: 2, decisions: 2, tackling: 1, firstTouch: 1 }),
-  role('BBM', 'Milieu box-to-box', 'Box-to-Box Midfielder', 'ip', CM, 'CM', { stamina: 3, workRate: 3, offTheBall: 2, passing: 2, tackling: 1, longShots: 1 }),
-  role('B2BPM', 'Meneur box-to-box', 'Box-to-Box Playmaker', 'ip', CM, 'CM', { passing: 3, vision: 2, stamina: 2, workRate: 2, firstTouch: 1, decisions: 1 }),
-  role('MFPM', 'Meneur de milieu', 'Midfield Playmaker', 'ip', CM, 'CM', { passing: 3, vision: 3, technique: 2, decisions: 2, firstTouch: 1, composure: 1 }),
-  role('CHM', 'Milieu de couloir', 'Channel Midfielder', 'ip', CM, 'CM', { offTheBall: 3, dribbling: 2, acceleration: 2, stamina: 2, passing: 1, finishing: 1 }),
-  role('WCM', 'Milieu axial excentré', 'Wide Central Midfielder', 'ip', CM, 'CM', { passing: 3, crossing: 2, stamina: 2, technique: 1, decisions: 1 }),
-  role('SCRCM', 'Milieu central écran', 'Screening Central Midfielder', 'oop', CM, 'CM', { positioning: 3, anticipation: 2, teamwork: 2, concentration: 2, tackling: 1 }),
-  role('PRSCM', 'Milieu central qui presse', 'Pressing Central Midfielder', 'oop', CM, 'CM', { workRate: 3, stamina: 3, aggression: 2, tackling: 2, acceleration: 1 }),
-  role('WCCM', 'Milieu central couvrant le côté', 'Wide-Cover Central Midfielder', 'oop', CM, 'CM', { stamina: 3, pace: 2, positioning: 2, teamwork: 1, tackling: 1 }),
-  // Milieux latéraux et ailiers
-  role('WM', 'Milieu latéral', 'Wide Midfielder', 'both', WM, 'WG', { crossing: 2, passing: 2, stamina: 3, workRate: 2, teamwork: 1, tackling: 1 }),
-  role('W', 'Ailier', 'Winger', 'ip', [...WM, ...AMW], 'WG', { dribbling: 3, crossing: 3, acceleration: 2, pace: 2, technique: 1, agility: 1 }),
-  role('IF', 'Attaquant intérieur', 'Inside Forward', 'ip', AMW, 'WG', { finishing: 3, dribbling: 3, offTheBall: 2, acceleration: 2, composure: 1, technique: 1 }),
-  role('IW', 'Ailier rentrant', 'Inverted Winger', 'ip', [...WM, ...AMW], 'WG', { dribbling: 3, passing: 2, vision: 2, technique: 2, longShots: 1, acceleration: 1 }),
-  role('WP', 'Ailier meneur', 'Wide Playmaker', 'ip', [...WM, ...AMW], 'WG', { passing: 3, vision: 3, technique: 2, firstTouch: 2, decisions: 1 }),
-  role('WF', 'Attaquant de côté', 'Wide Forward', 'ip', AMW, 'WG', { offTheBall: 3, finishing: 2, acceleration: 2, pace: 2, dribbling: 1 }),
-  role('TWM', 'Milieu latéral qui suit', 'Tracking Wide Midfielder', 'oop', WM, 'WG', { workRate: 3, stamina: 2, tackling: 2, positioning: 2, teamwork: 1 }),
-  role('WOM', 'Milieu latéral en pointe', 'Wide Outlet Midfielder', 'oop', WM, 'WG', { acceleration: 3, pace: 2, offTheBall: 2, anticipation: 1 }),
-  role('TW', 'Ailier qui suit', 'Tracking Winger', 'oop', AMW, 'WG', { workRate: 3, stamina: 3, tackling: 1, teamwork: 2, positioning: 1 }),
-  role('WOW', 'Ailier en pointe', 'Wide Outlet Winger', 'oop', AMW, 'WG', { acceleration: 3, pace: 3, offTheBall: 2, anticipation: 1 }),
-  role('IOW', 'Ailier en pointe dans l’axe', 'Inside Outlet Winger', 'oop', AMW, 'WG', { acceleration: 3, offTheBall: 2, anticipation: 2, pace: 2 }),
-  // Milieux offensifs
-  role('AM', 'Milieu offensif', 'Attacking Midfielder', 'both', AMC, 'AM', { passing: 2, offTheBall: 2, technique: 2, longShots: 2, vision: 2, decisions: 1 }),
-  role('AP', 'Meneur avancé', 'Advanced Playmaker', 'ip', [...AMC, ...CM], 'AM', { passing: 3, vision: 3, technique: 2, firstTouch: 2, decisions: 2, flair: 1 }),
-  role('FREE', 'Électron libre', 'Free Role', 'ip', AMC, 'AM', { flair: 3, vision: 2, dribbling: 2, technique: 2, offTheBall: 2, passing: 1 }),
-  role('SS', 'Second attaquant', 'Second Striker', 'ip', [...AMC, ...ST], 'AM', { offTheBall: 3, finishing: 3, anticipation: 2, composure: 2, acceleration: 1 }),
-  role('TAM', 'Milieu offensif qui suit', 'Tracking Attacking Midfielder', 'oop', AMC, 'AM', { workRate: 3, stamina: 2, teamwork: 2, tackling: 1, positioning: 1 }),
-  role('COAM', 'Milieu offensif en pointe', 'Central Outlet Attacking Midfielder', 'oop', AMC, 'AM', { offTheBall: 2, anticipation: 2, acceleration: 2, composure: 1 }),
-  role('SOAM', 'Milieu offensif qui écarte', 'Splitting Outlet Attacking Midfielder', 'oop', AMC, 'AM', { acceleration: 2, pace: 2, offTheBall: 2, stamina: 1 }),
-  // Attaquants
-  role('CF', 'Avant-centre', 'Centre-Forward', 'both', ST, 'ST', { finishing: 3, offTheBall: 2, firstTouch: 2, composure: 2, strength: 1, heading: 1, acceleration: 1 }),
-  role('POA', 'Renard des surfaces', 'Poacher', 'ip', ST, 'ST', { finishing: 3, offTheBall: 3, anticipation: 2, composure: 2, acceleration: 1 }),
-  role('TF', 'Pivot', 'Target Forward', 'ip', ST, 'ST', { heading: 3, strength: 3, jumpingReach: 2, firstTouch: 1, balance: 1, finishing: 1 }),
-  role('DLF', 'Attaquant en soutien', 'Deep-Lying Forward', 'ip', ST, 'ST', { firstTouch: 3, passing: 2, technique: 2, strength: 1, vision: 1, composure: 1 }),
-  role('F9', 'Faux neuf', 'False Nine', 'ip', ST, 'ST', { passing: 3, vision: 2, technique: 2, firstTouch: 2, dribbling: 2, decisions: 1 }),
-  role('CHF', 'Attaquant de couloir', 'Channel Forward', 'ip', ST, 'ST', { offTheBall: 3, acceleration: 3, pace: 2, dribbling: 1, finishing: 2 }),
-  role('CCS', 'Attaquant central', 'Central Striker', 'oop', ST, 'ST', { workRate: 2, positioning: 1, anticipation: 2, teamwork: 1 }),
-  role('TCF', 'Attaquant qui suit', 'Tracking Centre-Forward', 'oop', ST, 'ST', { workRate: 3, stamina: 2, teamwork: 2, aggression: 1 }),
-  role('COCF', 'Point d’appui axial', 'Central Outlet Centre-Forward', 'oop', ST, 'ST', { strength: 2, anticipation: 2, offTheBall: 2, firstTouch: 1 }),
+  // Gardiens — GB
+  { ...role('GK', 'Gardien de but', 'Goalkeeper', 'both', GK, 'GK', { reflexes: 3, handling: 3, oneOnOnes: 2, positioning: 2, aerialReach: 2, commandOfArea: 2, concentration: 1, agility: 1 }), ...g('Goalkeeper', 'Goalkeeper') },
+  { ...role('BPGK', 'Gardien à l’aise au pied', 'Ball-Playing Goalkeeper', 'ip', GK, 'GK', { passing: 3, kicking: 3, composure: 2, firstTouch: 2, vision: 1, reflexes: 2, decisions: 1 }), ...g('BallPlayingGoalkeeper') },
+  { ...role('NNGK', 'Gardien pragmatique', 'No-Nonsense Goalkeeper', 'ip', GK, 'GK', { kicking: 3, handling: 3, reflexes: 2, aerialReach: 2, positioning: 1, concentration: 1 }), ...g('NoNonsenseGoalkeeper') },
+  { ...role('SK', 'Gardien-libéro', 'Sweeper Keeper', 'oop', GK, 'GK', { rushingOut: 3, oneOnOnes: 3, anticipation: 2, acceleration: 2, reflexes: 2, decisions: 1, composure: 1 }), ...g(undefined, 'SweeperKeeper') },
+  { ...role('LHK', 'Gardien sur la ligne', 'Line-Holding Goalkeeper', 'oop', GK, 'GK', { reflexes: 3, handling: 3, positioning: 2, agility: 2, concentration: 1 }), ...g(undefined, 'LineKeeper') },
+  // Défenseurs centraux — D (C)
+  { ...role('CB', 'Défenseur central', 'Centre-Back', 'both', CB, 'CB', { marking: 3, tackling: 3, heading: 2, positioning: 2, strength: 2, jumpingReach: 1, concentration: 1 }), ...g('CentreBack', 'CentreBack') },
+  { ...role('ADCB', 'Défenseur central avancé', 'Advanced Centre-Back', 'ip', CB, 'CB', { dribbling: 2, passing: 2, firstTouch: 2, composure: 2, acceleration: 1, stamina: 1, decisions: 1 }), ...g('AdvancedCentreBack') },
+  { ...role('BPCB', 'Défenseur central à l’aise au pied', 'Ball-Playing Centre-Back', 'ip', CB, 'CB', { passing: 3, composure: 3, firstTouch: 2, vision: 2, technique: 1, decisions: 1 }), ...g('BallPlayingCentreBack') },
+  { ...role('NNCB', 'Défenseur central strict', 'No-Nonsense Centre-Back', 'ip', CB, 'CB', { heading: 3, marking: 3, tackling: 2, strength: 2, jumpingReach: 2, bravery: 1 }), ...g('NoNonsenseCentreBack') },
+  { ...role('WCB', 'Défenseur central excentré', 'Wide Centre-Back', 'both', CB, 'CB', { tackling: 2, marking: 2, pace: 2, stamina: 2, dribbling: 1, passing: 1, crossing: 1 }, { tackling: 3, marking: 2, positioning: 2, pace: 2, anticipation: 1 }), ...g('WideCentreBack', 'WideCentreBack'), cond: 'wide3' },
+  { ...role('OCB', 'Défenseur central de dédoublement', 'Overlapping Centre-Back', 'ip', CB, 'CB', { stamina: 3, pace: 2, crossing: 2, dribbling: 2, workRate: 2, tackling: 1 }), ...g('OverlappingCentreBack'), cond: 'wide3' },
+  { ...role('STCB', 'Défenseur central stoppeur', 'Stopping Centre-Back', 'oop', CB, 'CB', { tackling: 3, aggression: 2, bravery: 2, strength: 2, anticipation: 2, acceleration: 1 }), ...g(undefined, 'StoppingCentreBack') },
+  { ...role('CCB', 'Défenseur central de couverture', 'Covering Centre-Back', 'oop', CB, 'CB', { positioning: 3, anticipation: 3, pace: 2, concentration: 2, marking: 1 }), ...g(undefined, 'CoveringCentreBack') },
+  { ...role('SWCB', 'Défenseur central excentré stoppeur', 'Stopping Wide Centre-Back', 'oop', CB, 'CB', { tackling: 3, aggression: 2, bravery: 2, acceleration: 2, anticipation: 2 }), ...g(undefined, 'StoppingWideCentreBack'), cond: 'wide3' },
+  { ...role('CWCB', 'Défenseur central excentré de couverture', 'Covering Wide Centre-Back', 'oop', CB, 'CB', { positioning: 3, anticipation: 2, pace: 2, concentration: 2, marking: 1 }), ...g(undefined, 'CoveringWideCentreBack'), cond: 'wide3' },
+  // Latéraux — D (D/G) et DL (D/G)
+  { ...role('FB', 'Arrière latéral', 'Full-Back', 'both', FB, 'FB', { tackling: 3, marking: 2, positioning: 2, stamina: 2, crossing: 1, pace: 1, teamwork: 1 }), ...g('FullBack', 'FullBack') },
+  { ...role('WB', 'Latéral offensif', 'Wing-Back', 'both', [...FB, ...WB], 'FB', { stamina: 3, crossing: 3, pace: 2, workRate: 2, tackling: 1, dribbling: 1 }), positionsOOP: WB, ...g('WingBack', 'WingBack') },
+  { ...role('IWB', 'Latéral offensif intérieur', 'Inside Wing-Back', 'ip', [...FB, ...WB], 'FB', { passing: 3, vision: 2, firstTouch: 2, decisions: 2, stamina: 1, technique: 1 }), ...g('InsideWingBack') },
+  { ...role('IFB', 'Arrière latéral intérieur', 'Inside Full-Back', 'ip', FB, 'FB', { passing: 3, composure: 2, firstTouch: 2, decisions: 2, positioning: 1, technique: 1 }), ...g('InsideFullBack') },
+  { ...role('PMWB', 'Latéral offensif meneur de jeu', 'Playmaking Wing-Back', 'ip', [...FB, ...WB], 'FB', { passing: 3, vision: 3, technique: 2, crossing: 1, stamina: 2, decisions: 1 }), ...g('PlaymakingWingBack') },
+  { ...role('AWB', 'Latéral offensif avancé', 'Advanced Wing-Back', 'ip', WB, 'FB', { crossing: 3, dribbling: 2, acceleration: 2, stamina: 3, offTheBall: 1, technique: 1 }), ...g('AdvancedWingBack') },
+  { ...role('PFB', 'Arrière latéral de pressing', 'Pressing Full-Back', 'oop', FB, 'FB', { workRate: 3, aggression: 2, tackling: 2, acceleration: 2, stamina: 1 }), ...g(undefined, 'PressingFullBack') },
+  { ...role('HFB', 'Arrière latéral en retrait', 'Holding Full-Back', 'oop', FB, 'FB', { positioning: 3, marking: 2, concentration: 2, tackling: 2, teamwork: 1 }), ...g(undefined, 'HoldingFullBack') },
+  { ...role('PWB', 'Latéral offensif de pressing', 'Pressing Wing-Back', 'oop', WB, 'FB', { workRate: 3, stamina: 2, aggression: 2, tackling: 2, acceleration: 1 }), ...g(undefined, 'PressingWingBack') },
+  { ...role('HWB', 'Latéral offensif en retrait', 'Holding Wing-Back', 'oop', WB, 'FB', { positioning: 3, tackling: 2, marking: 2, stamina: 2, teamwork: 1 }), ...g(undefined, 'HoldingWingBack') },
+  // Milieux défensifs — MD (C)
+  { ...role('DM', 'Milieu défensif', 'Defensive Midfielder', 'both', DM, 'DM', { tackling: 3, positioning: 3, anticipation: 2, teamwork: 2, passing: 1, concentration: 1 }), ...g('DefensiveMidfielder', 'DefensiveMidfielder') },
+  { ...role('DLP', 'Meneur de jeu en retrait', 'Deep-Lying Playmaker', 'ip', DM, 'DM', { passing: 3, vision: 3, composure: 2, firstTouch: 2, decisions: 2, technique: 1 }), ...g('DeepLyingPlaymaker') },
+  { ...role('HB', 'Demi-centre', 'Half Back', 'ip', DM, 'DM', { positioning: 3, passing: 2, composure: 2, marking: 2, decisions: 1, anticipation: 1 }), ...g('HalfBack') },
+  { ...role('BBM', 'Milieu box to box', 'Box-To-Box Midfielder', 'ip', DM, 'DM', { stamina: 3, workRate: 3, offTheBall: 2, passing: 2, tackling: 1, longShots: 1 }), ...g('BoxToBoxMidfielder'), cond: 'wide' },
+  { ...role('B2BPM', 'Meneur de jeu box to box', 'Box-To-Box Playmaker', 'ip', DM, 'DM', { passing: 3, vision: 2, stamina: 2, workRate: 2, firstTouch: 1, decisions: 1 }), ...g('BoxToBoxPlaymaker'), cond: 'wide' },
+  { ...role('DROPDM', 'Milieu défensif en retrait', 'Dropping Defensive Midfielder', 'oop', DM, 'DM', { positioning: 3, marking: 2, heading: 1, concentration: 2, anticipation: 2 }), ...g(undefined, 'DroppingDefensiveMidfielder') },
+  { ...role('PRSDM', 'Milieu défensif de pressing', 'Pressing Defensive Midfielder', 'oop', DM, 'DM', { workRate: 3, aggression: 2, tackling: 2, stamina: 2, acceleration: 1 }), ...g(undefined, 'PressingDefensiveMidfielder') },
+  { ...role('SCRDM', 'Milieu défensif de couverture', 'Screening Defensive Midfielder', 'oop', DM, 'DM', { positioning: 3, anticipation: 3, concentration: 2, teamwork: 2, tackling: 1 }), ...g(undefined, 'ScreeningDefensiveMidfielder') },
+  { ...role('WCDM', 'Milieu défensif de couverture dans la largeur', 'Wide Covering Defensive Midfielder', 'oop', DM, 'DM', { stamina: 3, positioning: 2, pace: 2, tackling: 2, teamwork: 1 }), ...g(undefined, 'WideCoverDefensiveMidfielder'), cond: 'wide' },
+  // Milieux centraux — M (C)
+  { ...role('CM', 'Milieu axial', 'Central Midfielder', 'both', CM, 'CM', { passing: 3, teamwork: 2, stamina: 2, decisions: 2, tackling: 1, firstTouch: 1 }), ...g('CentralMidfielder', 'CentralMidfielder') },
+  { ...role('MFPM', 'Meneur de jeu du milieu', 'Midfield Playmaker', 'ip', CM, 'CM', { passing: 3, vision: 3, technique: 2, decisions: 2, firstTouch: 1, composure: 1 }), ...g('MidfieldPlaymaker') },
+  { ...role('CHM', 'Milieu de couloir', 'Channel Midfielder', 'ip', [...CM, ...AMC], 'CM', { offTheBall: 3, dribbling: 2, acceleration: 2, stamina: 2, passing: 1, finishing: 1 }), ...g('ChannelMidfielder') },
+  { ...role('WCM', 'Milieu central désaxé', 'Wide Central Midfielder', 'ip', CM, 'CM', { passing: 3, crossing: 2, stamina: 2, technique: 1, decisions: 1 }), ...g('WideCentralMidfielder') },
+  { ...role('PRSCM', 'Milieu axial de pressing', 'Pressing Central Midfielder', 'oop', CM, 'CM', { workRate: 3, stamina: 3, aggression: 2, tackling: 2, acceleration: 1 }), ...g(undefined, 'PressingCentralMidfielder') },
+  { ...role('SCRCM', 'Milieu axial de couverture', 'Screening Central Midfielder', 'oop', CM, 'CM', { positioning: 3, anticipation: 2, teamwork: 2, concentration: 2, tackling: 1 }), ...g(undefined, 'ScreeningCentralMidfielder') },
+  { ...role('WCCM', 'Milieu axial de couverture dans la largeur', 'Wide Covering Central Midfielder', 'oop', CM, 'CM', { stamina: 3, pace: 2, positioning: 2, teamwork: 1, tackling: 1 }), ...g(undefined, 'WideCoverCentralMidfielder'), cond: 'wide' },
+  // Milieux latéraux et ailiers — M (D/G) et MO (D/G)
+  { ...role('WM', 'Milieu latéral', 'Wide Midfielder', 'both', WM, 'WG', { crossing: 2, passing: 2, stamina: 3, workRate: 2, teamwork: 1, tackling: 1 }), ...g('WideMidfielder', 'WideMidfielder') },
+  { ...role('W', 'Ailier', 'Winger', 'both', [...WM, ...AMW], 'WG', { dribbling: 3, crossing: 3, acceleration: 2, pace: 2, technique: 1, agility: 1 }, { workRate: 2, stamina: 2, acceleration: 2, teamwork: 1, tackling: 1 }), positionsOOP: AMW, ...g('Winger', 'Winger') },
+  { ...role('WP', 'Ailier meneur de jeu', 'Playmaking Winger', 'ip', [...WM, ...AMW], 'WG', { passing: 3, vision: 3, technique: 2, firstTouch: 2, decisions: 1 }), ...g('PlaymakingWinger') },
+  { ...role('IW', 'Ailier intérieur', 'Inside Winger', 'ip', [...WM, ...AMW], 'WG', { dribbling: 3, passing: 2, vision: 2, technique: 2, longShots: 1, acceleration: 1 }), ...g('InsideWinger') },
+  { ...role('IF', 'Attaquant intérieur', 'Inside Forward', 'ip', AMW, 'WG', { finishing: 3, dribbling: 3, offTheBall: 2, acceleration: 2, composure: 1, technique: 1 }), ...g('InsideForward') },
+  { ...role('WF', 'Attaquant désaxé', 'Wide Forward', 'ip', AMW, 'WG', { offTheBall: 3, finishing: 2, acceleration: 2, pace: 2, dribbling: 1 }), ...g('WideForward') },
+  { ...role('TWM', 'Milieu latéral de couverture', 'Tracking Wide Midfielder', 'oop', WM, 'WG', { workRate: 3, stamina: 2, tackling: 2, positioning: 2, teamwork: 1 }), ...g(undefined, 'TrackingWideMidfielder') },
+  { ...role('WOM', 'Milieu latéral de contre-attaque', 'Wide Outlet Wide Midfielder', 'oop', WM, 'WG', { acceleration: 3, pace: 2, offTheBall: 2, anticipation: 1 }), ...g(undefined, 'WideOutletWideMidfielder') },
+  { ...role('TW', 'Ailier de couverture', 'Tracking Winger', 'oop', AMW, 'WG', { workRate: 3, stamina: 3, tackling: 1, teamwork: 2, positioning: 1 }), ...g(undefined, 'TrackingWinger') },
+  { ...role('WOW', 'Ailier de contre-attaque', 'Wide Outlet Winger', 'oop', AMW, 'WG', { acceleration: 3, pace: 3, offTheBall: 2, anticipation: 1 }), ...g(undefined, 'WideOutletWinger') },
+  { ...role('IOW', 'Ailier inversé de contre-attaque', 'Inside Outlet Winger', 'oop', AMW, 'WG', { acceleration: 3, offTheBall: 2, anticipation: 2, pace: 2 }), ...g(undefined, 'InsideOutletWinger') },
+  // Milieux offensifs — M (C) et MO (C)
+  { ...role('AM', 'Milieu offensif', 'Attacking Midfielder', 'both', [...CM, ...AMC], 'AM', { passing: 2, offTheBall: 2, technique: 2, longShots: 2, vision: 2, decisions: 1 }), positionsOOP: AMC, ...g('AttackingMidfielder', 'AttackingMidfielder') },
+  { ...role('AP', 'Meneur de jeu avancé', 'Advanced Playmaker', 'ip', [...CM, ...AMC], 'AM', { passing: 3, vision: 3, technique: 2, firstTouch: 2, decisions: 2, flair: 1 }), ...g('AdvancedPlaymaker') },
+  { ...role('FREE', 'Rôle libre', 'Free Role', 'ip', AMC, 'AM', { flair: 3, vision: 2, dribbling: 2, technique: 2, offTheBall: 2, passing: 1 }), ...g('FreeRole') },
+  { ...role('SS', 'Deuxième avant-centre', 'Second Striker', 'ip', AMC, 'AM', { offTheBall: 3, finishing: 3, anticipation: 2, composure: 2, acceleration: 1 }), ...g('SecondStriker') },
+  { ...role('TAM', 'Milieu offensif de couverture', 'Tracking Attacking Midfielder', 'oop', AMC, 'AM', { workRate: 3, stamina: 2, teamwork: 2, tackling: 1, positioning: 1 }), ...g(undefined, 'TrackingAttackingMidfielder') },
+  { ...role('COAM', 'Milieu de terrain offensif de contre-attaque axiale', 'Central Outlet Attacking Midfielder', 'oop', AMC, 'AM', { offTheBall: 2, anticipation: 2, acceleration: 2, composure: 1 }), ...g(undefined, 'CentralOutletAttackingMidfielder') },
+  { ...role('SOAM', 'Milieu offensif de contre-attaque de couloir', 'Splitting Outlet Attacking Midfielder', 'oop', AMC, 'AM', { acceleration: 2, pace: 2, offTheBall: 2, stamina: 1 }), ...g(undefined, 'SplittingOutletAttackingMidfielder'), cond: 'wide' },
+  // Attaquants — BT
+  { ...role('CF', 'Attaquant central', 'Centre Forward', 'both', ST, 'ST', { finishing: 3, offTheBall: 2, firstTouch: 2, composure: 2, strength: 1, heading: 1, acceleration: 1 }, { workRate: 2, anticipation: 2, positioning: 1, teamwork: 1 }), ...g('CentreForward', 'CentreForward') },
+  { ...role('POA', 'Renard des surfaces', 'Poacher', 'ip', ST, 'ST', { finishing: 3, offTheBall: 3, anticipation: 2, composure: 2, acceleration: 1 }), ...g('Poacher') },
+  { ...role('TF', 'Attaquant pivot', 'Target Forward', 'ip', ST, 'ST', { heading: 3, strength: 3, jumpingReach: 2, firstTouch: 1, balance: 1, finishing: 1 }), ...g('TargetForward') },
+  { ...role('DLF', 'Attaquant en retrait', 'Deep-Lying Forward', 'ip', ST, 'ST', { firstTouch: 3, passing: 2, technique: 2, strength: 1, vision: 1, composure: 1 }), ...g('DeepLyingForward') },
+  { ...role('F9', 'Faux neuf', 'False Nine', 'ip', ST, 'ST', { passing: 3, vision: 2, technique: 2, firstTouch: 2, dribbling: 2, decisions: 1 }), ...g('FalseNine') },
+  { ...role('CHF', 'Attaquant de couloir', 'Channel Forward', 'ip', ST, 'ST', { offTheBall: 3, acceleration: 3, pace: 2, dribbling: 1, finishing: 2 }), ...g('ChannelForward') },
+  { ...role('TCF', 'Attaquant central de couverture', 'Tracking Centre Forward', 'oop', ST, 'ST', { workRate: 3, stamina: 2, teamwork: 2, aggression: 1 }), ...g(undefined, 'TrackingCentreForward') },
+  // Libellé vu à l'écran du jeu (capture du 31/10/2026), qui diffère du libellé de rôle de languages.fmf.
+  { ...role('COCF', 'Avant-centre point d’appui axial', 'Central Outlet Centre Forward', 'oop', ST, 'ST', { strength: 2, anticipation: 2, offTheBall: 2, firstTouch: 1 }), ...g(undefined, 'CentralOutletCentreForward') },
+  { ...role('SOCF', 'Attaquant central de contre-attaque de couloir', 'Splitting Outlet Centre Forward', 'oop', ST, 'ST', { acceleration: 3, pace: 2, offTheBall: 2, stamina: 1 }), ...g(undefined, 'SplittingOutletCentreForward'), cond: 'wide' },
 ];
 
 const style = (s: StyleRef): StyleRef => s;
@@ -114,7 +132,7 @@ const STYLES: StyleRef[] = [
     outOfPossession: ['Ligne défensive plus haute', 'Pressing haut', 'Déclencher le pressing plus souvent', 'Contre-pressing en transition'],
     weights: { technical: 3, creators: 2, press: 1 },
     mentality: 'Équilibré',
-    signatureRoles: { ip: ['BPGK', 'BPCB', 'IFB', 'IWB', 'DLP', 'MFPM', 'AP', 'WP', 'IW', 'F9', 'DLF'], oop: ['SK', 'PFB', 'PRSCM', 'SCRDM', 'TW', 'TAM', 'CCS'] },
+    signatureRoles: { ip: ['BPGK', 'BPCB', 'IFB', 'IWB', 'DLP', 'MFPM', 'AP', 'WP', 'IW', 'F9', 'DLF'], oop: ['SK', 'PFB', 'PRSCM', 'SCRDM', 'TW', 'TAM', 'CF'] },
   }),
   style({
     id: 'gegenpress',
@@ -147,7 +165,7 @@ const STYLES: StyleRef[] = [
     outOfPossession: ['Bloc médian'],
     weights: { wide: 3, aerial: 2, finishing: 1, physical: 1 },
     mentality: 'Positif',
-    signatureRoles: { ip: ['GK', 'CB', 'WB', 'AWB', 'FB', 'CM', 'BBM', 'W', 'WM', 'TF', 'CF'], oop: ['GK', 'CB', 'DWB', 'TWM', 'TW', 'CCS'] },
+    signatureRoles: { ip: ['GK', 'CB', 'WB', 'AWB', 'FB', 'CM', 'BBM', 'W', 'WM', 'TF', 'CF'], oop: ['GK', 'CB', 'HWB', 'TWM', 'TW', 'CF'] },
   }),
   style({
     id: 'longball',
@@ -158,7 +176,7 @@ const STYLES: StyleRef[] = [
     outOfPossession: ['Bloc médian', 'Ligne défensive normale'],
     weights: { aerial: 3, physical: 2, defense: 1 },
     mentality: 'Équilibré',
-    signatureRoles: { ip: ['GK', 'CB', 'FB', 'DM', 'BBM', 'WM', 'W', 'TF', 'POA'], oop: ['LHK', 'STCB', 'HFB', 'TWM', 'CCS'] },
+    signatureRoles: { ip: ['GK', 'CB', 'FB', 'DM', 'BBM', 'WM', 'W', 'TF', 'POA'], oop: ['LHK', 'STCB', 'HFB', 'TWM', 'CF'] },
   }),
   style({
     id: 'ultra-def',
@@ -169,7 +187,7 @@ const STYLES: StyleRef[] = [
     outOfPossession: ['Bloc bas', 'Ligne défensive plus basse', 'Rester en place en transition'],
     weights: { defense: 3, aerial: 2, physical: 1, pace: 1 },
     mentality: 'Défensif',
-    signatureRoles: { ip: ['GK', 'CB', 'FB', 'WB', 'DM', 'CM', 'WM', 'TF', 'CF'], oop: ['LHK', 'CCB', 'HFB', 'DWB', 'DROPDM', 'SCRCM', 'TWM', 'TCF'] },
+    signatureRoles: { ip: ['GK', 'CB', 'FB', 'WB', 'DM', 'CM', 'WM', 'TF', 'CF'], oop: ['LHK', 'CCB', 'HFB', 'HWB', 'DROPDM', 'SCRCM', 'TWM', 'TCF'] },
   }),
 ];
 
