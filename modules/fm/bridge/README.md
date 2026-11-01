@@ -64,7 +64,7 @@ des tables statiques de l'interface (aucune requête au jeu).
 Joueurs d'autres clubs que le joueur suit, pour la page « Cibles du mercato » de Simloom. Sources (propriétés trouvées
 dans `decouverte.json`, remplaçables sans recompiler par la section `cibles` de `chemins.json`) :
 
-- `listeSuivi` : `GameCurrentManager/HumanSelectedShortlist{IsPlayerRecruitment=true,team=@team}` (liste de suivi affichée) ;
+- `selection` : `GameCurrentManager/HumanPersonSearch{team=@team,Type=0}/PersonList` (joueurs de la sélection, Recrutement > Sélections). **Le jeu ne remplit cette liste que pendant que l'écran Sélections est affiché** : ailleurs elle revient vide, et le plugin garde alors la dernière liste lue (0.4.3). `HumanSelectedShortlist` ne donne que la fiche de la sélection (nom, nombre) ;
 - `cibles` : `GameCurrentManagerClubTeam/Club/PlayerTargetsList{human=@human}` (cibles du recrutement).
 
 Une source peut renvoyer une liste de joueurs, une liste de fiches qui contiennent un joueur, ou une fiche qui contient
