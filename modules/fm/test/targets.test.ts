@@ -141,3 +141,22 @@ describe('cibles venues de la base du jeu', () => {
     expect(addBaseTarget([merged!], db, '2026-12-06')).toMatchObject({ dismissed: false, inList: true, firstSeen: '2026-12-02' });
   });
 });
+
+describe('valeurs inconnues du recrutement', () => {
+  it('ignore « - », -1 € et le texte « Observation nécessaire » pour un joueur connu', () => {
+    const t = targetOf({
+      id: 11,
+      name: 'Y',
+      attributes: {},
+      scout: {
+        knowledge: { ActualValue: 5, MaxValue: 5, Text: 'Grandes connaissances' },
+        minWage: { SortValue: 2147483647, DisplayValue: '-' },
+        maxWage: { SortValue: 2147483647, DisplayValue: '-' },
+        minValue: '-1 €',
+        maxValue: '-1 €',
+        recommendationText: 'Observation nécessaire',
+      },
+    });
+    expect(t?.scout).toMatchObject({ wage: null, value: null, recommendation: null });
+  });
+});
