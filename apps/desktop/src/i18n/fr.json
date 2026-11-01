@@ -270,6 +270,25 @@
         "pos": "Poste",
         "player": "Joueur",
         "backup": "Doublure"
+      },
+      "matchTitle": "Tactique du match contre {{name}}",
+      "matchSame": "Ta tactique de base, {{form}} {{style}}, reste la meilleure contre cet adversaire.",
+      "matchBest": "Contre cet adversaire, joue {{form}} {{style}} plutôt que ta tactique de base ({{base}}).",
+      "matchScore": "Note d'équipe {{base}}, affrontement {{bonus}}.",
+      "matchShow": "Voir cette compo",
+      "matchBase": "Revenir à la tactique de base",
+      "matchHelp": "Affrontement déduit du profil de l'adversaire (formations, pressing, défense), par des règles de football. Il ne fait basculer le choix que si les notes sont proches.",
+      "matchHelpMeasured": "Affrontement mesuré sur ce que l'adversaire concède selon la formation d'en face (rapport du jeu), complété par son profil.",
+      "why": {
+        "coverStrikers": "Ils jouent avec deux attaquants : deux milieux défensifs (ou trois centraux) les couvrent.",
+        "thinCover": "Ils jouent avec deux attaquants : sans milieu défensif, tes centraux seront à deux contre deux.",
+        "winMidfield": "Leur milieu est à deux dans l'axe : à trois au centre, tu gagnes le milieu.",
+        "widthVsScreen": "Sans ballon, leurs deux milieux défensifs ferment l'axe : la largeur paie.",
+        "possessionVsLowPress": "Ils pressent peu : ton jeu de passes courtes aura le temps.",
+        "directVsHighPress": "Ils pressent beaucoup : ton jeu direct passe au-dessus du pressing.",
+        "attackLeaky": "Leur défense concède souvent : une mentalité offensive en profite.",
+        "concedesMore": "Contre ce schéma, ils concèdent une occasion franche toutes les {{every}} min ({{minutes}} min observées), plus souvent que d'habitude.",
+        "concedesLess": "Contre ce schéma, ils ne concèdent qu'une occasion franche toutes les {{every}} min ({{minutes}} min observées)."
       }
     },
     "nav": "Sections de la partie",

@@ -55,7 +55,8 @@ export interface OpponentReport {
   assister: { name: string; value: number | null } | null;
   rated: { name: string; value: number | null } | null;
   squad: OpponentPlayer[];
-  formations: { ip: OpponentFormation[]; oop: OpponentFormation[] };
+  /** faced : formations affrontées (occasions concédées selon la formation d'en face), si lues. */
+  formations: { ip: OpponentFormation[]; oop: OpponentFormation[]; faced?: OpponentFormation[] };
   advice: OpponentAdvice[];
 }
 
@@ -116,7 +117,7 @@ export function opponentReport(snap: FmSnapshot): OpponentReport | null {
     assister: who('advPasseur', 'advPasses'),
     rated: who('advMeilleureNoteJoueur', 'advMeilleureNote'),
     squad,
-    formations: { ip: formationsOf(team.advFormationsAvec), oop: formationsOf(team.advFormationsSans) },
+    formations: { ip: formationsOf(team.advFormationsAvec), oop: formationsOf(team.advFormationsSans), faced: formationsOf(team.advFormationsAffrontees) },
     advice: [],
   };
   r.advice = opponentAdvice(r);

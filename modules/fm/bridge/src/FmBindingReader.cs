@@ -113,6 +113,14 @@ public class FmBindingReader : IGameReader
         return d == null || d.StartsWith("1900") ? null : d;
     }
 
+    // Date de jeu quand aucune équipe n'est chargée (manager sans club, 0.4.2, accord du joueur le 01/11) : seule
+    // lecture faite sans équipe. null au menu (1900-01-01) ou sans réponse.
+    public static string? DateWithoutTeam()
+    {
+        var d = DecodeDate(Batch.Run(new[] { new Req(null, "game.CurrentGameDate") }, 3000)[0] as string);
+        return d == null || d.StartsWith("1900") ? null : d;
+    }
+
     /// <summary>La partie a été quittée ou remplacée pendant une lecture : on abandonne l'instantané.</summary>
     public sealed class GameChanged : Exception { }
 

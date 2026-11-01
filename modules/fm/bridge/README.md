@@ -80,6 +80,8 @@ la forme de la réponse du jeu (pour corriger le chemin). Aucune lecture liée �
 À chaque instantané, le plugin écrit aussi `archivix-status.json` dans son dossier :
 `{"schema":"archivix-status/1","gameDate":"yyyy-MM-dd","club":"Nom"}`. Les valeurs viennent de l'instantané, sans lecture
 de plus. Simloom s'en sert pour savoir quelle partie est chargée et si le manager a un club.
+Sans équipe chargée depuis 45 s (manager sans club), le plugin lit seulement `game.CurrentGameDate`, une fois par
+minute au plus, et écrit le même fichier avec `"club": null`. La date du menu (1900-01-01) est ignorée.
 
 ## Requêtes au jeu : règles
 

@@ -270,6 +270,25 @@
         "pos": "Position",
         "player": "Player",
         "backup": "Backup"
+      },
+      "matchTitle": "Match tactic against {{name}}",
+      "matchSame": "Your base tactic, {{form}} {{style}}, remains the best against this opponent.",
+      "matchBest": "Against this opponent, play {{form}} {{style}} rather than your base tactic ({{base}}).",
+      "matchScore": "Team rating {{base}}, matchup {{bonus}}.",
+      "matchShow": "Show this line-up",
+      "matchBase": "Back to the base tactic",
+      "matchHelp": "Matchup inferred from the opponent's profile (formations, pressing, defence) with football rules. It only tips the choice when ratings are close.",
+      "matchHelpMeasured": "Matchup measured on what the opponent concedes depending on the formation they face (game report), plus their profile.",
+      "why": {
+        "coverStrikers": "They play two strikers: two defensive midfielders (or three centre-backs) cover them.",
+        "thinCover": "They play two strikers: with no defensive midfielder, your centre-backs are two against two.",
+        "winMidfield": "Their midfield has two in the middle: with three centrally you win midfield.",
+        "widthVsScreen": "Out of possession their two defensive midfielders close the middle: width pays off.",
+        "possessionVsLowPress": "They rarely press: your short passing game will have time.",
+        "directVsHighPress": "They press a lot: your direct game goes over the press.",
+        "attackLeaky": "Their defence concedes often: an attacking mentality makes the most of it.",
+        "concedesMore": "Against this formation they concede a clear-cut chance every {{every}} min ({{minutes}} min observed), more often than usual.",
+        "concedesLess": "Against this formation they concede a clear-cut chance only every {{every}} min ({{minutes}} min observed)."
       }
     },
     "nav": "Save sections",

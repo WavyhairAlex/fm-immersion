@@ -29,3 +29,4 @@ export * from './role-ratings-fm27';
 export * from './game-stars';
 export * from './lineup';
 export * from './opponent';
+export * from './matchup';

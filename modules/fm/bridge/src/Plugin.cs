@@ -79,13 +79,30 @@ public class Plugin : BasePlugin
         string? lastDate = null;
         var lastFull = DateTime.MinValue;
         DateTime? loadedSince = null;
+        // Sans équipe (manager sans club) : la date seule, au plus une fois par minute, après SettleSeconds sans équipe
+        // (jamais pendant un chargement ou une sortie de partie), pour archivix-status.json avec club null.
+        DateTime? noTeamSince = null, lastNoTeamRead = null;
+        string? lastNoTeamDate = null;
         while (true)
         {
             Thread.Sleep(10_000);
             try
             {
                 var date = FmBindingReader.CurrentDate();
-                if (date == null) { lastDate = null; loadedSince = null; continue; }   // pas de partie chargée
+                if (date == null)   // pas d'équipe chargée : menu, chargement, ou manager sans club
+                {
+                    lastDate = null; loadedSince = null;
+                    var now = DateTime.UtcNow;
+                    noTeamSince ??= now;
+                    if (now - noTeamSince >= TimeSpan.FromSeconds(SettleSeconds) && (lastNoTeamRead == null || now - lastNoTeamRead >= TimeSpan.FromSeconds(60)))
+                    {
+                        lastNoTeamRead = now;
+                        var d = FmBindingReader.DateWithoutTeam();
+                        if (d != null && d != lastNoTeamDate) { WriteStatus(d, null); lastNoTeamDate = d; }
+                    }
+                    continue;
+                }
+                noTeamSince = null; lastNoTeamRead = null; lastNoTeamDate = null;
                 loadedSince ??= DateTime.UtcNow;
                 if (DateTime.UtcNow - loadedSince < TimeSpan.FromSeconds(SettleSeconds)) continue;   // partie tout juste chargée
                 if (date == lastDate && DateTime.UtcNow - lastFull < TimeSpan.FromSeconds(RereadSeconds)) continue;

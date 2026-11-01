@@ -8,6 +8,7 @@ import {
   knownFormation,
   mergeReference,
   opponentReport,
+  rankForMatch,
   teamInstructionOf,
   phaseXY,
   planFromLineup,
@@ -107,6 +108,10 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   const { engine, local, prefs, update, avail, ranked, style, natural, form, plans, plan, gamePlan, fromGame, auto, pick } = useTacticChoice(players, folder, gameFormation, lineup);
   const phase: Phase = prefs.phase ?? 'ip';
   const opp = useMemo(() => (snap ? opponentReport(snap) : null), [snap]);
+  // Tactique du match : la meilleure combinaison style × schéma contre le prochain adversaire.
+  const forMatch = useMemo(() => (opp ? rankForMatch(ranked, opp) : []), [ranked, opp]);
+  const best = forMatch[0];
+  const baseKey = pick ? `${pick.style.id}|${pick.form}` : null;
   // Poste survolé : mis en évidence à la fois sur le terrain et dans la liste.
   const [hover, setHover] = useState<number | null>(null);
 
@@ -179,6 +184,42 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
         {local?.error && <span className="rounded-full bg-corail/15 px-3 py-1 text-sm text-canard">{t('fm.tac.localRefError')}</span>}
       </div>
       
+
+      {opp && best && !fromGame && (
+        <section className="card">
+          <h2 className="text-xl font-semibold">{t('fm.tac.matchTitle', { name: opp.name ?? t('fm.opp.club') })}</h2>
+          {pick && `${best.style.id}|${best.form}` === baseKey ? (
+            <p className="mt-1 text-sm">{t('fm.tac.matchSame', { form: pick.form, style: styleName(pick.style) })}</p>
+          ) : (
+            <p className="mt-1 text-sm">
+              {t('fm.tac.matchBest', { form: best.form, style: styleName(best.style), base: pick ? `${pick.form} ${styleName(pick.style)}` : '–' })}
+            </p>
+          )}
+          <p className="mt-1 text-xs text-brun">
+            {t('fm.tac.matchScore', { base: note(best.base), bonus: (best.bonus >= 0 ? '+' : '') + nf1.format(best.bonus) })}
+          </p>
+          {best.reasons.length > 0 && (
+            <ul className="mt-2 space-y-1 text-sm">
+              {best.reasons.map((r) => (
+                <li key={r.id}>• {t(`fm.tac.why.${r.id}`, { every: r.every, minutes: r.minutes })}</li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {(prefs.style !== best.style.id || form !== best.form) && (
+              <button type="button" className="btn-primary px-3 py-1.5 text-sm" onClick={() => update({ style: best.style.id, form: best.form, source: 'simloom' })}>
+                {t('fm.tac.matchShow')}
+              </button>
+            )}
+            {!auto && (
+              <button type="button" className="btn-secondary px-3 py-1.5 text-sm" onClick={() => update({ style: undefined, form: undefined })}>
+                {t('fm.tac.matchBase')}
+              </button>
+            )}
+          </div>
+          <p className="mt-2 text-xs text-brun">{t(opp.formations.faced?.length ? 'fm.tac.matchHelpMeasured' : 'fm.tac.matchHelp')}</p>
+        </section>
+      )}
 
       {/* Le onze : terrain compact à gauche, liste prête à appliquer dans FM27 à droite. Survoler l'un met l'autre en évidence. */}
       <section className="card">
