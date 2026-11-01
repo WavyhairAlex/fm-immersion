@@ -423,7 +423,20 @@ export function nearestPreset(w: TrainingWeek): GamePreset {
 /* ---------- Entraînement individuel ---------- */
 
 /** Intensités individuelles de FM27 (écran Entraîn. individuel), libellés dans fm.train.intensityLevel.<id>. */
-export const INDIVIDUAL_INTENSITIES = ['noWork', 'rest', 'half', 'normal', 'double'] as const;
+export const INDIVIDUAL_INTENSITIES = ['team', 'noWork', 'rest', 'half', 'normal', 'double'] as const;
+
+/**
+ * « Intensité de l'équipe » du jeu : il ajuste seul l'intensité et le repos selon la condition de chaque
+ * joueur. Réglage conseillé par niveau de condition (du plus mauvais au meilleur).
+ */
+export const CONDITION_LEVELS = ['veryPoor', 'poor', 'fair', 'good', 'excellent'] as const;
+export const TEAM_INTENSITY: Record<(typeof CONDITION_LEVELS)[number], IndividualIntensity> = {
+  veryPoor: 'noWork',
+  poor: 'half',
+  fair: 'normal',
+  good: 'normal',
+  excellent: 'normal',
+};
 export type IndividualIntensity = (typeof INDIVIDUAL_INTENSITIES)[number];
 export type IntensityReason = 'injured' | 'veryTired' | 'tired' | 'busyWeek' | 'young' | 'veteran' | 'normal';
 export interface IndividualAdvice {
@@ -438,17 +451,21 @@ export interface IndividualAdvice {
  * et augmente le risque de blessure : seulement pour les 21 ans et moins en pleine forme, hors semaine
  * à deux matchs. Condition entamée : semi-intensité ; blessé : aucun travail sur le terrain ou en salle.
  */
+/**
+ * Intensité individuelle : le jeu règle déjà chacun selon sa condition (intensité de l'équipe), donc on
+ * laisse « team » sauf exception : un jeune en pleine forme hors semaine à deux matchs passe en double.
+ */
 export function individualAdvice(
   p: { age: number | null; condition: number | null; sharpness: number | null; injury: string | null },
   o: { matches?: number } = {},
 ): IndividualAdvice {
   const rusty = !p.injury && p.sharpness != null && p.sharpness < 70;
-  if (p.injury) return { intensity: 'noWork', reason: 'injured', rusty: false };
-  if (p.condition != null && p.condition < 80) return { intensity: 'half', reason: 'veryTired', rusty };
-  if (p.condition != null && p.condition < 90) return { intensity: 'normal', reason: 'tired', rusty };
-  if (p.age != null && p.age <= 21) return (o.matches ?? 1) >= 2 ? { intensity: 'normal', reason: 'busyWeek', rusty } : { intensity: 'double', reason: 'young', rusty };
-  if (p.age != null && p.age >= 32) return { intensity: 'normal', reason: 'veteran', rusty };
-  return { intensity: 'normal', reason: 'normal', rusty };
+  if (p.injury) return { intensity: 'team', reason: 'injured', rusty: false };
+  if (p.condition != null && p.condition < 80) return { intensity: 'team', reason: 'veryTired', rusty };
+  if (p.condition != null && p.condition < 90) return { intensity: 'team', reason: 'tired', rusty };
+  if (p.age != null && p.age <= 21) return (o.matches ?? 1) >= 2 ? { intensity: 'team', reason: 'busyWeek', rusty } : { intensity: 'double', reason: 'young', rusty };
+  if (p.age != null && p.age >= 32) return { intensity: 'team', reason: 'veteran', rusty };
+  return { intensity: 'team', reason: 'normal', rusty };
 }
 
 /** Priorités de l'entraînement individuel de FM27 et attributs qu'elles travaillent (libellés dans fm.train.focus.<id>). */
@@ -601,12 +618,11 @@ export function currentTrainingWeek(o: {
   return buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: hasCalendar && cal.before, trainingDays: o.trainingDays, priorities: o.priorities, style: o.style });
 }
 
-/** Ce qui demande une action côté entraînement : intensités à baisser, joueurs en manque de rythme. */
+/** Ce qui demande une action côté entraînement : joueurs en manque de rythme (l'intensité, le jeu la règle). */
 export function trainingAlerts<P extends { injury: string | null; age: number | null; condition: number | null; sharpness: number | null; team?: string | null }>(players: P[]) {
   const squad = players.filter((p) => !p.team);
   const advice = squad.map((p) => ({ p, a: individualAdvice(p) }));
   return {
-    lower: advice.filter((x) => x.a.intensity === 'half').map((x) => x.p),
     rusty: advice.filter((x) => x.a.rusty).map((x) => x.p),
   };
 }

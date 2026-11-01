@@ -50,7 +50,7 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
           ? `${Math.round(a.condition)} %`
           : a.detail;
   // Les joueurs fatigués sont déjà regroupés dans le cadre Entraînement : pas de doublon ligne par ligne ici.
-  const alerts = tr.lower.length ? h.alerts.filter((a) => a.kind !== 'condition') : h.alerts;
+  const alerts = h.alerts;
   const shown = alerts.slice(0, 8);
 
   return (
@@ -99,15 +99,6 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
                 <Tag tone="warn">{t('fm.home.kind.setup')}</Tag> <b>{t('fm.home.setupChanges', { count: toChange.length })}</b>
                 <br />
                 <span className="text-xs text-brun">{short(toChange)}</span>
-              </span>
-            </Row>
-          )}
-          {tr.lower.length > 0 && (
-            <Row>
-              <span>
-                <Tag tone="warn">{t('fm.home.kind.condition')}</Tag> <b>{t('fm.home.lowerIntensity', { count: tr.lower.length })}</b>
-                <br />
-                <span className="text-xs text-brun">{short(tr.lower)}</span>
               </span>
             </Row>
           )}

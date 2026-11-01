@@ -128,12 +128,13 @@ describe('programme du jeu et entraînement individuel', () => {
   });
 
   it('règle l’intensité individuelle selon l’état du joueur', () => {
-    expect(individualAdvice({ age: 25, condition: 95, sharpness: 90, injury: 'Entorse' }).intensity).toBe('noWork');
-    expect(individualAdvice({ age: 25, condition: 75, sharpness: 90, injury: null })).toEqual({ intensity: 'half', reason: 'veryTired', rusty: false });
+    expect(individualAdvice({ age: 25, condition: 95, sharpness: 90, injury: 'Entorse' }).intensity).toBe('team');
+    expect(individualAdvice({ age: 25, condition: 75, sharpness: 90, injury: null })).toEqual({ intensity: 'team', reason: 'veryTired', rusty: false });
     expect(individualAdvice({ age: 19, condition: 98, sharpness: 50, injury: null })).toEqual({ intensity: 'double', reason: 'young', rusty: true });
-    expect(individualAdvice({ age: 19, condition: 98, sharpness: 90, injury: null }, { matches: 2 }).intensity).toBe('normal');
-    expect(individualAdvice({ age: 33, condition: 98, sharpness: 90, injury: null }).intensity).toBe('normal');
-    expect(individualAdvice({ age: 26, condition: 98, sharpness: 90, injury: null }).intensity).toBe('normal');
+    expect(individualAdvice({ age: 19, condition: 85, sharpness: 90, injury: null }).intensity).toBe('team');
+    expect(individualAdvice({ age: 19, condition: 98, sharpness: 90, injury: null }, { matches: 2 }).intensity).toBe('team');
+    expect(individualAdvice({ age: 33, condition: 98, sharpness: 90, injury: null }).intensity).toBe('team');
+    expect(individualAdvice({ age: 26, condition: 98, sharpness: 90, injury: null }).intensity).toBe('team');
   });
 
   it('choisit la priorité individuelle qui travaille l’attribut le plus faible', () => {
@@ -185,13 +186,12 @@ describe('semaine courante et alertes', () => {
     expect(w.days[5]!.kind).toBe('match');
   });
 
-  it('liste les intensités à baisser et les joueurs en manque de rythme', () => {
+  it('liste les joueurs en manque de rythme', () => {
     const a = trainingAlerts([
       { injury: null, age: 25, condition: 70, sharpness: 90 },
       { injury: null, age: 25, condition: 95, sharpness: 50 },
       { injury: 'x', age: 25, condition: 50, sharpness: 20 },
     ]);
-    expect(a.lower).toHaveLength(1);
     expect(a.rusty).toHaveLength(1);
   });
 });

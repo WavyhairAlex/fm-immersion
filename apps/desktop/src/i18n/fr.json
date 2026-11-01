@@ -347,8 +347,6 @@
       "noYoung": "Aucun joueur de 21 ans ou moins.",
       "training": "Entraînement de la semaine",
       "trainingPreset": "Programme du jeu à charger : « {{preset}} ».",
-      "lowerIntensity_one": "{{count}} joueur à passer en semi-intensité",
-      "lowerIntensity_other": "{{count}} joueurs à passer en semi-intensité",
       "rusty_one": "{{count}} joueur en manque de rythme",
       "rusty_other": "{{count}} joueurs en manque de rythme",
       "setupChanges_one": "{{count}} entraînement individuel à changer",
@@ -1053,6 +1051,7 @@
       "individual": "Entraînement individuel",
       "intensity": "Intensité",
       "intensityLevel": {
+        "team": "Intensité de l'équipe (auto)",
         "noWork": "Aucun travail sur le terrain ou en salle de gym",
         "rest": "Repos",
         "half": "Semi-intensité",
@@ -1061,16 +1060,16 @@
       },
       "note": "Pourquoi",
       "reason": {
-        "injured": "blessé",
-        "veryTired": "condition sous 80 %",
-        "tired": "condition sous 90 %",
+        "injured": "blessé : le jeu le met au repos",
+        "veryTired": "condition sous 80 % : le jeu baisse l'intensité",
+        "tired": "condition sous 90 % : le jeu ajuste l'intensité",
         "busyWeek": "jeune, mais semaine à deux matchs",
-        "young": "21 ans ou moins en pleine forme : progresse le plus",
-        "veteran": "32 ans ou plus, ménager",
-        "normal": "pas de raison de doubler la charge"
+        "young": "21 ans ou moins en pleine forme : double intensité, il progresse le plus",
+        "veteran": "32 ans ou plus : on laisse le jeu le ménager",
+        "normal": "rien à forcer : le jeu règle selon la condition"
       },
       "rusty": "manque de rythme : temps de jeu en réserve ou en fin de match",
-      "individualHelp": "Comme l'écran Entraîn. individuel du jeu. Rôles ALB et SLB : ceux de son poste dans le onze cible, sinon le rôle du projet où il est le plus adapté. Priorité : celle qui travaille son attribut clé le plus faible pour ce rôle (en dessous, ses 3 points faibles). Double intensité : seulement les 21 ans et moins en pleine forme, hors semaine à deux matchs ; pour les autres, intensité normale. Toute l'équipe en double intensité avec une charge « Intensive », c'est beaucoup de fatigue et de risque de blessure.",
+      "individualHelp": "Comme l'écran Entraîn. individuel du jeu. Rôles ALB et SLB : ceux de son poste dans le onze cible, sinon le rôle du projet où il est le plus adapté. Priorité : celle qui travaille son attribut clé le plus faible pour ce rôle (en dessous, ses 3 points faibles). Intensité : celle de l'équipe, réglée par le jeu selon la condition ; seule exception, la double intensité pour les 21 ans et moins en pleine forme hors semaine à deux matchs.",
       "mentoring": "Groupes d'encadrement",
       "mentor": "Tuteur",
       "mentees": "Jeunes encadrés",
@@ -1115,7 +1114,16 @@
       },
       "winterBreak": "Trêve hivernale",
       "winterFrom": "Début de la trêve",
-      "winterTo": "Reprise du championnat"
+      "winterTo": "Reprise du championnat",
+      "teamIntensity": "Intensité de l'équipe",
+      "condition": {
+        "veryPoor": "En très mauvaise forme",
+        "poor": "En mauvaise forme",
+        "fair": "Plutôt en forme",
+        "good": "En bonne forme",
+        "excellent": "En très bonne forme"
+      },
+      "teamIntensityHelp": "Réglage conseillé dans Entraînement > Intensité de l'équipe : le jeu ajuste alors seul l'intensité et le repos de chaque joueur selon sa condition. Plus besoin de toucher à l'intensité individuelle, sauf exception (un jeune en pleine forme en double intensité)."
     },
     "intro": {
       "home": "Ce qui demande ton attention aujourd'hui, les styles qui collent à l'effectif, tes meilleurs joueurs et tes jeunes.",

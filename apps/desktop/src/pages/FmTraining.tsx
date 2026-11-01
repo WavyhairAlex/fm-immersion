@@ -1,5 +1,7 @@
 import {
   CLUB_STATUSES,
+  CONDITION_LEVELS,
+  TEAM_INTENSITY,
   PART_TIME_DAYS,
   TRAINING_PHASES,
   addDays,
@@ -112,7 +114,7 @@ export function useIndividualSetups(engine: TacticEngine, players: FmPlayer[], f
 }
 
 /** Semaine d'entraînement type (méthode « Freedom » de FM Scout) adaptée au calendrier et au style visé. */
-const INTENSITY_TONE: Record<IndividualIntensity, 'good' | 'info' | 'warn' | 'bad'> = { noWork: 'bad', rest: 'warn', half: 'warn', normal: 'info', double: 'good' };
+const INTENSITY_TONE: Record<IndividualIntensity, 'good' | 'info' | 'warn' | 'bad'> = { team: 'info', noWork: 'bad', rest: 'warn', half: 'warn', normal: 'info', double: 'good' };
 
 export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; players: FmPlayer[]; folder: string }) {
   const { t, i18n } = useTranslation();
@@ -357,6 +359,18 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
             </span>
           ))}
         </div>
+      </Panel>
+
+      <Panel title={t('fm.train.teamIntensity')}>
+        <div className="grid gap-2 sm:grid-cols-5">
+          {CONDITION_LEVELS.map((c) => (
+            <div key={c} className="rounded-xl bg-white/60 p-2 ring-1 ring-canard/10">
+              <p className="text-xs text-brun">{t(`fm.train.condition.${c}`)}</p>
+              <Tag tone={INTENSITY_TONE[TEAM_INTENSITY[c]]}>{t(`fm.train.intensityLevel.${TEAM_INTENSITY[c]}`)}</Tag>
+            </div>
+          ))}
+        </div>
+        <p className="mt-2 text-xs text-brun">{t('fm.train.teamIntensityHelp')}</p>
       </Panel>
 
       {setups.rows.length > 0 && (
