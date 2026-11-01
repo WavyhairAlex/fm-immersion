@@ -66,9 +66,12 @@ function knowledgeOf(v: unknown): { pct: number | null; text: string | null } {
 /** Montant affiché par le jeu (« 3,22K € p/m ») ; SortValue n'a pas d'unité connue, on ne s'en sert pas. */
 function money(v: unknown): number | null {
   if (unread(v)) return null;
-  if (v && typeof v === 'object') return toNumber((v as Raw).DisplayValue);
-  return toNumber(v);
+  // Inconnu : le jeu écrit « - » (SortValue 2147483647) ou « -1 € ».
+  const n = v && typeof v === 'object' ? toNumber((v as Raw).DisplayValue) : toNumber(v);
+  return n != null && n > 0 ? n : null;
 }
+
+const recommendationOf = (text: string | null) => (text && /observation nécessaire|scouting required/i.test(text) ? null : text);
 
 function scoutOf(raw: unknown): ScoutView | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -81,7 +84,8 @@ function scoutOf(raw: unknown): ScoutView | null {
     knowledge: knowledge.pct == null ? null : Math.max(0, Math.min(100, knowledge.pct)),
     knowledgeText: knowledge.text,
     stars: cur == null && pot == null ? null : { current: cur, potential: pot },
-    recommendation: label(s.recommendationText) ?? label(s.recommendation),
+    // Le jeu laisse « Observation nécessaire » même pour un joueur bien connu : on ne le garde que s'il est vrai.
+    recommendation: knowledge.pct ? recommendationOf(label(s.recommendationText)) : label(s.recommendationText),
     bestPosition: label(s.bestPosition),
     bestRole: label(s.bestRole),
     value: between(money(s.minValue), money(s.maxValue)),
