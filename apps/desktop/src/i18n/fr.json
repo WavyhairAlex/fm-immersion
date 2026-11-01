@@ -245,7 +245,10 @@
         "d": "Défense",
         "s": "Soutien",
         "a": "Attaque"
-      }
+      },
+      "auto": "Automatique : meilleur choix",
+      "bestNow": "Meilleure tactique applicable",
+      "projectBest": "Ton projet est devenu le meilleur choix"
     },
     "nav": "Sections de la partie",
     "sections": {

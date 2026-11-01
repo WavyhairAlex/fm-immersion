@@ -114,3 +114,21 @@ describe('titulaires et remplaçants', () => {
     expect(rows.find((r) => r.pos === 'DC')!.subs.map((e) => e.player.id)).toContain('13');
   });
 });
+
+describe('tactique à jouer maintenant', () => {
+  it('prend le meilleur onze applicable, et le projet dès qu’il le vaut', async () => {
+    const { bestTactic } = await import('../src/project');
+    const { DEFAULT_TACTIC_REFERENCE, TacticEngine, normalizePlayer } = await import('../src');
+    const engine = new TacticEngine(DEFAULT_TACTIC_REFERENCE);
+    const squad = ['GB', 'D (C)', 'D (C)', 'D (D)', 'D (G)', 'MD', 'M (C)', 'M (C)', 'MO (G)', 'MO (D)', 'BT'].map((pos, i) =>
+      normalizePlayer({ id: i + 1, name: `J${i + 1}`, positions: pos, attributes: { Passing: 12, Tackling: 12, Finishing: 12, Reflexes: 12, Handling: 12, Pace: 12, Stamina: 12 } }),
+    );
+    const best = bestTactic(engine, squad)!;
+    expect(best.project).toBe(false);
+    const asProject = bestTactic(engine, squad, { style: best.style.id, form: best.form })!;
+    expect(asProject.project).toBe(true);
+    const other = DEFAULT_TACTIC_REFERENCE.styles.find((s) => s.id !== best.style.id)!;
+    const worse = bestTactic(engine, squad, { style: other.id, form: '5-4-1' })!;
+    expect(worse.plan.score).toBeGreaterThanOrEqual(engine.formationPlan('5-4-1', other, squad).score);
+  });
+});

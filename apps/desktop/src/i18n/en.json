@@ -245,7 +245,10 @@
         "d": "Defend",
         "s": "Support",
         "a": "Attack"
-      }
+      },
+      "auto": "Automatic: best choice",
+      "bestNow": "Best applicable tactic",
+      "projectBest": "Your project is now the best choice"
     },
     "nav": "Save sections",
     "sections": {
