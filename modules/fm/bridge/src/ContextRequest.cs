@@ -47,7 +47,8 @@ static class ContextRequest
         foreach (var c in ctxs)
         {
             var value = c.Ref != null ? refs(c.Ref) : c.Bool is bool bo ? TypedValue.Create(bo) : Number(c.Number!.Value);
-            if (value == null) return null;
+            // Jamais de contexte vide (équipe pas encore chargée ou déjà libérée) : la requête n'est pas envoyée.
+            if (value == null || value.IsNull) return null;
             rb = rb.AddContext(Il2CppSystem.MemoryExtensions.AsSpan(c.Name), value);
         }
         return rb.Bind(Il2CppSystem.MemoryExtensions.AsSpan(prop), owner, cb);

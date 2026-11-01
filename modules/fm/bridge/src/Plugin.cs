@@ -17,7 +17,7 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.4.1";
+    public const string Version = "0.4.2";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que Simloom renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
@@ -68,22 +68,32 @@ public class Plugin : BasePlugin
     // Vérifie la date de jeu toutes les 10 s ; instantané complet au chargement d'une partie, à chaque nouveau
     // jour de jeu, et au plus tard toutes les RelectureSecondes (300 s par défaut). Les lectures IL2CPP sont exécutées sur le thread principal
     // par MainThread ; ce thread-ci ne fait qu'attendre les réponses et écrire les fichiers.
+    //
+    // 0.4.2 (plantage du 01/11 à 18h02, lecture lancée juste après un chargement puis sortie de partie) :
+    // - après un chargement, on attend que la partie soit chargée sans interruption depuis SettleSeconds avant de lire ;
+    // - une lecture en cours s'arrête dès que la partie n'est plus la même (sortie, autre sauvegarde), voir FmBindingReader.Read.
+    const int SettleSeconds = 45;
+
     void RefreshLoop()
     {
         string? lastDate = null;
         var lastFull = DateTime.MinValue;
+        DateTime? loadedSince = null;
         while (true)
         {
             Thread.Sleep(10_000);
             try
             {
                 var date = FmBindingReader.CurrentDate();
-                if (date == null) { lastDate = null; continue; }   // pas de partie chargée
+                if (date == null) { lastDate = null; loadedSince = null; continue; }   // pas de partie chargée
+                loadedSince ??= DateTime.UtcNow;
+                if (DateTime.UtcNow - loadedSince < TimeSpan.FromSeconds(SettleSeconds)) continue;   // partie tout juste chargée
                 if (date == lastDate && DateTime.UtcNow - lastFull < TimeSpan.FromSeconds(RereadSeconds)) continue;
                 Refresh();
                 lastDate = date;
                 lastFull = DateTime.UtcNow;
             }
+            catch (FmBindingReader.GameChanged) { lastDate = null; loadedSince = null; Log.LogInfo("Partie quittée ou changée pendant la lecture : instantané abandonné."); }
             catch (Exception e) { Log.LogWarning($"Instantané impossible : {e.Message}"); }
         }
     }
@@ -99,12 +109,27 @@ public class Plugin : BasePlugin
         var json = JsonSerializer.Serialize(snap, Json);
         WriteAtomic(Path.Combine(dir, "archivix-snapshot.json"), json);
         WriteAtomic(Path.Combine(dir, $"archivix-{snap.GameDate}.json"), json);
+        WriteStatus(snap.GameDate, snap.Club);
         if (WriteDiscovery && !_discovered)
         {
             _discovered = true;
             try { Discovery.Write(dir); }
             catch (Exception e) { Log.LogWarning($"Rapport de découverte impossible : {e.Message}"); }
         }
+    }
+
+    // État courant pour Simloom (0.4.2) : date de jeu et club du manager (null = sans club). Aucune lecture en plus :
+    // reprend les valeurs de l'instantané. Format : {"schema":"archivix-status/1","gameDate":"yyyy-MM-dd","club":"Nom"|null}
+    internal static void WriteStatus(string gameDate, string? club)
+    {
+        try
+        {
+            var dir = DataDir;
+            Directory.CreateDirectory(dir);
+            var json = JsonSerializer.Serialize(new Dictionary<string, object?> { ["schema"] = "archivix-status/1", ["gameDate"] = gameDate, ["club"] = club });
+            WriteAtomic(Path.Combine(dir, "archivix-status.json"), json);
+        }
+        catch (Exception e) { Log.LogWarning($"archivix-status.json : {e.Message}"); }
     }
 
     // Écriture atomique : fichier .tmp puis remplacement, pour qu'un lecteur ne voie jamais un JSON à moitié écrit.

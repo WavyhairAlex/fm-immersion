@@ -75,8 +75,19 @@ salaire, clubs intéressés, statut de transfert, personnalité). Écrit dans le
 chaque nouveau jour de jeu, ou dès que le nombre de joueurs d'une liste change (0.4.1). `targetSources` indique, par source, le nombre de joueurs trouvés et, si aucun,
 la forme de la réponse du jeu (pour corriger le chemin). Aucune lecture liée à la tactique.
 
+## État courant (0.4.2)
+
+À chaque instantané, le plugin écrit aussi `archivix-status.json` dans son dossier :
+`{"schema":"archivix-status/1","gameDate":"yyyy-MM-dd","club":"Nom"}`. Les valeurs viennent de l'instantané, sans lecture
+de plus. Simloom s'en sert pour savoir quelle partie est chargée et si le manager a un club.
+
 ## Requêtes au jeu : règles
 
+- **Pas de lecture pendant un chargement (0.4.2).** Après le chargement d'une partie, le plugin attend 45 s de partie
+  chargée sans interruption avant le premier instantané, et il vérifie entre chaque bloc de lecture que la partie est
+  toujours chargée, au même jour. Sinon il abandonne l'instantané. Un contexte vide (`@team` non résolu) n'est jamais
+  envoyé au jeu. Cela fait suite au plantage du 01/11 à 18h02 : une lecture avait démarré 2 s après un chargement, puis
+  le joueur avait quitté la partie.
 - Chaque requête de binding est **désinscrite** dès sa réponse, même tardive, et **au délai dépassé** (0.2.2).
   Avant, une requête sans réponse restait active dans le jeu et s'ajoutait à chaque instantané : cause probable des gels
   de l'écran Tactique du 31/10 (FM27 figé ou arrêté pendant que des lectures de la tactique attendaient).

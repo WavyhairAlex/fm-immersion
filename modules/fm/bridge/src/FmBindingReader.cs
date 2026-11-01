@@ -113,6 +113,9 @@ public class FmBindingReader : IGameReader
         return d == null || d.StartsWith("1900") ? null : d;
     }
 
+    /// <summary>La partie a été quittée ou remplacée pendant une lecture : on abandonne l'instantané.</summary>
+    public sealed class GameChanged : Exception { }
+
     public Snapshot Read()
     {
         var head = Batch.Run(new[]
@@ -123,6 +126,9 @@ public class FmBindingReader : IGameReader
         var club = CleanName(head[0] as string) ?? "";
         var date = DecodeDate(head[1] as string) ?? DateTime.Today.ToString("yyyy-MM-dd");
         int count = head[3] is double c ? (int)c : 0;
+        // Entre deux blocs de lecture : la partie est-elle toujours chargée, au même jour ? Sinon on arrête tout.
+        void Guard() { if (CurrentDate() != date) throw new GameChanged(); }
+        Guard();
 
         var reqs = new List<Req>();
         for (int i = 0; i < count; i++)
@@ -136,6 +142,7 @@ public class FmBindingReader : IGameReader
         for (int i = 0; i < count; i++) rows[i] = new();
         for (int k = 0; k < reqs.Count; k++) rows[reqs[k].Item!.Value][reqs[k].Path] = values[k];
 
+        Guard();
         if (_attrDate != date && ReadAttributes(count, rows)) _attrDate = date;
 
         var players = rows.Select(r => ToPlayer(r)).Where(p => p != null).Cast<PlayerDto>().ToList();
@@ -153,10 +160,12 @@ public class FmBindingReader : IGameReader
             try { read(); collecte[key] = "lue"; }
             catch (Exception e) { collecte[key] = "erreur : " + e.Message; Plugin.Log.LogWarning($"{key} : {e.Message}"); }
         }
+        Guard();
         Block("tactique", Plugin.ReadTactic, () => tactic = ReadTactic(head[2] as string));
         Block("efficacite", Plugin.ReadEffectiveness, () => effectiveness = ReadEffectiveness());
         Block("compo", Plugin.ReadLineup, () => lineup = ReadLineup());
 
+        Guard();
         // Moral, satisfaction, hiérarchie, étoiles du staff : lectures de contexte par joueur (sans lien avec la tactique).
         Dictionary<string, Dictionary<string, object?>>? extended = null;
         if (!Plugin.ReadExtended) collecte["joueursEtendus"] = "désactivée (réglage)";
@@ -165,6 +174,7 @@ public class FmBindingReader : IGameReader
             catch (Exception e) { collecte["joueursEtendus"] = "erreur : " + e.Message; Plugin.Log.LogWarning($"joueursEtendus : {e.Message}"); }
         tactic ??= new TacticDto(head[2] as string, "MostUsedFormation", null, new(), new());
 
+        Guard();
         // Cibles du mercato (liste de suivi, cibles du recrutement) : sans lien avec la tactique, relues à chaque nouveau jour.
         if (!Plugin.ReadTargets) collecte["cibles"] = "désactivée (réglage)";
         else if (_targetsDate == date && _targets != null && TargetCounts() == _targetCounts) collecte["cibles"] = "lue (même jour, listes inchangées)";
@@ -178,6 +188,7 @@ public class FmBindingReader : IGameReader
             }
             catch (Exception e) { collecte["cibles"] = "erreur : " + e.Message; Plugin.Log.LogWarning($"cibles : {e.Message}"); }
 
+        Guard();
         // Club et prochain match : blocs optionnels
         Dictionary<string, object?>? clubInfo = null, nextMatch = null;
         try
@@ -191,6 +202,7 @@ public class FmBindingReader : IGameReader
         }
         catch (Exception e) { Plugin.Log.LogWarning($"Club / prochain match illisibles : {e.Message}"); }
 
+        Guard();
         // Données supplémentaires définies dans archivix\config\chemins.json (relu à chaque instantané, sans recompiler)
         Dictionary<string, object?>? custom = null;
         try { custom = ReadCustom(count); }
