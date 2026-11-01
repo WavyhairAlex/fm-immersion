@@ -20,7 +20,7 @@ export function FmLoans({ snap }: { snap: FmSnapshot }) {
   return (
     <Panel title={t('fm.loans.title', { count: list.length })}>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="data-table">
           <thead className="text-left text-canard/70">
             <tr>
               {['player', 'age', 'club', 'apps', 'goals', 'rating', 'level', 'end', 'verdict'].map((k) => (

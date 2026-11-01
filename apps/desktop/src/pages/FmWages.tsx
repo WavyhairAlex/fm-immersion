@@ -24,7 +24,7 @@ export function FmWages({ players, gameDate }: { players: FmPlayer[]; gameDate: 
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title={t('fm.wages.byStatus')}>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="data-table">
               <thead className="text-left text-canard/70">
                 <tr>
                   <th className="py-1 pr-2">{t('fm.wages.status')}</th>
@@ -109,7 +109,7 @@ export function FmWages({ players, gameDate }: { players: FmPlayer[]; gameDate: 
       </Panel>
 
       <Panel title={t('fm.wages.value')}>
-        <p className="-mt-2 mb-2 text-xs text-brun">{t('fm.wages.valueHelp')}</p>
+        <p className="help">{t('fm.wages.valueHelp')}</p>
         {r.costPerPoint.slice(0, 5).map(({ player, cost }) => (
           <Row key={player.id}>
             <span>

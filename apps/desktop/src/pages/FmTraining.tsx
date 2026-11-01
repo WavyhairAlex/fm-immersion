@@ -346,7 +346,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
             )}
           </p>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="data-table">
               <thead className="text-left text-canard/70">
                 <tr>
                   <th className="px-2 py-1">{t('fm.train.inGame')}</th>

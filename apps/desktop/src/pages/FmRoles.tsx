@@ -46,7 +46,7 @@ export function FmRoles({ players, folder }: { players: FmPlayer[]; folder: stri
   return (
     <div className="space-y-4">
       <Panel title={t('fm.roles.gridTitle')}>
-        <p className="-mt-2 mb-3 text-xs text-brun">{t('fm.roles.help', { phase: t(`fm.tac.phase.${opts.phase}`).toLowerCase() })}</p>
+        <p className="help">{t('fm.roles.help', { phase: t(`fm.tac.phase.${opts.phase}`).toLowerCase() })}</p>
         <div className="mb-3 flex flex-wrap items-center gap-4">
           <Chips
             value={opts.phase}
@@ -66,7 +66,7 @@ export function FmRoles({ players, folder }: { players: FmPlayer[]; folder: stri
           </label>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+          <table className="data-table text-xs">
             <thead>
               <tr>
                 <th className="sticky left-0 bg-white px-2 py-1 text-left text-sm">{t('fm.prog.player')}</th>

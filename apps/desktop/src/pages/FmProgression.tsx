@@ -36,11 +36,11 @@ export function FmProgression({ history }: { history: SquadAt[] }) {
 
   return (
     <Panel title={t('fm.prog.title', { date: f.date(history[0]!.gameDate) })}>
-      <p className="-mt-2 mb-3 text-xs text-brun">
+      <p className="help">
         {t('fm.prog.snaps', { count: history.length, dates: history.map((h) => f.date(h.gameDate)).join(' · ') })}
       </p>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="data-table">
           <thead className="text-left text-canard/70">
             <tr>
               <th className="px-2 py-1">{t('fm.prog.player')}</th>

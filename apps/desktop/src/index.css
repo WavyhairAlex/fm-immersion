@@ -15,5 +15,13 @@
   .input { @apply w-full rounded-xl border border-canard/20 bg-white px-4 py-2.5 text-canard outline-none focus:border-eau-soutenu focus:ring-2 focus:ring-eau/40; }
   /* Pastille de poste ou d'information, la même partout. */
   .pill { @apply inline-block whitespace-nowrap rounded-full bg-eau/20 px-2 py-0.5 text-xs font-bold text-canard; }
+  /* Texte d'aide sous un titre de cadre : même taille et même place sur tous les écrans. */
+  .help { @apply -mt-1 mb-3 max-w-3xl text-sm text-brun; }
+  /* Tableaux de données : en-têtes discrets, lignes séparées, survol, chiffres alignés. */
+  .data-table { @apply w-full text-sm tabular-nums; }
+  .data-table thead { @apply border-b border-canard/10; }
+  .data-table th { @apply px-2 py-1.5 text-left text-xs font-bold uppercase tracking-wide text-canard/60; }
+  .data-table td { @apply px-2 py-1.5; }
+  .data-table tbody tr { @apply border-b border-canard/5 last:border-0 hover:bg-creme/50; }
   .card { @apply rounded-3xl bg-white p-6 shadow-sm ring-1 ring-canard/5; }
 }

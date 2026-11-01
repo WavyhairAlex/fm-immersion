@@ -82,10 +82,10 @@ export function FmTargets({ saveId, snap, players, folder, go }: { saveId: strin
         ) : undefined
       }
     >
-      <p className="-mt-2 mb-3 text-xs text-brun">{t('fm.targets.help')}</p>
+      <p className="help">{t('fm.targets.help')}</p>
       {ranked.length ? (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="data-table">
             <thead className="text-left text-canard/70">
               <tr>
                 {['player', 'age', 'club', 'pos', 'fit', 'gain', 'level', 'stars', 'knowledge', 'value', 'seen', ''].map((k) => (
