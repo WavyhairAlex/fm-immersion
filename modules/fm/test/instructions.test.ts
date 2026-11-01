@@ -12,7 +12,8 @@ const slot = (pos: Slot['pos'], ip: string, oop: string, positions: string): Slo
 describe('consignes individuelles', () => {
   it('lit les verrous de pressing des rôles', () => {
     expect(roleLocks(engine.roles.get('SCRDM')).press).toBe('less');
-    expect(roleLocks(engine.roles.get('COCF')).press).toBe('less');
+    // Table du jeu : l'attaquant point d'appui axial n'impose pas de pressing.
+    expect(roleLocks(engine.roles.get('COCF')).press).toBeNull();
     expect(roleLocks(engine.roles.get('HFB')).press).toBe('less');
     expect(roleLocks(engine.roles.get('PRSDM')).press).toBe('more');
     expect(roleLocks(engine.roles.get('DM')).press).toBeNull();
@@ -35,9 +36,9 @@ describe('consignes individuelles', () => {
   });
 
   it('juge le pressing sur le rôle sans ballon, pas sur le rôle avec ballon', () => {
-    const adv = playerInstructions(engine, slot('BT', 'POA', 'COCF', 'BT'), style);
+    const adv = playerInstructions(engine, slot('MC', 'MFPM', 'SCRCM', 'M (C)'), style);
     expect(adv.list.map((x) => x.id)).not.toContain('pressMore');
-    expect(adv.switches[0]?.from).toBe('COCF');
+    expect(adv.switches[0]?.from).toBe('SCRCM');
   });
 
   it('suit les verrous relevés dans FM27 : socle du poste, puis consignes imposées par le rôle', () => {
@@ -67,6 +68,17 @@ describe('consignes individuelles', () => {
     const adv = playerInstructions(engine, { pos: 'DC', x: 45, y: 85, ip: 'BPCB', oop: 'CB', player: passer, fit: null }, style);
     expect(adv.list.map((x) => x.id)).not.toContain('riskMore');
     expect(adv.switches.filter((w) => w.unlocks === 'riskMore')).toEqual([]);
+  });
+
+  it('lit la table du jeu pour tous les postes, côté compris', () => {
+    // MO (D) : « Prenez les espaces » refusée par le poste ; l'attaquant désaxé impose ses courses.
+    const wf = roleLocks(engine.roles.get('WF') ?? [...engine.roles.values()].find((r) => r.game?.ip === 'WideForward'), 'MOD', 85, 'ip');
+    expect(wf.blocked).toEqual(expect.arrayContaining(['shortPass', 'runBehind']));
+    const dlf = [...engine.roles.values()].find((r) => r.game?.ip === 'DeepLyingForward')!;
+    expect(roleLocks(dlf, 'BT', 50, 'ip').blocked).toContain('holdBall');
+    expect(roleLocks(dlf, 'BT', 50, 'ip').blocked).toContain('cutInside');
+    // BT (D) : direction des dribbles libre, mais « Repiquez dans l'axe » refusée par le poste.
+    expect(roleLocks(dlf, 'BT', 62, 'ip').blocked).toContain('cutInside');
   });
 });
 
