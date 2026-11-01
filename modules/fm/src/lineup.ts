@@ -1,7 +1,7 @@
 import type { FmPlayer } from './player';
 import { parsePositions, type PosCode } from './positions';
 import type { FmSnapshot } from './snapshot';
-import { FORMATIONS, type FormationPlan, type RoleRef, type Slot, type TacticEngine } from './tactic';
+import { FORMATIONS, slotContexts, type FormationPlan, type RoleRef, type Slot, type SlotCtx, type TacticEngine } from './tactic';
 
 /*
  * Compo réelle lue dans FM27 (bloc « lineup » de l'instantané, plugin 0.3 et suivants) :
@@ -118,10 +118,13 @@ export function matchRole(engine: TacticEngine, raw: string | null, pos: PosCode
   if (!raw) return null;
   const direct = engine.roles.get(raw);
   if (direct) return direct;
+  const roles = [...engine.roles.values()];
+  // Code d'énumération du jeu (« OPScreeningDefensiveMidfielder », « BoxToBoxMidfielder »).
+  const game = roles.find((r) => r.game?.[phase] === raw) ?? roles.find((r) => r.game?.ip === raw || r.game?.oop === raw);
+  if (game) return game;
   // « OPScreeningDefensiveMidfielder » → « screeningdefensivemidfielder »
   const key = norm(raw.replace(/^(IP|OP)(?=[A-Z])/, ''));
-  const fits = (r: RoleRef) => (r.phase === phase || r.phase === 'both') && engine.rolePositions(r).includes(pos);
-  const roles = [...engine.roles.values()];
+  const fits = (r: RoleRef) => engine.availableAt(r, pos, phase);
   const exact = roles.filter((r) => [r.code, r.fr, r.en].some((x) => x && norm(x) === key));
   if (exact.length) return exact.find(fits) ?? exact[0]!;
   // Code du jeu plus long que notre libellé (« ScreeningDefensiveMidfielder » ↔ « Screening Midfielder ») :
@@ -168,14 +171,12 @@ export function planFromLineup(engine: TacticEngine, lineup: GameSlot[], players
     .filter((x): x is { s: GameSlot & { pos: PosCode }; p: FmPlayer | null } => !!x);
   for (const { s } of resolved) total[s.pos] = (total[s.pos] ?? 0) + 1;
   // Rôle : celui lu ; à défaut le meilleur rôle du joueur à ce poste (le plugin ne lit pas encore les rôles).
-  const roleFor = (raw: string | null, p: FmPlayer | null, pos: PosCode, ph: 'ip' | 'oop') =>
+  const roleFor = (raw: string | null, p: FmPlayer | null, pos: PosCode, ph: 'ip' | 'oop', ctx: SlotCtx) =>
     matchRole(engine, raw, pos, ph)?.code ??
-    (p && engine.bestAtPos(p, pos, ph)?.role.code) ??
-    [...engine.roles.values()].find((r) => (r.phase === ph || r.phase === 'both') && engine.rolePositions(r).includes(pos))?.code ??
+    (p && engine.bestAtPos(p, pos, ph, ctx)?.role.code) ??
+    [...engine.roles.values()].find((r) => engine.availableAt(r, pos, ph, ctx))?.code ??
     '';
-  const slots: Slot[] = resolved.map(({ s, p }) => {
-    const ip = roleFor(s.roleIP, p, s.pos, 'ip');
-    const oop = roleFor(s.roleOOP, p, s.pos, 'oop');
+  const placed = resolved.map(({ s, p }) => {
     // Position : celle du schéma connu si le poste y figure, sinon la position par défaut, écartée pour les doublons.
     const i = ref?.findIndex(([pos]) => pos === s.pos) ?? -1;
     let x: number, y: number;
@@ -188,6 +189,13 @@ export function planFromLineup(engine: TacticEngine, lineup: GameSlot[], players
       [x, y] = XY[s.pos];
       if (k > 1) x = Math.max(8, Math.min(92, x + (n - (k - 1) / 2) * 24));
     }
+    return { s, p, x, y };
+  });
+  // Créneaux excentrés (deux milieux défensifs, centraux gauche et droit…) : le jeu y propose d'autres rôles.
+  const ctxs = slotContexts(placed.map(({ s, x }) => ({ pos: s.pos, x })));
+  const slots: Slot[] = placed.map(({ s, p, x, y }, i) => {
+    const ip = roleFor(s.roleIP, p, s.pos, 'ip', ctxs[i]!);
+    const oop = roleFor(s.roleOOP, p, s.pos, 'oop', ctxs[i]!);
     const a = p ? engine.roleFit(p, ip, 'ip', s.pos) : null;
     const b = p ? engine.roleFit(p, oop, 'oop', s.pos) : null;
     return { pos: s.pos, x, y, ip, oop, player: p, fit: a != null && b != null ? (a + b) / 2 : (a ?? b), game: { custom: s.custom, instructions: s.instructions } };

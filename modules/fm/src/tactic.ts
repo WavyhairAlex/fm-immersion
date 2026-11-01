@@ -15,6 +15,15 @@ export const roleRefSchema = z
     en: z.string().optional(),
     phase: z.enum(['ip', 'oop', 'both']),
     positions: z.array(z.string()),
+    /** Postes sans ballon quand ils diffèrent des postes avec ballon (rôle « both »). */
+    positionsOOP: z.array(z.string()).nullish(),
+    /** Codes d'énumération du jeu (InPossessionRole, OutOfPossessionRole). */
+    game: z.object({ ip: z.string().optional(), oop: z.string().optional() }).nullish(),
+    /**
+     * Condition du jeu sur le créneau : « wide » = créneau axial excentré (deux milieux défensifs,
+     * centraux gauche/droit…), « wide3 » = idem dans une défense à trois centraux ou plus.
+     */
+    cond: z.enum(['wide', 'wide3']).nullish(),
     group: z.string(),
     weights: z.record(z.number()),
     weightsOOP: z.record(z.number()).nullish(),
@@ -41,6 +50,22 @@ export type RoleRef = z.infer<typeof roleRefSchema>;
 export type StyleRef = z.infer<typeof styleRefSchema>;
 export type TacticReference = z.infer<typeof tacticReferenceSchema>;
 export type Phase = 'ip' | 'oop';
+
+/** Contexte d'un créneau du schéma, pour les rôles que le jeu réserve aux créneaux excentrés. */
+export interface SlotCtx {
+  /** Créneau axial décalé à gauche ou à droite (le jeu ajoute un bit de côté au poste central). */
+  wide: boolean;
+  /** Nombre de défenseurs centraux du schéma. */
+  cbs: number;
+}
+
+const CENTRAL: ReadonlySet<PosCode> = new Set<PosCode>(['DC', 'MDF', 'MC', 'MOC', 'BT']);
+
+/** Contexte de chaque créneau d'après sa position sur le terrain (x en %, 50 = axe). */
+export function slotContexts(slots: { pos: PosCode; x: number }[]): SlotCtx[] {
+  const cbs = slots.filter((s) => s.pos === 'DC').length;
+  return slots.map((s) => ({ wide: CENTRAL.has(s.pos) && Math.abs(s.x - 50) >= 8, cbs }));
+}
 
 /** Coordonnées des postes en % du terrain (x de gauche à droite, y du but adverse vers le sien). */
 export const FORMATIONS: Record<string, [PosCode, number, number][]> = {
@@ -152,8 +177,20 @@ export class TacticEngine {
     this.roles = new Map(ref.roles.map((r) => [r.code, r]));
   }
 
-  rolePositions(r: RoleRef): PosCode[] {
-    return r.positions.map((x) => ROLE_POS[x]).filter((x): x is PosCode => !!x);
+  /** Postes où le jeu propose le rôle ; sans phase, tous ses postes. */
+  rolePositions(r: RoleRef, phase?: Phase): PosCode[] {
+    const raw = phase === 'oop' && r.positionsOOP ? r.positionsOOP : phase === undefined && r.positionsOOP ? [...new Set([...r.positions, ...r.positionsOOP])] : r.positions;
+    return raw.map((x) => ROLE_POS[x]).filter((x): x is PosCode => !!x);
+  }
+
+  /**
+   * Le jeu propose-t-il ce rôle à ce poste dans cette phase ? Sans contexte de créneau, les rôles
+   * réservés aux créneaux excentrés sont admis (on ne sait pas où joue le joueur).
+   */
+  availableAt(r: RoleRef, pos: PosCode, phase: Phase, ctx?: SlotCtx): boolean {
+    if (!(r.phase === phase || r.phase === 'both') || !this.rolePositions(r, phase).includes(pos)) return false;
+    if (!ctx || !r.cond) return true;
+    return ctx.wide && (r.cond === 'wide' || ctx.cbs >= 3);
   }
 
   /**
@@ -165,7 +202,7 @@ export class TacticEngine {
     if (!r) return null;
     const keys = wmean(p, phase === 'oop' && r.weightsOOP ? r.weightsOOP : r.weights);
     if (keys == null) return null;
-    const p0 = pos ?? this.rolePositions(r)[0];
+    const p0 = pos ?? this.rolePositions(r, phase)[0];
     const bk = (p0 && POS_BASE[POS_BASE_OF[p0]]) || [];
     const third = Math.ceil(bk.length / 3);
     const base = avgWeighted(bk.map((k, i) => [attrOf(p, k), i < third ? 10 : i < 2 * third ? 6 : 3]));
@@ -185,10 +222,10 @@ export class TacticEngine {
   }
 
   /** Meilleur rôle d'une phase pour le joueur à un poste donné (naturel ou non). */
-  bestAtPos(p: FmPlayer, pos: PosCode, phase: Phase): { role: RoleRef; fit: number } | null {
+  bestAtPos(p: FmPlayer, pos: PosCode, phase: Phase, ctx?: SlotCtx): { role: RoleRef; fit: number } | null {
     let best: { role: RoleRef; fit: number } | null = null;
     for (const role of this.ref.roles) {
-      if (!(role.phase === phase || role.phase === 'both') || !this.rolePositions(role).includes(pos)) continue;
+      if (!this.availableAt(role, pos, phase, ctx)) continue;
       const fit = this.roleFit(p, role.code, phase, pos);
       if (fit != null && (!best || fit > best.fit)) best = { role, fit };
     }
@@ -200,7 +237,7 @@ export class TacticEngine {
     let best: { role: RoleRef; pos: PosCode; fit: number } | null = null;
     for (const role of this.ref.roles) {
       if (role.phase === 'oop') continue;
-      for (const pos of this.rolePositions(role)) {
+      for (const pos of this.rolePositions(role, 'ip')) {
         if (!p.positions.includes(pos)) continue;
         const fit = this.roleFit(p, role.code, 'ip', pos);
         if (fit != null && (!best || fit > best.fit)) best = { role, pos, fit };
@@ -239,16 +276,18 @@ export class TacticEngine {
   /** Rôles typiques du style sur chaque poste du schéma, puis meilleur onze (joueurs naturels au poste). */
   formationPlan(form: string, style: StyleRef, list: FmPlayer[]): FormationPlan {
     const used: Record<Phase, Record<string, number>> = { ip: {}, oop: {} };
-    const pickRole = (pos: PosCode, ph: Phase) => {
+    const pickRole = (pos: PosCode, ph: Phase, ctx: SlotCtx) => {
       const opts = style.signatureRoles[ph].filter((c) => {
         const r = this.roles.get(c);
-        return r && this.rolePositions(r).includes(pos);
+        return r && this.availableAt(r, pos, ph, ctx);
       });
       if (!opts.length) return DEFAULT_ROLE[pos];
       used[ph][pos] = (used[ph][pos] ?? -1) + 1;
       return opts[used[ph][pos] % opts.length] ?? DEFAULT_ROLE[pos];
     };
-    const slots: Slot[] = (FORMATIONS[form] ?? FORMATIONS['4-3-3']!).map(([pos, x, y]) => ({ pos, x, y, ip: pickRole(pos, 'ip'), oop: pickRole(pos, 'oop'), player: null, fit: null }));
+    const base = FORMATIONS[form] ?? FORMATIONS['4-3-3']!;
+    const ctxs = slotContexts(base.map(([pos, x]) => ({ pos, x })));
+    const slots: Slot[] = base.map(([pos, x, y], i) => ({ pos, x, y, ip: pickRole(pos, 'ip', ctxs[i]!), oop: pickRole(pos, 'oop', ctxs[i]!), player: null, fit: null }));
     const pairs: { i: number; p: FmPlayer; f: number }[] = [];
     slots.forEach((sl, i) =>
       list.forEach((p) => {
@@ -346,7 +385,7 @@ const avgWeighted = (xs: [number | null, number][]) => {
   return t ? s / t : null;
 };
 
-const WIDE = new Set(['FB', 'WB', 'AWB', 'PMWB', 'WM', 'W', 'WF', 'WP']);
+const WIDE = new Set(['FB', 'WB', 'AWB', 'PMWB', 'WM', 'W', 'WF', 'WP', 'OCB']);
 const CREATE = new Set(['DLP', 'B2BPM', 'MFPM', 'AP', 'WP', 'PMWB', 'F9', 'FREE', 'BPCB']);
 const HOLD = new Set(['DM', 'HB', 'DLP']);
 const BOX = new Set(['CF', 'POA', 'TF', 'CHF', 'DLF', 'IF', 'WF', 'SS', 'BBM']);
@@ -388,13 +427,13 @@ export interface BalanceCheck {
 const ROLE_MOVE: Record<Phase, Record<string, [number, number, number]>> = {
   ip: {
     IFB: [0.55, 0, -12], FB: [0, 0, -14], CF: [0, 0, -2], IWB: [0.45, 0, -28], WB: [0, 0, -22], AWB: [0, 0, -34], PMWB: [0.25, 0, -22], HB: [0, 0, 12], ADCB: [0, 0, -14],
-    B2BDM: [0, 0, -10], B2BPM: [0, 0, -10], BBM: [0, 0, -14], CHM: [0, 12, -12], BBP: [0, 18, 0], WCM: [0.3, 0, 0], W: [0, 4, -8], IF: [0.35, 0, -8], IW: [0.25, 0, -2],
+    B2BPM: [0, 0, -10], BBM: [0, 0, -14], CHM: [0, 12, -12], WCM: [0, 14, 0], OCB: [0, 6, -16], WCB: [0, 4, -8], NNGK: [0, 0, 0], W: [0, 4, -8], IF: [0.35, 0, -8], IW: [0.25, 0, -2],
     WF: [0, 0, -10], WP: [0.3, 0, 0], AP: [0, 0, -4], SS: [0, 0, -10], DLF: [0, 0, 10], F9: [0, 0, 12], CHF: [0, 12, 0], TF: [0, 0, -3], POA: [0, 0, -3], BPGK: [0, 0, -4],
   },
   oop: {
-    TW: [0, 0, 18], TWM: [0, 0, 6], WOM: [0, 0, -4], WOW: [0, 0, -4], IOW: [0.15, 0, -4], TAM: [0, 0, 12], COAM: [0, 0, -6], SOAM: [0, 18, -4], CCS: [0, 0, 10], COCF: [0, 0, -4],
-    DROPDM: [0, 0, 14], WCDM: [0, 20, 0], WCCM: [0, 20, 0], SCRDM: [0, 0, 5], SCRCM: [0, 0, 5], PRSDM: [0, 0, -4], PRSCM: [0, 0, -4], PFB: [0, 0, -3], PWB: [0, 0, -3], HFB: [0, 0, 4], DWB: [0, 0, 6],
-    STCB: [0, 0, -5], CCB: [0, 0, 4], SK: [0, 0, -6], LHK: [0, 0, 2],
+    TW: [0, 0, 18], TWM: [0, 0, 6], WOM: [0, 0, -4], WOW: [0, 0, -4], IOW: [0.15, 0, -4], TAM: [0, 0, 12], COAM: [0, 0, -6], SOAM: [0, 18, -4], TCF: [0, 0, 10], COCF: [0, 0, -4], SOCF: [0, 14, -4],
+    DROPDM: [0, 0, 14], WCDM: [0, 20, 0], WCCM: [0, 20, 0], SCRDM: [0, 0, 5], SCRCM: [0, 0, 5], PRSDM: [0, 0, -4], PRSCM: [0, 0, -4], PFB: [0, 0, -3], PWB: [0, 0, -3], HFB: [0, 0, 4], HWB: [0, 0, 6],
+    STCB: [0, 0, -5], CCB: [0, 0, 4], SWCB: [0, 0, -5], CWCB: [0, 0, 4], SK: [0, 0, -6], LHK: [0, 0, 2],
   },
 };
 
