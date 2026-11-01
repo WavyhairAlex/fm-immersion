@@ -1,6 +1,6 @@
 [package]
 name = "simloom"
-version = "0.1.12"
+version = "0.1.13"
 description = "Simloom — le compagnon de tes parties de jeux de gestion"
 authors = ["Simloom"]
 license = "MIT"
@@ -26,6 +26,8 @@ thiserror = "2"
 # Plugin FM27 : téléchargement depuis GitHub Releases (sur demande) et vérification SHA-256
 ureq = "2"
 sha2 = "0.10"
+# Planet Zoo 2 : exports de Zoologix (registre JSON, plan PNG) transmis en base64 par la page
+base64 = "0.22"
 
 [profile.release]
 codegen-units = 1

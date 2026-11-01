@@ -1,6 +1,7 @@
 mod db;
 mod fm;
 mod fm_bridge;
+mod pz2;
 
 use std::sync::Mutex;
 use tauri::Manager;
@@ -27,7 +28,8 @@ pub fn run() {
             fm_bridge::fm_bridge_status,
             fm_bridge::fm_bridge_latest,
             fm_bridge::fm_bridge_install,
-            fm_bridge::fm_bridge_default_game_dir
+            fm_bridge::fm_bridge_default_game_dir,
+            pz2::pz2_save_download
         ])
         .run(tauri::generate_context!())
         .expect("impossible de démarrer Simloom");

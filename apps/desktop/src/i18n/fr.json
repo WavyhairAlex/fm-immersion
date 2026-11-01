@@ -827,5 +827,11 @@
       "custom": "perso",
       "inGame": "Dans le jeu :"
     }
+  },
+  "pz2": {
+    "back": "Mes parties",
+    "loading": "Ouverture du registre Zoologix…",
+    "error": "Le registre Zoologix de cette partie n'a pas pu être ouvert. Relance Simloom, puis réessaie.",
+    "frame": "Zoologix, ton registre Planet Zoo 2"
   }
 }

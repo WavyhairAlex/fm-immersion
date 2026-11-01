@@ -27,7 +27,8 @@ Le cadrage complet est dans le document « Simloom — Cadrage » (Claude Docs).
 ## Feuille de route
 
 1. Socle : appli Tauri, base locale, parties, mise à jour automatique, release Windows. ← on est ici
-2. Modules **Transport Fever 3** (`modules/tf3`) et **Planet Zoo 2** (`modules/pz2`).
+2. Modules **Transport Fever 3** (`modules/tf3`) et **Planet Zoo 2** (`modules/pz2`). Planet Zoo 2 = **Zoologix**,
+   repris tel quel depuis son artifact (v448, 01/11/2026), voir « Zoologix » plus bas.
 3. Module **Football Manager** (`fm`) en novembre/décembre (sortie du jeu le 10 novembre).
 4. Lecture des fichiers de sauvegarde (Rust), puis candidature SignPath une fois des utilisateurs réels.
 
@@ -43,6 +44,7 @@ Monorepo pnpm + Turborepo.
 | `packages/db` | Schéma Drizzle (dialecte SQLite) du socle ; les modules ajoutent le leur |
 | `packages/shared` | Schémas zod, types partagés, liste des jeux, contrat des modules |
 | `modules/<jeu>` | Un module par jeu : manifeste, `src/schema.ts` (tables préfixées `<jeu>_`), carte de tableau de bord |
+| `apps/desktop/zoologix`, `apps/desktop/public/zoologix` | Zoologix (Planet Zoo 2) : page ouverte dans un cadre par `/pz2/:saveId` |
 | `brand/source` | Sources de l'identité (PNG mascottes, SVG logo) — ne pas embarquer directement |
 
 ### Accès aux données
@@ -90,7 +92,20 @@ puis publication manuelle du brouillon de release.
 - Validation des entrées avec les schémas zod de `@simloom/shared`.
 - Imports internes sans extension (`./games`, pas `./games.js`).
 - Pas de données de jeu propriétaires dans le dépôt, pas de dépendance propriétaire (condition SignPath).
-- CSP stricte dans `tauri.conf.json` : aucun contenu distant dans la webview.
+- CSP stricte dans `tauri.conf.json` : aucun contenu distant dans la webview. Seule souplesse :
+  `style-src-attr 'unsafe-inline'` (attributs `style=""` de Zoologix) ; aucun script en ligne.
+
+## Zoologix (Planet Zoo 2)
+- Repris tel quel depuis l'artifact claude.ai (choix du 01/11/2026) : `public/zoologix/app.js` est le script
+  d'origine, `public/zoologix/zoologix.css` sa feuille de style. Exceptions assumées aux conventions : interface en
+  français seulement, palette et polices propres à Zoologix. Un alignement sur Simloom viendra ensuite.
+- `src/zoologix/entry.ts` remplace les services claude.ai (`window.claude.use("db" | "assets" | "downloads")`)
+  par la base locale (tables `pz2_docs`, `pz2_blobs`) via `src/lib/zoologix-host.ts`, préparé par la page parente.
+- Adaptations du script (en tête et en fin de `app.js`, marquées « Simloom ») : gestionnaires `onclick`/`onerror`/
+  `ontoggle` remplacés par `data-zx`/`data-ze`/`data-zt`, `<style>` en ligne doublés en feuilles construites,
+  polices locales pour les exports. Aucun portrait d'espèce du jeu n'est embarqué : icônes du joueur
+  (`public/zoologix/ico`, liste dans `src/zoologix/seed-icones.json`) ou pastille à initiales.
+- Données d'un ancien Zoologix : bouton Sauvegarder dans l'artifact, puis Restaurer dans l'appli.
 
 ## Commandes
 ```bash
