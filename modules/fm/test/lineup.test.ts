@@ -89,6 +89,13 @@ describe('compo lue dans le jeu', () => {
     expect(edh!.suspension).toBe('Championnat national, 1 match, 3 cartons jaunes');
     expect(unavailable(edh!)).toBe(true);
     expect(j7!.suspension).toBeNull();
+    // Après le match (01/11) : liste vide, cumul resté à 1 → plus suspendu.
+    expect(suspensionsOf({ ...base, custom: { equipe: { nbSuspensionsEnCours: 0, suspensionsEnCours: '[]' }, joueurs: { '0': { id: 2000533385, suspensions: 1 } } } } as unknown as FmSnapshot).size).toBe(0);
+    // Deux joueurs au cumul positif, une suspension reliée par suspenduId0 : seul le bon est écarté.
+    const two = { equipe: { nbSuspensionsEnCours: 1, suspensionsEnCours: [ban], suspenduId0: 7 }, joueurs: { '0': { id: 2000533385, suspensions: 1 }, '1': { id: 7, suspensions: 1 } } };
+    expect([...suspensionsOf({ ...base, custom: two } as unknown as FmSnapshot).keys()]).toEqual(['7']);
+    // Sans id : par prudence, les deux candidats sont écartés.
+    expect(suspensionsOf({ ...base, custom: { ...two, equipe: { nbSuspensionsEnCours: 1, suspensionsEnCours: [ban] } } } as unknown as FmSnapshot).size).toBe(2);
     // Compteur du joueur resté à 1 alors que l'équipe n'a plus de suspension : cumul, pas une suspension.
     expect(suspensionsOf({ ...base, custom: custom(0, []) } as unknown as FmSnapshot).size).toBe(0);
     // Liste déjà dépliée (objet) et sans compteur d'équipe : on se fie à la liste.
