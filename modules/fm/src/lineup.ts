@@ -234,11 +234,13 @@ export function starsOf(v: unknown): number | null {
 const num = (v: unknown) => (typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' && !isNaN(+v) ? +v : null);
 
 /**
- * Suspensions lues par chemins.json : `custom.joueurs[rang] = { id, suspensions: SuspensionsCount }` et
- * `custom.equipe = { nbSuspensionsEnCours: AllCompsActiveBansCount, suspensionsEnCours: AllCompsActiveBans }`.
- * SuspensionsCount n'est peut-être qu'un cumul : un joueur n'est compté suspendu que si l'équipe a aussi
- * une suspension en cours. La liste du jeu désigne le joueur par « Person#… », qui ne se relie pas à son id :
- * le détail (compétition, matchs restants, motif) n'est repris que s'il y a un seul suspendu.
+ * Suspensions lues par chemins.json. La source de vérité est la liste des suspensions en cours de l'équipe
+ * (`custom.equipe.suspensionsEnCours` = AllCompsActiveBans, `nbSuspensionsEnCours` = son compte).
+ * `custom.joueurs[].suspensions` (SuspensionsCount) est un cumul sur la saison (vérifié le 01/11 : il reste à 1
+ * une fois la suspension purgée) : il ne sert qu'à deviner le joueur quand la liste ne donne pas son id.
+ * L'id vient, dans l'ordre : de `custom.equipe.suspenduId0`, `suspenduId1`… (AllCompsActiveBans/#i/Player/UniqueId),
+ * d'un champ id de l'élément de liste, sinon des joueurs dont le cumul est positif. Dans ce dernier cas, s'il y a
+ * plus de candidats que de suspensions, tous sont écartés par prudence, sans détail.
  * Renvoie id du joueur → texte de la suspension.
  */
 export function suspensionsOf(snap: FmSnapshot): Map<string, string> {
@@ -246,7 +248,6 @@ export function suspensionsOf(snap: FmSnapshot): Map<string, string> {
   const custom = (snap as Raw).custom as Raw | null | undefined;
   if (!custom || typeof custom !== 'object') return out;
   const team = (custom.equipe ?? {}) as Raw;
-  const teamCount = num(team.nbSuspensionsEnCours);
   let list: unknown = team.suspensionsEnCours;
   if (typeof list === 'string') {
     try {
@@ -256,10 +257,8 @@ export function suspensionsOf(snap: FmSnapshot): Map<string, string> {
     }
   }
   const bans = (Array.isArray(list) ? list : list && typeof list === 'object' ? [list] : []) as Raw[];
-  const active = teamCount ?? (Array.isArray(list) || (list && typeof list === 'object') ? bans.length : null);
-  if (active === 0) return out;
-  const rows = Object.values((custom.joueurs ?? {}) as Record<string, Raw>);
-  const ids = rows.filter((r) => r && r.id != null && (num(r.suspensions) ?? 0) > 0).map((r) => String(r.id));
+  const count = num(team.nbSuspensionsEnCours) ?? (list == null ? null : bans.length);
+  if (!count) return out;
   const detail = (b: Raw | undefined) => {
     if (!b) return 'Suspendu';
     const scope = str((b.BanScope as Raw | undefined)?.BanScopeString) ?? str(b.BanScope);
@@ -268,7 +267,21 @@ export function suspensionsOf(snap: FmSnapshot): Map<string, string> {
     const parts = [scope, left != null ? `${left} match${left > 1 ? 's' : ''}` : null, why].filter(Boolean);
     return parts.length ? parts.join(', ') : 'Suspendu';
   };
-  for (const id of ids) out.set(id, detail(ids.length === 1 && bans.length === 1 ? bans[0] : undefined));
+  const rows = Object.values((custom.joueurs ?? {}) as Record<string, Raw>).filter((r) => r && r.id != null);
+  const known = new Set(rows.map((r) => String(r.id)));
+  // Ids explicites : suspenduId<i> lu par chemins.json, ou id porté par l'élément de liste.
+  const idOf = (b: Raw | undefined, i: number) => {
+    const v = str(team[`suspenduId${i}`]) ?? str(b?.PlayerId) ?? str((b?.Player as Raw | undefined)?.UniqueId) ?? str(b?.Player);
+    return v && (known.size === 0 || known.has(v)) ? v : null;
+  };
+  const resolved = Array.from({ length: Math.max(count, bans.length) }, (_, i) => idOf(bans[i], i));
+  resolved.forEach((id, i) => id && out.set(id, detail(bans[i])));
+  const missing = resolved.filter((id) => !id).length;
+  if (!missing) return out;
+  // Repli : joueurs au cumul positif qui ne sont pas déjà reliés.
+  const cand = rows.filter((r) => (num(r.suspensions) ?? 0) > 0 && !out.has(String(r.id))).map((r) => String(r.id));
+  const lone = cand.length === 1 && missing === 1 ? bans[resolved.indexOf(null)] : undefined;
+  for (const id of cand) out.set(id, detail(lone));
   return out;
 }
 
