@@ -1301,7 +1301,7 @@
       },
       "groupHelp": {
         "sell": "No place in either eleven, not even as a backup: transfer-list them.",
-        "release": "Contract ending within six months, or no market value: don't renew, or terminate to free the wage.",
+        "release": "No place in either eleven and no market value: don't renew, or terminate to free the wage.",
         "loan": "Promising youngsters stuck behind starters and backups: a loan gets them minutes.",
         "extend": "Contract ending within a year: renew before they leave on a free.",
         "replace": "Starters today whose profile doesn't suit the project (or outside the project eleven at 27 or older): they play while they're the best, without a renewal, until a replacement who suits the target style arrives.",
@@ -1454,6 +1454,21 @@
       "title": "Best project role: {{fit}} · best role overall: {{best}}",
       "noPosition": "No position of the project formation within reach",
       "help": "Does the profile suit the game plan? We compare the rating in the best role of the project eleven with the best possible rating at the player's positions. Project ✓: gap of 0.3 star at most; Project ~: up to 0.8 star; Off project: more, or no position in the formation. This measures profile, not level: don't invest time (training, renewal, transfer) in an off-project player."
+    },
+    "decide": {
+      "title_one": "Contracts to decide · {{count}}",
+      "title_other": "Contracts to decide · {{count}}",
+      "help": "Contracts ending within six months, the ones FM27 messages you about. For each: the decision to take in the game, then why (place in today's and the project eleven, fit with the game plan, age, potential).",
+      "call": {
+        "extend": "Renew",
+        "extendShort": "Renew 1 year",
+        "sellNow": "Sell in January",
+        "letGo": "Let go"
+      },
+      "years_one": "{{count}} year",
+      "years_other": "{{count}} years",
+      "wage": "wage {{wage}}",
+      "legend": "Renew: starter, useful backup under 29, or promising youngster who suits the project. Renew 1 year: starter aged 31+, backup aged 29-30, or off-project starter while you find better. Sell in January: no place in either eleven or off-project profile, but has market value. Let go: same without value, or backup aged 31+."
     }
   },
   "pz2": {

@@ -211,7 +211,7 @@ export function mercatoAdvice(engine: TacticEngine, players: FmPlayer[], gameDat
           reasons.push({ id: 'youthTeam' });
         } else verdict = 'loan';
       } else if (tier <= 1) verdict = 'backup';
-      else verdict = months != null && months <= 12 ? 'release' : 'sell';
+      else verdict = (p.value ?? 1) > 0 ? 'sell' : 'release';
     } else if (tier === 0) {
       // Titulaire aujourd'hui mais hors du onze du projet, et plus en âge de s'y adapter : à remplacer à terme.
       // Profil hors projet : il joue tant qu'il est le meilleur, mais on ne prolonge pas et on prépare sa succession.
@@ -225,7 +225,8 @@ export function mercatoAdvice(engine: TacticEngine, players: FmPlayer[], gameDat
         reasons.push({ id: 'decline', age });
       } else verdict = 'backup';
     } else {
-      verdict = months != null && months <= 6 ? 'release' : p.value === 0 ? 'release' : 'sell';
+      // Même à six mois de la fin, une vente au prochain mercato rapporte plus qu'un départ libre.
+      verdict = (p.value ?? 1) > 0 ? 'sell' : 'release';
       if (age >= 30) reasons.push({ id: 'decline', age });
     }
     // Statut « indésirable » donné en jeu : il part, sauf s'il est titulaire (le statut est alors à revoir).
@@ -252,3 +253,46 @@ export function mercatoAdvice(engine: TacticEngine, players: FmPlayer[], gameDat
   };
 }
 
+
+/* ---------- Contrats à décider ---------- */
+
+/**
+ * Décision pour un contrat qui se termine bientôt :
+ * - `extend` : prolonger (durée conseillée en années) ;
+ * - `extendShort` : prolonger d'un an seulement (titulaire âgé, ou titulaire hors projet le temps de trouver mieux) ;
+ * - `sellNow` : vendre avant la fin du contrat plutôt que le perdre libre ;
+ * - `letGo` : ne pas prolonger, il part libre.
+ */
+export type ContractCall = 'extend' | 'extendShort' | 'sellNow' | 'letGo';
+export const CONTRACT_CALLS: ContractCall[] = ['extend', 'extendShort', 'sellNow', 'letGo'];
+/** Fin de contrat (en mois) à partir de laquelle FM27 demande une décision. */
+export const CONTRACT_DECIDE_MONTHS = 6;
+
+export interface ContractDecision {
+  advice: MercatoAdvice;
+  call: ContractCall;
+  /** Durée conseillée de la prolongation, en années (null si pas de prolongation). */
+  years: number | null;
+}
+
+export function contractCall(a: MercatoAdvice): Pick<ContractDecision, 'call' | 'years'> {
+  const age = a.player.age ?? 25;
+  const tier = Math.min(a.now.tier, a.project.tier);
+  const leave: ContractCall = (a.player.value ?? 1) > 0 ? 'sellNow' : 'letGo';
+  const long = age <= 26 ? 3 : age <= 30 ? 2 : 1;
+  // Profil hors projet : on ne s'engage pas sur la durée. Titulaire du jour : un an, le temps de trouver mieux.
+  if (a.compat?.compat === 'no') return a.now.tier === 0 ? { call: 'extendShort', years: 1 } : { call: leave, years: null };
+  if (isUnwanted(a.player.squadStatus) && tier > 0) return { call: leave, years: null };
+  if (a.prospect) return { call: 'extend', years: Math.max(3, long) };
+  if (tier === 0) return age >= 31 ? { call: 'extendShort', years: 1 } : { call: 'extend', years: long };
+  if (tier === 1) return age >= 31 ? { call: 'letGo', years: null } : age >= 29 ? { call: 'extendShort', years: 1 } : { call: 'extend', years: long };
+  return { call: leave, years: null };
+}
+
+/** Contrats qui finissent dans `within` mois ou moins (ou déjà échus), avec la décision conseillée pour chacun. */
+export function contractDecisions(r: MercatoReport, within = CONTRACT_DECIDE_MONTHS): ContractDecision[] {
+  return r.advice
+    .filter((a) => a.months != null && a.months <= within)
+    .map((advice) => ({ advice, ...contractCall(advice) }))
+    .sort((a, b) => CONTRACT_CALLS.indexOf(a.call) - CONTRACT_CALLS.indexOf(b.call) || (b.advice.player.level ?? 0) - (a.advice.player.level ?? 0));
+}

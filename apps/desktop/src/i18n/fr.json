@@ -1301,7 +1301,7 @@
       },
       "groupHelp": {
         "sell": "Pas de place dans les deux onze, même comme doublure : mets-les sur la liste des transferts.",
-        "release": "Contrat qui finit dans moins de six mois, ou sans valeur marchande : ne pas prolonger, ou résilier pour libérer le salaire.",
+        "release": "Pas de place dans les deux onze et aucune valeur marchande : ne pas prolonger, ou résilier pour libérer le salaire.",
         "loan": "Jeunes prometteurs bloqués derrière les titulaires et les doublures : un prêt leur donne du temps de jeu.",
         "extend": "Contrat qui finit dans moins d'un an : à prolonger avant qu'ils ne partent libres.",
         "replace": "Titulaires aujourd'hui, mais dont le profil ne colle pas au projet (ou hors du onze du projet à 27 ans ou plus) : ils jouent tant qu'ils sont les meilleurs, sans prolongation, en attendant un remplaçant qui colle au style visé.",
@@ -1454,6 +1454,21 @@
       "title": "Au meilleur rôle du projet : {{fit}} · à son meilleur rôle : {{best}}",
       "noPosition": "Aucun poste du schéma du projet dans ses cordes",
       "help": "Le profil colle-t-il au projet de jeu ? On compare sa note au meilleur rôle du onze du projet à sa meilleure note possible à ses postes. Projet ✓ : écart d'au plus 0,3 étoile ; Projet ~ : jusqu'à 0,8 étoile ; Hors projet : au-delà, ou aucun poste du schéma. Ne mesure pas le niveau, seulement le profil : inutile d'investir du temps (entraînement, prolongation, transfert) sur un joueur hors projet."
+    },
+    "decide": {
+      "title_one": "Contrats à décider · {{count}}",
+      "title_other": "Contrats à décider · {{count}}",
+      "help": "Les contrats qui finissent dans six mois ou moins, ceux que FM27 t'envoie en message. Pour chacun : la décision à prendre dans le jeu, puis pourquoi (place dans le onze du jour et du projet, compatibilité avec le projet de jeu, âge, potentiel).",
+      "call": {
+        "extend": "Prolonger",
+        "extendShort": "Prolonger 1 an",
+        "sellNow": "Vendre en janvier",
+        "letGo": "Laisser partir"
+      },
+      "years_one": "{{count}} an",
+      "years_other": "{{count}} ans",
+      "wage": "salaire {{wage}}",
+      "legend": "Prolonger : titulaire, doublure utile de moins de 29 ans ou jeune prometteur au profil du projet. Prolonger 1 an : titulaire de 31 ans ou plus, doublure de 29-30 ans, ou titulaire hors projet le temps de trouver mieux. Vendre en janvier : pas de place dans les deux onze ou profil hors projet, mais une valeur marchande. Laisser partir : idem sans valeur, ou doublure de 31 ans ou plus."
     }
   },
   "pz2": {
