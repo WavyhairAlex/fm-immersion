@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { autoPhase, buildTrainingWeek, defaultMatchDays, individualAdvice, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, weekMatches } from '../src';
+import { autoPhase, buildTrainingWeek, currentTrainingWeek, trainingAlerts, defaultMatchDays, individualAdvice, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, weekMatches } from '../src';
 
 const MONDAY = '2026-08-31';
 
@@ -166,5 +166,23 @@ describe('groupes d’encadrement', () => {
     expect(personalityTone('Peu professionnel')).toBe('bad');
     expect(personalityTone('Très professionnel')).toBe('good');
     expect(personalityTone('Équilibré')).toBe('neutral');
+  });
+});
+
+describe('semaine courante et alertes', () => {
+  it('construit la semaine d’après le calendrier du jeu', () => {
+    const w = currentTrainingWeek({ gameDate: '2026-09-03', seasonStart: 8, fixtures: [{ date: '2026-09-05' }] });
+    expect(w.code).toBe('A2-1');
+    expect(w.days[5]!.kind).toBe('match');
+  });
+
+  it('liste les intensités à baisser et les joueurs en manque de rythme', () => {
+    const a = trainingAlerts([
+      { injury: null, age: 25, condition: 70, sharpness: 90 },
+      { injury: null, age: 25, condition: 95, sharpness: 50 },
+      { injury: 'x', age: 25, condition: 50, sharpness: 20 },
+    ]);
+    expect(a.lower).toHaveLength(1);
+    expect(a.rusty).toHaveLength(1);
   });
 });

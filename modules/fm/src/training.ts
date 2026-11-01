@@ -487,3 +487,33 @@ export function mentoringGroups<P extends MentorPlayer>(players: P[], maxPerMent
   }
   return { groups, avoid, unassigned };
 }
+
+/* ---------- Semaine courante (accueil) ---------- */
+
+/** Semaine type en cours d'après la date du jeu, le calendrier et les réglages du coach, sans réglage manuel. */
+export function currentTrainingWeek(o: {
+  gameDate: string;
+  fixtures?: unknown;
+  seasonStart?: number;
+  trainingDays?: number[];
+  priorities?: EffArea[];
+  style?: string;
+}): TrainingWeek {
+  const monday = mondayOf(o.gameDate);
+  const { phase, week } = autoPhase(monday, o.seasonStart ?? 8);
+  const hasCalendar = Array.isArray(o.fixtures) && o.fixtures.length > 0;
+  const cal = weekMatches(o.fixtures, monday);
+  const seasonal = phase === 'A' || phase === 'B' || phase === 'C';
+  const matchDays = hasCalendar ? cal.days : defaultMatchDays(phase, week, seasonal ? 1 : 0);
+  return buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: hasCalendar && cal.before, trainingDays: o.trainingDays, priorities: o.priorities, style: o.style });
+}
+
+/** Ce qui demande une action côté entraînement : intensités à baisser, joueurs en manque de rythme. */
+export function trainingAlerts<P extends { injury: string | null; age: number | null; condition: number | null; sharpness: number | null; team?: string | null }>(players: P[]) {
+  const squad = players.filter((p) => !p.team);
+  const advice = squad.map((p) => ({ p, a: individualAdvice(p) }));
+  return {
+    lower: advice.filter((x) => x.a.intensity === 'low').map((x) => x.p),
+    rusty: advice.filter((x) => x.a.rusty).map((x) => x.p),
+  };
+}
