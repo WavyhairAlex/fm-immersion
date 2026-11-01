@@ -963,14 +963,16 @@
         "T": "Bloc tactique",
         "A": "Début de saison",
         "B": "Milieu de saison",
-        "C": "Fin de saison"
+        "C": "Fin de saison",
+        "R": "Repos (trêve)"
       },
       "phaseHelp": {
         "P": "4 semaines de reprise : P1 et P2 uniquement physiques, P3 ajoute le ballon (amicaux mercredi et samedi), P4 le jeu de passes, la construction, l'attaque et la défense (amical le mercredi).",
         "T": "Bloc de 4 semaines pour installer la tactique, avec un match le mercredi.",
         "A": "4 premiers mois : travail technique et tactique large.",
         "B": "3 mois suivants : organisation déjà installée, préparation de match et esprit d'équipe.",
-        "C": "Jusqu'à la fin : préparation de match, organisation défensive et coups de pied arrêtés."
+        "C": "Jusqu'à la fin : préparation de match, organisation défensive et coups de pied arrêtés.",
+        "R": "Trêve : semaine complète de repos, comme le jeu. Les dernières semaines avant la reprise deviennent une mini-présaison (P1 à P4, P4 juste avant la reprise)."
       },
       "theme": {
         "buildUp": "Construction et possession",
@@ -1034,6 +1036,7 @@
       "trainingDaysHelp": "Un club à temps partiel ne s'entraîne que certains soirs : coche les jours proposés dans l'écran Entraînement du jeu. Les autres jours sans match restent libres ; la dernière séance avant un match sert de préparation.",
       "presetHint": "Point de départ dans le jeu : charge le programme « {{preset}} », puis ajuste les séances comme ci-dessous.",
       "preset": {
+        "fullRest": "Semaine complète de repos",
         "preSeason": "Pré-saison",
         "tacticalBalanced": "Priorité tactique - Équilibrée",
         "tacticalIP": "Priorité tactique - Avec le ballon",
@@ -1108,7 +1111,10 @@
       "setupStatus": {
         "todo": "à régler",
         "change": "À changer"
-      }
+      },
+      "winterBreak": "Trêve hivernale",
+      "winterFrom": "Début de la trêve",
+      "winterTo": "Reprise du championnat"
     },
     "intro": {
       "home": "Ce qui demande ton attention aujourd'hui, les styles qui collent à l'effectif, tes meilleurs joueurs et tes jeunes.",
