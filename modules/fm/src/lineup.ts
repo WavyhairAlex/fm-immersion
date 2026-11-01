@@ -1,6 +1,7 @@
 import { unavailable, type FmPlayer } from './player';
 import { parsePositions, type PosCode } from './positions';
 import type { FmSnapshot } from './snapshot';
+import { snapshotRoleStars, type RoleStars } from './game-stars';
 import { FORMATIONS, slotContexts, type FormationPlan, type RoleRef, type Slot, type SlotCtx, type TacticEngine } from './tactic';
 
 /*
@@ -285,6 +286,12 @@ export function suspensionsOf(snap: FmSnapshot): Map<string, string> {
   return out;
 }
 
+function simpleStars(st: RoleStars[string]) {
+  const out: Record<string, Record<string, Record<string, number>>> = {};
+  for (const [pos, byPh] of Object.entries(st)) for (const [ph, t] of Object.entries(byPh ?? {})) ((out[pos] ??= {})[ph] = Object.fromEntries(Object.entries(t).map(([k, v]) => [k, v.v])));
+  return out;
+}
+
 /**
  * Données joueurs étendues du plugin 0.3.1 (`playersExtended[playerId]`) : moral, satisfaction,
  * hiérarchie, étoiles de niveau et de potentiel vues par le staff. Fusionnées dans chaque joueur brut.
@@ -293,12 +300,15 @@ export function withExtended(snap: FmSnapshot): FmSnapshot {
   const ext = (snap as Raw).playersExtended;
   const byId = (ext && typeof ext === 'object' ? ext : {}) as Record<string, Raw | undefined>;
   const bans = suspensionsOf(snap);
-  if (!Object.keys(byId).length && !bans.size) return snap;
+  const stars = snapshotRoleStars(snap);
+  if (!Object.keys(byId).length && !bans.size && !Object.keys(stars).length) return snap;
   return {
     ...snap,
     players: snap.players.map((p) => {
       const ban = bans.get(String(p.id));
-      const q = ban && !(p as Raw).suspension ? { ...p, suspension: ban } : p;
+      let q: typeof p = ban && !(p as Raw).suspension ? { ...p, suspension: ban } : p;
+      const st = stars[String(p.id)];
+      if (st) q = { ...q, gameStars: simpleStars(st) };
       const x = byId[String(p.id)];
       if (!x) return q;
       return {
