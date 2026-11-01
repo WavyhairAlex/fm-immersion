@@ -1,13 +1,15 @@
-import { POS_LABEL, buildProject, rankTargets, storedTargets, type FmPlayer, type FmSnapshot, type StoredTarget } from '@simloom/module-fm';
+import { POS_LABEL, buildProject, rankTargets, storedTargets, type FmPlayer, type FmSnapshot, type StoredTarget, type TargetVerdict } from '@simloom/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { fmData } from '../lib/data';
 import { useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticEngine } from './FmTactic';
-import { Empty, Fit, Level, Panel, Tag, useCoach, useFormat, useNames } from './FmUi';
+import { Empty, Fit, Level, Panel, Tag, useCoach, useFormat, useNames, type Tone } from './FmUi';
 
 type Filter = 'list' | 'all' | 'dismissed';
+
+const VERDICT_TONE: Record<TargetVerdict, Tone> = { starter: 'good', backup: 'info', none: 'warn' };
 
 /**
  * Cibles du mercato : joueurs suivis dans le jeu (liste de suivi, cibles du recrutement), gardés dans la base
@@ -35,11 +37,11 @@ export function FmTargets({ saveId, snap, players, folder, go }: { saveId: strin
   const ranked = useMemo(() => {
     const withAttrs = shown.filter((p) => Object.keys(p.attributes).length);
     const rest = shown.filter((p) => !Object.keys(p.attributes).length).map((target) => ({ target, best: null }));
-    return [...(pr ? rankTargets(engine, withAttrs, pr) : withAttrs.map((target) => ({ target, best: null }))), ...rest] as {
+    return [...(pr ? rankTargets(engine, withAttrs, pr, players) : withAttrs.map((target) => ({ target, best: null }))), ...rest] as {
       target: StoredTarget;
       best: ReturnType<typeof rankTargets>[number]['best'];
     }[];
-  }, [engine, shown, pr]);
+  }, [engine, shown, pr, players]);
 
   const dismiss = useMutation({
     mutationFn: ({ id, on }: { id: string; on: boolean }) => fmData.dismissTarget(saveId, id, on),
@@ -48,6 +50,9 @@ export function FmTargets({ saveId, snap, players, folder, go }: { saveId: strin
 
   if (!pr) return <Empty>{t('fm.tac.noAttributes')}</Empty>;
   const read = (snap as { collecte?: Record<string, string> }).collecte?.cibles;
+
+  // Le jeu met -1 ou 0 quand il ne connaît pas la valeur.
+  const money = (v: number | null | undefined) => (v != null && v > 0 ? f.money(v) : '–');
 
   const compare = (id: string) => {
     writeScoped('simloom.fm.compare', scope, [id]);
@@ -101,16 +106,10 @@ export function FmTargets({ saveId, snap, players, folder, go }: { saveId: strin
                   <tr key={p.id} className={`border-t border-canard/5 hover:bg-creme/60 ${p.inList ? '' : 'text-canard/60'}`}>
                     <td className="cursor-pointer px-2 py-1.5 font-bold" onClick={() => compare(p.id)} title={t('fm.targets.compare')}>
                       {p.name}
-                      {p.sources.includes('essai') && (
-                        <>
-                          {' '}
-                          <Tag tone="info">{t('fm.targets.trial')}</Tag>
-                        </>
-                      )}
                       {p.scout?.recommendation && <div className="text-xs font-normal text-brun">{p.scout.recommendation}</div>}
                     </td>
                     <td className="px-2 py-1.5 tabular-nums">{p.age ?? '–'}</td>
-                    <td className="px-2 py-1.5">{p.club ?? '–'}</td>
+                    <td className="px-2 py-1.5">{p.sources.includes('essai') ? <Tag tone="info">{t('fm.targets.trial')}</Tag> : (p.club ?? '–')}</td>
                     <td className="px-2 py-1.5">
                       {best ? (
                         <>
@@ -123,8 +122,15 @@ export function FmTargets({ saveId, snap, players, folder, go }: { saveId: strin
                     <td className="px-2 py-1.5">
                       <Fit value={best?.fit} />
                     </td>
-                    <td className={`px-2 py-1.5 font-bold tabular-nums ${best && best.gain > 0 ? 'text-eau-fonce' : 'text-brun'}`}>
-                      {best ? `${best.gain > 0 ? '+' : ''}${Math.round((best.gain / 20) * 100)} pts` : '–'}
+                    <td className="px-2 py-1.5" title={best ? t('fm.targets.gainHelp', { gain: `${best.gain > 0 ? '+' : ''}${Math.round((best.gain / 20) * 100)}` }) : undefined}>
+                      {best ? (
+                        <>
+                          <Tag tone={VERDICT_TONE[best.verdict]}>{t(`fm.targets.verdict.${best.verdict}`)}</Tag>
+                          {best.over && <div className="mt-0.5 text-xs text-brun">{t(`fm.targets.over.${best.verdict}`, { name: best.over.name })}</div>}
+                        </>
+                      ) : (
+                        '–'
+                      )}
                     </td>
                     <td className="px-2 py-1.5">
                       <Level value={p.level} />
@@ -136,7 +142,7 @@ export function FmTargets({ saveId, snap, players, folder, go }: { saveId: strin
                       {p.scout?.knowledge != null ? `${Math.round(p.scout.knowledge)} %` : '–'}
                     </td>
                     <td className="whitespace-nowrap px-2 py-1.5 tabular-nums">
-                      {value?.min != null && value.max != null && value.min !== value.max ? `${f.money(value.min)} – ${f.money(value.max)}` : f.money(value?.mid ?? p.value)}
+                      {value?.min != null && value.max != null && value.min !== value.max ? `${f.money(value.min)} – ${f.money(value.max)}` : money(value?.mid ?? p.value)}
                     </td>
                     <td className="whitespace-nowrap px-2 py-1.5 text-xs">{p.inList ? <Tag tone="good">{t('fm.targets.inList')}</Tag> : t('fm.targets.lastSeen', { date: f.date(p.lastSeen) })}</td>
                     <td className="px-2 py-1.5 text-right">

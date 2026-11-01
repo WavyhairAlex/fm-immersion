@@ -427,21 +427,67 @@ export function roleMatrix(engine: TacticEngine, list: FmPlayer[], phase: Phase)
 
 /* ---------- Cibles du mercato ---------- */
 
-/** Cibles classées par ce qu'elles apporteraient au onze cible : adéquation au rôle du poste et gain sur le titulaire. */
-export function rankTargets(engine: TacticEngine, targets: Target[], project: Project) {
+/**
+ * Apport d'une cible à l'équipe, poste par poste du onze cible :
+ * - `starter` : meilleure que le titulaire actuel (gain sur le titulaire) ;
+ * - `backup` : pas mieux que le titulaire, mais meilleure que la doublure actuelle (meilleur non-titulaire au poste) ;
+ * - `none` : n'apporte rien à ce poste.
+ */
+export type TargetVerdict = 'starter' | 'backup' | 'none';
+export interface TargetFit {
+  slot: ProjectSlot;
+  fit: number;
+  /** Écart avec le titulaire du poste (sur 20). */
+  gain: number;
+  verdict: TargetVerdict;
+  /** Joueur qu'elle remplacerait (titulaire) ou devancerait (doublure). */
+  over: FmPlayer | null;
+  /** Écart avec ce joueur (sur 20). */
+  margin: number;
+}
+
+/** Marge sous laquelle deux adéquations sont considérées égales (sur 20). */
+const VERDICT_MARGIN = 0.25;
+const VERDICT_RANK: Record<TargetVerdict, number> = { starter: 2, backup: 1, none: 0 };
+
+/** Cibles classées par ce qu'elles apporteraient au onze cible : titulaire, doublure ou rien, puis gain sur le titulaire. */
+export function rankTargets(engine: TacticEngine, targets: Target[], project: Project, squad: FmPlayer[] = []) {
+  const slotFit = (p: FmPlayer, sl: ProjectSlot) => {
+    const a = engine.roleFit(p, sl.ip, 'ip', sl.pos);
+    const b = engine.roleFit(p, sl.oop, 'oop', sl.pos);
+    return a == null || b == null ? null : (a + b) / 2;
+  };
+  const starters = new Set(project.slots.flatMap((sl) => (sl.player ? [sl.player.id] : [])));
+  // Doublure de chaque poste : meilleur joueur de l'effectif, hors titulaires, qui y joue naturellement.
+  const backups = new Map(
+    project.slots.map((sl) => {
+      let best: { player: FmPlayer; fit: number } | null = null;
+      for (const p of squad) {
+        if (starters.has(p.id) || !p.positions.includes(sl.pos)) continue;
+        const fit = slotFit(p, sl);
+        if (fit != null && (!best || fit > best.fit)) best = { player: p, fit };
+      }
+      return [sl, best] as const;
+    }),
+  );
   return targets
     .map((t) => {
-      let best: { slot: ProjectSlot; fit: number; gain: number } | null = null;
+      let best: TargetFit | null = null;
       for (const sl of project.slots) {
         if (!t.positions.includes(sl.pos)) continue;
-        const a = engine.roleFit(t, sl.ip, 'ip', sl.pos);
-        const b = engine.roleFit(t, sl.oop, 'oop', sl.pos);
-        if (a == null || b == null) continue;
-        const fit = (a + b) / 2;
+        const fit = slotFit(t, sl);
+        if (fit == null) continue;
         const gain = fit - (sl.fit ?? 0);
-        if (!best || gain > best.gain) best = { slot: sl, fit, gain };
+        const bk = backups.get(sl) ?? null;
+        const cand: TargetFit =
+          !sl.player || gain >= VERDICT_MARGIN
+            ? { slot: sl, fit, gain, verdict: 'starter', over: sl.player, margin: gain }
+            : !bk || fit - bk.fit >= VERDICT_MARGIN
+              ? { slot: sl, fit, gain, verdict: 'backup', over: bk?.player ?? null, margin: bk ? fit - bk.fit : fit }
+              : { slot: sl, fit, gain, verdict: 'none', over: sl.player, margin: gain };
+        if (!best || VERDICT_RANK[cand.verdict] > VERDICT_RANK[best.verdict] || (cand.verdict === best.verdict && cand.gain > best.gain)) best = cand;
       }
       return { target: t, best };
     })
-    .sort((a, b) => (b.best?.gain ?? -99) - (a.best?.gain ?? -99));
+    .sort((a, b) => (b.best ? VERDICT_RANK[b.best.verdict] : -1) - (a.best ? VERDICT_RANK[a.best.verdict] : -1) || (b.best?.gain ?? -99) - (a.best?.gain ?? -99));
 }

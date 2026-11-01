@@ -96,6 +96,12 @@ describe('projet du coach', () => {
     expect(ranked[0]!.target.name).toBe('Bon BT');
     expect(ranked[0]!.best!.gain).toBeGreaterThan(0);
     expect(ranked[1]!.best!.gain).toBeLessThan(0);
+    expect(ranked[0]!.best!.verdict).toBe('starter');
+    // Sans effectif connu au-delà des titulaires, une cible moins bonne que le titulaire reste une doublure utile.
+    expect(ranked[1]!.best!.verdict).toBe('backup');
+    // Avec une doublure meilleure qu'elle, elle n'apporte rien.
+    const withBackup = rankTargets(engine, targets, pr, [...squad, p(20, 'BT', 15)]);
+    expect(withBackup.find((r) => r.target.id === 't2')!.best!.verdict).toBe('none');
   });
 });
 

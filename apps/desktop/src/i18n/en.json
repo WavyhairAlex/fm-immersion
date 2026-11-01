@@ -789,14 +789,14 @@
     },
     "targets": {
       "title": "Transfer targets · {{style}} {{form}}",
-      "help": "Players from your shortlist and recruitment targets, read from the game and kept in Simloom. Ranked by what each would add to your target XI (\"Recruitment and training\"): fit for the position's role and gain over the current starter. Click a name to compare. Players on trial (no contract) are listed here too, outside the squad.",
+      "help": "Players from your shortlist, your recruitment targets and those on trial, read from the game and kept in Simloom. For each one, Simloom tells what they would add to your target XI (\"Recruitment and training\"): starter if better than the current starter, backup if better than your current backup in that position, otherwise nothing. Click a name to compare.",
       "col": {
         "player": "Player",
         "age": "Age",
         "club": "Club",
         "pos": "Target position",
         "fit": "Fit",
-        "gain": "Gain",
+        "gain": "Adds",
         "level": "Level",
         "eff": "Proj. effectiveness",
         "wage": "Wage",
@@ -821,7 +821,18 @@
       "unknown": "attributes unknown",
       "emptyFilter": "No target in this filter.",
       "noneRead": "The plugin read the game's lists but found no player ({{status}}). Add players to your shortlist, or check targetSources in the snapshot.",
-      "trial": "On trial"
+      "trial": "On trial",
+      "verdict": {
+        "starter": "Starter",
+        "backup": "Backup",
+        "none": "Adds nothing"
+      },
+      "over": {
+        "starter": "instead of {{name}}",
+        "backup": "ahead of {{name}}",
+        "none": "{{name}} is better"
+      },
+      "gainHelp": "{{gain}} fit points against the current starter"
     },
     "pi": {
       "title": "Player instructions",
