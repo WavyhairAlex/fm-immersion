@@ -448,6 +448,26 @@ export function individualFocus(weak: { key: string }[], isGk: boolean): string 
   return null;
 }
 
+/* ---------- Réglages faits en jeu ---------- */
+
+/** Réglage individuel tel qu'on le saisit dans l'écran Entraîn. individuel du jeu. */
+export interface IndividualSetup {
+  ip: string | null;
+  oop: string | null;
+  focus: string | null;
+  intensity: IndividualIntensity;
+}
+export const SETUP_FIELDS = ['ip', 'oop', 'focus', 'intensity'] as const;
+export type SetupField = (typeof SETUP_FIELDS)[number];
+export type SetupStatus = 'todo' | 'change' | 'ok';
+
+/** Compare le conseil du jour à ce que le joueur a noté comme réglé en jeu. */
+export function setupStatus(rec: IndividualSetup, applied: IndividualSetup | undefined): { status: SetupStatus; changed: SetupField[] } {
+  if (!applied) return { status: 'todo', changed: [] };
+  const changed = SETUP_FIELDS.filter((f) => (rec[f] ?? null) !== (applied[f] ?? null));
+  return { status: changed.length ? 'change' : 'ok', changed };
+}
+
 /* ---------- Groupes d'encadrement ---------- */
 
 /** Personnalités défavorables (FR/EN du jeu) : à tenir à l'écart des jeunes, l'influence se transmet. */

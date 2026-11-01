@@ -292,7 +292,8 @@
         "contract": "Contrat",
         "condition": "Condition",
         "status": "Statut",
-        "sharpness": "Rythme"
+        "sharpness": "Rythme",
+        "setup": "Entraînement"
       },
       "endsIn_one": "fin dans {{count}} mois",
       "endsIn_other": "fin dans {{count}} mois",
@@ -309,7 +310,9 @@
       "lowerIntensity_one": "{{count}} joueur à passer en semi-intensité",
       "lowerIntensity_other": "{{count}} joueurs à passer en semi-intensité",
       "rusty_one": "{{count}} joueur en manque de rythme",
-      "rusty_other": "{{count}} joueurs en manque de rythme"
+      "rusty_other": "{{count}} joueurs en manque de rythme",
+      "setupChanges_one": "{{count}} entraînement individuel à changer",
+      "setupChanges_other": "{{count}} entraînements individuels à changer"
     },
     "contracts": {
       "byYear": "Salaires mensuels libérés par année de fin de contrat",
@@ -1055,6 +1058,16 @@
         "agilityBalance": "Agilité et équilibre",
         "endurance": "Endurance",
         "resistance": "Résistance"
+      },
+      "inGame": "En jeu",
+      "markAll": "Tout est réglé en jeu",
+      "setupDone": "{{done}} / {{total}} joueurs réglés en jeu",
+      "setupChanges_one": "{{count}} changement à faire",
+      "setupChanges_other": "{{count}} changements à faire",
+      "setupHelp": "Coche un joueur une fois son entraînement individuel réglé dans le jeu. Dès que le conseil change (forme, blessure, semaine chargée, onze cible), la case se décoche et la ligne passe en tête avec l'ancien réglage barré.",
+      "setupStatus": {
+        "todo": "à régler",
+        "change": "À changer"
       }
     },
     "intro": {

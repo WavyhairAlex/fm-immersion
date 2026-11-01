@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FmSummary } from './FmSummary';
 import { useTacticChoice } from './FmTactic';
+import { useIndividualSetups } from './FmTraining';
 import { Empty, fitPct, Level, Panel, PlayerName, Pos, Row, Tag, useCoach, type Tone } from './FmUi';
 
 const KIND_TONE: Record<string, Tone> = { injured: 'bad', suspended: 'bad', contract: 'warn', condition: 'warn', status: 'info' };
@@ -29,6 +30,8 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
     [snap.gameDate, snap.fixtures, coach.seasonStart, coach.clubStatus, coach.trainingDays, style],
   );
   const tr = useMemo(() => trainingAlerts(players), [players]);
+  const setups = useIndividualSetups(engine, players, folder, week.days.filter((d) => d.kind === 'match').length);
+  const toChange = setups.rows.filter((r) => r.status === 'change').map((r) => r.plan.player);
   const short = (list: FmPlayer[]) => list.map((p) => p.name.split(' ').at(-1)).join(', ');
   const link = (view: string, label: string) => (
     <button type="button" className="text-sm font-bold text-eau-fonce hover:underline" onClick={() => go(view)}>
@@ -87,6 +90,15 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
             </span>
           </Row>
           <p className="mb-1 text-xs text-brun">{t('fm.home.trainingPreset', { preset: t(`fm.train.preset.${nearestPreset(week)}`) })}</p>
+          {toChange.length > 0 && (
+            <Row>
+              <span>
+                <Tag tone="warn">{t('fm.home.kind.setup')}</Tag> <b>{t('fm.home.setupChanges', { count: toChange.length })}</b>
+                <br />
+                <span className="text-xs text-brun">{short(toChange)}</span>
+              </span>
+            </Row>
+          )}
           {tr.lower.length > 0 && (
             <Row>
               <span>

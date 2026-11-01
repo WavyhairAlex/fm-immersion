@@ -292,7 +292,8 @@
         "contract": "Contract",
         "condition": "Condition",
         "status": "Status",
-        "sharpness": "Sharpness"
+        "sharpness": "Sharpness",
+        "setup": "Training"
       },
       "endsIn_one": "ends in {{count}} month",
       "endsIn_other": "ends in {{count}} months",
@@ -309,7 +310,9 @@
       "lowerIntensity_one": "{{count}} player to set to Half Intensity",
       "lowerIntensity_other": "{{count}} players to set to Half Intensity",
       "rusty_one": "{{count}} player lacking sharpness",
-      "rusty_other": "{{count}} players lacking sharpness"
+      "rusty_other": "{{count}} players lacking sharpness",
+      "setupChanges_one": "{{count}} individual training to change",
+      "setupChanges_other": "{{count}} individual trainings to change"
     },
     "contracts": {
       "byYear": "Monthly wages freed by contract end year",
@@ -1055,6 +1058,16 @@
         "agilityBalance": "Agility and Balance",
         "endurance": "Endurance",
         "resistance": "Resistance"
+      },
+      "inGame": "In game",
+      "markAll": "All set in game",
+      "setupDone": "{{done}} / {{total}} players set in game",
+      "setupChanges_one": "{{count}} change to make",
+      "setupChanges_other": "{{count}} changes to make",
+      "setupHelp": "Tick a player once their individual training is set in the game. As soon as the advice changes (condition, injury, busy week, target XI), the box unticks and the row moves to the top with the old setting struck through.",
+      "setupStatus": {
+        "todo": "to set",
+        "change": "To change"
       }
     },
     "intro": {
