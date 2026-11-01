@@ -281,6 +281,8 @@ mod off {
     // ACTUAL_PLAYER
     pub const AP_VBPTR: u64 = 0x8;
     pub const AP_TEAM: u64 = 0x130;
+    /// Pointeur vers le vecteur des blessures en cours (code du jeu, pas encore vu en partie).
+    pub const AP_INJURIES: u64 = 0xF8;
     pub const AP_POSITIONS: u64 = 0x150;
     pub const AP_ATTR_BASE: usize = 0x150;
     pub const AP_VALUE: usize = 0x234;
@@ -309,6 +311,8 @@ mod off {
     pub const C_WAGE: u64 = 0x20;
     pub const C_FLAGS: u64 = 0x2B;
     pub const C_END: u64 = 0x48;
+    /// Drapeaux de mise en vente : bit 0 ou 3 = sur la liste des transferts (code du jeu, pas encore vu en partie).
+    pub const C_LISTING: u64 = 0x57;
     /// Contrat de prêt : équipe d'accueil `+0x10`, fin du prêt `+0x48` (sans condition).
     pub const L_TEAM: u64 = 0x10;
     pub const L_END: u64 = 0x48;
@@ -473,8 +477,19 @@ pub struct DbPlayer {
     /// vaut environ × 52/12 × le taux de change du jeu, 1,165 dans la partie d'essai).
     pub wage_weekly: Option<i32>,
     pub contract_end: Option<String>,
+    /// Sur la liste des transferts (lu dans le code du jeu, à confirmer en partie).
+    pub transfer_listed: bool,
+    /// Blessé (lu dans le code du jeu, à confirmer en partie).
+    pub injured: bool,
     /// Valeur stockée par le jeu, monnaie de base (le jeu affiche une fourchette estimée autour de cette valeur).
     pub value_raw: Option<i32>,
+}
+
+/// Données de base d'un joueur, disponibles avant les lectures coûteuses.
+pub struct Pre<'a> {
+    pub ca: i16,
+    pub pa: i16,
+    pub position_ratings: &'a BTreeMap<&'static str, u8>,
 }
 
 struct Ctx<'a, M: Mem> {
@@ -514,6 +529,12 @@ impl<M: Mem> Ctx<'_, M> {
     }
 
     fn player(&mut self, ap: u64) -> Option<DbPlayer> {
+        self.player_if(ap, &|_| true)
+    }
+
+    /// Lit un joueur si `pre` accepte ses données de base (CA, PA, postes), avant les lectures plus coûteuses
+    /// (noms, contrat, club) : une recherche dans toute la base reste ainsi rapide.
+    fn player_if(&mut self, ap: u64, pre: &dyn Fn(&Pre) -> bool) -> Option<DbPlayer> {
         let b = self.r.bytes(ap, off::AP_BLOCK)?;
         // Héritage virtuel : les sous-objets PERSON et ACTUAL_PERSON se trouvent par le vbptr.
         let vb = self.r.ptr(ap + off::AP_VBPTR)?;
@@ -542,6 +563,9 @@ impl<M: Mem> Ctx<'_, M> {
                 position_ratings.insert(*code, b[off::AP_POSITIONS as usize + i]);
             }
         }
+        if !pre(&Pre { ca, pa, position_ratings: &position_ratings }) {
+            return None;
+        }
         let mut best: Vec<_> = position_ratings.iter().filter(|(_, &v)| v >= 15).map(|(c, v)| (*c, *v)).collect();
         best.sort_by(|a, b| b.1.cmp(&a.1));
         let positions_text = best.iter().map(|(c, _)| *c).collect::<Vec<_>>().join(", ");
@@ -549,13 +573,14 @@ impl<M: Mem> Ctx<'_, M> {
         let first_name = self.r.string_indirect(actual + off::A_FIRST_NAME);
         let last_name = self.r.string_indirect(actual + off::A_LAST_NAME);
         let common_name = self.r.string_indirect(actual + off::A_COMMON_NAME);
+        // Comme le jeu : nom usuel, sinon prénom + nom, sinon nom complet (vérifié sur 27 joueurs).
         let name = common_name
             .clone()
-            .or_else(|| self.r.string(actual + off::A_FULL_NAME))
             .or_else(|| match (&first_name, &last_name) {
                 (Some(f), Some(l)) => Some(format!("{f} {l}")),
                 (f, l) => f.clone().or_else(|| l.clone()),
-            })?;
+            })
+            .or_else(|| self.r.string(actual + off::A_FULL_NAME))?;
         let birth = date_at(&self.r, actual + off::A_BIRTH);
 
         let contract = self.r.ptr(actual + off::A_CONTRACT);
@@ -568,14 +593,22 @@ impl<M: Mem> Ctx<'_, M> {
         // Club propriétaire : celui du contrat principal ; à défaut, celui où le joueur évolue (+0x130).
         let team = le_u64(&b, off::AP_TEAM as usize);
         let team = valid(team).then_some(team);
+        let loan = self.r.ptr(actual + off::A_LOAN).and_then(|x| self.r.ptr(x));
+        // Prêté chez nous sans contrat principal lisible : le propriétaire reste inconnu (pas le club d'accueil).
         let club = match contract.and_then(|c| self.r.ptr(c + off::C_TEAM)).and_then(|t| self.club_of_team(t)) {
             Some(c) => Some(c),
-            None => team.and_then(|t| self.club_of_team(t)),
+            None if loan.is_none() => team.and_then(|t| self.club_of_team(t)),
+            None => None,
         };
-        let loan = self.r.ptr(actual + off::A_LOAN).and_then(|x| self.r.ptr(x));
         let loan_club = loan.and_then(|l| self.r.ptr(l + off::L_TEAM)).and_then(|t| self.club_of_team(t));
         let loan_end = loan.and_then(|l| date_at(&self.r, l + off::L_END)).and_then(|d| d.iso());
         let value = le_i32(&b, off::AP_VALUE);
+        let transfer_listed = contract.and_then(|c| self.r.u8(c + off::C_LISTING)).is_some_and(|f| f & 0x09 != 0);
+        let injured = self
+            .r
+            .ptr(ap + off::AP_INJURIES)
+            .and_then(|v| Some((self.r.ptr(v)?, self.r.ptr(v + 8)?)))
+            .is_some_and(|(begin, end)| end > begin);
 
         Some(DbPlayer {
             id,
@@ -603,6 +636,8 @@ impl<M: Mem> Ctx<'_, M> {
             attribute_scale: if scale100 { 100 } else { 20 },
             wage_weekly,
             contract_end,
+            transfer_listed,
+            injured,
             value_raw: (value >= 0).then_some(value),
         })
     }
@@ -684,6 +719,21 @@ impl<'a, M: Mem> Database<'a, M> {
                 }
             }
         }
+        out
+    }
+
+    /// Recherche : joueurs acceptés par `pre` puis `keep`, triés par CA décroissant, `limit` au plus.
+    pub fn search(&mut self, limit: usize, pre: &dyn Fn(&Pre) -> bool, keep: impl Fn(&DbPlayer) -> bool) -> Vec<DbPlayer> {
+        let mut out: Vec<DbPlayer> = Vec::new();
+        for i in 0..self.players.len() {
+            if let Some(p) = self.ctx.player_if(self.players[i], pre) {
+                if keep(&p) {
+                    out.push(p);
+                }
+            }
+        }
+        out.sort_by(|a, b| b.ca.cmp(&a.ca).then(b.pa.cmp(&a.pa)));
+        out.truncate(limit);
         out
     }
 
@@ -973,6 +1023,69 @@ pub async fn fm_memory_find(query: String) -> Result<Vec<DbPlayer>, MemError> {
     .map_err(|e| MemError::Unexpected(e.to_string()))?
 }
 
+/// Critères de recherche dans la base (tous facultatifs).
+#[derive(Debug, Default, Clone, serde::Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct SearchFilter {
+    /// Postes Simloom (`DC`, `MC`…) : au moins un tenu à `min_rating` ou plus (15 par défaut).
+    pub positions: Vec<String>,
+    pub min_rating: Option<u8>,
+    pub max_age: Option<u16>,
+    pub min_ca: Option<i16>,
+    pub max_ca: Option<i16>,
+    /// Potentiel minimal (les potentiels négatifs du jeu, en fourchette, sont gardés).
+    pub min_pa: Option<i16>,
+    pub max_wage_weekly: Option<i32>,
+    /// Club à exclure (celui du manager).
+    pub exclude_club_id: Option<i32>,
+    /// Exclure le club du manager humain (trouvé dans la partie).
+    pub exclude_own: bool,
+    /// Seulement les joueurs sans club (libres).
+    pub free_only: bool,
+    /// Seulement les joueurs sur la liste des transferts.
+    pub transfer_listed_only: bool,
+    /// Écarter les blessés.
+    pub exclude_injured: bool,
+    pub limit: Option<usize>,
+}
+
+impl SearchFilter {
+    fn pre(&self, p: &Pre) -> bool {
+        let min = self.min_rating.unwrap_or(15);
+        self.min_ca.map_or(true, |m| p.ca >= m)
+            && self.max_ca.map_or(true, |m| p.ca <= m)
+            && self.min_pa.map_or(true, |m| p.pa < 0 || p.pa >= m)
+            && (self.positions.is_empty()
+                || self.positions.iter().any(|c| p.position_ratings.get(c.as_str()).is_some_and(|&v| v >= min)))
+    }
+    fn keep(&self, p: &DbPlayer) -> bool {
+        self.max_age.map_or(true, |m| p.age.is_some_and(|a| a <= m))
+            && self.max_wage_weekly.map_or(true, |m| p.wage_weekly.map_or(true, |w| w <= m))
+            && self.exclude_club_id.map_or(true, |c| p.club_id != Some(c) && p.loan_club_id != Some(c))
+            && (!self.free_only || (p.club_id.is_none() && p.loan_club_id.is_none()))
+            && (!self.transfer_listed_only || p.transfer_listed)
+            && (!self.exclude_injured || !p.injured)
+    }
+}
+
+/// Recherche dans toute la base (lecture seule, à la demande) : 300 joueurs au plus, meilleurs CA d'abord.
+#[tauri::command]
+pub async fn fm_memory_search(filter: SearchFilter) -> Result<Vec<DbPlayer>, MemError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        with_database(|db, _| {
+            db.check()?;
+            let mut filter = filter;
+            if filter.exclude_own && filter.exclude_club_id.is_none() {
+                filter.exclude_club_id = db.humans().iter().find_map(|h| h.club_id);
+            }
+            let limit = filter.limit.unwrap_or(100).min(300);
+            Ok(db.search(limit, &|p| filter.pre(p), |p| filter.keep(p)))
+        })
+    })
+    .await
+    .map_err(|e| MemError::Unexpected(e.to_string()))?
+}
+
 // ---------------------------------------------------------------------------------------------
 
 #[cfg(test)]
@@ -1108,7 +1221,27 @@ mod tests {
         assert_eq!(p.attributes["AerialReach"], 1);
         assert_eq!(p.attributes["NaturalFitness"], 47 % 20);
         assert_eq!(p.value_raw, Some(1_250_000));
+        assert!(!p.transfer_listed && !p.injured);
         assert_eq!(db.check().unwrap(), (1, 1));
+    }
+
+    #[test]
+    fn recherche_par_criteres() {
+        let m = world();
+        let mut db = Database::open(&m, BASE, KNOWN).unwrap();
+        let run = |db: &mut Database<Fake>, f: SearchFilter| db.search(10, &|p| f.pre(p), |p| f.keep(p)).len();
+        assert_eq!(run(&mut db, SearchFilter::default()), 1);
+        let f = SearchFilter { positions: vec!["DC".into()], max_age: Some(26), min_ca: Some(140), ..Default::default() };
+        assert_eq!(run(&mut db, f), 1);
+        // MDF à 8 seulement, sous le seuil de 15.
+        assert_eq!(run(&mut db, SearchFilter { positions: vec!["MDF".into()], ..Default::default() }), 0);
+        assert_eq!(run(&mut db, SearchFilter { max_age: Some(25), ..Default::default() }), 0);
+        assert_eq!(run(&mut db, SearchFilter { exclude_club_id: Some(7_001), ..Default::default() }), 0);
+        assert_eq!(run(&mut db, SearchFilter { max_wage_weekly: Some(4_000), ..Default::default() }), 0);
+        assert_eq!(run(&mut db, SearchFilter { free_only: true, ..Default::default() }), 0);
+        assert_eq!(run(&mut db, SearchFilter { transfer_listed_only: true, ..Default::default() }), 0);
+        // Potentiel négatif (fourchette du jeu) : gardé.
+        assert_eq!(run(&mut db, SearchFilter { min_pa: Some(170), ..Default::default() }), 1);
     }
 
     #[test]
@@ -1135,6 +1268,11 @@ mod tests {
         assert_eq!(p.loan_club.as_deref(), Some("MFK Košice"));
         assert_eq!(p.loan_club_id, Some(9_002));
         assert_eq!(p.loan_end.as_deref(), Some("2027-05-31"));
+        // Sans contrat principal lisible, le propriétaire n'est pas le club d'accueil.
+        m.put_u64(actual + 0x80, 0);
+        let mut db = Database::open(&m, BASE, KNOWN).unwrap();
+        let p = db.players(1, |_| true).pop().unwrap();
+        assert_eq!((p.club.as_deref(), p.loan_club.as_deref()), (None, Some("MFK Košice")));
     }
 
     #[test]

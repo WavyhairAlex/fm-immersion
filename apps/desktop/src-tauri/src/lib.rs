@@ -34,6 +34,7 @@ pub fn run() {
             fm_bridge::fm_bridge_default_game_dir,
             fm_memory::fm_memory_probe,
             fm_memory::fm_memory_find,
+            fm_memory::fm_memory_search,
             pz2::pz2_save_download
         ])
         .run(tauri::generate_context!())

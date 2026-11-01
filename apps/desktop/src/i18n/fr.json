@@ -1386,6 +1386,43 @@
         "mistakes": "Erreurs → but",
         "focus": "À travailler"
       }
+    },
+    "dbSearch": {
+      "title": "Chercher dans toute la base",
+      "teaser": "Trouve des recrues parmi tous les joueurs de la partie, selon tes critères (poste, âge, niveau, salaire).",
+      "open": "Ouvrir la recherche",
+      "help": "Lecture seule de la base de FM27, à la demande, partie ouverte. Les CA/PA et attributs sont les vraies valeurs du jeu, pas celles connues de tes recruteurs. Les résultats sont classés selon ce qu'ils apportent au onze du projet.",
+      "run": "Chercher",
+      "count": "{{shown}} joueurs retenus sur {{read}} lus",
+      "none": "Aucun joueur ne correspond. Élargis les critères.",
+      "listed": "Transférable",
+      "injured": "Blessé",
+      "free": "Libre",
+      "followed": "Suivi",
+      "add": "Suivre",
+      "f": {
+        "positions": "Postes (aucun = tous)",
+        "maxAge": "Âge max",
+        "minCa": "CA min",
+        "minPa": "PA min",
+        "maxWageWeekly": "Salaire hebdo max",
+        "freeOnly": "Joueurs libres seulement",
+        "transferListedOnly": "Transférables seulement",
+        "excludeInjured": "Sans les blessés",
+        "usefulOnly": "Seulement ceux qui renforcent le onze"
+      },
+      "col": {
+        "player": "Joueur",
+        "age": "Âge",
+        "club": "Club",
+        "caPa": "CA / PA",
+        "pos": "Place",
+        "fit": "Note",
+        "gain": "Apport",
+        "level": "Niveau",
+        "wage": "Salaire hebdo",
+        "contract": "Fin de contrat"
+      }
     }
   },
   "pz2": {

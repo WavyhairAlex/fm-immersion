@@ -163,6 +163,12 @@ const trialOnly = (data: unknown) => {
   return Array.isArray(s) && s.length > 0 && s.every((x) => x === 'essai');
 };
 
+/** Une cible ajoutée à la main depuis la recherche dans la base : elle ne sort jamais seule de la liste. */
+const fromBase = (data: unknown) => {
+  const s = (data as Raw | null)?.sources;
+  return Array.isArray(s) && s.includes('base');
+};
+
 /** Cibles de l'instantané, normalisées (vide si le plugin ne les a pas lues). */
 export function shortlist(snap: FmSnapshot): Target[] {
   return (snapshotTargets(snap) ?? []).flatMap((x) => targetOf(x) ?? []);
@@ -198,7 +204,7 @@ export function mergeTargets(known: TargetRecord[], snap: FmSnapshot): TargetRec
   const byId = new Map(known.map((k) => [k.playerId, k]));
   const seen = new Set<string>();
   const out: TargetRecord[] = [];
-  for (const x of raw) {
+  for (let x of raw) {
     const r = fmPlayerSchema.safeParse(x);
     if (!r.success) continue;
     const id = String(r.data.id);
@@ -206,6 +212,11 @@ export function mergeTargets(known: TargetRecord[], snap: FmSnapshot): TargetRec
     seen.add(id);
     const prev = byId.get(id);
     if (prev && prev.lastSeen > date) continue;
+    // Une cible ajoutée depuis la base le reste, même quand le jeu la liste aussi.
+    if (prev && fromBase(prev.data)) {
+      const sources = Array.isArray((x as Raw).sources) ? ((x as Raw).sources as unknown[]) : [];
+      x = { ...(prev.data as Raw), ...(x as Raw), sources: [...new Set([...sources, 'base'])] };
+    }
     out.push({
       playerId: id,
       name: r.data.name.replace(/<[^>]*>/g, '').trim(),
@@ -217,10 +228,11 @@ export function mergeTargets(known: TargetRecord[], snap: FmSnapshot): TargetRec
       data: x,
     });
   }
-  // Sans listes lues (réglage coupé), seules les cibles venues des essais peuvent sortir.
+  // Sans listes lues (réglage coupé), seules les cibles venues des essais peuvent sortir ;
+  // celles ajoutées depuis la base ne sortent jamais seules (Écarter les retire).
   const listsRead = Array.isArray(snap.shortlist);
   for (const k of known)
-    if (!seen.has(k.playerId) && k.inList && k.lastSeen <= date && (listsRead || trialOnly(k.data))) out.push({ ...k, inList: false });
+    if (!seen.has(k.playerId) && k.inList && k.lastSeen <= date && !fromBase(k.data) && (listsRead || trialOnly(k.data))) out.push({ ...k, inList: false });
   return out;
 }
 
@@ -232,4 +244,79 @@ export function storedTargets(rows: TargetRecord[]): StoredTarget[] {
     const t = targetOf(r.data);
     return t ? [{ ...t, firstSeen: r.firstSeen, lastSeen: r.lastSeen, inList: r.inList, dismissed: r.dismissed }] : [];
   });
+}
+
+/* ---------- Recherche dans la base du jeu ---------- */
+
+/**
+ * Joueur lu directement dans la base de FM27 par Simloom (lecture seule en mémoire, `fm_memory_search`).
+ * Les attributs sont les vraies valeurs (pas l'avis des recruteurs) ; salaire par semaine et valeur dans la
+ * monnaie de base du jeu.
+ */
+export interface DbPlayer {
+  id: number;
+  name: string;
+  age: number | null;
+  birthDate: string | null;
+  club: string | null;
+  clubShort: string | null;
+  loanClub: string | null;
+  loanEnd: string | null;
+  ca: number;
+  pa: number;
+  positionsText: string;
+  positionRatings: Record<string, number>;
+  attributes: Record<string, number>;
+  wageWeekly: number | null;
+  contractEnd: string | null;
+  valueRaw: number | null;
+  transferListed?: boolean;
+  injured?: boolean;
+}
+
+/** Données d'une cible venue de la base, au format des cibles de l'instantané. */
+export function baseTargetData(p: DbPlayer): Raw {
+  return {
+    id: p.id,
+    name: p.name,
+    age: p.age,
+    positionsText: p.positionsText,
+    positionRatings: p.positionRatings,
+    attributes: p.attributes,
+    contractEnd: p.contractEnd,
+    club: p.club ?? p.loanClub,
+    loanClub: p.loanClub,
+    ca: p.ca,
+    pa: p.pa,
+    wageWeekly: p.wageWeekly,
+    valueRaw: p.valueRaw,
+    sources: ['base'],
+  };
+}
+
+/** Cible prête à classer (rankTargets) pour un joueur trouvé dans la base. */
+export function baseTarget(p: DbPlayer): Target | null {
+  return targetOf(baseTargetData(p));
+}
+
+/**
+ * Ajoute à la base des cibles un joueur trouvé dans la base du jeu (ou le remet en liste s'il y est déjà).
+ * Les infos du recrutement déjà connues sont gardées ; la cible ne sort plus seule de la liste.
+ */
+export function addBaseTarget(known: TargetRecord[], p: DbPlayer, date: string): TargetRecord {
+  const id = String(p.id);
+  const prev = known.find((k) => k.playerId === id);
+  const data = baseTargetData(p);
+  const prevData = (prev?.data ?? {}) as Raw;
+  const sources = Array.isArray(prevData.sources) ? (prevData.sources as unknown[]) : [];
+  return {
+    playerId: id,
+    name: p.name,
+    club: p.club ?? p.loanClub,
+    firstSeen: prev && prev.firstSeen < date ? prev.firstSeen : date,
+    lastSeen: prev && prev.lastSeen > date ? prev.lastSeen : date,
+    inList: true,
+    dismissed: false,
+    data: { ...prevData, ...data, sources: [...new Set([...sources, 'base'])] },
+  };
 }
