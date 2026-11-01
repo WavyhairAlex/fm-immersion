@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { autoPhase, buildTrainingWeek, currentTrainingWeek, trainingAlerts, defaultMatchDays, individualAdvice, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, weekMatches } from '../src';
+import { autoPhase, buildTrainingWeek, currentTrainingWeek, trainingAlerts, defaultMatchDays, individualAdvice, individualFocus, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, weekMatches } from '../src';
 
 const MONDAY = '2026-08-31';
 
@@ -128,10 +128,19 @@ describe('programme du jeu et entraînement individuel', () => {
   });
 
   it('règle l’intensité individuelle selon l’état du joueur', () => {
-    expect(individualAdvice({ age: 25, condition: 95, sharpness: 90, injury: 'Entorse' }).intensity).toBe('none');
-    expect(individualAdvice({ age: 25, condition: 75, sharpness: 90, injury: null })).toEqual({ intensity: 'low', reason: 'veryTired', rusty: false });
-    expect(individualAdvice({ age: 19, condition: 98, sharpness: 50, injury: null })).toEqual({ intensity: 'high', reason: 'young', rusty: true });
-    expect(individualAdvice({ age: 33, condition: 98, sharpness: 90, injury: null }).intensity).toBe('medium');
+    expect(individualAdvice({ age: 25, condition: 95, sharpness: 90, injury: 'Entorse' }).intensity).toBe('noWork');
+    expect(individualAdvice({ age: 25, condition: 75, sharpness: 90, injury: null })).toEqual({ intensity: 'half', reason: 'veryTired', rusty: false });
+    expect(individualAdvice({ age: 19, condition: 98, sharpness: 50, injury: null })).toEqual({ intensity: 'double', reason: 'young', rusty: true });
+    expect(individualAdvice({ age: 19, condition: 98, sharpness: 90, injury: null }, { matches: 2 }).intensity).toBe('normal');
+    expect(individualAdvice({ age: 33, condition: 98, sharpness: 90, injury: null }).intensity).toBe('normal');
+    expect(individualAdvice({ age: 26, condition: 98, sharpness: 90, injury: null }).intensity).toBe('normal');
+  });
+
+  it('choisit la priorité individuelle qui travaille l’attribut le plus faible', () => {
+    expect(individualFocus([{ key: 'Kicking' }], true)).toBe('gkDistribution');
+    expect(individualFocus([{ key: 'Positioning' }, { key: 'Tackling' }], false)).toBe('defensivePositioning');
+    expect(individualFocus([{ key: 'Leadership' }, { key: 'Pace' }], false)).toBe('quickness');
+    expect(individualFocus([{ key: 'Reflexes' }], false)).toBeNull();
   });
 });
 

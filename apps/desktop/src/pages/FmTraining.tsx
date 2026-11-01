@@ -8,6 +8,7 @@ import {
   buildTrainingWeek,
   effectiveness,
   individualAdvice,
+  individualFocus,
   mentoringGroups,
   nearestPreset,
   defaultMatchDays,
@@ -49,7 +50,7 @@ function Session({ id }: { id: SessionId }) {
 }
 
 /** Semaine d'entraînement type (méthode « Freedom » de FM Scout) adaptée au calendrier et au style visé. */
-const INTENSITY_TONE: Record<IndividualIntensity, 'good' | 'info' | 'warn' | 'bad'> = { none: 'bad', low: 'warn', medium: 'info', high: 'good', veryHigh: 'good' };
+const INTENSITY_TONE: Record<IndividualIntensity, 'good' | 'info' | 'warn' | 'bad'> = { noWork: 'bad', rest: 'warn', half: 'warn', normal: 'info', double: 'good' };
 
 export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; players: FmPlayer[]; folder: string }) {
   const { t, i18n } = useTranslation();
@@ -262,29 +263,38 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
               <thead className="text-left text-canard/70">
                 <tr>
                   <th className="px-2 py-1">{t('fm.prog.player')}</th>
+                  <th className="px-2 py-1">{t('fm.train.roleIp')}</th>
+                  <th className="px-2 py-1">{t('fm.train.roleOop')}</th>
+                  <th className="px-2 py-1">{t('fm.train.focusCol')}</th>
                   <th className="px-2 py-1">{t('fm.train.intensity')}</th>
-                  <th className="px-2 py-1">{t('fm.proj.role')}</th>
                   <th className="px-2 py-1 text-right">{t('fm.proj.fit')}</th>
-                  <th className="px-2 py-1">{t('fm.proj.axes')}</th>
                   <th className="px-2 py-1">{t('fm.train.note')}</th>
                 </tr>
               </thead>
               <tbody>
                 {project.plans.map((x) => {
-                  const a = individualAdvice(x.player);
+                  const a = individualAdvice(x.player, { matches: plan.days.filter((d) => d.kind === 'match').length });
+                  const focus = individualFocus(x.weak, x.player.positions[0] === 'GB');
+                  const ip = x.slot ? engine.roles.get(x.slot.ip) : x.phase === 'ip' ? x.role : null;
+                  const oop = x.slot ? engine.roles.get(x.slot.oop) : x.phase === 'oop' ? x.role : null;
                   return (
                     <tr key={x.player.id} className="border-t border-canard/5">
                       <td className="px-2 py-1.5 font-bold">
                         {x.player.name} <Pos player={x.player} />
                       </td>
+                      <td className="px-2 py-1.5">{ip ? names.role(ip) : '–'}</td>
+                      <td className="px-2 py-1.5">{oop ? names.role(oop) : '–'}</td>
+                      <td className="px-2 py-1.5">
+                        {focus ? <b>{t(`fm.train.focus.${focus}`)}</b> : '–'}
+                        <br />
+                        <span className="text-xs text-brun">{x.weak.map((w) => `${attr(w.key)} ${Math.round(w.value)}`).join(', ')}</span>
+                      </td>
                       <td className="px-2 py-1.5">
                         <Tag tone={INTENSITY_TONE[a.intensity]}>{t(`fm.train.intensityLevel.${a.intensity}`)}</Tag>
                       </td>
-                      <td className="px-2 py-1.5">{x.role ? names.role(x.role) : '–'}</td>
                       <td className="px-2 py-1.5 text-right">
                         <Fit value={x.fit} />
                       </td>
-                      <td className="px-2 py-1.5">{x.weak.map((w) => `${attr(w.key)} ${Math.round(w.value)}`).join(', ')}</td>
                       <td className="px-2 py-1.5 text-xs text-brun">
                         {[t(`fm.train.reason.${a.reason}`), a.rusty ? t('fm.train.rusty') : null].filter(Boolean).join(' · ')}
                       </td>
