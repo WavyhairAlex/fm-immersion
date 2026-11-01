@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, scopedKey, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticChoice } from './FmTactic';
-import { Empty, Fit, Kpi, Panel, Tag, useNames } from './FmUi';
+import { Chips, Empty, Fit, Kpi, Panel, Tag, useNames } from './FmUi';
 
 const STYLE_KEY = 'simloom.fm.styleView';
 
@@ -15,6 +15,8 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
   const { engine, avail: list, ranked, style: chosen } = useTacticChoice(players, folder, null);
   const sig = useMemo(() => engine.squadSignals(list), [engine, list]);
   const scope = useFmSaveScope();
+  // Rôles typiques montrés une phase à la fois : la liste complète faisait près de 30 cartes.
+  const [rolePhase, setRolePhase] = useState<Phase>('ip');
   const [sel, setSel] = useState<string | null>(() => {
     // Ancienne valeur commune : un id brut, pas du JSON.
     try {
@@ -57,7 +59,6 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
       <div key={`${code}-${ph}`} className="rounded-xl bg-creme/50 px-3 py-2">
         <div className="flex items-baseline justify-between gap-2">
           <b>{names.role(r)}</b>
-          <Tag tone={ph === 'ip' ? 'good' : 'info'}>{t(`fm.tac.phase.${ph}`)}</Tag>
         </div>
         <p className="text-xs text-brun">{keyAttrs(engine, code, ph, 4).map((k) => t(`fm.attr.${k}`, { defaultValue: k })).join(', ')}</p>
         <div className="mt-1 text-sm">
@@ -164,11 +165,15 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
             ))}
           </div>
         </div>
-        <h3 className="mb-2 mt-5 font-semibold">{t('fm.style.roles')}</h3>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {cur.signatureRoles.ip.map((c) => roleBlock(c, 'ip'))}
-          {cur.signatureRoles.oop.map((c) => roleBlock(c, 'oop'))}
+        <div className="mb-2 mt-5 flex flex-wrap items-center justify-between gap-3">
+          <h3 className="font-semibold">{t('fm.style.roles')}</h3>
+          <Chips
+            value={rolePhase}
+            options={(['ip', 'oop'] as const).map((ph) => [ph, `${t(`fm.tac.phase.${ph}`)} · ${cur.signatureRoles[ph].length}`] as [Phase, string])}
+            onChange={setRolePhase}
+          />
         </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{cur.signatureRoles[rolePhase].map((c) => roleBlock(c, rolePhase))}</div>
         <p className="mt-2 text-xs text-brun">{t('fm.style.rolesHelp')}</p>
       </Panel>
 

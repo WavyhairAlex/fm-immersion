@@ -48,7 +48,9 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
         : a.kind === 'condition'
           ? `${Math.round(a.condition)} %`
           : a.detail;
-  const shown = h.alerts.slice(0, 8);
+  // Les joueurs fatigués sont déjà regroupés dans le cadre Entraînement : pas de doublon ligne par ligne ici.
+  const alerts = tr.lower.length ? h.alerts.filter((a) => a.kind !== 'condition') : h.alerts;
+  const shown = alerts.slice(0, 8);
 
   return (
     <div className="space-y-4">
@@ -79,7 +81,7 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
           ) : !h.contracts ? (
             <Empty>{t('fm.home.nothing')}</Empty>
           ) : null}
-          {h.alerts.length > shown.length && <p className="mt-1 text-xs text-brun">{t('fm.home.more', { count: h.alerts.length - shown.length })}</p>}
+          {alerts.length > shown.length && <p className="mt-1 text-xs text-brun">{t('fm.home.more', { count: alerts.length - shown.length })}</p>}
         </Panel>
 
         <Panel title={t('fm.home.training')} action={link('training', t('fm.views.training'))}>

@@ -781,7 +781,8 @@
       "axes": "Axes de travail",
       "inProject": "Projet",
       "rotation": "Rotation",
-      "trainingHelp": "Rôle visé : celui de son poste pour un titulaire du onze cible, sinon le rôle du projet où il est le plus adapté. Axes : ses 3 attributs clés les plus faibles pour ce rôle, à cibler en entraînement individuel."
+      "trainingHelp": "Rôle visé : celui de son poste pour un titulaire du onze cible, sinon le rôle du projet où il est le plus adapté. Axes : ses 3 attributs clés les plus faibles pour ce rôle, à cibler en entraînement individuel.",
+      "trainingDetail": "Le détail joueur par joueur (rôle visé, attributs à travailler, intensité) est à l'étape suivante, Entraînement."
     },
     "targets": {
       "title": "Cibles du mercato · {{style}} {{form}}",
