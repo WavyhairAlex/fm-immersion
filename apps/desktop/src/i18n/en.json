@@ -44,7 +44,8 @@
       "missing": "{{name}} (not found)",
       "saved": "saved {{date}}",
       "other": "FM27 has loaded a save with {{club}}, but this career follows {{expected}}: nothing is imported here. Open the Simloom career for that save, or import anyway if you changed clubs.",
-      "importAnyway": "Import anyway ({{club}})"
+      "importAnyway": "Import anyway ({{club}})",
+      "free": "Without a club since {{date}}: your next club will be picked up automatically"
     },
     "empty": "No squad imported yet. Start FM27 with the plugin, load your save, then click “Import from FM27”.",
     "alert": {

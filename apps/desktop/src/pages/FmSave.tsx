@@ -109,6 +109,9 @@ export function FmSave() {
 
   // Instantané d'une autre sauvegarde chargée dans FM27 : rien n'est importé tant que le joueur ne le confirme pas.
   const [other, setOther] = useState<FmOtherSaveError | null>(null);
+  // Sans club dans FM27 (date de jeu), d'après l'état écrit par le plugin.
+  const [free, setFree] = useState<string | null>(null);
+  const freeSince = free ? (settings?.fmFreeSince ?? free) : null;
   const importSnap = useMutation({
     mutationFn: async (opts: { force?: boolean } = {}) => {
       const text = await invoke<string>('fm_read_snapshot', { folder });
@@ -130,6 +133,17 @@ export function FmSave() {
     if (!folder) return;
     let stop = false;
     const tick = async () => {
+      // État du manager (club entraîné ou sans club), écrit par le plugin depuis la version qui le gère.
+      try {
+        const st = await invoke<string | null>('fm_read_status', { folder });
+        if (!stop && st) {
+          const status = await fmData.noteStatus(saveId, JSON.parse(st));
+          setFree(status.club ? null : status.gameDate);
+          qc.invalidateQueries({ queryKey: [...key, 'settings'] });
+        }
+      } catch {
+        /* fichier absent ou en cours d'écriture */
+      }
       try {
         const text = await invoke<string>('fm_read_snapshot', { folder });
         if (stop || text === lastText.current) return;
@@ -174,6 +188,12 @@ export function FmSave() {
           {snapshot && (
             <span className="text-sm text-brun">
               {t('fm.context', { club: snapshot.club, date: dateFmt.format(new Date(snapshot.gameDate)), count: snapshot.playerCount })}
+            </span>
+          )}
+          {freeSince && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-0.5 text-sm font-bold text-canard ring-1 ring-canard/15">
+              <span className="inline-block h-2 w-2 rounded-full bg-ambre" aria-hidden />
+              {t('fm.saveFile.free', { date: dateFmt.format(new Date(freeSince)) })}
             </span>
           )}
         </div>

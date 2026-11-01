@@ -102,4 +102,22 @@ describe('instantanés Football Manager', () => {
     await fm.updateSettings(save.id, { fmClub: undefined });
     await expect(fm.importSnapshot(save.id, { ...snap('2026-09-01', ['A']), club: 'GAIS' })).rejects.toBeInstanceOf(FmOtherSaveError);
   });
+
+  it('reprend tout seul le nouveau club après une période sans club', async () => {
+    const save = await saves.create({ gameId: 'fm', name: 'V' });
+    await fm.importSnapshot(save.id, snap('2026-11-01', ['A']));
+    // État d'une autre sauvegarde, plus ancien que la partie : ignoré.
+    await fm.noteStatus(save.id, { schema: 'archivix-status/1', gameDate: '2025-01-01', club: null });
+    expect((await fm.settings(save.id)).fmFreeSince).toBeUndefined();
+
+    await fm.noteStatus(save.id, { schema: 'archivix-status/1', gameDate: '2026-11-20', club: null });
+    expect((await fm.settings(save.id)).fmFreeSince).toBe('2026-11-20');
+    // L'ancien instantané relu au démarrage ne met pas fin à la période sans club.
+    await fm.importSnapshot(save.id, snap('2026-11-01', ['A']));
+    expect((await fm.settings(save.id)).fmFreeSince).toBe('2026-11-20');
+
+    await fm.importSnapshot(save.id, { ...snap('2026-12-05', ['N']), club: 'Örgryte IS' });
+    const st = await fm.settings(save.id);
+    expect([st.fmClub, st.fmFreeSince]).toEqual(['Örgryte IS', undefined]);
+  });
 });

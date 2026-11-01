@@ -53,3 +53,17 @@ export const fmSnapshotSchema = z
 
 export type FmPlayerRaw = z.infer<typeof fmPlayerSchema>;
 export type FmSnapshot = z.infer<typeof fmSnapshotSchema>;
+
+/**
+ * État du manager écrit par le plugin à chaque relecture (`archivix-status.json`) : le club entraîné,
+ * ou `null` quand le manager est sans club (l'instantané d'effectif n'est alors pas réécrit).
+ */
+export const fmStatusSchema = z
+  .object({
+    schema: z.literal('archivix-status/1'),
+    gameDate: z.string(),
+    club: z.string().nullish(),
+  })
+  .passthrough();
+
+export type FmStatus = z.infer<typeof fmStatusSchema>;

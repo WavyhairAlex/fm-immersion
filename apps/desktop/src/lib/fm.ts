@@ -1,5 +1,5 @@
 import { saves } from '@simloom/db';
-import { carryRoleStars, fmSnapshotSchema, mergeTargets, type FmSnapshot, type TargetRecord } from '@simloom/module-fm';
+import { carryRoleStars, fmSnapshotSchema, fmStatusSchema, type FmStatus, mergeTargets, type FmSnapshot, type TargetRecord } from '@simloom/module-fm';
 import { fmSnapshots, fmTargets } from '@simloom/module-fm/schema';
 import { and, asc, desc, eq } from 'drizzle-orm';
 import type { Db } from './db';
@@ -11,6 +11,8 @@ export interface FmSaveSettings {
   fmSaveFile?: string;
   /** Club suivi par la partie : un instantané d'un autre club vient d'une autre sauvegarde. */
   fmClub?: string;
+  /** Date de jeu depuis laquelle le manager est sans club (lue dans l'état écrit par le plugin). */
+  fmFreeSince?: string;
 }
 
 /** Fichier .fm listé par Rust (métadonnées seulement). */
@@ -78,8 +80,11 @@ export function fmRepo(db: Db) {
       // Les étoiles des rôles sont lues un poste à la fois : on garde les tables lues avant.
       const prev = await this.latest(saveId);
       const expected = settings.fmClub ?? prev?.club;
-      if (expected && parsed.club !== expected && !opts.force) throw new FmOtherSaveError(parsed.club, expected);
-      if (settings.fmClub !== parsed.club) await this.updateSettings(saveId, { fmClub: parsed.club });
+      // Après une période sans club dans cette carrière, le nouveau club est accepté sans confirmation.
+      const newJob = !!settings.fmFreeSince && parsed.gameDate >= settings.fmFreeSince;
+      if (expected && parsed.club !== expected && !opts.force && !newJob) throw new FmOtherSaveError(parsed.club, expected);
+      // Un ancien instantané (d'avant le départ) ne met pas fin à la période sans club.
+      if (settings.fmClub !== parsed.club || newJob) await this.updateSettings(saveId, { fmClub: parsed.club, ...(newJob ? { fmFreeSince: undefined } : {}) });
       const snap = carryRoleStars(parsed, prev?.club === parsed.club ? prev?.data : undefined);
       const values = { saveId, gameDate: snap.gameDate, club: snap.club, playerCount: snap.players.length, data: snap };
       await db
@@ -125,6 +130,18 @@ export function fmRepo(db: Db) {
     async settings(saveId: string): Promise<FmSaveSettings> {
       const [row] = await db.select({ extra: saves.extra }).from(saves).where(eq(saves.id, saveId));
       return (row?.extra ?? {}) as FmSaveSettings;
+    },
+
+    /**
+     * Note l'état du manager écrit par le plugin. Sans club : la partie le retient (date de départ),
+     * seulement si cet état est postérieur au dernier instantané (sinon il vient d'une autre sauvegarde).
+     */
+    async noteStatus(saveId: string, raw: unknown): Promise<FmStatus> {
+      const status = fmStatusSchema.parse(raw);
+      if (status.club) return status;
+      const [settings, prev] = await Promise.all([this.settings(saveId), this.latest(saveId)]);
+      if (!settings.fmFreeSince && (!prev || status.gameDate >= prev.gameDate)) await this.updateSettings(saveId, { fmFreeSince: status.gameDate });
+      return status;
     },
 
     async updateSettings(saveId: string, patch: Partial<FmSaveSettings>) {

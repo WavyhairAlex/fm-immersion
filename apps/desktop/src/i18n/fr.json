@@ -44,7 +44,8 @@
       "missing": "{{name}} (introuvable)",
       "saved": "enregistrée le {{date}}",
       "other": "FM27 a chargé une sauvegarde de {{club}}, alors que cette partie suit {{expected}} : rien n'est importé ici. Ouvre la partie Simloom de cette sauvegarde, ou importe quand même si tu as changé de club.",
-      "importAnyway": "Importer quand même ({{club}})"
+      "importAnyway": "Importer quand même ({{club}})",
+      "free": "Sans club depuis le {{date}} : ton prochain club sera repris tout seul"
     },
     "empty": "Aucun effectif importé. Lance FM27 avec le plugin, charge ta partie, puis clique sur « Importer depuis FM27 ».",
     "alert": {

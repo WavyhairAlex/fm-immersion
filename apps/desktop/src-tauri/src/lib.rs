@@ -26,6 +26,7 @@ pub fn run() {
             fm::fm_read_reference,
             fm::fm_default_folder,
             fm::fm_list_saves,
+            fm::fm_read_status,
             fm_bridge::fm_bridge_status,
             fm_bridge::fm_bridge_latest,
             fm_bridge::fm_bridge_install,
