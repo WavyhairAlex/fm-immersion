@@ -98,7 +98,7 @@ export function matchupOf(form: string, style: StyleRef, opp: OpponentReport): M
 
   const press = opp.manager.pressing?.toLowerCase() ?? '';
   const ip = style.inPossession.join(' ').toLowerCase();
-  if (/moins|less|rarement/.test(press) && /courtes|jouer malgré le pressing/.test(ip)) reasons.push({ id: 'possessionVsLowPress', value: 0.1 });
+  if (/moins|less|rarement/.test(press) && /courtes|jouer malgré le pressing|gérer le pressing/.test(ip)) reasons.push({ id: 'possessionVsLowPress', value: 0.1 });
   else if (/plus|more|souvent/.test(press) && !/moins/.test(press) && /direct|contourner/.test(ip)) reasons.push({ id: 'directVsHighPress', value: 0.1 });
 
   const leak = opp.formations.oop[0]?.every;

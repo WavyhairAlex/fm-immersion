@@ -1,4 +1,4 @@
-import { abilityNeeded, teamInstructionOf, keyAttrs, styleComplexity, tactAbility, type FmPlayer, type Phase } from '@simloom/module-fm';
+import { abilityNeeded, gameInstructionLabel, keyAttrs, styleComplexity, tactAbility, type FmPlayer, type Phase } from '@simloom/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, scopedKey, useFmSaveScope, writeScoped } from '../lib/save-store';
@@ -149,8 +149,8 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
             <p className="text-xs font-bold uppercase text-canard/60">{t('fm.style.ip')}</p>
             {cur.inPossession.map((x) => (
               <p key={x}>
-                {x}
-                {!teamInstructionOf(x) && <span className="ml-1 text-xs text-brun">({t('fm.style.notInGame')})</span>}
+                {gameInstructionLabel(x) ?? x}
+                {!gameInstructionLabel(x) && <span className="ml-1 text-xs text-brun">({t('fm.style.notInGame')})</span>}
               </p>
             ))}
           </div>
@@ -158,8 +158,8 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
             <p className="text-xs font-bold uppercase text-canard/60">{t('fm.style.oop')}</p>
             {cur.outOfPossession.map((x) => (
               <p key={x}>
-                {x}
-                {!teamInstructionOf(x) && <span className="ml-1 text-xs text-brun">({t('fm.style.notInGame')})</span>}
+                {gameInstructionLabel(x) ?? x}
+                {!gameInstructionLabel(x) && <span className="ml-1 text-xs text-brun">({t('fm.style.notInGame')})</span>}
               </p>
             ))}
           </div>

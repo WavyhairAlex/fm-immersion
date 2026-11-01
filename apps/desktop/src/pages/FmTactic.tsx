@@ -9,7 +9,7 @@ import {
   mergeReference,
   opponentReport,
   rankForMatch,
-  teamInstructionOf,
+  gameInstructionLabel,
   phaseXY,
   planFromLineup,
   playerInstructions,
@@ -392,8 +392,8 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                 <p className="text-xs font-bold uppercase text-canard/60">{t(`fm.style.${ph}`)}</p>
                 {list.map((x) => (
                   <p key={x}>
-                    {x}
-                    {!teamInstructionOf(x) && <span className="ml-1 text-xs text-brun">({t('fm.style.notInGame')})</span>}
+                    {gameInstructionLabel(x) ?? x}
+                    {!gameInstructionLabel(x) && <span className="ml-1 text-xs text-brun">({t('fm.style.notInGame')})</span>}
                   </p>
                 ))}
               </div>
