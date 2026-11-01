@@ -1,7 +1,7 @@
 import { gameFormationOf, gameLineup, normalizePlayer, squadSnapshot, withExtended, type FmPlayer, type FmSnapshot, type Line, type SquadAt } from '@simloom/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { fmData, savesData } from '../lib/data';
@@ -40,19 +40,36 @@ const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
  */
 const SECTIONS = [
   { id: 'home', views: ['home'] },
-  { id: 'squad', views: ['squad', 'analysis', 'stats', 'compare', 'dressing', 'loans'] },
-  { id: 'tactic', views: ['tactic', 'opponent', 'depth', 'calendar', 'roles', 'effectiveness'] },
-  { id: 'project', views: ['style', 'project', 'training', 'mercato', 'targets'] },
-  { id: 'club', views: ['finances', 'wages', 'contracts', 'progression'] },
+  { id: 'squad', views: ['squad', 'analysis', 'compare', 'dressing'] },
+  { id: 'tactic', views: ['tactic', 'opponent', 'roles', 'effectiveness'] },
+  { id: 'project', views: ['style', 'project', 'training', 'mercato'] },
+  { id: 'club', views: ['finances'] },
 ] as const;
+/**
+ * Écrans regroupés : un onglet affiche plusieurs parties à la suite (22 onglets ramenés à 14).
+ * Les anciens noms d'écran restent valides : `go('contracts')` ouvre Finances et descend à Contrats.
+ */
+const PARTS: Record<string, readonly string[]> = {
+  squad: ['squad', 'loans'],
+  analysis: ['analysis', 'stats', 'progression'],
+  tactic: ['tactic', 'depth'],
+  opponent: ['opponent', 'calendar'],
+  mercato: ['mercato', 'targets'],
+  finances: ['finances', 'wages', 'contracts'],
+};
 /** Sections dont les écrans s'enchaînent comme des étapes (numérotées, avec « étape suivante »). */
 const STEPPED = new Set<string>(['project']);
 type View = (typeof SECTIONS)[number]['views'][number];
+const isView = (v: string): v is View => SECTIONS.some((s) => (s.views as readonly string[]).includes(v));
+/** Onglet qui contient un écran (lui-même, ou l'onglet où il a été regroupé). */
+const pageOf = (v: string): View => (isView(v) ? v : ((Object.keys(PARTS).find((k) => PARTS[k]!.includes(v)) as View | undefined) ?? 'home'));
 const VIEW_KEY = 'simloom.fm.view';
+/** Nom d'un onglet : son nom propre s'il regroupe plusieurs écrans, sinon celui de l'écran. */
+const pageLabel = (t: (k: string, o?: Record<string, unknown>) => string, v: string) => t(`fm.pages.${v}`, { defaultValue: t(`fm.views.${v}`) });
 const readView = (): View => {
   try {
-    const v = localStorage.getItem(VIEW_KEY) as View | null;
-    return v && SECTIONS.some((s) => (s.views as readonly string[]).includes(v)) ? v : 'home';
+    const v = localStorage.getItem(VIEW_KEY);
+    return v ? pageOf(v) : 'home';
   } catch {
     return 'home';
   }
@@ -83,12 +100,16 @@ export function FmSave() {
 
   const [view, setView] = useState<View>(readView);
   const go = (v: string) => {
-    setView(v as View);
+    const page = pageOf(v);
+    setView(page);
     try {
-      localStorage.setItem(VIEW_KEY, v);
+      localStorage.setItem(VIEW_KEY, page);
     } catch {
       /* stockage indisponible : l'écran n'est pas retenu */
     }
+    // Écran regroupé : on descend jusqu'à sa partie une fois l'onglet affiché.
+    if (v !== page) setTimeout(() => document.getElementById(`part-${v}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+    else window.scrollTo({ top: 0 });
   };
   const section = SECTIONS.find((s) => (s.views as readonly string[]).includes(view)) ?? SECTIONS[0];
   const [folder, setFolder] = useState('');
@@ -176,6 +197,58 @@ export function FmSave() {
   );
   const gameFormation = gameFormationOf(snapshot?.data.tactic);
   const lineup = useMemo(() => gameLineup(snapshot?.data), [snapshot?.data]);
+  // Contenu de chaque écran ; un onglet en affiche une ou plusieurs parties (voir PARTS).
+  const part = (v: string) => {
+    if (!snapshot) return null;
+    switch (v) {
+      case 'home':
+        return <FmHome snap={snapshot.data} players={players} folder={folder} go={go} />;
+      case 'squad':
+        return <SquadTable players={players} />;
+      case 'analysis':
+        return <FmAnalysis players={players} gameDate={snapshot.gameDate} />;
+      case 'stats':
+        return <FmStats snap={snapshot.data} players={players} />;
+      case 'compare':
+        return <FmCompare saveId={saveId} snap={snapshot.data} players={players} folder={folder} history={history} />;
+      case 'dressing':
+        return <FmDressing players={players} />;
+      case 'loans':
+        return <FmLoans snap={snapshot.data} />;
+      case 'tactic':
+        return <FmTactic snap={snapshot.data} go={go} players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} lineupStatus={(snapshot.data as { collecte?: { compo?: string } }).collecte?.compo ?? null} />;
+      case 'opponent':
+        return <FmOpponent snap={snapshot.data} />;
+      case 'calendar':
+        return <FmCalendar snap={snapshot.data} players={players} />;
+      case 'roles':
+        return <FmRoles players={players} folder={folder} />;
+      case 'style':
+        return <FmStyle players={players} folder={folder} />;
+      case 'effectiveness':
+        return <FmEffectiveness snap={snapshot.data} history={history} go={go} />;
+      case 'project':
+        return <FmProject snap={snapshot.data} players={players} folder={folder} history={history} />;
+      case 'training':
+        return <FmTraining snap={snapshot.data} players={players} folder={folder} />;
+      case 'mercato':
+        return <FmMercato players={players} folder={folder} gameDate={snapshot.gameDate} history={history} />;
+      case 'targets':
+        return <FmTargets saveId={saveId} snap={snapshot.data} players={players} folder={folder} go={go} />;
+      case 'depth':
+        return <FmDepth players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameDate={snapshot.gameDate} history={history} />;
+      case 'finances':
+        return <FmFinances snap={snapshot.data} players={players} />;
+      case 'wages':
+        return <FmWages players={players} gameDate={snapshot.gameDate} />;
+      case 'contracts':
+        return <FmContracts players={players} gameDate={snapshot.gameDate} />;
+      case 'progression':
+        return <FmProgression history={history} />;
+      default:
+        return null;
+    }
+  };
   const dateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' });
   const stampFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'short', timeStyle: 'short' });
 
@@ -280,7 +353,7 @@ export function FmSave() {
                       className={`block w-full rounded-lg px-2 py-1 text-left text-sm font-bold ${v === view ? 'bg-canard text-white' : 'text-canard hover:bg-white'}`}
                     >
                       {STEPPED.has(s.id) && <span className="mr-1.5 tabular-nums opacity-60">{s.views.indexOf(v as never) + 1}.</span>}
-                      {t(`fm.views.${v}`)}
+                      {pageLabel(t, v)}
                     </button>
                   ))}
                 </div>
@@ -314,7 +387,7 @@ export function FmSave() {
                   className={`font-bold ${v === view ? 'text-canard underline decoration-eau-soutenu decoration-2 underline-offset-8' : 'text-canard/60 hover:text-canard'}`}
                 >
                   {STEPPED.has(section.id) && <span className="mr-1 tabular-nums opacity-60">{section.views.indexOf(v as never) + 1}.</span>}
-                  {t(`fm.views.${v}`)}
+                  {pageLabel(t, v)}
                 </button>
               ))}
             </div>
@@ -322,28 +395,7 @@ export function FmSave() {
           </div>
           <div className="mt-4 lg:mt-0">
             <ViewHeader section={section.id} view={view} />
-            {view === 'home' && <FmHome snap={snapshot.data} players={players} folder={folder} go={go} />}
-            {view === 'squad' && <SquadTable players={players} />}
-            {view === 'analysis' && <FmAnalysis players={players} gameDate={snapshot.gameDate} />}
-            {view === 'stats' && <FmStats snap={snapshot.data} players={players} />}
-            {view === 'compare' && <FmCompare saveId={saveId} snap={snapshot.data} players={players} folder={folder} history={history} />}
-            {view === 'dressing' && <FmDressing players={players} />}
-            {view === 'loans' && <FmLoans snap={snapshot.data} />}
-            {view === 'tactic' && <FmTactic snap={snapshot.data} go={go} players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} lineupStatus={(snapshot.data as { collecte?: { compo?: string } }).collecte?.compo ?? null} />}
-            {view === 'opponent' && <FmOpponent snap={snapshot.data} />}
-            {view === 'calendar' && <FmCalendar snap={snapshot.data} players={players} />}
-            {view === 'roles' && <FmRoles players={players} folder={folder} />}
-            {view === 'style' && <FmStyle players={players} folder={folder} />}
-            {view === 'effectiveness' && <FmEffectiveness snap={snapshot.data} history={history} go={go} />}
-            {view === 'project' && <FmProject snap={snapshot.data} players={players} folder={folder} history={history} />}
-            {view === 'training' && <FmTraining snap={snapshot.data} players={players} folder={folder} />}
-            {view === 'mercato' && <FmMercato players={players} folder={folder} gameDate={snapshot.gameDate} history={history} />}
-            {view === 'targets' && <FmTargets saveId={saveId} snap={snapshot.data} players={players} folder={folder} go={go} />}
-            {view === 'depth' && <FmDepth players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameDate={snapshot.gameDate} history={history} />}
-            {view === 'finances' && <FmFinances snap={snapshot.data} players={players} />}
-            {view === 'wages' && <FmWages players={players} gameDate={snapshot.gameDate} />}
-            {view === 'contracts' && <FmContracts players={players} gameDate={snapshot.gameDate} />}
-            {view === 'progression' && <FmProgression history={history} />}
+            <PageParts page={view} go={go} render={part} />
             {STEPPED.has(section.id) && <NextStep views={section.views} view={view} go={go} />}
           </div>
           </div>
@@ -354,14 +406,40 @@ export function FmSave() {
   );
 }
 
+/** Parties d'un onglet, à la suite : la première sans titre (l'en-tête de l'onglet suffit), les suivantes titrées. */
+function PageParts({ page, go, render }: { page: string; go: (v: string) => void; render: (v: string) => ReactNode }) {
+  const { t } = useTranslation();
+  const parts = PARTS[page] ?? [page];
+  return (
+    <>
+      {parts.length > 1 && (
+        <p className="-mt-2 mb-4 flex flex-wrap items-center gap-2 text-sm text-brun">
+          {t('fm.onThisPage')}
+          {parts.map((v) => (
+            <button key={v} type="button" className="pill hover:bg-eau/40" onClick={() => go(v)}>
+              {t(`fm.views.${v}`)}
+            </button>
+          ))}
+        </p>
+      )}
+      {parts.map((v, i) => (
+        <section key={v} id={`part-${v}`} className={i ? 'mt-10 scroll-mt-4' : 'scroll-mt-4'}>
+          {i > 0 && <h2 className="mb-3 border-t border-canard/10 pt-6 text-xl font-semibold">{t(`fm.views.${v}`)}</h2>}
+          {render(v)}
+        </section>
+      ))}
+    </>
+  );
+}
+
 /** En-tête commun à tous les écrans : section, nom de l'écran et la question à laquelle il répond. */
 function ViewHeader({ section, view }: { section: string; view: string }) {
   const { t } = useTranslation();
   return (
     <header className="mb-4">
       {section !== view && <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t(`fm.sections.${section}`)}</p>}
-      <h2 className="text-2xl font-semibold">{t(`fm.views.${view}`)}</h2>
-      <p className="mt-0.5 max-w-3xl text-sm text-brun">{t(`fm.intro.${view}`)}</p>
+      <h2 className="text-2xl font-semibold">{pageLabel(t, view)}</h2>
+      <p className="mt-0.5 max-w-3xl text-sm text-brun">{t(`fm.pageIntro.${view}`, { defaultValue: t(`fm.intro.${view}`) })}</p>
     </header>
   );
 }
@@ -374,7 +452,7 @@ function NextStep({ views, view, go }: { views: readonly string[]; view: string;
   return (
     <div className="mt-6 flex justify-end">
       <button type="button" className="btn-secondary text-sm" onClick={() => go(next)}>
-        {t('fm.nextStep', { view: t(`fm.views.${next}`) })} →
+        {t('fm.nextStep', { view: pageLabel(t, next) })} →
       </button>
     </div>
   );

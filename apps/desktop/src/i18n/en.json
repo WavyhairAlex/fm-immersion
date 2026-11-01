@@ -1423,6 +1423,20 @@
         "wage": "Weekly wage",
         "contract": "Contract end"
       }
+    },
+    "onThisPage": "On this page:",
+    "pages": {
+      "opponent": "Next match",
+      "mercato": "Transfers",
+      "finances": "Finances and contracts"
+    },
+    "pageIntro": {
+      "squad": "Every first-team player, sortable by level, condition, contract or wage; loaned-out players at the bottom.",
+      "analysis": "The squad diagnosis, match statistics and each player's progression.",
+      "tactic": "The best formation and starting eleven available today, then the starter and backups in each position.",
+      "opponent": "The next opponent, then the fixtures and who to rotate based on fatigue.",
+      "mercato": "Step 4: who to let go, which youngsters to keep, then your shortlist ranked by what each player would add to the project.",
+      "finances": "Budgets and board expectations, the wage bill, then contract expiries to plan for."
     }
   },
   "pz2": {
