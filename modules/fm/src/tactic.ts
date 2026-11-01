@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { moraleLevel } from './club';
 import type { FmPlayer } from './player';
 import type { PosCode } from './positions';
 
@@ -24,6 +25,8 @@ export const roleRefSchema = z
      * centraux gauche/droit…), « wide3 » = idem dans une défense à trois centraux ou plus.
      */
     cond: z.enum(['wide', 'wide3']).nullish(),
+    /** Mission avec ballon, fixée par le rôle dans FM27 : Défense, Soutien ou Attaque. */
+    duty: z.enum(['d', 's', 'a']).nullish(),
     group: z.string(),
     weights: z.record(z.number()),
     weightsOOP: z.record(z.number()).nullish(),
@@ -170,6 +173,21 @@ function wmean(p: FmPlayer, w: Record<string, number>) {
   return t ? s / t : null;
 }
 
+/**
+ * Forme du jour, sur l'échelle des notes (/20) : fatigue (condition sous 95 %), rythme de match
+ * (sous 90 %), moral et place de leader pèsent sur le choix du titulaire, sans changer
+ * l'adéquation au rôle affichée.
+ */
+export function readiness(p: FmPlayer): number {
+  const cond = p.condition != null && p.condition < 95 ? -(95 - p.condition) * 0.1 : 0;
+  const sharp = p.sharpness != null && p.sharpness < 90 ? -(90 - p.sharpness) * 0.05 : 0;
+  const m = moraleLevel(p.morale);
+  const mor = m == null ? 0 : ([-1.2, -0.7, -0.3, 0, 0.2, 0.4] as const)[m]!;
+  // Faire jouer les leaders du vestiaire soutient le moral du groupe.
+  const lead = /leader|meneur|chef/i.test(p.hierarchy ?? '') ? 0.2 : /influen/i.test(p.hierarchy ?? '') ? 0.1 : 0;
+  return cond + sharp + mor + lead;
+}
+
 export class TacticEngine {
   readonly roles: Map<string, RoleRef>;
 
@@ -276,28 +294,32 @@ export class TacticEngine {
   /** Rôles typiques du style sur chaque poste du schéma, puis meilleur onze (joueurs naturels au poste). */
   formationPlan(form: string, style: StyleRef, list: FmPlayer[]): FormationPlan {
     const used: Record<Phase, Record<string, number>> = { ip: {}, oop: {} };
+    // Rôles du style proposés à ce créneau ; un créneau excentré prend d'abord les rôles qui lui sont réservés.
     const pickRole = (pos: PosCode, ph: Phase, ctx: SlotCtx) => {
       const opts = style.signatureRoles[ph].filter((c) => {
         const r = this.roles.get(c);
         return r && this.availableAt(r, pos, ph, ctx);
       });
+      if (ctx.wide) opts.sort((a, b) => Number(!!this.roles.get(b)?.cond) - Number(!!this.roles.get(a)?.cond));
       if (!opts.length) return DEFAULT_ROLE[pos];
-      used[ph][pos] = (used[ph][pos] ?? -1) + 1;
-      return opts[used[ph][pos] % opts.length] ?? DEFAULT_ROLE[pos];
+      const key = `${pos}${ctx.wide ? '+' : ''}`;
+      used[ph][key] = (used[ph][key] ?? -1) + 1;
+      return opts[used[ph][key] % opts.length] ?? DEFAULT_ROLE[pos];
     };
     const base = FORMATIONS[form] ?? FORMATIONS['4-3-3']!;
     const ctxs = slotContexts(base.map(([pos, x]) => ({ pos, x })));
     const slots: Slot[] = base.map(([pos, x, y], i) => ({ pos, x, y, ip: pickRole(pos, 'ip', ctxs[i]!), oop: pickRole(pos, 'oop', ctxs[i]!), player: null, fit: null }));
-    const pairs: { i: number; p: FmPlayer; f: number }[] = [];
+    const pairs: { i: number; p: FmPlayer; f: number; r: number }[] = [];
     slots.forEach((sl, i) =>
       list.forEach((p) => {
         if (!p.positions.includes(sl.pos)) return;
         const a = this.roleFit(p, sl.ip, 'ip', sl.pos);
         const b = this.roleFit(p, sl.oop, 'oop', sl.pos);
-        if (a != null && b != null) pairs.push({ i, p, f: (a + b) / 2 });
+        if (a != null && b != null) pairs.push({ i, p, f: (a + b) / 2, r: (a + b) / 2 + readiness(p) });
       }),
     );
-    pairs.sort((a, b) => b.f - a.f);
+    // Le titulaire est le meilleur au poste ce jour-là : adéquation au rôle, fatigue et moral.
+    pairs.sort((a, b) => b.r - a.r);
     const taken = new Set<string>();
     for (const pr of pairs) {
       const sl = slots[pr.i]!;
@@ -306,12 +328,32 @@ export class TacticEngine {
       sl.fit = pr.f;
       taken.add(pr.p.id);
     }
+    // Rôle du titulaire : parmi les rôles du style que le jeu propose à ce créneau, on garde celui qui
+    // rend l'équipe meilleure (un ailier droitier à droite plutôt qu'un ailier intérieur, par exemple).
+    slots.forEach((sl, i) => {
+      const p = sl.player;
+      if (!p) return;
+      const best = (ph: Phase, cur: string) => {
+        let code = cur;
+        let f = this.roleFit(p, cur, ph, sl.pos) ?? 0;
+        for (const c of [...style.signatureRoles[ph], DEFAULT_ROLE[sl.pos]]) {
+          const r = this.roles.get(c);
+          if (!r || !this.availableAt(r, sl.pos, ph, ctxs[i])) continue;
+          const g = this.roleFit(p, c, ph, sl.pos) ?? 0;
+          if (g > f + 0.3) [code, f] = [c, g];
+        }
+        return [code, f] as const;
+      };
+      const [ip, a] = best('ip', sl.ip);
+      const [oop, b] = best('oop', sl.oop);
+      Object.assign(sl, { ip, oop, fit: (a + b) / 2 });
+    });
     // Remplaçants : chaque joueur hors du onze au plus une fois en premier choix.
     const bench = list.filter((p) => !taken.has(p.id));
     const cands = slots.map((sl) =>
       bench
         .filter((p) => p.positions.includes(sl.pos))
-        .map((p) => ({ p, f: ((this.roleFit(p, sl.ip, 'ip', sl.pos) ?? 0) + (this.roleFit(p, sl.oop, 'oop', sl.pos) ?? 0)) / 2 }))
+        .map((p) => ({ p, f: ((this.roleFit(p, sl.ip, 'ip', sl.pos) ?? 0) + (this.roleFit(p, sl.oop, 'oop', sl.pos) ?? 0)) / 2 + readiness(p) }))
         .sort((a, b) => b.f - a.f),
     );
     const subs: FmPlayer[][] = slots.map(() => []);

@@ -248,6 +248,7 @@ export function withExtended(snap: FmSnapshot): FmSnapshot {
         ...p,
         morale: p.morale ?? str(x.moraleText) ?? str(x.morale),
         personality: (p as Raw).personality ?? str(x.personality),
+        hierarchy: (p as Raw).hierarchy ?? str(x.hierarchy),
         stars: { current: starsOf(x.currentStars), potential: starsOf(x.potentialStars) },
         extended: x,
       };

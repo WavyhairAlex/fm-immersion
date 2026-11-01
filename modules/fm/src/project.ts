@@ -2,7 +2,7 @@ import { normalizePlayer, toNumber, type FmPlayer } from './player';
 import { POS_ORDER, type PosCode } from './positions';
 import { projectLevel, type SquadAt } from './progress';
 import { fmPlayerSchema, type FmSnapshot } from './snapshot';
-import { FORMATIONS, STYLE_FORMS, attrKey, attrOf, avg, type Phase, type RoleRef, type Slot, type StyleRef, type TacticEngine } from './tactic';
+import { FORMATIONS, STYLE_FORMS, attrKey, attrOf, avg, type FormationPlan, type Phase, type RoleRef, type Slot, type StyleRef, type TacticEngine } from './tactic';
 
 /**
  * Projet du coach (portage de la page Archivix) : style visé → onze cible, postes à recruter,
@@ -226,6 +226,35 @@ export function buildProject(engine: TacticEngine, list: FmPlayer[], prefs: Coac
     })
     .sort((a, b) => POS_ORDER.indexOf(a.player.positions[0] ?? 'BT') - POS_ORDER.indexOf(b.player.positions[0] ?? 'BT') || (b.player.level ?? 0) - (a.player.level ?? 0));
   return { style, form, forms, score: plan.score, slots, plans, threshold: T, target };
+}
+
+/* ---------- Tactique à jouer maintenant ---------- */
+
+export interface TacticPick {
+  style: StyleRef;
+  form: string;
+  plan: FormationPlan;
+  /** Le projet du coach est devenu le meilleur choix. */
+  project: boolean;
+}
+
+/**
+ * Tactique à jouer maintenant : le style et le schéma dont le onze applicable donne la meilleure
+ * note d'équipe. Le projet du coach sert à orienter l'entraînement et le mercato ; dès que son onze
+ * vaut au moins le meilleur, il devient automatiquement la tactique conseillée.
+ */
+export function bestTactic(engine: TacticEngine, list: FmPlayer[], coach: CoachPrefs = {}): TacticPick | null {
+  let best: TacticPick | null = null;
+  let proj: TacticPick | null = null;
+  for (const style of engine.ref.styles)
+    for (const form of Object.keys(FORMATIONS)) {
+      const plan = engine.formationPlan(form, style, list);
+      const pick = { style, form, plan, project: false };
+      if (!best || plan.score > best.plan.score) best = pick;
+      if (style.id === coach.style && (coach.form ? form === coach.form : !proj || plan.score > proj.plan.score)) proj = pick;
+    }
+  if (proj && best && proj.plan.score >= best.plan.score) return { ...proj, project: true };
+  return best;
 }
 
 /* ---------- Quand basculer vers le style du projet ---------- */

@@ -48,6 +48,8 @@ export interface FmPlayer {
   /** Moral tel qu'écrit par le jeu (« Très bon »…), s'il est connu. */
   morale: string | null;
   personality: string | null;
+  /** Place dans la hiérarchie du vestiaire (« Leader de l'équipe », « Joueur influent »…), plugin 0.3.1. */
+  hierarchy: string | null;
   /** Équipe du club quand ce n'est pas l'équipe première (réserve, U19…). */
   team: string | null;
   /** Pied fort tel qu'écrit par le jeu (« Gauche », « Droit uniquement », « Les deux »…). */
@@ -97,6 +99,7 @@ export function normalizePlayer(p: FmPlayerRaw): FmPlayer {
     foot: p.foot ?? null,
     morale: p.morale ?? null,
     personality: typeof p.personality === 'string' ? p.personality : null,
+    hierarchy: typeof p.hierarchy === 'string' ? p.hierarchy : null,
     team: typeof p.team === 'string' ? p.team : null,
     stars: p.stars && typeof p.stars === 'object' ? (p.stars as FmPlayer['stars']) : null,
     attributes,

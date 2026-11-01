@@ -79,3 +79,28 @@ describe('moteur tactique', () => {
     expect(merged.roles).toHaveLength(DEFAULT_TACTIC_REFERENCE.roles.length);
   });
 });
+
+describe('forme du jour', () => {
+  it('fait passer devant le joueur frais et de bon moral à niveau proche', () => {
+    const engine = new TacticEngine(DEFAULT_TACTIC_REFERENCE);
+    const style = DEFAULT_TACTIC_REFERENCE.styles[0]!;
+    const tired = p(1, 'BT', 14, {}, { condition: 70, morale: 'Médiocre' });
+    const fresh = p(2, 'BT', 13.5, {}, { condition: 100, morale: 'Très bon' });
+    const st = engine.formationPlan('4-3-3', style, [tired, fresh]).slots.find((s) => s.pos === 'BT')!;
+    expect(st.player?.id).toBe(fresh.id);
+    const healthy = p(3, 'BT', 14, {}, { condition: 100, morale: 'Bon' });
+    expect(engine.formationPlan('4-3-3', style, [healthy, fresh]).slots.find((s) => s.pos === 'BT')!.player?.id).toBe(healthy.id);
+  });
+});
+
+describe('rôle qui améliore l’équipe', () => {
+  it('ne laisse pas un droitier en ailier intérieur à droite quand un rôle du même pied lui va mieux', () => {
+    const engine = new TacticEngine(DEFAULT_TACTIC_REFERENCE);
+    const style = DEFAULT_TACTIC_REFERENCE.styles.find((s) => s.id === 'possession')!;
+    const right = p(1, 'MO (D)', 13, {}, { foot: 'Droit uniquement' });
+    const sl = engine.formationPlan('4-3-3', style, [right]).slots.find((s) => s.pos === 'MOD')!;
+    expect(sl.player?.id).toBe(right.id);
+    expect(engine.roleFit(right, sl.ip, 'ip', 'MOD')).toBeGreaterThanOrEqual(engine.roleFit(right, 'IW', 'ip', 'MOD')!);
+    expect(sl.ip).not.toBe('IW');
+  });
+});

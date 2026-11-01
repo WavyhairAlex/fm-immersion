@@ -240,7 +240,15 @@
       "fromGameHelp": "Joueurs et postes lus dans ta tactique FM27. Rôles et consignes : ceux du jeu quand le plugin les lit, sinon le meilleur rôle de chaque joueur à son poste.",
       "suggestedHelpGame": "Placement calculé par Simloom selon le style choisi. « Onze du jeu » affiche ta vraie compo FM27.",
       "pitchHelpGame": "Ta compo FM27. Les pointillés montrent le déplacement depuis l'autre phase. Survole un joueur pour voir ses remplaçants ; clique un schéma à droite pour comparer avec un onze calculé par Simloom.",
-      "lineupStatus": "Lecture de la compo par le plugin : {{status}}."
+      "lineupStatus": "Lecture de la compo par le plugin : {{status}}.",
+      "duty": {
+        "d": "Défense",
+        "s": "Soutien",
+        "a": "Attaque"
+      },
+      "auto": "Automatique : meilleur choix",
+      "bestNow": "Meilleure tactique applicable",
+      "projectBest": "Ton projet est devenu le meilleur choix"
     },
     "nav": "Sections de la partie",
     "sections": {
