@@ -1011,7 +1011,7 @@
       "seasonStart": "Reprise du championnat",
       "matches": "Jours de match",
       "fromCalendar": "d'après le calendrier du jeu",
-      "manual": "Calendrier absent de l'instantané : coche les jours de match (amicaux compris).",
+      "manual": "Matchs de cette semaine inconnus (le jeu ne donne que les 5 prochains) : coche les jours de match, amicaux compris.",
       "eve": "Match la veille du lundi",
       "code": "Planning {{code}}",
       "variant_0": "aucun match",

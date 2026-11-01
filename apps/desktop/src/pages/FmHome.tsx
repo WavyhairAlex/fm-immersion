@@ -1,4 +1,4 @@
-import { PART_TIME_DAYS, currentTrainingWeek, homeOverview, nearestPreset, trainingAlerts, trainingFor, type FmPlayer, type FmSnapshot } from '@simloom/module-fm';
+import { PART_TIME_DAYS, currentTrainingWeek, snapshotFixtures, homeOverview, nearestPreset, trainingAlerts, trainingFor, type FmPlayer, type FmSnapshot } from '@simloom/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FmSummary } from './FmSummary';
@@ -21,14 +21,14 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
     () =>
       currentTrainingWeek({
         gameDate: snap.gameDate,
-        fixtures: snap.fixtures,
+        fixtures: snapshotFixtures(snap),
         seasonStart: coach.seasonStart,
         winterBreak: coach.winterBreak,
         trainingDays: (coach.clubStatus ?? 'pro') === 'pro' ? undefined : (coach.trainingDays ?? PART_TIME_DAYS),
         priorities: style ? trainingFor(style) : [],
         style: style?.id,
       }),
-    [snap.gameDate, snap.fixtures, coach.seasonStart, coach.winterBreak, coach.clubStatus, coach.trainingDays, style],
+    [snap, coach.seasonStart, coach.winterBreak, coach.clubStatus, coach.trainingDays, style],
   );
   const tr = useMemo(() => trainingAlerts(players), [players]);
   const setups = useIndividualSetups(engine, players, folder, week.days.filter((d) => d.kind === 'match').length);

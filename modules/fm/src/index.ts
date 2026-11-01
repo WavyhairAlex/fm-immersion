@@ -23,6 +23,7 @@ export * from './progress';
 export * from './project';
 export * from './targets';
 export * from './training';
+export * from './fixtures';
 export * from './instructions';
 export * from './team-instructions-fm27';
 export * from './role-ratings-fm27';
