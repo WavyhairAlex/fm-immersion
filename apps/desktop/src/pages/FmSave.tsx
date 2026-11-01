@@ -243,7 +243,7 @@ export function FmSave() {
             {view === 'home' && <FmHome snap={snapshot.data} players={players} folder={folder} go={go} />}
             {view === 'squad' && <SquadTable players={players} />}
             {view === 'analysis' && <FmAnalysis players={players} gameDate={snapshot.gameDate} />}
-            {view === 'compare' && <FmCompare snap={snapshot.data} players={players} folder={folder} history={history} />}
+            {view === 'compare' && <FmCompare saveId={saveId} snap={snapshot.data} players={players} folder={folder} history={history} />}
             {view === 'dressing' && <FmDressing players={players} />}
             {view === 'loans' && <FmLoans snap={snapshot.data} />}
             {view === 'tactic' && <FmTactic players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} lineupStatus={(snapshot.data as { collecte?: { compo?: string } }).collecte?.compo ?? null} />}
@@ -253,7 +253,7 @@ export function FmSave() {
             {view === 'effectiveness' && <FmEffectiveness snap={snapshot.data} history={history} go={go} />}
             {view === 'project' && <FmProject snap={snapshot.data} players={players} folder={folder} history={history} />}
             {view === 'training' && <FmTraining snap={snapshot.data} players={players} folder={folder} />}
-            {view === 'targets' && <FmTargets snap={snapshot.data} players={players} folder={folder} go={go} />}
+            {view === 'targets' && <FmTargets saveId={saveId} snap={snapshot.data} players={players} folder={folder} go={go} />}
             {view === 'depth' && <FmDepth players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameDate={snapshot.gameDate} history={history} />}
             {view === 'finances' && <FmFinances snap={snapshot.data} players={players} />}
             {view === 'wages' && <FmWages players={players} gameDate={snapshot.gameDate} />}

@@ -1,6 +1,6 @@
 import { saves } from '@simloom/db';
-import { carryRoleStars, fmSnapshotSchema, type FmSnapshot } from '@simloom/module-fm';
-import { fmSnapshots } from '@simloom/module-fm/schema';
+import { carryRoleStars, fmSnapshotSchema, mergeTargets, type FmSnapshot, type TargetRecord } from '@simloom/module-fm';
+import { fmSnapshots, fmTargets } from '@simloom/module-fm/schema';
 import { and, asc, desc, eq } from 'drizzle-orm';
 import type { Db } from './db';
 
@@ -52,8 +52,40 @@ export function fmRepo(db: Db) {
         .delete(fmSnapshots)
         .where(and(eq(fmSnapshots.saveId, saveId), eq(fmSnapshots.gameDate, snap.gameDate)));
       await db.insert(fmSnapshots).values(values);
+      await this.saveTargets(saveId, snap);
       await db.update(saves).set({ updatedAt: new Date().toISOString() }).where(eq(saves.id, saveId));
       return snap;
+    },
+
+    /** Cibles du mercato gardées pour la partie (y compris celles que le jeu ne liste plus). */
+    async targets(saveId: string): Promise<TargetRecord[]> {
+      const rows = await db.select().from(fmTargets).where(eq(fmTargets.saveId, saveId)).orderBy(desc(fmTargets.lastSeen));
+      return rows.map(({ saveId: _s, updatedAt: _u, ...r }) => r);
+    },
+
+    /** Ajoute ou met à jour les cibles lues dans l'instantané (rien si le plugin ne les a pas lues). */
+    async saveTargets(saveId: string, snap: FmSnapshot) {
+      const changes = mergeTargets(await this.targets(saveId), snap);
+      if (!changes?.length) return;
+      const now = new Date().toISOString();
+      for (const c of changes) {
+        const row = { ...c, saveId, updatedAt: now };
+        await db
+          .insert(fmTargets)
+          .values(row)
+          .onConflictDoUpdate({
+            target: [fmTargets.saveId, fmTargets.playerId],
+            set: { name: row.name, club: row.club, firstSeen: row.firstSeen, lastSeen: row.lastSeen, inList: row.inList, data: row.data, updatedAt: now },
+          });
+      }
+    },
+
+    /** Écarte une cible (ou la remet) dans Simloom, sans rien changer dans le jeu. */
+    async dismissTarget(saveId: string, playerId: string, dismissed: boolean) {
+      await db
+        .update(fmTargets)
+        .set({ dismissed, updatedAt: new Date().toISOString() })
+        .where(and(eq(fmTargets.saveId, saveId), eq(fmTargets.playerId, playerId)));
     },
 
     async settings(saveId: string): Promise<FmSaveSettings> {

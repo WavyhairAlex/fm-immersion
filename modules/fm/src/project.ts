@@ -1,7 +1,8 @@
-import { normalizePlayer, toNumber, unavailable, type FmPlayer } from './player';
+import { toNumber, unavailable, type FmPlayer } from './player';
 import { POS_ORDER, type PosCode } from './positions';
 import { projectLevel, type SquadAt } from './progress';
-import { fmPlayerSchema, type FmSnapshot } from './snapshot';
+import type { FmSnapshot } from './snapshot';
+import type { Target } from './targets';
 import { FORMATIONS, STYLE_FORMS, attrKey, attrOf, avg, type FormationPlan, type Phase, type RoleRef, type Slot, type StyleRef, type TacticEngine } from './tactic';
 
 /**
@@ -396,19 +397,6 @@ export function roleMatrix(engine: TacticEngine, list: FmPlayer[], phase: Phase)
 }
 
 /* ---------- Cibles du mercato ---------- */
-
-export type Target = FmPlayer & { club: string | null; projectedEffectiveness: Range | null };
-
-/** Liste de suivi du jeu (bloc « shortlist » de l'instantané), normalisée comme l'effectif. */
-export function shortlist(snap: FmSnapshot): Target[] {
-  const raw = Array.isArray(snap.shortlist) ? (snap.shortlist as unknown[]) : [];
-  return raw.flatMap((x) => {
-    const r = fmPlayerSchema.safeParse(x);
-    if (!r.success) return [];
-    const o = x as Record<string, unknown>;
-    return [{ ...normalizePlayer(r.data), id: `t${r.data.id}`, club: typeof o.club === 'string' ? o.club : null, projectedEffectiveness: range(o.projectedEffectiveness) }];
-  });
-}
 
 /** Cibles classées par ce qu'elles apporteraient au onze cible : adéquation au rôle du poste et gain sur le titulaire. */
 export function rankTargets(engine: TacticEngine, targets: Target[], project: Project) {

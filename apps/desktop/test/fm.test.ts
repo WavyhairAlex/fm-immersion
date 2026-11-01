@@ -49,4 +49,23 @@ describe('instantanés Football Manager', () => {
     await fm.setFolder(save.id, 'D:\\Sports Interactive\\Football Manager 27\\archivix');
     expect(await fm.settings(save.id)).toEqual({ fmFolder: 'D:\\Sports Interactive\\Football Manager 27\\archivix' });
   });
+
+  it('garde les cibles du mercato d\'un instantané à l\'autre', async () => {
+    const save = await saves.create({ gameId: 'fm', name: 'V' });
+    const cible = (id: number, name: string, club: string) => ({ id, name, club, positions: 'M (C)', attributes: { Passing: { min: 11, max: 14 } }, scout: { knowledge: 60 }, sources: ['listeSuivi'] });
+    await fm.importSnapshot(save.id, { ...snap('2026-09-01', ['A']), shortlist: [cible(10, 'Cible Un', 'IFK'), cible(11, 'Cible Deux', 'GAIS')] });
+    // Instantané sans bloc de cibles (lecture désactivée) : la base ne bouge pas.
+    await fm.importSnapshot(save.id, snap('2026-09-02', ['A']));
+    expect((await fm.targets(save.id)).filter((t) => t.inList)).toHaveLength(2);
+
+    await fm.importSnapshot(save.id, { ...snap('2026-09-08', ['A']), shortlist: [cible(11, 'Cible Deux', 'Örgryte')] });
+    const rows = await fm.targets(save.id);
+    const deux = rows.find((t) => t.playerId === '11')!;
+    expect([deux.club, deux.firstSeen, deux.lastSeen, deux.inList]).toEqual(['Örgryte', '2026-09-01', '2026-09-08', true]);
+    const un = rows.find((t) => t.playerId === '10')!;
+    expect([un.inList, un.lastSeen]).toEqual([false, '2026-09-01']);
+
+    await fm.dismissTarget(save.id, '10', true);
+    expect((await fm.targets(save.id)).find((t) => t.playerId === '10')?.dismissed).toBe(true);
+  });
 });

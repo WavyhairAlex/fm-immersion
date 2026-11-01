@@ -17,12 +17,12 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.3.1";
+    public const string Version = "0.4.0";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que Simloom renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
     internal static string DataDir = null!;
-    internal static bool ReadTactic = true, ReadEffectiveness, ReadLineup, ReadExtended, WriteDiscovery = true;
+    internal static bool ReadTactic = true, ReadEffectiveness, ReadLineup, ReadExtended, ReadTargets, WriteDiscovery = true;
     bool _discovered;
     internal static int RereadSeconds = 300;
     const string Prefix = "http://localhost:8727/";
@@ -50,6 +50,8 @@ public class Plugin : BasePlugin
             "Lire la compo (joueur à chaque poste) et les rôles personnalisés. Expérimental ; jamais pendant que l'écran Tactique est ouvert.").Value;
         ReadExtended = Config.Bind("Archivix", "LireJoueursEtendus", false,
             "Lire moral, satisfaction, hiérarchie, étoiles du staff et niveau des joueurs (expérimental).").Value;
+        ReadTargets = Config.Bind("Archivix", "LireCibles", false,
+            "Lire les cibles du mercato : ta liste de suivi et les cibles du recrutement (joueurs d'autres clubs, avis des recruteurs). Expérimental.").Value;
         WriteDiscovery = Config.Bind("Archivix", "Decouverte", true,
             "Écrire archivix\\config\\decouverte.json (propriétés et contextes du jeu, sans requête au jeu) une fois par lancement.").Value;
         RereadSeconds = Math.Max(60, Config.Bind("Archivix", "RelectureSecondes", 300,
@@ -204,6 +206,10 @@ public record Snapshot(string Schema, string Game, string Club, string GameDate,
     // Réglage LireJoueursEtendus : par id de joueur {morale, moraleText, happiness*, hierarchy, currentStars, potentialStars,
     // personality, mediaHandling, currentAbility, potentialAbility} (champs absents si le jeu ne répond pas)
     public Dictionary<string, Dictionary<string, object?>>? PlayersExtended { get; init; }
+    // Réglage LireCibles (0.4.0) : joueurs suivis hors du club (mêmes champs que players + club, scout, sources) ;
+    // TargetSources : par source, chemin lu, nombre de joueurs, et la forme renvoyée par le jeu si aucun joueur n'est reconnu.
+    public List<PlayerDto>? Shortlist { get; init; }
+    public Dictionary<string, object?>? TargetSources { get; init; }
     // État de la collecte : blocs lus ou sautés et pourquoi (ex. {"tactique":"sautée : écran Tactique ouvert"})
     public Dictionary<string, string>? Collecte { get; init; }
 }
@@ -231,6 +237,13 @@ public record PlayerDto(
     public long? ValueMin { get; init; }
     public int? InjuryReturnDays { get; init; }
     public AttrRange? StarRating { get; init; }   // à remplir : étoiles CA/PA du staff (propriété à confirmer)
+    // Cibles du mercato seulement (absents pour l'effectif) : club actuel, avis du recrutement, listes où le joueur figure.
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string? Club { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public Dictionary<string, object?>? Scout { get; init; }
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string[]? Sources { get; init; }
 }
 
 public record AttrRange(int Min, int Max);

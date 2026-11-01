@@ -1,6 +1,8 @@
-import { ATTR_GROUPS, attrKey, attrOf, bestOf, POS_LABEL, projectLevel, shortlist, type FmPlayer, type FmSnapshot, type SquadAt } from '@simloom/module-fm';
+import { ATTR_GROUPS, attrKey, attrOf, bestOf, POS_LABEL, projectLevel, storedTargets, type FmPlayer, type FmSnapshot, type SquadAt } from '@simloom/module-fm';
+import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { fmData } from '../lib/data';
 import { useTacticEngine } from './FmTactic';
 import { Level, Panel, Tag, useFormat } from './FmUi';
 
@@ -23,17 +25,18 @@ const write = (key: string, v: unknown) => {
   }
 };
 
-/** Joueurs du club et de la liste de cibles du jeu, quand le plugin la fournit. */
-const pool = (snap: FmSnapshot, players: FmPlayer[]): Person[] =>
-  [...players, ...shortlist(snap).map((t) => ({ ...t, target: true }))].filter((p) => Object.keys(p.attributes).length);
+/** Joueurs du club et cibles du mercato gardées dans la base (sauf celles écartées). */
+const pool = (players: FmPlayer[], targets: FmPlayer[]): Person[] =>
+  [...players, ...targets.map((t) => ({ ...t, target: true }))].filter((p) => Object.keys(p.attributes).length);
 
 /** Comparateur : deux ou trois joueurs côte à côte, du club ou de la liste de cibles. */
-export function FmCompare({ snap, players, folder, history }: { snap: FmSnapshot; players: FmPlayer[]; folder: string; history: SquadAt[] }) {
+export function FmCompare({ saveId, snap, players, folder, history }: { saveId: string; snap: FmSnapshot; players: FmPlayer[]; folder: string; history: SquadAt[] }) {
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
   const f = useFormat();
   const { engine } = useTacticEngine(folder, players);
-  const people = useMemo(() => pool(snap, players), [snap, players]);
+  const { data: rows } = useQuery({ queryKey: ['fm', saveId, 'targets', snap.gameDate], queryFn: () => fmData.targets(saveId) });
+  const people = useMemo(() => pool(players, storedTargets(rows ?? []).filter((t) => !t.dismissed)), [players, rows]);
   const [ids, setIds] = useState<string[]>(() => read(CMP_KEY, []));
   const [roleCode, setRoleCode] = useState<string | null>(() => read(`${CMP_KEY}.role`, null));
 

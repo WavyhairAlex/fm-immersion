@@ -23,7 +23,7 @@ le club et le prochain match via le système de bindings de l'interface du jeu, 
 Par défaut `Documents\Sports Interactive\Football Manager 27\archivix`. Simloom le renseigne à l'installation.
 
 Autres clés : `LireTactique` (non par défaut), `LireEfficacite` (non par défaut, expérimental),
-`LireCompo` (non par défaut, expérimental : joueur à chaque poste), `LireJoueursEtendus` (non par défaut, expérimental : moral, hiérarchie, étoiles du staff), `Decouverte` (oui par défaut : rapport
+`LireCompo` (non par défaut, expérimental : joueur à chaque poste), `LireJoueursEtendus` (non par défaut, expérimental : moral, hiérarchie, étoiles du staff), `LireCibles` (non par défaut, expérimental : cibles du mercato), `Decouverte` (oui par défaut : rapport
 `archivix\config\decouverte.json`), `RelectureSecondes` (300 par défaut, 60 au minimum : relecture complète même sans
 changement de date).
 
@@ -58,6 +58,22 @@ des tables statiques de l'interface (aucune requête au jeu).
   mediaHandling, currentAbility, potentialAbility }` (champs absents si le jeu ne répond pas).
 - Efficacité tactique (si `LireEfficacite`) : désormais lue avec son contexte `{human}`.
 - `collecte` : `{ "tactique" | "efficacite" | "compo": "lue" | "désactivée (réglage)" | "sautée : …" | "erreur : …" }`.
+
+## Cibles du mercato (0.4.0, réglage `LireCibles`)
+
+Joueurs d'autres clubs que le joueur suit, pour la page « Cibles du mercato » de Simloom. Sources (propriétés trouvées
+dans `decouverte.json`, remplaçables sans recompiler par la section `cibles` de `chemins.json`) :
+
+- `listeSuivi` : `GameCurrentManager/HumanSelectedShortlist{IsPlayerRecruitment=true,team=@team}` (liste de suivi affichée) ;
+- `cibles` : `GameCurrentManagerClubTeam/Club/PlayerTargetsList{human=@human}` (cibles du recrutement).
+
+Une source peut renvoyer une liste de joueurs, une liste de fiches qui contiennent un joueur, ou une fiche qui contient
+la liste : le plugin garde les joueurs (40 au plus, par paquets de 10). Pour chacun : les champs de `players`
+(attributs en fourchette selon la connaissance du recrutement), plus `club`, `sources` et `scout` (étoiles du staff et
+des recruteurs, connaissance, recommandation, meilleur poste et rôles vus par le recrutement, fourchettes de valeur et de
+salaire, clubs intéressés, statut de transfert, personnalité). Écrit dans le bloc `shortlist` de l'instantané ; relu à
+chaque nouveau jour de jeu seulement. `targetSources` indique, par source, le nombre de joueurs trouvés et, si aucun,
+la forme de la réponse du jeu (pour corriger le chemin). Aucune lecture liée à la tactique.
 
 ## Requêtes au jeu : règles
 

@@ -1,9 +1,11 @@
 {
-  "_aide": "Données supplémentaires lues dans FM27 à chaque instantané, sans recompiler ni réinstaller le plugin. Clé = nom dans l'instantané (bloc custom), valeur = chemin de propriétés FM27 séparées par /. Racines : partie (game.), equipe (équipe du club), club, tactique, joueur (chaque joueur). profond = clés dont la valeur composée (liste, objet) est convertie en JSON.",
+  "_aide": "Données supplémentaires lues dans FM27 à chaque instantané, sans recompiler ni réinstaller le plugin. Clé = nom dans l'instantané (bloc custom), valeur = chemin de propriétés FM27 séparées par /. Racines : partie (game.), equipe (équipe du club), club, tactique, joueur (chaque joueur). profond = clés dont la valeur composée (liste, objet) est convertie en JSON. cibles (plugin 0.4.0, réglage LireCibles) : sources des joueurs suivis hors du club, chemin depuis game. ; une source peut renvoyer une liste de joueurs ou de fiches qui en contiennent.",
   "partie": {},
   "equipe": {
     "formationLaPlusUtilisee": "MostUsedFormation",
-    "joursAvantProchainMatch": "NextMatchDaysText"
+    "joursAvantProchainMatch": "NextMatchDaysText",
+    "suspensionsEnCours": "AllCompsActiveBans",
+    "nbSuspensionsEnCours": "AllCompsActiveBansCount"
   },
   "club": {
     "reputationDivision": "DivisionReputation"
@@ -13,7 +15,14 @@
   },
   "joueur": {
     "risqueBlessureGlobal": "InjuryRiskLevel",
-    "etatAffutage": "SharpnessStatusDescription"
+    "etatAffutage": "SharpnessStatusDescription",
+    "suspensions": "SuspensionsCount"
   },
-  "profond": []
+  "profond": [
+    "suspensionsEnCours"
+  ],
+  "cibles": {
+    "listeSuivi": "GameCurrentManager/HumanSelectedShortlist{IsPlayerRecruitment=true,team=@team}",
+    "cibles": "GameCurrentManagerClubTeam/Club/PlayerTargetsList{human=@human}"
+  }
 }
