@@ -13,7 +13,7 @@ const snap = {
   players: [],
   custom: {
     joueurs: {
-      '0': row(1, { statMinutes: 900, statPassPct: '91 %', statProgPass90: 6, statInterc90: '2,1', statTacklePct: 80, statMistakes: 0, statPress90: 3, statPressAtt90: 15, statXg: 0.2 }),
+      '0': row(1, { statMinutes: 900, statPassPct: '91 %', statProgPass90: 6, statInterc90: { PropertyValue: 2.1, Count: 16 }, statSavePct: { PropertyValue: 0, Count: 0 }, statTacklePct: 80, statMistakes: 0, statPress90: 3, statPressAtt90: 15, statXg: 0.2 }),
       '1': row(2, { statMinutes: 880, statPassPct: '70 %', statProgPass90: 2, statInterc90: '0,8', statTacklePct: 55, statMistakes: 2, statPress90: 2, statPressAtt90: 14, statXg: 0.1 }),
       '2': row(3, { statMinutes: 870, statPassPct: 80, statProgPass90: 4, statInterc90: 1.5, statTacklePct: 70, statMistakes: 1, statPress90: 2, statPressAtt90: 12, statXg: 0.3 }),
       '3': row(4, { statMinutes: 120, statPassPct: 60 }),

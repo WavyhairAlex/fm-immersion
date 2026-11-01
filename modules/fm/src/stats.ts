@@ -31,6 +31,8 @@ type Raw = Record<string, unknown>;
 export function statValue(v: unknown): number | null {
   if (v == null || typeof v !== 'object') return toNumber(v);
   const o = v as Raw;
+  // Forme lue en jeu (01/11/2026) : { PropertyValue, Count } ; Count = 0 → pas de donnée (ex. aucun tacle tenté).
+  if ('PropertyValue' in o) return o.Count === 0 ? null : toNumber(o.PropertyValue);
   for (const k of ['ActualValue', 'Value', 'SortValue', 'RawValue']) if (typeof o[k] === 'number') return o[k] as number;
   for (const k of ['DisplayValue', 'Text', 'DisplayString', 'String']) {
     const n = toNumber(o[k]);
@@ -165,10 +167,13 @@ export function statsBoard(players: FmPlayer[], stats: Map<string, PlayerStats>)
     for (const line of m.lines) {
       const peers = rows.filter((r) => r.enough && r.player.line === line && r.stats[m.key] != null);
       if (peers.length < 2) continue;
-      const sorted = [...peers].sort((a, b) => (m.better === 'high' ? a.stats[m.key]! - b.stats[m.key]! : b.stats[m.key]! - a.stats[m.key]!));
-      sorted.forEach((r, i) => {
-        r.marks[m.key] = { key: m.key, value: r.stats[m.key]!, rank: i / (sorted.length - 1) };
-      });
+      // Rang : part des pairs moins bons (les ex æquo comptent pour moitié), 0 = le moins bon, 1 = le meilleur.
+      const score = (r: PlayerStatReport) => (m.better === 'high' ? r.stats[m.key]! : -r.stats[m.key]!);
+      for (const r of peers) {
+        const worse = peers.filter((x) => score(x) < score(r)).length;
+        const same = peers.filter((x) => x !== r && score(x) === score(r)).length;
+        r.marks[m.key] = { key: m.key, value: r.stats[m.key]!, rank: (worse + same / 2) / (peers.length - 1) };
+      }
     }
   }
   for (const r of rows) {
