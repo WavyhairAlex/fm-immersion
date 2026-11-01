@@ -1,6 +1,8 @@
 import type { RoleRef, StyleRef, TacticReference } from './tactic';
 
 /*
+ * Consignes d'équipe et mentalités des styles : libellés exacts de FM27 (voir team-instructions-fm27.ts).
+ *
  * Repères maison de Simloom : rôles et styles de jeu décrits avec nos propres pondérations
  * (3 = essentiel, 2 = important, 1 = utile). Ils servent par défaut ; un fichier local de repères
  * plus fins, placé par le joueur dans le dossier du plugin, les remplace.
@@ -142,10 +144,10 @@ const STYLES: StyleRef[] = [
     name: 'Contrôle de la possession',
     nameEn: 'Possession control',
     summary: 'Garder le ballon, construire court depuis l’arrière et le récupérer vite.',
-    inPossession: ['Passes plus courtes', 'Gérer le pressing', 'GB relance vers DC', 'Dégagements au pied courts', 'Rythme plus lent'],
-    outOfPossession: ['Ligne défensive plus haute', 'Pressing haut', 'Déclencher le pressing plus souvent', 'Contre-pressing en transition'],
+    inPossession: ['Faites plus de passes courtes', 'Jouer malgré le pressing', 'Relancez vers défenseurs centraux', 'Dégagements au pied courts', 'Rythme plus lent', 'Passer dans les pieds'],
+    outOfPossession: ['Pressing haut', 'Ligne défensive plus haute', 'Déclenchez le pressing plus souvent', 'Effectuer un contre-pressing'],
     weights: { technical: 3, creators: 2, press: 1 },
-    mentality: 'Équilibré',
+    mentality: 'Équilibrée',
     signatureRoles: { ip: ['BPGK', 'BPCB', 'CB', 'IFB', 'IWB', 'PMWB', 'B2BPM', 'DLP', 'HB', 'MFPM', 'AP', 'IW', 'WP', 'F9', 'DLF'], oop: ['SK', 'STCB', 'CB', 'PFB', 'PWB', 'SCRDM', 'PRSDM', 'PRSCM', 'SCRCM', 'TWM', 'TW', 'TAM', 'CF'] },
   }),
   style({
@@ -153,10 +155,10 @@ const STYLES: StyleRef[] = [
     name: 'Pressing à la perte',
     nameEn: 'Gegenpress',
     summary: 'Récupérer le ballon tout de suite après l’avoir perdu, haut sur le terrain.',
-    inPossession: ['Passes plus directes', 'Rythme plus élevé'],
-    outOfPossession: ['Ligne défensive plus haute', 'Pressing haut', 'Déclencher le pressing beaucoup plus souvent', 'Contre-pressing en transition'],
+    inPossession: ['Faites plus de passes directes', 'Rythme plus élevé', 'Relances rapides'],
+    outOfPossession: ['Pressing haut', 'Ligne défensive plus haute', 'Déclenchez le pressing beaucoup plus souvent', 'Effectuer un contre-pressing', "S'engager plus"],
     weights: { press: 3, physical: 2, pace: 1, technical: 1 },
-    mentality: 'Positif',
+    mentality: 'Positive',
     signatureRoles: { ip: ['GK', 'BPCB', 'CB', 'FB', 'WB', 'AWB', 'BBM', 'DM', 'CM', 'CHM', 'AM', 'IF', 'W', 'CF', 'POA'], oop: ['SK', 'STCB', 'CB', 'PFB', 'PWB', 'PRSDM', 'PRSCM', 'TWM', 'TW', 'TAM', 'CF'] },
   }),
   style({
@@ -164,10 +166,10 @@ const STYLES: StyleRef[] = [
     name: 'Contre-attaque rapide',
     nameEn: 'Fast counter-attack',
     summary: 'Défendre en bloc et projeter vite les joueurs rapides dans l’espace.',
-    inPossession: ['Passes plus directes', 'Contre-attaque en transition', 'Rythme plus élevé'],
-    outOfPossession: ['Bloc médian', 'Ligne défensive normale'],
+    inPossession: ['Faites plus de passes directes', 'Contrez', 'Rythme plus élevé', 'Passer dans les espaces', 'Relances rapides'],
+    outOfPossession: ['Bloc médian', 'Regroupement'],
     weights: { pace: 3, finishing: 2, defense: 2, physical: 1 },
-    mentality: 'Équilibré',
+    mentality: 'Équilibrée',
     signatureRoles: { ip: ['GK', 'CB', 'NNCB', 'FB', 'WB', 'BBM', 'DM', 'CM', 'CHM', 'WM', 'IF', 'WF', 'W', 'SS', 'CHF', 'POA'], oop: ['GK', 'CCB', 'CB', 'HFB', 'HWB', 'SCRDM', 'SCRCM', 'WOM', 'WOW', 'IOW', 'COAM', 'COCF'] },
   }),
   style({
@@ -175,10 +177,10 @@ const STYLES: StyleRef[] = [
     name: 'Jeu sur les ailes',
     nameEn: 'Wing play',
     summary: 'Étirer le bloc adverse par les côtés et servir la surface.',
-    inPossession: ['Plus grande largeur', 'Centrer de loin', 'Passes plus directes'],
+    inPossession: ['Plus large', 'Centrer de loin', 'Faites plus de passes directes', 'Jouez sur les deux flancs', 'Cherchez à dédoubler'],
     outOfPossession: ['Bloc médian'],
     weights: { wide: 3, aerial: 2, finishing: 1, physical: 1 },
-    mentality: 'Positif',
+    mentality: 'Positive',
     signatureRoles: { ip: ['GK', 'OCB', 'CB', 'WB', 'AWB', 'FB', 'BBM', 'DM', 'CM', 'WCM', 'WM', 'W', 'AM', 'TF', 'CF'], oop: ['GK', 'CB', 'HWB', 'FB', 'DM', 'CM', 'TWM', 'TW', 'AM', 'CF'] },
   }),
   style({
@@ -186,10 +188,10 @@ const STYLES: StyleRef[] = [
     name: 'Jeu direct',
     nameEn: 'Direct play',
     summary: 'Chercher vite l’avant-centre et jouer les seconds ballons.',
-    inPossession: ['Passes beaucoup plus directes', 'Longs dégagements', 'Contourner le pressing'],
-    outOfPossession: ['Bloc médian', 'Ligne défensive normale'],
+    inPossession: ['Jouez beaucoup plus direct', 'Longs dégagements au pied', 'Contourner le pressing', 'Relancez vers attaquant pivot'],
+    outOfPossession: ['Bloc médian'],
     weights: { aerial: 3, physical: 2, defense: 1 },
-    mentality: 'Équilibré',
+    mentality: 'Équilibrée',
     signatureRoles: { ip: ['NNGK', 'NNCB', 'CB', 'FB', 'WB', 'BBM', 'DM', 'CM', 'WM', 'W', 'AM', 'TF', 'POA'], oop: ['LHK', 'STCB', 'CB', 'HFB', 'HWB', 'DM', 'CM', 'TWM', 'TW', 'AM', 'TCF', 'CF'] },
   }),
   style({
@@ -197,10 +199,10 @@ const STYLES: StyleRef[] = [
     name: 'Bloc bas',
     nameEn: 'Low block',
     summary: 'Fermer l’axe, défendre bas et frapper sur les rares occasions.',
-    inPossession: ['Passes plus directes', 'Contre-attaque en transition'],
-    outOfPossession: ['Bloc bas', 'Ligne défensive plus basse', 'Rester en place en transition'],
+    inPossession: ['Faites plus de passes directes', 'Contrez'],
+    outOfPossession: ['Bloc bas', 'Ligne défensive plus basse', 'Regroupement', 'Empêchez les relances courtes du GB'],
     weights: { defense: 3, aerial: 2, physical: 1, pace: 1 },
-    mentality: 'Défensif',
+    mentality: 'Défensive',
     signatureRoles: { ip: ['NNGK', 'NNCB', 'CB', 'WCB', 'FB', 'WB', 'HB', 'DM', 'CM', 'WM', 'TF', 'CF'], oop: ['LHK', 'CCB', 'CB', 'CWCB', 'HFB', 'HWB', 'DROPDM', 'SCRDM', 'SCRCM', 'TWM', 'TW', 'TAM', 'TCF'] },
   }),
 ];
