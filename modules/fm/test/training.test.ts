@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { autoPhase, buildTrainingWeek, currentTrainingWeek, trainingAlerts, defaultMatchDays, individualAdvice, individualFocus, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, weekMatches } from '../src';
+import { autoPhase, buildTrainingWeek, currentTrainingWeek, trainingAlerts, defaultMatchDays, individualAdvice, individualFocus, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, setupStatus, weekMatches } from '../src';
 
 const MONDAY = '2026-08-31';
 
@@ -193,5 +193,16 @@ describe('semaine courante et alertes', () => {
     ]);
     expect(a.lower).toHaveLength(1);
     expect(a.rusty).toHaveLength(1);
+  });
+});
+
+describe('réglages faits en jeu', () => {
+  const rec = { ip: 'a', oop: 'b', focus: 'pressing', intensity: 'normal' as const };
+  it('signale un joueur jamais réglé, à jour ou à changer', () => {
+    expect(setupStatus(rec, undefined).status).toBe('todo');
+    expect(setupStatus(rec, { ...rec }).status).toBe('ok');
+    const c = setupStatus(rec, { ...rec, intensity: 'double', focus: 'tackling' });
+    expect(c.status).toBe('change');
+    expect(c.changed).toEqual(['focus', 'intensity']);
   });
 });

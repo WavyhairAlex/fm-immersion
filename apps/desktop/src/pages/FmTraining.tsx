@@ -14,6 +14,7 @@ import {
   defaultMatchDays,
   mondayOf,
   sessionCategory,
+  setupStatus,
   trainingFor,
   weekLoad,
   weekMatches,
@@ -23,11 +24,16 @@ import {
   type FmPlayer,
   type FmSnapshot,
   type IndividualIntensity,
+  type IndividualSetup,
+  type SetupField,
+  type SetupStatus,
+  type TacticEngine,
+  type WorkPlan,
   type SessionCategory,
   type SessionId,
   type TrainingPhase,
 } from '@simloom/module-fm';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
 import { Chips, Fit, Panel, Pos, Tag, useCoach, useNames } from './FmUi';
@@ -49,12 +55,74 @@ function Session({ id }: { id: SessionId }) {
   return <span className={`block rounded-lg px-2 py-1 text-xs font-bold leading-tight ${CAT_CLS[sessionCategory(id)]}`}>{t(`fm.train.session.${id}`)}</span>;
 }
 
+/** Réglages individuels notés comme faits en jeu, par partie (retenus sur ce PC). */
+const setupKey = (folder: string) => `simloom.fm.individual.${folder}`;
+function readSetups(folder: string): Record<string, IndividualSetup> {
+  try {
+    return JSON.parse(localStorage.getItem(setupKey(folder)) ?? '{}') as Record<string, IndividualSetup>;
+  } catch {
+    return {};
+  }
+}
+export function useAppliedSetups(folder: string) {
+  const [applied, setApplied] = useState(() => readSetups(folder));
+  const save = (next: Record<string, IndividualSetup>) => {
+    setApplied(next);
+    try {
+      localStorage.setItem(setupKey(folder), JSON.stringify(next));
+    } catch {
+      /* stockage indisponible : la checklist n'est pas retenue */
+    }
+  };
+  return [applied, save] as const;
+}
+
+export interface SetupRow {
+  plan: WorkPlan;
+  rec: IndividualSetup;
+  advice: ReturnType<typeof individualAdvice>;
+  status: SetupStatus;
+  changed: SetupField[];
+}
+const STATUS_ORDER: Record<SetupStatus, number> = { change: 0, todo: 1, ok: 2 };
+
+/** Conseil individuel du jour pour chaque joueur, comparé à ce qui est réglé en jeu. */
+export function useIndividualSetups(engine: TacticEngine, players: FmPlayer[], folder: string, matches: number) {
+  const [coach] = useCoach();
+  const [applied, save] = useAppliedSetups(folder);
+  const list = useMemo(() => players.filter((p) => Object.keys(p.attributes).length), [players]);
+  const project = useMemo(() => buildProject(engine, list, coach), [engine, list, coach]);
+  const rows = useMemo<SetupRow[]>(() => {
+    if (!project) return [];
+    return project.plans
+      .map((x) => {
+        const advice = individualAdvice(x.player, { matches });
+        const ip = x.slot ? (engine.roles.get(x.slot.ip) ?? null) : x.phase === 'ip' ? x.role : null;
+        const oop = x.slot ? (engine.roles.get(x.slot.oop) ?? null) : x.phase === 'oop' ? x.role : null;
+        const rec: IndividualSetup = {
+          ip: ip?.code ?? null,
+          oop: oop?.code ?? null,
+          focus: individualFocus(x.weak, x.player.positions[0] === 'GB'),
+          intensity: advice.intensity,
+        };
+        return { plan: x, rec, advice, ...setupStatus(rec, applied[x.player.id]) };
+      })
+      .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
+  }, [project, engine, matches, applied]);
+  const mark = (ids: string[], on: boolean) => {
+    const next = { ...applied };
+    for (const r of rows) if (ids.includes(r.plan.player.id)) on ? (next[r.plan.player.id] = r.rec) : delete next[r.plan.player.id];
+    save(next);
+  };
+  return { rows, applied, mark };
+}
+
 /** Semaine d'entraînement type (méthode « Freedom » de FM Scout) adaptée au calendrier et au style visé. */
 const INTENSITY_TONE: Record<IndividualIntensity, 'good' | 'info' | 'warn' | 'bad'> = { noWork: 'bad', rest: 'warn', half: 'warn', normal: 'info', double: 'good' };
 
 export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; players: FmPlayer[]; folder: string }) {
   const { t, i18n } = useTranslation();
-  const { engine } = useTacticEngine(folder);
+  const { engine } = useTacticEngine(folder, players);
   const [coach, setCoach] = useCoach();
   const seasonStart = coach.seasonStart ?? 8;
   const clubStatus: ClubStatus = coach.clubStatus ?? 'pro';
@@ -80,8 +148,6 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
   const weakest = effectiveness(snap)?.weakest ?? [];
   const priorities = [...new Set<EffArea>([...styleAreas.slice(0, 1), ...weakest, ...styleAreas])];
   const names = useNames();
-  const list = useMemo(() => players.filter((p) => Object.keys(p.attributes).length), [players]);
-  const project = useMemo(() => buildProject(engine, list, coach), [engine, list, coach]);
   const mentoring = useMemo(() => mentoringGroups(players), [players]);
   const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
   const plan = useMemo(
@@ -98,6 +164,9 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
   const monthName = new Intl.DateTimeFormat(i18n.resolvedLanguage, { month: 'long' });
   const dayMonth = new Intl.DateTimeFormat(i18n.resolvedLanguage, { day: 'numeric', month: 'short', timeZone: 'UTC' });
+  const setups = useIndividualSetups(engine, players, folder, plan.days.filter((d) => d.kind === 'match').length);
+  const todoCount = setups.rows.filter((r) => r.status !== 'ok').length;
+  const changeCount = setups.rows.filter((r) => r.status === 'change').length;
 
   return (
     <div className="space-y-4">
@@ -256,12 +325,31 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
         </div>
       </Panel>
 
-      {project && project.plans.length > 0 && (
-        <Panel title={t('fm.train.individual')}>
+      {setups.rows.length > 0 && (
+        <Panel
+          title={t('fm.train.individual')}
+          action={
+            todoCount > 0 ? (
+              <button type="button" className="btn-secondary text-sm" onClick={() => setups.mark(setups.rows.filter((r) => r.status !== 'ok').map((r) => r.plan.player.id), true)}>
+                {t('fm.train.markAll')}
+              </button>
+            ) : undefined
+          }
+        >
+          <p className="mb-2 text-sm">
+            <b>{t('fm.train.setupDone', { done: setups.rows.length - todoCount, total: setups.rows.length })}</b>
+            {changeCount > 0 && (
+              <>
+                {' '}
+                <Tag tone="warn">{t('fm.train.setupChanges', { count: changeCount })}</Tag>
+              </>
+            )}
+          </p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-left text-canard/70">
                 <tr>
+                  <th className="px-2 py-1">{t('fm.train.inGame')}</th>
                   <th className="px-2 py-1">{t('fm.prog.player')}</th>
                   <th className="px-2 py-1">{t('fm.train.roleIp')}</th>
                   <th className="px-2 py-1">{t('fm.train.roleOop')}</th>
@@ -272,26 +360,47 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
                 </tr>
               </thead>
               <tbody>
-                {project.plans.map((x) => {
-                  const a = individualAdvice(x.player, { matches: plan.days.filter((d) => d.kind === 'match').length });
-                  const focus = individualFocus(x.weak, x.player.positions[0] === 'GB');
-                  const ip = x.slot ? engine.roles.get(x.slot.ip) : x.phase === 'ip' ? x.role : null;
-                  const oop = x.slot ? engine.roles.get(x.slot.oop) : x.phase === 'oop' ? x.role : null;
+                {setups.rows.map(({ plan: x, rec, advice: a, status, changed }) => {
+                  const ip = rec.ip ? engine.roles.get(rec.ip) : null;
+                  const oop = rec.oop ? engine.roles.get(rec.oop) : null;
+                  const was = setups.applied[x.player.id];
+                  const label = (f: SetupField, v: IndividualSetup) => {
+                    const val = v[f];
+                    if (val == null) return '–';
+                    if (f === 'focus') return t(`fm.train.focus.${val}`);
+                    if (f === 'intensity') return t(`fm.train.intensityLevel.${val}`);
+                    const r = engine.roles.get(val);
+                    return r ? names.role(r) : '–';
+                  };
+                  const cell = (f: SetupField, content: ReactNode) =>
+                    changed.includes(f) && was ? (
+                      <span>
+                        <span className="text-xs text-brun line-through">{label(f, was)}</span>
+                        <br />
+                        {content}
+                      </span>
+                    ) : (
+                      content
+                    );
                   return (
-                    <tr key={x.player.id} className="border-t border-canard/5">
+                    <tr key={x.player.id} className={`border-t border-canard/5 ${status === 'change' ? 'bg-ambre/10' : ''}`}>
+                      <td className="px-2 py-1.5">
+                        <label className="flex items-center gap-1.5">
+                          <input type="checkbox" checked={status === 'ok'} onChange={(e) => setups.mark([x.player.id], e.target.checked)} />
+                          {status === 'change' ? <Tag tone="warn">{t('fm.train.setupStatus.change')}</Tag> : status === 'todo' ? <span className="text-xs text-brun">{t('fm.train.setupStatus.todo')}</span> : null}
+                        </label>
+                      </td>
                       <td className="px-2 py-1.5 font-bold">
                         {x.player.name} <Pos player={x.player} />
                       </td>
-                      <td className="px-2 py-1.5">{ip ? names.role(ip) : '–'}</td>
-                      <td className="px-2 py-1.5">{oop ? names.role(oop) : '–'}</td>
+                      <td className="px-2 py-1.5">{cell('ip', ip ? names.role(ip) : '–')}</td>
+                      <td className="px-2 py-1.5">{cell('oop', oop ? names.role(oop) : '–')}</td>
                       <td className="px-2 py-1.5">
-                        {focus ? <b>{t(`fm.train.focus.${focus}`)}</b> : '–'}
+                        {cell('focus', rec.focus ? <b>{t(`fm.train.focus.${rec.focus}`)}</b> : '–')}
                         <br />
                         <span className="text-xs text-brun">{x.weak.map((w) => `${attr(w.key)} ${Math.round(w.value)}`).join(', ')}</span>
                       </td>
-                      <td className="px-2 py-1.5">
-                        <Tag tone={INTENSITY_TONE[a.intensity]}>{t(`fm.train.intensityLevel.${a.intensity}`)}</Tag>
-                      </td>
+                      <td className="px-2 py-1.5">{cell('intensity', <Tag tone={INTENSITY_TONE[a.intensity]}>{t(`fm.train.intensityLevel.${a.intensity}`)}</Tag>)}</td>
                       <td className="px-2 py-1.5 text-right">
                         <Fit value={x.fit} />
                       </td>
@@ -304,7 +413,8 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-xs text-brun">{t('fm.train.individualHelp')}</p>
+          <p className="mt-2 text-xs text-brun">{t('fm.train.setupHelp')}</p>
+          <p className="mt-1 text-xs text-brun">{t('fm.train.individualHelp')}</p>
         </Panel>
       )}
 
