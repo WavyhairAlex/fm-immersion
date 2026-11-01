@@ -200,7 +200,7 @@ const STYLES: StyleRef[] = [
     nameEn: 'Low block',
     summary: 'Fermer l’axe, défendre bas et frapper sur les rares occasions.',
     inPossession: ['Faites plus de passes directes', 'Contrez'],
-    outOfPossession: ['Bloc bas', 'Ligne défensive plus basse', 'Regroupement', 'Empêchez les relances courtes du GB'],
+    outOfPossession: ['Bloc bas', 'Ligne défensive plus basse', 'Regroupement', 'Empêchez de centrer'],
     weights: { defense: 3, aerial: 2, physical: 1, pace: 1 },
     mentality: 'Défensive',
     signatureRoles: { ip: ['NNGK', 'NNCB', 'CB', 'WCB', 'FB', 'WB', 'HB', 'DM', 'CM', 'WM', 'TF', 'CF'], oop: ['LHK', 'CCB', 'CB', 'CWCB', 'HFB', 'HWB', 'DROPDM', 'SCRDM', 'SCRCM', 'TWM', 'TW', 'TAM', 'TCF'] },
