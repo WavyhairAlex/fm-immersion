@@ -5,8 +5,8 @@ import { INVERTED, attrOf, avg, footInfo, sideOf, styleBlock, type Phase, type R
 /*
  * Consignes individuelles conseillées pour chaque titulaire, d'après ses attributs comparés à son
  * propre niveau, son poste, son pied, ses rôles et le style. Une consigne que le jeu verrouille
- * pour le rôle (le pressing d'un rôle « de couverture », par exemple) n'est jamais proposée :
- * à la place, on propose le rôle qui la débloque.
+ * pour le poste ou le rôle (le pressing d'un rôle « de couverture », par exemple) n'est jamais
+ * proposée : à la place, on propose le rôle qui la débloque.
  */
 
 export type InstructionId =
@@ -48,33 +48,119 @@ export interface RoleLocks {
   blocked: InstructionId[];
 }
 
+/** Groupes de consignes individuelles de FM27 (identifiants du jeu) : 13 avec ballon, 4 sans ballon. */
+export type InstructionGroup =
+  | 'AttackingWidth' | 'DribblingDirection' | 'DribblingFrequency' | 'ForwardRuns' | 'FreedomOfMovement' | 'HoldUpBall'
+  | 'Shooting' | 'PassingRisk' | 'PassingStrategy' | 'CrossFrom' | 'CrossingStrategy' | 'AttackBoxSide' | 'AttackBoxDepth'
+  | 'TriggerPress' | 'Marking' | 'Tackling' | 'MarkingTarget';
+
+/** Groupe du jeu que règle chaque consigne conseillée (absent : pas de groupe identifié). */
+export const INSTRUCTION_GROUP: Partial<Record<InstructionId, InstructionGroup>> = {
+  gkShort: 'PassingStrategy', gkLong: 'PassingStrategy', slowDown: 'HoldUpBall',
+  shootMore: 'Shooting', shootLess: 'Shooting', dribbleMore: 'DribblingFrequency', dribbleLess: 'DribblingFrequency',
+  riskMore: 'PassingRisk', riskLess: 'PassingRisk', shortPass: 'PassingStrategy', directPass: 'PassingStrategy',
+  cutInside: 'DribblingDirection', crossByline: 'CrossFrom', crossToTarget: 'CrossingStrategy',
+  holdPosition: 'ForwardRuns', lateRuns: 'ForwardRuns', holdBall: 'HoldUpBall', roam: 'FreedomOfMovement',
+  farPost: 'AttackBoxSide', nearPost: 'AttackBoxSide',
+  pressMore: 'TriggerPress', pressLess: 'TriggerPress', tackleHarder: 'Tackling', tackleLess: 'Tackling', markTighter: 'Marking',
+};
+
+/**
+ * Groupes verrouillés par le poste, quel que soit le rôle (« Consigne indisponible » à l'écran
+ * Consignes individuelles de FM27). Relevé sur captures du jeu le 01/11/2026 ; les postes absents
+ * ne sont pas encore relevés et gardent les règles déduites du nom des rôles.
+ */
+export const POSITION_LOCKS: Partial<Record<PosCode, readonly InstructionGroup[]>> = {
+  GB: ['AttackingWidth', 'DribblingDirection', 'ForwardRuns', 'FreedomOfMovement', 'HoldUpBall', 'Shooting',
+    'CrossFrom', 'CrossingStrategy', 'AttackBoxSide', 'AttackBoxDepth', 'TriggerPress', 'Marking', 'MarkingTarget'],
+  DC: ['DribblingDirection', 'ForwardRuns', 'FreedomOfMovement', 'HoldUpBall', 'CrossFrom', 'CrossingStrategy', 'AttackBoxSide', 'AttackBoxDepth'],
+};
+
+/** Sens d'une consigne imposée : « more » = plus (de risques, de pressing…), « less » = moins, « direct » = plus directes. */
+export type ImposedValue = 'more' | 'less' | 'direct';
+
+/**
+ * Consignes imposées par le rôle (fiche du rôle, cadre « Cons. individuelles ») : le groupe est
+ * verrouillé sur cette valeur. Un rôle listé sans entrée n'impose rien. Codes du jeu ou codes Simloom.
+ */
+export const ROLE_IMPOSED: Record<string, Partial<Record<InstructionGroup, ImposedValue>>> = {
+  GK: {}, SK: {}, LHK: {},
+  BPGK: { PassingRisk: 'more' },
+  NNGK: { PassingRisk: 'less', DribblingFrequency: 'less' },
+  CB: { ForwardRuns: 'less' },
+  ADCB: {},
+  BPCB: { ForwardRuns: 'less', PassingRisk: 'more' },
+  NNCB: { ForwardRuns: 'less', PassingRisk: 'less', DribblingFrequency: 'less', PassingStrategy: 'direct' },
+  STCB: { TriggerPress: 'more' },
+  CCB: { TriggerPress: 'less' },
+};
+
 const tag = (r: RoleRef) => `${r.code} ${r.en}`;
 // Rôles qui restent en couverture, en retrait ou haut en point d'appui : le jeu verrouille le pressing en « Moins souvent ».
 const PRESS_LESS = /Screening|(?<!Wide )Covering|Dropping|Holding|Outlet|\b(SCRDM|SCRCM|CCB|CWCB|DROPDM|HFB|HWB|LHK|WOM|WOW|IOW|COAM|SOAM|COCF|SOCF)\b/;
 // Rôles de pressing : le jeu verrouille le pressing en « Plus souvent ».
 const PRESS_MORE = /Pressing|\b(PFB|PWB|PRSDM|PRSCM)\b/;
 
+/** Consignes imposées par un rôle relevé en jeu, ou null s'il n'est pas encore relevé. */
+function imposedBy(r: RoleRef): Partial<Record<InstructionGroup, ImposedValue>> | null {
+  return ROLE_IMPOSED[r.code] ?? null;
+}
+
+/** Sens de chaque consigne conseillée, pour reconnaître celles que le rôle impose déjà. */
+const INSTRUCTION_VALUE: Partial<Record<InstructionId, ImposedValue>> = {
+  riskMore: 'more', riskLess: 'less', dribbleMore: 'more', dribbleLess: 'less', pressMore: 'more', pressLess: 'less',
+  directPass: 'direct', holdPosition: 'less', lateRuns: 'more',
+};
+
+/** Le rôle impose déjà cette consigne : inutile de la conseiller ou de changer de rôle pour elle. */
+export function roleImposes(r: RoleRef | undefined, id: InstructionId): boolean {
+  const g = INSTRUCTION_GROUP[id];
+  const v = INSTRUCTION_VALUE[id];
+  return !!r && !!g && !!v && imposedBy(r)?.[g] === v;
+}
+
 /**
- * Verrous déduits du nom des rôles et de l'écran Consignes de FM27 (pressing « Moins souvent »
- * verrouillé pour un rôle de couverture). À compléter rôle par rôle quand on en voit d'autres en jeu.
+ * Verrous d'un rôle (à un poste donné, quand on le connaît). Pour les postes et les rôles relevés
+ * sur l'écran Consignes de FM27, on suit le jeu : groupes verrouillés par le poste, puis groupes
+ * imposés par le rôle. Sinon, on garde les verrous déduits du nom du rôle.
  */
-export function roleLocks(r: RoleRef | undefined): RoleLocks {
+export function roleLocks(r: RoleRef | undefined, pos?: PosCode): RoleLocks {
   if (!r) return { press: null, blocked: [] };
+  const imposed = imposedBy(r);
+  const posLocks = pos ? POSITION_LOCKS[pos] : undefined;
+  if (imposed || posLocks) {
+    const locked = new Set<InstructionGroup>([...(posLocks ?? []), ...(Object.keys(imposed ?? {}) as InstructionGroup[])]);
+    const blocked = (Object.keys(INSTRUCTION_GROUP) as InstructionId[]).filter((id) => locked.has(INSTRUCTION_GROUP[id]!));
+    // Consigne sans équivalent dans FM27 : la sortie du gardien dépend de son rôle sans ballon (Gardien-libéro).
+    if (pos === 'GB' || r.group === 'GK') blocked.push('rushOut');
+    const p = imposed?.TriggerPress;
+    const press = p === 'more' || p === 'less' ? p : imposed ? null : fallbackPress(r);
+    if (!imposed) blocked.push(...fallbackBlocked(r, press).filter((id) => !blocked.includes(id)));
+    return { press, blocked };
+  }
+  const press = fallbackPress(r);
+  return { press, blocked: fallbackBlocked(r, press) };
+}
+
+function fallbackPress(r: RoleRef): RoleLocks['press'] {
+  const s = tag(r);
+  return r.group === 'GK' ? null : PRESS_MORE.test(s) ? 'more' : PRESS_LESS.test(s) ? 'less' : null;
+}
+
+/** Verrous déduits du nom des rôles, pour les postes pas encore relevés en jeu. */
+function fallbackBlocked(r: RoleRef, press: RoleLocks['press']): InstructionId[] {
   const s = tag(r);
   const blocked: InstructionId[] = [];
-  const press = r.group === 'GK' ? null : PRESS_MORE.test(s) ? 'more' : PRESS_LESS.test(s) ? 'less' : null;
   if (press === 'less') blocked.push('pressMore');
   if (press === 'more') blocked.push('pressLess');
-  // Le défenseur couvreur défend sa zone : le marquage serré va contre son rôle.
-  if (/Covering (Wide )?Centre-Back|\b(CCB|CWCB)\b/.test(s)) blocked.push('markTighter');
   // Rôles qui se déplacent déjà librement ou restent déjà en place.
   if (/Free Role|False Nine|\b(FREE|F9)\b/.test(s)) blocked.push('roam');
   if (/Half[- ]Back|Holding|\bHB\b/.test(s)) blocked.push('holdPosition');
-  return { press, blocked };
+  return blocked;
 }
 
-/** Ce qu'un rôle permet : la consigne n'est pas verrouillée. */
-export const roleAllows = (r: RoleRef | undefined, id: InstructionId) => !roleLocks(r).blocked.includes(id);
+/** Ce qu'un rôle permet (au poste donné) : la consigne n'est pas verrouillée. */
+export const roleAllows = (r: RoleRef | undefined, id: InstructionId, pos?: PosCode) => !roleLocks(r, pos).blocked.includes(id);
 
 /* ---------- Choix des consignes ---------- */
 
@@ -168,7 +254,7 @@ export function playerInstructions(engine: TacticEngine, slot: Slot, style: Styl
   return pick(wanted, ipRole, oopRole, engine, slot, 3, 2);
 }
 
-const SWITCHABLE = new Set<InstructionId>(['pressMore', 'pressLess', 'markTighter']);
+const SWITCHABLE = new Set<InstructionId>(['pressMore', 'pressLess', 'markTighter', 'riskMore', 'riskLess', 'dribbleMore', 'dribbleLess', 'shortPass', 'directPass']);
 
 /** Écarte les consignes verrouillées par le rôle de leur phase (et propose le rôle qui les débloque), puis garde les plus marquées. */
 function pick(wanted: PlayerInstruction[], ipRole: RoleRef | undefined, oopRole: RoleRef | undefined, engine: TacticEngine, slot: Slot, maxIp: number, maxOop: number): PlayerAdvice {
@@ -178,9 +264,9 @@ function pick(wanted: PlayerInstruction[], ipRole: RoleRef | undefined, oopRole:
   const switches: RoleSwitch[] = [];
   for (const x of sorted) {
     const role = x.phase === 'ip' ? ipRole : oopRole;
-    if (roleAllows(role, x.id)) list.push(x);
+    if (roleAllows(role, x.id, slot.pos)) list.push(x);
     // Un rôle qui fait déjà la consigne (rôle libre, demi-défenseur) n'a pas besoin d'un autre rôle.
-    else if (role && SWITCHABLE.has(x.id)) {
+    else if (role && SWITCHABLE.has(x.id) && !roleImposes(role, x.id)) {
       const alt = unlockingRole(engine, slot, x.phase, x.id);
       if (alt && alt.code !== role.code) switches.push({ phase: x.phase, from: role.code, to: alt.code, unlocks: x.id });
     }
@@ -198,9 +284,9 @@ function unlockingRole(engine: TacticEngine, slot: Slot, phase: Phase, id: Instr
   const pos: PosCode = slot.pos;
   let best: { r: RoleRef; f: number } | null = null;
   for (const r of engine.ref.roles) {
-    if (!engine.availableAt(r, pos, phase) || !roleAllows(r, id)) continue;
+    if (!engine.availableAt(r, pos, phase) || !roleAllows(r, id, pos)) continue;
     // Pour presser plus, on vise un vrai rôle de pressing quand le poste en a un.
-    const bonus = id === 'pressMore' && roleLocks(r).press === 'more' ? 1 : 0;
+    const bonus = id === 'pressMore' && roleLocks(r, pos).press === 'more' ? 1 : 0;
     const f = (engine.roleFit(p, r.code, phase, pos) ?? 0) + bonus;
     if (!best || f > best.f) best = { r, f };
   }
