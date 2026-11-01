@@ -12,6 +12,7 @@ import {
   rolePos,
   shapeOf,
   spreadXY,
+  unavailable,
   styleBlock,
   tacticReferenceSchema,
   type BalanceCheck,
@@ -81,7 +82,7 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
     setPrefs(next);
     writePrefs(next);
   };
-  const avail = useMemo(() => players.filter((p) => !p.injury && Object.keys(p.attributes).length > 0), [players]);
+  const avail = useMemo(() => players.filter((p) => !unavailable(p) && Object.keys(p.attributes).length > 0), [players]);
   const ranked = useMemo(() => engine.rankStyles(avail), [engine, avail]);
   const [coach] = useCoach();
   // Sans choix du joueur : la meilleure tactique applicable, ou le projet dès qu'il devient le meilleur.

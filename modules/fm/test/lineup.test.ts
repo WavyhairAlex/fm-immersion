@@ -78,4 +78,20 @@ describe('compo lue dans le jeu', () => {
     expect(starsOf({ MinValue: 20, MaxValue: 20 })).toBe(5);
     expect(starsOf(3)).toBe(3);
   });
+
+  it('lit les suspensions de chemins.json (instantané réel du 01/11) et les écarte', async () => {
+    const { withExtended, suspensionsOf, unavailable } = await import('../src');
+    const ban = { Player: 'Person#213462', BanScope: { BanScopeString: 'Championnat national' }, ActiveBanMatchesRemaining: 1, ActiveBanMatchesElapsed: 0, ActiveBanTotalMatches: 1, ActiveBanReason: '3 cartons jaunes' };
+    const base = { players: [{ id: 2000533385, name: 'Pontus Edh' }, { id: 7, name: 'J7' }] };
+    const custom = (count: number, list: unknown) => ({ equipe: { nbSuspensionsEnCours: count, suspensionsEnCours: list }, joueurs: { '0': { id: 2000533385, suspensions: 1 }, '1': { id: 7, suspensions: 0 } } });
+    const s1 = withExtended({ ...base, custom: custom(1, JSON.stringify([ban])) } as unknown as FmSnapshot);
+    const [edh, j7] = s1.players.map(normalizePlayer);
+    expect(edh!.suspension).toBe('Championnat national, 1 match, 3 cartons jaunes');
+    expect(unavailable(edh!)).toBe(true);
+    expect(j7!.suspension).toBeNull();
+    // Compteur du joueur resté à 1 alors que l'équipe n'a plus de suspension : cumul, pas une suspension.
+    expect(suspensionsOf({ ...base, custom: custom(0, []) } as unknown as FmSnapshot).size).toBe(0);
+    // Liste déjà dépliée (objet) et sans compteur d'équipe : on se fie à la liste.
+    expect(suspensionsOf({ ...base, custom: { equipe: { suspensionsEnCours: [ban] }, joueurs: { '0': { id: 2000533385, suspensions: 1 } } } } as unknown as FmSnapshot).get('2000533385')).toContain('1 match');
+  });
 });

@@ -1,4 +1,4 @@
-import { abilityNeeded, keyAttrs, styleComplexity, tactAbility, type FmPlayer, type Phase } from '@simloom/module-fm';
+import { abilityNeeded, unavailable, keyAttrs, styleComplexity, tactAbility, type FmPlayer, type Phase } from '@simloom/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
@@ -11,7 +11,7 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
   const { t, i18n } = useTranslation();
   const names = useNames();
   const { engine } = useTacticEngine(folder);
-  const list = useMemo(() => players.filter((p) => !p.injury && Object.keys(p.attributes).length), [players]);
+  const list = useMemo(() => players.filter((p) => !unavailable(p) && Object.keys(p.attributes).length), [players]);
   const ranked = useMemo(() => engine.rankStyles(list), [engine, list]);
   const sig = useMemo(() => engine.squadSignals(list), [engine, list]);
   const [sel, setSel] = useState<string | null>(() => {

@@ -262,6 +262,7 @@ export function dressingRoom(players: FmPlayer[]): DressingRoom {
 export type HomeAlert =
   | { kind: 'injured'; player: FmPlayer; detail: string }
   | { kind: 'contract'; player: FmPlayer; months: number }
+  | { kind: 'suspended'; player: FmPlayer; detail: string }
   | { kind: 'condition'; player: FmPlayer; condition: number }
   | { kind: 'status'; player: FmPlayer; detail: string };
 
@@ -276,6 +277,7 @@ export interface HomeOverview {
 export function homeOverview(players: FmPlayer[], gameDate: string): HomeOverview {
   const alerts: HomeAlert[] = [];
   for (const p of players) if (p.injury) alerts.push({ kind: 'injured', player: p, detail: p.injury + (p.injuryDays ? ` (${p.injuryDays} j)` : '') });
+  for (const p of players) if (p.suspension) alerts.push({ kind: 'suspended', player: p, detail: p.suspension });
   const contracts = upcomingContracts(players, gameDate, 6);
   const grouped = contracts.length >= 3;
   if (!grouped) for (const c of contracts) alerts.push({ kind: 'contract', player: c.player, months: c.months });

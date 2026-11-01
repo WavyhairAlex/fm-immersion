@@ -1,11 +1,11 @@
-import { homeOverview, type FmPlayer, type FmSnapshot } from '@simloom/module-fm';
+import { homeOverview, unavailable, type FmPlayer, type FmSnapshot } from '@simloom/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FmSummary } from './FmSummary';
 import { useTacticEngine } from './FmTactic';
 import { Empty, Level, Panel, PlayerName, Pos, Row, Tag, type Tone } from './FmUi';
 
-const KIND_TONE: Record<string, Tone> = { injured: 'bad', contract: 'warn', condition: 'warn', status: 'info' };
+const KIND_TONE: Record<string, Tone> = { injured: 'bad', suspended: 'bad', contract: 'warn', condition: 'warn', status: 'info' };
 
 /** Accueil de la partie : chiffres clés, ce qui est à traiter, styles adaptés, meilleurs joueurs et jeunes. */
 export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; players: FmPlayer[]; folder: string; go: (view: string) => void }) {
@@ -13,7 +13,7 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
   const en = i18n.resolvedLanguage === 'en';
   const h = useMemo(() => homeOverview(players, snap.gameDate), [players, snap.gameDate]);
   const { engine } = useTacticEngine(folder);
-  const ranked = useMemo(() => engine.rankStyles(players.filter((p) => !p.injury && Object.keys(p.attributes).length)), [engine, players]);
+  const ranked = useMemo(() => engine.rankStyles(players.filter((p) => !unavailable(p) && Object.keys(p.attributes).length)), [engine, players]);
   const pct = (f: number | null) => (f == null ? '–' : `${Math.round((f / 20) * 100)} %`);
   const link = (view: string, label: string) => (
     <button type="button" className="text-sm font-bold text-eau-fonce hover:underline" onClick={() => go(view)}>
