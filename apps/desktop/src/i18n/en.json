@@ -262,7 +262,7 @@
       "bestNow": "Best applicable tactic",
       "projectBest": "Your project is now the best choice",
       "teamTitle": "Team instructions · {{style}}",
-      "teamHelp": "Set them in the game's Tactics screen, with the mentality. Exact FM27 labels.",
+      "teamHelp": "Every card of the game's Team Instructions screen, in its order; in bold, those the style sets, the others stay on the default. Set them with the mentality.",
       "oppTitle": "Against {{name}}",
       "oppMore": "Full report",
       "xi": {
@@ -277,7 +277,7 @@
       "matchScore": "Team rating {{base}}, matchup {{bonus}}.",
       "matchShow": "Show this line-up",
       "matchBase": "Back to the base tactic",
-      "matchHelp": "Matchup inferred from the opponent's profile (formations, pressing, defence) with football rules. It only tips the choice when ratings are close.",
+      "matchHelp": "Matchup inferred from the opponent's profile (formations, pressing, defence) with football rules. It starts from your base tactic: without a weakness measured in the game's report the formation stays, and a style change must gain more than the understanding it costs.",
       "matchHelpMeasured": "Matchup measured on what the opponent concedes depending on the formation they face (game report), plus their profile.",
       "why": {
         "coverStrikers": "They play two strikers: two defensive midfielders (or three centre-backs) cover them.",
@@ -288,7 +288,9 @@
         "directVsHighPress": "They press a lot: your direct game goes over the press.",
         "attackLeaky": "Their defence concedes often: an attacking mentality makes the most of it.",
         "concedesMore": "Against this formation they concede a clear-cut chance every {{every}} min ({{minutes}} min observed), more often than usual.",
-        "concedesLess": "Against this formation they concede a clear-cut chance only every {{every}} min ({{minutes}} min observed)."
+        "concedesLess": "Against this formation they concede a clear-cut chance only every {{every}} min ({{minutes}} min observed).",
+        "changeStyle": "Changing style costs tactical understanding (estimate: −0.2).",
+        "changeForm": "Changing formation costs tactical understanding (estimate: −0.3): only suggested on a weakness measured over at least 270 min."
       }
     },
     "nav": "Save sections",
@@ -635,6 +637,7 @@
     },
     "style": {
       "notInGame": "not in FM27",
+      "cardsSet": "{{count}} set out of {{total}}",
       "which": "Which style suits my squad?",
       "whichHelp": "Each style's requirements compared with the profile of the 16 best available outfield players. Pick a style for details.",
       "profile": "Squad profile",

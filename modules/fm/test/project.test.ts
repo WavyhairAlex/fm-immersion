@@ -131,4 +131,19 @@ describe('tactique à jouer maintenant', () => {
     const worse = bestTactic(engine, squad, { style: other.id, form: '5-4-1' })!;
     expect(worse.plan.score).toBeGreaterThanOrEqual(engine.formationPlan('5-4-1', other, squad).score);
   });
+
+  it('départage les styles à égalité par l’adéquation de l’effectif au style', async () => {
+    const { rankTactics, TACTIC_TIE } = await import('../src/project');
+    const { DEFAULT_TACTIC_REFERENCE, TacticEngine, normalizePlayer } = await import('../src');
+    const engine = new TacticEngine(DEFAULT_TACTIC_REFERENCE);
+    const attrs = { Passing: 16, Technique: 16, FirstTouch: 16, Vision: 15, Decisions: 14, Tackling: 9, Heading: 8, Jumping: 8, Strength: 9, Finishing: 11, Reflexes: 12, Handling: 12, Pace: 12, Stamina: 13, WorkRate: 13 };
+    const squad = ['GB', 'D (C)', 'D (C)', 'D (D)', 'D (G)', 'MD', 'M (C)', 'M (C)', 'MO (G)', 'MO (D)', 'BT'].map((pos, i) => normalizePlayer({ id: i + 1, name: `J${i + 1}`, positions: pos, attributes: attrs }));
+    const ranked = rankTactics(engine, squad);
+    const top = Math.max(...ranked.map((r) => r.fit));
+    const tied = ranked.filter((r) => top - r.fit < TACTIC_TIE);
+    // Les styles à égalité viennent en tête, rangés par adéquation de l'effectif au style.
+    expect(ranked.slice(0, tied.length)).toEqual(tied);
+    const order = engine.rankStyles(squad).map((x) => x.style.id).filter((id) => tied.some((t) => t.style.id === id));
+    expect(tied.map((t) => t.style.id)).toEqual(order);
+  });
 });

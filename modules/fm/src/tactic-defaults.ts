@@ -1,7 +1,12 @@
 import type { RoleRef, StyleRef, TacticReference } from './tactic';
 
 /*
- * Consignes d'équipe et mentalités des styles : libellés exacts de FM27 (voir team-instructions-fm27.ts).
+ * Consignes d'équipe et mentalités des styles : libellés exacts de FM27 (voir team-instructions-fm27.ts),
+ * reprises des tactiques préréglées du jeu (shared/data/simatch.fmf, lu hors jeu le 01/11/2026 ; styles
+ * Contrôle de la possession, Gegenpress, Contre-attaques fluides, Jeu sur les ailes, Longs ballons devant,
+ * Jeu ultra-défensif). Contrôle de la possession est vérifié sur l'écran du jeu (Malženice, 01/11) : la ligne
+ * défensive y reste Standard et « Ralentissez le rythme » (relances du GB) remplace « Gagnez du temps » lu
+ * dans le fichier ; ces deux lectures du fichier sont donc écartées pour tous les styles.
  *
  * Repères maison de Simloom : rôles et styles de jeu décrits avec nos propres pondérations
  * (3 = essentiel, 2 = important, 1 = utile). Ils servent par défaut ; un fichier local de repères
@@ -144,10 +149,10 @@ const STYLES: StyleRef[] = [
     name: 'Contrôle de la possession',
     nameEn: 'Possession control',
     summary: 'Garder le ballon, construire court depuis l’arrière et le récupérer vite.',
-    inPossession: ['Faites plus de passes courtes', 'Jouer malgré le pressing', 'Relancez vers défenseurs centraux', 'Dégagements au pied courts', 'Rythme plus lent', 'Passer dans les pieds'],
-    outOfPossession: ['Pressing haut', 'Ligne défensive plus haute', 'Déclenchez le pressing plus souvent', 'Effectuer un contre-pressing'],
+    inPossession: ['Faites plus de passes courtes', 'Rythme plus lent', 'Jouer le ballon dans la surface', 'Jouer malgré le pressing', 'Dégagements au pied courts', 'Ralentissez le rythme', 'Relancez vers défenseurs centraux'],
+    outOfPossession: ['Pressing haut', 'Déclenchez le pressing plus souvent', 'Effectuer un contre-pressing', 'Empêchez les relances courtes du GB'],
     weights: { technical: 3, creators: 2, press: 1 },
-    mentality: 'Équilibrée',
+    mentality: 'Positive',
     signatureRoles: { ip: ['BPGK', 'BPCB', 'CB', 'IFB', 'IWB', 'PMWB', 'B2BPM', 'DLP', 'HB', 'MFPM', 'AP', 'IW', 'WP', 'F9', 'DLF'], oop: ['SK', 'STCB', 'CB', 'PFB', 'PWB', 'SCRDM', 'PRSDM', 'PRSCM', 'SCRCM', 'TWM', 'TW', 'TAM', 'CF'] },
   }),
   style({
@@ -155,10 +160,10 @@ const STYLES: StyleRef[] = [
     name: 'Pressing à la perte',
     nameEn: 'Gegenpress',
     summary: 'Récupérer le ballon tout de suite après l’avoir perdu, haut sur le terrain.',
-    inPossession: ['Faites plus de passes directes', 'Rythme plus élevé', 'Relances rapides'],
-    outOfPossession: ['Pressing haut', 'Ligne défensive plus haute', 'Déclenchez le pressing beaucoup plus souvent', 'Effectuer un contre-pressing', "S'engager plus"],
+    inPossession: ['Rythme beaucoup plus élevé', 'Plus axiale', 'Contrez', 'Jouer malgré le pressing', 'Relancez vers défenseurs centraux'],
+    outOfPossession: ['Pressing haut', 'Rester plus haut', 'Déclenchez le pressing beaucoup plus souvent', 'Effectuer un contre-pressing', 'Empêchez les relances courtes du GB'],
     weights: { press: 3, physical: 2, pace: 1, technical: 1 },
-    mentality: 'Positive',
+    mentality: 'Équilibrée',
     signatureRoles: { ip: ['GK', 'BPCB', 'CB', 'FB', 'WB', 'AWB', 'BBM', 'DM', 'CM', 'CHM', 'AM', 'IF', 'W', 'CF', 'POA'], oop: ['SK', 'STCB', 'CB', 'PFB', 'PWB', 'PRSDM', 'PRSCM', 'TWM', 'TW', 'TAM', 'CF'] },
   }),
   style({
@@ -166,10 +171,10 @@ const STYLES: StyleRef[] = [
     name: 'Contre-attaque rapide',
     nameEn: 'Fast counter-attack',
     summary: 'Défendre en bloc et projeter vite les joueurs rapides dans l’espace.',
-    inPossession: ['Faites plus de passes directes', 'Contrez', 'Rythme plus élevé', 'Passer dans les espaces', 'Relances rapides'],
-    outOfPossession: ['Bloc médian', 'Regroupement'],
+    inPossession: ['Faites plus de passes courtes', 'Rythme plus élevé', 'Contrez', 'Prenez la défense de vitesse', 'Passer dans les espaces', 'Relances rapides'],
+    outOfPossession: ['Bloc médian', 'Rester plus bas', 'Déclenchez le pressing plus souvent', 'Effectuer un contre-pressing', "S'engager plus"],
     weights: { pace: 3, finishing: 2, defense: 2, physical: 1 },
-    mentality: 'Équilibrée',
+    mentality: 'Prudente',
     signatureRoles: { ip: ['GK', 'CB', 'NNCB', 'FB', 'WB', 'BBM', 'DM', 'CM', 'CHM', 'WM', 'IF', 'WF', 'W', 'SS', 'CHF', 'POA'], oop: ['GK', 'CCB', 'CB', 'HFB', 'HWB', 'SCRDM', 'SCRCM', 'WOM', 'WOW', 'IOW', 'COAM', 'COCF'] },
   }),
   style({
@@ -177,10 +182,10 @@ const STYLES: StyleRef[] = [
     name: 'Jeu sur les ailes',
     nameEn: 'Wing play',
     summary: 'Étirer le bloc adverse par les côtés et servir la surface.',
-    inPossession: ['Plus large', 'Centrer de loin', 'Faites plus de passes directes', 'Jouez sur les deux flancs', 'Cherchez à dédoubler'],
-    outOfPossession: ['Bloc médian'],
+    inPossession: ['Faites plus de passes directes', 'Rythme plus élevé', 'Beaucoup plus large', 'Contrez', 'Cherchez à dédoubler', 'Jouez sur les deux flancs', 'Relancez vers défenseurs latéraux'],
+    outOfPossession: ['Bloc médian', 'Déclenchez le pressing plus souvent', 'Pressing vers les côtés'],
     weights: { wide: 3, aerial: 2, finishing: 1, physical: 1 },
-    mentality: 'Positive',
+    mentality: 'Équilibrée',
     signatureRoles: { ip: ['GK', 'OCB', 'CB', 'WB', 'AWB', 'FB', 'BBM', 'DM', 'CM', 'WCM', 'WM', 'W', 'AM', 'TF', 'CF'], oop: ['GK', 'CB', 'HWB', 'FB', 'DM', 'CM', 'TWM', 'TW', 'AM', 'CF'] },
   }),
   style({
@@ -188,8 +193,8 @@ const STYLES: StyleRef[] = [
     name: 'Jeu direct',
     nameEn: 'Direct play',
     summary: 'Chercher vite l’avant-centre et jouer les seconds ballons.',
-    inPossession: ['Jouez beaucoup plus direct', 'Longs dégagements au pied', 'Contourner le pressing', 'Relancez vers attaquant pivot'],
-    outOfPossession: ['Bloc médian'],
+    inPossession: ['Jouez beaucoup plus direct', 'Rythme plus élevé', 'Contrez', 'Soyez plus disciplinés', 'Obtenir des coups de pied arrêtés', 'Centrer de loin', 'Contourner le pressing', 'Longs dégagements au pied'],
+    outOfPossession: ['Bloc médian', 'Regroupement', "S'engager plus", 'Pressing vers les côtés'],
     weights: { aerial: 3, physical: 2, defense: 1 },
     mentality: 'Équilibrée',
     signatureRoles: { ip: ['NNGK', 'NNCB', 'CB', 'FB', 'WB', 'BBM', 'DM', 'CM', 'WM', 'W', 'AM', 'TF', 'POA'], oop: ['LHK', 'STCB', 'CB', 'HFB', 'HWB', 'DM', 'CM', 'TWM', 'TW', 'AM', 'TCF', 'CF'] },
@@ -199,8 +204,8 @@ const STYLES: StyleRef[] = [
     name: 'Bloc bas',
     nameEn: 'Low block',
     summary: 'Fermer l’axe, défendre bas et frapper sur les rares occasions.',
-    inPossession: ['Faites plus de passes directes', 'Contrez'],
-    outOfPossession: ['Bloc bas', 'Ligne défensive plus basse', 'Regroupement', 'Empêchez de centrer'],
+    inPossession: ['Faites plus de passes directes', 'Rythme plus lent', 'Plus axiale', 'Soyez plus disciplinés', 'Gagnez beaucoup plus de temps', 'Obtenir des coups de pied arrêtés', 'Centrer de loin', 'Passer dans les espaces', 'Contourner le pressing', 'Longs dégagements au pied', 'Ralentissez le rythme'],
+    outOfPossession: ['Bloc bas', 'Rester plus bas', 'Déclenchez le pressing moins souvent', 'Regroupement', "S'engager plus", 'Pressing vers les côtés'],
     weights: { defense: 3, aerial: 2, physical: 1, pace: 1 },
     mentality: 'Défensive',
     signatureRoles: { ip: ['NNGK', 'NNCB', 'CB', 'WCB', 'FB', 'WB', 'HB', 'DM', 'CM', 'WM', 'TF', 'CF'], oop: ['LHK', 'CCB', 'CB', 'CWCB', 'HFB', 'HWB', 'DROPDM', 'SCRDM', 'SCRCM', 'TWM', 'TW', 'TAM', 'TCF'] },

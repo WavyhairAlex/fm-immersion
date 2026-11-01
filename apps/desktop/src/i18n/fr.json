@@ -262,7 +262,7 @@
       "bestNow": "Meilleure tactique applicable",
       "projectBest": "Ton projet est devenu le meilleur choix",
       "teamTitle": "Consignes d'équipe · {{style}}",
-      "teamHelp": "À régler dans l'écran Tactique du jeu, avec la mentalité. Libellés exacts de FM27.",
+      "teamHelp": "Toutes les cases de l'écran Consignes d'équipe du jeu, dans son ordre ; en gras, celles que le style règle, les autres restent sur la valeur par défaut. À régler avec la mentalité.",
       "oppTitle": "Contre {{name}}",
       "oppMore": "Rapport complet",
       "xi": {
@@ -277,7 +277,7 @@
       "matchScore": "Note d'équipe {{base}}, affrontement {{bonus}}.",
       "matchShow": "Voir cette compo",
       "matchBase": "Revenir à la tactique de base",
-      "matchHelp": "Affrontement déduit du profil de l'adversaire (formations, pressing, défense), par des règles de football. Il ne fait basculer le choix que si les notes sont proches.",
+      "matchHelp": "Affrontement déduit du profil de l'adversaire (formations, pressing, défense), par des règles de football. On part de ta tactique de base : sans faille mesurée dans le rapport du jeu, le schéma reste le même, et un changement de style doit rapporter plus que la compréhension qu'il coûte.",
       "matchHelpMeasured": "Affrontement mesuré sur ce que l'adversaire concède selon la formation d'en face (rapport du jeu), complété par son profil.",
       "why": {
         "coverStrikers": "Ils jouent avec deux attaquants : deux milieux défensifs (ou trois centraux) les couvrent.",
@@ -288,7 +288,9 @@
         "directVsHighPress": "Ils pressent beaucoup : ton jeu direct passe au-dessus du pressing.",
         "attackLeaky": "Leur défense concède souvent : une mentalité offensive en profite.",
         "concedesMore": "Contre ce schéma, ils concèdent une occasion franche toutes les {{every}} min ({{minutes}} min observées), plus souvent que d'habitude.",
-        "concedesLess": "Contre ce schéma, ils ne concèdent qu'une occasion franche toutes les {{every}} min ({{minutes}} min observées)."
+        "concedesLess": "Contre ce schéma, ils ne concèdent qu'une occasion franche toutes les {{every}} min ({{minutes}} min observées).",
+        "changeStyle": "Changer de style coûte de la compréhension tactique (estimation : −0,2).",
+        "changeForm": "Changer de schéma coûte de la compréhension tactique (estimation : −0,3) : proposé seulement sur une faille mesurée d'au moins 270 min."
       }
     },
     "nav": "Sections de la partie",
@@ -635,6 +637,7 @@
     },
     "style": {
       "notInGame": "absente de FM27",
+      "cardsSet": "{{count}} réglées sur {{total}}",
       "which": "Quel style pour mon effectif ?",
       "whichHelp": "Exigences de chaque style comparées au profil des 16 meilleurs joueurs de champ disponibles. Choisis un style pour le détailler.",
       "profile": "Profil de l'effectif",

@@ -10,6 +10,12 @@ import { MENTALITIES_FM27 } from './team-instructions-fm27';
  * - mesuré quand le rapport du jeu donne ce que l'adversaire concède selon la formation d'en face
  *   (`advFormationsAffrontees`, onglet « Formations affrontées », au moins 180 min observées) ;
  * - sinon déduit du profil de l'adversaire (règles de football, pas une formule du jeu).
+ *
+ * Règle « une base, des ajustements » (01/11/2026) : on part de la tactique de base et on ne la change que
+ * si le gain dépasse le coût. La moitié de l'efficacité tactique du jeu est la compréhension, qu'un changement
+ * fait baisser : changer de style (consignes d'équipe) coûte CHANGE_STYLE, et on ne change de schéma que sur une
+ * faille mesurée (au moins MIN_MINUTES observées), au prix de CHANGE_FORM. Ces coûts sont des estimations,
+ * pas des valeurs lues dans le jeu.
  */
 export type MatchupReasonId =
   | 'coverStrikers'
@@ -20,7 +26,9 @@ export type MatchupReasonId =
   | 'directVsHighPress'
   | 'attackLeaky'
   | 'concedesMore'
-  | 'concedesLess';
+  | 'concedesLess'
+  | 'changeStyle'
+  | 'changeForm';
 
 export interface MatchupReason {
   id: MatchupReasonId;
@@ -48,6 +56,10 @@ export interface MatchTactic {
 }
 
 const MAX = 0.6;
+/** Minutes adverses observées pour croire à une faille (3 matchs). */
+export const MIN_MINUTES = 270;
+export const CHANGE_STYLE = 0.2;
+export const CHANGE_FORM = 0.3;
 const round2 = (x: number) => Math.round(x * 100) / 100;
 /** « 4-2-3-1 MD MO Jeu large » → « 4-2-3-1 » ; « 4-4-2 2MD » → « 4-4-2 ». */
 export const formationFamily = (f: string) => f.match(/\d(?:-\d)+/)?.[0] ?? f;
@@ -61,7 +73,7 @@ function measured(form: string, faced: OpponentFormation[]): MatchupReason | nul
   const seen = faced.filter((f) => (f.minutes ?? 0) > 0 && f.every != null && f.every > 0);
   const vs = seen.filter((f) => formationFamily(f.form) === form);
   const minutes = vs.reduce((a, f) => a + f.minutes!, 0);
-  if (minutes < 180) return null;
+  if (minutes < MIN_MINUTES) return null;
   const totalMin = seen.reduce((a, f) => a + f.minutes!, 0);
   const chances = (fs: OpponentFormation[]) => fs.reduce((a, f) => a + f.minutes! / f.every!, 0);
   const avgEvery = totalMin / chances(seen);
@@ -109,14 +121,36 @@ export function matchupOf(form: string, style: StyleRef, opp: OpponentReport): M
   return { bonus: round2(bonus), reasons };
 }
 
-/** Toutes les combinaisons style × schéma classées pour ce match. */
-export function rankForMatch(ranked: { style: StyleRef; plans: FormationPlan[] }[], opp: OpponentReport): MatchTactic[] {
+/**
+ * Toutes les combinaisons style × schéma classées pour ce match. Avec une tactique de base, le coût d'un changement
+ * est déduit, et un autre schéma n'est proposé que sur une faille mesurée contre lui.
+ */
+export function rankForMatch(
+  ranked: { style: StyleRef; plans: FormationPlan[] }[],
+  opp: OpponentReport,
+  base?: { style: string; form: string } | null,
+): MatchTactic[] {
   return ranked
     .flatMap(({ style, plans }) =>
       plans.map((plan) => {
-        const { bonus, reasons } = matchupOf(plan.form, style, opp);
+        const m = matchupOf(plan.form, style, opp);
+        const reasons = [...m.reasons];
+        let bonus = m.bonus;
+        if (base) {
+          if (plan.form !== base.form) {
+            if (!reasons.some((r) => r.id === 'concedesMore')) return null;
+            reasons.push({ id: 'changeForm', value: -CHANGE_FORM });
+            bonus -= CHANGE_FORM;
+          }
+          if (style.id !== base.style) {
+            reasons.push({ id: 'changeStyle', value: -CHANGE_STYLE });
+            bonus -= CHANGE_STYLE;
+          }
+        }
+        bonus = round2(bonus);
         return { style, form: plan.form, plan, base: plan.score, bonus, score: plan.score + bonus, reasons };
       }),
     )
+    .filter((x): x is MatchTactic => !!x)
     .sort((a, b) => b.score - a.score);
 }

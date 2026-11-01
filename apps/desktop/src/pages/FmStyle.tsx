@@ -1,9 +1,9 @@
-import { abilityNeeded, gameInstructionLabel, keyAttrs, styleComplexity, tactAbility, type FmPlayer, type Phase } from '@simloom/module-fm';
+import { abilityNeeded, keyAttrs, styleComplexity, tactAbility, type FmPlayer, type Phase } from '@simloom/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, scopedKey, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticChoice } from './FmTactic';
-import { Chips, Empty, Fit, fitGap, Kpi, Panel, Tag, useNames } from './FmUi';
+import { Chips, Empty, Fit, fitGap, Kpi, Panel, Tag, TeamCards, useNames } from './FmUi';
 
 const STYLE_KEY = 'simloom.fm.styleView';
 
@@ -151,23 +151,8 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
               })}
             </p>
           </div>
-          <div className="text-sm">
-            <p className="text-xs font-bold uppercase text-canard/60">{t('fm.style.ip')}</p>
-            {cur.inPossession.map((x) => (
-              <p key={x}>
-                {gameInstructionLabel(x) ?? x}
-                {!gameInstructionLabel(x) && <span className="ml-1 text-xs text-brun">({t('fm.style.notInGame')})</span>}
-              </p>
-            ))}
-          </div>
-          <div className="text-sm">
-            <p className="text-xs font-bold uppercase text-canard/60">{t('fm.style.oop')}</p>
-            {cur.outOfPossession.map((x) => (
-              <p key={x}>
-                {gameInstructionLabel(x) ?? x}
-                {!gameInstructionLabel(x) && <span className="ml-1 text-xs text-brun">({t('fm.style.notInGame')})</span>}
-              </p>
-            ))}
+          <div className="sm:col-span-2">
+            <TeamCards wide inPossession={cur.inPossession} outOfPossession={cur.outOfPossession} />
           </div>
         </div>
         <div className="mb-2 mt-5 flex flex-wrap items-center justify-between gap-3">
