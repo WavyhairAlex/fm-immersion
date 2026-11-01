@@ -147,6 +147,10 @@ pub struct Globals {
 /// Valeurs trouvées dans FM27 du 29/10/2026 (game_plugin.dll, SHA-256 bc940e47…0fe057f).
 pub const KNOWN: Globals = Globals { database: 0x57036D0, humans: 0x56F3008, date: 0x56AD378 };
 
+/// Vtable (RVA) d'un contrat d'essai (`TRIAL_CONTRACT`) pour cette version : il occupe la même place que
+/// le contrat de prêt (`[ACTUAL_PERSON+0x88]+0`) mais n'en est pas un (vérifié en partie le 01/11, 1 cas).
+pub const KNOWN_TRIAL_VTABLE: u64 = 0x4C8EB78;
+
 struct Sig {
     pattern: &'static str,
     /// Position du déplacement 32 bits relatif à RIP dans le motif.
@@ -311,7 +315,7 @@ mod off {
     pub const C_WAGE: u64 = 0x20;
     pub const C_FLAGS: u64 = 0x2B;
     pub const C_END: u64 = 0x48;
-    /// Drapeaux de mise en vente : bit 0 ou 3 = sur la liste des transferts (code du jeu, pas encore vu en partie).
+    /// Drapeaux de mise en vente : bit 0 ou 3 = sur la liste des transferts (code du jeu ; 2 901 joueurs en partie le 01/11).
     pub const C_LISTING: u64 = 0x57;
     /// Contrat de prêt : équipe d'accueil `+0x10`, fin du prêt `+0x48` (sans condition).
     pub const L_TEAM: u64 = 0x10;
@@ -494,6 +498,8 @@ pub struct Pre<'a> {
 
 struct Ctx<'a, M: Mem> {
     r: R<'a, M>,
+    /// Adresse de la vtable des contrats d'essai (version connue seulement).
+    trial_vtable: Option<u64>,
     today: Option<SiDate>,
     clubs: HashMap<u64, Option<ClubInfo>>,
 }
@@ -593,11 +599,15 @@ impl<M: Mem> Ctx<'_, M> {
         // Club propriétaire : celui du contrat principal ; à défaut, celui où le joueur évolue (+0x130).
         let team = le_u64(&b, off::AP_TEAM as usize);
         let team = valid(team).then_some(team);
-        let loan = self.r.ptr(actual + off::A_LOAN).and_then(|x| self.r.ptr(x));
-        // Prêté chez nous sans contrat principal lisible : le propriétaire reste inconnu (pas le club d'accueil).
+        // `[X+0]` est un contrat de prêt ou d'essai (même emplacement) : la vtable les distingue.
+        let other = self.r.ptr(actual + off::A_LOAN).and_then(|x| self.r.ptr(x));
+        let trial = other.filter(|&l| self.trial_vtable.is_some() && self.r.ptr(l) == self.trial_vtable);
+        let loan = other.filter(|_| trial.is_none());
+        // Sans contrat principal lisible : prêté ou à l'essai, le club propriétaire reste inconnu (pas le club
+        // d'accueil) ; un joueur à l'essai sans contrat est libre.
         let club = match contract.and_then(|c| self.r.ptr(c + off::C_TEAM)).and_then(|t| self.club_of_team(t)) {
             Some(c) => Some(c),
-            None if loan.is_none() => team.and_then(|t| self.club_of_team(t)),
+            None if other.is_none() => team.and_then(|t| self.club_of_team(t)),
             None => None,
         };
         let loan_club = loan.and_then(|l| self.r.ptr(l + off::L_TEAM)).and_then(|t| self.club_of_team(t));
@@ -684,7 +694,8 @@ impl<'a, M: Mem> Database<'a, M> {
         if players.is_empty() {
             return Err(MemError::NoSave);
         }
-        Ok(Database { ctx: Ctx { r, today, clubs: HashMap::new() }, module_base, globals, players })
+        let trial_vtable = (globals == KNOWN).then_some(module_base + KNOWN_TRIAL_VTABLE);
+        Ok(Database { ctx: Ctx { r, today, trial_vtable, clubs: HashMap::new() }, module_base, globals, players })
     }
 
     pub fn count(&self) -> usize {
@@ -1273,6 +1284,16 @@ mod tests {
         let mut db = Database::open(&m, BASE, KNOWN).unwrap();
         let p = db.players(1, |_| true).pop().unwrap();
         assert_eq!((p.club.as_deref(), p.loan_club.as_deref()), (None, Some("MFK Košice")));
+        // Contrat d'essai au même emplacement : ni prêt ni club propriétaire (joueur libre à l'essai).
+        m.put_u64(loan, BASE + KNOWN_TRIAL_VTABLE);
+        let mut db = Database::open(&m, BASE, KNOWN).unwrap();
+        let p = db.players(1, |_| true).pop().unwrap();
+        assert_eq!((p.club.as_deref(), p.loan_club.as_deref(), p.loan_end.as_deref()), (None, None, None));
+        // X non nul mais `[X+0]` nul : pas de prêt, le club est celui où il joue.
+        m.put_u64(x, 0);
+        let mut db = Database::open(&m, BASE, KNOWN).unwrap();
+        let p = db.players(1, |_| true).pop().unwrap();
+        assert_eq!((p.club.as_deref(), p.loan_club.as_deref()), (Some("MFK Košice"), None));
     }
 
     #[test]
