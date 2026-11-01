@@ -1,4 +1,4 @@
-import { POS_LABEL, teamInstructionCards, teamInstructionOf, type CoachPrefs, type FmPlayer } from '@simloom/module-fm';
+import { POS_LABEL, teamInstructionCards, teamInstructionOf, type CoachPrefs, type FmPlayer, type ProjectCompat } from '@simloom/module-fm';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
@@ -45,6 +45,19 @@ export function Row({ children, className = '' }: { children: ReactNode; classNa
 
 export function Empty({ children }: { children: ReactNode }) {
   return <p className="text-sm text-brun">{children}</p>;
+}
+
+/** Pastille « compatible avec le projet de jeu », avec en infobulle la note au rôle du projet et la meilleure note possible. */
+export function CompatTag({ c }: { c: ProjectCompat | null | undefined }) {
+  const { t } = useTranslation();
+  if (!c) return <span className="text-canard/40">–</span>;
+  const tone: Tone = c.compat === 'yes' ? 'good' : c.compat === 'partial' ? 'warn' : 'bad';
+  const title = c.noPosition ? t('fm.compat.noPosition') : t('fm.compat.title', { fit: fitPct(c.fit), best: fitPct(c.best) });
+  return (
+    <span title={title}>
+      <Tag tone={tone}>{t(`fm.compat.${c.compat}`)}</Tag>
+    </span>
+  );
 }
 
 export function Pos({ player }: { player: FmPlayer }) {

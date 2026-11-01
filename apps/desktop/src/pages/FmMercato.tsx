@@ -2,7 +2,7 @@ import { MERCATO_ORDER, POS_LABEL, mercatoAdvice, type FmPlayer, type MercatoAdv
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
-import { Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone } from './FmUi';
+import { CompatTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone } from './FmUi';
 
 const TONE: Record<MercatoVerdict, Tone> = { sell: 'bad', release: 'bad', loan: 'warn', extend: 'warn', develop: 'good', replace: 'warn', backup: 'info', core: 'good' };
 /** Groupes affichés en détail : ce qui demande une décision au mercato. */
@@ -66,6 +66,7 @@ export function FmMercato({ players, folder, gameDate, history }: { players: FmP
           <b>{a.player.name}</b> <Pos player={a.player} />
           <span className="text-xs text-brun">{t('fm.contracts.age', { count: a.player.age ?? 0 })}</span>
           {a.player.team && <Tag>{a.player.team}</Tag>}
+          <CompatTag c={a.compat} />
           {showVerdict && <Tag tone={TONE[a.verdict]}>{t(`fm.merc.verdict.${a.verdict}`)}</Tag>}
         </div>
         <p className="mt-0.5 text-xs text-brun">{a.reasons.map(reason).join(' · ')}</p>
@@ -85,11 +86,12 @@ export function FmMercato({ players, folder, gameDate, history }: { players: FmP
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Kpi label={t('fm.merc.kpi.leave')} value={n('sell') + n('release')} tone={n('sell') + n('release') ? 'bad' : undefined} sub={t('fm.merc.kpi.leaveSub', { sell: n('sell'), release: n('release') })} />
         <Kpi label={t('fm.merc.kpi.income')} value={f.money(r.income)} sub={t('fm.merc.kpi.incomeSub', { wages: f.money(r.wagesFreed) })} />
         <Kpi label={t('fm.merc.kpi.prospects')} value={prospects.length} sub={t('fm.merc.kpi.prospectsSub', { loan: n('loan') })} />
         <Kpi label={t('fm.merc.kpi.extend')} value={n('extend')} sub={t('fm.merc.kpi.extendSub')} />
+        <Kpi label={t('fm.merc.kpi.off')} value={r.advice.filter((a) => a.compat?.compat === 'no').length} sub={t('fm.merc.kpi.offSub')} />
       </div>
       <p className="help">{t('fm.merc.help', { form: r.nowForm ?? '–', style: names.style(style), projectForm: r.projectForm ?? '–' })}</p>
 

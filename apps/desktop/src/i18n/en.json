@@ -73,7 +73,8 @@
       "contract": "Contract ends",
       "wage": "Wage",
       "status": "Status",
-      "starsHelp": "Current / potential ability stars according to your staff"
+      "starsHelp": "Current / potential ability stars according to your staff",
+      "compat": "Project"
     },
     "an": {
       "xi": "First XI level",
@@ -1267,12 +1268,14 @@
         "prospects": "Youngsters worth keeping",
         "prospectsSub": "{{loan}} of them to loan out",
         "extend": "Contracts to renew",
-        "extendSub": "starters and prospects within a year of expiry"
+        "extendSub": "starters and prospects within a year of expiry",
+        "off": "Off project",
+        "offSub": "profiles that don't suit the target style"
       },
       "youth_one": "Youngsters (21 or under) · {{count}}",
       "youth_other": "Youngsters (21 or under) · {{count}}",
       "noYouth": "No player aged 21 or under in the imported squad.",
-      "youthHelp": "A youngster is worth it when the staff rate their potential at 3 stars or more, when they catch the starter at their position within three seasons, or when they already make one of the two elevens. Blocked at 19 or older: loan them out to play. 18 or younger: they develop with the club's youth team.",
+      "youthHelp": "A youngster is worth it when their profile suits the game plan and the staff rate their potential at 3 stars or more, when they catch the starter at their position within three seasons, or when they already make one of the two elevens. Blocked at 19 or older: loan them out to play. 18 or younger: they develop with the club's youth team. An off-project profile isn't worth the time, even with potential.",
       "stay": "Who stays",
       "verdict": {
         "sell": "Sell",
@@ -1301,7 +1304,7 @@
         "release": "Contract ending within six months, or no market value: don't renew, or terminate to free the wage.",
         "loan": "Promising youngsters stuck behind starters and backups: a loan gets them minutes.",
         "extend": "Contract ending within a year: renew before they leave on a free.",
-        "replace": "Starters today, but outside the project eleven and aged 27 or more: keep them until a replacement who suits the target style arrives.",
+        "replace": "Starters today whose profile doesn't suit the project (or outside the project eleven at 27 or older): they play while they're the best, without a renewal, until a replacement who suits the target style arrives.",
         "develop": "youngsters to keep and play.",
         "backup": "useful backups, to keep.",
         "core": "starters in today's or the project eleven."
@@ -1321,7 +1324,8 @@
         "overtakes_one": "at {{starter}}'s level in {{count}} season",
         "overtakes_other": "at {{starter}}'s level in {{count}} seasons",
         "decline": "{{age}}, declining",
-        "youthTeam": "develops with the youth team"
+        "youthTeam": "develops with the youth team",
+        "offProject": "profile off the game plan"
       }
     },
     "stats": {
@@ -1437,6 +1441,14 @@
       "opponent": "The next opponent, then the fixtures and who to rotate based on fatigue.",
       "mercato": "Step 4: who to let go, which youngsters to keep, then your shortlist ranked by what each player would add to the project.",
       "finances": "Budgets and board expectations, the wage bill, then contract expiries to plan for."
+    },
+    "compat": {
+      "yes": "Project ✓",
+      "partial": "Project ~",
+      "no": "Off project",
+      "title": "Best project role: {{fit}} · best role overall: {{best}}",
+      "noPosition": "No position of the project formation within reach",
+      "help": "Does the profile suit the game plan? We compare the rating in the best role of the project eleven with the best possible rating at the player's positions. Project ✓: gap of 0.3 star at most; Project ~: up to 0.8 star; Off project: more, or no position in the formation. This measures profile, not level: don't invest time (training, renewal, transfer) in an off-project player."
     }
   },
   "pz2": {

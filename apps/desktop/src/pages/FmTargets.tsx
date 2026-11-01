@@ -1,6 +1,7 @@
 import {
   POS_LABEL,
   buildProject,
+  projectCompat,
   rankTargets,
   storedTargets,
   type FmPlayer,
@@ -16,6 +17,7 @@ import { useFmSaveScope, writeScoped } from "../lib/save-store";
 import { FmDbSearch } from "./FmDbSearch";
 import { useTacticEngine } from "./FmTactic";
 import {
+  CompatTag,
   Empty,
   Fit,
   Level,
@@ -245,7 +247,8 @@ export function FmTargets({
                           <>
                             <Tag tone={VERDICT_TONE[best.verdict]}>
                               {t(`fm.targets.verdict.${best.verdict}`)}
-                            </Tag>
+                            </Tag>{" "}
+                            {pr && <CompatTag c={projectCompat(engine, pr, p)} />}
                             {best.over && (
                               <div className="mt-0.5 text-xs text-brun">
                                 {t(`fm.targets.over.${best.verdict}`, {
