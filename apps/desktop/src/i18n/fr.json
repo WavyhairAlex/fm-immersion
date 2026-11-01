@@ -162,7 +162,7 @@
       "inGame": "Dans le jeu : {{form}}",
       "localRef": "Repères locaux utilisés",
       "localRefError": "Fichier de repères local illisible : repères maison utilisés",
-      "fit": "adéquation {{value}}",
+      "fit": "note d'équipe {{value}}",
       "suggested": "Compo suggérée",
       "suggestedHelp": "Placement calculé par Simloom. Le plugin ne lit pas encore quel joueur occupe chaque poste dans ta tactique FM27.",
       "phase": {
@@ -174,7 +174,7 @@
       "nobody": "Personne",
       "pitchHelp": "Onze choisi par adéquation aux rôles du style, blessés exclus. Les pointillés montrent le déplacement depuis l'autre phase. Survole un joueur pour voir ses remplaçants.",
       "balance": "Équilibre de l'équipe",
-      "balanceHelp": "Vitesse, pressing et jeu aérien sont comparés au niveau moyen de ton onze : vert = point fort, rouge = point faible.",
+      "balanceHelp": "Vitesse, pressing et jeu aérien sont comparés au niveau moyen de ton onze : vert = point fort, rouge = point faible. Chaque point faible baisse la note d'équipe, qui choisit le schéma et le style : le calcul juge le onze dans son ensemble, pas seulement poste par poste.",
       "forms": "Schémas pour ce style",
       "natural": "naturel",
       "holes_one": "{{count}} poste vide",

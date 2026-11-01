@@ -2,7 +2,7 @@ import { unavailable, type FmPlayer } from './player';
 import { parsePositions, type PosCode } from './positions';
 import type { FmSnapshot } from './snapshot';
 import { snapshotRoleStars, type RoleStars } from './game-stars';
-import { FORMATIONS, slotContexts, type FormationPlan, type RoleRef, type Slot, type SlotCtx, type TacticEngine } from './tactic';
+import { FORMATIONS, balancePenalty, readiness, slotContexts, type FormationPlan, type RoleRef, type Slot, type SlotCtx, type TacticEngine } from './tactic';
 
 /*
  * Compo réelle lue dans FM27 (bloc « lineup » de l'instantané, plugin 0.3 et suivants) :
@@ -210,8 +210,12 @@ export function planFromLineup(engine: TacticEngine, lineup: GameSlot[], players
       .slice(0, 2)
       .map((x) => x.p),
   );
-  const fits = slots.map((s) => s.fit ?? 0);
-  return { form: form ?? '', slots, subs, score: fits.reduce((a, b) => a + b, 0) / (fits.length || 1), holes: slots.filter((s) => !s.player).length };
+  // Même note d'équipe que les plans calculés (sans le style, inconnu ici : seuls les déséquilibres de rôles comptent).
+  const n = slots.length || 1;
+  const fit = slots.reduce((a, s) => a + (s.fit ?? 0), 0) / n;
+  const form1 = slots.reduce((a, s) => a + (s.player ? readiness(s.player) : 0), 0) / n;
+  const penalty = balancePenalty(engine.roleChecks(slots));
+  return { form: form ?? '', slots, subs, score: fit + form1 - penalty, fit, penalty, holes: slots.filter((s) => !s.player).length };
 }
 
 /**
