@@ -9,7 +9,6 @@ import {
   mergeReference,
   opponentReport,
   rankForMatch,
-  gameInstructionLabel,
   phaseXY,
   planFromLineup,
   playerInstructions,
@@ -30,7 +29,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
-import { fitPct, setFitScale, useCoach } from './FmUi';
+import { fitPct, setFitScale, TeamCards, useCoach } from './FmUi';
 
 // v2 : le choix automatique (meilleure tactique applicable) devient la valeur par défaut.
 const PREFS_KEY = 'simloom.fm.tactic.v2';
@@ -108,7 +107,8 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   const phase: Phase = prefs.phase ?? 'ip';
   const opp = useMemo(() => (snap ? opponentReport(snap) : null), [snap]);
   // Tactique du match : la meilleure combinaison style × schéma contre le prochain adversaire.
-  const forMatch = useMemo(() => (opp ? rankForMatch(ranked, opp) : []), [ranked, opp]);
+  // Une base, des ajustements : on part de la tactique de base, un changement doit rapporter plus qu'il ne coûte.
+  const forMatch = useMemo(() => (opp ? rankForMatch(ranked, opp, pick ? { style: pick.style.id, form: pick.form } : null) : []), [ranked, opp, pick]);
   const best = forMatch[0];
   const baseKey = pick ? `${pick.style.id}|${pick.form}` : null;
   // Poste survolé : mis en évidence à la fois sur le terrain et dans la liste.
@@ -381,23 +381,8 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
         <section className="card">
           <h2 className="text-xl font-semibold">{t('fm.tac.teamTitle', { style: styleName(style) })}</h2>
           {style.mentality && <p className="mt-1 text-sm">{t('fm.style.mentality', { value: style.mentality })}</p>}
-          <div className="mt-3 grid gap-4 sm:grid-cols-2 text-sm">
-            {(
-              [
-                ['ip', style.inPossession],
-                ['oop', style.outOfPossession],
-              ] as const
-            ).map(([ph, list]) => (
-              <div key={ph}>
-                <p className="text-xs font-bold uppercase text-canard/60">{t(`fm.style.${ph}`)}</p>
-                {list.map((x) => (
-                  <p key={x}>
-                    {gameInstructionLabel(x) ?? x}
-                    {!gameInstructionLabel(x) && <span className="ml-1 text-xs text-brun">({t('fm.style.notInGame')})</span>}
-                  </p>
-                ))}
-              </div>
-            ))}
+          <div className="mt-3">
+            <TeamCards inPossession={style.inPossession} outOfPossession={style.outOfPossession} />
           </div>
           <p className="mt-3 text-xs text-brun">{t('fm.tac.teamHelp')}</p>
         </section>

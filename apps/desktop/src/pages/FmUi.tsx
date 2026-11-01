@@ -1,4 +1,4 @@
-import { POS_LABEL, type CoachPrefs, type FmPlayer } from '@simloom/module-fm';
+import { POS_LABEL, teamInstructionCards, teamInstructionOf, type CoachPrefs, type FmPlayer } from '@simloom/module-fm';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
@@ -151,6 +151,41 @@ export function Chips<T extends string>({ value, options, onChange }: { value: T
         >
           {label}
         </button>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Consignes d'équipe comme l'écran du jeu : toutes les cases, avec et sans ballon, dans l'ordre de FM27.
+ * Les cases que le style change sont en gras ; les autres gardent la valeur par défaut du jeu.
+ */
+export function TeamCards({ inPossession, outOfPossession, wide = false }: { inPossession: string[]; outOfPossession: string[]; wide?: boolean }) {
+  const { t } = useTranslation();
+  const labels = [...inPossession, ...outOfPossession];
+  const cards = teamInstructionCards(labels);
+  const unknown = labels.filter((l) => !teamInstructionOf(l));
+  return (
+    <div className={`text-sm ${wide ? 'grid gap-4 sm:grid-cols-2' : 'space-y-3'}`}>
+      {(['ip', 'oop'] as const).map((ph) => (
+        <div key={ph}>
+          <p className="text-xs font-bold uppercase text-canard/60">
+            {t(`fm.style.${ph}`)} · {t('fm.style.cardsSet', { count: cards[ph].filter((c) => c.set).length, total: cards[ph].length })}
+          </p>
+          <ul className="mt-1 divide-y divide-canard/10">
+            {cards[ph].map((c) => (
+              <li key={c.def.id} className="flex items-baseline justify-between gap-3 py-0.5">
+                <span className={c.set ? 'font-bold' : 'text-brun'}>{c.def.title}</span>
+                <span className={`text-right ${c.set ? 'font-bold' : 'text-brun'}`}>{c.value}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+      {unknown.map((l) => (
+        <p key={l}>
+          {l} <span className="text-xs text-brun">({t('fm.style.notInGame')})</span>
+        </p>
       ))}
     </div>
   );

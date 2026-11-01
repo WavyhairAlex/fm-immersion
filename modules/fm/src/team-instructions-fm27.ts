@@ -177,3 +177,41 @@ export function checkTeamInstructions(labels: string[]): TeamInstructionIssue[] 
   }
   return issues;
 }
+
+/** Ordre des cases de l'écran Consignes d'équipe du jeu (vue d'ensemble), relevé le 01/11/2026. */
+const CARD_ORDER: Record<'ip' | 'oop', number[]> = {
+  ip: [1, 21, 4, 3, 5, 7, 6, 18, 27, 26, 19, 28, 30, 20, 24, 29, 17, 16],
+  oop: [8, 9, 15, 10, 11, 12, 23, 25, 22],
+};
+
+export interface TeamInstructionCard {
+  def: TeamInstructionDef;
+  /** Option affichée : celle demandée, sinon la valeur par défaut du jeu. */
+  option: number;
+  /** Valeur de la case (« Plus courtes », « Standard »). */
+  value: string;
+  /** Vrai si la consigne s'écarte de la valeur par défaut. */
+  set: boolean;
+}
+
+/**
+ * Toutes les cases de l'écran Consignes d'équipe, avec et sans ballon, dans l'ordre du jeu : chaque consigne
+ * demandée prend sa valeur, les autres gardent celle par défaut (comme dans le jeu). La transition offensive
+ * est rangée avec le ballon, la transition défensive sans, comme à l'écran.
+ */
+export function teamInstructionCards(labels: string[]): Record<'ip' | 'oop', TeamInstructionCard[]> {
+  const chosen = new Map<number, number>();
+  for (const l of labels) {
+    const m = teamInstructionOf(l);
+    if (m && !chosen.has(m.def.id)) chosen.set(m.def.id, m.option);
+  }
+  const byId = new Map(TEAM_INSTRUCTIONS_FM27.map((d) => [d.id, d]));
+  const card = (id: number): TeamInstructionCard | null => {
+    const def = byId.get(id);
+    if (!def) return null;
+    const option = chosen.get(id) ?? def.def ?? 0;
+    return { def, option, value: def.short[option] ?? def.options[option] ?? '', set: chosen.has(id) && option !== def.def };
+  };
+  const of = (ph: 'ip' | 'oop') => CARD_ORDER[ph].map(card).filter((c): c is TeamInstructionCard => !!c);
+  return { ip: of('ip'), oop: of('oop') };
+}

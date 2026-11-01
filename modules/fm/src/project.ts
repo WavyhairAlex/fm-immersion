@@ -247,11 +247,21 @@ export interface TacticPick {
 }
 
 /**
+ * Écart de note d'équipe (sur 20) sous lequel deux tactiques sont jugées équivalentes : 0,2 = 0,1 étoile, la
+ * précision des étoiles du jeu. Avec les notes du jeu, presque tous les styles trouvent des rôles qui vont aux
+ * joueurs, et leurs notes tombent à moins de 0,1 étoile les unes des autres.
+ */
+export const TACTIC_TIE = 0.2;
+
+/**
  * Chaque style avec son meilleur schéma et la note d'équipe de son onze applicable, du meilleur au moins bon.
  * C'est le classement commun à tous les onglets (accueil, style de jeu, composition).
+ * Les styles à égalité avec le premier (moins de TACTIC_TIE d'écart) sont départagés par l'adéquation de
+ * l'effectif au style (attributs mis en avant par le style, `rankStyles`) : sans cela, le choix tient au hasard.
  */
 export function rankTactics(engine: TacticEngine, list: FmPlayer[]): { style: StyleRef; form: string; plan: FormationPlan; fit: number; plans: FormationPlan[] }[] {
-  return engine.ref.styles
+  const squadFit = new Map(engine.rankStyles(list).map((x) => [x.style.id, x.fit ?? 0]));
+  const all = engine.ref.styles
     .map((style) => {
       const plans = Object.keys(FORMATIONS)
         .map((form) => engine.formationPlan(form, style, list))
@@ -260,12 +270,16 @@ export function rankTactics(engine: TacticEngine, list: FmPlayer[]): { style: St
       return { style, form: plan.form, plan, fit: plan.score, plans };
     })
     .sort((a, b) => b.fit - a.fit);
+  if (!all.length) return all;
+  const top = all[0]!.fit;
+  const tied = all.filter((x) => top - x.fit < TACTIC_TIE).sort((a, b) => (squadFit.get(b.style.id) ?? 0) - (squadFit.get(a.style.id) ?? 0) || b.fit - a.fit);
+  return [...tied, ...all.slice(tied.length)];
 }
 
 /**
  * Tactique à jouer maintenant : le style et le schéma dont le onze applicable donne la meilleure
  * note d'équipe. Le projet du coach sert à orienter l'entraînement et le mercato ; dès que son onze
- * vaut au moins le meilleur, il devient automatiquement la tactique conseillée.
+ * vaut le meilleur (à TACTIC_TIE près), il devient automatiquement la tactique conseillée.
  */
 export function bestTactic(engine: TacticEngine, list: FmPlayer[], coach: CoachPrefs = {}, ranked = rankTactics(engine, list)): TacticPick | null {
   const top = ranked[0];
@@ -273,7 +287,8 @@ export function bestTactic(engine: TacticEngine, list: FmPlayer[], coach: CoachP
   const best: TacticPick = { style: top.style, form: top.form, plan: top.plan, project: false };
   const mine = ranked.find((r) => r.style.id === coach.style);
   const projPlan = mine && (coach.form ? mine.plans.find((p) => p.form === coach.form) : mine.plan);
-  if (mine && projPlan && projPlan.score >= best.plan.score) return { style: mine.style, form: projPlan.form, plan: projPlan, project: true };
+  const bestScore = Math.max(...ranked.map((r) => r.fit));
+  if (mine && projPlan && projPlan.score > bestScore - TACTIC_TIE) return { style: mine.style, form: projPlan.form, plan: projPlan, project: true };
   return best;
 }
 
