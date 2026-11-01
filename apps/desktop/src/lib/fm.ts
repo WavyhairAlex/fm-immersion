@@ -1,5 +1,5 @@
 import { saves } from '@simloom/db';
-import { carryRoleStars, fmSnapshotSchema, fmStatusSchema, type FmStatus, mergeTargets, type FmSnapshot, type TargetRecord } from '@simloom/module-fm';
+import { addBaseTarget, carryRoleStars, fmSnapshotSchema, fmStatusSchema, type DbPlayer, type FmStatus, mergeTargets, type FmSnapshot, type TargetRecord } from '@simloom/module-fm';
 import { fmSnapshots, fmTargets } from '@simloom/module-fm/schema';
 import { and, asc, desc, eq } from 'drizzle-orm';
 import type { Db } from './db';
@@ -117,6 +117,20 @@ export function fmRepo(db: Db) {
             set: { name: row.name, club: row.club, firstSeen: row.firstSeen, lastSeen: row.lastSeen, inList: row.inList, data: row.data, updatedAt: now },
           });
       }
+    },
+
+    /** Ajoute aux cibles un joueur trouvé dans la base du jeu (recherche en lecture directe). */
+    async addBaseTarget(saveId: string, p: DbPlayer, gameDate: string) {
+      const c = addBaseTarget(await this.targets(saveId), p, gameDate);
+      const now = new Date().toISOString();
+      const row = { ...c, saveId, updatedAt: now };
+      await db
+        .insert(fmTargets)
+        .values(row)
+        .onConflictDoUpdate({
+          target: [fmTargets.saveId, fmTargets.playerId],
+          set: { name: row.name, club: row.club, firstSeen: row.firstSeen, lastSeen: row.lastSeen, inList: true, dismissed: false, data: row.data, updatedAt: now },
+        });
     },
 
     /** Écarte une cible (ou la remet) dans Simloom, sans rien changer dans le jeu. */

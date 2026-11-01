@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mergeTargets, squadSnapshot, targetOf, trialistIds, shortlist, storedTargets, type TargetRecord } from '../src/targets';
+import { addBaseTarget, baseTarget, mergeTargets, squadSnapshot, targetOf, trialistIds, shortlist, storedTargets, type TargetRecord } from '../src/targets';
 import type { FmSnapshot } from '../src/snapshot';
 
 const snap = (gameDate: string, shortlist?: unknown[]): FmSnapshot => ({ schema: 'archivix/1', game: 'FM27', club: 'V', gameDate, players: [], ...(shortlist ? { shortlist } : {}) });
@@ -99,5 +99,45 @@ describe('avis du recrutement lu en profond (plugin 0.4.4)', () => {
   it("ignore le nom de type renvoyé par l'ancien plugin", () => {
     const t = targetOf({ id: 8, name: 'X', attributes: {}, scout: { knowledge: 'SI.Bindable.DynamicReference', minWage: 'SI.Bindable.DynamicReference' } });
     expect(t?.scout).toMatchObject({ knowledge: null, wage: null });
+  });
+});
+
+describe('cibles venues de la base du jeu', () => {
+  const db = {
+    id: 3001,
+    name: 'Ľuboš Šarmír',
+    age: 22,
+    birthDate: '2004-03-01',
+    club: 'MFK Skalica',
+    clubShort: 'Skalica',
+    loanClub: null,
+    loanEnd: null,
+    ca: 110,
+    pa: 140,
+    positionsText: 'MC, MOC',
+    positionRatings: { MC: 20, MOC: 16, BT: 8 },
+    attributes: { Passing: 14, Vision: 15 },
+    wageWeekly: 900,
+    contractEnd: '2027-06-30',
+    valueRaw: 250000,
+  };
+
+  it('normalise un joueur de la base comme une cible', () => {
+    const t = baseTarget(db)!;
+    expect(t).toMatchObject({ id: 't3001', name: 'Ľuboš Šarmír', club: 'MFK Skalica', positions: ['MC', 'MOC'], sources: ['base'] });
+    expect(t.familiarity).toMatchObject({ MC: 20, MOC: 16, BT: 8 });
+  });
+
+  it("l'ajoute en liste et ne la fait pas sortir quand le jeu ne la liste pas", () => {
+    const rec = addBaseTarget([], db, '2026-12-02');
+    expect(rec).toMatchObject({ playerId: '3001', inList: true, dismissed: false, firstSeen: '2026-12-02' });
+    expect(mergeTargets([rec], snap('2026-12-05', []))).toEqual([]);
+  });
+
+  it('garde la marque « base » quand le jeu la liste aussi, et reprend une cible écartée', () => {
+    const rec = { ...addBaseTarget([], db, '2026-12-02'), dismissed: true };
+    const [merged] = mergeTargets([rec], snap('2026-12-05', [{ ...cible, id: 3001, name: 'Ľuboš Šarmír' }]))!;
+    expect((merged!.data as { sources: string[] }).sources).toEqual(['listeSuivi', 'cibles', 'base']);
+    expect(addBaseTarget([merged!], db, '2026-12-06')).toMatchObject({ dismissed: false, inList: true, firstSeen: '2026-12-02' });
   });
 });
