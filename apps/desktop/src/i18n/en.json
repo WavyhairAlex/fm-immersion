@@ -172,6 +172,7 @@
       },
       "otherPhase": "{{phase}}: {{role}}",
       "subs": "Backups: {{names}}",
+      "offPos": "outside natural position (accomplished)",
       "nobody": "Nobody",
       "pitchHelp": "Eleven picked by fit to the style's roles, injured players left out. Dotted lines show the move from the other phase. Hover a player to see backups.",
       "balance": "Team balance",

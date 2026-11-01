@@ -1,9 +1,9 @@
-import { PART_TIME_DAYS, currentTrainingWeek, homeOverview, nearestPreset, trainingAlerts, trainingFor, unavailable, type FmPlayer, type FmSnapshot } from '@simloom/module-fm';
+import { PART_TIME_DAYS, currentTrainingWeek, homeOverview, nearestPreset, trainingAlerts, trainingFor, type FmPlayer, type FmSnapshot } from '@simloom/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FmSummary } from './FmSummary';
-import { useTacticEngine } from './FmTactic';
-import { Empty, Level, Panel, PlayerName, Pos, Row, Tag, useCoach, type Tone } from './FmUi';
+import { useTacticChoice } from './FmTactic';
+import { Empty, fitPct, Level, Panel, PlayerName, Pos, Row, Tag, useCoach, type Tone } from './FmUi';
 
 const KIND_TONE: Record<string, Tone> = { injured: 'bad', suspended: 'bad', contract: 'warn', condition: 'warn', status: 'info' };
 
@@ -12,8 +12,8 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
   const h = useMemo(() => homeOverview(players, snap.gameDate), [players, snap.gameDate]);
-  const { engine } = useTacticEngine(folder, players);
-  const ranked = useMemo(() => engine.rankStyles(players.filter((p) => !unavailable(p) && Object.keys(p.attributes).length)), [engine, players]);
+  // Même classement que l'onglet Composition : note d'équipe du meilleur onze de chaque style.
+  const { engine, ranked } = useTacticChoice(players, folder, null);
   const [coach] = useCoach();
   const style = engine.ref.styles.find((s) => s.id === coach.style) ?? engine.ref.styles[0];
   const week = useMemo(
@@ -30,7 +30,6 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
   );
   const tr = useMemo(() => trainingAlerts(players), [players]);
   const short = (list: FmPlayer[]) => list.map((p) => p.name.split(' ').at(-1)).join(', ');
-  const pct = (f: number | null) => (f == null ? '–' : `${Math.round((f / 20) * 100)} %`);
   const link = (view: string, label: string) => (
     <button type="button" className="text-sm font-bold text-eau-fonce hover:underline" onClick={() => go(view)}>
       {label} →
@@ -115,7 +114,7 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
                 <span>
                   <b>{en && style.nameEn ? style.nameEn : style.name}</b> {style.mentality && <span className="text-xs text-brun">{style.mentality}</span>}
                 </span>
-                <span className="text-sm font-bold tabular-nums">{pct(fit)}</span>
+                <span className="text-sm font-bold tabular-nums">{fitPct(fit)}</span>
               </Row>
             ))}
             <p className="mt-2 text-xs text-brun">{t('fm.home.leastFit', { name: (en && ranked.at(-1)!.style.nameEn) || ranked.at(-1)!.style.name })}</p>

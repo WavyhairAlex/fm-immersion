@@ -204,7 +204,7 @@ export function planFromLineup(engine: TacticEngine, lineup: GameSlot[], players
   const xi = new Set(slots.flatMap((s) => (s.player ? [s.player.id] : [])));
   const subs = slots.map((sl) =>
     players
-      .filter((p) => !xi.has(p.id) && !unavailable(p) && p.positions.includes(sl.pos))
+      .filter((p) => !xi.has(p.id) && !unavailable(p) && engine.canPlay(p, sl.pos))
       .map((p) => ({ p, f: ((engine.roleFit(p, sl.ip, 'ip', sl.pos) ?? 0) + (engine.roleFit(p, sl.oop, 'oop', sl.pos) ?? 0)) / 2 }))
       .sort((a, b) => b.f - a.f)
       .slice(0, 2)

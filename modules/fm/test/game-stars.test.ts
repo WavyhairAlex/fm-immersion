@@ -57,4 +57,32 @@ describe('étoiles lues dans le jeu', () => {
     // Les valeurs lues restent telles quelles.
     expect(engine.roleFit(list[0]!, 'CB', 'ip', 'DC')).toBe(16);
   });
+
+  it('donne à chaque joueur lu sa propre échelle, et ouvre les postes où il est accompli', () => {
+    const attrs = Object.fromEntries(['Marking', 'Tackling', 'Heading', 'Positioning', 'Strength', 'JumpingReach', 'Concentration', 'Passing', 'Composure', 'Pace', 'Acceleration', 'Anticipation', 'Decisions', 'Stamina', 'WorkRate', 'Crossing'].map((k) => [k, 10]));
+    // Mêmes attributs, mais le jeu note le premier bien plus haut (capacité actuelle plus élevée).
+    const star = (id: number, v: number) =>
+      normalizePlayer({ id, name: `J${id}`, positions: 'D (C)', positionRatings: { DD: 16 }, attributes: attrs, gameStars: { DC: { ip: { 'defenseur central': v, "defenseur central a l'aise au pied": v - 1 }, oop: { 'defenseur central': v } } } });
+    const [hi, lo] = [star(1, 19), star(2, 13)];
+    const engine = new TacticEngine(DEFAULT_TACTIC_REFERENCE).calibrate([hi!, lo!]);
+    // Poste non lu (D (D)) : chacun garde son écart.
+    expect(engine.roleFit(hi!, 'FB', 'ip', 'DD')!).toBeGreaterThan(engine.roleFit(lo!, 'FB', 'ip', 'DD')! + 3);
+    // Familiarité 16 en D (D) : poste ouvert au calcul du onze ; pas en MC.
+    expect(engine.canPlay(hi!, 'DD')).toBe(true);
+    expect(engine.canPlay(hi!, 'MC')).toBe(false);
+  });
+
+  it('compare les joueurs non lus par leurs étoiles générales', () => {
+    const attrs = Object.fromEntries(['Marking', 'Tackling', 'Heading', 'Positioning', 'Strength', 'JumpingReach', 'Concentration', 'Passing', 'Composure', 'Pace', 'Acceleration', 'Anticipation', 'Decisions'].map((k) => [k, 10]));
+    const mk = (id: number, current: number | null) => normalizePlayer({ id, name: `J${id}`, positions: 'D (C)', attributes: attrs, stars: { current, potential: null } });
+    const [a, b, c] = [mk(1, 4), mk(2, 2), mk(3, null)];
+    const engine = new TacticEngine(DEFAULT_TACTIC_REFERENCE).calibrate([a!, b!, c!]);
+    const best = (p: typeof a) => Math.max(...['CB', 'BPCB', 'NNCB'].map((r) => engine.roleFit(p!, r, 'ip', 'DC') ?? 0));
+    // Mêmes attributs, mais 4 étoiles contre 2 : 4 points d'écart sur l'échelle du jeu (meilleur rôle ≈ 10 + 2 × étoiles).
+    expect(best(a)).toBeCloseTo(18, 0);
+    expect(best(a) - best(b)).toBeCloseTo(4, 1);
+    // Sans étoiles : décalage moyen, entre les deux.
+    expect(best(c)).toBeGreaterThan(best(b));
+    expect(best(c)).toBeLessThan(best(a));
+  });
 });

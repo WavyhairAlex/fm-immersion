@@ -237,9 +237,19 @@ export class TacticEngine {
     // Valeur lue dans le jeu pour ce joueur, ce poste et cette phase : elle prime sur tout calcul.
     const read = this.readFit(p, r, phase, pos);
     if (read != null) return read;
-    const c = this.computedFit(p, code, phase, pos);
     // Sans lecture, la note calculée est ramenée à l'échelle des étoiles du jeu (voir calibrate).
-    return c == null || !this.cal ? c : Math.max(1, Math.min(20, this.cal.a * c + this.cal.b));
+    if (!this.cal) return this.computedFit(p, code, phase, pos);
+    const thr = this.thresholdCode(r, phase);
+    const c = this.computedFit(p, code, phase, pos, !!thr);
+    if (c == null) return c;
+    // Rôle à seuil : perte mesurée sur les valeurs lues de ce rôle, sinon 5 points (4 à 7 constatés).
+    return thr ? Math.max(1, this.scaled(p, c, pos) - (this.thrLoss.get(thr) ?? 5)) : this.scaled(p, c, pos);
+  }
+
+  /** Code du jeu du rôle s'il est à seuil (note divisée par 2 sous une capacité minimale) et la capacité inconnue. */
+  private thresholdCode(r: RoleRef, phase: Phase): string | null {
+    const g = phase === 'oop' ? r.game?.oop : r.game?.ip;
+    return g && roleThreshold(g) != null ? g : null;
   }
 
   /** Valeur lue dans le jeu (sur 20, 10 = 0 étoile, 20 = 5 étoiles), ou null. */
@@ -254,51 +264,132 @@ export class TacticEngine {
   /**
    * Échelle commune : `a × note calculée + b` ≈ valeur lue dans le jeu. Les deux ne sont pas sur la même
    * échelle (moyenne d'attributs d'un côté, étoiles rapportées à la capacité actuelle de l'autre) ; sans
-   * cette correction, un joueur lu dans le jeu écraserait les autres. Ajustée par moindres carrés sur toutes
-   * les valeurs lues de l'effectif (au moins 6, pente positive), sinon simple décalage moyen.
+   * cette correction, un joueur lu dans le jeu écraserait les autres.
+   * - Pente et décalage ajustés par moindres carrés, à part pour les gardiens (attributs propres) et pour les
+   *   joueurs de champ (au moins 6 valeurs et une pente positive, sinon simple décalage moyen).
+   * - Décalage propre à chaque joueur dès qu'il a 2 valeurs lues : le jeu rapporte ses étoiles à la capacité
+   *   actuelle du joueur, que les attributs seuls ne donnent pas. Ses rôles et postes non lus en profitent.
    */
   calibrate(list: FmPlayer[]): this {
     this.cal = null;
-    const xs: number[] = [];
-    const ys: number[] = [];
+    this.calBy = new Map();
+    this.thrLoss = new Map();
+    this.calOut = null;
+    this.calGk = null;
+    const pairs: { id: string; gk: boolean; c: number; v: number }[] = [];
+    const thrPairs: { id: string; gk: boolean; c: number; v: number; thr: string }[] = [];
     for (const p of list)
       for (const [pos, byPh] of Object.entries(p.gameStars ?? {}))
         for (const ph of ['ip', 'oop'] as const)
           for (const r of this.roles.values()) {
-            if (!(r.phase === ph || r.phase === 'both')) continue;
+            if (!byPh?.[ph] || !(r.phase === ph || r.phase === 'both')) continue;
             const v = this.readFit(p, r, ph, pos as PosCode);
-            if (v == null || !byPh?.[ph]) continue;
-            const c = this.computedFit(p, r.code, ph, pos as PosCode);
+            if (v == null) continue;
+            const thr = this.thresholdCode(r, ph);
+            const c = this.computedFit(p, r.code, ph, pos as PosCode, !!thr);
             if (c == null) continue;
-            xs.push(c);
-            ys.push(v);
+            // Les rôles à seuil sont mesurés à part (perte propre), pour ne pas fausser l'échelle.
+            if (thr) thrPairs.push({ id: p.id, gk: pos === 'GB', c, v, thr });
+            else pairs.push({ id: p.id, gk: pos === 'GB', c, v });
           }
-    if (!xs.length) return this;
-    const n = xs.length;
-    const mx = xs.reduce((a, b) => a + b, 0) / n;
-    const my = ys.reduce((a, b) => a + b, 0) / n;
-    let sxy = 0;
-    let sxx = 0;
-    for (let i = 0; i < n; i++) {
-      sxy += (xs[i]! - mx) * (ys[i]! - my);
-      sxx += (xs[i]! - mx) ** 2;
+    // Joueurs sans valeur lue : leur meilleure valeur suit leurs étoiles générales (à ±1 sur 440 valeurs).
+    const anchored = list.filter((p) => p.stars?.current != null && Object.keys(p.attributes).length);
+    if (!pairs.length && !anchored.length) return this;
+    const fit = (xs: { c: number; v: number }[]) => {
+      const n = xs.length;
+      const mx = xs.reduce((a, x) => a + x.c, 0) / n;
+      const my = xs.reduce((a, x) => a + x.v, 0) / n;
+      let sxy = 0;
+      let sxx = 0;
+      for (const x of xs) {
+        sxy += (x.c - mx) * (x.v - my);
+        sxx += (x.c - mx) ** 2;
+      }
+      const a = n >= 6 && sxx > 1e-6 ? sxy / sxx : 0;
+      return a > 0.2 ? { a, b: my - a * mx, n } : { a: 1, b: my - mx, n };
+    };
+    this.cal = pairs.length ? fit(pairs) : { a: 1, b: 0, n: 0 };
+    const out = pairs.filter((x) => !x.gk);
+    const gk = pairs.filter((x) => x.gk);
+    if (out.length) this.calOut = fit(out);
+    if (gk.length) this.calGk = fit(gk);
+    const byPlayer = new Map<string, { c: number; v: number; gk: boolean }[]>();
+    for (const x of pairs) byPlayer.set(`${x.id}|${x.gk ? 'g' : 'o'}`, [...(byPlayer.get(`${x.id}|${x.gk ? 'g' : 'o'}`) ?? []), x]);
+    for (const [k, xs] of byPlayer) {
+      if (xs.length < 2) continue;
+      const a = (xs[0]!.gk ? this.calGk : this.calOut)?.a ?? this.cal.a;
+      this.calBy.set(k, xs.reduce((s, x) => s + (x.v - a * x.c), 0) / xs.length);
     }
-    const a = n >= 6 && sxx > 1e-6 ? sxy / sxx : 0;
-    this.cal = a > 0.2 ? { a, b: my - a * mx, n } : { a: 1, b: my - mx, n };
+    // Ancrage sur les étoiles générales : valeur du meilleur rôle ≈ 10 + 2 × étoiles (échelle du jeu, 10 = 0 étoile).
+    for (const p of anchored) {
+      const gk = p.positions.includes('GB');
+      const k = `${p.id}|${gk ? 'g' : 'o'}`;
+      if (this.calBy.has(k)) continue;
+      const best = this.bestComputed(p);
+      if (best == null) continue;
+      const a = (gk ? this.calGk : this.calOut)?.a ?? this.cal.a;
+      this.calBy.set(k, 10 + 2 * p.stars!.current! - a * best);
+    }
+    // Sans aucune valeur lue, les joueurs sans étoiles prennent le décalage moyen des joueurs ancrés.
+    if (!pairs.length && this.calBy.size) this.cal = { a: 1, b: [...this.calBy.values()].reduce((x, y) => x + y, 0) / this.calBy.size, n: 0 };
+    const loss = new Map<string, number[]>();
+    for (const x of thrPairs) {
+      const pl = list.find((p) => p.id === x.id)!;
+      loss.set(x.thr, [...(loss.get(x.thr) ?? []), this.scaled(pl, x.c, x.gk ? 'GB' : undefined) - x.v]);
+    }
+    for (const [k, xs] of loss) this.thrLoss.set(k, Math.max(0, xs.reduce((a, b) => a + b, 0) / xs.length));
     return this;
+  }
+
+  /** Meilleure note calculée du joueur (postes naturels, rôles sans seuil). */
+  private bestComputed(p: FmPlayer): number | null {
+    let best: number | null = null;
+    for (const pos of p.positions)
+      for (const r of this.roles.values())
+        for (const ph of ['ip', 'oop'] as const) {
+          if (!this.availableAt(r, pos, ph) || this.thresholdCode(r, ph)) continue;
+          const c = this.computedFit(p, r.code, ph, pos, true);
+          if (c != null && (best == null || c > best)) best = c;
+        }
+    return best;
+  }
+
+  /** Note calculée ramenée à l'échelle du jeu pour ce joueur et ce poste (voir calibrate). */
+  private scaled(p: FmPlayer, c: number, pos?: PosCode): number {
+    if (!this.cal) return c;
+    const gk = pos === 'GB';
+    const g = (gk ? this.calGk : this.calOut) ?? this.cal;
+    const b = this.calBy.get(`${p.id}|${gk ? 'g' : 'o'}`) ?? g.b;
+    return Math.max(1, Math.min(20, g.a * c + b));
   }
 
   /** Correction d'échelle en cours (null : aucune valeur lue dans le jeu). */
   cal: { a: number; b: number; n: number } | null = null;
+  private calOut: { a: number; b: number; n: number } | null = null;
+  private calGk: { a: number; b: number; n: number } | null = null;
+  private calBy = new Map<string, number>();
+  private thrLoss = new Map<string, number>();
+
+  /**
+   * Le joueur peut-il tenir ce poste ? Poste naturel, poste où le jeu le juge au moins accompli
+   * (familiarité 15 et plus), ou poste pour lequel le jeu a donné ses étoiles. Hors poste naturel, la note
+   * tient déjà compte de la familiarité (formule du jeu ou étoiles lues).
+   */
+  canPlay(p: FmPlayer, pos: PosCode): boolean {
+    if (p.positions.includes(pos)) return true;
+    if ((p.familiarity?.[pos] ?? 0) >= 15) return true;
+    const t = p.gameStars?.[pos];
+    return !!t && Object.values(t).some((x) => x && Object.keys(x).length > 0);
+  }
 
   /** Note calculée (formule du jeu ou repères maison), sans les valeurs lues. */
-  computedFit(p: FmPlayer, code: string, phase: Phase, pos?: PosCode): number | null {
+  computedFit(p: FmPlayer, code: string, phase: Phase, pos?: PosCode, noThreshold = false): number | null {
     const r = this.roles.get(code);
     if (!r) return null;
     // Rôle connu du jeu : note de FM27 (attributs clés, secondaires, à éviter, familiarité), puis pied.
     const gameCode = phase === 'oop' ? r.game?.oop : r.game?.ip;
     const game = gameCode ? gameRoleRating(p, gameCode, pos) : null;
-    if (game != null) return Math.max(1, Math.min(20, game * thresholdFactor(p, gameCode!) + (pos ? footAdj(p, code, pos) : 0)));
+    if (game != null) return Math.max(1, Math.min(20, game * (noThreshold ? 1 : thresholdFactor(p, gameCode!)) + (pos ? footAdj(p, code, pos) : 0)));
     const keys = wmean(p, phase === 'oop' && r.weightsOOP ? r.weightsOOP : r.weights);
     if (keys == null) return null;
     const p0 = pos ?? this.rolePositions(r, phase)[0];
@@ -431,8 +522,8 @@ export class TacticEngine {
     };
 
     // 1-2. Attribution optimale : somme maximale de (adéquation au rôle + forme du jour) sur le onze.
-    const pool = list.filter((p) => slots.some((sl) => p.positions.includes(sl.pos)));
-    const value = slots.map((sl, i) => pool.map((p) => (p.positions.includes(sl.pos) ? (styleRole(p, i, 'ip')[1] + styleRole(p, i, 'oop')[1]) / 2 + ready.get(p.id)! : null)));
+    const pool = list.filter((p) => slots.some((sl) => this.canPlay(p, sl.pos)));
+    const value = slots.map((sl, i) => pool.map((p) => (this.canPlay(p, sl.pos) ? (styleRole(p, i, 'ip')[1] + styleRole(p, i, 'oop')[1]) / 2 + ready.get(p.id)! : null)));
     const assign = assignMax(value);
     const taken = new Set<string>();
     slots.forEach((sl, i) => {
@@ -477,7 +568,7 @@ export class TacticEngine {
     const bench = list.filter((p) => !taken.has(p.id));
     const cands = slots.map((sl) =>
       bench
-        .filter((p) => p.positions.includes(sl.pos))
+        .filter((p) => this.canPlay(p, sl.pos))
         .map((p) => ({ p, f: (fitOf(p, sl.ip, 'ip', sl.pos) + fitOf(p, sl.oop, 'oop', sl.pos)) / 2 + ready.get(p.id)! }))
         .sort((a, b) => b.f - a.f),
     );

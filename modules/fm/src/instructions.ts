@@ -286,6 +286,9 @@ function ctxOf(slot: Slot, team: Slot[]): SlotCtx {
   return slotContexts([slot, ...team.filter((t) => t !== slot)])[0]!;
 }
 
+/** Consignes individuelles au plus par joueur (complexité tactique). */
+export const MAX_PER_PLAYER = 3;
+
 function pick(wanted: PlayerInstruction[], ipRole: RoleRef | undefined, oopRole: RoleRef | undefined, engine: TacticEngine, slot: Slot, maxIp: number, maxOop: number, ctx: SlotCtx): PlayerAdvice {
   const seen = new Set<string>();
   const sorted = [...wanted].sort((x, y) => y.weight - x.weight).filter((x) => !seen.has(x.id) && !!seen.add(x.id));
@@ -300,8 +303,12 @@ function pick(wanted: PlayerInstruction[], ipRole: RoleRef | undefined, oopRole:
       if (alt && alt.code !== role.code) switches.push({ phase: x.phase, from: role.code, to: alt.code, unlocks: x.id });
     }
   }
+  // Complexité tactique (FUN_1846d4060) : chaque consigne individuelle alourdit la charge du joueur et fait baisser
+  // sa compréhension tactique, la moitié de l'efficacité (FUN_182a49c90). On garde les 3 plus utiles au total.
+  const kept = new Set([...list.filter((x) => x.phase === 'ip').slice(0, maxIp), ...list.filter((x) => x.phase === 'oop').slice(0, maxOop)]);
+  const top = list.filter((x) => kept.has(x)).slice(0, MAX_PER_PLAYER);
   return {
-    list: [...list.filter((x) => x.phase === 'ip').slice(0, maxIp), ...list.filter((x) => x.phase === 'oop').slice(0, maxOop)],
+    list: [...top.filter((x) => x.phase === 'ip'), ...top.filter((x) => x.phase === 'oop')],
     switches: switches.slice(0, 1),
   };
 }

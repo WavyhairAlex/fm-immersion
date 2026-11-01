@@ -245,21 +245,33 @@ export interface TacticPick {
 }
 
 /**
+ * Chaque style avec son meilleur schéma et la note d'équipe de son onze applicable, du meilleur au moins bon.
+ * C'est le classement commun à tous les onglets (accueil, style de jeu, composition).
+ */
+export function rankTactics(engine: TacticEngine, list: FmPlayer[]): { style: StyleRef; form: string; plan: FormationPlan; fit: number; plans: FormationPlan[] }[] {
+  return engine.ref.styles
+    .map((style) => {
+      const plans = Object.keys(FORMATIONS)
+        .map((form) => engine.formationPlan(form, style, list))
+        .sort((a, b) => b.score - a.score);
+      const plan = plans[0]!;
+      return { style, form: plan.form, plan, fit: plan.score, plans };
+    })
+    .sort((a, b) => b.fit - a.fit);
+}
+
+/**
  * Tactique à jouer maintenant : le style et le schéma dont le onze applicable donne la meilleure
  * note d'équipe. Le projet du coach sert à orienter l'entraînement et le mercato ; dès que son onze
  * vaut au moins le meilleur, il devient automatiquement la tactique conseillée.
  */
-export function bestTactic(engine: TacticEngine, list: FmPlayer[], coach: CoachPrefs = {}): TacticPick | null {
-  let best: TacticPick | null = null;
-  let proj: TacticPick | null = null;
-  for (const style of engine.ref.styles)
-    for (const form of Object.keys(FORMATIONS)) {
-      const plan = engine.formationPlan(form, style, list);
-      const pick = { style, form, plan, project: false };
-      if (!best || plan.score > best.plan.score) best = pick;
-      if (style.id === coach.style && (coach.form ? form === coach.form : !proj || plan.score > proj.plan.score)) proj = pick;
-    }
-  if (proj && best && proj.plan.score >= best.plan.score) return { ...proj, project: true };
+export function bestTactic(engine: TacticEngine, list: FmPlayer[], coach: CoachPrefs = {}, ranked = rankTactics(engine, list)): TacticPick | null {
+  const top = ranked[0];
+  if (!top) return null;
+  const best: TacticPick = { style: top.style, form: top.form, plan: top.plan, project: false };
+  const mine = ranked.find((r) => r.style.id === coach.style);
+  const projPlan = mine && (coach.form ? mine.plans.find((p) => p.form === coach.form) : mine.plan);
+  if (mine && projPlan && projPlan.score >= best.plan.score) return { style: mine.style, form: projPlan.form, plan: projPlan, project: true };
   return best;
 }
 

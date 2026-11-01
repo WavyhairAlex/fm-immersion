@@ -172,6 +172,7 @@
       },
       "otherPhase": "{{phase}} : {{role}}",
       "subs": "Remplaçants : {{names}}",
+      "offPos": "hors poste naturel (accompli)",
       "nobody": "Personne",
       "pitchHelp": "Onze choisi par adéquation aux rôles du style, blessés exclus. Les pointillés montrent le déplacement depuis l'autre phase. Survole un joueur pour voir ses remplaçants.",
       "balance": "Équilibre de l'équipe",

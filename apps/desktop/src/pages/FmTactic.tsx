@@ -4,6 +4,7 @@ import {
   STYLE_FORMS,
   TacticEngine,
   bestTactic,
+  rankTactics,
   knownFormation,
   mergeReference,
   phaseXY,
@@ -25,7 +26,7 @@ import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useCoach } from './FmUi';
+import { fitPct, setFitScale, useCoach } from './FmUi';
 
 // v2 : le choix automatique (meilleure tactique applicable) devient la valeur par défaut.
 const PREFS_KEY = 'simloom.fm.tactic.v2';
@@ -67,7 +68,11 @@ async function loadLocalReference(folder: string): Promise<{ ref: TacticReferenc
 export function useTacticEngine(folder: string, players: FmPlayer[] = []) {
   const { data: local } = useQuery({ queryKey: ['fm', 'reference', folder], queryFn: () => loadLocalReference(folder), staleTime: 60_000 });
   // Notes calculées ramenées à l'échelle des étoiles lues dans le jeu pour cet effectif.
-  const engine = useMemo(() => new TacticEngine(mergeReference(local?.ref)).calibrate(players), [local?.ref, players]);
+  const engine = useMemo(() => {
+    const e = new TacticEngine(mergeReference(local?.ref)).calibrate(players);
+    setFitScale(!!e.cal);
+    return e;
+  }, [local?.ref, players]);
   return { engine, local };
 }
 
@@ -84,19 +89,17 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
     writePrefs(next);
   };
   const avail = useMemo(() => players.filter((p) => !unavailable(p) && Object.keys(p.attributes).length > 0), [players]);
-  const ranked = useMemo(() => engine.rankStyles(avail), [engine, avail]);
+  // Classement commun à tous les onglets : chaque style avec la note d'équipe de son meilleur onze.
+  const ranked = useMemo(() => rankTactics(engine, avail), [engine, avail]);
   const [coach] = useCoach();
   // Sans choix du joueur : la meilleure tactique applicable, ou le projet dès qu'il devient le meilleur.
-  const pick = useMemo(() => bestTactic(engine, avail, coach), [engine, avail, coach]);
+  const pick = useMemo(() => bestTactic(engine, avail, coach, ranked), [engine, avail, coach, ranked]);
   const auto = !prefs.style;
   const style = (auto ? pick?.style : ranked.find((r) => r.style.id === prefs.style)?.style) ?? ranked[0]?.style;
   const gameForm = knownFormation(gameFormation);
   const natural = (style && STYLE_FORMS[style.id]?.filter((f) => FORMATIONS[f])) || ['4-3-3'];
   const form = prefs.form && FORMATIONS[prefs.form] ? prefs.form : auto && pick ? pick.form : (gameForm ?? natural[0] ?? '4-3-3');
-  const plans = useMemo(
-    () => (style ? Object.keys(FORMATIONS).map((f) => engine.formationPlan(f, style, avail)).sort((a, b) => b.score - a.score) : []),
-    [engine, style, avail],
-  );
+  const plans = useMemo(() => ranked.find((r) => r.style.id === style?.id)?.plans ?? [], [ranked, style]);
   const gamePlan = useMemo(() => (lineup ? planFromLineup(engine, lineup, players, gameForm ?? gameFormation) : null), [engine, lineup, players, gameForm, gameFormation]);
   const fromGame = !!gamePlan && prefs.source !== 'simloom';
   const plan = fromGame ? gamePlan : plans.find((p) => p.form === form);
@@ -124,9 +127,8 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
   const styleName = (s: typeof style) => (en && s.nameEn ? s.nameEn : s.name);
   const nf = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 0 });
   const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  const pct = (f: number | null) => (f == null ? '–' : `${nf.format((f / 20) * 100)} %`);
   // Avec des étoiles lues dans le jeu, les notes sont sur l'échelle du jeu : on les montre en étoiles (10 = 0, 20 = 5).
-  const note = (f: number | null) => (f == null ? '–' : engine.cal ? `${nf1.format(Math.max(0, Math.min(5, (f - 10) / 2)))} ★` : pct(f));
+  const note = fitPct;
   const field = plan.slots.filter((s) => s.pos !== 'GB');
   const shape = (ph: Phase) => shapeOf(field.map((s) => phaseXY(s, ph, block)));
   const shown = spreadXY(plan.slots.map((s) => phaseXY(s, phase, block)));
@@ -141,7 +143,7 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
             <option value="">{t('fm.tac.auto')}</option>
             {ranked.map((r) => (
               <option key={r.style.id} value={r.style.id}>
-                {styleName(r.style)} · {pct(r.fit)}
+                {styleName(r.style)} · {note(r.fit)}
               </option>
             ))}
           </select>
@@ -249,6 +251,7 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
                   </div>
                   <div className="truncate text-brun">{roleName(code, phase)}</div>
                   <div className="truncate font-bold text-canard">{sl.player?.name ?? t('fm.tac.nobody')}</div>
+                  {sl.player && !sl.player.positions.includes(sl.pos) && <div className="truncate text-[10px] text-brun">{t('fm.tac.offPos')}</div>}
                 </div>
               );
             })}

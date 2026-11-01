@@ -98,13 +98,25 @@ export function useNames() {
 }
 
 /** Adéquation sur 20 affichée en pourcentage. */
-export const fitPct = (f: number | null | undefined) => (f == null ? '–' : `${Math.round((f / 20) * 100)} %`);
+/*
+ * Échelle d'affichage des notes. Dès que des étoiles ont été lues dans le jeu, toutes les notes sont sur
+ * l'échelle du jeu (10 = 0 étoile, 20 = 5 étoiles) et s'affichent en étoiles dans tous les onglets ;
+ * sinon en pourcentage. Réglée par useTacticEngine (FmTactic), commun à tous les onglets.
+ */
+let starScale = false;
+export const setFitScale = (stars: boolean) => {
+  starScale = stars;
+};
+const toStars = (f: number) => Math.max(0, Math.min(5, (f - 10) / 2));
+export const fitPct = (f: number | null | undefined) =>
+  f == null ? '–' : starScale ? `${toStars(f).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ★` : `${Math.round((f / 20) * 100)} %`;
 
-/** Pastille d'adéquation : vert au-dessus de 65 %, neutre au milieu, corail sous 45 %. */
+/** Pastille d'adéquation : vert au-dessus de 65 % (3,5 étoiles), neutre au milieu, corail sous 45 % (1,5 étoile). */
 export function Fit({ value }: { value: number | null | undefined }) {
   if (value == null) return <span className="text-canard/40">–</span>;
-  const pc = (value / 20) * 100;
-  const cls = pc >= 65 ? 'bg-eau-fonce text-white' : pc >= 55 ? 'bg-eau/40 text-canard' : pc >= 45 ? 'bg-canard/10 text-canard' : 'bg-corail/20 text-canard';
+  const pc = starScale ? (toStars(value) / 5) * 100 : (value / 20) * 100;
+  const [hi, mid, lo] = starScale ? [70, 50, 30] : [65, 55, 45];
+  const cls = pc >= hi ? 'bg-eau-fonce text-white' : pc >= mid ? 'bg-eau/40 text-canard' : pc >= lo ? 'bg-canard/10 text-canard' : 'bg-corail/20 text-canard';
   return <span className={`inline-block min-w-[3rem] rounded-full px-2 py-0.5 text-center text-xs font-bold tabular-nums ${cls}`}>{fitPct(value)}</span>;
 }
 

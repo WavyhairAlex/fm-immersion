@@ -1,7 +1,7 @@
-import { abilityNeeded, teamInstructionOf, unavailable, keyAttrs, styleComplexity, tactAbility, type FmPlayer, type Phase } from '@simloom/module-fm';
+import { abilityNeeded, teamInstructionOf, keyAttrs, styleComplexity, tactAbility, type FmPlayer, type Phase } from '@simloom/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTacticEngine } from './FmTactic';
+import { useTacticChoice } from './FmTactic';
 import { Empty, Fit, Kpi, Panel, Tag, useNames } from './FmUi';
 
 const STYLE_KEY = 'simloom.fm.styleView';
@@ -10,9 +10,8 @@ const STYLE_KEY = 'simloom.fm.styleView';
 export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: string }) {
   const { t, i18n } = useTranslation();
   const names = useNames();
-  const { engine } = useTacticEngine(folder, players);
-  const list = useMemo(() => players.filter((p) => !unavailable(p) && Object.keys(p.attributes).length), [players]);
-  const ranked = useMemo(() => engine.rankStyles(list), [engine, list]);
+  // Même classement et même style par défaut que l'onglet Composition.
+  const { engine, avail: list, ranked, style: chosen } = useTacticChoice(players, folder, null);
   const sig = useMemo(() => engine.squadSignals(list), [engine, list]);
   const [sel, setSel] = useState<string | null>(() => {
     try {
@@ -30,7 +29,7 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
       /* stockage indisponible : le style affiché n'est pas retenu */
     }
   };
-  const cur = ranked.find((r) => r.style.id === sel)?.style ?? ranked[0]!.style;
+  const cur = ranked.find((r) => r.style.id === sel)?.style ?? chosen ?? ranked[0]!.style;
   const fits = ranked.map((r) => r.fit ?? 0);
   const lo = Math.min(...fits);
   const hi = Math.max(...fits);
@@ -49,7 +48,8 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
     if (!r) return null;
     const top = list
       .filter((p) => engine.rolePositions(r).some((pos) => p.positions.includes(pos)))
-      .map((p) => ({ p, f: engine.roleFit(p, code, ph) }))
+      // Note au meilleur poste naturel du joueur pour ce rôle (étoiles lues dans le jeu comprises).
+      .map((p) => ({ p, f: Math.max(...engine.rolePositions(r, ph).filter((pos) => p.positions.includes(pos)).map((pos) => engine.roleFit(p, code, ph, pos) ?? 0), 0) || null }))
       .filter((x): x is { p: FmPlayer; f: number } => x.f != null)
       .sort((a, b) => b.f - a.f)
       .slice(0, 3);
