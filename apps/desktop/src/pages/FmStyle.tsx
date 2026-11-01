@@ -10,7 +10,7 @@ const STYLE_KEY = 'simloom.fm.styleView';
 export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: string }) {
   const { t, i18n } = useTranslation();
   const names = useNames();
-  const { engine } = useTacticEngine(folder);
+  const { engine } = useTacticEngine(folder, players);
   const list = useMemo(() => players.filter((p) => !unavailable(p) && Object.keys(p.attributes).length), [players]);
   const ranked = useMemo(() => engine.rankStyles(list), [engine, list]);
   const sig = useMemo(() => engine.squadSignals(list), [engine, list]);

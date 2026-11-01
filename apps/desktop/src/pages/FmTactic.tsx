@@ -64,9 +64,10 @@ async function loadLocalReference(folder: string): Promise<{ ref: TacticReferenc
 }
 
 /** Moteur tactique avec les repères maison, remplacés par les repères locaux du joueur s'il en a. */
-export function useTacticEngine(folder: string) {
+export function useTacticEngine(folder: string, players: FmPlayer[] = []) {
   const { data: local } = useQuery({ queryKey: ['fm', 'reference', folder], queryFn: () => loadLocalReference(folder), staleTime: 60_000 });
-  const engine = useMemo(() => new TacticEngine(mergeReference(local?.ref)), [local?.ref]);
+  // Notes calculées ramenées à l'échelle des étoiles lues dans le jeu pour cet effectif.
+  const engine = useMemo(() => new TacticEngine(mergeReference(local?.ref)).calibrate(players), [local?.ref, players]);
   return { engine, local };
 }
 
@@ -75,7 +76,7 @@ export function useTacticEngine(folder: string) {
  * les autres vues de l'effectif s'appuient dessus pour rester cohérentes.
  */
 export function useTacticChoice(players: FmPlayer[], folder: string, gameFormation: string | null, lineup: GameSlot[] | null = null) {
-  const { engine, local } = useTacticEngine(folder);
+  const { engine, local } = useTacticEngine(folder, players);
   const [prefs, setPrefs] = useState<Prefs>(readPrefs);
   const update = (p: Prefs) => {
     const next = { ...prefs, ...p };
@@ -124,6 +125,8 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
   const nf = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 0 });
   const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const pct = (f: number | null) => (f == null ? '–' : `${nf.format((f / 20) * 100)} %`);
+  // Avec des étoiles lues dans le jeu, les notes sont sur l'échelle du jeu : on les montre en étoiles (10 = 0, 20 = 5).
+  const note = (f: number | null) => (f == null ? '–' : engine.cal ? `${nf1.format(Math.max(0, Math.min(5, (f - 10) / 2)))} ★` : pct(f));
   const field = plan.slots.filter((s) => s.pos !== 'GB');
   const shape = (ph: Phase) => shapeOf(field.map((s) => phaseXY(s, ph, block)));
   const shown = spreadXY(plan.slots.map((s) => phaseXY(s, phase, block)));
@@ -149,7 +152,7 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
             {fromGame && !FORMATIONS[form] && <option value={form}>{form || gameFormation}</option>}
             {plans.map((p) => (
               <option key={p.form} value={p.form}>
-                {p.form} · {pct(p.score)}
+                {p.form} · {note(p.score)}
               </option>
             ))}
           </select>
@@ -182,7 +185,7 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
       <div className="grid gap-6 lg:grid-cols-[3fr_2fr] 2xl:grid-cols-2">
         <section className="card">
           <h2 className="text-xl font-semibold">
-            {form} · {styleName(style)} <span className="text-sm font-normal text-brun">{t('fm.tac.fit', { value: pct(plan.score) })}</span>
+            {form} · {styleName(style)} <span className="text-sm font-normal text-brun">{t('fm.tac.fit', { value: note(plan.score) })}</span>
           </h2>
           <p className="mt-1 text-sm text-brun">
             <span className="mr-2 rounded-full bg-eau/20 px-2 py-0.5 text-xs font-bold text-canard">{t(fromGame ? 'fm.tac.fromGame' : 'fm.tac.suggested')}</span>
@@ -242,7 +245,7 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
                 >
                   <div className="flex items-center justify-between gap-1">
                     <span className="font-bold text-canard">{POS_LABEL[rolePos(sl, phase)]}</span>
-                    {fit != null && <span className="text-brun">{pct(fit)}</span>}
+                    {fit != null && <span className="text-brun">{note(fit)}</span>}
                   </div>
                   <div className="truncate text-brun">{roleName(code, phase)}</div>
                   <div className="truncate font-bold text-canard">{sl.player?.name ?? t('fm.tac.nobody')}</div>
@@ -285,7 +288,7 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
                     {natural.includes(p.form) && <span className="ml-2 text-xs font-normal text-eau-fonce">{t('fm.tac.natural')}</span>}
                     {p.holes > 0 && <span className="ml-2 text-xs font-normal text-corail">{t('fm.tac.holes', { count: p.holes })}</span>}
                   </span>
-                  <span className="text-brun">{pct(p.score)}</span>
+                  <span className="text-brun">{note(p.score)}</span>
                 </button>
               </li>
             ))}

@@ -9,7 +9,7 @@ export function FmTargets({ snap, players, folder, go }: { snap: FmSnapshot; pla
   const { t } = useTranslation();
   const names = useNames();
   const f = useFormat();
-  const { engine } = useTacticEngine(folder);
+  const { engine } = useTacticEngine(folder, players);
   const [coach] = useCoach();
   const own = useMemo(() => players.filter((p) => !p.injury && Object.keys(p.attributes).length), [players]);
   const pr = useMemo(() => buildProject(engine, own, coach), [engine, own, coach]);

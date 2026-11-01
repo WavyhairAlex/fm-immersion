@@ -12,7 +12,7 @@ const ICON_CLS = { good: 'bg-eau/30', warn: 'bg-ambre/40', bad: 'bg-corail/25' }
 export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot; players: FmPlayer[]; folder: string; history: SquadAt[] }) {
   const { t, i18n } = useTranslation();
   const names = useNames();
-  const { engine } = useTacticEngine(folder);
+  const { engine } = useTacticEngine(folder, players);
   const [coach, setCoach] = useCoach();
   const list = useMemo(() => players.filter((p) => Object.keys(p.attributes).length), [players]);
   const pr = useMemo(() => buildProject(engine, list, coach), [engine, list, coach]);
