@@ -997,7 +997,16 @@
         "normal": "standard intensity"
       },
       "rusty": "lacking sharpness: reserve minutes or late appearances",
-      "individualHelp": "Role and areas: the project's (his position's role in the target XI, otherwise the role he fits best) and his 3 weakest key attributes, to set as individual training focus. Intensity: set under \"Individual Player Intensity\"; never very high by default (injury risk)."
+      "individualHelp": "Role and areas: the project's (his position's role in the target XI, otherwise the role he fits best) and his 3 weakest key attributes, to set as individual training focus. Intensity: set under \"Individual Player Intensity\"; never very high by default (injury risk).",
+      "mentoring": "Mentoring groups",
+      "mentor": "Mentor",
+      "mentees": "Mentored youngsters",
+      "age_one": "{{count}} yr",
+      "age_other": "{{count}} yrs",
+      "noMentoring": "No group to suggest: it needs players aged 21 or under and at least one player aged 24+ with a favourable personality (or high determination). Personality comes from the extended player read.",
+      "avoid": "Keep away from youngsters",
+      "unassigned": "No mentor available: {{list}}.",
+      "mentoringHelp": "In the game: Training, Mentoring, Create Mentoring Group. Influential players' personality and determination rub off on the group's youngsters, for better or worse; at most 3 youngsters per mentor, from the same area of the pitch when possible."
     }
   },
   "pz2": {

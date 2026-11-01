@@ -8,6 +8,7 @@ import {
   buildTrainingWeek,
   effectiveness,
   individualAdvice,
+  mentoringGroups,
   nearestPreset,
   defaultMatchDays,
   mondayOf,
@@ -80,6 +81,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
   const names = useNames();
   const list = useMemo(() => players.filter((p) => Object.keys(p.attributes).length), [players]);
   const project = useMemo(() => buildProject(engine, list, coach), [engine, list, coach]);
+  const mentoring = useMemo(() => mentoringGroups(players), [players]);
   const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
   const plan = useMemo(
     () => buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: before, priorities, style: style?.id, trainingDays }),
@@ -295,6 +297,37 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
           <p className="mt-2 text-xs text-brun">{t('fm.train.individualHelp')}</p>
         </Panel>
       )}
+
+      <Panel title={t('fm.train.mentoring')}>
+        {mentoring.groups.length ? (
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {mentoring.groups.map((g) => (
+              <div key={g.mentor.id} className="rounded-xl bg-white/60 p-3 ring-1 ring-canard/10">
+                <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.train.mentor')}</p>
+                <p className="font-bold">
+                  {g.mentor.name} <Pos player={g.mentor} />
+                </p>
+                <p className="text-xs text-brun">{[g.mentor.personality, g.mentor.hierarchy, g.mentor.age != null ? t('fm.train.age', { count: g.mentor.age }) : null].filter(Boolean).join(' · ')}</p>
+                <p className="mt-2 text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.train.mentees')}</p>
+                {g.mentees.map((y) => (
+                  <p key={y.id} className="text-sm">
+                    {y.name} <Pos player={y} /> <span className="text-xs text-brun">{[y.personality, y.age != null ? t('fm.train.age', { count: y.age }) : null].filter(Boolean).join(' · ')}</span>
+                  </p>
+                ))}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-brun">{t('fm.train.noMentoring')}</p>
+        )}
+        {mentoring.avoid.length > 0 && (
+          <p className="mt-3 text-sm">
+            <Tag tone="warn">{t('fm.train.avoid')}</Tag> {mentoring.avoid.map((p) => `${p.name} (${p.personality})`).join(', ')}
+          </p>
+        )}
+        {mentoring.unassigned.length > 0 && <p className="mt-2 text-xs text-brun">{t('fm.train.unassigned', { list: mentoring.unassigned.map((p) => p.name).join(', ') })}</p>}
+        <p className="mt-2 text-xs text-brun">{t('fm.train.mentoringHelp')}</p>
+      </Panel>
 
       <Panel title={t('fm.train.rules')}>
         <ul className="list-disc space-y-1 pl-5 text-sm">

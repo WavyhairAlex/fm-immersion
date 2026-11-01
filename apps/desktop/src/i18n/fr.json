@@ -997,7 +997,16 @@
         "normal": "intensité standard"
       },
       "rusty": "manque de rythme : temps de jeu en réserve ou en fin de match",
-      "individualHelp": "Rôle et axes : ceux du projet (rôle de son poste dans le onze cible, sinon le rôle où il est le plus adapté) et ses 3 attributs clés les plus faibles, à mettre en priorité de l'entraînement individuel. Intensité : à régler dans « Intensité de l'entraînement individuel » ; jamais très élevée d'office (risque de blessure)."
+      "individualHelp": "Rôle et axes : ceux du projet (rôle de son poste dans le onze cible, sinon le rôle où il est le plus adapté) et ses 3 attributs clés les plus faibles, à mettre en priorité de l'entraînement individuel. Intensité : à régler dans « Intensité de l'entraînement individuel » ; jamais très élevée d'office (risque de blessure).",
+      "mentoring": "Groupes d'encadrement",
+      "mentor": "Tuteur",
+      "mentees": "Jeunes encadrés",
+      "age_one": "{{count}} an",
+      "age_other": "{{count}} ans",
+      "noMentoring": "Aucun groupe à proposer : il faut des joueurs de 21 ans et moins et au moins un joueur de 24 ans et plus à la personnalité favorable (ou très déterminé). La personnalité vient de la lecture étendue des joueurs.",
+      "avoid": "À tenir à l'écart des jeunes",
+      "unassigned": "Sans tuteur disponible : {{list}}.",
+      "mentoringHelp": "Dans le jeu : Entraînement, Encadrement, Créer un groupe d'encadrement. La personnalité et la détermination des joueurs influents déteignent sur les jeunes du groupe, en bien comme en mal ; 3 jeunes au plus par tuteur, du même secteur de jeu quand c'est possible."
     }
   },
   "pz2": {

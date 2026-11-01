@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { autoPhase, buildTrainingWeek, defaultMatchDays, individualAdvice, mondayOf, nearestPreset, sessionCategory, weekMatches } from '../src';
+import { autoPhase, buildTrainingWeek, defaultMatchDays, individualAdvice, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, weekMatches } from '../src';
 
 const MONDAY = '2026-08-31';
 
@@ -132,5 +132,39 @@ describe('programme du jeu et entraînement individuel', () => {
     expect(individualAdvice({ age: 25, condition: 75, sharpness: 90, injury: null })).toEqual({ intensity: 'low', reason: 'veryTired', rusty: false });
     expect(individualAdvice({ age: 19, condition: 98, sharpness: 50, injury: null })).toEqual({ intensity: 'high', reason: 'young', rusty: true });
     expect(individualAdvice({ age: 33, condition: 98, sharpness: 90, injury: null }).intensity).toBe('medium');
+  });
+});
+
+describe('groupes d’encadrement', () => {
+  const pl = (id: string, age: number, line: string, personality: string | null, hierarchy: string | null = null, det = 10) => ({
+    id,
+    name: id,
+    age,
+    line,
+    level: 10,
+    personality,
+    hierarchy,
+    attributes: { Determination: det },
+  });
+
+  it('associe les jeunes à des tuteurs expérimentés à la bonne personnalité, du même secteur', () => {
+    const m = mentoringGroups([
+      pl('vieuxDef', 30, 'DEF', 'Professionnel modèle', 'Leader de l’équipe'),
+      pl('vieuxAtt', 27, 'ATT', 'Résolu', 'Joueur influent'),
+      pl('caractere', 29, 'MIL', 'Tempéramental', 'Joueur influent'),
+      pl('jeuneDef', 19, 'DEF', 'Équilibré'),
+      pl('jeuneAtt', 20, 'ATT', 'Peu ambitieux'),
+    ]);
+    expect(m.groups.map((g) => [g.mentor.id, g.mentees.map((x) => x.id)])).toEqual([
+      ['vieuxDef', ['jeuneDef']],
+      ['vieuxAtt', ['jeuneAtt']],
+    ]);
+    expect(m.avoid.map((x) => x.id)).toEqual(['caractere']);
+  });
+
+  it('classe les personnalités, les défavorables avant les favorables', () => {
+    expect(personalityTone('Peu professionnel')).toBe('bad');
+    expect(personalityTone('Très professionnel')).toBe('good');
+    expect(personalityTone('Équilibré')).toBe('neutral');
   });
 });
