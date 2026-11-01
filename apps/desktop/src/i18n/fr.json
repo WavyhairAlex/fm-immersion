@@ -276,7 +276,8 @@
       "finances": "Finances et board",
       "wages": "Masse salariale",
       "contracts": "Contrats",
-      "progression": "Progression"
+      "progression": "Progression",
+      "training": "Entraînement"
     },
     "home": {
       "todo": "À traiter",
@@ -558,12 +559,12 @@
     "areaSession": {
       "buildUpStrategy": "Construction",
       "chanceCreation": "Création d'occasions",
-      "inPossessionShape": "Animation avec ballon",
-      "outOfPossessionShape": "Animation sans ballon",
-      "lineOfEngagement": "Ligne d'engagement",
+      "inPossessionShape": "Organisation avec le ballon",
+      "outOfPossessionShape": "Positionnement sans le ballon",
+      "lineOfEngagement": "Hauteur du pressing",
       "passingStyle": "Style de passes",
       "pressingIntensity": "Intensité du pressing",
-      "pressingTrap": "Piège de pressing"
+      "pressingTrap": "Piège du pressing"
     },
     "roles": {
       "help": "Chaque case donne l'adéquation au meilleur rôle {{phase}} à ce poste. Pastilles : postes naturels. Chiffres gris : hors poste (le jeu y ajoute une pénalité de familiarité). Cerclé en pointillé : hors poste mais meilleur qu'à son poste, à essayer. Survole une case pour voir le rôle.",
@@ -828,6 +829,131 @@
       },
       "custom": "perso",
       "inGame": "Dans le jeu :"
+    },
+    "train": {
+      "session": {
+        "rest": "Repos",
+        "recovery": "Récupération",
+        "lightConditioning": "Condition physique légère",
+        "conditioning": "Condition physique",
+        "heavyConditioning": "Condition physique intensive",
+        "passingStyle": "Style de passes",
+        "buildUpStrategy": "Construction",
+        "chanceCreation": "Création d'occasions",
+        "inPossessionShape": "Organisation avec le ballon",
+        "lineOfEngagement": "Hauteur du pressing",
+        "pressingIntensity": "Intensité du pressing",
+        "pressingTrap": "Piège du pressing",
+        "outOfPossessionShape": "Positionnement sans le ballon",
+        "pressAvoidance": "Éviter le pressing",
+        "ballProgression": "Progression avec le ballon",
+        "finalThird": "30 derniers mètres",
+        "defensiveBlock": "Bloc défensif",
+        "defensivePositioning": "Placement défensif",
+        "defensiveEngagement": "Engagement défensif",
+        "corners": "Corners",
+        "freeKicks": "Coups francs",
+        "possessionBallWork": "Travail de possession",
+        "attackingBalanced": "Attaque - Équilibrée",
+        "attackingPatient": "Attaque - Patience",
+        "attackingDirect": "Attaque - Direct",
+        "attackingWings": "Attaque - Ailes",
+        "defendingBalanced": "Défense - Équilibrée",
+        "defendingEngaged": "Défense - Engagé",
+        "defendingDisengaged": "Défense - Désengagée",
+        "defendingWide": "Défense - Dans la largeur",
+        "theoryAttacking": "Théorie - Jeu d'ombres offensif",
+        "theoryDefensive": "Théorie - Jeu d'ombre défensif",
+        "techChanceCreation": "Technique - Création d'occasions",
+        "techChanceConversion": "Technique - Conversion des occasions",
+        "techBallRetention": "Technique - Conservation du ballon",
+        "techGroundDefense": "Technique - Défense au sol",
+        "techAerialDefense": "Technique - Défense aérienne",
+        "transitionRestrict": "Phase de transition - restreindre",
+        "transitionPress": "Phase de transition - presser",
+        "transitionProgress": "Transition - Progrès",
+        "setPiecesDelivery": "Coups de pied arrêtés - Centres",
+        "setPiecesPenalties": "Coups de pied arrêtés - Penalties",
+        "individualDevelopment": "Développement individuel",
+        "teamBonding": "Esprit d'équipe",
+        "communityOutreach": "Programme de proximité",
+        "travel": "En déplacement",
+        "match": "Match"
+      },
+      "cat": {
+        "physical": "Physique et récupération",
+        "tactical": "Compréhension tactique",
+        "matchPrep": "Préparation de match",
+        "ballWork": "Développement footballistique",
+        "individual": "Développement individuel",
+        "extra": "Autres activités",
+        "match": "Match"
+      },
+      "phase": {
+        "P": "Présaison",
+        "T": "Bloc tactique",
+        "A": "Début de saison",
+        "B": "Milieu de saison",
+        "C": "Fin de saison"
+      },
+      "phaseHelp": {
+        "P": "4 semaines de reprise : P1 et P2 uniquement physiques, P3 ajoute le ballon (amicaux mercredi et samedi), P4 le jeu de passes, la construction, l'attaque et la défense (amical le mercredi).",
+        "T": "Bloc de 4 semaines pour installer la tactique, avec un match le mercredi.",
+        "A": "4 premiers mois : travail technique et tactique large.",
+        "B": "3 mois suivants : organisation déjà installée, préparation de match et esprit d'équipe.",
+        "C": "Jusqu'à la fin : préparation de match, organisation défensive et coups de pied arrêtés."
+      },
+      "theme": {
+        "buildUp": "Construction et possession",
+        "pressing": "Pressing et cohésion défensive",
+        "attack": "Création et attaque",
+        "balance": "Équilibre et coups de pied arrêtés"
+      },
+      "kind": {
+        "match": "Match",
+        "recovery": "Récupération",
+        "prep": "Préparation",
+        "dev": "Travail"
+      },
+      "days": [
+        "Lun",
+        "Mar",
+        "Mer",
+        "Jeu",
+        "Ven",
+        "Sam",
+        "Dim"
+      ],
+      "slot": [
+        "Séance 1",
+        "Séance 2",
+        "Extra"
+      ],
+      "title": "Semaine d'entraînement",
+      "which": "Semaine",
+      "thisWeek": "Cette semaine",
+      "nextWeek": "Semaine suivante",
+      "phaseLabel": "Phase",
+      "auto": "auto : {{code}}",
+      "cycleWeek": "Semaine du cycle",
+      "seasonStart": "Reprise du championnat",
+      "matches": "Jours de match",
+      "fromCalendar": "d'après le calendrier du jeu",
+      "manual": "Calendrier absent de l'instantané : coche les jours de match (amicaux compris).",
+      "eve": "Match la veille du lundi",
+      "code": "Planning {{code}}",
+      "variant_0": "aucun match",
+      "variant_1": "un match",
+      "variant_2": "deux matchs",
+      "priorities": "Zones du style visé travaillées en priorité : {{list}}.",
+      "load": "Dans la semaine",
+      "rules": "Les règles",
+      "rule1": "Veille de match : préparation de match. Lendemain : Récupération, Récupération, puis Esprit d'équipe en extra.",
+      "rule2": "Aucune séance de Repos : l'esprit d'équipe n'est pas du repos.",
+      "rule3": "Si un match est déplacé, remets la préparation la veille et la récupération le lendemain.",
+      "rule4": "Les joueurs qui reviennent de sélection se gèrent à part.",
+      "rule5": "Juge le plan sur plusieurs semaines, pas sur un résultat, et allège si la charge ne convient pas.",
+      "source": "Méthode « Freedom » (FM Scout, FM27 training schedules) : 44 plannings, cycles de 4 semaines à thème. L'article ne fournit pas les fichiers .fmf : Archivix reconstruit chaque journée avec les séances de FM27, orientées par ton style visé. À recopier dans l'écran Entraînement du jeu."
     }
   },
   "pz2": {

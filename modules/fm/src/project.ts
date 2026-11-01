@@ -141,6 +141,8 @@ export interface CoachPrefs {
   form?: string | null;
   /** Niveau visé, en % d'adéquation au rôle. */
   target?: number;
+  /** Mois de reprise du championnat (1 à 12), pour situer la phase d'entraînement. */
+  seasonStart?: number;
 }
 export const TARGETS = [45, 50, 55, 60, 65, 70];
 
