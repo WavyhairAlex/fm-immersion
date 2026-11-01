@@ -183,7 +183,7 @@
       "subs": "Backups: {{names}}",
       "offPos": "outside natural position (accomplished)",
       "nobody": "Nobody",
-      "pitchHelp": "Eleven picked by fit to the style's roles, injured players left out. Dotted lines show the move from the other phase. Hover a player to see backups.",
+      "pitchHelp": "Eleven picked by fit to the style's roles, injured players left out. Dotted lines show the move from the other phase; hover a player to find them in the list.",
       "balance": "Team balance",
       "balanceHelp": "Pace, pressing and aerial play are compared to your eleven's average level: green = strength, red = weakness. Each weakness lowers the team rating, which picks the formation and style: the eleven is judged as a whole, not only position by position.",
       "forms": "Formations for this style",
@@ -250,7 +250,7 @@
       "fromGame": "Game line-up",
       "fromGameHelp": "Players and positions read from your FM27 tactic. Roles and instructions: the game's when the plugin reads them, otherwise each player's best role in that position.",
       "suggestedHelpGame": "Placement computed by Simloom for the chosen style. “Game XI” shows your real FM27 line-up.",
-      "pitchHelpGame": "Your FM27 line-up. Dotted lines show movement from the other phase. Hover a player for their substitutes; click a formation on the right to compare with an XI computed by Simloom.",
+      "pitchHelpGame": "Your FM27 line-up. Dotted lines show the move from the other phase; hover a player to find them in the list. Click a formation below to compare with an eleven worked out by Simloom.",
       "lineupStatus": "Plugin line-up reading: {{status}}.",
       "duty": {
         "d": "Defend",
@@ -263,7 +263,13 @@
       "teamTitle": "Team instructions · {{style}}",
       "teamHelp": "Set them in the game's Tactics screen, with the mentality. Exact FM27 labels.",
       "oppTitle": "Against {{name}}",
-      "oppMore": "Full report"
+      "oppMore": "Full report",
+      "xi": {
+        "title": "The eleven to set in FM27",
+        "pos": "Position",
+        "player": "Player",
+        "backup": "Backup"
+      }
     },
     "nav": "Save sections",
     "sections": {
