@@ -61,6 +61,8 @@ export interface FmPlayer {
   foot: string | null;
   /** Étoiles de niveau et de potentiel vues par le staff (plugin 0.3.1), sur 5. */
   stars: { current: number | null; potential: number | null } | null;
+  /** Valeurs sur 20 des rôles lues dans le jeu, par poste et phase (libellé FR normalisé → valeur). */
+  gameStars: Partial<Record<PosCode, { ip?: Record<string, number>; oop?: Record<string, number> }>> | null;
   /** Familiarité au poste lue dans le jeu (1-20), si le plugin la donne (`positionRatings`). */
   familiarity: Partial<Record<PosCode, number>> | null;
   /** Attributs connus (milieu de fourchette si le recrutement ne les a pas affinés), sans le préfixe « Attribute ». */
@@ -112,6 +114,7 @@ export function normalizePlayer(p: FmPlayerRaw): FmPlayer {
     stars: p.stars && typeof p.stars === 'object' ? (p.stars as FmPlayer['stars']) : null,
     attributes,
     familiarity: familiarityOf(p.positionRatings),
+    gameStars: p.gameStars && typeof p.gameStars === 'object' ? (p.gameStars as FmPlayer['gameStars']) : null,
   };
 }
 

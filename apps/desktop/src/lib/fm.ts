@@ -1,5 +1,5 @@
 import { saves } from '@simloom/db';
-import { fmSnapshotSchema, type FmSnapshot } from '@simloom/module-fm';
+import { carryRoleStars, fmSnapshotSchema, type FmSnapshot } from '@simloom/module-fm';
 import { fmSnapshots } from '@simloom/module-fm/schema';
 import { and, asc, desc, eq } from 'drizzle-orm';
 import type { Db } from './db';
@@ -44,7 +44,9 @@ export function fmRepo(db: Db) {
 
     /** Valide le JSON du plugin puis l'enregistre. Lève une erreur zod si le fichier n'est pas reconnu. */
     async importSnapshot(saveId: string, raw: unknown): Promise<FmSnapshot> {
-      const snap = fmSnapshotSchema.parse(raw);
+      // Les étoiles des rôles sont lues un poste à la fois : on garde les tables lues avant.
+      const prev = await this.latest(saveId);
+      const snap = carryRoleStars(fmSnapshotSchema.parse(raw), prev?.data);
       const values = { saveId, gameDate: snap.gameDate, club: snap.club, playerCount: snap.players.length, data: snap };
       await db
         .delete(fmSnapshots)

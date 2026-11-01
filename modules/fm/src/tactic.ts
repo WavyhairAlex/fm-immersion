@@ -3,6 +3,7 @@ import { moraleLevel } from './club';
 import type { FmPlayer } from './player';
 import type { PosCode } from './positions';
 import { gameRoleRating, roleThreshold } from './role-ratings-fm27';
+import { roleKey } from './game-stars';
 
 /*
  * Tactique : rôles avec et sans ballon, schémas, onze conseillé et équilibre de l'équipe.
@@ -233,6 +234,9 @@ export class TacticEngine {
   roleFit(p: FmPlayer, code: string, phase: Phase, pos?: PosCode): number | null {
     const r = this.roles.get(code);
     if (!r) return null;
+    // Valeur lue dans le jeu pour ce joueur, ce poste et cette phase : elle prime sur tout calcul.
+    const read = pos ? p.gameStars?.[pos]?.[phase]?.[roleKey(r.fr)] : undefined;
+    if (read != null) return Math.max(1, Math.min(20, read));
     // Rôle connu du jeu : note de FM27 (attributs clés, secondaires, à éviter, familiarité), puis pied.
     const gameCode = phase === 'oop' ? r.game?.oop : r.game?.ip;
     const game = gameCode ? gameRoleRating(p, gameCode, pos) : null;
