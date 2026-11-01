@@ -1,5 +1,6 @@
 import { unavailable, type FmPlayer } from './player';
 import type { PosCode } from './positions';
+import { snapshotFixtures } from './fixtures';
 import type { FmSnapshot } from './snapshot';
 import { FORMATIONS, type FormationPlan } from './tactic';
 
@@ -160,7 +161,7 @@ export interface Fixture {
 }
 
 export function upcomingFixtures(snap: FmSnapshot, max = 6): Fixture[] {
-  const raw = Array.isArray(snap.fixtures) ? (snap.fixtures as Record<string, unknown>[]) : [];
+  const raw = snapshotFixtures(snap) as unknown as Record<string, unknown>[];
   const list = raw
     .filter((f) => typeof f.date === 'string' && f.date >= snap.gameDate)
     .sort((a, b) => String(a.date).localeCompare(String(b.date)))

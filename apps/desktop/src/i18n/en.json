@@ -1012,7 +1012,7 @@
       "seasonStart": "League starts in",
       "matches": "Match days",
       "fromCalendar": "from the game's calendar",
-      "manual": "No calendar in the snapshot: tick the match days (friendlies included).",
+      "manual": "This week's matches are unknown (the game only gives the next 5): tick the match days, friendlies included.",
       "eve": "Match the day before Monday",
       "code": "Schedule {{code}}",
       "variant_0": "no match",

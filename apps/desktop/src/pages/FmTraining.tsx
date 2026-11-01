@@ -19,6 +19,7 @@ import {
   setupStatus,
   trainingFor,
   weekLoad,
+  snapshotFixtures,
   weekMatches,
   type ClubStatus,
   type CycleWeek,
@@ -134,8 +135,10 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
   const auto = autoPhase(monday, seasonStart, winterBreak);
   const phase = phaseOverride ?? auto.phase;
   const week = weekOverride ?? (phaseOverride && phaseOverride !== auto.phase ? 1 : auto.week);
-  const hasCalendar = Array.isArray(snap.fixtures) && snap.fixtures.length > 0;
-  const cal = useMemo(() => weekMatches(snap.fixtures, monday), [snap.fixtures, monday]);
+  const fixtures = useMemo(() => snapshotFixtures(snap), [snap]);
+  // Le calendrier ne couvre que les 5 prochains matchs : au-delà du dernier connu, on revient aux jours cochés.
+  const hasCalendar = fixtures.some((f) => f.date >= monday);
+  const cal = useMemo(() => weekMatches(fixtures, monday), [fixtures, monday]);
   const matchDays = manualDays ?? (hasCalendar ? cal.days : defaultMatchDays(phase, week, phase === 'A' || phase === 'B' || phase === 'C' ? 1 : 0));
   const before = eve ?? (hasCalendar ? cal.before : false);
 
