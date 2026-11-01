@@ -31,7 +31,7 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
     [snap, coach.seasonStart, coach.winterBreak, coach.clubStatus, coach.trainingDays, style],
   );
   const tr = useMemo(() => trainingAlerts(players), [players]);
-  const setups = useIndividualSetups(engine, players, folder, week.days.filter((d) => d.kind === 'match').length);
+  const setups = useIndividualSetups(engine, players, folder, week.days.filter((d) => d.kind === 'match').length, snap);
   const toChange = setups.rows.filter((r) => r.status === 'change').map((r) => r.plan.player);
   const short = (list: FmPlayer[]) => list.map((p) => p.name.split(' ').at(-1)).join(', ');
   const link = (view: string, label: string) => (

@@ -305,6 +305,7 @@
       "home": "Accueil",
       "squad": "Effectif",
       "analysis": "Analyse",
+      "stats": "Centre de données",
       "compare": "Comparateur",
       "dressing": "Vestiaire",
       "loans": "Prêtés",
@@ -1140,12 +1141,14 @@
         "good": "En bonne forme",
         "excellent": "En très bonne forme"
       },
-      "teamIntensityHelp": "Réglage conseillé dans Entraînement > Intensité de l'équipe : le jeu ajuste alors seul l'intensité et le repos de chaque joueur selon sa condition. Plus besoin de toucher à l'intensité individuelle, sauf exception (un jeune en pleine forme en double intensité)."
+      "teamIntensityHelp": "Réglage conseillé dans Entraînement > Intensité de l'équipe : le jeu ajuste alors seul l'intensité et le repos de chaque joueur selon sa condition. Plus besoin de toucher à l'intensité individuelle, sauf exception (un jeune en pleine forme en double intensité).",
+      "focusFromStats": "D'après les matchs"
     },
     "intro": {
       "home": "Ce qui demande ton attention aujourd'hui, les styles qui collent à l'effectif, tes meilleurs joueurs et tes jeunes.",
       "squad": "Tous les joueurs de l'équipe première, à trier par niveau, forme, contrat ou salaire.",
       "analysis": "Le diagnostic de l'effectif : priorités, lignes, profondeur et pyramide des âges.",
+      "stats": "Les stats de match de chaque joueur (passes, xG, pressing, duels) et ce qu'elles disent à travailler.",
       "compare": "Deux ou trois joueurs côte à côte, du club ou de ta liste de cibles.",
       "dressing": "Moral, leaders et hiérarchie du vestiaire.",
       "loans": "Tes joueurs prêtés : où ils jouent et s'ils progressent.",
@@ -1319,6 +1322,69 @@
         "overtakes_other": "au niveau de {{starter}} dans {{count}} saisons",
         "decline": "{{age}} ans, en déclin",
         "youthTeam": "progresse avec les jeunes"
+      }
+    },
+    "stats": {
+      "title": "Centre de données",
+      "none": "Pas encore de statistiques de match dans l'instantané. Elles arrivent avec le prochain instantané du plugin (clés stat* de chemins.json) : avance d'un jour dans FM27.",
+      "tooEarly": "Moins de 3 matchs joués : trop tôt pour tirer des conclusions sur l'équipe.",
+      "noAlert": "Rien d'alarmant dans les stats de l'équipe.",
+      "alertsTitle": "Ce que disent les matchs",
+      "train": "À l'entraînement : {{list}}.",
+      "who": "Les plus en difficulté : {{list}}.",
+      "help": "Stats de la saison, toutes compétitions, comme l'écran Centre de données du jeu. Chaque joueur est comparé aux joueurs de sa ligne : vert = meilleur quart, corail = moins bon quart. En grisé : moins de {{min}} minutes, pas comparé. « À travailler » = priorité d'entraînement individuel qui cible son point le plus faible en match.",
+      "kpi": {
+        "matches": "Matchs couverts",
+        "xg": "xG par match",
+        "pass": "Passes réussies",
+        "press": "Pressings réussis",
+        "mistakes": "Erreurs → but"
+      },
+      "alert": {
+        "possession": {
+          "tag": "Possession",
+          "text": "Seulement {{value}} % de passes réussies : l'équipe perd trop vite le ballon pour un jeu de contrôle."
+        },
+        "creation": {
+          "tag": "Création",
+          "text": "{{value}} xG par match : l'équipe se crée peu d'occasions."
+        },
+        "pressing": {
+          "tag": "Pressing",
+          "text": "{{value}} % de pressings réussis : l'équipe presse sans récupérer le ballon."
+        },
+        "duels": {
+          "tag": "Duels",
+          "text": "{{value}} % de tacles réussis : l'équipe perd ses duels au sol."
+        },
+        "aerial": {
+          "tag": "Jeu aérien",
+          "text": "{{value}} % de duels aériens gagnés."
+        },
+        "mistakes": {
+          "tag": "Erreurs",
+          "text": "{{value}} erreurs ont mené à un but adverse."
+        },
+        "finishing": {
+          "tag": "Finition",
+          "text": "{{value}} buts par rapport aux xG : les attaquants gâchent des occasions (priorité individuelle « Conversion des occasions »)."
+        }
+      },
+      "col": {
+        "player": "Joueur",
+        "minutes": "Min.",
+        "passPct": "Passes réussies",
+        "progPass90": "Passes progr. /90",
+        "keyPass90": "Passes clés /90",
+        "xgPer90": "xG /90",
+        "xaPer90": "xA /90",
+        "press90": "Pressings réussis /90",
+        "tacklePct": "Tacles réussis",
+        "interc90": "Interc. /90",
+        "headerPct": "Duels aériens gagnés",
+        "distance90": "Distance /90",
+        "mistakes": "Erreurs → but",
+        "focus": "À travailler"
       }
     },
     "dbSearch": {

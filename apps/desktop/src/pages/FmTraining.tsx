@@ -11,6 +11,8 @@ import {
   effectiveness,
   individualAdvice,
   individualFocus,
+  matchStats,
+  statsBoard,
   mentoringGroups,
   nearestPreset,
   defaultMatchDays,
@@ -80,12 +82,21 @@ export interface SetupRow {
   advice: ReturnType<typeof individualAdvice>;
   status: SetupStatus;
   changed: SetupField[];
+  /** Priorité choisie d'après les stats de match (centre de données) plutôt que les attributs du rôle. */
+  focusFromStats: boolean;
 }
 const STATUS_ORDER: Record<SetupStatus, number> = { change: 0, todo: 1, ok: 2 };
 
 /** Conseil individuel du jour pour chaque joueur, comparé à ce qui est réglé en jeu. */
-export function useIndividualSetups(engine: TacticEngine, players: FmPlayer[], folder: string, matches: number) {
+export function useIndividualSetups(engine: TacticEngine, players: FmPlayer[], folder: string, matches: number, snap?: FmSnapshot) {
   const [coach] = useCoach();
+  // Point le plus faible en match (bas de sa ligne, assez de minutes) : il passe avant l'attribut le plus faible du rôle.
+  const statFocus = useMemo(() => {
+    const out = new Map<string, string>();
+    if (!snap) return out;
+    for (const r of statsBoard(players, matchStats(snap)).players) if (r.focus) out.set(r.player.id, r.focus);
+    return out;
+  }, [players, snap]);
   const [applied, save] = useAppliedSetups(folder);
   const list = useMemo(() => players.filter((p) => Object.keys(p.attributes).length), [players]);
   const project = useMemo(() => buildProject(engine, list, coach), [engine, list, coach]);
@@ -96,16 +107,17 @@ export function useIndividualSetups(engine: TacticEngine, players: FmPlayer[], f
         const advice = individualAdvice(x.player, { matches });
         const ip = x.slot ? (engine.roles.get(x.slot.ip) ?? null) : x.phase === 'ip' ? x.role : null;
         const oop = x.slot ? (engine.roles.get(x.slot.oop) ?? null) : x.phase === 'oop' ? x.role : null;
+        const fromStats = statFocus.get(x.player.id) ?? null;
         const rec: IndividualSetup = {
           ip: ip?.code ?? null,
           oop: oop?.code ?? null,
-          focus: individualFocus(x.weak, x.player.positions[0] === 'GB'),
+          focus: fromStats ?? individualFocus(x.weak, x.player.positions[0] === 'GB'),
           intensity: advice.intensity,
         };
-        return { plan: x, rec, advice, ...setupStatus(rec, applied[x.player.id]) };
+        return { plan: x, rec, advice, focusFromStats: !!fromStats, ...setupStatus(rec, applied[x.player.id]) };
       })
       .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
-  }, [project, engine, matches, applied]);
+  }, [project, engine, matches, applied, statFocus]);
   const mark = (ids: string[], on: boolean) => {
     const next = { ...applied };
     for (const r of rows) if (ids.includes(r.plan.player.id)) on ? (next[r.plan.player.id] = r.rec) : delete next[r.plan.player.id];
@@ -146,7 +158,9 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
   // Zones à travailler : la n° 1 du style visé, puis les zones les moins comprises d'après le jeu, puis le reste du style.
   const styleAreas = style ? trainingFor(style) : [];
   const weakest = effectiveness(snap)?.weakest ?? [];
-  const priorities = [...new Set<EffArea>([...styleAreas.slice(0, 1), ...weakest, ...styleAreas])];
+  // Puis ce que montrent les matchs (centre de données : passes ratées, pressing inefficace…).
+  const fromMatches = useMemo(() => statsBoard(players, matchStats(snap)).areas, [players, snap]);
+  const priorities = [...new Set<EffArea>([...styleAreas.slice(0, 1), ...weakest, ...fromMatches, ...styleAreas])];
   const names = useNames();
   const mentoring = useMemo(() => mentoringGroups(players), [players]);
   const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
@@ -164,7 +178,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
   const months = Array.from({ length: 12 }, (_, i) => i + 1);
   const monthName = new Intl.DateTimeFormat(i18n.resolvedLanguage, { month: 'long' });
   const dayMonth = new Intl.DateTimeFormat(i18n.resolvedLanguage, { day: 'numeric', month: 'short', timeZone: 'UTC' });
-  const setups = useIndividualSetups(engine, players, folder, plan.days.filter((d) => d.kind === 'match').length);
+  const setups = useIndividualSetups(engine, players, folder, plan.days.filter((d) => d.kind === 'match').length, snap);
   const todoCount = setups.rows.filter((r) => r.status !== 'ok').length;
   const changeCount = setups.rows.filter((r) => r.status === 'change').length;
 
@@ -411,7 +425,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
                 </tr>
               </thead>
               <tbody>
-                {setups.rows.map(({ plan: x, rec, advice: a, status, changed }) => {
+                {setups.rows.map(({ plan: x, rec, advice: a, status, changed, focusFromStats }) => {
                   const ip = rec.ip ? engine.roles.get(rec.ip) : null;
                   const oop = rec.oop ? engine.roles.get(rec.oop) : null;
                   const was = setups.applied[x.player.id];
@@ -448,6 +462,12 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
                       <td className="px-2 py-1.5">{cell('oop', oop ? names.role(oop) : '–')}</td>
                       <td className="px-2 py-1.5">
                         {cell('focus', rec.focus ? <b>{t(`fm.train.focus.${rec.focus}`)}</b> : '–')}
+                        {focusFromStats && (
+                          <>
+                            {' '}
+                            <Tag>{t('fm.train.focusFromStats')}</Tag>
+                          </>
+                        )}
                         <br />
                         <span className="text-xs text-brun">{x.weak.map((w) => `${attr(w.key)} ${Math.round(w.value)}`).join(', ')}</span>
                       </td>

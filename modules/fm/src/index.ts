@@ -32,3 +32,4 @@ export * from './lineup';
 export * from './opponent';
 export * from './matchup';
 export * from './mercato';
+export * from './stats';
