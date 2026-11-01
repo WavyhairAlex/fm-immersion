@@ -13,7 +13,6 @@ import {
   phaseXY,
   planFromLineup,
   playerInstructions,
-  rolePos,
   shapeOf,
   spreadXY,
   unavailable,
@@ -271,7 +270,8 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                     <span
                       className={`whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-xs font-bold text-canard shadow ring-2 ${hover === i ? 'ring-ambre' : off ? 'ring-corail' : 'ring-white/0'}`}
                     >
-                      {POS_LABEL[rolePos(sl, phase)]}
+                      {/* Le poste FM27 du créneau : le rôle déplace la pastille sur le terrain, jamais le poste. */}
+                      {POS_LABEL[sl.pos]}
                     </span>
                     <span className="mt-0.5 max-w-full truncate rounded bg-canard/85 px-1.5 text-xs font-bold text-white">{sl.player ? shortName(sl.player.name) : t('fm.tac.nobody')}</span>
                     {fit != null && <span className="text-xs font-bold text-white/90">{note(fit)}</span>}
