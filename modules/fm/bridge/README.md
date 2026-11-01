@@ -72,7 +72,7 @@ la liste : le plugin garde les joueurs (40 au plus, par paquets de 10). Pour cha
 (attributs en fourchette selon la connaissance du recrutement), plus `club`, `sources` et `scout` (étoiles du staff et
 des recruteurs, connaissance, recommandation, meilleur poste et rôles vus par le recrutement, fourchettes de valeur et de
 salaire, clubs intéressés, statut de transfert, personnalité). Écrit dans le bloc `shortlist` de l'instantané ; relu à
-chaque nouveau jour de jeu seulement. `targetSources` indique, par source, le nombre de joueurs trouvés et, si aucun,
+chaque nouveau jour de jeu, ou dès que le nombre de joueurs d'une liste change (0.4.1). `targetSources` indique, par source, le nombre de joueurs trouvés et, si aucun,
 la forme de la réponse du jeu (pour corriger le chemin). Aucune lecture liée à la tactique.
 
 ## Requêtes au jeu : règles

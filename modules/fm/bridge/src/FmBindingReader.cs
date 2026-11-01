@@ -167,12 +167,13 @@ public class FmBindingReader : IGameReader
 
         // Cibles du mercato (liste de suivi, cibles du recrutement) : sans lien avec la tactique, relues à chaque nouveau jour.
         if (!Plugin.ReadTargets) collecte["cibles"] = "désactivée (réglage)";
-        else if (_targetsDate == date && _targets != null) collecte["cibles"] = "lue (même jour)";
+        else if (_targetsDate == date && _targets != null && TargetCounts() == _targetCounts) collecte["cibles"] = "lue (même jour, listes inchangées)";
         else
             try
             {
                 (_targets, _targetSources) = ReadTargets();
                 _targetsDate = date;
+                _targetCounts = TargetCounts();
                 collecte["cibles"] = $"lue : {_targets.Count} joueur(s)";
             }
             catch (Exception e) { collecte["cibles"] = "erreur : " + e.Message; Plugin.Log.LogWarning($"cibles : {e.Message}"); }
@@ -254,6 +255,16 @@ public class FmBindingReader : IGameReader
     // Les cibles bougent peu : relues seulement quand la date de jeu change, par paquets de joueurs pour ménager le jeu.
     const int TargetChunk = 10, MaxTargets = 40;
     string? _targetsDate;
+    // Nombre de joueurs de chaque source à la dernière lecture : un ajout ou un retrait dans une liste du jeu
+    // déclenche une relecture sans attendre le jour suivant (une requête par source à chaque instantané).
+    string? _targetCounts;
+
+    string TargetCounts()
+    {
+        var sources = TargetSources();
+        var v = Batch.Run(sources.Select(x => new Req(null, "#count", false, "game." + x.Path)).ToList(), TimeoutMs);
+        return string.Join(",", v.Select(x => Num(x) is double n ? ((int)n).ToString(CultureInfo.InvariantCulture) : "?"));
+    }
     List<PlayerDto>? _targets;
     Dictionary<string, object?>? _targetSources;
 
