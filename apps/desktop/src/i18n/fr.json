@@ -914,7 +914,8 @@
         "match": "Match",
         "recovery": "Récupération",
         "prep": "Préparation",
-        "dev": "Travail"
+        "dev": "Travail",
+        "off": "Libre"
       },
       "days": [
         "Lun",
@@ -954,7 +955,15 @@
       "rule3": "Si un match est déplacé, remets la préparation la veille et la récupération le lendemain.",
       "rule4": "Les joueurs qui reviennent de sélection se gèrent à part.",
       "rule5": "Juge le plan sur plusieurs semaines, pas sur un résultat, et allège si la charge ne convient pas.",
-      "source": "Méthode « Freedom » (FM Scout, FM27 training schedules) : 44 plannings, cycles de 4 semaines à thème. L'article ne fournit pas les fichiers .fmf : Archivix reconstruit chaque journée avec les séances de FM27, orientées par ton style visé. À recopier dans l'écran Entraînement du jeu."
+      "source": "Méthode « Freedom » (FM Scout, FM27 training schedules) : 44 plannings, cycles de 4 semaines à thème. L'article ne fournit pas les fichiers .fmf : Archivix reconstruit chaque journée avec les séances de FM27, orientées par ton style visé. À recopier dans l'écran Entraînement du jeu.",
+      "clubStatus": "Statut du club",
+      "status": {
+        "pro": "Professionnel",
+        "semi": "Semi-professionnel",
+        "amateur": "Amateur"
+      },
+      "trainingDays": "Jours d'entraînement",
+      "trainingDaysHelp": "Un club à temps partiel ne s'entraîne que certains soirs : coche les jours proposés dans l'écran Entraînement du jeu. Les autres jours sans match restent libres ; la dernière séance avant un match sert de préparation."
     }
   },
   "pz2": {

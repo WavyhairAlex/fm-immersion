@@ -99,3 +99,18 @@ describe('planning d’entraînement (méthode Freedom)', () => {
     expect(m.opponents[2]).toBe('Kumla');
   });
 });
+
+describe('club semi-professionnel', () => {
+  it('ne s’entraîne que les jours choisis ; la dernière séance avant le match sert de préparation', () => {
+    const w = buildTrainingWeek({ monday: MONDAY, phase: 'B', week: 1, matchDays: [5], trainingDays: [1, 3], priorities: ['passingStyle'] });
+    expect(w.days.map((d) => d.kind)).toEqual(['off', 'dev', 'off', 'prep', 'off', 'match', 'off']);
+    for (const d of w.days.filter((x) => x.kind === 'off')) expect(d.sessions).toEqual([null, null, null]);
+    expect(sessionCategory(w.days[3]!.sessions[0]!)).toBe('matchPrep');
+    expect(w.days.some((d) => d.sessions.includes('passingStyle'))).toBe(true);
+  });
+
+  it('séance le lendemain d’un match = récupération', () => {
+    const w = buildTrainingWeek({ monday: MONDAY, phase: 'A', week: 1, matchDays: [2, 5], trainingDays: [1, 3] });
+    expect(w.days.map((d) => d.kind)).toEqual(['off', 'prep', 'match', 'recovery', 'off', 'match', 'off']);
+  });
+});

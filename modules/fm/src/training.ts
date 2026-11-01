@@ -82,7 +82,12 @@ export type CycleWeek = 1 | 2 | 3 | 4;
 /** Thème de chaque semaine du cycle (1 à 4). */
 export const WEEK_THEMES = ['buildUp', 'pressing', 'attack', 'balance'] as const;
 export type WeekTheme = (typeof WEEK_THEMES)[number];
-export type DayKind = 'match' | 'recovery' | 'prep' | 'dev';
+export type DayKind = 'match' | 'recovery' | 'prep' | 'dev' | 'off';
+/** Statut du club : un club semi-professionnel ou amateur ne s'entraîne que certains jours. */
+export const CLUB_STATUSES = ['pro', 'semi', 'amateur'] as const;
+export type ClubStatus = (typeof CLUB_STATUSES)[number];
+/** Jours d'entraînement par défaut d'un club non professionnel (mardi et jeudi soir), réglables. */
+export const PART_TIME_DAYS = [1, 3];
 
 export interface TrainingDay {
   /** Date ISO (AAAA-MM-JJ). */
@@ -114,6 +119,11 @@ export interface TrainingInput {
   matchDays: number[];
   /** Match la veille du lundi (dimanche précédent) : le lundi devient une journée de récupération. */
   matchBeforeMonday?: boolean;
+  /**
+   * Jours où le club s'entraîne (0 = lundi … 6 = dimanche). Absent : tous les jours (club professionnel).
+   * Les autres jours sans match sont libres : pas de séance.
+   */
+  trainingDays?: number[];
   /** Zones tactiques à prioriser, de la plus importante à la moins importante (style visé, efficacité). */
   priorities?: EffArea[];
   /** Identifiant du style visé, pour choisir la variante des séances offensives et défensives. */
@@ -264,13 +274,28 @@ export function buildTrainingWeek(input: TrainingInput): TrainingWeek {
   const theme: WeekTheme | null = phase === 'P' ? null : WEEK_THEMES[week - 1]!;
   const code = seasonal ? `${phase}${week}-${variant}` : `${phase}${week}`;
 
+  const training = input.trainingDays ? new Set(input.trainingDays) : null;
   const kindOf = (d: number): DayKind => {
     if (matchDays.has(d)) return 'match';
+    if (training && !training.has(d)) return 'off';
     if (d === 0 ? input.matchBeforeMonday : matchDays.has(d - 1)) return 'recovery';
     if (matchDays.has(d + 1)) return 'prep';
     return 'dev';
   };
   const kinds = Array.from({ length: 7 }, (_, d) => kindOf(d));
+  if (training) {
+    // Club à temps partiel : la dernière séance avant un match (jusqu'à 2 jours avant) sert de préparation.
+    for (const m of matchDays) {
+      for (const d of [m - 1, m - 2]) {
+        if (d < 0) break;
+        if (kinds[d] === 'match' || kinds[d] === 'recovery') break;
+        if (kinds[d] === 'dev' || kinds[d] === 'prep') {
+          kinds[d] = 'prep';
+          break;
+        }
+      }
+    }
+  }
 
   const resolve = (p: Pick): SessionId => (p === 'ATT' ? ATTACK_BY_STYLE[input.style ?? ''] ?? 'attackingBalanced' : p === 'DEF' ? DEFENCE_BY_STYLE[input.style ?? ''] ?? 'defendingBalanced' : p);
   const content = theme ? THEMES[theme] : null;
@@ -323,14 +348,16 @@ export function buildTrainingWeek(input: TrainingInput): TrainingWeek {
     weekday: d,
     kind,
     sessions:
-      kind === 'match' ? ['match', null, null] : kind === 'recovery' ? ['recovery', 'recovery', 'teamBonding'] : kind === 'prep' ? prepSessions() : devSessions(d),
+      kind === 'off' ? [null, null, null] : kind === 'match' ? ['match', null, null] : kind === 'recovery' ? ['recovery', 'recovery', 'teamBonding'] : kind === 'prep' ? prepSessions() : devSessions(d),
   }));
 
   // Le projet oriente l'entraînement : la zone n° 1 du style visé est travaillée au moins une fois par semaine.
   const top = priorities[0];
   if (top && seasonal && !days.some((x) => x.sessions.includes(top))) {
     const first = days.find((x) => x.kind === 'dev');
+    const prepDay = days.find((x) => x.kind === 'prep');
     if (first) first.sessions[0] = top;
+    else if (prepDay) prepDay.sessions[1] = top;
   }
   return { code, phase, week, variant, theme, days };
 }

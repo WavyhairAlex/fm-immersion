@@ -1,4 +1,6 @@
 import {
+  CLUB_STATUSES,
+  PART_TIME_DAYS,
   TRAINING_PHASES,
   addDays,
   autoPhase,
@@ -9,6 +11,7 @@ import {
   trainingFor,
   weekLoad,
   weekMatches,
+  type ClubStatus,
   type CycleWeek,
   type FmSnapshot,
   type SessionCategory,
@@ -43,6 +46,8 @@ export function FmTraining({ snap, folder }: { snap: FmSnapshot; folder: string 
   const { engine } = useTacticEngine(folder);
   const [coach, setCoach] = useCoach();
   const seasonStart = coach.seasonStart ?? 8;
+  const clubStatus: ClubStatus = coach.clubStatus ?? 'pro';
+  const trainingDays = clubStatus === 'pro' ? undefined : coach.trainingDays ?? PART_TIME_DAYS;
   const [offset, setOffset] = useState<'0' | '1'>('0');
   const [phaseOverride, setPhase] = useState<TrainingPhase | null>(null);
   const [weekOverride, setWeek] = useState<CycleWeek | null>(null);
@@ -61,8 +66,8 @@ export function FmTraining({ snap, folder }: { snap: FmSnapshot; folder: string 
   const style = engine.ref.styles.find((s) => s.id === coach.style) ?? engine.ref.styles[0];
   const priorities = style ? trainingFor(style) : [];
   const plan = useMemo(
-    () => buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: before, priorities, style: style?.id }),
-    [monday, phase, week, matchDays.join(), before, priorities.join(), style?.id],
+    () => buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: before, priorities, style: style?.id, trainingDays }),
+    [monday, phase, week, matchDays.join(), before, priorities.join(), style?.id, trainingDays?.join()],
   );
   const load = weekLoad(plan);
   const resetWeek = () => {
@@ -136,7 +141,32 @@ export function FmTraining({ snap, folder }: { snap: FmSnapshot; folder: string 
               ))}
             </select>
           </label>
+          <div className={label}>
+            {t('fm.train.clubStatus')}
+            <div className="mt-1">
+              <Chips value={clubStatus} options={CLUB_STATUSES.map((c) => [c, t(`fm.train.status.${c}`)] as [ClubStatus, string])} onChange={(v) => setCoach({ clubStatus: v })} />
+            </div>
+          </div>
         </div>
+
+        {trainingDays && (
+          <div className="mt-4">
+            <p className="text-xs font-bold text-canard/70">{t('fm.train.trainingDays')}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              {[0, 1, 2, 3, 4, 5, 6].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setCoach({ trainingDays: trainingDays.includes(d) ? trainingDays.filter((x) => x !== d) : [...trainingDays, d].sort() })}
+                  className={`rounded-full px-3 py-1 text-sm font-bold ${trainingDays.includes(d) ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
+                >
+                  {t(`fm.train.days.${d}`)}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-xs text-brun">{t('fm.train.trainingDaysHelp')}</p>
+          </div>
+        )}
 
         <div className="mt-4">
           <p className="text-xs font-bold text-canard/70">
@@ -173,7 +203,7 @@ export function FmTraining({ snap, folder }: { snap: FmSnapshot; folder: string 
 
         <div className="mt-3 grid gap-2 sm:grid-cols-4 lg:grid-cols-7">
           {plan.days.map((d) => (
-            <div key={d.date} className={`rounded-xl p-2 ${d.kind === 'match' ? 'bg-eau/15' : 'bg-white/60'} ring-1 ring-canard/10`}>
+            <div key={d.date} className={`rounded-xl p-2 ${d.kind === 'match' ? 'bg-eau/15' : d.kind === 'off' ? 'bg-creme/60 opacity-70' : 'bg-white/60'} ring-1 ring-canard/10`}>
               <p className="text-sm font-bold">
                 {t(`fm.train.days.${d.weekday}`)} <span className="font-normal text-brun">{dayMonth.format(new Date(`${d.date}T00:00:00Z`))}</span>
               </p>

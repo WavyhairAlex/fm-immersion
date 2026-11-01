@@ -143,6 +143,9 @@ export interface CoachPrefs {
   target?: number;
   /** Mois de reprise du championnat (1 à 12), pour situer la phase d'entraînement. */
   seasonStart?: number;
+  /** Statut du club (pro, semi, amateur) et jours d'entraînement d'un club à temps partiel. */
+  clubStatus?: 'pro' | 'semi' | 'amateur';
+  trainingDays?: number[];
 }
 export const TARGETS = [45, 50, 55, 60, 65, 70];
 
