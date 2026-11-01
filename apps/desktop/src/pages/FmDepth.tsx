@@ -63,7 +63,7 @@ export function FmDepth({ players, folder, gameFormation, lineup, gameDate, hist
           {alerts.map(({ pos, sub, starter }) => (
             <div key={sub.player.id} className="flex items-center justify-between gap-3 border-b border-canard/5 py-1.5 last:border-0">
               <span>
-                <span className="rounded-full bg-eau/20 px-2 py-0.5 text-xs font-bold">{POS_LABEL[pos]}</span>{' '}
+                <span className="pill">{POS_LABEL[pos]}</span>{' '}
                 {t(sub.when === 0 ? 'fm.depth.already' : 'fm.depth.may', { sub: sub.player.name, starter: starter.name })}
               </span>
               <Tag tone={sub.when === 0 ? 'good' : 'info'}>{sub.when === 0 ? t('fm.depth.now') : t('fm.depth.in', { season: season(sub.when!) })}</Tag>
@@ -80,7 +80,7 @@ export function FmDepth({ players, folder, gameFormation, lineup, gameDate, hist
           {rows.map((r) => (
             <div key={r.pos} className="rounded-xl bg-creme/50 px-3 py-2">
               <div className="mb-1 flex items-center justify-between">
-                <span className="rounded-full bg-eau/20 px-2 py-0.5 text-xs font-bold">
+                <span className="pill">
                   {POS_LABEL[r.pos]}
                   {r.count > 1 ? ` ×${r.count}` : ''}
                 </span>
