@@ -846,14 +846,14 @@
         "pressingIntensity": "Pressing Intensity",
         "pressingTrap": "Pressing Trap",
         "outOfPossessionShape": "Out Of Possession Shape",
-        "pressAvoidance": "Press Avoidance",
-        "ballProgression": "Ball Progression",
-        "finalThird": "Final Third",
-        "defensiveBlock": "Defensive Block",
-        "defensivePositioning": "Defensive Positioning",
-        "defensiveEngagement": "Defensive Engagement",
-        "corners": "Corners",
-        "freeKicks": "Free Kicks",
+        "pressAvoidance": "In Possession - Press Avoidance",
+        "ballProgression": "In Possession - Ball Progression",
+        "finalThird": "In Possession - Final Third",
+        "defensiveBlock": "Out of Possession - Defensive Block",
+        "defensivePositioning": "Out of Possession - Defensive Positioning",
+        "defensiveEngagement": "Out of Possession - Defensive Engagement",
+        "corners": "Set Pieces - Corners",
+        "freeKicks": "Set Pieces - Free Kicks",
         "possessionBallWork": "Possession Ball Work",
         "attackingBalanced": "Attacking - Balanced",
         "attackingPatient": "Attacking - Patient",
@@ -963,7 +963,41 @@
         "amateur": "Amateur"
       },
       "trainingDays": "Training days",
-      "trainingDaysHelp": "A part-time club only trains on some evenings: tick the days offered in the game's Training screen. Other days without a match stay free; the last session before a match is used for preparation."
+      "trainingDaysHelp": "A part-time club only trains on some evenings: tick the days offered in the game's Training screen. Other days without a match stay free; the last session before a match is used for preparation.",
+      "presetHint": "Starting point in the game: load the \"{{preset}}\" schedule, then adjust the sessions as below.",
+      "preset": {
+        "preSeason": "Pre-Season",
+        "tacticalBalanced": "Tactical Focus - Balanced",
+        "tacticalIP": "Tactical Focus - In Possession",
+        "tacticalOOP": "Tactical Focus - Out Of Possession",
+        "match": "Match Focus",
+        "mix": "Tactical & Match Focus Mix",
+        "devBalanced": "Development Focus - Balanced",
+        "devIP": "Development Focus - In Possession",
+        "devOOP": "Development Focus - Out Of Possession",
+        "congestion": "Fixture Congestion"
+      },
+      "weakest": "Least understood areas according to the game (Effectiveness), added to the priorities: {{list}}.",
+      "individual": "Individual training",
+      "intensity": "Intensity",
+      "intensityLevel": {
+        "none": "No Intensity",
+        "low": "Low Intensity",
+        "medium": "Medium Intensity",
+        "high": "High Intensity",
+        "veryHigh": "Very High Intensity"
+      },
+      "note": "Why",
+      "reason": {
+        "injured": "injured",
+        "veryTired": "condition below 80%",
+        "tired": "condition below 90%",
+        "young": "young, improves the most",
+        "veteran": "32 or older, manage load",
+        "normal": "standard intensity"
+      },
+      "rusty": "lacking sharpness: reserve minutes or late appearances",
+      "individualHelp": "Role and areas: the project's (his position's role in the target XI, otherwise the role he fits best) and his 3 weakest key attributes, to set as individual training focus. Intensity: set under \"Individual Player Intensity\"; never very high by default (injury risk)."
     }
   },
   "pz2": {

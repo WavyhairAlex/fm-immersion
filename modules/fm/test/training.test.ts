@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { autoPhase, buildTrainingWeek, defaultMatchDays, mondayOf, sessionCategory, weekMatches } from '../src';
+import { autoPhase, buildTrainingWeek, defaultMatchDays, individualAdvice, mondayOf, nearestPreset, sessionCategory, weekMatches } from '../src';
 
 const MONDAY = '2026-08-31';
 
@@ -112,5 +112,25 @@ describe('club semi-professionnel', () => {
   it('séance le lendemain d’un match = récupération', () => {
     const w = buildTrainingWeek({ monday: MONDAY, phase: 'A', week: 1, matchDays: [2, 5], trainingDays: [1, 3] });
     expect(w.days.map((d) => d.kind)).toEqual(['off', 'prep', 'match', 'recovery', 'off', 'match', 'off']);
+  });
+});
+
+describe('programme du jeu et entraînement individuel', () => {
+  it('propose le programme prédéfini le plus proche', () => {
+    const at = (phase: 'P' | 'T' | 'A' | 'B' | 'C', week: 1 | 2 | 3 | 4, days: number[]) => nearestPreset(buildTrainingWeek({ monday: MONDAY, phase, week, matchDays: days }));
+    expect(at('P', 1, [])).toBe('preSeason');
+    expect(at('A', 1, [2, 5])).toBe('congestion');
+    expect(at('A', 1, [5])).toBe('devIP');
+    expect(at('A', 2, [5])).toBe('devOOP');
+    expect(at('T', 4, [2])).toBe('tacticalBalanced');
+    expect(at('B', 1, [5])).toBe('mix');
+    expect(at('C', 1, [5])).toBe('match');
+  });
+
+  it('règle l’intensité individuelle selon l’état du joueur', () => {
+    expect(individualAdvice({ age: 25, condition: 95, sharpness: 90, injury: 'Entorse' }).intensity).toBe('none');
+    expect(individualAdvice({ age: 25, condition: 75, sharpness: 90, injury: null })).toEqual({ intensity: 'low', reason: 'veryTired', rusty: false });
+    expect(individualAdvice({ age: 19, condition: 98, sharpness: 50, injury: null })).toEqual({ intensity: 'high', reason: 'young', rusty: true });
+    expect(individualAdvice({ age: 33, condition: 98, sharpness: 90, injury: null }).intensity).toBe('medium');
   });
 });

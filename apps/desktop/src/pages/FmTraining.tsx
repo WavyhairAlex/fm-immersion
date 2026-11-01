@@ -4,7 +4,11 @@ import {
   TRAINING_PHASES,
   addDays,
   autoPhase,
+  buildProject,
   buildTrainingWeek,
+  effectiveness,
+  individualAdvice,
+  nearestPreset,
   defaultMatchDays,
   mondayOf,
   sessionCategory,
@@ -13,7 +17,10 @@ import {
   weekMatches,
   type ClubStatus,
   type CycleWeek,
+  type EffArea,
+  type FmPlayer,
   type FmSnapshot,
+  type IndividualIntensity,
   type SessionCategory,
   type SessionId,
   type TrainingPhase,
@@ -21,7 +28,7 @@ import {
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
-import { Chips, Panel, useCoach } from './FmUi';
+import { Chips, Fit, Panel, Pos, Tag, useCoach, useNames } from './FmUi';
 
 /** Couleur des pastilles par catégorie de séance (texte toujours canard, sauf le match en bouton principal). */
 const CAT_CLS: Record<SessionCategory, string> = {
@@ -41,7 +48,9 @@ function Session({ id }: { id: SessionId }) {
 }
 
 /** Semaine d'entraînement type (méthode « Freedom » de FM Scout) adaptée au calendrier et au style visé. */
-export function FmTraining({ snap, folder }: { snap: FmSnapshot; folder: string }) {
+const INTENSITY_TONE: Record<IndividualIntensity, 'good' | 'info' | 'warn' | 'bad'> = { none: 'bad', low: 'warn', medium: 'info', high: 'good', veryHigh: 'good' };
+
+export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; players: FmPlayer[]; folder: string }) {
   const { t, i18n } = useTranslation();
   const { engine } = useTacticEngine(folder);
   const [coach, setCoach] = useCoach();
@@ -64,7 +73,14 @@ export function FmTraining({ snap, folder }: { snap: FmSnapshot; folder: string 
   const before = eve ?? (hasCalendar ? cal.before : false);
 
   const style = engine.ref.styles.find((s) => s.id === coach.style) ?? engine.ref.styles[0];
-  const priorities = style ? trainingFor(style) : [];
+  // Zones à travailler : la n° 1 du style visé, puis les zones les moins comprises d'après le jeu, puis le reste du style.
+  const styleAreas = style ? trainingFor(style) : [];
+  const weakest = effectiveness(snap)?.weakest ?? [];
+  const priorities = [...new Set<EffArea>([...styleAreas.slice(0, 1), ...weakest, ...styleAreas])];
+  const names = useNames();
+  const list = useMemo(() => players.filter((p) => Object.keys(p.attributes).length), [players]);
+  const project = useMemo(() => buildProject(engine, list, coach), [engine, list, coach]);
+  const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
   const plan = useMemo(
     () => buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: before, priorities, style: style?.id, trainingDays }),
     [monday, phase, week, matchDays.join(), before, priorities.join(), style?.id, trainingDays?.join()],
@@ -199,6 +215,8 @@ export function FmTraining({ snap, folder }: { snap: FmSnapshot; folder: string 
           {plan.variant != null && <> · {t(`fm.train.variant_${plan.variant}`)}</>}
         </p>
         <p className="mt-1 text-xs text-brun">{t(`fm.train.phaseHelp.${plan.phase}`)}</p>
+        <p className="mt-1 text-xs text-brun">{t('fm.train.presetHint', { preset: t(`fm.train.preset.${nearestPreset(plan)}`) })}</p>
+        {weakest.length > 0 && <p className="mt-1 text-xs text-brun">{t('fm.train.weakest', { list: weakest.map((a) => t(`fm.train.session.${a}`)).join(', ') })}</p>}
         {priorities.length > 0 && <p className="mt-1 text-xs text-brun">{t('fm.train.priorities', { list: priorities.map((a) => t(`fm.train.session.${a}`)).join(', ') })}</p>}
 
         <div className="mt-3 grid gap-2 sm:grid-cols-4 lg:grid-cols-7">
@@ -234,6 +252,49 @@ export function FmTraining({ snap, folder }: { snap: FmSnapshot; folder: string 
           ))}
         </div>
       </Panel>
+
+      {project && project.plans.length > 0 && (
+        <Panel title={t('fm.train.individual')}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-canard/70">
+                <tr>
+                  <th className="px-2 py-1">{t('fm.prog.player')}</th>
+                  <th className="px-2 py-1">{t('fm.train.intensity')}</th>
+                  <th className="px-2 py-1">{t('fm.proj.role')}</th>
+                  <th className="px-2 py-1 text-right">{t('fm.proj.fit')}</th>
+                  <th className="px-2 py-1">{t('fm.proj.axes')}</th>
+                  <th className="px-2 py-1">{t('fm.train.note')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {project.plans.map((x) => {
+                  const a = individualAdvice(x.player);
+                  return (
+                    <tr key={x.player.id} className="border-t border-canard/5">
+                      <td className="px-2 py-1.5 font-bold">
+                        {x.player.name} <Pos player={x.player} />
+                      </td>
+                      <td className="px-2 py-1.5">
+                        <Tag tone={INTENSITY_TONE[a.intensity]}>{t(`fm.train.intensityLevel.${a.intensity}`)}</Tag>
+                      </td>
+                      <td className="px-2 py-1.5">{x.role ? names.role(x.role) : '–'}</td>
+                      <td className="px-2 py-1.5 text-right">
+                        <Fit value={x.fit} />
+                      </td>
+                      <td className="px-2 py-1.5">{x.weak.map((w) => `${attr(w.key)} ${Math.round(w.value)}`).join(', ')}</td>
+                      <td className="px-2 py-1.5 text-xs text-brun">
+                        {[t(`fm.train.reason.${a.reason}`), a.rusty ? t('fm.train.rusty') : null].filter(Boolean).join(' · ')}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-xs text-brun">{t('fm.train.individualHelp')}</p>
+        </Panel>
+      )}
 
       <Panel title={t('fm.train.rules')}>
         <ul className="list-disc space-y-1 pl-5 text-sm">

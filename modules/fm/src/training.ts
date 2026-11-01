@@ -368,3 +368,45 @@ export function weekLoad(w: TrainingWeek): Partial<Record<SessionCategory, numbe
   for (const d of w.days) for (const s of d.sessions) if (s && s !== 'match') out[SESSIONS[s]] = (out[SESSIONS[s]] ?? 0) + 1;
   return out;
 }
+
+/* ---------- Programme du jeu le plus proche ---------- */
+
+/** Programmes d'entraînement prédéfinis de FM27 (libellés dans fm.train.preset.<id>). */
+export const GAME_PRESETS = ['preSeason', 'tacticalBalanced', 'tacticalIP', 'tacticalOOP', 'match', 'mix', 'devBalanced', 'devIP', 'devOOP', 'congestion'] as const;
+export type GamePreset = (typeof GAME_PRESETS)[number];
+
+/** Programme prédéfini du jeu le plus proche de la semaine, à charger puis ajuster séance par séance. */
+export function nearestPreset(w: TrainingWeek): GamePreset {
+  if (w.phase === 'P') return 'preSeason';
+  if (w.variant === 2) return 'congestion';
+  const side = w.theme === 'pressing' ? 'OOP' : w.theme === 'balance' ? 'Balanced' : 'IP';
+  if (w.phase === 'T') return `tactical${side}` as GamePreset;
+  if (w.phase === 'A') return `dev${side}` as GamePreset;
+  return w.phase === 'B' ? 'mix' : 'match';
+}
+
+/* ---------- Entraînement individuel ---------- */
+
+export const INDIVIDUAL_INTENSITIES = ['none', 'low', 'medium', 'high', 'veryHigh'] as const;
+export type IndividualIntensity = (typeof INDIVIDUAL_INTENSITIES)[number];
+export type IntensityReason = 'injured' | 'veryTired' | 'tired' | 'young' | 'veteran' | 'normal';
+export interface IndividualAdvice {
+  intensity: IndividualIntensity;
+  reason: IntensityReason;
+  /** Manque de rythme : a besoin de temps de jeu (match de l'équipe réserve ou entrée en jeu). */
+  rusty: boolean;
+}
+
+/**
+ * Intensité individuelle conseillée : jamais « très élevée » d'office (risque de blessure),
+ * baissée si la condition est entamée, montée pour les jeunes qui progressent le plus.
+ */
+export function individualAdvice(p: { age: number | null; condition: number | null; sharpness: number | null; injury: string | null }): IndividualAdvice {
+  const rusty = !p.injury && p.sharpness != null && p.sharpness < 70;
+  if (p.injury) return { intensity: 'none', reason: 'injured', rusty: false };
+  if (p.condition != null && p.condition < 80) return { intensity: 'low', reason: 'veryTired', rusty };
+  if (p.condition != null && p.condition < 90) return { intensity: 'medium', reason: 'tired', rusty };
+  if (p.age != null && p.age <= 21) return { intensity: 'high', reason: 'young', rusty };
+  if (p.age != null && p.age >= 32) return { intensity: 'medium', reason: 'veteran', rusty };
+  return { intensity: 'medium', reason: 'normal', rusty };
+}
