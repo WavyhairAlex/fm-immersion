@@ -1,4 +1,4 @@
-import { starsOf } from './lineup';
+import { starsOf, withExtended } from './lineup';
 import { normalizePlayer, toNumber, type FmPlayer } from './player';
 import { range, type Range } from './project';
 import { fmPlayerSchema, type FmSnapshot } from './snapshot';
@@ -14,8 +14,10 @@ const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null
 
 /** Avis du recrutement sur une cible (champs absents si le jeu ne les donne pas). */
 export interface ScoutView {
-  /** Connaissance du joueur par le recrutement, en % (0-100). */
+  /** Connaissance du joueur par le recrutement, en % (0-100) : niveau du jeu sur 5 ramené en %. */
   knowledge: number | null;
+  /** Libellé du niveau de connaissance (« Grandes connaissances »…). */
+  knowledgeText: string | null;
   /** Étoiles de niveau et de potentiel (sur 5), vues par les recruteurs ou à défaut par le staff. */
   stars: { current: number | null; potential: number | null } | null;
   recommendation: string | null;
@@ -46,21 +48,44 @@ function label(v: unknown): string | null {
   return null;
 }
 
+/** Champ lu en profond (plugin 0.4.4) : fiche du jeu, sinon valeur simple ; le nom de type brut ne vaut rien. */
+const unread = (v: unknown) => typeof v === 'string' && v.startsWith('SI.');
+
+/** Connaissance : fiche {ActualValue, MaxValue, Text} (niveau sur 5), ou ancien nombre en %. */
+function knowledgeOf(v: unknown): { pct: number | null; text: string | null } {
+  if (unread(v)) return { pct: null, text: null };
+  if (v && typeof v === 'object') {
+    const o = v as Raw;
+    const cur = toNumber(o.ActualValue);
+    const max = toNumber(o.MaxValue);
+    return { pct: cur != null && max ? (cur / max) * 100 : null, text: str(o.Text) };
+  }
+  return { pct: toNumber(v), text: null };
+}
+
+/** Montant affiché par le jeu (« 3,22K € p/m ») ; SortValue n'a pas d'unité connue, on ne s'en sert pas. */
+function money(v: unknown): number | null {
+  if (unread(v)) return null;
+  if (v && typeof v === 'object') return toNumber((v as Raw).DisplayValue);
+  return toNumber(v);
+}
+
 function scoutOf(raw: unknown): ScoutView | null {
   if (!raw || typeof raw !== 'object') return null;
   const s = raw as Raw;
-  const knowledge = toNumber(s.knowledge);
+  const knowledge = knowledgeOf(s.knowledge);
   const cur = starsOf(s.scoutCurrentStars) ?? starsOf(s.currentStars);
   const pot = starsOf(s.scoutPotentialStars) ?? starsOf(s.potentialStars);
   const between = (lo: unknown, hi: unknown) => range({ min: toNumber(lo), max: toNumber(hi) });
   return {
-    knowledge: knowledge == null ? null : Math.max(0, Math.min(100, knowledge)),
+    knowledge: knowledge.pct == null ? null : Math.max(0, Math.min(100, knowledge.pct)),
+    knowledgeText: knowledge.text,
     stars: cur == null && pot == null ? null : { current: cur, potential: pot },
     recommendation: label(s.recommendationText) ?? label(s.recommendation),
     bestPosition: label(s.bestPosition),
     bestRole: label(s.bestRole),
-    value: between(s.minValue, s.maxValue),
-    wage: between(s.minWage, s.maxWage),
+    value: between(money(s.minValue), money(s.maxValue)),
+    wage: between(money(s.minWage), money(s.maxWage)),
     interestedClubs: toNumber(s.interestedClubs),
     transferStatus: label(s.transferStatus),
   };
@@ -85,10 +110,58 @@ export function targetOf(x: unknown): Target | null {
   };
 }
 
-/** Liste de cibles de l'instantané, ou null si le plugin ne l'a pas lue (réglage désactivé, plugin antérieur à 0.4.0). */
-export function snapshotTargets(snap: FmSnapshot): unknown[] | null {
-  return Array.isArray(snap.shortlist) ? (snap.shortlist as unknown[]) : null;
+/* ---------- Joueurs à l'essai ---------- */
+
+const empty = (v: unknown) => v == null || (typeof v === 'string' && (v.trim() === '' || v.trim() === '-' || v.trim() === '–'));
+const hasContract = (x: unknown) => {
+  const o = x as Raw;
+  return !empty(o.contractEnd) || !empty(o.wage) || !empty(o.wageText);
+};
+
+/**
+ * Joueurs à l'essai : le jeu les range dans l'effectif, mais sans contrat (ni fin de contrat, ni salaire, ni statut).
+ * Simloom les sort de l'effectif et les montre dans les cibles du mercato, pour les juger avant de leur proposer
+ * un contrat. Seulement si l'instantané donne les contrats des autres joueurs (sinon un vieux plugin ferait
+ * passer tout l'effectif pour des essais).
+ */
+export function trialistIds(snap: FmSnapshot): Set<string> {
+  const players = (Array.isArray(snap.players) ? snap.players : []) as unknown[];
+  if (!players.some(hasContract)) return new Set();
+  return new Set(players.filter((x) => !hasContract(x) && empty((x as Raw).squadStatus)).map((x) => String((x as Raw).id)));
 }
+
+/** Instantané sans les joueurs à l'essai : l'effectif sous contrat. */
+export function squadSnapshot(snap: FmSnapshot): FmSnapshot {
+  const trial = trialistIds(snap);
+  return trial.size ? { ...snap, players: snap.players.filter((p) => !trial.has(String(p.id))) } : snap;
+}
+
+/**
+ * Cibles de l'instantané (listes lues par le plugin + joueurs à l'essai), ou null s'il n'y a ni l'un ni l'autre
+ * (réglage désactivé, plugin antérieur à 0.4.0, aucun essai en cours).
+ */
+export function snapshotTargets(snap: FmSnapshot): unknown[] | null {
+  const read = Array.isArray(snap.shortlist) ? (snap.shortlist as unknown[]) : null;
+  const trial = trialistIds(snap);
+  if (!trial.size) return read;
+  const out = [...(read ?? [])];
+  for (const p of withExtended(snap).players.filter((x) => trial.has(String(x.id)))) {
+    const i = out.findIndex((x) => String((x as Raw).id) === String(p.id));
+    if (i < 0) out.push({ ...p, club: null, sources: ['essai'] });
+    else {
+      const prev = out[i] as Raw;
+      const sources = Array.isArray(prev.sources) ? prev.sources : [];
+      out[i] = { ...prev, sources: [...new Set([...sources, 'essai'])] };
+    }
+  }
+  return out;
+}
+
+/** Une cible ne vient que des essais (pas des listes du jeu). */
+const trialOnly = (data: unknown) => {
+  const s = (data as Raw | null)?.sources;
+  return Array.isArray(s) && s.length > 0 && s.every((x) => x === 'essai');
+};
 
 /** Cibles de l'instantané, normalisées (vide si le plugin ne les a pas lues). */
 export function shortlist(snap: FmSnapshot): Target[] {
@@ -144,7 +217,10 @@ export function mergeTargets(known: TargetRecord[], snap: FmSnapshot): TargetRec
       data: x,
     });
   }
-  for (const k of known) if (!seen.has(k.playerId) && k.inList && k.lastSeen <= date) out.push({ ...k, inList: false });
+  // Sans listes lues (réglage coupé), seules les cibles venues des essais peuvent sortir.
+  const listsRead = Array.isArray(snap.shortlist);
+  for (const k of known)
+    if (!seen.has(k.playerId) && k.inList && k.lastSeen <= date && (listsRead || trialOnly(k.data))) out.push({ ...k, inList: false });
   return out;
 }
 

@@ -789,7 +789,7 @@
     },
     "targets": {
       "title": "Transfer targets · {{style}} {{form}}",
-      "help": "Players from your shortlist and recruitment targets, read from the game and kept in Simloom. Ranked by what each would add to your target XI (\"Recruitment and training\"): fit for the position's role and gain over the current starter. Click a name to compare.",
+      "help": "Players from your shortlist and recruitment targets, read from the game and kept in Simloom. Ranked by what each would add to your target XI (\"Recruitment and training\"): fit for the position's role and gain over the current starter. Click a name to compare. Players on trial (no contract) are listed here too, outside the squad.",
       "col": {
         "player": "Player",
         "age": "Age",
@@ -820,7 +820,8 @@
       "restore": "Restore",
       "unknown": "attributes unknown",
       "emptyFilter": "No target in this filter.",
-      "noneRead": "The plugin read the game's lists but found no player ({{status}}). Add players to your shortlist, or check targetSources in the snapshot."
+      "noneRead": "The plugin read the game's lists but found no player ({{status}}). Add players to your shortlist, or check targetSources in the snapshot.",
+      "trial": "On trial"
     },
     "pi": {
       "title": "Player instructions",
