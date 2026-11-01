@@ -1,4 +1,4 @@
-import type { FmPlayer } from './player';
+import { unavailable, type FmPlayer } from './player';
 import { parsePositions, type PosCode } from './positions';
 import type { FmSnapshot } from './snapshot';
 import { FORMATIONS, slotContexts, type FormationPlan, type RoleRef, type Slot, type SlotCtx, type TacticEngine } from './tactic';
@@ -203,7 +203,7 @@ export function planFromLineup(engine: TacticEngine, lineup: GameSlot[], players
   const xi = new Set(slots.flatMap((s) => (s.player ? [s.player.id] : [])));
   const subs = slots.map((sl) =>
     players
-      .filter((p) => !xi.has(p.id) && !p.injury && p.positions.includes(sl.pos))
+      .filter((p) => !xi.has(p.id) && !unavailable(p) && p.positions.includes(sl.pos))
       .map((p) => ({ p, f: ((engine.roleFit(p, sl.ip, 'ip', sl.pos) ?? 0) + (engine.roleFit(p, sl.oop, 'oop', sl.pos) ?? 0)) / 2 }))
       .sort((a, b) => b.f - a.f)
       .slice(0, 2)
@@ -231,21 +231,65 @@ export function starsOf(v: unknown): number | null {
   return Math.round(five * 2) / 2;
 }
 
+const num = (v: unknown) => (typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' && !isNaN(+v) ? +v : null);
+
+/**
+ * Suspensions lues par chemins.json : `custom.joueurs[rang] = { id, suspensions: SuspensionsCount }` et
+ * `custom.equipe = { nbSuspensionsEnCours: AllCompsActiveBansCount, suspensionsEnCours: AllCompsActiveBans }`.
+ * SuspensionsCount n'est peut-être qu'un cumul : un joueur n'est compté suspendu que si l'équipe a aussi
+ * une suspension en cours. La liste du jeu désigne le joueur par « Person#… », qui ne se relie pas à son id :
+ * le détail (compétition, matchs restants, motif) n'est repris que s'il y a un seul suspendu.
+ * Renvoie id du joueur → texte de la suspension.
+ */
+export function suspensionsOf(snap: FmSnapshot): Map<string, string> {
+  const out = new Map<string, string>();
+  const custom = (snap as Raw).custom as Raw | null | undefined;
+  if (!custom || typeof custom !== 'object') return out;
+  const team = (custom.equipe ?? {}) as Raw;
+  const teamCount = num(team.nbSuspensionsEnCours);
+  let list: unknown = team.suspensionsEnCours;
+  if (typeof list === 'string') {
+    try {
+      list = JSON.parse(list);
+    } catch {
+      list = null;
+    }
+  }
+  const bans = (Array.isArray(list) ? list : list && typeof list === 'object' ? [list] : []) as Raw[];
+  const active = teamCount ?? (Array.isArray(list) || (list && typeof list === 'object') ? bans.length : null);
+  if (active === 0) return out;
+  const rows = Object.values((custom.joueurs ?? {}) as Record<string, Raw>);
+  const ids = rows.filter((r) => r && r.id != null && (num(r.suspensions) ?? 0) > 0).map((r) => String(r.id));
+  const detail = (b: Raw | undefined) => {
+    if (!b) return 'Suspendu';
+    const scope = str((b.BanScope as Raw | undefined)?.BanScopeString) ?? str(b.BanScope);
+    const left = num(b.ActiveBanMatchesRemaining);
+    const why = str(b.ActiveBanReason);
+    const parts = [scope, left != null ? `${left} match${left > 1 ? 's' : ''}` : null, why].filter(Boolean);
+    return parts.length ? parts.join(', ') : 'Suspendu';
+  };
+  for (const id of ids) out.set(id, detail(ids.length === 1 && bans.length === 1 ? bans[0] : undefined));
+  return out;
+}
+
 /**
  * Données joueurs étendues du plugin 0.3.1 (`playersExtended[playerId]`) : moral, satisfaction,
  * hiérarchie, étoiles de niveau et de potentiel vues par le staff. Fusionnées dans chaque joueur brut.
  */
 export function withExtended(snap: FmSnapshot): FmSnapshot {
   const ext = (snap as Raw).playersExtended;
-  if (!ext || typeof ext !== 'object') return snap;
-  const byId = ext as Record<string, Raw | undefined>;
+  const byId = (ext && typeof ext === 'object' ? ext : {}) as Record<string, Raw | undefined>;
+  const bans = suspensionsOf(snap);
+  if (!Object.keys(byId).length && !bans.size) return snap;
   return {
     ...snap,
     players: snap.players.map((p) => {
+      const ban = bans.get(String(p.id));
+      const q = ban && !(p as Raw).suspension ? { ...p, suspension: ban } : p;
       const x = byId[String(p.id)];
-      if (!x) return p;
+      if (!x) return q;
       return {
-        ...p,
+        ...q,
         morale: p.morale ?? str(x.moraleText) ?? str(x.morale),
         personality: (p as Raw).personality ?? str(x.personality),
         hierarchy: (p as Raw).hierarchy ?? str(x.hierarchy),

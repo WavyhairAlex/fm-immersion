@@ -1,4 +1,4 @@
-import type { FmPlayer } from './player';
+import { unavailable, type FmPlayer } from './player';
 import type { PosCode } from './positions';
 import type { FmSnapshot } from './snapshot';
 import { FORMATIONS, type FormationPlan } from './tactic';
@@ -72,7 +72,7 @@ export function depthChart(players: FmPlayer[], form: string | null | undefined,
     const cand = players.filter((p) => p.positions.includes(pos) && p.level != null).sort((a, b) => b.level! - a.level!);
     const starters: DepthEntry[] = [];
     for (let i = 0; i < count; i++) {
-      const t = cand.find((p) => !used.has(p.id) && !p.injury) ?? cand.find((p) => !used.has(p.id));
+      const t = cand.find((p) => !used.has(p.id) && !unavailable(p)) ?? cand.find((p) => !used.has(p.id));
       if (!t) break;
       used.add(t.id);
       starters.push(entry(t));

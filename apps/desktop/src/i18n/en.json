@@ -285,6 +285,7 @@
       "contracts_other": "{{count}} contracts ending within 6 months",
       "kind": {
         "injured": "Injured",
+        "suspended": "Suspended",
         "contract": "Contract",
         "condition": "Condition",
         "status": "Status"

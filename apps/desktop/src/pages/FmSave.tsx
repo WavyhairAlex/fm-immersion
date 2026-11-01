@@ -299,6 +299,7 @@ function SquadTable({ players }: { players: FmPlayer[] }) {
                 <td className="px-3 py-2 font-bold">
                   {p.name}
                   {p.injury && <span className="ml-2 rounded-full bg-corail/15 px-2 py-0.5 text-xs text-canard">{p.injury}</span>}
+                  {p.suspension && <span className="ml-2 rounded-full bg-corail/15 px-2 py-0.5 text-xs text-canard">{p.suspension === 'Suspendu' ? t('fm.home.kind.suspended') : `${t('fm.home.kind.suspended')} : ${p.suspension}`}</span>}
                 </td>
                 <td className="px-3 py-2">
                   <span className="flex flex-wrap gap-1">

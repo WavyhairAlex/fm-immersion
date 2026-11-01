@@ -1,4 +1,4 @@
-import { normalizePlayer, toNumber, type FmPlayer } from './player';
+import { normalizePlayer, toNumber, unavailable, type FmPlayer } from './player';
 import { POS_ORDER, type PosCode } from './positions';
 import { projectLevel, type SquadAt } from './progress';
 import { fmPlayerSchema, type FmSnapshot } from './snapshot';
@@ -319,7 +319,7 @@ export function switchAnalysis(engine: TacticEngine, list: FmPlayer[], prefs: Co
   const target = engine.ref.styles.find((s) => s.id === prefs.style) ?? engine.ref.styles[0];
   if (!target) return null;
   const T = ((prefs.target ?? 55) / 100) * 20;
-  const avail = list.filter((p) => !p.injury);
+  const avail = list.filter((p) => !unavailable(p));
   const ranked = engine.rankStyles(avail);
   const best = ranked[0]!;
   const isBest = best.style.id === target.id;

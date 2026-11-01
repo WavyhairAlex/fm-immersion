@@ -45,6 +45,11 @@ export interface FmPlayer {
   avgRating: number | null;
   injury: string | null;
   injuryDays: number | null;
+  /**
+   * Suspension en cours lue par chemins.json (`custom.joueurs[].suspensions`, `custom.equipe.suspensionsEnCours`) :
+   * texte du jeu (« Championnat national, 1 match, 3 cartons jaunes ») ou « Suspendu » si le détail manque.
+   */
+  suspension: string | null;
   /** Moral tel qu'écrit par le jeu (« Très bon »…), s'il est connu. */
   morale: string | null;
   personality: string | null;
@@ -96,6 +101,7 @@ export function normalizePlayer(p: FmPlayerRaw): FmPlayer {
     avgRating: p.avgRating ?? null,
     injury: injury || null,
     injuryDays,
+    suspension: typeof p.suspension === 'string' && p.suspension ? p.suspension : null,
     foot: p.foot ?? null,
     morale: p.morale ?? null,
     personality: typeof p.personality === 'string' ? p.personality : null,
@@ -104,4 +110,9 @@ export function normalizePlayer(p: FmPlayerRaw): FmPlayer {
     stars: p.stars && typeof p.stars === 'object' ? (p.stars as FmPlayer['stars']) : null,
     attributes,
   };
+}
+
+/** Joueur indisponible pour le prochain match : blessé ou suspendu. */
+export function unavailable(p: FmPlayer): boolean {
+  return !!p.injury || !!p.suspension;
 }
