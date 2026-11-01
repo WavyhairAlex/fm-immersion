@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mergeTargets, shortlist, storedTargets, type TargetRecord } from '../src/targets';
+import { mergeTargets, targetOf, shortlist, storedTargets, type TargetRecord } from '../src/targets';
 import type { FmSnapshot } from '../src/snapshot';
 
 const snap = (gameDate: string, shortlist?: unknown[]): FmSnapshot => ({ schema: 'archivix/1', game: 'FM27', club: 'V', gameDate, players: [], ...(shortlist ? { shortlist } : {}) });
@@ -40,5 +40,12 @@ describe('cibles du mercato', () => {
 
     expect(mergeTargets(later, snap('2026-09-05', []))).toEqual([]);
     expect(storedTargets(gone)[0]).toMatchObject({ id: 't2001', inList: false, dismissed: true, club: 'GAIS' });
+  });
+});
+
+describe('cibles non observées', () => {
+  it('traite les étoiles -1 comme inconnues', () => {
+    const t = targetOf({ id: 9, name: 'X', attributes: {}, scout: { currentStars: { MinValue: -1, MaxValue: -1 }, potentialStars: -1 } });
+    expect(t?.scout?.stars).toBeNull();
   });
 });

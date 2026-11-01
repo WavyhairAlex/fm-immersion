@@ -223,7 +223,11 @@ export function planFromLineup(engine: TacticEngine, lineup: GameSlot[], players
  * Une fourchette (avis de recruteur) donne son milieu.
  */
 export function starsOf(v: unknown): number | null {
-  const n = (x: unknown) => (typeof x === 'number' ? x : typeof x === 'string' && x.trim() !== '' && !Number.isNaN(Number(x)) ? Number(x) : null);
+  // Le jeu renvoie -1 pour un joueur non observé : valeur inconnue, pas zéro étoile.
+  const n = (x: unknown) => {
+    const v = typeof x === 'number' ? x : typeof x === 'string' && x.trim() !== '' && !Number.isNaN(Number(x)) ? Number(x) : null;
+    return v != null && v >= 0 ? v : null;
+  };
   let raw = n(v);
   if (raw == null && v && typeof v === 'object') {
     const o = v as Raw;

@@ -22,7 +22,7 @@
     "suspensionsEnCours"
   ],
   "cibles": {
-    "listeSuivi": "GameCurrentManager/HumanSelectedShortlist{IsPlayerRecruitment=true,team=@team}",
+    "selection": "GameCurrentManager/HumanPersonSearch{team=@team,Type=0}/PersonList",
     "cibles": "GameCurrentManagerClubTeam/Club/PlayerTargetsList{human=@human}"
   }
 }

@@ -189,10 +189,19 @@ public class FmBindingReader : IGameReader
         else
             try
             {
-                (_targets, _targetSources) = ReadTargets();
+                var (read, sources) = ReadTargets();
+                // La recherche « Sélections » du jeu n'est remplie que pendant que son écran est affiché : ailleurs, elle
+                // revient vide. Une liste vide après une liste non vide garde donc la dernière lue (vérifié le 01/11).
+                if (read.Count == 0 && _targets is { Count: > 0 })
+                    collecte["cibles"] = $"gardée : {_targets.Count} joueur(s) (liste vide, écran Sélections sans doute fermé)";
+                else
+                {
+                    _targets = read;
+                    collecte["cibles"] = $"lue : {read.Count} joueur(s)";
+                }
+                _targetSources = sources;
                 _targetsDate = date;
                 _targetCounts = TargetCounts();
-                collecte["cibles"] = $"lue : {_targets.Count} joueur(s)";
             }
             catch (Exception e) { collecte["cibles"] = "erreur : " + e.Message; Plugin.Log.LogWarning($"cibles : {e.Message}"); }
 
@@ -236,7 +245,10 @@ public class FmBindingReader : IGameReader
     // de joueurs, une liste de Records qui contiennent un joueur, ou un Record qui contient la liste (voir Batch.Persons).
     static readonly (string Key, string Path)[] DefaultTargetSources =
     {
-        ("listeSuivi", "GameCurrentManager/HumanSelectedShortlist{IsPlayerRecruitment=true,team=@team}"),
+        // Joueurs de la sélection affichée (Recrutement > Sélections) : HumanShortlistSearchType{IsPlayerRecruitment=true}
+        // vaut 0, et la liste n'est remplie que pendant que l'écran est ouvert (test en jeu du 01/11/2026).
+        // HumanSelectedShortlist et HumanShortlists ne donnent que la fiche de la sélection (nom, « 2 joueurs »).
+        ("selection", "GameCurrentManager/HumanPersonSearch{team=@team,Type=0}/PersonList"),
         ("cibles", "GameCurrentManagerClubTeam/Club/PlayerTargetsList{human=@human}"),
     };
 
