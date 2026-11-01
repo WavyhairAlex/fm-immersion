@@ -27,14 +27,20 @@ import { FmWages } from './FmWages';
 
 const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
 
-/** Les écrans de la page Archivix, rangés en 5 sections. */
+/**
+ * Les écrans de la page, rangés en 5 sections qui répondent chacune à une question :
+ * qui ai-je (Effectif), qui joue le prochain match (Tactique), où va l'équipe (Mon projet, à suivre
+ * dans l'ordre : style visé, feuille de route, entraînement, recrutement), et le club.
+ */
 const SECTIONS = [
   { id: 'home', views: ['home'] },
   { id: 'squad', views: ['squad', 'analysis', 'compare', 'dressing', 'loans'] },
-  { id: 'tactic', views: ['tactic', 'roles', 'calendar', 'depth', 'style', 'effectiveness'] },
-  { id: 'project', views: ['project', 'training', 'targets'] },
+  { id: 'tactic', views: ['tactic', 'depth', 'calendar', 'roles', 'effectiveness'] },
+  { id: 'project', views: ['style', 'project', 'training', 'targets'] },
   { id: 'club', views: ['finances', 'wages', 'contracts', 'progression'] },
 ] as const;
+/** Sections dont les écrans s'enchaînent comme des étapes (numérotées, avec « étape suivante »). */
+const STEPPED = new Set<string>(['project']);
 type View = (typeof SECTIONS)[number]['views'][number];
 const VIEW_KEY = 'simloom.fm.view';
 const readView = (): View => {
@@ -191,6 +197,7 @@ export function FmSave() {
                       onClick={() => go(v)}
                       className={`block w-full rounded-lg px-2 py-1 text-left text-sm font-bold ${v === view ? 'bg-canard text-white' : 'text-canard hover:bg-white'}`}
                     >
+                      {STEPPED.has(s.id) && <span className="mr-1.5 tabular-nums opacity-60">{s.views.indexOf(v as never) + 1}.</span>}
                       {t(`fm.views.${v}`)}
                     </button>
                   ))}
@@ -224,6 +231,7 @@ export function FmSave() {
                   onClick={() => go(v)}
                   className={`font-bold ${v === view ? 'text-canard underline decoration-eau-soutenu decoration-2 underline-offset-8' : 'text-canard/60 hover:text-canard'}`}
                 >
+                  {STEPPED.has(section.id) && <span className="mr-1 tabular-nums opacity-60">{section.views.indexOf(v as never) + 1}.</span>}
                   {t(`fm.views.${v}`)}
                 </button>
               ))}
@@ -231,6 +239,7 @@ export function FmSave() {
           )}
           </div>
           <div className="mt-4 lg:mt-0">
+            <ViewHeader section={section.id} view={view} />
             {view === 'home' && <FmHome snap={snapshot.data} players={players} folder={folder} go={go} />}
             {view === 'squad' && <SquadTable players={players} />}
             {view === 'analysis' && <FmAnalysis players={players} gameDate={snapshot.gameDate} />}
@@ -250,10 +259,37 @@ export function FmSave() {
             {view === 'wages' && <FmWages players={players} gameDate={snapshot.gameDate} />}
             {view === 'contracts' && <FmContracts players={players} gameDate={snapshot.gameDate} />}
             {view === 'progression' && <FmProgression history={history} />}
+            {STEPPED.has(section.id) && <NextStep views={section.views} view={view} go={go} />}
           </div>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** En-tête commun à tous les écrans : section, nom de l'écran et la question à laquelle il répond. */
+function ViewHeader({ section, view }: { section: string; view: string }) {
+  const { t } = useTranslation();
+  return (
+    <header className="mb-4">
+      {section !== view && <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t(`fm.sections.${section}`)}</p>}
+      <h2 className="text-2xl font-semibold">{t(`fm.views.${view}`)}</h2>
+      <p className="mt-0.5 max-w-3xl text-sm text-brun">{t(`fm.intro.${view}`)}</p>
+    </header>
+  );
+}
+
+/** Lien vers l'étape suivante d'une section en étapes. */
+function NextStep({ views, view, go }: { views: readonly string[]; view: string; go: (v: string) => void }) {
+  const { t } = useTranslation();
+  const next = views[views.indexOf(view) + 1];
+  if (!next) return null;
+  return (
+    <div className="mt-6 flex justify-end">
+      <button type="button" className="btn-secondary text-sm" onClick={() => go(next)}>
+        {t('fm.nextStep', { view: t(`fm.views.${next}`) })} →
+      </button>
     </div>
   );
 }
@@ -294,7 +330,7 @@ function SquadTable({ players }: { players: FmPlayer[] }) {
   );
 
   return (
-    <section className="mt-6">
+    <section>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           {[null, ...LINES].map((l) => (
@@ -334,7 +370,7 @@ function SquadTable({ players }: { players: FmPlayer[] }) {
                 <td className="px-3 py-2">
                   <span className="flex flex-wrap gap-1">
                     {p.positionsLabel.split(', ').map((pos) => (
-                      <span key={pos} className="rounded-full bg-eau/20 px-2 py-0.5 text-xs font-bold">
+                      <span key={pos} className="pill">
                         {pos}
                       </span>
                     ))}
