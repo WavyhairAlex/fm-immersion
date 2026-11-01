@@ -581,6 +581,7 @@
       }
     },
     "style": {
+      "notInGame": "absente de FM27",
       "which": "Quel style pour mon effectif ?",
       "whichHelp": "Exigences de chaque style comparées au profil des 16 meilleurs joueurs de champ disponibles. Choisis un style pour le détailler.",
       "profile": "Profil de l'effectif",

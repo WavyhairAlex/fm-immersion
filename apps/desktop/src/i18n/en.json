@@ -581,6 +581,7 @@
       }
     },
     "style": {
+      "notInGame": "not in FM27",
       "which": "Which style suits my squad?",
       "whichHelp": "Each style's requirements compared with the profile of the 16 best available outfield players. Pick a style for details.",
       "profile": "Squad profile",

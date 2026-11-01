@@ -1,4 +1,4 @@
-import { abilityNeeded, unavailable, keyAttrs, styleComplexity, tactAbility, type FmPlayer, type Phase } from '@simloom/module-fm';
+import { abilityNeeded, teamInstructionOf, unavailable, keyAttrs, styleComplexity, tactAbility, type FmPlayer, type Phase } from '@simloom/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
@@ -148,13 +148,19 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
           <div className="text-sm">
             <p className="text-xs font-bold uppercase text-canard/60">{t('fm.style.ip')}</p>
             {cur.inPossession.map((x) => (
-              <p key={x}>{x}</p>
+              <p key={x}>
+                {x}
+                {!teamInstructionOf(x) && <span className="ml-1 text-xs text-brun">({t('fm.style.notInGame')})</span>}
+              </p>
             ))}
           </div>
           <div className="text-sm">
             <p className="text-xs font-bold uppercase text-canard/60">{t('fm.style.oop')}</p>
             {cur.outOfPossession.map((x) => (
-              <p key={x}>{x}</p>
+              <p key={x}>
+                {x}
+                {!teamInstructionOf(x) && <span className="ml-1 text-xs text-brun">({t('fm.style.notInGame')})</span>}
+              </p>
             ))}
           </div>
         </div>
