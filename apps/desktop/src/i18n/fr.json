@@ -272,7 +272,7 @@
       "depth": "Titulaires et remplaçants",
       "style": "Style de jeu",
       "effectiveness": "Efficacité",
-      "project": "Recrutement et entraînement",
+      "project": "Feuille de route",
       "targets": "Cibles du mercato",
       "finances": "Finances et board",
       "wages": "Masse salariale",
@@ -580,7 +580,8 @@
         "base": "20 % : attributs de base du poste (pour un défenseur central : marquage, tacle, jeu de tête, placement…).",
         "engine": "10 % : « moteur de match » (accélération, vitesse, anticipation, décisions), utile à tous les postes de champ.",
         "foot": "Pied fort : sur un côté, −0,5 point si le pied fort ne correspond pas (−1 s'il n'utilise qu'un pied). Les rôles rentrants veulent le pied opposé au côté."
-      }
+      },
+      "gridTitle": "Adéquation par poste"
     },
     "style": {
       "notInGame": "absente de FM27",
@@ -660,7 +661,8 @@
         "playerAbility": "Aptitude",
         "playerBuyIn": "Adhésion",
         "nextMatch": "Prochain match"
-      }
+      },
+      "gauges": "Jauges du jeu"
     },
     "proj": {
       "coach": "Mon coach",
@@ -1012,8 +1014,39 @@
         "normal": "intensité standard"
       },
       "rusty": "manque de rythme : temps de jeu en réserve ou en fin de match",
-      "individualHelp": "Rôle et axes : ceux du projet (rôle de son poste dans le onze cible, sinon le rôle où il est le plus adapté) et ses 3 attributs clés les plus faibles, à mettre en priorité de l'entraînement individuel. Intensité : à régler dans « Intensité de l'entraînement individuel » ; jamais très élevée d'office (risque de blessure)."
-    }
+      "individualHelp": "Rôle et axes : ceux du projet (rôle de son poste dans le onze cible, sinon le rôle où il est le plus adapté) et ses 3 attributs clés les plus faibles, à mettre en priorité de l'entraînement individuel. Intensité : à régler dans « Intensité de l'entraînement individuel » ; jamais très élevée d'office (risque de blessure).",
+      "mentoring": "Groupes d'encadrement",
+      "mentor": "Tuteur",
+      "mentees": "Jeunes encadrés",
+      "age_one": "{{count}} an",
+      "age_other": "{{count}} ans",
+      "noMentoring": "Aucun groupe à proposer : il faut des joueurs de 21 ans et moins et au moins un joueur de 24 ans et plus à la personnalité favorable (ou très déterminé). La personnalité vient de la lecture étendue des joueurs.",
+      "avoid": "À tenir à l'écart des jeunes",
+      "unassigned": "Sans tuteur disponible : {{list}}.",
+      "mentoringHelp": "Dans le jeu : Entraînement, Encadrement, Créer un groupe d'encadrement. La personnalité et la détermination des joueurs influents déteignent sur les jeunes du groupe, en bien comme en mal ; 3 jeunes au plus par tuteur, du même secteur de jeu quand c'est possible."
+    },
+    "intro": {
+      "home": "Ce qui demande ton attention aujourd'hui, les styles qui collent à l'effectif, tes meilleurs joueurs et tes jeunes.",
+      "squad": "Tous les joueurs de l'équipe première, à trier par niveau, forme, contrat ou salaire.",
+      "analysis": "Le diagnostic de l'effectif : priorités, lignes, profondeur et pyramide des âges.",
+      "compare": "Deux ou trois joueurs côte à côte, du club ou de ta liste de cibles.",
+      "dressing": "Moral, leaders et hiérarchie du vestiaire.",
+      "loans": "Tes joueurs prêtés : où ils jouent et s'ils progressent.",
+      "tactic": "La meilleure formation et le meilleur onze possibles aujourd'hui, poste par poste.",
+      "depth": "Qui joue à chaque poste, et quelle doublure peut passer devant d'ici deux saisons.",
+      "calendar": "Les prochains matchs et qui faire tourner selon la fatigue.",
+      "roles": "Pour chaque joueur, son adéquation à chaque poste et rôle.",
+      "effectiveness": "Les jauges d'efficacité tactique du jeu et ce qu'il faut travailler cette semaine.",
+      "style": "Étape 1 : quel style de jeu ton effectif peut jouer aujourd'hui, et lequel viser.",
+      "project": "Étape 2 : le onze qu'il faut pour le style visé, poste par poste : prêt, à faire progresser ou à recruter.",
+      "training": "Étape 3 : le programme d'entraînement collectif et individuel qui rapproche l'effectif du projet.",
+      "targets": "Étape 4 : ta liste de suivi du jeu, classée selon ce que chaque joueur apporterait au projet.",
+      "finances": "Budgets, simulateur de prolongations et attentes du board.",
+      "wages": "Les salaires regroupés par statut, et ce qui détonne.",
+      "contracts": "Les fins de contrat à anticiper.",
+      "progression": "L'évolution du niveau de chaque joueur depuis le premier instantané."
+    },
+    "nextStep": "Étape suivante : {{view}}"
   },
   "pz2": {
     "back": "Mes parties",

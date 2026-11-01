@@ -410,3 +410,80 @@ export function individualAdvice(p: { age: number | null; condition: number | nu
   if (p.age != null && p.age >= 32) return { intensity: 'medium', reason: 'veteran', rusty };
   return { intensity: 'medium', reason: 'normal', rusty };
 }
+
+/* ---------- Groupes d'encadrement ---------- */
+
+/** Personnalités défavorables (FR/EN du jeu) : à tenir à l'écart des jeunes, l'influence se transmet. */
+const BAD_PERSONALITY = /peu professionnel|unprofessional|peu ambitieux|unambitious|tempéramental|temperamental|mercenaire|mercenary|désinvolte|casual|nonchalant|slack|manque de détermination|low determination|antisportif|unsporting|volatile|facilement découragé|easily discouraged|influençable|spineless|craintif|low self.belief/i;
+/** Personnalités favorables : modèles pour les jeunes. */
+const GOOD_PERSONALITY = /professionnel|professional|déterminé|determined|résolu|resolute|ambitieux|ambitious|perfectionni|leader|meneur|charismatique|charismatic|vaillant|spirited|dévoué|devoted|loyal|fidèle|honnête|honest|sportif|sporting/i;
+
+export type PersonalityTone = 'good' | 'bad' | 'neutral';
+export function personalityTone(p: string | null | undefined): PersonalityTone {
+  if (!p) return 'neutral';
+  if (BAD_PERSONALITY.test(p)) return 'bad';
+  return GOOD_PERSONALITY.test(p) ? 'good' : 'neutral';
+}
+
+type MentorPlayer = {
+  id: string;
+  name: string;
+  age: number | null;
+  line: string | null;
+  level: number | null;
+  personality: string | null;
+  hierarchy: string | null;
+  attributes: Record<string, number>;
+  team?: string | null;
+};
+
+export interface MentoringGroup<P extends MentorPlayer = MentorPlayer> {
+  mentor: P;
+  mentees: P[];
+}
+export interface Mentoring<P extends MentorPlayer = MentorPlayer> {
+  groups: MentoringGroup<P>[];
+  /** Joueurs d'influence à la personnalité défavorable : à ne pas mettre avec les jeunes. */
+  avoid: P[];
+  /** Jeunes sans tuteur disponible. */
+  unassigned: P[];
+}
+
+const influence = (p: MentorPlayer) => (/leader|meneur|chef/i.test(p.hierarchy ?? '') ? 2 : /influen/i.test(p.hierarchy ?? '') ? 1 : 0);
+
+/**
+ * Groupes d'encadrement : un tuteur expérimenté (24 ans et plus, personnalité favorable ou détermination
+ * élevée, influent dans le vestiaire) avec jusqu'à 3 jeunes (21 ans et moins), du même secteur de préférence.
+ * Les jeunes qui ont déjà une bonne personnalité passent après les autres.
+ */
+export function mentoringGroups<P extends MentorPlayer>(players: P[], maxPerMentor = 3): Mentoring<P> {
+  const squad = players.filter((p) => !p.team);
+  const det = (p: MentorPlayer) => p.attributes.Determination ?? 10;
+  const mentorScore = (p: P) => (personalityTone(p.personality) === 'good' ? 3 : 0) + influence(p) * 1.5 + (det(p) - 10) / 4 + ((p.age ?? 0) >= 28 ? 1 : 0);
+  const mentors = squad
+    .filter((p) => (p.age ?? 0) >= 24 && personalityTone(p.personality) !== 'bad' && (personalityTone(p.personality) === 'good' || det(p) >= 14))
+    .sort((a, b) => mentorScore(b) - mentorScore(a));
+  const mentees = squad
+    .filter((p) => p.age != null && p.age <= 21)
+    .sort((a, b) => (personalityTone(a.personality) === 'good' ? 1 : 0) - (personalityTone(b.personality) === 'good' ? 1 : 0) || (b.level ?? 0) - (a.level ?? 0));
+  const avoid = squad.filter((p) => personalityTone(p.personality) === 'bad' && (influence(p) > 0 || (p.age ?? 0) >= 24));
+
+  const groups: MentoringGroup<P>[] = [];
+  const unassigned: P[] = [];
+  for (const y of mentees) {
+    // Tuteur du même secteur s'il a de la place, sinon le premier tuteur avec de la place.
+    const open = (m: P) => {
+      const g = groups.find((x) => x.mentor.id === m.id);
+      return !g || g.mentees.length < maxPerMentor;
+    };
+    const m = mentors.find((x) => x.line === y.line && open(x)) ?? mentors.find(open);
+    if (!m) {
+      unassigned.push(y);
+      continue;
+    }
+    let g = groups.find((x) => x.mentor.id === m.id);
+    if (!g) groups.push((g = { mentor: m, mentees: [] }));
+    g.mentees.push(y);
+  }
+  return { groups, avoid, unassigned };
+}

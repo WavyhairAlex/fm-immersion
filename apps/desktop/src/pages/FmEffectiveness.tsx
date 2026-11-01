@@ -35,7 +35,7 @@ export function FmEffectiveness({ snap, history, go }: { snap: FmSnapshot; histo
   const tactic = (snap.tactic ?? {}) as Record<string, unknown>;
   if (!e)
     return (
-      <Panel title={t('fm.views.effectiveness')}>
+      <Panel title={t('fm.eff.gauges')}>
         <Empty>{t('fm.eff.none')}</Empty>
         <button type="button" className="mt-3 text-sm font-bold text-eau-fonce hover:underline" onClick={() => go('style')}>
           {t('fm.eff.toStyle')} →

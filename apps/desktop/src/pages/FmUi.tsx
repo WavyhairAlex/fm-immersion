@@ -48,7 +48,7 @@ export function Empty({ children }: { children: ReactNode }) {
 
 export function Pos({ player }: { player: FmPlayer }) {
   const c = player.positions[0];
-  return c ? <span className="rounded-full bg-eau/20 px-2 py-0.5 text-xs font-bold">{POS_LABEL[c]}</span> : null;
+  return c ? <span className="pill">{POS_LABEL[c]}</span> : null;
 }
 
 /** Niveau /20 dans une pastille dont la couleur suit la valeur. */
