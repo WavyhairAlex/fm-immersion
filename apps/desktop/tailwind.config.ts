@@ -16,6 +16,10 @@ export default {
         creme: '#F7EFE3',
         brun: '#8B5E3C',
       },
+      // Petit texte (aides, pastilles, en-têtes de tableaux) à 13 px au lieu de 12 : plus lisible sur un écran de PC.
+      fontSize: {
+        xs: ['0.8125rem', { lineHeight: '1.125rem' }],
+      },
       fontFamily: {
         display: ['"Fraunces Variable"', 'Georgia', 'serif'],
         sans: ['"Nunito Variable"', 'system-ui', 'sans-serif'],

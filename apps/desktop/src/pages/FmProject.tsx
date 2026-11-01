@@ -113,7 +113,7 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
         ))}
         <h3 className="mb-1 mt-4 font-semibold">{t('fm.proj.timeline')}</h3>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="data-table">
             <thead className="text-left text-canard/70">
               <tr>
                 <th className="px-2 py-1">{t('fm.proj.when')}</th>
@@ -208,7 +208,7 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
           <b>{t('fm.proj.collective')}</b> {trainingFor(pr.style).map((a, i) => `${i + 1}. ${t(`fm.areaSession.${a}`)}`).join(' · ')}. {t('fm.proj.collectiveMore')}
         </p>
         <div className="mt-3 overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="data-table">
             <thead className="text-left text-canard/70">
               <tr>
                 <th className="px-2 py-1">{t('fm.prog.player')}</th>

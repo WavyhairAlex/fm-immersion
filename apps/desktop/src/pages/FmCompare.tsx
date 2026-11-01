@@ -125,7 +125,7 @@ export function FmCompare({ saveId, snap, players, folder, history }: { saveId: 
       </Panel>
 
       <div className="card overflow-x-auto p-0">
-        <table className="w-full text-sm">
+        <table className="data-table">
           <thead>
             <tr>
               <th />

@@ -80,7 +80,7 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title={t('fm.style.which')}>
-          <p className="-mt-2 mb-2 text-xs text-brun">{t('fm.style.whichHelp')}</p>
+          <p className="help">{t('fm.style.whichHelp')}</p>
           {ranked.map(({ style, fit }) => (
             <button
               key={style.id}
@@ -173,7 +173,7 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
       </Panel>
 
       <Panel title={t('fm.style.effTitle')}>
-        <p className="-mt-2 mb-3 text-xs text-brun">{t('fm.style.effHelp')}</p>
+        <p className="help">{t('fm.style.effHelp')}</p>
         <div className="grid gap-3 sm:grid-cols-3">
           <Kpi label={t('fm.style.complexity')} value={'●'.repeat(cx) + '○'.repeat(5 - cx)} sub={t(`fm.style.cx.${cx}`)} />
           <Kpi label={t('fm.style.ability')} value={ability == null ? '–' : nf1.format(ability)} sub={t('fm.style.abilitySub', { value: nf1.format(need) })} />

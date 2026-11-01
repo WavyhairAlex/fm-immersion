@@ -346,7 +346,7 @@ function SquadTable({ players }: { players: FmPlayer[] }) {
         </div>
       </div>
       <div className="card mt-4 overflow-x-auto p-0">
-        <table className="w-full text-sm">
+        <table className="data-table">
           <thead className="border-b border-canard/10 text-canard/70">
             <tr>
               {head('name', t('fm.col.name'))}

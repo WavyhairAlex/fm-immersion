@@ -73,7 +73,7 @@ export function FmDepth({ players, folder, gameFormation, lineup, gameDate, hist
       )}
 
       <Panel title={t('fm.depth.byPos')}>
-        <p className="-mt-2 mb-3 text-xs text-brun">
+        <p className="help">
           {t(fromGame ? 'fm.depth.fromGame' : 'fm.depth.fromTactic')} {t('fm.depth.help', { s1: season(1), s2: season(2) })}
         </p>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">

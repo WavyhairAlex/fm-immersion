@@ -30,7 +30,7 @@ export function FmFinances({ snap, players }: { snap: FmSnapshot; players: FmPla
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel title={t('fm.fin.sim')}>
-          <p className="-mt-2 mb-2 text-xs text-brun">{t('fm.fin.simHelp')}</p>
+          <p className="help">{t('fm.fin.simHelp')}</p>
           {ext.length ? (
             ext.map(({ player: p }) => (
               <Row key={p.id}>
