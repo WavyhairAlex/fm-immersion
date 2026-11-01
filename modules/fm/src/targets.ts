@@ -14,8 +14,10 @@ const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null
 
 /** Avis du recrutement sur une cible (champs absents si le jeu ne les donne pas). */
 export interface ScoutView {
-  /** Connaissance du joueur par le recrutement, en % (0-100). */
+  /** Connaissance du joueur par le recrutement, en % (0-100) : niveau du jeu sur 5 ramené en %. */
   knowledge: number | null;
+  /** Libellé du niveau de connaissance (« Grandes connaissances »…). */
+  knowledgeText: string | null;
   /** Étoiles de niveau et de potentiel (sur 5), vues par les recruteurs ou à défaut par le staff. */
   stars: { current: number | null; potential: number | null } | null;
   recommendation: string | null;
@@ -46,21 +48,44 @@ function label(v: unknown): string | null {
   return null;
 }
 
+/** Champ lu en profond (plugin 0.4.4) : fiche du jeu, sinon valeur simple ; le nom de type brut ne vaut rien. */
+const unread = (v: unknown) => typeof v === 'string' && v.startsWith('SI.');
+
+/** Connaissance : fiche {ActualValue, MaxValue, Text} (niveau sur 5), ou ancien nombre en %. */
+function knowledgeOf(v: unknown): { pct: number | null; text: string | null } {
+  if (unread(v)) return { pct: null, text: null };
+  if (v && typeof v === 'object') {
+    const o = v as Raw;
+    const cur = toNumber(o.ActualValue);
+    const max = toNumber(o.MaxValue);
+    return { pct: cur != null && max ? (cur / max) * 100 : null, text: str(o.Text) };
+  }
+  return { pct: toNumber(v), text: null };
+}
+
+/** Montant affiché par le jeu (« 3,22K € p/m ») ; SortValue n'a pas d'unité connue, on ne s'en sert pas. */
+function money(v: unknown): number | null {
+  if (unread(v)) return null;
+  if (v && typeof v === 'object') return toNumber((v as Raw).DisplayValue);
+  return toNumber(v);
+}
+
 function scoutOf(raw: unknown): ScoutView | null {
   if (!raw || typeof raw !== 'object') return null;
   const s = raw as Raw;
-  const knowledge = toNumber(s.knowledge);
+  const knowledge = knowledgeOf(s.knowledge);
   const cur = starsOf(s.scoutCurrentStars) ?? starsOf(s.currentStars);
   const pot = starsOf(s.scoutPotentialStars) ?? starsOf(s.potentialStars);
   const between = (lo: unknown, hi: unknown) => range({ min: toNumber(lo), max: toNumber(hi) });
   return {
-    knowledge: knowledge == null ? null : Math.max(0, Math.min(100, knowledge)),
+    knowledge: knowledge.pct == null ? null : Math.max(0, Math.min(100, knowledge.pct)),
+    knowledgeText: knowledge.text,
     stars: cur == null && pot == null ? null : { current: cur, potential: pot },
     recommendation: label(s.recommendationText) ?? label(s.recommendation),
     bestPosition: label(s.bestPosition),
     bestRole: label(s.bestRole),
-    value: between(s.minValue, s.maxValue),
-    wage: between(s.minWage, s.maxWage),
+    value: between(money(s.minValue), money(s.maxValue)),
+    wage: between(money(s.minWage), money(s.maxWage)),
     interestedClubs: toNumber(s.interestedClubs),
     transferStatus: label(s.transferStatus),
   };

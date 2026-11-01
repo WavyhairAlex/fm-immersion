@@ -132,7 +132,9 @@ export function FmTargets({ saveId, snap, players, folder, go }: { saveId: strin
                     <td className="whitespace-nowrap px-2 py-1.5 text-xs tabular-nums">
                       {p.stars?.current != null ? `★ ${p.stars.current}${p.stars.potential != null ? ` / ${p.stars.potential}` : ''}` : '–'}
                     </td>
-                    <td className="px-2 py-1.5 tabular-nums">{p.scout?.knowledge != null ? `${Math.round(p.scout.knowledge)} %` : '–'}</td>
+                    <td className="px-2 py-1.5 tabular-nums" title={p.scout?.knowledgeText ?? undefined}>
+                      {p.scout?.knowledge != null ? `${Math.round(p.scout.knowledge)} %` : '–'}
+                    </td>
                     <td className="whitespace-nowrap px-2 py-1.5 tabular-nums">
                       {value?.min != null && value.max != null && value.min !== value.max ? `${f.money(value.min)} – ${f.money(value.max)}` : f.money(value?.mid ?? p.value)}
                     </td>

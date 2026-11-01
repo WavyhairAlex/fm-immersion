@@ -78,3 +78,26 @@ describe("joueurs à l'essai", () => {
     expect(next.find((r) => r.playerId === '5')).toMatchObject({ inList: true });
   });
 });
+
+describe('avis du recrutement lu en profond (plugin 0.4.4)', () => {
+  it('lit la connaissance sur 5 et les salaires affichés', () => {
+    const t = targetOf({
+      id: 7,
+      name: 'Martin Boda',
+      attributes: {},
+      scout: {
+        knowledge: { ActualValue: 5, MaxValue: 5, Text: 'Grandes connaissances' },
+        minWage: { SortValue: 639, DisplayValue: '3,22K € p/m' },
+        maxWage: { SortValue: 850, DisplayValue: '4,28K € p/m' },
+        minValue: '3,62K €',
+        maxValue: '3,62K €',
+      },
+    });
+    expect(t?.scout).toMatchObject({ knowledge: 100, knowledgeText: 'Grandes connaissances', wage: { min: 3220, max: 4280 }, value: { min: 3620, max: 3620 } });
+  });
+
+  it("ignore le nom de type renvoyé par l'ancien plugin", () => {
+    const t = targetOf({ id: 8, name: 'X', attributes: {}, scout: { knowledge: 'SI.Bindable.DynamicReference', minWage: 'SI.Bindable.DynamicReference' } });
+    expect(t?.scout).toMatchObject({ knowledge: null, wage: null });
+  });
+});

@@ -267,7 +267,9 @@ public class FmBindingReader : IGameReader
         ("potentialStars", "PotentialAbilityStarRange{team=@team,human=@human}", true),
         ("scoutCurrentStars", "ScoutCurrentAbilityStarRange{team=@team,human=@human}", true),
         ("scoutPotentialStars", "ScoutPotentialAbilityStarRange{team=@team,human=@human}", true),
-        ("knowledge", "ScoutingKnowledgeLevel{human=@human,team=@team}", false),
+        // Connaissance et salaires : SI.Bindable.DynamicReference, une fiche (Record) à lire en profond
+        // (connaissance : ActualValue/MaxValue sur 5 + Text ; salaires : SortValue + DisplayValue « 3,22K € p/m »).
+        ("knowledge", "ScoutingKnowledgeLevel{human=@human,team=@team}", true),
         ("recommendation", "ScoutRecommendationGrade{human=@human,team=@team}", false),
         ("recommendationText", "ShortScoutRecommendation{human=@human}", false),
         ("bestPosition", "ScoutedBestPosition{human=@human,team=@team}", false),
@@ -275,8 +277,8 @@ public class FmBindingReader : IGameReader
         ("bestRoleOop", "ScoutedBestRoleOop{human=@human,team=@team}", false),
         ("minValue", "ScoutedMinValue{human=@human,team=@team}", false),
         ("maxValue", "ScoutedMaxValue{human=@human,team=@team}", false),
-        ("minWage", "ScoutedMinWage{human=@human,team=@team}", false),
-        ("maxWage", "ScoutedMaxWage{human=@human,team=@team}", false),
+        ("minWage", "ScoutedMinWage{human=@human,team=@team}", true),
+        ("maxWage", "ScoutedMaxWage{human=@human,team=@team}", true),
         ("interestedClubs", "ActiveInterestedClubsCount{human=@human}", false),
         ("transferStatus", "TransferStatusDetails/TransferStatusCategory", false),
         ("personality", "Personality", false),
