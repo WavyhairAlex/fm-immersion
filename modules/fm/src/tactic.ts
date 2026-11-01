@@ -174,14 +174,18 @@ function wmean(p: FmPlayer, w: Record<string, number>) {
 }
 
 /**
- * Forme du jour, sur l'échelle des notes (/20) : la fatigue (condition sous 95 %) et le moral pèsent
- * sur le choix du titulaire, sans changer l'adéquation au rôle affichée.
+ * Forme du jour, sur l'échelle des notes (/20) : fatigue (condition sous 95 %), rythme de match
+ * (sous 90 %), moral et place de leader pèsent sur le choix du titulaire, sans changer
+ * l'adéquation au rôle affichée.
  */
 export function readiness(p: FmPlayer): number {
   const cond = p.condition != null && p.condition < 95 ? -(95 - p.condition) * 0.1 : 0;
+  const sharp = p.sharpness != null && p.sharpness < 90 ? -(90 - p.sharpness) * 0.05 : 0;
   const m = moraleLevel(p.morale);
   const mor = m == null ? 0 : ([-1.2, -0.7, -0.3, 0, 0.2, 0.4] as const)[m]!;
-  return cond + mor;
+  // Faire jouer les leaders du vestiaire soutient le moral du groupe.
+  const lead = /leader|meneur|chef/i.test(p.hierarchy ?? '') ? 0.2 : /influen/i.test(p.hierarchy ?? '') ? 0.1 : 0;
+  return cond + sharp + mor + lead;
 }
 
 export class TacticEngine {
@@ -324,6 +328,26 @@ export class TacticEngine {
       sl.fit = pr.f;
       taken.add(pr.p.id);
     }
+    // Rôle du titulaire : parmi les rôles du style que le jeu propose à ce créneau, on garde celui qui
+    // rend l'équipe meilleure (un ailier droitier à droite plutôt qu'un ailier intérieur, par exemple).
+    slots.forEach((sl, i) => {
+      const p = sl.player;
+      if (!p) return;
+      const best = (ph: Phase, cur: string) => {
+        let code = cur;
+        let f = this.roleFit(p, cur, ph, sl.pos) ?? 0;
+        for (const c of [...style.signatureRoles[ph], DEFAULT_ROLE[sl.pos]]) {
+          const r = this.roles.get(c);
+          if (!r || !this.availableAt(r, sl.pos, ph, ctxs[i])) continue;
+          const g = this.roleFit(p, c, ph, sl.pos) ?? 0;
+          if (g > f + 0.3) [code, f] = [c, g];
+        }
+        return [code, f] as const;
+      };
+      const [ip, a] = best('ip', sl.ip);
+      const [oop, b] = best('oop', sl.oop);
+      Object.assign(sl, { ip, oop, fit: (a + b) / 2 });
+    });
     // Remplaçants : chaque joueur hors du onze au plus une fois en premier choix.
     const bench = list.filter((p) => !taken.has(p.id));
     const cands = slots.map((sl) =>

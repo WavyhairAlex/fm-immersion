@@ -92,3 +92,15 @@ describe('forme du jour', () => {
     expect(engine.formationPlan('4-3-3', style, [healthy, fresh]).slots.find((s) => s.pos === 'BT')!.player?.id).toBe(healthy.id);
   });
 });
+
+describe('rôle qui améliore l’équipe', () => {
+  it('ne laisse pas un droitier en ailier intérieur à droite quand un rôle du même pied lui va mieux', () => {
+    const engine = new TacticEngine(DEFAULT_TACTIC_REFERENCE);
+    const style = DEFAULT_TACTIC_REFERENCE.styles.find((s) => s.id === 'possession')!;
+    const right = p(1, 'MO (D)', 13, {}, { foot: 'Droit uniquement' });
+    const sl = engine.formationPlan('4-3-3', style, [right]).slots.find((s) => s.pos === 'MOD')!;
+    expect(sl.player?.id).toBe(right.id);
+    expect(engine.roleFit(right, sl.ip, 'ip', 'MOD')).toBeGreaterThanOrEqual(engine.roleFit(right, 'IW', 'ip', 'MOD')!);
+    expect(sl.ip).not.toBe('IW');
+  });
+});
