@@ -112,6 +112,10 @@ const toStars = (f: number) => Math.max(0, Math.min(5, (f - 10) / 2));
 export const fitPct = (f: number | null | undefined) =>
   f == null ? '–' : starScale ? `${toStars(f).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ★` : `${Math.round((f / 20) * 100)} %`;
 
+/** Écart entre deux notes sur 20, dans l'unité affichée (étoiles ou pourcentage), à deux décimales près. */
+export const fitGap = (d: number) =>
+  starScale ? `${(d / 2).toLocaleString(undefined, { maximumFractionDigits: 2 })} ★` : `${((d / 20) * 100).toLocaleString(undefined, { maximumFractionDigits: 1 })} %`;
+
 /** Pastille d'adéquation : vert au-dessus de 65 % (3,5 étoiles), neutre au milieu, corail sous 45 % (1,5 étoile). */
 export function Fit({ value }: { value: number | null | undefined }) {
   if (value == null) return <span className="text-canard/40">–</span>;

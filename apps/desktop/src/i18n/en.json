@@ -665,7 +665,8 @@
         "slow": "Slow to learn",
         "hard": "Too complex for the squad"
       },
-      "simplify": "Simplify instructions or plan training time."
+      "simplify": "Simplify instructions or plan training time.",
+      "allClose": "All styles are within {{gap}} of each other: your squad doesn't favour any. Pick your project's style; Simloom builds the best eleven for each."
     },
     "eff": {
       "none": "The game's effectiveness gauges are not in this snapshot yet. Meanwhile, Simloom's estimate is under \"Playing style\".",

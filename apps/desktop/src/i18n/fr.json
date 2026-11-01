@@ -665,7 +665,8 @@
         "slow": "Long à assimiler",
         "hard": "Trop complexe pour l'effectif"
       },
-      "simplify": "Simplifie les consignes ou prévois du temps d'entraînement."
+      "simplify": "Simplifie les consignes ou prévois du temps d'entraînement.",
+      "allClose": "Tous les styles se valent à {{gap}} près : ton effectif n'en impose aucun. Choisis celui de ton projet, Simloom bâtit le meilleur onze pour chacun."
     },
     "eff": {
       "none": "Les jauges d'efficacité du jeu ne sont pas encore dans cet instantané. En attendant, l'estimation de Simloom est dans « Style de jeu ».",
