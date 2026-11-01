@@ -7,6 +7,8 @@ import {
   rankTactics,
   knownFormation,
   mergeReference,
+  opponentReport,
+  teamInstructionOf,
   phaseXY,
   planFromLineup,
   playerInstructions,
@@ -18,6 +20,7 @@ import {
   tacticReferenceSchema,
   type BalanceCheck,
   type FmPlayer,
+  type FmSnapshot,
   type GameSlot,
   type Phase,
   type TacticReference,
@@ -109,11 +112,12 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
 const DOT: Record<BalanceCheck['status'], string> = { good: 'bg-eau', warn: 'bg-ambre', bad: 'bg-corail' };
 
 /** Tactique : style conseillé, schéma, onze par rôles, formes avec et sans ballon, équilibre. */
-export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus }: { players: FmPlayer[]; folder: string; gameFormation: string | null; lineup: GameSlot[] | null; lineupStatus?: string | null }) {
+export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupStatus, go }: { snap?: FmSnapshot; players: FmPlayer[]; folder: string; gameFormation: string | null; lineup: GameSlot[] | null; lineupStatus?: string | null; go?: (view: string) => void }) {
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
   const { engine, local, prefs, update, avail, ranked, style, natural, form, plans, plan, gamePlan, fromGame, auto, pick } = useTacticChoice(players, folder, gameFormation, lineup);
   const phase: Phase = prefs.phase ?? 'ip';
+  const opp = useMemo(() => (snap ? opponentReport(snap) : null), [snap]);
 
   if (!avail.length || !style || !plan) return <p className="card mt-6 text-brun">{t('fm.tac.noAttributes')}</p>;
 
@@ -296,6 +300,56 @@ export function FmTactic({ players, folder, gameFormation, lineup, lineupStatus 
               </li>
             ))}
           </ol>
+        </section>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className="card">
+          <h2 className="text-xl font-semibold">{t('fm.tac.teamTitle', { style: styleName(style) })}</h2>
+          {style.mentality && <p className="mt-1 text-sm">{t('fm.style.mentality', { value: style.mentality })}</p>}
+          <div className="mt-3 grid gap-4 sm:grid-cols-2 text-sm">
+            {(
+              [
+                ['ip', style.inPossession],
+                ['oop', style.outOfPossession],
+              ] as const
+            ).map(([ph, list]) => (
+              <div key={ph}>
+                <p className="text-xs font-bold uppercase text-canard/60">{t(`fm.style.${ph}`)}</p>
+                {list.map((x) => (
+                  <p key={x}>
+                    {x}
+                    {!teamInstructionOf(x) && <span className="ml-1 text-xs text-brun">({t('fm.style.notInGame')})</span>}
+                  </p>
+                ))}
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-brun">{t('fm.tac.teamHelp')}</p>
+        </section>
+        <section className="card">
+          <h2 className="text-xl font-semibold">{opp?.name ? t('fm.tac.oppTitle', { name: opp.name }) : t('fm.opp.club')}</h2>
+          {opp ? (
+            <>
+              <p className="mt-1 text-sm text-brun">
+                {[opp.manager.formation, opp.manager.mentality, opp.manager.pressing && t('fm.opp.pressShort', { value: opp.manager.pressing }), opp.manager.marking && t('fm.opp.marking', { value: opp.manager.marking })]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+              <ul className="mt-2 space-y-1 text-sm">
+                {opp.advice.map((a) => (
+                  <li key={a.id}>• {t(`fm.opp.advice.${a.id}`, { name: a.name })}</li>
+                ))}
+              </ul>
+              {go && (
+                <button type="button" className="mt-2 text-sm font-bold text-eau-fonce hover:underline" onClick={() => go('opponent')}>
+                  {t('fm.tac.oppMore')} →
+                </button>
+              )}
+            </>
+          ) : (
+            <p className="mt-1 text-sm text-brun">{t('fm.opp.none')}</p>
+          )}
         </section>
       </div>
 

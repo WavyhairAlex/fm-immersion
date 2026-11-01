@@ -16,6 +16,7 @@ import { FmEffectiveness } from './FmEffectiveness';
 import { FmFinances } from './FmFinances';
 import { FmHome } from './FmHome';
 import { FmLoans } from './FmLoans';
+import { FmOpponent } from './FmOpponent';
 import { FmProgression } from './FmProgression';
 import { FmProject } from './FmProject';
 import { FmRoles } from './FmRoles';
@@ -35,7 +36,7 @@ const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
 const SECTIONS = [
   { id: 'home', views: ['home'] },
   { id: 'squad', views: ['squad', 'analysis', 'compare', 'dressing', 'loans'] },
-  { id: 'tactic', views: ['tactic', 'depth', 'calendar', 'roles', 'effectiveness'] },
+  { id: 'tactic', views: ['tactic', 'opponent', 'depth', 'calendar', 'roles', 'effectiveness'] },
   { id: 'project', views: ['style', 'project', 'training', 'targets'] },
   { id: 'club', views: ['finances', 'wages', 'contracts', 'progression'] },
 ] as const;
@@ -246,7 +247,8 @@ export function FmSave() {
             {view === 'compare' && <FmCompare saveId={saveId} snap={snapshot.data} players={players} folder={folder} history={history} />}
             {view === 'dressing' && <FmDressing players={players} />}
             {view === 'loans' && <FmLoans snap={snapshot.data} />}
-            {view === 'tactic' && <FmTactic players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} lineupStatus={(snapshot.data as { collecte?: { compo?: string } }).collecte?.compo ?? null} />}
+            {view === 'tactic' && <FmTactic snap={snapshot.data} go={go} players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} lineupStatus={(snapshot.data as { collecte?: { compo?: string } }).collecte?.compo ?? null} />}
+            {view === 'opponent' && <FmOpponent snap={snapshot.data} />}
             {view === 'calendar' && <FmCalendar snap={snapshot.data} players={players} />}
             {view === 'roles' && <FmRoles players={players} folder={folder} />}
             {view === 'style' && <FmStyle players={players} folder={folder} />}
