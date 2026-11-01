@@ -1,6 +1,7 @@
 mod db;
 mod fm;
 mod fm_bridge;
+mod fm_memory;
 mod pz2;
 
 use std::sync::Mutex;
@@ -31,6 +32,8 @@ pub fn run() {
             fm_bridge::fm_bridge_latest,
             fm_bridge::fm_bridge_install,
             fm_bridge::fm_bridge_default_game_dir,
+            fm_memory::fm_memory_probe,
+            fm_memory::fm_memory_find,
             pz2::pz2_save_download
         ])
         .run(tauri::generate_context!())

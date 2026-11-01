@@ -22,6 +22,10 @@ Le cadrage complet est dans le document « Simloom — Cadrage » (Claude Docs).
   propriétaire, réputation vérifiable avant candidature, section « Code signing policy » et déclaration de
   confidentialité (dans le README). Tant que ce n'est pas accepté, l'installeur n'est pas signé.
 - **Lecture des sauvegardes** des jeux : côté Rust, en local. Jamais d'envoi des fichiers.
+- **FM27, lecture directe en mémoire** (`src-tauri/src/fm_memory.rs`) : Simloom ouvre `fm.exe` en lecture seule
+  (`PROCESS_VM_READ`) et lit la base native de `game_plugin.dll`, seulement sur action du joueur. Jamais d'écriture
+  ni d'injection. Adresses issues de notre propre analyse hors jeu (rien repris de FM27 Live Editor, dont la licence
+  interdit l'analyse) ; points d'entrée retrouvés par motifs dans le fichier du module.
 - Windows uniquement pour l'instant (Tauri permettra macOS plus tard).
 
 ## Feuille de route

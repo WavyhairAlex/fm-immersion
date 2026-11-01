@@ -1,0 +1,1199 @@
+//! Lecture directe de la base de FM27 en mémoire, de l'extérieur du jeu et en lecture seule.
+//!
+//! Simloom ouvre le processus `fm.exe` avec les seuls droits de lecture (`PROCESS_VM_READ`) et lit la base
+//! native du moteur (module `game_plugin.dll`). Il n'écrit jamais dans le jeu, n'y injecte rien et n'y lance
+//! aucun code : une adresse invalide fait seulement échouer la lecture, sans effet sur la partie.
+//! Rien ne se lit sans une action du joueur dans l'interface.
+//!
+//! Les adresses viennent de notre propre analyse hors jeu de `game_plugin.dll` (FM27 du 29/10/2026) :
+//! - trois points d'entrée globaux, retrouvés à chaque lancement par des motifs d'octets cherchés dans le
+//!   fichier du module sur disque (ils survivent à un patch tant que le code autour ne change pas) ;
+//! - la disposition des objets (joueur, personne, contrat, équipe, club), fixée pour cette version.
+//!   Chaque lecture est contrôlée (valeurs plausibles) : si la structure ne correspond plus, on s'arrête.
+
+// Hors Windows, seule la partie testable est utilisée.
+#![cfg_attr(not(windows), allow(dead_code))]
+
+use serde::{Serialize, Serializer};
+use std::collections::{BTreeMap, HashMap};
+use std::io::{Read, Seek, SeekFrom};
+use std::path::{Path, PathBuf};
+use std::sync::Mutex;
+
+// ---------------------------------------------------------------------------------------------
+// Erreurs
+
+#[derive(Debug, thiserror::Error)]
+pub enum MemError {
+    #[cfg_attr(windows, allow(dead_code))]
+    #[error("lecture directe disponible uniquement sous Windows")]
+    Unsupported,
+    #[error("FM27 n'est pas lancé")]
+    NotRunning,
+    #[error("FM27 est lancé mais sa base n'est pas encore chargée : réessaie une fois la partie ouverte")]
+    ModuleMissing,
+    #[error("accès au processus de FM27 refusé")]
+    AccessDenied,
+    #[error("version de FM27 non reconnue : {0}")]
+    UnknownVersion(String),
+    #[error("aucune partie chargée dans FM27")]
+    NoSave,
+    #[error("structure inattendue ({0}) : la lecture est arrêtée")]
+    Unexpected(String),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+}
+
+impl Serialize for MemError {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        s.serialize_str(&self.to_string())
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Accès mémoire (abstrait : le processus du jeu sous Windows, une mémoire simulée dans les tests)
+
+pub trait Mem {
+    /// Copie `buf.len()` octets depuis `addr` ; `false` si la zone n'est pas lisible en entier.
+    fn read(&self, addr: u64, buf: &mut [u8]) -> bool;
+}
+
+/// Adresse plausible d'un objet du jeu (espace utilisateur Windows x64).
+fn valid(p: u64) -> bool {
+    (0x10000..0x7FFF_FFFF_0000).contains(&p)
+}
+
+struct R<'a, M: Mem>(&'a M);
+
+impl<M: Mem> R<'_, M> {
+    fn bytes(&self, addr: u64, len: usize) -> Option<Vec<u8>> {
+        if !valid(addr) {
+            return None;
+        }
+        let mut b = vec![0u8; len];
+        self.0.read(addr, &mut b).then_some(b)
+    }
+    fn arr<const N: usize>(&self, addr: u64) -> Option<[u8; N]> {
+        if !valid(addr) {
+            return None;
+        }
+        let mut b = [0u8; N];
+        self.0.read(addr, &mut b).then_some(b)
+    }
+    fn u8(&self, a: u64) -> Option<u8> {
+        self.arr::<1>(a).map(|b| b[0])
+    }
+    fn i32(&self, a: u64) -> Option<i32> {
+        self.arr::<4>(a).map(i32::from_le_bytes)
+    }
+    fn ptr(&self, a: u64) -> Option<u64> {
+        self.arr::<8>(a).map(u64::from_le_bytes).filter(|&p| valid(p))
+    }
+    /// Chaîne du jeu : pointeur `p` vers `[p+0]` longueur (int32) puis les octets (UTF-8 supposé).
+    fn string_at(&self, p: u64) -> Option<String> {
+        let len = self.i32(p)?;
+        if !(1..=512).contains(&len) {
+            return None;
+        }
+        let b = self.bytes(p + 4, len as usize)?;
+        Some(decode(&b)).filter(|s| !s.trim().is_empty())
+    }
+    /// Champ qui contient directement le pointeur de chaîne.
+    fn string(&self, field: u64) -> Option<String> {
+        self.string_at(self.ptr(field)?)
+    }
+    /// Champ qui pointe vers un enregistrement dont le premier mot est la chaîne (prénoms, noms).
+    fn string_indirect(&self, field: u64) -> Option<String> {
+        self.string(self.ptr(field)?)
+    }
+}
+
+/// UTF-8 si valide, sinon Latin-1 (l'encodage des noms reste à confirmer en jeu).
+fn decode(b: &[u8]) -> String {
+    match std::str::from_utf8(b) {
+        Ok(s) => s.to_string(),
+        Err(_) => b.iter().map(|&c| c as char).collect(),
+    }
+}
+
+fn le_u16(b: &[u8], o: usize) -> u16 {
+    u16::from_le_bytes([b[o], b[o + 1]])
+}
+fn le_i16(b: &[u8], o: usize) -> i16 {
+    le_u16(b, o) as i16
+}
+fn le_i32(b: &[u8], o: usize) -> i32 {
+    i32::from_le_bytes([b[o], b[o + 1], b[o + 2], b[o + 3]])
+}
+fn le_u64(b: &[u8], o: usize) -> u64 {
+    u64::from_le_bytes(b[o..o + 8].try_into().unwrap())
+}
+
+// ---------------------------------------------------------------------------------------------
+// Points d'entrée : motifs d'octets cherchés dans game_plugin.dll
+
+/// RVA des trois points d'entrée (à ajouter à l'adresse de chargement du module).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Globals {
+    /// Objet statique `db::DATABASE`.
+    pub database: u64,
+    /// Pointeur vers le gestionnaire des managers humains.
+    pub humans: u64,
+    /// Pointeur vers l'objet qui porte la date du jeu.
+    pub date: u64,
+}
+
+/// Valeurs trouvées dans FM27 du 29/10/2026 (game_plugin.dll, SHA-256 bc940e47…0fe057f).
+pub const KNOWN: Globals = Globals { database: 0x57036D0, humans: 0x56F3008, date: 0x5709280 };
+
+struct Sig {
+    pattern: &'static str,
+    /// Position du déplacement 32 bits relatif à RIP dans le motif.
+    disp: usize,
+    /// Écart entre la cible et le point d'entrée cherché (table des personnes = DATABASE + 0x68).
+    minus: u64,
+}
+
+const SIG_DATABASE: Sig = Sig { pattern: "48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? C7 44 24 5C 00 00 00 1B", disp: 3, minus: 0 };
+const SIG_PERSONS: Sig = Sig {
+    pattern: "48 8B 05 ?? ?? ?? ?? 48 8B 80 80 00 00 00 48 8B 48 08 48 3B 08 0F 85 ?? ?? ?? ??",
+    disp: 3,
+    minus: 0x68,
+};
+const SIG_HUMANS: Sig = Sig { pattern: "4C 8B 25 ?? ?? ?? ?? 49 8B 44 24 18 49 8B 54 24 20 48 39 C2 74 4D", disp: 3, minus: 0 };
+const SIG_DATE: Sig = Sig { pattern: "41 B8 64 01 00 00 4C 03 05 ?? ?? ?? ?? 3C 02", disp: 9, minus: 0 };
+
+fn parse_pattern(p: &str) -> Vec<Option<u8>> {
+    p.split_whitespace().map(|t| if t == "??" { None } else { u8::from_str_radix(t, 16).ok() }).collect()
+}
+
+fn matches_at(data: &[u8], i: usize, pat: &[Option<u8>]) -> bool {
+    pat.iter().enumerate().all(|(k, b)| b.map_or(true, |b| data[i + k] == b))
+}
+
+#[derive(Debug, Clone, Copy)]
+struct Section {
+    va: u32,
+    raw_size: u32,
+    raw_ptr: u32,
+}
+
+fn sections(header: &[u8]) -> Option<Vec<Section>> {
+    if header.len() < 0x40 || &header[..2] != b"MZ" {
+        return None;
+    }
+    let pe = u32::from_le_bytes(header[0x3C..0x40].try_into().ok()?) as usize;
+    if header.get(pe..pe + 4)? != b"PE\0\0" {
+        return None;
+    }
+    let count = le_u16(header, pe + 6) as usize;
+    let opt = le_u16(header, pe + 20) as usize;
+    let first = pe + 24 + opt;
+    (0..count)
+        .map(|i| {
+            let s = first + i * 40;
+            let b = header.get(s..s + 40)?;
+            Some(Section {
+                va: u32::from_le_bytes(b[12..16].try_into().ok()?),
+                raw_size: u32::from_le_bytes(b[16..20].try_into().ok()?),
+                raw_ptr: u32::from_le_bytes(b[20..24].try_into().ok()?),
+            })
+        })
+        .collect()
+}
+
+/// Cherche les motifs dans le fichier du module et en déduit les RVA des points d'entrée.
+/// Chaque motif doit apparaître exactement une fois, et les deux motifs de la base doivent concorder.
+pub fn scan_globals<F: Read + Seek>(file: &mut F) -> Result<Globals, MemError> {
+    let mut header = vec![0u8; 4096];
+    file.seek(SeekFrom::Start(0))?;
+    let n = file.read(&mut header)?;
+    header.truncate(n);
+    let secs = sections(&header).ok_or_else(|| MemError::UnknownVersion("module illisible".into()))?;
+
+    let sigs = [&SIG_DATABASE, &SIG_PERSONS, &SIG_HUMANS, &SIG_DATE];
+    let pats: Vec<Vec<Option<u8>>> = sigs.iter().map(|s| parse_pattern(s.pattern)).collect();
+    let longest = pats.iter().map(Vec::len).max().unwrap_or(0);
+    let mut found: Vec<Vec<u64>> = vec![Vec::new(); sigs.len()];
+
+    const CHUNK: usize = 8 << 20;
+    let mut buf = Vec::with_capacity(CHUNK + longest);
+    for s in secs.iter().filter(|s| s.raw_size > 0) {
+        file.seek(SeekFrom::Start(s.raw_ptr as u64))?;
+        let mut remaining = s.raw_size as usize;
+        // Position (dans la section) du premier octet de `buf`.
+        let mut base = 0usize;
+        buf.clear();
+        while remaining > 0 || buf.len() >= longest {
+            let want = CHUNK.min(remaining);
+            let old = buf.len();
+            buf.resize(old + want, 0);
+            file.read_exact(&mut buf[old..])?;
+            remaining -= want;
+            let end = if remaining == 0 { buf.len() } else { buf.len().saturating_sub(longest - 1) };
+            for i in 0..end {
+                for (k, pat) in pats.iter().enumerate() {
+                    if i + pat.len() <= buf.len() && pat[0] == Some(buf[i]) && matches_at(&buf, i, pat) {
+                        let d = le_i32(&buf, i + sigs[k].disp) as i64;
+                        let rva = s.va as i64 + (base + i) as i64 + sigs[k].disp as i64 + 4 + d;
+                        found[k].push((rva as u64).wrapping_sub(sigs[k].minus));
+                    }
+                }
+            }
+            if remaining == 0 {
+                break;
+            }
+            buf.drain(..end);
+            base += end;
+        }
+    }
+
+    let names = ["base", "personnes", "managers", "date"];
+    let mut one = |k: usize| -> Result<u64, MemError> {
+        found[k].sort_unstable();
+        found[k].dedup();
+        match found[k].as_slice() {
+            [v] => Ok(*v),
+            [] => Err(MemError::UnknownVersion(format!("motif « {} » introuvable", names[k]))),
+            _ => Err(MemError::UnknownVersion(format!("motif « {} » ambigu", names[k]))),
+        }
+    };
+    let database = one(0)?;
+    if one(1)? != database {
+        return Err(MemError::UnknownVersion("les motifs de la base ne concordent pas".into()));
+    }
+    Ok(Globals { database, humans: one(2)?, date: one(3)? })
+}
+
+// ---------------------------------------------------------------------------------------------
+// Disposition des objets (FM27 du 29/10/2026)
+
+mod off {
+    /// `DATABASE` : vecteur {début, fin} de tous les `ACTUAL_PLAYER*`.
+    pub const DB_PLAYERS: u64 = 0x100;
+    /// Gestionnaire des managers humains : vecteur de `HUMAN_NON_PLAYER*`.
+    pub const HUMANS_VEC: u64 = 0x18;
+    pub const HUMAN_PERSON: u64 = 0x440;
+    pub const HUMAN_ACTUAL_PERSON: u64 = 0x468;
+    /// Date du jeu dans l'objet pointé par le global `date`.
+    pub const DATE: u64 = 0x164;
+
+    // ACTUAL_PLAYER
+    pub const AP_VBPTR: u64 = 0x8;
+    pub const AP_TEAM: u64 = 0x130;
+    pub const AP_POSITIONS: u64 = 0x150;
+    pub const AP_ATTR_BASE: usize = 0x150;
+    pub const AP_VALUE: usize = 0x234;
+    pub const AP_REP_HOME: usize = 0x25E;
+    pub const AP_REP_CURRENT: usize = 0x260;
+    pub const AP_REP_WORLD: usize = 0x262;
+    pub const AP_CA: usize = 0x264;
+    pub const AP_PA: usize = 0x266;
+    pub const AP_SCALE: usize = 0x278;
+    /// Taille lue d'un coup pour un joueur (couvre tous les champs ci-dessus).
+    pub const AP_BLOCK: usize = 0x280;
+
+    // PERSON / ACTUAL_PERSON
+    pub const P_UID: u64 = 0xC;
+    pub const A_FULL_NAME: u64 = 0x18;
+    pub const A_FIRST_NAME: u64 = 0x28;
+    pub const A_LAST_NAME: u64 = 0x30;
+    pub const A_COMMON_NAME: u64 = 0x38;
+    pub const A_BIRTH: u64 = 0x60;
+    pub const A_CONTRACT: u64 = 0x80;
+
+    // CONTRACT
+    pub const C_TEAM: u64 = 0x10;
+    pub const C_WAGE: u64 = 0x20;
+    pub const C_FLAGS: u64 = 0x2B;
+    pub const C_END: u64 = 0x48;
+
+    // TEAM
+    pub const T_NAME: u64 = 0x18;
+    pub const T_NATIONAL: u64 = 0x2F;
+    pub const T_CONTAINER: u64 = 0x30;
+
+    // CLUB
+    pub const CL_UID: u64 = 0xC;
+    pub const CL_NAME: u64 = 0xC0;
+    pub const CL_SHORT_NAME: u64 = 0xC8;
+}
+
+/// Les 47 attributs : clé Simloom et position après `ACTUAL_PLAYER+0x150` (table du jeu à la RVA 0x4D36B3E).
+const ATTRIBUTES: [(&str, usize); 47] = [
+    ("AerialReach", 27),
+    ("CommandOfArea", 28),
+    ("Communication", 29),
+    ("Eccentricity", 46),
+    ("Handling", 26),
+    ("Kicking", 30),
+    ("Reflexes", 36),
+    ("RushingOut", 47),
+    ("TendencyToPunch", 48),
+    ("Throwing", 31),
+    ("OneOnOnes", 34),
+    ("Crossing", 15),
+    ("Dribbling", 16),
+    ("Finishing", 17),
+    ("Heading", 18),
+    ("LongShots", 19),
+    ("LongThrows", 45),
+    ("Marking", 20),
+    ("Passing", 22),
+    ("PenaltyTaking", 23),
+    ("FreeKicks", 50),
+    ("Tackling", 24),
+    ("Technique", 38),
+    ("FirstTouch", 37),
+    ("Corners", 42),
+    ("Aggression", 60),
+    ("Anticipation", 32),
+    ("Bravery", 58),
+    ("Vision", 25),
+    ("Decisions", 33),
+    ("Determination", 66),
+    ("Flair", 41),
+    ("Leadership", 55),
+    ("OffTheBall", 21),
+    ("Positioning", 35),
+    ("Teamwork", 43),
+    ("WorkRate", 44),
+    ("Composure", 67),
+    ("Concentration", 68),
+    ("Acceleration", 49),
+    ("Agility", 61),
+    ("Balance", 57),
+    ("Pace", 53),
+    ("Stamina", 52),
+    ("Strength", 51),
+    ("JumpingReach", 54),
+    ("NaturalFitness", 65),
+];
+
+/// Les 15 postes (octets `+0x150` à `+0x15E`) en codes Simloom ; le libéro n'a pas d'équivalent.
+const POSITIONS: [Option<&str>; 15] = [
+    Some("GB"),
+    None,
+    Some("DG"),
+    Some("DC"),
+    Some("DD"),
+    Some("MDF"),
+    Some("MG"),
+    Some("MC"),
+    Some("MD"),
+    Some("MOG"),
+    Some("MOC"),
+    Some("MOD"),
+    Some("BT"),
+    Some("DLG"),
+    Some("DLD"),
+];
+
+// ---------------------------------------------------------------------------------------------
+// Dates du jeu : 2 octets jour de l'année (bits 0-8), 2 octets année
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub struct SiDate {
+    pub day: u16,
+    pub year: u16,
+}
+
+impl SiDate {
+    fn from_bytes(b: [u8; 4]) -> Self {
+        SiDate { day: u16::from_le_bytes([b[0], b[1]]) & 0x1FF, year: u16::from_le_bytes([b[2], b[3]]) }
+    }
+    fn plausible(&self) -> bool {
+        (1900..=2200).contains(&self.year) && self.day < 366
+    }
+    /// Date ISO, en comptant le jour de l'année à partir de 0 (à confirmer en jeu).
+    pub fn iso(&self) -> Option<String> {
+        if !self.plausible() {
+            return None;
+        }
+        let leap = |y: u16| (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+        let months = [31, if leap(self.year) { 29 } else { 28 }, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        let mut d = self.day;
+        for (m, len) in months.iter().enumerate() {
+            if d < *len {
+                return Some(format!("{:04}-{:02}-{:02}", self.year, m + 1, d + 1));
+            }
+            d -= len;
+        }
+        None
+    }
+    /// Âge en années révolues à la date `today`.
+    fn age_at(&self, today: &SiDate) -> Option<u16> {
+        (self.plausible() && today.plausible() && today.year >= self.year)
+            .then(|| today.year - self.year - u16::from(today.day < self.day))
+    }
+}
+
+fn date_at<M: Mem>(r: &R<M>, a: u64) -> Option<SiDate> {
+    r.arr::<4>(a).map(SiDate::from_bytes).filter(SiDate::plausible)
+}
+
+// ---------------------------------------------------------------------------------------------
+// Lecture des joueurs
+
+/// Un joueur de la base, au format des joueurs de l'instantané (`players`) plus quelques champs bruts.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DbPlayer {
+    pub id: i32,
+    pub name: String,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub common_name: Option<String>,
+    pub birth_date: Option<String>,
+    pub age: Option<u16>,
+    pub club: Option<String>,
+    pub club_short: Option<String>,
+    pub club_id: Option<i32>,
+    pub team: Option<String>,
+    /// Capacité actuelle et potentielle réelles (0-200 ; potentiel négatif = fourchette du jeu).
+    pub ca: i16,
+    pub pa: i16,
+    pub reputation: [i16; 3],
+    /// Postes à 15 ou plus sur 20 (« compétent » et au-delà), au format texte de Simloom.
+    pub positions_text: String,
+    pub position_ratings: BTreeMap<&'static str, u8>,
+    pub attributes: BTreeMap<&'static str, u8>,
+    /// Échelle de stockage des attributs (`100` : convertis en 1-20 comme le fait le jeu).
+    pub attribute_scale: u8,
+    /// Salaire brut lu dans le contrat (unité à confirmer en jeu).
+    pub wage: Option<i32>,
+    pub contract_end: Option<String>,
+    /// Valeur stockée par le jeu (la valeur affichée est recalculée selon le manager : à comparer).
+    pub value_raw: Option<i32>,
+}
+
+struct Ctx<'a, M: Mem> {
+    r: R<'a, M>,
+    today: Option<SiDate>,
+    clubs: HashMap<u64, Option<ClubInfo>>,
+}
+
+#[derive(Clone)]
+struct ClubInfo {
+    id: i32,
+    name: Option<String>,
+    short: Option<String>,
+}
+
+impl<M: Mem> Ctx<'_, M> {
+    fn club(&mut self, club: u64) -> Option<ClubInfo> {
+        if let Some(c) = self.clubs.get(&club) {
+            return c.clone();
+        }
+        let info = self.r.i32(club + off::CL_UID).filter(|&id| id > 0).map(|id| ClubInfo {
+            id,
+            name: self.r.string(club + off::CL_NAME),
+            short: self.r.string(club + off::CL_SHORT_NAME),
+        });
+        self.clubs.insert(club, info.clone());
+        info
+    }
+
+    /// Club d'une équipe (`None` pour une sélection nationale).
+    fn club_of_team(&mut self, team: u64) -> Option<ClubInfo> {
+        if self.r.u8(team + off::T_NATIONAL)? != 0 {
+            return None;
+        }
+        let club = self.r.ptr(team + off::T_CONTAINER)?;
+        self.club(club)
+    }
+
+    fn player(&mut self, ap: u64) -> Option<DbPlayer> {
+        let b = self.r.bytes(ap, off::AP_BLOCK)?;
+        // Héritage virtuel : les sous-objets PERSON et ACTUAL_PERSON se trouvent par le vbptr.
+        let vb = self.r.ptr(ap + off::AP_VBPTR)?;
+        let person = ap + off::AP_VBPTR + self.r.i32(vb + 4)? as i64 as u64;
+        let actual = ap + off::AP_VBPTR + self.r.i32(vb + 8)? as i64 as u64;
+        let id = self.r.i32(person + off::P_UID).filter(|&id| id > 0)?;
+
+        let ca = le_i16(&b, off::AP_CA);
+        let pa = le_i16(&b, off::AP_PA);
+        if !(0..=200).contains(&ca) || !(-200..=200).contains(&pa) {
+            return None;
+        }
+        let scale100 = b[off::AP_SCALE] & 0x80 != 0;
+        let mut attributes = BTreeMap::new();
+        for (key, pos) in ATTRIBUTES {
+            let v = b[off::AP_ATTR_BASE + pos];
+            let v = if scale100 { ((v as u16 + 2) / 5).clamp(1, 20) as u8 } else { v };
+            attributes.insert(key, v);
+        }
+        if attributes.values().any(|&v| v > 20) {
+            return None;
+        }
+        let mut position_ratings = BTreeMap::new();
+        for (i, code) in POSITIONS.iter().enumerate() {
+            if let Some(code) = code {
+                position_ratings.insert(*code, b[off::AP_POSITIONS as usize + i]);
+            }
+        }
+        let mut best: Vec<_> = position_ratings.iter().filter(|(_, &v)| v >= 15).map(|(c, v)| (*c, *v)).collect();
+        best.sort_by(|a, b| b.1.cmp(&a.1));
+        let positions_text = best.iter().map(|(c, _)| *c).collect::<Vec<_>>().join(", ");
+
+        let first_name = self.r.string_indirect(actual + off::A_FIRST_NAME);
+        let last_name = self.r.string_indirect(actual + off::A_LAST_NAME);
+        let common_name = self.r.string_indirect(actual + off::A_COMMON_NAME);
+        let name = common_name
+            .clone()
+            .or_else(|| self.r.string(actual + off::A_FULL_NAME))
+            .or_else(|| match (&first_name, &last_name) {
+                (Some(f), Some(l)) => Some(format!("{f} {l}")),
+                (f, l) => f.clone().or_else(|| l.clone()),
+            })?;
+        let birth = date_at(&self.r, actual + off::A_BIRTH);
+
+        let contract = self.r.ptr(actual + off::A_CONTRACT);
+        let wage = contract.and_then(|c| self.r.i32(c + off::C_WAGE)).filter(|&w| w >= 0);
+        let contract_end = contract
+            .filter(|&c| self.r.u8(c + off::C_FLAGS).is_some_and(|f| f & 0x08 == 0))
+            .and_then(|c| date_at(&self.r, c + off::C_END))
+            .and_then(|d| d.iso());
+
+        let team = le_u64(&b, off::AP_TEAM as usize);
+        let team = valid(team).then_some(team);
+        let mut club = team.and_then(|t| self.club_of_team(t));
+        if club.is_none() {
+            // Joueur en sélection ou sans équipe lisible : on passe par l'équipe de son contrat.
+            if let Some(t) = contract.and_then(|c| self.r.ptr(c + off::C_TEAM)) {
+                club = self.club_of_team(t);
+            }
+        }
+        let value = le_i32(&b, off::AP_VALUE);
+
+        Some(DbPlayer {
+            id,
+            name,
+            first_name,
+            last_name,
+            common_name,
+            birth_date: birth.and_then(|d| d.iso()),
+            age: match (birth, self.today) {
+                (Some(b), Some(t)) => b.age_at(&t),
+                _ => None,
+            },
+            club_id: club.as_ref().map(|c| c.id),
+            club_short: club.as_ref().and_then(|c| c.short.clone()),
+            club: club.and_then(|c| c.name),
+            team: team.and_then(|t| self.r.string(t + off::T_NAME)),
+            ca,
+            pa,
+            reputation: [le_i16(&b, off::AP_REP_HOME), le_i16(&b, off::AP_REP_CURRENT), le_i16(&b, off::AP_REP_WORLD)],
+            positions_text,
+            position_ratings,
+            attributes,
+            attribute_scale: if scale100 { 100 } else { 20 },
+            wage,
+            contract_end,
+            value_raw: (value >= 0).then_some(value),
+        })
+    }
+}
+
+/// Copie d'un vecteur {début, fin} de pointeurs (8 octets par élément), éléments nuls retirés.
+fn pointer_vec<M: Mem>(r: &R<M>, at: u64, max: usize) -> Option<Vec<u64>> {
+    let begin = r.ptr(at)?;
+    let end = r.ptr(at + 8)?;
+    if end < begin || (end - begin) % 8 != 0 {
+        return None;
+    }
+    let n = ((end - begin) / 8) as usize;
+    if n > max {
+        return None;
+    }
+    let mut out = Vec::with_capacity(n);
+    const STEP: usize = 4096;
+    for start in (0..n).step_by(STEP) {
+        let count = STEP.min(n - start);
+        let raw = r.bytes(begin + start as u64 * 8, count * 8)?;
+        out.extend((0..count).map(|i| le_u64(&raw, i * 8)).filter(|&p| valid(p)));
+    }
+    Some(out)
+}
+
+/// Base lue en mémoire, prête à parcourir.
+pub struct Database<'a, M: Mem> {
+    ctx: Ctx<'a, M>,
+    module_base: u64,
+    globals: Globals,
+    players: Vec<u64>,
+}
+
+/// Nombre maximal de joueurs accepté (une base FM complète en compte quelques centaines de milliers).
+const MAX_PLAYERS: usize = 3_000_000;
+
+impl<'a, M: Mem> Database<'a, M> {
+    pub fn open(mem: &'a M, module_base: u64, globals: Globals) -> Result<Self, MemError> {
+        let r = R(mem);
+        let today = r.ptr(module_base + globals.date).and_then(|p| date_at(&r, p + off::DATE));
+        let players = pointer_vec(&r, module_base + globals.database + off::DB_PLAYERS, MAX_PLAYERS)
+            .ok_or_else(|| MemError::Unexpected("liste des joueurs illisible".into()))?;
+        if players.is_empty() {
+            return Err(MemError::NoSave);
+        }
+        Ok(Database { ctx: Ctx { r, today, clubs: HashMap::new() }, module_base, globals, players })
+    }
+
+    pub fn count(&self) -> usize {
+        self.players.len()
+    }
+
+    pub fn today(&self) -> Option<SiDate> {
+        self.ctx.today
+    }
+
+    /// Contrôle sur un échantillon : au moins 90 % des joueurs doivent être lisibles et plausibles.
+    pub fn check(&mut self) -> Result<(usize, usize), MemError> {
+        let step = (self.players.len() / 200).max(1);
+        let sample: Vec<u64> = self.players.iter().step_by(step).take(200).copied().collect();
+        let ok = sample.iter().filter(|&&p| self.ctx.player(p).is_some()).count();
+        if ok * 10 < sample.len() * 9 {
+            return Err(MemError::Unexpected(format!("{ok} joueurs plausibles sur {} contrôlés", sample.len())));
+        }
+        Ok((ok, sample.len()))
+    }
+
+    /// Parcourt les joueurs et garde ceux que `keep` accepte, jusqu'à `limit`.
+    pub fn players(&mut self, limit: usize, mut keep: impl FnMut(&DbPlayer) -> bool) -> Vec<DbPlayer> {
+        let mut out = Vec::new();
+        for i in 0..self.players.len() {
+            if out.len() >= limit {
+                break;
+            }
+            if let Some(p) = self.ctx.player(self.players[i]) {
+                if keep(&p) {
+                    out.push(p);
+                }
+            }
+        }
+        out
+    }
+
+    /// Managers humains de la partie et leur club.
+    pub fn humans(&mut self) -> Vec<Human> {
+        let r = &self.ctx.r;
+        let Some(mgr) = r.ptr(self.module_base + self.globals.humans) else { return Vec::new() };
+        let list = pointer_vec(r, mgr + off::HUMANS_VEC, 64).unwrap_or_default();
+        let mut out = Vec::new();
+        for h in list {
+            let actual = h + off::HUMAN_ACTUAL_PERSON;
+            let r = &self.ctx.r;
+            let id = r.i32(h + off::HUMAN_PERSON + off::P_UID);
+            let name = r.string(actual + off::A_FULL_NAME).or_else(|| {
+                let f = r.string_indirect(actual + off::A_FIRST_NAME);
+                let l = r.string_indirect(actual + off::A_LAST_NAME);
+                match (f, l) {
+                    (Some(f), Some(l)) => Some(format!("{f} {l}")),
+                    (f, l) => f.or(l),
+                }
+            });
+            let team = r.ptr(actual + off::A_CONTRACT).and_then(|c| r.ptr(c + off::C_TEAM));
+            let club = team.and_then(|t| self.ctx.club_of_team(t));
+            out.push(Human { id, name, club: club.as_ref().and_then(|c| c.name.clone()), club_id: club.map(|c| c.id) });
+        }
+        out
+    }
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Human {
+    pub id: Option<i32>,
+    pub name: Option<String>,
+    pub club: Option<String>,
+    pub club_id: Option<i32>,
+}
+
+// ---------------------------------------------------------------------------------------------
+// Processus du jeu (Windows)
+
+#[derive(Debug, Clone)]
+pub struct Module {
+    pub pid: u32,
+    pub base: u64,
+    pub size: u32,
+    pub path: PathBuf,
+}
+
+#[cfg(windows)]
+mod win {
+    use super::{Mem, MemError, Module};
+    use std::ffi::c_void;
+    use std::path::PathBuf;
+    use windows_sys::Win32::Foundation::{CloseHandle, GetLastError, ERROR_ACCESS_DENIED, HANDLE, INVALID_HANDLE_VALUE};
+    use windows_sys::Win32::System::Diagnostics::Debug::ReadProcessMemory;
+    use windows_sys::Win32::System::Diagnostics::ToolHelp::{
+        CreateToolhelp32Snapshot, Module32FirstW, Module32NextW, Process32FirstW, Process32NextW, MODULEENTRY32W,
+        PROCESSENTRY32W, TH32CS_SNAPMODULE, TH32CS_SNAPMODULE32, TH32CS_SNAPPROCESS,
+    };
+    use windows_sys::Win32::System::Threading::{OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_VM_READ};
+
+    fn wide(s: &[u16]) -> String {
+        let end = s.iter().position(|&c| c == 0).unwrap_or(s.len());
+        String::from_utf16_lossy(&s[..end])
+    }
+
+    struct Snapshot(HANDLE);
+    impl Drop for Snapshot {
+        fn drop(&mut self) {
+            unsafe { CloseHandle(self.0) };
+        }
+    }
+
+    fn game_pid() -> Option<u32> {
+        unsafe {
+            let snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+            if snap == INVALID_HANDLE_VALUE {
+                return None;
+            }
+            let snap = Snapshot(snap);
+            let mut e: PROCESSENTRY32W = std::mem::zeroed();
+            e.dwSize = std::mem::size_of::<PROCESSENTRY32W>() as u32;
+            let mut ok = Process32FirstW(snap.0, &mut e) != 0;
+            while ok {
+                if wide(&e.szExeFile).eq_ignore_ascii_case("fm.exe") {
+                    return Some(e.th32ProcessID);
+                }
+                ok = Process32NextW(snap.0, &mut e) != 0;
+            }
+            None
+        }
+    }
+
+    pub fn find_module() -> Result<Module, MemError> {
+        let pid = game_pid().ok_or(MemError::NotRunning)?;
+        // La liste des modules peut échouer pendant que le jeu en charge : quelques essais.
+        for _ in 0..5 {
+            unsafe {
+                let snap = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE | TH32CS_SNAPMODULE32, pid);
+                if snap == INVALID_HANDLE_VALUE {
+                    if GetLastError() == ERROR_ACCESS_DENIED {
+                        return Err(MemError::AccessDenied);
+                    }
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    continue;
+                }
+                let snap = Snapshot(snap);
+                let mut e: MODULEENTRY32W = std::mem::zeroed();
+                e.dwSize = std::mem::size_of::<MODULEENTRY32W>() as u32;
+                let mut ok = Module32FirstW(snap.0, &mut e) != 0;
+                while ok {
+                    if wide(&e.szModule).eq_ignore_ascii_case("game_plugin.dll") {
+                        return Ok(Module {
+                            pid,
+                            base: e.modBaseAddr as u64,
+                            size: e.modBaseSize,
+                            path: PathBuf::from(wide(&e.szExePath)),
+                        });
+                    }
+                    ok = Module32NextW(snap.0, &mut e) != 0;
+                }
+                return Err(MemError::ModuleMissing);
+            }
+        }
+        Err(MemError::ModuleMissing)
+    }
+
+    /// Processus du jeu ouvert en lecture seule.
+    pub struct Process(HANDLE);
+
+    impl Process {
+        pub fn open(pid: u32) -> Result<Self, MemError> {
+            let h = unsafe { OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_LIMITED_INFORMATION, 0, pid) };
+            if h.is_null() {
+                return Err(MemError::AccessDenied);
+            }
+            Ok(Process(h))
+        }
+    }
+
+    impl Drop for Process {
+        fn drop(&mut self) {
+            unsafe { CloseHandle(self.0) };
+        }
+    }
+
+    impl Mem for Process {
+        fn read(&self, addr: u64, buf: &mut [u8]) -> bool {
+            let mut n = 0usize;
+            let ok = unsafe {
+                ReadProcessMemory(self.0, addr as *const c_void, buf.as_mut_ptr() as *mut c_void, buf.len(), &mut n)
+            };
+            ok != 0 && n == buf.len()
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Commandes
+
+/// Points d'entrée retrouvés pour un fichier donné (taille + date), pour ne pas relire 400 Mo à chaque fois.
+static GLOBALS_CACHE: Mutex<Option<((PathBuf, u64, u128), Globals)>> = Mutex::new(None);
+
+fn globals_for(path: &Path) -> Result<Globals, MemError> {
+    let meta = std::fs::metadata(path)?;
+    let modified = meta.modified().ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map_or(0, |d| d.as_millis());
+    let key = (path.to_path_buf(), meta.len(), modified);
+    if let Some((k, g)) = GLOBALS_CACHE.lock().unwrap().as_ref() {
+        if *k == key {
+            return Ok(*g);
+        }
+    }
+    let mut f = std::io::BufReader::new(std::fs::File::open(path)?);
+    let g = scan_globals(&mut f)?;
+    *GLOBALS_CACHE.lock().unwrap() = Some((key, g));
+    Ok(g)
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Probe {
+    pub module_path: String,
+    pub module_size: u32,
+    pub globals: Globals,
+    /// Les points d'entrée sont ceux de la version analysée (sinon : patch du jeu, retrouvés par motifs).
+    pub known_version: bool,
+    pub game_date: Option<String>,
+    pub game_date_raw: Option<SiDate>,
+    pub player_count: usize,
+    pub checked: usize,
+    pub plausible: usize,
+    pub humans: Vec<Human>,
+    /// Joueurs du club du premier manager humain, à comparer avec leurs fiches dans le jeu.
+    pub squad: Vec<DbPlayer>,
+}
+
+#[cfg(windows)]
+fn with_database<T>(f: impl FnOnce(&mut Database<win::Process>, &Module) -> Result<T, MemError>) -> Result<T, MemError> {
+    let module = win::find_module()?;
+    let globals = globals_for(&module.path)?;
+    let process = win::Process::open(module.pid)?;
+    let mut db = Database::open(&process, module.base, globals)?;
+    f(&mut db, &module)
+}
+
+#[cfg(not(windows))]
+fn with_database<T>(_f: impl FnOnce(&mut Database<NoMem>, &Module) -> Result<T, MemError>) -> Result<T, MemError> {
+    Err(MemError::Unsupported)
+}
+
+#[cfg(not(windows))]
+pub struct NoMem;
+#[cfg(not(windows))]
+impl Mem for NoMem {
+    fn read(&self, _: u64, _: &mut [u8]) -> bool {
+        false
+    }
+}
+
+fn probe() -> Result<Probe, MemError> {
+    with_database(|db, module| {
+        let (plausible, checked) = db.check()?;
+        let humans = db.humans();
+        let squad = match humans.iter().find_map(|h| h.club_id) {
+            Some(club) => db.players(80, |p| p.club_id == Some(club)),
+            None => Vec::new(),
+        };
+        let today = db.today();
+        Ok(Probe {
+            module_path: module.path.display().to_string(),
+            module_size: module.size,
+            globals: db.globals,
+            known_version: db.globals == KNOWN,
+            game_date: today.and_then(|d| d.iso()),
+            game_date_raw: today,
+            player_count: db.count(),
+            checked,
+            plausible,
+            humans,
+            squad,
+        })
+    })
+}
+
+/// Comparaison de noms sans casse ni accents (« Kåre » trouve « kare »).
+pub fn fold(s: &str) -> String {
+    s.chars()
+        .flat_map(char::to_lowercase)
+        .map(|c| match c {
+            'à' | 'á' | 'â' | 'ã' | 'ä' | 'å' | 'ā' => 'a',
+            'ç' | 'ć' | 'č' => 'c',
+            'è' | 'é' | 'ê' | 'ë' | 'ē' | 'ę' | 'ě' => 'e',
+            'ì' | 'í' | 'î' | 'ï' => 'i',
+            'ñ' | 'ń' | 'ň' => 'n',
+            'ò' | 'ó' | 'ô' | 'õ' | 'ö' | 'ø' => 'o',
+            'ù' | 'ú' | 'û' | 'ü' | 'ů' => 'u',
+            'ý' | 'ÿ' => 'y',
+            'š' | 'ś' => 's',
+            'ž' | 'ź' | 'ż' => 'z',
+            'ł' => 'l',
+            c => c,
+        })
+        .collect()
+}
+
+/// État de la lecture directe : points d'entrée, date, nombre de joueurs, managers humains et effectif.
+#[tauri::command]
+pub async fn fm_memory_probe() -> Result<Probe, MemError> {
+    tauri::async_runtime::spawn_blocking(probe).await.map_err(|e| MemError::Unexpected(e.to_string()))?
+}
+
+/// Joueurs dont le nom contient `query` (50 au plus), pour comparer avec leurs fiches dans le jeu.
+#[tauri::command]
+pub async fn fm_memory_find(query: String) -> Result<Vec<DbPlayer>, MemError> {
+    let q = fold(query.trim());
+    if q.chars().count() < 3 {
+        return Ok(Vec::new());
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        with_database(|db, _| {
+            db.check()?;
+            Ok(db.players(50, |p| fold(&p.name).contains(&q)))
+        })
+    })
+    .await
+    .map_err(|e| MemError::Unexpected(e.to_string()))?
+}
+
+// ---------------------------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    /// Mémoire simulée : des zones posées à des adresses précises.
+    #[derive(Default)]
+    struct Fake(Vec<(u64, Vec<u8>)>);
+
+    impl Fake {
+        fn put(&mut self, addr: u64, bytes: Vec<u8>) {
+            self.0.push((addr, bytes));
+        }
+        fn put_u64(&mut self, addr: u64, v: u64) {
+            self.put(addr, v.to_le_bytes().to_vec());
+        }
+        fn put_i32(&mut self, addr: u64, v: i32) {
+            self.put(addr, v.to_le_bytes().to_vec());
+        }
+        fn put_str(&mut self, addr: u64, s: &str) {
+            let mut b = (s.len() as i32).to_le_bytes().to_vec();
+            b.extend_from_slice(s.as_bytes());
+            b.push(0);
+            self.put(addr, b);
+        }
+    }
+
+    impl Mem for Fake {
+        fn read(&self, addr: u64, buf: &mut [u8]) -> bool {
+            // Zones les plus récentes en premier, octet par octet.
+            for (i, slot) in buf.iter_mut().enumerate() {
+                let a = addr + i as u64;
+                match self.0.iter().rev().find(|(s, b)| a >= *s && a < s + b.len() as u64) {
+                    Some((s, b)) => *slot = b[(a - s) as usize],
+                    None => return false,
+                }
+            }
+            true
+        }
+    }
+
+    const BASE: u64 = 0x7FF0_0000_0000;
+
+    fn date(day: u16, year: u16) -> Vec<u8> {
+        let mut b = day.to_le_bytes().to_vec();
+        b.extend_from_slice(&year.to_le_bytes());
+        b
+    }
+
+    /// Un joueur `ACTUAL_PLAYER` complet, comme le jeu le range, plus sa base et la date.
+    fn world() -> Fake {
+        let mut m = Fake::default();
+        let ap = 0x2000_0000u64;
+        let vb = 0x2100_0000u64;
+        let contract = 0x2200_0000u64;
+        let team = 0x2300_0000u64;
+        let club = 0x2400_0000u64;
+        let rgm = 0x2500_0000u64;
+        let list = 0x2600_0000u64;
+
+        // Date du jeu : 1er novembre 2026 (jour 304 compté depuis 0).
+        m.put_u64(BASE + KNOWN.date, rgm);
+        m.put(rgm + off::DATE, date(304, 2026));
+        // Liste des joueurs : un pointeur nul (trou) et notre joueur.
+        m.put_u64(BASE + KNOWN.database + off::DB_PLAYERS, list);
+        m.put_u64(BASE + KNOWN.database + off::DB_PLAYERS + 8, list + 16);
+        m.put_u64(list, 0);
+        m.put_u64(list + 8, ap);
+
+        let mut b = vec![0u8; off::AP_BLOCK];
+        b[0x130..0x138].copy_from_slice(&team.to_le_bytes());
+        for (i, (_, pos)) in ATTRIBUTES.iter().enumerate() {
+            b[0x150 + pos] = (i % 20 + 1) as u8;
+        }
+        b[0x150 + 3] = 20; // DC
+        b[0x150 + 7] = 15; // MC
+        b[0x150 + 5] = 8; // MDF
+        b[0x264..0x266].copy_from_slice(&142i16.to_le_bytes());
+        b[0x266..0x268].copy_from_slice(&(-8i16).to_le_bytes());
+        b[0x234..0x238].copy_from_slice(&1_250_000i32.to_le_bytes());
+        m.put(ap, b);
+        m.put_u64(ap + 8, vb);
+        m.put_i32(vb + 4, 0x288 - 8);
+        m.put_i32(vb + 8, 0x2B0 - 8);
+        let person = ap + 0x288;
+        let actual = ap + 0x2B0;
+        m.put_i32(person + 0xC, 2_000_533);
+        m.put_u64(actual + 0x18, 0);
+        m.put_u64(actual + 0x28, 0x2700_0000);
+        m.put_u64(0x2700_0000, 0x2700_0100);
+        m.put_str(0x2700_0100, "Pontus");
+        m.put_u64(actual + 0x30, 0x2700_0200);
+        m.put_u64(0x2700_0200, 0x2700_0300);
+        m.put_str(0x2700_0300, "Edh");
+        m.put_u64(actual + 0x38, 0);
+        m.put(actual + 0x60, date(150, 2000)); // 30 mai 2000 (année bissextile)
+        m.put_u64(actual + 0x80, contract);
+        m.put(contract, vec![0u8; 0x60]);
+        m.put_i32(contract + 0x20, 4_500);
+        m.put(contract + 0x48, date(364, 2027));
+        m.put(team, vec![0u8; 0x40]);
+        m.put_u64(team + 0x18, 0x2700_0400);
+        m.put_str(0x2700_0400, "Vänersborgs IF");
+        m.put_u64(team + 0x30, club);
+        m.put_i32(club + 0xC, 7_001);
+        m.put_u64(club + 0xC0, 0x2700_0500);
+        m.put_str(0x2700_0500, "Vänersborgs IF");
+        m.put_u64(club + 0xC8, 0x2700_0600);
+        m.put_str(0x2700_0600, "Vänersborg");
+        m
+    }
+
+    #[test]
+    fn lit_un_joueur_complet() {
+        let m = world();
+        let mut db = Database::open(&m, BASE, KNOWN).unwrap();
+        assert_eq!(db.count(), 1);
+        assert_eq!(db.today().unwrap().iso().as_deref(), Some("2026-11-01"));
+        let p = db.players(10, |_| true).pop().unwrap();
+        assert_eq!(p.id, 2_000_533);
+        assert_eq!(p.name, "Pontus Edh");
+        assert_eq!(p.birth_date.as_deref(), Some("2000-05-30"));
+        assert_eq!(p.age, Some(26));
+        assert_eq!((p.ca, p.pa), (142, -8));
+        assert_eq!(p.club.as_deref(), Some("Vänersborgs IF"));
+        assert_eq!(p.club_short.as_deref(), Some("Vänersborg"));
+        assert_eq!(p.club_id, Some(7_001));
+        assert_eq!(p.wage, Some(4_500));
+        assert_eq!(p.contract_end.as_deref(), Some("2027-12-31"));
+        assert_eq!(p.positions_text, "DC, MC");
+        assert_eq!(p.attributes.len(), 47);
+        assert_eq!(p.attributes["AerialReach"], 1);
+        assert_eq!(p.attributes["NaturalFitness"], 47 % 20);
+        assert_eq!(p.value_raw, Some(1_250_000));
+        assert_eq!(db.check().unwrap(), (1, 1));
+    }
+
+    #[test]
+    fn convertit_les_attributs_sur_100() {
+        let mut m = world();
+        let ap = 0x2000_0000u64;
+        m.put(ap + 0x278, vec![0x80]);
+        m.put(ap + 0x150 + 27, vec![73]); // AerialReach 73/100 → 15
+        let mut db = Database::open(&m, BASE, KNOWN).unwrap();
+        let p = db.players(1, |_| true).pop().unwrap();
+        assert_eq!(p.attribute_scale, 100);
+        assert_eq!(p.attributes["AerialReach"], 15);
+    }
+
+    #[test]
+    fn rejette_une_structure_incoherente() {
+        let mut m = world();
+        m.put(0x2000_0000 + 0x264, 999i16.to_le_bytes().to_vec());
+        let mut db = Database::open(&m, BASE, KNOWN).unwrap();
+        assert!(db.players(1, |_| true).is_empty());
+        assert!(matches!(db.check(), Err(MemError::Unexpected(_))));
+    }
+
+    #[test]
+    fn sans_partie_chargee() {
+        let mut m = world();
+        let list = 0x2600_0000u64;
+        m.put_u64(BASE + KNOWN.database + off::DB_PLAYERS + 8, list);
+        assert!(matches!(Database::open(&m, BASE, KNOWN), Err(MemError::NoSave)));
+    }
+
+    #[test]
+    fn dates_du_jeu() {
+        assert_eq!(SiDate { day: 0, year: 2026 }.iso().as_deref(), Some("2026-01-01"));
+        assert_eq!(SiDate { day: 59, year: 2028 }.iso().as_deref(), Some("2028-02-29"));
+        assert_eq!(SiDate { day: 365, year: 2027 }.iso(), None);
+        let birth = SiDate { day: 150, year: 2000 };
+        assert_eq!(birth.age_at(&SiDate { day: 149, year: 2026 }), Some(25));
+        assert_eq!(birth.age_at(&SiDate { day: 150, year: 2026 }), Some(26));
+    }
+
+    #[test]
+    fn noms_sans_accents() {
+        assert_eq!(fold("Kåre Ødegård"), "kare odegard");
+    }
+
+    /// Petit PE : une section dont le contenu porte les quatre motifs.
+    fn fake_pe(code: &[u8], va: u32) -> Vec<u8> {
+        let mut f = vec![0u8; 0x400];
+        f[0..2].copy_from_slice(b"MZ");
+        f[0x3C..0x40].copy_from_slice(&0x80u32.to_le_bytes());
+        f[0x80..0x84].copy_from_slice(b"PE\0\0");
+        f[0x86..0x88].copy_from_slice(&1u16.to_le_bytes());
+        f[0x94..0x96].copy_from_slice(&0xF0u16.to_le_bytes());
+        let s = 0x80 + 24 + 0xF0;
+        f[s..s + 5].copy_from_slice(b".code");
+        f[s + 12..s + 16].copy_from_slice(&va.to_le_bytes());
+        f[s + 16..s + 20].copy_from_slice(&(code.len() as u32).to_le_bytes());
+        f[s + 20..s + 24].copy_from_slice(&0x400u32.to_le_bytes());
+        f.extend_from_slice(code);
+        f
+    }
+
+    fn emit(code: &mut Vec<u8>, va: u32, sig: &Sig, target: u64) {
+        let at = code.len();
+        let pat = parse_pattern(sig.pattern);
+        code.extend(pat.iter().map(|b| b.unwrap_or(0x90)));
+        let disp = target as i64 - (va as i64 + at as i64 + sig.disp as i64 + 4);
+        code[at + sig.disp..at + sig.disp + 4].copy_from_slice(&(disp as i32).to_le_bytes());
+    }
+
+    #[test]
+    fn retrouve_les_points_d_entree_par_motifs() {
+        let va = 0x1000;
+        let mut code = vec![0xCC; 3_000];
+        emit(&mut code, va, &SIG_DATABASE, KNOWN.database);
+        code.extend(vec![0xCC; 5_000]);
+        emit(&mut code, va, &SIG_PERSONS, KNOWN.database + 0x68);
+        emit(&mut code, va, &SIG_HUMANS, KNOWN.humans);
+        code.extend(vec![0xCC; 100]);
+        emit(&mut code, va, &SIG_DATE, KNOWN.date);
+        code.extend(vec![0xCC; 64]);
+        let g = scan_globals(&mut Cursor::new(fake_pe(&code, va))).unwrap();
+        assert_eq!(g, KNOWN);
+    }
+
+    #[test]
+    fn motif_absent_ou_double() {
+        let va = 0x1000;
+        let mut code = vec![0xCC; 64];
+        emit(&mut code, va, &SIG_DATABASE, KNOWN.database);
+        emit(&mut code, va, &SIG_PERSONS, KNOWN.database + 0x68);
+        emit(&mut code, va, &SIG_HUMANS, KNOWN.humans);
+        assert!(matches!(scan_globals(&mut Cursor::new(fake_pe(&code, va))), Err(MemError::UnknownVersion(_))));
+        emit(&mut code, va, &SIG_DATE, KNOWN.date);
+        emit(&mut code, va, &SIG_DATE, KNOWN.date + 8);
+        assert!(matches!(scan_globals(&mut Cursor::new(fake_pe(&code, va))), Err(MemError::UnknownVersion(_))));
+    }
+}

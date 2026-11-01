@@ -1,6 +1,6 @@
 [package]
 name = "simloom"
-version = "0.1.51"
+version = "0.1.52"
 description = "Simloom — le compagnon de tes parties de jeux de gestion"
 authors = ["Simloom"]
 license = "MIT"
@@ -28,6 +28,15 @@ ureq = "2"
 sha2 = "0.10"
 # Planet Zoo 2 : exports de Zoologix (registre JSON, plan PNG) transmis en base64 par la page
 base64 = "0.22"
+
+# FM27 : lecture directe de la base du jeu en mémoire (lecture seule, à la demande du joueur)
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = [
+  "Win32_Foundation",
+  "Win32_System_Diagnostics_Debug",
+  "Win32_System_Diagnostics_ToolHelp",
+  "Win32_System_Threading",
+] }
 
 [profile.release]
 codegen-units = 1
