@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { moraleLevel } from './club';
 import type { FmPlayer } from './player';
 import type { PosCode } from './positions';
 
@@ -172,6 +173,17 @@ function wmean(p: FmPlayer, w: Record<string, number>) {
   return t ? s / t : null;
 }
 
+/**
+ * Forme du jour, sur l'échelle des notes (/20) : la fatigue (condition sous 95 %) et le moral pèsent
+ * sur le choix du titulaire, sans changer l'adéquation au rôle affichée.
+ */
+export function readiness(p: FmPlayer): number {
+  const cond = p.condition != null && p.condition < 95 ? -(95 - p.condition) * 0.1 : 0;
+  const m = moraleLevel(p.morale);
+  const mor = m == null ? 0 : ([-1.2, -0.7, -0.3, 0, 0.2, 0.4] as const)[m]!;
+  return cond + mor;
+}
+
 export class TacticEngine {
   readonly roles: Map<string, RoleRef>;
 
@@ -293,16 +305,17 @@ export class TacticEngine {
     const base = FORMATIONS[form] ?? FORMATIONS['4-3-3']!;
     const ctxs = slotContexts(base.map(([pos, x]) => ({ pos, x })));
     const slots: Slot[] = base.map(([pos, x, y], i) => ({ pos, x, y, ip: pickRole(pos, 'ip', ctxs[i]!), oop: pickRole(pos, 'oop', ctxs[i]!), player: null, fit: null }));
-    const pairs: { i: number; p: FmPlayer; f: number }[] = [];
+    const pairs: { i: number; p: FmPlayer; f: number; r: number }[] = [];
     slots.forEach((sl, i) =>
       list.forEach((p) => {
         if (!p.positions.includes(sl.pos)) return;
         const a = this.roleFit(p, sl.ip, 'ip', sl.pos);
         const b = this.roleFit(p, sl.oop, 'oop', sl.pos);
-        if (a != null && b != null) pairs.push({ i, p, f: (a + b) / 2 });
+        if (a != null && b != null) pairs.push({ i, p, f: (a + b) / 2, r: (a + b) / 2 + readiness(p) });
       }),
     );
-    pairs.sort((a, b) => b.f - a.f);
+    // Le titulaire est le meilleur au poste ce jour-là : adéquation au rôle, fatigue et moral.
+    pairs.sort((a, b) => b.r - a.r);
     const taken = new Set<string>();
     for (const pr of pairs) {
       const sl = slots[pr.i]!;
@@ -316,7 +329,7 @@ export class TacticEngine {
     const cands = slots.map((sl) =>
       bench
         .filter((p) => p.positions.includes(sl.pos))
-        .map((p) => ({ p, f: ((this.roleFit(p, sl.ip, 'ip', sl.pos) ?? 0) + (this.roleFit(p, sl.oop, 'oop', sl.pos) ?? 0)) / 2 }))
+        .map((p) => ({ p, f: ((this.roleFit(p, sl.ip, 'ip', sl.pos) ?? 0) + (this.roleFit(p, sl.oop, 'oop', sl.pos) ?? 0)) / 2 + readiness(p) }))
         .sort((a, b) => b.f - a.f),
     );
     const subs: FmPlayer[][] = slots.map(() => []);
