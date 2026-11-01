@@ -35,6 +35,7 @@
     "folder": "Dossier du plugin Archivix",
     "folderHelp": "Le plugin écrit archivix-snapshot.json dans ce dossier (par exemple D:\\Sports Interactive\\Football Manager 27\\archivix). Simloom le lit seulement, sans toucher à ta sauvegarde.",
     "import": "Importer depuis FM27",
+    "autoImport": "mise à jour automatique chaque minute",
     "importError": "Import impossible : {{reason}}",
     "empty": "Aucun effectif importé. Lance FM27 avec le plugin, charge ta partie, puis clique sur « Importer depuis FM27 ».",
     "alert": {

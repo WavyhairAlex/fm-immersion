@@ -235,8 +235,66 @@ export class TacticEngine {
     const r = this.roles.get(code);
     if (!r) return null;
     // Valeur lue dans le jeu pour ce joueur, ce poste et cette phase : elle prime sur tout calcul.
-    const read = pos ? p.gameStars?.[pos]?.[phase]?.[roleKey(r.fr)] : undefined;
-    if (read != null) return Math.max(1, Math.min(20, read));
+    const read = this.readFit(p, r, phase, pos);
+    if (read != null) return read;
+    const c = this.computedFit(p, code, phase, pos);
+    // Sans lecture, la note calculée est ramenée à l'échelle des étoiles du jeu (voir calibrate).
+    return c == null || !this.cal ? c : Math.max(1, Math.min(20, this.cal.a * c + this.cal.b));
+  }
+
+  /** Valeur lue dans le jeu (sur 20, 10 = 0 étoile, 20 = 5 étoiles), ou null. */
+  readFit(p: FmPlayer, r: RoleRef, phase: Phase, pos?: PosCode): number | null {
+    if (!pos) return null;
+    const table = p.gameStars?.[pos]?.[phase];
+    if (!table) return null;
+    const v = table[roleKey(r.fr)];
+    return v == null ? null : Math.max(1, Math.min(20, v));
+  }
+
+  /**
+   * Échelle commune : `a × note calculée + b` ≈ valeur lue dans le jeu. Les deux ne sont pas sur la même
+   * échelle (moyenne d'attributs d'un côté, étoiles rapportées à la capacité actuelle de l'autre) ; sans
+   * cette correction, un joueur lu dans le jeu écraserait les autres. Ajustée par moindres carrés sur toutes
+   * les valeurs lues de l'effectif (au moins 6, pente positive), sinon simple décalage moyen.
+   */
+  calibrate(list: FmPlayer[]): this {
+    this.cal = null;
+    const xs: number[] = [];
+    const ys: number[] = [];
+    for (const p of list)
+      for (const [pos, byPh] of Object.entries(p.gameStars ?? {}))
+        for (const ph of ['ip', 'oop'] as const)
+          for (const r of this.roles.values()) {
+            if (!(r.phase === ph || r.phase === 'both')) continue;
+            const v = this.readFit(p, r, ph, pos as PosCode);
+            if (v == null || !byPh?.[ph]) continue;
+            const c = this.computedFit(p, r.code, ph, pos as PosCode);
+            if (c == null) continue;
+            xs.push(c);
+            ys.push(v);
+          }
+    if (!xs.length) return this;
+    const n = xs.length;
+    const mx = xs.reduce((a, b) => a + b, 0) / n;
+    const my = ys.reduce((a, b) => a + b, 0) / n;
+    let sxy = 0;
+    let sxx = 0;
+    for (let i = 0; i < n; i++) {
+      sxy += (xs[i]! - mx) * (ys[i]! - my);
+      sxx += (xs[i]! - mx) ** 2;
+    }
+    const a = n >= 6 && sxx > 1e-6 ? sxy / sxx : 0;
+    this.cal = a > 0.2 ? { a, b: my - a * mx, n } : { a: 1, b: my - mx, n };
+    return this;
+  }
+
+  /** Correction d'échelle en cours (null : aucune valeur lue dans le jeu). */
+  cal: { a: number; b: number; n: number } | null = null;
+
+  /** Note calculée (formule du jeu ou repères maison), sans les valeurs lues. */
+  computedFit(p: FmPlayer, code: string, phase: Phase, pos?: PosCode): number | null {
+    const r = this.roles.get(code);
+    if (!r) return null;
     // Rôle connu du jeu : note de FM27 (attributs clés, secondaires, à éviter, familiarité), puis pied.
     const gameCode = phase === 'oop' ? r.game?.oop : r.game?.ip;
     const game = gameCode ? gameRoleRating(p, gameCode, pos) : null;

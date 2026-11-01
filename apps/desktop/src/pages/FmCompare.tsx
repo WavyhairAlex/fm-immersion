@@ -32,7 +32,7 @@ export function FmCompare({ snap, players, folder, history }: { snap: FmSnapshot
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
   const f = useFormat();
-  const { engine } = useTacticEngine(folder);
+  const { engine } = useTacticEngine(folder, players);
   const people = useMemo(() => pool(snap, players), [snap, players]);
   const [ids, setIds] = useState<string[]>(() => read(CMP_KEY, []));
   const [roleCode, setRoleCode] = useState<string | null>(() => read(`${CMP_KEY}.role`, null));

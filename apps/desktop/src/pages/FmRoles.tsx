@@ -22,7 +22,7 @@ const readOpts = (): Opts => {
 export function FmRoles({ players, folder }: { players: FmPlayer[]; folder: string }) {
   const { t } = useTranslation();
   const names = useNames();
-  const { engine } = useTacticEngine(folder);
+  const { engine } = useTacticEngine(folder, players);
   const [opts, setOpts] = useState<Opts>(readOpts);
   const update = (p: Partial<Opts>) => {
     const next = { ...opts, ...p };

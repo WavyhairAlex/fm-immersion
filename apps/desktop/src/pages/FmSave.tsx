@@ -1,7 +1,7 @@
 import { gameFormationOf, gameLineup, normalizePlayer, withExtended, type FmPlayer, type FmSnapshot, type Line, type SquadAt } from '@simloom/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { fmData, savesData } from '../lib/data';
@@ -93,6 +93,33 @@ export function FmSave() {
     },
   });
 
+  // Import automatique : le plugin réécrit son instantané toutes les 5 minutes ; on le relit chaque minute et
+  // on l'enregistre dès qu'il a changé, pour que tout l'écran suive la partie sans bouton à presser.
+  const lastText = useRef<string | null>(null);
+  useEffect(() => {
+    if (!folder) return;
+    let stop = false;
+    const tick = async () => {
+      try {
+        const text = await invoke<string>('fm_read_snapshot', { folder });
+        if (stop || text === lastText.current) return;
+        lastText.current = text;
+        await fmData.importSnapshot(saveId, JSON.parse(text));
+        qc.invalidateQueries({ queryKey: key });
+        qc.invalidateQueries({ queryKey: ['saves'] });
+      } catch {
+        /* fichier absent ou en cours d'écriture : nouvel essai à la prochaine minute */
+      }
+    };
+    void tick();
+    const id = setInterval(() => void tick(), 60_000);
+    return () => {
+      stop = true;
+      clearInterval(id);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [folder, saveId]);
+
   const players = useMemo(() => (snapshot ? withExtended(snapshot.data).players.map(normalizePlayer) : []), [snapshot]);
   const history = useMemo<SquadAt[]>(
     () => (all ?? []).map((h) => ({ gameDate: h.gameDate, players: (h.data as FmSnapshot).players.map(normalizePlayer) })),
@@ -131,6 +158,7 @@ export function FmSave() {
               <p className="mt-1 text-xs text-canard/60">{t('fm.folderHelp')}</p>
             </div>
           </details>
+          <span className="text-xs text-brun">{t('fm.autoImport')}</span>
           <button className="btn-primary px-4 py-1.5 text-sm" disabled={importSnap.isPending || !folder}>
             {t('fm.import')}
           </button>

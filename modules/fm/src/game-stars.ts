@@ -23,6 +23,9 @@ export const roleKey = (s: string) =>
   s
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
+    // Caractères invisibles glissés dans certains libellés du jeu (« Défenseur central\u200b stoppeur »).
+    .replace(/[\u200b-\u200d\ufeff]/g, '')
+    .replace(/\s+/g, ' ')
     .replace(/[’']/g, "'")
     .toLowerCase()
     .trim();
