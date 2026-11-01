@@ -134,3 +134,11 @@ dotnet build -c Release -p:FMDir="G:\Steam\steamapps\common\Football Manager 27"
 
 `FMDir` peut aussi venir de la variable d'environnement `FM27_DIR`. La cartographie des données du jeu
 (chemins, types, limites connues) est décrite dans le rapport `cartographie.md` produit pendant le développement.
+
+## Centre de données (chemins.json, 01/11/2026)
+
+Les statistiques de la saison de chaque joueur (écran Centre de données : minutes, xG, xA, passes, passes
+progressives et clés, dribbles, pressings, tacles, interceptions, duels aériens, distance, erreurs, arrêts du
+gardien) sont lues par les clés `stat*` de la section `joueur` de `config/chemins.json` : propriétés de
+`PersonReference` sans contexte, relevées dans `decouverte.json`. Aucune recompilation ; aucune lecture liée à la
+tactique. Simloom les importe depuis `custom.joueurs` (`modules/fm/src/stats.ts`, page Effectif > Centre de données).

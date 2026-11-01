@@ -305,6 +305,7 @@
       "home": "Home",
       "squad": "Squad",
       "analysis": "Analysis",
+      "stats": "Data centre",
       "compare": "Compare",
       "dressing": "Dressing room",
       "loans": "On loan",
@@ -1140,12 +1141,14 @@
         "good": "Good condition",
         "excellent": "Excellent condition"
       },
-      "teamIntensityHelp": "Recommended setting in Training > Team Intensity: the game then adjusts each player's intensity and rest by condition. No need to touch individual intensity, except for exceptions (a fully fit youngster on double intensity)."
+      "teamIntensityHelp": "Recommended setting in Training > Team Intensity: the game then adjusts each player's intensity and rest by condition. No need to touch individual intensity, except for exceptions (a fully fit youngster on double intensity).",
+      "focusFromStats": "From matches"
     },
     "intro": {
       "home": "What needs your attention today, the styles that suit the squad, your best players and your youngsters.",
       "squad": "Every first-team player, sortable by level, condition, contract or wage.",
       "analysis": "The squad diagnosis: priorities, lines, depth and age profile.",
+      "stats": "Each player's match stats (passes, xG, pressing, duels) and what they say to work on.",
       "compare": "Two or three players side by side, from the club or your shortlist.",
       "dressing": "Morale, leaders and dressing-room hierarchy.",
       "loans": "Your loaned-out players: where they play and whether they improve.",
@@ -1319,6 +1322,69 @@
         "overtakes_other": "at {{starter}}'s level in {{count}} seasons",
         "decline": "{{age}}, declining",
         "youthTeam": "develops with the youth team"
+      }
+    },
+    "stats": {
+      "title": "Data centre",
+      "none": "No match stats in the snapshot yet. They arrive with the plugin's next snapshot (stat* keys in chemins.json): advance one day in FM27.",
+      "tooEarly": "Fewer than 3 matches played: too early to judge the team.",
+      "noAlert": "Nothing alarming in the team's stats.",
+      "alertsTitle": "What the matches say",
+      "train": "In training: {{list}}.",
+      "who": "Struggling most: {{list}}.",
+      "help": "Season stats, all competitions, as in the game's Data Centre. Each player is compared with players in his line: green = top quarter, coral = bottom quarter. Greyed out: under {{min}} minutes, not compared. \"To work on\" = individual training focus that targets his weakest match stat.",
+      "kpi": {
+        "matches": "Matches covered",
+        "xg": "xG per match",
+        "pass": "Pass completion",
+        "press": "Pressures won",
+        "mistakes": "Errors → goal"
+      },
+      "alert": {
+        "possession": {
+          "tag": "Possession",
+          "text": "Only {{value}}% pass completion: the team loses the ball too quickly for a control game."
+        },
+        "creation": {
+          "tag": "Chances",
+          "text": "{{value}} xG per match: the team creates few chances."
+        },
+        "pressing": {
+          "tag": "Pressing",
+          "text": "{{value}}% of pressures won: the team presses without winning the ball."
+        },
+        "duels": {
+          "tag": "Duels",
+          "text": "{{value}}% tackles won: the team loses its ground duels."
+        },
+        "aerial": {
+          "tag": "Aerial",
+          "text": "{{value}}% headers won."
+        },
+        "mistakes": {
+          "tag": "Errors",
+          "text": "{{value}} errors led to an opposition goal."
+        },
+        "finishing": {
+          "tag": "Finishing",
+          "text": "{{value}} goals versus xG: the forwards waste chances (individual focus \"Chance conversion\")."
+        }
+      },
+      "col": {
+        "player": "Player",
+        "minutes": "Min.",
+        "passPct": "Pass completion",
+        "progPass90": "Prog. passes /90",
+        "keyPass90": "Key passes /90",
+        "xgPer90": "xG /90",
+        "xaPer90": "xA /90",
+        "press90": "Pressures won /90",
+        "tacklePct": "Tackles won",
+        "interc90": "Interc. /90",
+        "headerPct": "Headers won",
+        "distance90": "Distance /90",
+        "mistakes": "Errors → goal",
+        "focus": "To work on"
       }
     }
   },

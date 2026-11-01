@@ -24,6 +24,7 @@ import { FmOpponent } from './FmOpponent';
 import { FmProgression } from './FmProgression';
 import { FmProject } from './FmProject';
 import { FmRoles } from './FmRoles';
+import { FmStats } from './FmStats';
 import { FmStyle } from './FmStyle';
 import { FmTactic } from './FmTactic';
 import { FmTargets } from './FmTargets';
@@ -39,7 +40,7 @@ const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
  */
 const SECTIONS = [
   { id: 'home', views: ['home'] },
-  { id: 'squad', views: ['squad', 'analysis', 'compare', 'dressing', 'loans'] },
+  { id: 'squad', views: ['squad', 'analysis', 'stats', 'compare', 'dressing', 'loans'] },
   { id: 'tactic', views: ['tactic', 'opponent', 'depth', 'calendar', 'roles', 'effectiveness'] },
   { id: 'project', views: ['style', 'project', 'training', 'mercato', 'targets'] },
   { id: 'club', views: ['finances', 'wages', 'contracts', 'progression'] },
@@ -324,6 +325,7 @@ export function FmSave() {
             {view === 'home' && <FmHome snap={snapshot.data} players={players} folder={folder} go={go} />}
             {view === 'squad' && <SquadTable players={players} />}
             {view === 'analysis' && <FmAnalysis players={players} gameDate={snapshot.gameDate} />}
+            {view === 'stats' && <FmStats snap={snapshot.data} players={players} />}
             {view === 'compare' && <FmCompare saveId={saveId} snap={snapshot.data} players={players} folder={folder} history={history} />}
             {view === 'dressing' && <FmDressing players={players} />}
             {view === 'loans' && <FmLoans snap={snapshot.data} />}
