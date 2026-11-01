@@ -314,12 +314,13 @@
       "style": "Style de jeu",
       "effectiveness": "Efficacité",
       "project": "Feuille de route",
-      "targets": "Cibles du mercato",
       "finances": "Finances et board",
       "wages": "Masse salariale",
       "contracts": "Contrats",
       "progression": "Progression",
-      "training": "Entraînement"
+      "training": "Entraînement",
+      "mercato": "Départs et jeunes",
+      "targets": "Cibles du mercato"
     },
     "home": {
       "todo": "À traiter",
@@ -1141,12 +1142,13 @@
       "style": "Étape 1 : quel style de jeu ton effectif peut jouer aujourd'hui, et lequel viser.",
       "project": "Étape 2 : le onze qu'il faut pour le style visé, poste par poste : prêt, à faire progresser ou à recruter.",
       "training": "Étape 3 : le programme d'entraînement collectif et individuel qui rapproche l'effectif du projet.",
-      "targets": "Étape 4 : ta liste de suivi du jeu, classée selon ce que chaque joueur apporterait au projet.",
+      "targets": "Étape 5 : ta liste de suivi du jeu, classée selon ce que chaque joueur apporterait au projet.",
       "finances": "Budgets, simulateur de prolongations et attentes du board.",
       "wages": "Les salaires regroupés par statut, et ce qui détonne.",
       "contracts": "Les fins de contrat à anticiper.",
       "progression": "L'évolution du niveau de chaque joueur depuis le premier instantané.",
-      "opponent": "Le prochain adversaire tel que le décrit le rapport d'équipe du jeu, et comment le jouer."
+      "opponent": "Le prochain adversaire tel que le décrit le rapport d'équipe du jeu, et comment le jouer.",
+      "mercato": "Étape 4 : qui faire partir (vente, prêt, fin de contrat), qui prolonger, et quels jeunes valent le coup pour le projet."
     },
     "nextStep": "Étape suivante : {{view}}",
     "opp": {
@@ -1234,6 +1236,73 @@
         "wage": "Salaire (brut)",
         "contractEnd": "Fin de contrat",
         "value": "Valeur (brute)"
+      }
+    },
+    "merc": {
+      "help": "Calculé sur l'effectif importé, dans deux onze : celui à jouer aujourd'hui ({{form}}) et celui du projet ({{style}} {{projectForm}}). À chaque poste, on garde les titulaires et une doublure par place (deux gardiens remplaçants) ; au-delà, le joueur est en trop. Les étoiles sont celles du staff (niveau → potentiel, par rapport au club) ; le niveau est projeté dans deux saisons.",
+      "kpi": {
+        "leave": "À faire partir",
+        "leaveSub": "{{sell}} à vendre, {{release}} en fin de contrat",
+        "income": "Recette possible",
+        "incomeSub": "valeur des joueurs à vendre · salaires libérés : {{wages}}",
+        "prospects": "Jeunes qui valent le coup",
+        "prospectsSub": "dont {{loan}} à prêter",
+        "extend": "Contrats à prolonger",
+        "extendSub": "titulaires et jeunes prometteurs à moins d'un an de la fin"
+      },
+      "youth_one": "Les jeunes (21 ans ou moins) · {{count}}",
+      "youth_other": "Les jeunes (21 ans ou moins) · {{count}}",
+      "noYouth": "Aucun joueur de 21 ans ou moins dans l'effectif importé.",
+      "youthHelp": "Un jeune vaut le coup quand le staff lui donne au moins 3 étoiles de potentiel, qu'il rattrape le titulaire de son poste d'ici trois saisons, ou qu'il est déjà dans un des deux onze. Bloqué à 19 ans ou plus : prêt pour qu'il joue. À 18 ans ou moins : il progresse avec les jeunes du club.",
+      "stay": "Ceux qui restent",
+      "verdict": {
+        "sell": "À vendre",
+        "release": "Fin de contrat",
+        "loan": "À prêter",
+        "extend": "À prolonger",
+        "develop": "À faire progresser",
+        "replace": "À remplacer",
+        "backup": "Doublure",
+        "core": "Cadre"
+      },
+      "group": {
+        "sell_one": "À vendre · {{count}}",
+        "sell_other": "À vendre · {{count}}",
+        "release_one": "À laisser partir · {{count}}",
+        "release_other": "À laisser partir · {{count}}",
+        "loan_one": "À prêter · {{count}}",
+        "loan_other": "À prêter · {{count}}",
+        "extend_one": "À prolonger · {{count}}",
+        "extend_other": "À prolonger · {{count}}",
+        "replace_one": "À remplacer pour le projet · {{count}}",
+        "replace_other": "À remplacer pour le projet · {{count}}"
+      },
+      "groupHelp": {
+        "sell": "Pas de place dans les deux onze, même comme doublure : mets-les sur la liste des transferts.",
+        "release": "Contrat qui finit dans moins de six mois, ou sans valeur marchande : ne pas prolonger, ou résilier pour libérer le salaire.",
+        "loan": "Jeunes prometteurs bloqués derrière les titulaires et les doublures : un prêt leur donne du temps de jeu.",
+        "extend": "Contrat qui finit dans moins d'un an : à prolonger avant qu'ils ne partent libres.",
+        "replace": "Titulaires aujourd'hui, mais hors du onze du projet et âgés de 27 ans ou plus : à garder jusqu'à l'arrivée d'un remplaçant qui colle au style visé.",
+        "develop": "jeunes à garder et à faire jouer.",
+        "backup": "doublures utiles, à garder.",
+        "core": "titulaires du onze du jour ou du projet."
+      },
+      "why": {
+        "starterNow": "titulaire aujourd'hui ({{pos}})",
+        "starterProject": "titulaire du projet ({{pos}})",
+        "backupAt": "doublure en {{pos}}",
+        "surplus": "{{rank}}e en {{pos}} pour {{need}} place(s)",
+        "noPosition": "aucun poste dans les deux onze",
+        "misfit": "moins adapté au style visé en {{pos}}",
+        "contract_one": "contrat : {{count}} mois",
+        "contract_other": "contrat : {{count}} mois",
+        "unwanted": "statut du club : {{status}}",
+        "potential": "potentiel {{stars}} ★",
+        "lowPotential": "potentiel limité",
+        "overtakes_one": "au niveau de {{starter}} dans {{count}} saison",
+        "overtakes_other": "au niveau de {{starter}} dans {{count}} saisons",
+        "decline": "{{age}} ans, en déclin",
+        "youthTeam": "progresse avec les jeunes"
       }
     }
   },

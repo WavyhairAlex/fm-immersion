@@ -30,3 +30,4 @@ export * from './game-stars';
 export * from './lineup';
 export * from './opponent';
 export * from './matchup';
+export * from './mercato';

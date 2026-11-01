@@ -314,12 +314,13 @@
       "style": "Playing style",
       "effectiveness": "Effectiveness",
       "project": "Roadmap",
-      "targets": "Transfer targets",
       "finances": "Finances and board",
       "wages": "Wage bill",
       "contracts": "Contracts",
       "progression": "Progression",
-      "training": "Training"
+      "training": "Training",
+      "mercato": "Departures and youth",
+      "targets": "Transfer targets"
     },
     "home": {
       "todo": "To deal with",
@@ -1141,12 +1142,13 @@
       "style": "Step 1: which playing style your squad can play today, and which one to aim for.",
       "project": "Step 2: the eleven the target style needs, position by position: ready, to develop or to sign.",
       "training": "Step 3: the team and individual training schedule that moves the squad towards the project.",
-      "targets": "Step 4: your in-game shortlist, ranked by what each player would add to the project.",
+      "targets": "Step 5: your in-game shortlist, ranked by what each player would add to the project.",
       "finances": "Budgets, contract-extension simulator and board expectations.",
       "wages": "Wages grouped by squad status, and what stands out.",
       "contracts": "Contract expiries to plan for.",
       "progression": "Each player's level since the first snapshot.",
-      "opponent": "The next opponent as the game's team report describes it, and how to play them."
+      "opponent": "The next opponent as the game's team report describes it, and how to play them.",
+      "mercato": "Step 4: who to move on (sale, loan, contract end), who to renew, and which youngsters are worth it for the project."
     },
     "nextStep": "Next step: {{view}}",
     "opp": {
@@ -1234,6 +1236,73 @@
         "wage": "Wage (raw)",
         "contractEnd": "Contract end",
         "value": "Value (raw)"
+      }
+    },
+    "merc": {
+      "help": "Based on the imported squad, in two elevens: the one to play today ({{form}}) and the project one ({{style}} {{projectForm}}). At each position we keep the starters plus one backup per slot (two backup keepers); anyone beyond that is surplus. Stars are the staff's (current → potential, relative to the club); level is projected two seasons ahead.",
+      "kpi": {
+        "leave": "To move on",
+        "leaveSub": "{{sell}} to sell, {{release}} at contract end",
+        "income": "Possible income",
+        "incomeSub": "value of players to sell · wages freed: {{wages}}",
+        "prospects": "Youngsters worth keeping",
+        "prospectsSub": "{{loan}} of them to loan out",
+        "extend": "Contracts to renew",
+        "extendSub": "starters and prospects within a year of expiry"
+      },
+      "youth_one": "Youngsters (21 or under) · {{count}}",
+      "youth_other": "Youngsters (21 or under) · {{count}}",
+      "noYouth": "No player aged 21 or under in the imported squad.",
+      "youthHelp": "A youngster is worth it when the staff rate their potential at 3 stars or more, when they catch the starter at their position within three seasons, or when they already make one of the two elevens. Blocked at 19 or older: loan them out to play. 18 or younger: they develop with the club's youth team.",
+      "stay": "Who stays",
+      "verdict": {
+        "sell": "Sell",
+        "release": "Let go",
+        "loan": "Loan out",
+        "extend": "Renew",
+        "develop": "Develop",
+        "replace": "Replace",
+        "backup": "Backup",
+        "core": "Core"
+      },
+      "group": {
+        "sell_one": "To sell · {{count}}",
+        "sell_other": "To sell · {{count}}",
+        "release_one": "To let go · {{count}}",
+        "release_other": "To let go · {{count}}",
+        "loan_one": "To loan out · {{count}}",
+        "loan_other": "To loan out · {{count}}",
+        "extend_one": "To renew · {{count}}",
+        "extend_other": "To renew · {{count}}",
+        "replace_one": "To replace for the project · {{count}}",
+        "replace_other": "To replace for the project · {{count}}"
+      },
+      "groupHelp": {
+        "sell": "No place in either eleven, not even as a backup: transfer-list them.",
+        "release": "Contract ending within six months, or no market value: don't renew, or terminate to free the wage.",
+        "loan": "Promising youngsters stuck behind starters and backups: a loan gets them minutes.",
+        "extend": "Contract ending within a year: renew before they leave on a free.",
+        "replace": "Starters today, but outside the project eleven and aged 27 or more: keep them until a replacement who suits the target style arrives.",
+        "develop": "youngsters to keep and play.",
+        "backup": "useful backups, to keep.",
+        "core": "starters in today's or the project eleven."
+      },
+      "why": {
+        "starterNow": "starter today ({{pos}})",
+        "starterProject": "project starter ({{pos}})",
+        "backupAt": "backup at {{pos}}",
+        "surplus": "#{{rank}} at {{pos}} for {{need}} slot(s)",
+        "noPosition": "no position in either eleven",
+        "misfit": "less suited to the target style at {{pos}}",
+        "contract_one": "contract: {{count}} month",
+        "contract_other": "contract: {{count}} months",
+        "unwanted": "club status: {{status}}",
+        "potential": "potential {{stars}} ★",
+        "lowPotential": "limited potential",
+        "overtakes_one": "at {{starter}}'s level in {{count}} season",
+        "overtakes_other": "at {{starter}}'s level in {{count}} seasons",
+        "decline": "{{age}}, declining",
+        "youthTeam": "develops with the youth team"
       }
     }
   },
