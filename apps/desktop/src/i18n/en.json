@@ -732,7 +732,7 @@
     },
     "targets": {
       "title": "Transfer targets · {{style}} {{form}}",
-      "help": "Your in-game shortlist, ranked by what each player would add to your target XI (\"Recruitment and training\"): fit for the position's role and gain over the current starter. Click a row to compare.",
+      "help": "Players from your shortlist and recruitment targets, read from the game and kept in Simloom. Ranked by what each would add to your target XI (\"Recruitment and training\"): fit for the position's role and gain over the current starter. Click a name to compare.",
       "col": {
         "player": "Player",
         "age": "Age",
@@ -743,12 +743,27 @@
         "level": "Level",
         "eff": "Proj. effectiveness",
         "wage": "Wage",
-        "value": "Value"
+        "value": "Value",
+        "stars": "Stars",
+        "knowledge": "Known",
+        "seen": "List"
       },
       "compare": "Compare",
       "outside": "outside target XI",
-      "none": "Your in-game shortlist is not in the snapshot yet. Meanwhile, the profiles to look for are under \"Recruitment and training\".",
-      "toProject": "See profiles to sign"
+      "none": "No targets yet. This needs FM27 plugin 0.4.0 with the LireCibles setting on: it reads your shortlist and recruitment targets on each new game day. Meanwhile, the profiles to look for are under \"Recruitment and training\".",
+      "toProject": "See profiles to sign",
+      "filter": {
+        "list": "In game ({{n}})",
+        "all": "All ({{n}})",
+        "dismissed": "Dismissed ({{n}})"
+      },
+      "inList": "in game",
+      "lastSeen": "seen {{date}}",
+      "dismiss": "Dismiss",
+      "restore": "Restore",
+      "unknown": "attributes unknown",
+      "emptyFilter": "No target in this filter.",
+      "noneRead": "The plugin read the game's lists but found no player ({{status}}). Add players to your shortlist, or check targetSources in the snapshot."
     },
     "pi": {
       "title": "Player instructions",

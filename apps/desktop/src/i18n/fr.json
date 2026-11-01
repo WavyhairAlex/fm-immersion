@@ -732,7 +732,7 @@
     },
     "targets": {
       "title": "Cibles du mercato · {{style}} {{form}}",
-      "help": "Ta liste de suivi du jeu, classée par ce que chaque joueur apporterait à ton onze cible (« Recrutement et entraînement ») : adéquation au rôle du poste et gain face au titulaire actuel. Clique une ligne pour le comparer.",
+      "help": "Les joueurs de ta liste de suivi et des cibles du recrutement, lus dans le jeu et gardés dans Simloom. Classés par ce que chacun apporterait à ton onze cible (« Recrutement et entraînement ») : adéquation au rôle du poste et gain face au titulaire actuel. Clique un nom pour le comparer.",
       "col": {
         "player": "Joueur",
         "age": "Âge",
@@ -743,12 +743,27 @@
         "level": "Niveau",
         "eff": "Efficacité proj.",
         "wage": "Salaire",
-        "value": "Valeur"
+        "value": "Valeur",
+        "stars": "Étoiles",
+        "knowledge": "Connu",
+        "seen": "Liste"
       },
       "compare": "Comparer",
       "outside": "hors onze cible",
-      "none": "Ta liste de suivi du jeu n'est pas encore dans l'instantané. En attendant, les profils à chercher sont dans « Recrutement et entraînement ».",
-      "toProject": "Voir les profils à recruter"
+      "none": "Aucune cible pour l'instant. Il faut le plugin FM27 0.4.0 avec le réglage LireCibles activé : il lit ta liste de suivi et les cibles du recrutement à chaque nouveau jour de jeu. En attendant, les profils à chercher sont dans « Recrutement et entraînement ».",
+      "toProject": "Voir les profils à recruter",
+      "filter": {
+        "list": "Dans le jeu ({{n}})",
+        "all": "Toutes ({{n}})",
+        "dismissed": "Écartées ({{n}})"
+      },
+      "inList": "dans le jeu",
+      "lastSeen": "vue le {{date}}",
+      "dismiss": "Écarter",
+      "restore": "Remettre",
+      "unknown": "attributs inconnus",
+      "emptyFilter": "Aucune cible dans ce filtre.",
+      "noneRead": "Le plugin a lu les listes du jeu sans y trouver de joueur ({{status}}). Ajoute des joueurs à ta liste de suivi, ou vérifie le détail dans targetSources de l'instantané."
     },
     "pi": {
       "title": "Consignes individuelles",

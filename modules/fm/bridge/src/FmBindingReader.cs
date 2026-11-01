@@ -138,7 +138,7 @@ public class FmBindingReader : IGameReader
 
         if (_attrDate != date && ReadAttributes(count, rows)) _attrDate = date;
 
-        var players = rows.Select(ToPlayer).Where(p => p != null).Cast<PlayerDto>().ToList();
+        var players = rows.Select(r => ToPlayer(r)).Where(p => p != null).Cast<PlayerDto>().ToList();
         TacticDto? tactic = null; Dictionary<string, object?>? effectiveness = null;
         List<Dictionary<string, object?>>? lineup = null;
         var collecte = new Dictionary<string, string>();
@@ -164,6 +164,18 @@ public class FmBindingReader : IGameReader
             try { extended = ReadExtended(count); collecte["joueursEtendus"] = extended == null ? "pas de réponse" : "lue"; }
             catch (Exception e) { collecte["joueursEtendus"] = "erreur : " + e.Message; Plugin.Log.LogWarning($"joueursEtendus : {e.Message}"); }
         tactic ??= new TacticDto(head[2] as string, "MostUsedFormation", null, new(), new());
+
+        // Cibles du mercato (liste de suivi, cibles du recrutement) : sans lien avec la tactique, relues à chaque nouveau jour.
+        if (!Plugin.ReadTargets) collecte["cibles"] = "désactivée (réglage)";
+        else if (_targetsDate == date && _targets != null) collecte["cibles"] = "lue (même jour)";
+        else
+            try
+            {
+                (_targets, _targetSources) = ReadTargets();
+                _targetsDate = date;
+                collecte["cibles"] = $"lue : {_targets.Count} joueur(s)";
+            }
+            catch (Exception e) { collecte["cibles"] = "erreur : " + e.Message; Plugin.Log.LogWarning($"cibles : {e.Message}"); }
 
         // Club et prochain match : blocs optionnels
         Dictionary<string, object?>? clubInfo = null, nextMatch = null;
@@ -191,8 +203,153 @@ public class FmBindingReader : IGameReader
             NextMatch = nextMatch is { Count: > 0 } ? nextMatch : null,
             Lineup = lineup,
             PlayersExtended = extended,
+            Shortlist = Plugin.ReadTargets ? _targets : null,
+            TargetSources = Plugin.ReadTargets ? _targetSources : null,
             Collecte = collecte,
         };
+    }
+
+    // --- Cibles du mercato (réglage LireCibles) : joueurs d'autres clubs suivis par le joueur ---
+    // Sources par défaut (propriétés trouvées dans decouverte.json, sans requête au jeu). Remplaçables sans recompiler
+    // par la section "cibles" de chemins.json : { "nom": "chemin depuis game." }. Chaque source peut renvoyer une liste
+    // de joueurs, une liste de Records qui contiennent un joueur, ou un Record qui contient la liste (voir Batch.Persons).
+    static readonly (string Key, string Path)[] DefaultTargetSources =
+    {
+        ("listeSuivi", "GameCurrentManager/HumanSelectedShortlist{IsPlayerRecruitment=true,team=@team}"),
+        ("cibles", "GameCurrentManagerClubTeam/Club/PlayerTargetsList{human=@human}"),
+    };
+
+    // Propriétés lues pour chaque cible ; celles du recrutement sont « de contexte » (staff du club humain).
+    static readonly string[] TargetProps =
+    {
+        "UniqueId", "Name", "Age", "NationalityText", "PositionCombinedString", "BestPositionShortString",
+        "Footedness/PreferredFootString", "FullContract/EndDate", "FullContract/Wage/DisplayValue",
+        "TransferValueRange/TransferValueRangeString", "ClubAppearancesThisSeason", "ClubGoalsThisSeason", "ClubAverageRatingThisSeason",
+        "CurrentInjury/IsActive", "CurrentInjury/InjuryDescription", "CurrentInjury/InjuryReturnDays", "Club/Name",
+    };
+
+    static readonly (string Key, string Path, bool Deep)[] ScoutFields =
+    {
+        ("currentStars", "CurrentAbilityStarRange{team=@team,human=@human}", true),
+        ("potentialStars", "PotentialAbilityStarRange{team=@team,human=@human}", true),
+        ("scoutCurrentStars", "ScoutCurrentAbilityStarRange{team=@team,human=@human}", true),
+        ("scoutPotentialStars", "ScoutPotentialAbilityStarRange{team=@team,human=@human}", true),
+        ("knowledge", "ScoutingKnowledgeLevel{human=@human,team=@team}", false),
+        ("recommendation", "ScoutRecommendationGrade{human=@human,team=@team}", false),
+        ("recommendationText", "ShortScoutRecommendation{human=@human}", false),
+        ("bestPosition", "ScoutedBestPosition{human=@human,team=@team}", false),
+        ("bestRole", "ScoutedBestRole{human=@human,team=@team}", false),
+        ("bestRoleOop", "ScoutedBestRoleOop{human=@human,team=@team}", false),
+        ("minValue", "ScoutedMinValue{human=@human,team=@team}", false),
+        ("maxValue", "ScoutedMaxValue{human=@human,team=@team}", false),
+        ("minWage", "ScoutedMinWage{human=@human,team=@team}", false),
+        ("maxWage", "ScoutedMaxWage{human=@human,team=@team}", false),
+        ("interestedClubs", "ActiveInterestedClubsCount{human=@human}", false),
+        ("transferStatus", "TransferStatusDetails/TransferStatusCategory", false),
+        ("personality", "Personality", false),
+        ("daysLeftOnShortlist", "DaysLeftOnShortlist", false),
+        ("worldReputationStars", "PlayerWorldReputationStarRating/MaxValue", false),
+    };
+
+    // Les cibles bougent peu : relues seulement quand la date de jeu change, par paquets de joueurs pour ménager le jeu.
+    const int TargetChunk = 10, MaxTargets = 40;
+    string? _targetsDate;
+    List<PlayerDto>? _targets;
+    Dictionary<string, object?>? _targetSources;
+
+    (string Key, string Path)[] TargetSources()
+    {
+        try
+        {
+            if (System.IO.File.Exists(CustomFile))
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(System.IO.File.ReadAllText(CustomFile));
+                if (doc.RootElement.TryGetProperty("cibles", out var c) && c.ValueKind == System.Text.Json.JsonValueKind.Object)
+                {
+                    var list = c.EnumerateObject().Where(p => p.Value.ValueKind == System.Text.Json.JsonValueKind.String && !p.Name.StartsWith('_'))
+                        .Select(p => (p.Name, p.Value.GetString()!)).ToArray();
+                    if (list.Length > 0) return list;
+                }
+            }
+        }
+        catch (Exception e) { Plugin.Log.LogWarning($"chemins.json (cibles) : {e.Message}"); }
+        return DefaultTargetSources;
+    }
+
+    // Lit les joueurs de chaque source : mêmes données que l'effectif (attributs en fourchette selon la connaissance
+    // du recrutement) + avis du recrutement. Une cible présente dans plusieurs sources n'est lue qu'une fois.
+    (List<PlayerDto> Targets, Dictionary<string, object?> Sources) ReadTargets()
+    {
+        var byId = new Dictionary<int, PlayerDto>();
+        var sources = new Dictionary<string, object?>();
+        foreach (var (key, rel) in TargetSources())
+        {
+            var path = "game." + rel;
+            var info = new Dictionary<string, object?> { ["chemin"] = rel };
+            sources[key] = info;
+            try
+            {
+                int count = Num(Batch.Run(new[] { new Req(null, "#count", false, path) }, TimeoutMs)[0]) is double n ? (int)n : 0;
+                info["joueurs"] = count;
+                if (count == 0)
+                {
+                    // Rien de reconnu : on décrit ce que le jeu renvoie, pour ajuster le chemin dans chemins.json.
+                    try { info["forme"] = Batch.Describe(path, TimeoutMs); } catch (Exception e) { info["forme"] = "erreur : " + e.Message; }
+                    continue;
+                }
+                for (int start = 0; start < count && byId.Count < MaxTargets; start += TargetChunk)
+                {
+                    int end = Math.Min(count, start + TargetChunk);
+                    var reqs = new List<Req>();
+                    for (int i = start; i < end; i++)
+                    {
+                        foreach (var p in TargetProps) reqs.Add(new Req(i, p, false, path));
+                        foreach (var (_, p) in PositionAbilities) reqs.Add(new Req(i, p, false, path));
+                        foreach (var f in ScoutFields) reqs.Add(new Req(i, f.Path, f.Deep, path));
+                        foreach (var a in AttributeNames)
+                        {
+                            reqs.Add(new Req(i, $"Attribute{a}/AttributeMinValue", false, path));
+                            reqs.Add(new Req(i, $"Attribute{a}/AttributeMaxValue", false, path));
+                        }
+                    }
+                    var v = Batch.Run(reqs, TimeoutMs * 2);
+                    var rows = new Dictionary<int, Dictionary<string, object?>>();
+                    for (int k = 0; k < reqs.Count; k++)
+                    {
+                        int i = reqs[k].Item!.Value;
+                        if (!rows.TryGetValue(i, out var row)) rows[i] = row = new Dictionary<string, object?>();
+                        row[reqs[k].Path] = v[k];
+                    }
+                    foreach (var (i, row) in rows)
+                    {
+                        if (Num(row.GetValueOrDefault("UniqueId")) is not double id) continue;
+                        if (byId.TryGetValue((int)id, out var known))
+                        {
+                            byId[(int)id] = known with { Sources = known.Sources!.Append(key).ToArray() };
+                            continue;
+                        }
+                        var at = new Dictionary<string, object>();
+                        foreach (var a in AttributeNames)
+                            if (Num(row.GetValueOrDefault($"Attribute{a}/AttributeMinValue")) is double min && min > 0
+                                && Num(row.GetValueOrDefault($"Attribute{a}/AttributeMaxValue")) is double max)
+                                at[a] = min == max ? (int)min : new AttrRange((int)min, (int)max);
+                        var sc = ScoutFields.Select(f => (f.Key, V: row.GetValueOrDefault(f.Path) is string s ? (object?)(Num(s) ?? (object)CleanName(s)!) : row.GetValueOrDefault(f.Path)))
+                            .Where(x => x.V != null).ToDictionary(x => x.Key, x => x.V);
+                        var basic = ToPlayer(row, at.Count > 0 ? at : null);
+                        if (basic == null) continue;
+                        byId[(int)id] = basic with
+                        {
+                            Club = CleanName(row.GetValueOrDefault("Club/Name") as string),
+                            Scout = sc.Count > 0 ? sc : null,
+                            Sources = new[] { key },
+                        };
+                        if (byId.Count >= MaxTargets) break;
+                    }
+                }
+            }
+            catch (Exception e) { info["erreur"] = e.Message; Plugin.Log.LogWarning($"cibles ({key}) : {e.Message}"); }
+        }
+        return (byId.Values.ToList(), sources);
     }
 
     bool _tacticsAllowed;
@@ -441,7 +598,9 @@ public class FmBindingReader : IGameReader
         return _attrCache.Count > 0;
     }
 
-    PlayerDto? ToPlayer(Dictionary<string, object?> r)
+    PlayerDto? ToPlayer(Dictionary<string, object?> r) => ToPlayer(r, Num(r.GetValueOrDefault("UniqueId")) is double id ? _attrCache.GetValueOrDefault((long)id) : null);
+
+    PlayerDto? ToPlayer(Dictionary<string, object?> r, Dictionary<string, object>? attributes)
     {
         if (Num(r.GetValueOrDefault("UniqueId")) is not double id) return null;
         string? S(string k) => r.GetValueOrDefault(k) as string;
@@ -464,7 +623,7 @@ public class FmBindingReader : IGameReader
             I("ClubAppearancesThisSeason"), I("ClubGoalsThisSeason"),
             Num(r.GetValueOrDefault("ClubAverageRatingThisSeason")) is double avg ? Math.Round(avg, 2) : null,
             injured ? S("CurrentInjury/InjuryDescription") ?? "Blessé" : null,
-            _attrCache.GetValueOrDefault((long)id))
+            attributes)
         {
             PositionsText = S("PositionCombinedString"),
             PositionRatings = PositionAbilities.Select(x => (x.Fr, V: I(x.Path))).Where(x => x.V != null)
@@ -536,7 +695,9 @@ public class FmBindingReader : IGameReader
 
     // Item = index dans l'effectif (null = chemin absolu "game.…" ou "tactic.…"). "#count" = taille de la liste.
     // Segment "#N" = N-ième élément de la liste courante. Deep = valeur composée convertie en JSON (Record, liste).
-    public sealed record Req(int? Item, string Path, bool Deep = false);
+    // List = autre liste de joueurs que l'effectif (chemin absolu "game.…", contextes permis) : Item indexe alors
+    // les joueurs trouvés dans cette liste (voir Batch.Persons) ; Path "#count" = leur nombre.
+    public sealed record Req(int? Item, string Path, bool Deep = false, string? List = null);
 
     static class Batch
     {
@@ -563,10 +724,10 @@ public class FmBindingReader : IGameReader
         {
             var states = reqs.Select(r => new State { Deep = r.Deep }).ToArray();
             TypedValue? squad = null, team = null;
-            bool needSquad = reqs.Any(r => r.Item != null || r.Path.StartsWith(Squad));
-            bool needTactic = reqs.Any(r => r.Path.StartsWith(Tactic)) || reqs.Any(r => r.Path.Contains("@team"));
+            bool needSquad = reqs.Any(r => (r.Item != null && r.List == null) || r.Path.StartsWith(Squad));
+            bool needTactic = reqs.Any(r => r.Path.StartsWith(Tactic)) || reqs.Any(r => r.Path.Contains("@team") || (r.List?.Contains("@team") ?? false));
             TypedValue? human = null;
-            if (reqs.Any(r => r.Path.Contains("@human")))
+            if (reqs.Any(r => r.Path.Contains("@human") || (r.List?.Contains("@human") ?? false)))
             {
                 var h = new State { Segs = new[] { "GameCurrentManager" } };
                 Resolve(new[] { h }, () => Root(), timeoutMs);
@@ -585,6 +746,15 @@ public class FmBindingReader : IGameReader
                 Resolve(new[] { t }, () => Root(), timeoutMs);
                 team = t.Cur;
             }
+            // Autres listes de joueurs (liste de suivi, cibles…) : résolues une fois, puis réduites aux joueurs qu'elles contiennent.
+            var lists = new Dictionary<string, List<TypedValue>>();
+            foreach (var lp in reqs.Select(r => r.List).Where(x => x != null).Distinct())
+            {
+                var l = new State { Segs = lp!.Substring("game.".Length).Split('/'), Team = team, Human = human };
+                Resolve(new[] { l }, () => Root(), timeoutMs);
+                var cur = l.Failed ? null : l.Cur;
+                lists[lp] = cur == null ? new() : MainThread.Run(() => Persons(cur, MaxListPersons)).Result;
+            }
 
             MainThread.Run(() =>
             {
@@ -593,9 +763,11 @@ public class FmBindingReader : IGameReader
                     var r = reqs[k]; var st = states[k];
                     st.Team = team; st.Human = human;
                     if (r.Path == Squad + "/#count") { st.Result = (double?)Count(squad); st.Failed = true; continue; }
+                    if (r.List != null && r.Path == "#count") { st.Result = (double)lists[r.List].Count; st.Failed = true; continue; }
                     if (r.Item != null)
                     {
-                        var el = ItemAt(squad, r.Item.Value);
+                        var el = r.List == null ? ItemAt(squad, r.Item.Value)
+                            : r.Item.Value < lists[r.List].Count ? lists[r.List][r.Item.Value] : null;
                         if (el == null) { st.Failed = true; continue; }
                         st.Cur = el;
                         st.Person = el;
@@ -758,6 +930,75 @@ public class FmBindingReader : IGameReader
                 if (dr != null) return $"{dr.Type}#{dr.m_index}";
             }
             try { var s = v.AsString(); return s == null ? null : CleanName(s); } catch { return null; }
+        }
+
+        // Une liste du recrutement n'est pas forcément une liste de joueurs : élément = joueur, ou Record qui en contient un
+        // (ex. {Player, DaysLeft…}) ; la liste elle-même peut être un Record qui contient la liste. On garde les joueurs.
+        public const int MaxListPersons = 60;
+
+        static List<TypedValue> Persons(TypedValue value, int max)
+        {
+            var res = new List<TypedValue>();
+            var list = AsList(value, 2);
+            if (list == null) { if (AsPerson(value, 0) is { } one) res.Add(TypedValue.CreateCopyFrom(one)); return res; }
+            int n = Count(list) ?? 0;
+            for (int i = 0; i < n && res.Count < max; i++)
+                if (ItemAt(list, i) is { } el && AsPerson(el, 2) is { } p) res.Add(TypedValue.CreateCopyFrom(p));
+            return res;
+        }
+
+        static TypedValue? AsList(TypedValue v, int depth)
+        {
+            var o = v.TryCast<ReferenceTypedValue>()?.Value;
+            if (o == null) return null;
+            if (o.TryCast<Il2CppSystem.Collections.IList>() != null) return v;
+            var rec = o.TryCast<Record>();
+            if (rec == null || depth == 0) return null;
+            foreach (var kv in rec)
+                if (kv.Value != null && AsList(kv.Value, depth - 1) is { } l && (Count(l) ?? 0) > 0) return l;
+            return null;
+        }
+
+        static TypedValue? AsPerson(TypedValue v, int depth)
+        {
+            var o = v.TryCast<ReferenceTypedValue>()?.Value;
+            if (o == null) return null;
+            var dr = o.TryCast<FM.UI.DatabaseRecordReference>();
+            if (dr != null) return dr.Type.ToString() is "Person" or "Player" ? v : null;
+            var rec = depth > 0 ? o.TryCast<Record>() : null;
+            if (rec == null) return null;
+            TypedValue? found = null;
+            foreach (var kv in rec)
+            {
+                if (kv.Value == null || AsPerson(kv.Value, depth - 1) is not { } p) continue;
+                var name = Probe.PropName(kv.Key);
+                if (name is "Player" or "Person") return p;
+                found ??= p;
+            }
+            return found;
+        }
+
+        // Forme d'une source de joueurs, pour le rapport de collecte : nombre d'éléments, joueurs reconnus, premier élément.
+        public static Dictionary<string, object?> Describe(string listPath, int timeoutMs)
+        {
+            TypedValue? team = null, human = null;
+            if (listPath.Contains("@team")) { var t = new State { Segs = new[] { "GameCurrentManagerClubTeam" } }; Resolve(new[] { t }, () => Root(), timeoutMs); team = t.Cur; }
+            if (listPath.Contains("@human")) { var h = new State { Segs = new[] { "GameCurrentManager" } }; Resolve(new[] { h }, () => Root(), timeoutMs); human = h.Cur; }
+            var l = new State { Segs = listPath.Substring("game.".Length).Split('/'), Team = team, Human = human };
+            Resolve(new[] { l }, () => Root(), timeoutMs);
+            var cur = l.Failed ? null : l.Cur;
+            if (cur == null) return new() { ["reponse"] = false };
+            return MainThread.Run(() =>
+            {
+                var list = AsList(cur, 2);
+                return new Dictionary<string, object?>
+                {
+                    ["reponse"] = true,
+                    ["elements"] = list == null ? null : Count(list),
+                    ["joueurs"] = Persons(cur, MaxListPersons).Count,
+                    ["premier"] = list != null && ItemAt(list, 0) is { } el ? Dump(el, 2) : Dump(cur, 2),
+                };
+            }).Result;
         }
 
         static int? Count(TypedValue? list) =>
