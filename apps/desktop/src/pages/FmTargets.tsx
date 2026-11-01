@@ -50,7 +50,7 @@ export function FmTargets({ snap, players, folder, go }: { snap: FmSnapshot; pla
                   <td className="px-2 py-1.5">
                     {best ? (
                       <>
-                        <span className="rounded-full bg-eau/20 px-2 py-0.5 text-xs font-bold">{POS_LABEL[best.slot.pos]}</span> {names.role(engine.roles.get(best.slot.ip))}
+                        <span className="pill">{POS_LABEL[best.slot.pos]}</span> {names.role(engine.roles.get(best.slot.ip))}
                       </>
                     ) : (
                       <span className="text-xs text-brun">{t('fm.targets.outside')}</span>

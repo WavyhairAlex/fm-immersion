@@ -272,7 +272,7 @@
       "depth": "Starters and backups",
       "style": "Playing style",
       "effectiveness": "Effectiveness",
-      "project": "Recruitment and training",
+      "project": "Roadmap",
       "targets": "Transfer targets",
       "finances": "Finances and board",
       "wages": "Wage bill",
@@ -580,7 +580,8 @@
         "base": "20%: the position's basic attributes (for a centre-back: marking, tackling, heading, positioning…).",
         "engine": "10%: \"match engine\" attributes (acceleration, pace, anticipation, decisions), useful everywhere outfield.",
         "foot": "Stronger foot: on a flank, −0.5 if the foot does not match (−1 if one-footed). Inverted roles want the foot opposite to the flank."
-      }
+      },
+      "gridTitle": "Fit by position"
     },
     "style": {
       "notInGame": "not in FM27",
@@ -660,7 +661,8 @@
         "playerAbility": "Ability",
         "playerBuyIn": "Buy-in",
         "nextMatch": "Next match"
-      }
+      },
+      "gauges": "In-game gauges"
     },
     "proj": {
       "coach": "My coach",
@@ -998,7 +1000,29 @@
       },
       "rusty": "lacking sharpness: reserve minutes or late appearances",
       "individualHelp": "Role and areas: the project's (his position's role in the target XI, otherwise the role he fits best) and his 3 weakest key attributes, to set as individual training focus. Intensity: set under \"Individual Player Intensity\"; never very high by default (injury risk)."
-    }
+    },
+    "intro": {
+      "home": "What needs your attention today, the styles that suit the squad, your best players and your youngsters.",
+      "squad": "Every first-team player, sortable by level, condition, contract or wage.",
+      "analysis": "The squad diagnosis: priorities, lines, depth and age profile.",
+      "compare": "Two or three players side by side, from the club or your shortlist.",
+      "dressing": "Morale, leaders and dressing-room hierarchy.",
+      "loans": "Your loaned-out players: where they play and whether they improve.",
+      "tactic": "The best formation and starting eleven available today, position by position.",
+      "depth": "Who plays in each position, and which backup could overtake within two seasons.",
+      "calendar": "Upcoming matches and who to rotate based on fatigue.",
+      "roles": "How well each player suits each position and role.",
+      "effectiveness": "The game's tactical effectiveness gauges and what to work on this week.",
+      "style": "Step 1: which playing style your squad can play today, and which one to aim for.",
+      "project": "Step 2: the eleven the target style needs, position by position: ready, to develop or to sign.",
+      "training": "Step 3: the team and individual training schedule that moves the squad towards the project.",
+      "targets": "Step 4: your in-game shortlist, ranked by what each player would add to the project.",
+      "finances": "Budgets, contract-extension simulator and board expectations.",
+      "wages": "Wages grouped by squad status, and what stands out.",
+      "contracts": "Contract expiries to plan for.",
+      "progression": "Each player's level since the first snapshot."
+    },
+    "nextStep": "Next step: {{view}}"
   },
   "pz2": {
     "back": "My games",

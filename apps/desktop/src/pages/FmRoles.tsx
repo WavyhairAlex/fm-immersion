@@ -45,7 +45,7 @@ export function FmRoles({ players, folder }: { players: FmPlayer[]; folder: stri
 
   return (
     <div className="space-y-4">
-      <Panel title={t('fm.views.roles')}>
+      <Panel title={t('fm.roles.gridTitle')}>
         <p className="-mt-2 mb-3 text-xs text-brun">{t('fm.roles.help', { phase: t(`fm.tac.phase.${opts.phase}`).toLowerCase() })}</p>
         <div className="mb-3 flex flex-wrap items-center gap-4">
           <Chips
