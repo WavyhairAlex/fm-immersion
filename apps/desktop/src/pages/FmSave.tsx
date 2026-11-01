@@ -41,19 +41,19 @@ const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
  */
 const SECTIONS = [
   { id: 'home', views: ['home'] },
-  { id: 'squad', views: ['squad', 'analysis', 'compare', 'dressing'] },
-  { id: 'tactic', views: ['tactic', 'opponent', 'roles', 'effectiveness'] },
+  { id: 'squad', views: ['squad', 'analysis', 'compare'] },
+  { id: 'tactic', views: ['tactic', 'opponent'] },
   { id: 'project', views: ['style', 'project', 'training', 'mercato'] },
   { id: 'club', views: ['finances'] },
 ] as const;
 /**
- * Écrans regroupés : un onglet affiche plusieurs parties à la suite (22 onglets ramenés à 14).
+ * Écrans regroupés : un onglet affiche plusieurs parties à la suite (22 onglets ramenés à 11).
  * Les anciens noms d'écran restent valides : `go('contracts')` ouvre Finances et descend à Contrats.
  */
 const PARTS: Record<string, readonly string[]> = {
-  squad: ['squad', 'loans'],
-  analysis: ['analysis', 'stats', 'progression'],
-  tactic: ['tactic', 'depth'],
+  squad: ['squad', 'dressing', 'loans'],
+  analysis: ['analysis', 'roles', 'stats', 'progression'],
+  tactic: ['tactic', 'depth', 'effectiveness'],
   opponent: ['opponent', 'calendar'],
   mercato: ['mercato', 'targets'],
   finances: ['finances', 'wages', 'contracts'],
