@@ -1423,6 +1423,20 @@
         "wage": "Salaire hebdo",
         "contract": "Fin de contrat"
       }
+    },
+    "onThisPage": "Sur cette page :",
+    "pages": {
+      "opponent": "Prochain match",
+      "mercato": "Mercato",
+      "finances": "Finances et contrats"
+    },
+    "pageIntro": {
+      "squad": "Tous les joueurs de l'équipe première, à trier par niveau, forme, contrat ou salaire ; tes prêtés en bas de page.",
+      "analysis": "Le diagnostic de l'effectif, les statistiques de match et la progression de chaque joueur.",
+      "tactic": "La meilleure formation et le meilleur onze possibles aujourd'hui, puis le titulaire et les remplaçants à chaque poste.",
+      "opponent": "L'adversaire du prochain match, puis le calendrier et qui faire tourner selon la fatigue.",
+      "mercato": "Étape 4 : qui faire partir, quels jeunes garder, puis ta liste de suivi classée selon ce que chaque joueur apporterait au projet.",
+      "finances": "Budgets et attentes du board, masse salariale, puis les fins de contrat à anticiper."
     }
   },
   "pz2": {
