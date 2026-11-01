@@ -1,8 +1,9 @@
 //! Lecture de l'instantané Football Manager écrit par le plugin BepInEx.
 //!
 //! Le plugin (lecture seule dans le jeu) dépose `archivix-snapshot.json` dans un
-//! dossier `archivix` à côté des sauvegardes. Simloom se contente de lire ce fichier,
-//! jamais la sauvegarde ni la mémoire du jeu, et n'écrit rien dans ce dossier.
+//! dossier `archivix` à côté des sauvegardes. Ce module se contente de lire ce fichier,
+//! jamais la sauvegarde, et n'écrit rien dans ce dossier. La lecture directe de la base
+//! du jeu en mémoire (à la demande du joueur, lecture seule) est dans `fm_memory.rs`.
 
 use serde::{Serialize, Serializer};
 use std::path::{Path, PathBuf};

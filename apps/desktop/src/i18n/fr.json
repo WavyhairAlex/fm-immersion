@@ -1202,6 +1202,38 @@
       "formsHelp": "Lu dans l'analyse de formation du rapport d'équipe du jeu. Sans ballon, les occasions sont celles qu'ils concèdent.",
       "withBall": "{{value}} avec ballon",
       "withoutBall": "{{value}} sans ballon"
+    },
+    "memory": {
+      "open": "Essai : lire la base de FM27 directement",
+      "title": "Lecture directe de la base de FM27 (essai)",
+      "intro": "Simloom lit la base du jeu en mémoire, de l'extérieur et en lecture seule : rien n'est écrit dans FM27. Lance FM27, charge ta partie, puis compare les valeurs ci-dessous avec les fiches du jeu.",
+      "run": "Lancer l'essai",
+      "reading": "Lecture…",
+      "error": "Lecture impossible : {{reason}}",
+      "date": "Date du jeu : {{date}} (jour {{day}}, année {{year}})",
+      "count": "{{count}} joueurs dans la base",
+      "plausible": "Contrôle : {{ok}} joueurs cohérents sur {{total}}",
+      "known": "Version du jeu reconnue",
+      "patched": "Version du jeu différente : adresses retrouvées par motifs, à vérifier",
+      "human": "Manager : {{name}} ({{club}})",
+      "noClub": "sans club",
+      "squad": "Effectif de ton club",
+      "search": "Chercher un joueur",
+      "searchHint": "3 lettres au moins",
+      "find": "Chercher",
+      "none": "Aucun joueur trouvé.",
+      "scale": "Attributs stockés sur {{scale}}",
+      "birth": "né le {{date}}",
+      "col": {
+        "name": "Joueur",
+        "age": "Âge",
+        "club": "Club",
+        "caPa": "CA / PA",
+        "positions": "Postes",
+        "wage": "Salaire (brut)",
+        "contractEnd": "Fin de contrat",
+        "value": "Valeur (brute)"
+      }
     }
   },
   "pz2": {

@@ -1202,6 +1202,38 @@
       "formsHelp": "Read from the formation analysis of the game's team report. Out of possession, chances are those they concede.",
       "withBall": "{{value}} in possession",
       "withoutBall": "{{value}} out of possession"
+    },
+    "memory": {
+      "open": "Trial: read the FM27 database directly",
+      "title": "Direct FM27 database reading (trial)",
+      "intro": "Simloom reads the game database in memory, from outside the game and read-only: nothing is written to FM27. Start FM27, load your save, then compare the values below with the in-game profiles.",
+      "run": "Run the trial",
+      "reading": "Reading…",
+      "error": "Reading failed: {{reason}}",
+      "date": "Game date: {{date}} (day {{day}}, year {{year}})",
+      "count": "{{count}} players in the database",
+      "plausible": "Check: {{ok}} consistent players out of {{total}}",
+      "known": "Game version recognised",
+      "patched": "Different game version: addresses found by patterns, to be checked",
+      "human": "Manager: {{name}} ({{club}})",
+      "noClub": "no club",
+      "squad": "Your club's squad",
+      "search": "Find a player",
+      "searchHint": "at least 3 letters",
+      "find": "Search",
+      "none": "No player found.",
+      "scale": "Attributes stored out of {{scale}}",
+      "birth": "born {{date}}",
+      "col": {
+        "name": "Player",
+        "age": "Age",
+        "club": "Club",
+        "caPa": "CA / PA",
+        "positions": "Positions",
+        "wage": "Wage (raw)",
+        "contractEnd": "Contract end",
+        "value": "Value (raw)"
+      }
     }
   },
   "pz2": {

@@ -9,6 +9,7 @@ import { FmOtherSaveError, type FmSaveFile } from '../lib/fm';
 import { FmSaveScopeContext, type FmSaveScope } from '../lib/save-store';
 import { FmAnalysis } from './FmAnalysis';
 import { FmBridge } from './FmBridge';
+import { FmMemory } from './FmMemory';
 import { FmCalendar } from './FmCalendar';
 import { FmCompare } from './FmCompare';
 import { FmContracts } from './FmContracts';
@@ -250,6 +251,7 @@ export function FmSave() {
       {importSnap.isError && !other && <p className="mt-2 text-sm text-corail">{t('fm.importError', { reason: String(importSnap.error?.message ?? importSnap.error) })}</p>}
 
       <FmBridge dataFolder={folder} />
+      <FmMemory />
 
       {!isLoading && !snapshot && (
         <div className="card mt-6 flex flex-col items-center gap-3 py-10 text-center">
