@@ -250,7 +250,11 @@
       },
       "auto": "Automatic: best choice",
       "bestNow": "Best applicable tactic",
-      "projectBest": "Your project is now the best choice"
+      "projectBest": "Your project is now the best choice",
+      "teamTitle": "Team instructions · {{style}}",
+      "teamHelp": "Set them in the game's Tactics screen, with the mentality. Exact FM27 labels.",
+      "oppTitle": "Against {{name}}",
+      "oppMore": "Full report"
     },
     "nav": "Save sections",
     "sections": {
@@ -268,6 +272,7 @@
       "dressing": "Dressing room",
       "loans": "On loan",
       "tactic": "Line-up",
+      "opponent": "Opponent",
       "roles": "Positions and roles",
       "calendar": "Fixtures and rotation",
       "depth": "Starters and backups",
@@ -1089,9 +1094,48 @@
       "finances": "Budgets, contract-extension simulator and board expectations.",
       "wages": "Wages grouped by squad status, and what stands out.",
       "contracts": "Contract expiries to plan for.",
-      "progression": "Each player's level since the first snapshot."
+      "progression": "Each player's level since the first snapshot.",
+      "opponent": "The next opponent as the game's team report describes it, and how to play them."
     },
-    "nextStep": "Next step: {{view}}"
+    "nextStep": "Next step: {{view}}",
+    "opp": {
+      "none": "No report on the next opponent yet. The plugin reads it on its own once chemins.json holds the « adv… » reads (opponent step 1).",
+      "club": "Next opponent",
+      "position": "{{value}} in the league",
+      "formation": "Preferred formation",
+      "mentality": "Mentality",
+      "pressMark": "Pressing",
+      "marking": "{{value}} marking",
+      "adviceTitle": "How to play them",
+      "adviceHelp": "Football advice drawn from the opposing manager's profile and key players, read from the game's team report. These are not game calculations.",
+      "noAdvice": "Nothing special to report.",
+      "keyTitle": "Players to watch",
+      "noKey": "Notable players not read.",
+      "scorer": "Top scorer",
+      "assister": "Top assister",
+      "rated": "Best average rating",
+      "goals_one": "{{count}} goal",
+      "goals_other": "{{count}} goals",
+      "assists_one": "{{count}} assist",
+      "assists_other": "{{count}} assists",
+      "squad_one": "Squad read ({{count}} player)",
+      "squad_other": "Squad read ({{count}} players)",
+      "squadHelp": "Opponent stars only show when your staff knows them.",
+      "advice": {
+        "buildShort": "They rarely press: build short from the back, your defenders will have time.",
+        "beatPress": "They press a lot: plan direct or long outlets to bypass their press.",
+        "rotate": "Man marking: make your players rotate and drop deep to drag their markers out of position.",
+        "overloadZone": "Zonal marking: overload one zone (a flank or the middle) to create numerical superiority.",
+        "twoStrikers": "Two strikers: keep at least three players behind the ball (a defensive midfielder, or only one full-back going forward).",
+        "oneStriker": "A lone striker: both full-backs can push on, two centre-backs are enough to cover him.",
+        "betweenLines": "Two banks of four with no attacking midfielder: put a player between their lines (attacking midfielder, false nine).",
+        "counter": "Attacking mentality: they will leave space behind, prepare quick counters.",
+        "patience": "Cautious mentality: expect a low block, move the ball and stretch the play.",
+        "markCreator": "{{name}} makes them tick: tight marking on him and cut his passing lanes.",
+        "watchScorer": "{{name}} is their goalscorer: give him no space in the box."
+      },
+      "pressShort": "pressing {{value}}"
+    }
   },
   "pz2": {
     "back": "My games",

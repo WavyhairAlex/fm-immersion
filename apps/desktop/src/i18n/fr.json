@@ -250,7 +250,11 @@
       },
       "auto": "Automatique : meilleur choix",
       "bestNow": "Meilleure tactique applicable",
-      "projectBest": "Ton projet est devenu le meilleur choix"
+      "projectBest": "Ton projet est devenu le meilleur choix",
+      "teamTitle": "Consignes d'équipe · {{style}}",
+      "teamHelp": "À régler dans l'écran Tactique du jeu, avec la mentalité. Libellés exacts de FM27.",
+      "oppTitle": "Contre {{name}}",
+      "oppMore": "Rapport complet"
     },
     "nav": "Sections de la partie",
     "sections": {
@@ -268,6 +272,7 @@
       "dressing": "Vestiaire",
       "loans": "Prêtés",
       "tactic": "Composition",
+      "opponent": "Adversaire",
       "roles": "Postes et rôles",
       "calendar": "Calendrier et rotation",
       "depth": "Titulaires et remplaçants",
@@ -1089,9 +1094,48 @@
       "finances": "Budgets, simulateur de prolongations et attentes du board.",
       "wages": "Les salaires regroupés par statut, et ce qui détonne.",
       "contracts": "Les fins de contrat à anticiper.",
-      "progression": "L'évolution du niveau de chaque joueur depuis le premier instantané."
+      "progression": "L'évolution du niveau de chaque joueur depuis le premier instantané.",
+      "opponent": "Le prochain adversaire tel que le décrit le rapport d'équipe du jeu, et comment le jouer."
     },
-    "nextStep": "Étape suivante : {{view}}"
+    "nextStep": "Étape suivante : {{view}}",
+    "opp": {
+      "none": "Pas encore de rapport sur le prochain adversaire. Le plugin le lit tout seul quand chemins.json contient les lectures « adv… » (étape adverse 1).",
+      "club": "Prochain adversaire",
+      "position": "{{value}} du championnat",
+      "formation": "Formation préférée",
+      "mentality": "Mentalité",
+      "pressMark": "Pressing",
+      "marking": "marquage {{value}}",
+      "adviceTitle": "Comment le jouer",
+      "adviceHelp": "Conseils de football déduits du profil de l'entraîneur adverse et de ses joueurs clés, lus dans le rapport d'équipe du jeu. Ce ne sont pas des calculs du jeu.",
+      "noAdvice": "Rien de particulier à signaler.",
+      "keyTitle": "Joueurs à surveiller",
+      "noKey": "Joueurs notables non lus.",
+      "scorer": "Meilleur buteur",
+      "assister": "Meilleur passeur",
+      "rated": "Meilleure moyenne",
+      "goals_one": "{{count}} but",
+      "goals_other": "{{count}} buts",
+      "assists_one": "{{count}} passe décisive",
+      "assists_other": "{{count}} passes décisives",
+      "squad_one": "Effectif lu ({{count}} joueur)",
+      "squad_other": "Effectif lu ({{count}} joueurs)",
+      "squadHelp": "Les étoiles adverses ne s'affichent que si ton staff les connaît.",
+      "advice": {
+        "buildShort": "Ils pressent peu : relance courte depuis ta défense, tes défenseurs auront le temps.",
+        "beatPress": "Ils pressent beaucoup : prévois des sorties directes ou longues pour sauter leur pressing.",
+        "rotate": "Marquage individuel : fais permuter et décrocher tes joueurs pour tirer leurs défenseurs hors de position.",
+        "overloadZone": "Marquage en zone : surcharge une zone (un côté ou l'axe) pour créer le surnombre.",
+        "twoStrikers": "Deux attaquants : garde au moins trois joueurs derrière le ballon (un milieu défensif, ou un seul latéral qui monte).",
+        "oneStriker": "Un seul attaquant : tes latéraux peuvent monter tous les deux, deux défenseurs centraux suffisent pour le couvrir.",
+        "betweenLines": "Deux lignes de quatre sans milieu offensif : place un joueur entre leurs lignes (milieu offensif, faux neuf).",
+        "counter": "Mentalité offensive : ils laisseront de l'espace dans leur dos, prépare des contres rapides.",
+        "patience": "Mentalité prudente : attends-toi à un bloc bas, fais circuler et élargis le jeu.",
+        "markCreator": "{{name}} fait jouer l'équipe : marquage serré sur lui et coupe ses lignes de passe.",
+        "watchScorer": "{{name}} est leur buteur : ne lui laisse pas d'espace dans la surface."
+      },
+      "pressShort": "pressing {{value}}"
+    }
   },
   "pz2": {
     "back": "Mes parties",
