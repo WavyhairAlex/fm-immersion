@@ -144,6 +144,8 @@ export interface CoachPrefs {
   target?: number;
   /** Mois de reprise du championnat (1 à 12), pour situer la phase d'entraînement. */
   seasonStart?: number;
+  /** Trêve hivernale (MM-JJ) : repos complet puis mini-présaison avant la reprise. */
+  winterBreak?: { from: string; to: string } | null;
   /** Statut du club (pro, semi, amateur) et jours d'entraînement d'un club à temps partiel. */
   clubStatus?: 'pro' | 'semi' | 'amateur';
   trainingDays?: number[];

@@ -964,14 +964,16 @@
         "T": "Tactical block",
         "A": "Early season",
         "B": "Mid-season",
-        "C": "Late season"
+        "C": "Late season",
+        "R": "Rest (winter break)"
       },
       "phaseHelp": {
         "P": "4 weeks back: P1 and P2 physical only, P3 adds ball work (Wednesday and Saturday friendlies), P4 passing, build-up, attacking and defensive work (Wednesday friendly).",
         "T": "4-week block to install the tactic, with a Wednesday match.",
         "A": "First 4 months: broad technical and tactical work.",
         "B": "Next 3 months: established organisation, match preparation and team bonding.",
-        "C": "To the end: match preparation, defensive organisation and set pieces."
+        "C": "To the end: match preparation, defensive organisation and set pieces.",
+        "R": "Winter break: full week of rest, as in the game. The last weeks before the restart become a mini pre-season (P1 to P4, P4 just before the restart)."
       },
       "theme": {
         "buildUp": "Build-up and possession",
@@ -1035,6 +1037,7 @@
       "trainingDaysHelp": "A part-time club only trains on some evenings: tick the days offered in the game's Training screen. Other days without a match stay free; the last session before a match is used for preparation.",
       "presetHint": "Starting point in the game: load the \"{{preset}}\" schedule, then adjust the sessions as below.",
       "preset": {
+        "fullRest": "Full Week of Rest",
         "preSeason": "Pre-Season",
         "tacticalBalanced": "Tactical Focus - Balanced",
         "tacticalIP": "Tactical Focus - In Possession",
@@ -1109,7 +1112,10 @@
       "setupStatus": {
         "todo": "to set",
         "change": "To change"
-      }
+      },
+      "winterBreak": "Winter break",
+      "winterFrom": "Break starts",
+      "winterTo": "League restarts"
     },
     "intro": {
       "home": "What needs your attention today, the styles that suit the squad, your best players and your youngsters.",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { autoPhase, buildTrainingWeek, currentTrainingWeek, trainingAlerts, defaultMatchDays, individualAdvice, individualFocus, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, setupStatus, weekMatches } from '../src';
+import { autoPhase, breakPhase, buildTrainingWeek, currentTrainingWeek, trainingAlerts, defaultMatchDays, individualAdvice, individualFocus, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, setupStatus, weekMatches } from '../src';
 
 const MONDAY = '2026-08-31';
 
@@ -204,5 +204,24 @@ describe('réglages faits en jeu', () => {
     const c = setupStatus(rec, { ...rec, intensity: 'double', focus: 'tackling' });
     expect(c.status).toBe('change');
     expect(c.changed).toEqual(['focus', 'intensity']);
+  });
+});
+
+describe('trêve hivernale', () => {
+  const wb = { from: '12-21', to: '02-08' };
+  it('repos complet puis mini-présaison terminée par P4 avant la reprise', () => {
+    expect(breakPhase('2026-12-15', wb)).toBeNull();
+    expect(breakPhase('2026-12-22', wb)?.phase).toBe('R');
+    expect(breakPhase('2027-01-04', wb)?.phase).toBe('R');
+    expect(breakPhase('2027-01-11', wb)).toEqual({ phase: 'P', week: 1 });
+    expect(breakPhase('2027-02-01', wb)).toEqual({ phase: 'P', week: 4 });
+    expect(breakPhase('2027-02-08', wb)).toBeNull();
+    expect(autoPhase('2027-01-18', 7, wb).phase).toBe('P');
+    expect(autoPhase('2027-02-10', 7, wb).phase).toBe('C');
+  });
+  it('semaine de repos : aucune séance, programme « Semaine complète de repos »', () => {
+    const w = buildTrainingWeek({ monday: '2026-12-28', phase: 'R', week: 1, matchDays: [] });
+    expect(w.days.every((d) => d.kind === 'off' && d.sessions.every((x) => x === null))).toBe(true);
+    expect(nearestPreset(w)).toBe('fullRest');
   });
 });

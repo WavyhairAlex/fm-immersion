@@ -23,11 +23,12 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
         gameDate: snap.gameDate,
         fixtures: snap.fixtures,
         seasonStart: coach.seasonStart,
+        winterBreak: coach.winterBreak,
         trainingDays: (coach.clubStatus ?? 'pro') === 'pro' ? undefined : (coach.trainingDays ?? PART_TIME_DAYS),
         priorities: style ? trainingFor(style) : [],
         style: style?.id,
       }),
-    [snap.gameDate, snap.fixtures, coach.seasonStart, coach.clubStatus, coach.trainingDays, style],
+    [snap.gameDate, snap.fixtures, coach.seasonStart, coach.winterBreak, coach.clubStatus, coach.trainingDays, style],
   );
   const tr = useMemo(() => trainingAlerts(players), [players]);
   const setups = useIndividualSetups(engine, players, folder, week.days.filter((d) => d.kind === 'match').length);

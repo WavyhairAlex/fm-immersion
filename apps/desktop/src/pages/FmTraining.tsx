@@ -128,7 +128,8 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
   const [eve, setEve] = useState<boolean | null>(null);
 
   const monday = addDays(mondayOf(snap.gameDate), offset === '1' ? 7 : 0);
-  const auto = autoPhase(monday, seasonStart);
+  const winterBreak = coach.winterBreak ?? null;
+  const auto = autoPhase(monday, seasonStart, winterBreak);
   const phase = phaseOverride ?? auto.phase;
   const week = weekOverride ?? (phaseOverride && phaseOverride !== auto.phase ? 1 : auto.week);
   const hasCalendar = Array.isArray(snap.fixtures) && snap.fixtures.length > 0;
@@ -229,6 +230,39 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
               <Chips value={clubStatus} options={CLUB_STATUSES.map((c) => [c, t(`fm.train.status.${c}`)] as [ClubStatus, string])} onChange={(v) => setCoach({ clubStatus: v })} />
             </div>
           </div>
+          <div className={label}>
+            <span className="flex items-center gap-1.5">
+              <input
+                type="checkbox"
+                checked={!!winterBreak}
+                onChange={(e) => {
+                  setCoach({ winterBreak: e.target.checked ? { from: '12-28', to: '02-08' } : null });
+                  setPhase(null);
+                  setWeek(null);
+                }}
+              />
+              {t('fm.train.winterBreak')}
+            </span>
+            {winterBreak && (
+              <span className="mt-1 flex items-center gap-1.5 font-normal">
+                <input
+                  type="date"
+                  className="input"
+                  aria-label={t('fm.train.winterFrom')}
+                  value={`${monday.slice(0, 4)}-${winterBreak.from}`}
+                  onChange={(e) => e.target.value && setCoach({ winterBreak: { ...winterBreak, from: e.target.value.slice(5) } })}
+                />
+                →
+                <input
+                  type="date"
+                  className="input"
+                  aria-label={t('fm.train.winterTo')}
+                  value={`${monday.slice(0, 4)}-${winterBreak.to}`}
+                  onChange={(e) => e.target.value && setCoach({ winterBreak: { ...winterBreak, to: e.target.value.slice(5) } })}
+                />
+              </span>
+            )}
+          </div>
         </div>
 
         {trainingDays && (
@@ -301,6 +335,12 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
                     <div key={i}>
                       {d.kind !== 'match' && <span className="text-[10px] uppercase tracking-wide text-canard/50">{t(`fm.train.slot.${i}`)}</span>}
                       <Session id={s} />
+                    </div>
+                  ) : d.kind !== 'match' ? (
+                    // Créneau vide : le jeu y affiche « Repos ».
+                    <div key={i}>
+                      <span className="text-[10px] uppercase tracking-wide text-canard/50">{t(`fm.train.slot.${i}`)}</span>
+                      <span className="block rounded-lg px-2 py-1 text-xs leading-tight text-brun ring-1 ring-canard/10">{t('fm.train.session.rest')}</span>
                     </div>
                   ) : null,
                 )}

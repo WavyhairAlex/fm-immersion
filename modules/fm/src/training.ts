@@ -76,7 +76,8 @@ export type SessionId = keyof typeof SESSIONS;
 export type SessionCategory = (typeof SESSIONS)[SessionId];
 export const sessionCategory = (s: SessionId): SessionCategory => SESSIONS[s];
 
-export const TRAINING_PHASES = ['P', 'T', 'A', 'B', 'C'] as const;
+/** R : semaine complète de repos (trêve), comme le programme « Semaine complète de repos » du jeu. */
+export const TRAINING_PHASES = ['P', 'T', 'A', 'B', 'C', 'R'] as const;
 export type TrainingPhase = (typeof TRAINING_PHASES)[number];
 export type CycleWeek = 1 | 2 | 3 | 4;
 /** Thème de chaque semaine du cycle (1 à 4). */
@@ -147,8 +148,40 @@ export function mondayOf(isoDate: string): string {
  * Présaison : les 4 semaines qui précèdent le 1er du mois de reprise. A : 4 premiers mois,
  * B : 3 mois suivants, C : le reste. La semaine du cycle compte les lundis depuis le début de la phase.
  */
-export function autoPhase(isoDate: string, seasonStart: number): { phase: TrainingPhase; week: CycleWeek } {
+export interface WinterBreak {
+  /** Début de la trêve (MM-JJ). */
+  from: string;
+  /** Reprise du championnat après la trêve (MM-JJ). */
+  to: string;
+}
+
+/**
+ * Semaine de trêve hivernale : repos complet d'abord (au moins une semaine, comme le jeu qui met
+ * des « Semaines complètes de repos »), puis une mini-présaison qui se termine par P4 la semaine
+ * qui précède la reprise. Null hors trêve.
+ */
+export function breakPhase(isoDate: string, wb: WinterBreak): { phase: TrainingPhase; week: CycleWeek } | null {
   const monday = mondayOf(isoDate);
+  const y = utc(monday).getUTCFullYear();
+  for (const year of [y - 1, y]) {
+    const from = mondayOf(`${year}-${wb.from}`);
+    const toYear = wb.to < wb.from ? year + 1 : year;
+    const to = mondayOf(`${toYear}-${wb.to}`);
+    if (monday < from || monday >= to) continue;
+    const total = Math.round((utc(to).getTime() - utc(from).getTime()) / (7 * DAY));
+    const left = Math.round((utc(to).getTime() - utc(monday).getTime()) / (7 * DAY));
+    const rest = Math.max(1, total - 4);
+    const index = total - left;
+    if (index < rest) return { phase: 'R', week: ((index % 4) + 1) as CycleWeek };
+    return { phase: 'P', week: (5 - left) as CycleWeek };
+  }
+  return null;
+}
+
+export function autoPhase(isoDate: string, seasonStart: number, winterBreak?: WinterBreak | null): { phase: TrainingPhase; week: CycleWeek } {
+  const monday = mondayOf(isoDate);
+  const pause = winterBreak ? breakPhase(monday, winterBreak) : null;
+  if (pause) return pause;
   const y = utc(monday).getUTCFullYear();
   const startOf = (year: number) => `${year}-${String(seasonStart).padStart(2, '0')}-01`;
   // Reprise retenue : la plus récente dont la présaison (4 semaines avant) a commencé.
@@ -271,12 +304,13 @@ export function buildTrainingWeek(input: TrainingInput): TrainingWeek {
   const matchDays = new Set(input.matchDays.filter((d) => d >= 0 && d <= 6));
   const seasonal = phase === 'A' || phase === 'B' || phase === 'C';
   const variant = seasonal ? (Math.min(2, matchDays.size) as 0 | 1 | 2) : null;
-  const theme: WeekTheme | null = phase === 'P' ? null : WEEK_THEMES[week - 1]!;
+  const theme: WeekTheme | null = phase === 'P' || phase === 'R' ? null : WEEK_THEMES[week - 1]!;
   const code = seasonal ? `${phase}${week}-${variant}` : `${phase}${week}`;
 
   const training = input.trainingDays ? new Set(input.trainingDays) : null;
   const kindOf = (d: number): DayKind => {
     if (matchDays.has(d)) return 'match';
+    if (phase === 'R') return 'off';
     if (training && !training.has(d)) return 'off';
     if (d === 0 ? input.matchBeforeMonday : matchDays.has(d - 1)) return 'recovery';
     if (matchDays.has(d + 1)) return 'prep';
@@ -372,11 +406,12 @@ export function weekLoad(w: TrainingWeek): Partial<Record<SessionCategory, numbe
 /* ---------- Programme du jeu le plus proche ---------- */
 
 /** Programmes d'entraînement prédéfinis de FM27 (libellés dans fm.train.preset.<id>). */
-export const GAME_PRESETS = ['preSeason', 'tacticalBalanced', 'tacticalIP', 'tacticalOOP', 'match', 'mix', 'devBalanced', 'devIP', 'devOOP', 'congestion'] as const;
+export const GAME_PRESETS = ['fullRest', 'preSeason', 'tacticalBalanced', 'tacticalIP', 'tacticalOOP', 'match', 'mix', 'devBalanced', 'devIP', 'devOOP', 'congestion'] as const;
 export type GamePreset = (typeof GAME_PRESETS)[number];
 
 /** Programme prédéfini du jeu le plus proche de la semaine, à charger puis ajuster séance par séance. */
 export function nearestPreset(w: TrainingWeek): GamePreset {
+  if (w.phase === 'R') return 'fullRest';
   if (w.phase === 'P') return 'preSeason';
   if (w.variant === 2) return 'congestion';
   const side = w.theme === 'pressing' ? 'OOP' : w.theme === 'balance' ? 'Balanced' : 'IP';
@@ -552,12 +587,13 @@ export function currentTrainingWeek(o: {
   gameDate: string;
   fixtures?: unknown;
   seasonStart?: number;
+  winterBreak?: WinterBreak | null;
   trainingDays?: number[];
   priorities?: EffArea[];
   style?: string;
 }): TrainingWeek {
   const monday = mondayOf(o.gameDate);
-  const { phase, week } = autoPhase(monday, o.seasonStart ?? 8);
+  const { phase, week } = autoPhase(monday, o.seasonStart ?? 8, o.winterBreak);
   const hasCalendar = Array.isArray(o.fixtures) && o.fixtures.length > 0;
   const cal = weekMatches(o.fixtures, monday);
   const seasonal = phase === 'A' || phase === 'B' || phase === 'C';
