@@ -83,6 +83,9 @@ impl<M: Mem> R<'_, M> {
     fn u8(&self, a: u64) -> Option<u8> {
         self.arr::<1>(a).map(|b| b[0])
     }
+    fn i16(&self, a: u64) -> Option<i16> {
+        self.arr::<2>(a).map(i16::from_le_bytes)
+    }
     fn i32(&self, a: u64) -> Option<i32> {
         self.arr::<4>(a).map(i32::from_le_bytes)
     }
@@ -306,6 +309,8 @@ mod off {
     pub const A_LAST_NAME: u64 = 0x30;
     pub const A_COMMON_NAME: u64 = 0x38;
     pub const A_BIRTH: u64 = 0x60;
+    /// Nation (`NATION*`), vérifiée sur 35 joueurs le 01/11.
+    pub const A_NATION: u64 = 0x40;
     pub const A_CONTRACT: u64 = 0x80;
     /// Pointeur X (nul sans prêt) ; `[X+0]` = contrat de prêt.
     pub const A_LOAN: u64 = 0x88;
@@ -324,6 +329,18 @@ mod off {
     // TEAM (ses noms sont vides en partie : on prend celui du club)
     pub const T_NATIONAL: u64 = 0x2F;
     pub const T_CONTAINER: u64 = 0x30;
+    /// Compétition de l'équipe (`COMP*`, peut être nulle).
+    pub const T_COMP: u64 = 0x50;
+
+    // NATION
+    pub const N_UID: u64 = 0xC;
+    pub const N_NAME: u64 = 0x20;
+
+    // COMP (division)
+    pub const CO_UID: u64 = 0xC;
+    pub const CO_NAME: u64 = 0x40;
+    /// Réputation de la compétition (Premier League 189, LaLiga 180, 2e division slovaque 82…).
+    pub const CO_REPUTATION: u64 = 0x188;
 
     // CLUB
     pub const CL_UID: u64 = 0xC;
@@ -467,6 +484,13 @@ pub struct DbPlayer {
     pub loan_club: Option<String>,
     pub loan_club_id: Option<i32>,
     pub loan_end: Option<String>,
+    /// Nationalité (nom court du jeu, ex. « Argentine »).
+    pub nation: Option<String>,
+    pub nation_id: Option<i32>,
+    /// Division du club propriétaire (sinon de l'équipe où il joue), et sa réputation (0-200 environ).
+    pub division: Option<String>,
+    pub division_id: Option<i32>,
+    pub division_reputation: Option<i16>,
     /// Capacité actuelle et potentielle réelles (0-200 ; potentiel négatif = fourchette du jeu).
     pub ca: i16,
     pub pa: i16,
@@ -502,6 +526,15 @@ struct Ctx<'a, M: Mem> {
     trial_vtable: Option<u64>,
     today: Option<SiDate>,
     clubs: HashMap<u64, Option<ClubInfo>>,
+    names: HashMap<u64, Option<Named>>,
+}
+
+/// Nation ou compétition : identifiant, nom, réputation (compétitions seulement).
+#[derive(Clone)]
+struct Named {
+    id: i32,
+    name: Option<String>,
+    reputation: Option<i16>,
 }
 
 #[derive(Clone)]
@@ -512,6 +545,29 @@ struct ClubInfo {
 }
 
 impl<M: Mem> Ctx<'_, M> {
+    fn named(&mut self, at: u64, uid: u64, name: u64, reputation: Option<u64>) -> Option<Named> {
+        if let Some(n) = self.names.get(&at) {
+            return n.clone();
+        }
+        let info = self.r.i32(at + uid).filter(|&id| id > 0).map(|id| Named {
+            id,
+            name: self.r.string(at + name),
+            reputation: reputation.and_then(|o| self.r.i16(at + o)),
+        });
+        self.names.insert(at, info.clone());
+        info
+    }
+
+    fn nation(&mut self, at: u64) -> Option<Named> {
+        self.named(at, off::N_UID, off::N_NAME, None)
+    }
+
+    /// Division d'une équipe (compétition `[équipe+0x50]`).
+    fn division_of_team(&mut self, team: u64) -> Option<Named> {
+        let comp = self.r.ptr(team + off::T_COMP)?;
+        self.named(comp, off::CO_UID, off::CO_NAME, Some(off::CO_REPUTATION))
+    }
+
     fn club(&mut self, club: u64) -> Option<ClubInfo> {
         if let Some(c) = self.clubs.get(&club) {
             return c.clone();
@@ -605,7 +661,14 @@ impl<M: Mem> Ctx<'_, M> {
         let loan = other.filter(|_| trial.is_none());
         // Sans contrat principal lisible : prêté ou à l'essai, le club propriétaire reste inconnu (pas le club
         // d'accueil) ; un joueur à l'essai sans contrat est libre.
-        let club = match contract.and_then(|c| self.r.ptr(c + off::C_TEAM)).and_then(|t| self.club_of_team(t)) {
+        let owner_team = contract.and_then(|c| self.r.ptr(c + off::C_TEAM));
+        // Division du club propriétaire ; à défaut, celle de l'équipe où il joue.
+        let division = match owner_team.and_then(|t| self.division_of_team(t)) {
+            Some(d) => Some(d),
+            None => team.and_then(|t| self.division_of_team(t)),
+        };
+        let nation = self.r.ptr(actual + off::A_NATION).and_then(|n| self.nation(n));
+        let club = match owner_team.and_then(|t| self.club_of_team(t)) {
             Some(c) => Some(c),
             None if other.is_none() => team.and_then(|t| self.club_of_team(t)),
             None => None,
@@ -637,6 +700,11 @@ impl<M: Mem> Ctx<'_, M> {
             loan_club_id: loan_club.as_ref().map(|c| c.id),
             loan_club: loan_club.and_then(|c| c.name),
             loan_end,
+            nation_id: nation.as_ref().map(|n| n.id),
+            nation: nation.and_then(|n| n.name),
+            division_id: division.as_ref().map(|d| d.id),
+            division_reputation: division.as_ref().and_then(|d| d.reputation),
+            division: division.and_then(|d| d.name),
             ca,
             pa,
             reputation: [le_i16(&b, off::AP_REP_HOME), le_i16(&b, off::AP_REP_CURRENT), le_i16(&b, off::AP_REP_WORLD)],
@@ -695,7 +763,7 @@ impl<'a, M: Mem> Database<'a, M> {
             return Err(MemError::NoSave);
         }
         let trial_vtable = (globals == KNOWN).then_some(module_base + KNOWN_TRIAL_VTABLE);
-        Ok(Database { ctx: Ctx { r, today, trial_vtable, clubs: HashMap::new() }, module_base, globals, players })
+        Ok(Database { ctx: Ctx { r, today, trial_vtable, clubs: HashMap::new(), names: HashMap::new() }, module_base, globals, players })
     }
 
     pub fn count(&self) -> usize {
@@ -1034,6 +1102,15 @@ pub async fn fm_memory_find(query: String) -> Result<Vec<DbPlayer>, MemError> {
     .map_err(|e| MemError::Unexpected(e.to_string()))?
 }
 
+/// Vrai si aucun filtre, ou si l'un des morceaux (séparés par des virgules) figure dans la valeur.
+fn matches(query: &Option<String>, value: &Option<String>) -> bool {
+    let parts: Vec<String> = query.iter().flat_map(|q| q.split(',')).map(|q| fold(q.trim())).filter(|q| !q.is_empty()).collect();
+    if parts.is_empty() {
+        return true;
+    }
+    value.as_deref().map(fold).is_some_and(|v| parts.iter().any(|q| v.contains(q.as_str())))
+}
+
 /// Critères de recherche dans la base (tous facultatifs).
 #[derive(Debug, Default, Clone, serde::Deserialize)]
 #[serde(rename_all = "camelCase", default)]
@@ -1057,6 +1134,11 @@ pub struct SearchFilter {
     pub transfer_listed_only: bool,
     /// Écarter les blessés.
     pub exclude_injured: bool,
+    /// Nationalité ou division : morceau du nom, sans tenir compte des majuscules ni des accents.
+    pub nation: Option<String>,
+    pub division: Option<String>,
+    /// Réputation minimale de la division (niveau du championnat).
+    pub min_division_reputation: Option<i16>,
     pub limit: Option<usize>,
 }
 
@@ -1076,6 +1158,9 @@ impl SearchFilter {
             && (!self.free_only || (p.club_id.is_none() && p.loan_club_id.is_none()))
             && (!self.transfer_listed_only || p.transfer_listed)
             && (!self.exclude_injured || !p.injured)
+            && matches(&self.nation, &p.nation)
+            && matches(&self.division, &p.division)
+            && self.min_division_reputation.map_or(true, |m| p.division_reputation.is_some_and(|r| r >= m))
     }
 }
 
@@ -1206,6 +1291,17 @@ mod tests {
         m.put_str(0x2700_0500, "Vänersborgs IF");
         m.put_u64(club + 0xC8, 0x2700_0600);
         m.put_str(0x2700_0600, "Vänersborg");
+        // Nation et division.
+        let (nation, comp) = (0x2500_0000u64, 0x2500_1000u64);
+        m.put_u64(actual + 0x40, nation);
+        m.put_i32(nation + 0xC, 796);
+        m.put_u64(nation + 0x20, 0x2700_0700);
+        m.put_str(0x2700_0700, "Suède");
+        m.put_u64(team + 0x50, comp);
+        m.put_i32(comp + 0xC, 1_301);
+        m.put_u64(comp + 0x40, 0x2700_0800);
+        m.put_str(0x2700_0800, "Ettan Södra");
+        m.put(comp + 0x188, 74i16.to_le_bytes().to_vec());
         m
     }
 
@@ -1251,6 +1347,17 @@ mod tests {
         assert_eq!(run(&mut db, SearchFilter { max_wage_weekly: Some(4_000), ..Default::default() }), 0);
         assert_eq!(run(&mut db, SearchFilter { free_only: true, ..Default::default() }), 0);
         assert_eq!(run(&mut db, SearchFilter { transfer_listed_only: true, ..Default::default() }), 0);
+        let f = |n: &str, d: &str, r| SearchFilter {
+            nation: Some(n.into()),
+            division: Some(d.into()),
+            min_division_reputation: r,
+            ..Default::default()
+        };
+        assert_eq!(run(&mut db, f("suede", "södra", Some(70))), 1);
+        assert_eq!(run(&mut db, f("Argentine, Suède", "", None)), 1);
+        assert_eq!(run(&mut db, f("France", "", None)), 0);
+        assert_eq!(run(&mut db, f("", "Allsvenskan", None)), 0);
+        assert_eq!(run(&mut db, f("", "", Some(100))), 0);
         // Potentiel négatif (fourchette du jeu) : gardé.
         assert_eq!(run(&mut db, SearchFilter { min_pa: Some(170), ..Default::default() }), 1);
     }

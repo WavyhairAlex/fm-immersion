@@ -266,6 +266,9 @@ export interface DbPlayer {
   clubShort: string | null;
   loanClub: string | null;
   loanEnd: string | null;
+  nation?: string | null;
+  division?: string | null;
+  divisionReputation?: number | null;
   ca: number;
   pa: number;
   positionsText: string;

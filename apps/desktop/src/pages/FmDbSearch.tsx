@@ -32,6 +32,9 @@ type Filter = {
   minCa: string;
   minPa: string;
   maxWageWeekly: string;
+  nation: string;
+  division: string;
+  minDivisionReputation: string;
   freeOnly: boolean;
   transferListedOnly: boolean;
   excludeInjured: boolean;
@@ -44,6 +47,9 @@ const EMPTY: Filter = {
   minCa: "",
   minPa: "",
   maxWageWeekly: "",
+  nation: "",
+  division: "",
+  minDivisionReputation: "",
   freeOnly: false,
   transferListedOnly: false,
   excludeInjured: true,
@@ -96,6 +102,9 @@ export function FmDbSearch({
           minCa: num(f.minCa),
           minPa: num(f.minPa),
           maxWageWeekly: num(f.maxWageWeekly),
+          nation: f.nation.trim() || undefined,
+          division: f.division.trim() || undefined,
+          minDivisionReputation: num(f.minDivisionReputation),
           freeOnly: f.freeOnly,
           transferListedOnly: f.transferListedOnly,
           excludeInjured: f.excludeInjured,
@@ -142,12 +151,25 @@ export function FmDbSearch({
       </section>
     );
 
-  const input = (k: "maxAge" | "minCa" | "minPa" | "maxWageWeekly") => (
+  const input = (
+    k: "maxAge" | "minCa" | "minPa" | "maxWageWeekly" | "minDivisionReputation",
+  ) => (
     <label className="block text-xs font-bold text-canard">
       {t(`fm.dbSearch.f.${k}`)}
       <input
         className="input mt-1 w-28 font-normal"
         inputMode="numeric"
+        value={filter[k]}
+        onChange={(e) => set(k, e.target.value)}
+      />
+    </label>
+  );
+  const text = (k: "nation" | "division") => (
+    <label className="block text-xs font-bold text-canard">
+      {t(`fm.dbSearch.f.${k}`)}
+      <input
+        className="input mt-1 w-56 font-normal"
+        placeholder={t(`fm.dbSearch.f.${k}Hint`)}
         value={filter[k]}
         onChange={(e) => set(k, e.target.value)}
       />
@@ -202,6 +224,11 @@ export function FmDbSearch({
         {input("minCa")}
         {input("minPa")}
         {input("maxWageWeekly")}
+      </div>
+      <div className="mt-3 flex flex-wrap items-end gap-4">
+        {text("nation")}
+        {text("division")}
+        {input("minDivisionReputation")}
       </div>
       <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
         {check("usefulOnly")}
@@ -271,6 +298,11 @@ export function FmDbSearch({
                     >
                       <td className="px-2 py-1.5 font-bold">
                         {p.name}
+                        {d?.nation && (
+                          <div className="text-xs font-normal text-brun">
+                            {d.nation}
+                          </div>
+                        )}
                         <div className="flex flex-wrap gap-1 font-normal">
                           {d?.transferListed && (
                             <Tag tone="info">{t("fm.dbSearch.listed")}</Tag>
@@ -285,6 +317,9 @@ export function FmDbSearch({
                       </td>
                       <td className="px-2 py-1.5">
                         {d?.club ?? (d?.loanClub ? "–" : t("fm.dbSearch.free"))}
+                        {d?.division && (
+                          <div className="text-xs text-brun">{d.division}</div>
+                        )}
                         {d?.loanClub && (
                           <div className="text-xs text-brun">
                             {t("fm.memory.loan", {

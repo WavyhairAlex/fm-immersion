@@ -1395,7 +1395,7 @@
       "title": "Search the whole database",
       "teaser": "Find signings among every player in the save, by your criteria (position, age, ability, wage).",
       "open": "Open search",
-      "help": "Read-only access to the FM27 database, on demand, with the save open. CA/PA and attributes are the game's true values, not what your scouts know. Results are ranked by what they add to the project XI.",
+      "help": "Read-only access to the FM27 database, on demand, with the save open. CA/PA and attributes are the game's true values, not what your scouts know. Results are ranked by what they add to the project XI. Nationality and division: one or more name parts separated by commas. League level: the game's reputation (Premier League 189, LaLiga 180, Championship 136).",
       "run": "Search",
       "count": "{{shown}} players kept out of {{read}} read",
       "none": "No player matches. Widen the criteria.",
@@ -1413,7 +1413,12 @@
         "freeOnly": "Free agents only",
         "transferListedOnly": "Transfer listed only",
         "excludeInjured": "Exclude injured",
-        "usefulOnly": "Only those who strengthen the XI"
+        "usefulOnly": "Only those who strengthen the XI",
+        "nation": "Nationality",
+        "nationHint": "e.g. France, Belgium",
+        "division": "Division",
+        "divisionHint": "e.g. Ligue 1, Eredivisie",
+        "minDivisionReputation": "Min. league level"
       },
       "col": {
         "player": "Player",
