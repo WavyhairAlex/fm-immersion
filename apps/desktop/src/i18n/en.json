@@ -827,5 +827,11 @@
       "custom": "custom",
       "inGame": "In game:"
     }
+  },
+  "pz2": {
+    "back": "My games",
+    "loading": "Opening the Zoologix register…",
+    "error": "This game's Zoologix register could not be opened. Restart Simloom, then try again.",
+    "frame": "Zoologix, your Planet Zoo 2 register"
   }
 }
