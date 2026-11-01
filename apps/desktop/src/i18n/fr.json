@@ -786,7 +786,7 @@
     },
     "targets": {
       "title": "Cibles du mercato · {{style}} {{form}}",
-      "help": "Les joueurs de ta liste de suivi et des cibles du recrutement, lus dans le jeu et gardés dans Simloom. Classés par ce que chacun apporterait à ton onze cible (« Recrutement et entraînement ») : adéquation au rôle du poste et gain face au titulaire actuel. Clique un nom pour le comparer.",
+      "help": "Les joueurs de ta liste de suivi et des cibles du recrutement, lus dans le jeu et gardés dans Simloom. Classés par ce que chacun apporterait à ton onze cible (« Recrutement et entraînement ») : adéquation au rôle du poste et gain face au titulaire actuel. Clique un nom pour le comparer. Les joueurs à l'essai (sans contrat) y figurent aussi, hors de l'effectif.",
       "col": {
         "player": "Joueur",
         "age": "Âge",
@@ -817,7 +817,8 @@
       "restore": "Remettre",
       "unknown": "attributs inconnus",
       "emptyFilter": "Aucune cible dans ce filtre.",
-      "noneRead": "Le plugin a lu les listes du jeu sans y trouver de joueur ({{status}}). Ajoute des joueurs à ta liste de suivi, ou vérifie le détail dans targetSources de l'instantané."
+      "noneRead": "Le plugin a lu les listes du jeu sans y trouver de joueur ({{status}}). Ajoute des joueurs à ta liste de suivi, ou vérifie le détail dans targetSources de l'instantané.",
+      "trial": "À l'essai"
     },
     "pi": {
       "title": "Consignes individuelles",

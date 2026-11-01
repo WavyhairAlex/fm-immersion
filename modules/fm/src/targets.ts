@@ -1,4 +1,4 @@
-import { starsOf } from './lineup';
+import { starsOf, withExtended } from './lineup';
 import { normalizePlayer, toNumber, type FmPlayer } from './player';
 import { range, type Range } from './project';
 import { fmPlayerSchema, type FmSnapshot } from './snapshot';
@@ -85,10 +85,58 @@ export function targetOf(x: unknown): Target | null {
   };
 }
 
-/** Liste de cibles de l'instantané, ou null si le plugin ne l'a pas lue (réglage désactivé, plugin antérieur à 0.4.0). */
-export function snapshotTargets(snap: FmSnapshot): unknown[] | null {
-  return Array.isArray(snap.shortlist) ? (snap.shortlist as unknown[]) : null;
+/* ---------- Joueurs à l'essai ---------- */
+
+const empty = (v: unknown) => v == null || (typeof v === 'string' && (v.trim() === '' || v.trim() === '-' || v.trim() === '–'));
+const hasContract = (x: unknown) => {
+  const o = x as Raw;
+  return !empty(o.contractEnd) || !empty(o.wage) || !empty(o.wageText);
+};
+
+/**
+ * Joueurs à l'essai : le jeu les range dans l'effectif, mais sans contrat (ni fin de contrat, ni salaire, ni statut).
+ * Simloom les sort de l'effectif et les montre dans les cibles du mercato, pour les juger avant de leur proposer
+ * un contrat. Seulement si l'instantané donne les contrats des autres joueurs (sinon un vieux plugin ferait
+ * passer tout l'effectif pour des essais).
+ */
+export function trialistIds(snap: FmSnapshot): Set<string> {
+  const players = (Array.isArray(snap.players) ? snap.players : []) as unknown[];
+  if (!players.some(hasContract)) return new Set();
+  return new Set(players.filter((x) => !hasContract(x) && empty((x as Raw).squadStatus)).map((x) => String((x as Raw).id)));
 }
+
+/** Instantané sans les joueurs à l'essai : l'effectif sous contrat. */
+export function squadSnapshot(snap: FmSnapshot): FmSnapshot {
+  const trial = trialistIds(snap);
+  return trial.size ? { ...snap, players: snap.players.filter((p) => !trial.has(String(p.id))) } : snap;
+}
+
+/**
+ * Cibles de l'instantané (listes lues par le plugin + joueurs à l'essai), ou null s'il n'y a ni l'un ni l'autre
+ * (réglage désactivé, plugin antérieur à 0.4.0, aucun essai en cours).
+ */
+export function snapshotTargets(snap: FmSnapshot): unknown[] | null {
+  const read = Array.isArray(snap.shortlist) ? (snap.shortlist as unknown[]) : null;
+  const trial = trialistIds(snap);
+  if (!trial.size) return read;
+  const out = [...(read ?? [])];
+  for (const p of withExtended(snap).players.filter((x) => trial.has(String(x.id)))) {
+    const i = out.findIndex((x) => String((x as Raw).id) === String(p.id));
+    if (i < 0) out.push({ ...p, club: null, sources: ['essai'] });
+    else {
+      const prev = out[i] as Raw;
+      const sources = Array.isArray(prev.sources) ? prev.sources : [];
+      out[i] = { ...prev, sources: [...new Set([...sources, 'essai'])] };
+    }
+  }
+  return out;
+}
+
+/** Une cible ne vient que des essais (pas des listes du jeu). */
+const trialOnly = (data: unknown) => {
+  const s = (data as Raw | null)?.sources;
+  return Array.isArray(s) && s.length > 0 && s.every((x) => x === 'essai');
+};
 
 /** Cibles de l'instantané, normalisées (vide si le plugin ne les a pas lues). */
 export function shortlist(snap: FmSnapshot): Target[] {
@@ -144,7 +192,10 @@ export function mergeTargets(known: TargetRecord[], snap: FmSnapshot): TargetRec
       data: x,
     });
   }
-  for (const k of known) if (!seen.has(k.playerId) && k.inList && k.lastSeen <= date) out.push({ ...k, inList: false });
+  // Sans listes lues (réglage coupé), seules les cibles venues des essais peuvent sortir.
+  const listsRead = Array.isArray(snap.shortlist);
+  for (const k of known)
+    if (!seen.has(k.playerId) && k.inList && k.lastSeen <= date && (listsRead || trialOnly(k.data))) out.push({ ...k, inList: false });
   return out;
 }
 

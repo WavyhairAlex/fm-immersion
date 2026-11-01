@@ -1,4 +1,4 @@
-import { gameFormationOf, gameLineup, normalizePlayer, withExtended, type FmPlayer, type FmSnapshot, type Line, type SquadAt } from '@simloom/module-fm';
+import { gameFormationOf, gameLineup, normalizePlayer, squadSnapshot, withExtended, type FmPlayer, type FmSnapshot, type Line, type SquadAt } from '@simloom/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -168,9 +168,9 @@ export function FmSave() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [folder, saveId]);
 
-  const players = useMemo(() => (snapshot ? withExtended(snapshot.data).players.map(normalizePlayer) : []), [snapshot]);
+  const players = useMemo(() => (snapshot ? withExtended(squadSnapshot(snapshot.data)).players.map(normalizePlayer) : []), [snapshot]);
   const history = useMemo<SquadAt[]>(
-    () => (all ?? []).map((h) => ({ gameDate: h.gameDate, players: (h.data as FmSnapshot).players.map(normalizePlayer) })),
+    () => (all ?? []).map((h) => ({ gameDate: h.gameDate, players: squadSnapshot(h.data as FmSnapshot).players.map(normalizePlayer) })),
     [all],
   );
   const gameFormation = gameFormationOf(snapshot?.data.tactic);

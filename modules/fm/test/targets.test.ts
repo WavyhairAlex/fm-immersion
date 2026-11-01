@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mergeTargets, targetOf, shortlist, storedTargets, type TargetRecord } from '../src/targets';
+import { mergeTargets, squadSnapshot, targetOf, trialistIds, shortlist, storedTargets, type TargetRecord } from '../src/targets';
 import type { FmSnapshot } from '../src/snapshot';
 
 const snap = (gameDate: string, shortlist?: unknown[]): FmSnapshot => ({ schema: 'archivix/1', game: 'FM27', club: 'V', gameDate, players: [], ...(shortlist ? { shortlist } : {}) });
@@ -47,5 +47,34 @@ describe('cibles non observées', () => {
   it('traite les étoiles -1 comme inconnues', () => {
     const t = targetOf({ id: 9, name: 'X', attributes: {}, scout: { currentStars: { MinValue: -1, MaxValue: -1 }, potentialStars: -1 } });
     expect(t?.scout?.stars).toBeNull();
+  });
+});
+
+describe("joueurs à l'essai", () => {
+  const sous = { id: 1, name: 'Sous Contrat', positionsText: 'BT', contractEnd: '2027-06-30', wage: 1500, squadStatus: 'Joueur secondaire', attributes: { Finishing: 12 } };
+  const essai = { id: 2, name: 'À Essai', positionsText: 'MO (C)', contractEnd: null, wage: null, squadStatus: '-', attributes: { Passing: 14 } };
+  const base = (players: unknown[], shortlist?: unknown[]) => ({ ...snap('2026-11-26', shortlist), players }) as FmSnapshot;
+
+  it("sort de l'effectif les joueurs sans contrat et les range dans les cibles", () => {
+    const s = base([sous, essai]);
+    expect([...trialistIds(s)]).toEqual(['2']);
+    expect(squadSnapshot(s).players.map((p) => p.id)).toEqual([1]);
+    const [t] = shortlist(s);
+    expect(t).toMatchObject({ id: 't2', name: 'À Essai', club: null, sources: ['essai'] });
+  });
+
+  it('ne prend pas tout un vieil instantané sans contrats pour des essais', () => {
+    const s = base([{ id: 3, name: 'A', attributes: {} }, { id: 4, name: 'B', attributes: {} }]);
+    expect(trialistIds(s).size).toBe(0);
+    expect(mergeTargets([], s)).toBeNull();
+  });
+
+  it("marque hors liste un essai terminé, même sans listes lues, sans toucher aux autres cibles", () => {
+    const first = mergeTargets([], base([sous, essai]))!;
+    const known: TargetRecord[] = [...first, { playerId: '9', name: 'Liste', club: 'X', firstSeen: '2026-11-01', lastSeen: '2026-11-01', inList: true, dismissed: false, data: { ...cible, id: 9 } }];
+    const next = mergeTargets(known, base([sous, { ...essai, contractEnd: '2027-06-30', wage: 800, squadStatus: 'Espoir' }, { ...essai, id: 5 }]))!;
+    expect(next.find((r) => r.playerId === '2')).toMatchObject({ inList: false });
+    expect(next.find((r) => r.playerId === '9')).toBeUndefined();
+    expect(next.find((r) => r.playerId === '5')).toMatchObject({ inList: true });
   });
 });

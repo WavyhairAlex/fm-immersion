@@ -101,6 +101,12 @@ export function FmTargets({ saveId, snap, players, folder, go }: { saveId: strin
                   <tr key={p.id} className={`border-t border-canard/5 hover:bg-creme/60 ${p.inList ? '' : 'text-canard/60'}`}>
                     <td className="cursor-pointer px-2 py-1.5 font-bold" onClick={() => compare(p.id)} title={t('fm.targets.compare')}>
                       {p.name}
+                      {p.sources.includes('essai') && (
+                        <>
+                          {' '}
+                          <Tag tone="info">{t('fm.targets.trial')}</Tag>
+                        </>
+                      )}
                       {p.scout?.recommendation && <div className="text-xs font-normal text-brun">{p.scout.recommendation}</div>}
                     </td>
                     <td className="px-2 py-1.5 tabular-nums">{p.age ?? '–'}</td>
