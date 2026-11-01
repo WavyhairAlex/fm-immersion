@@ -913,7 +913,8 @@
         "match": "Match",
         "recovery": "Recovery",
         "prep": "Preparation",
-        "dev": "Work"
+        "dev": "Work",
+        "off": "Free"
       },
       "days": [
         "Mon",
@@ -953,7 +954,15 @@
       "rule3": "If a match moves, put preparation back the day before and recovery the day after.",
       "rule4": "Players back from international duty are handled separately.",
       "rule5": "Judge the plan over several weeks, not one result, and lighten it if the workload doesn't suit.",
-      "source": "\"Freedom\" method (FM Scout, FM27 training schedules): 44 schedules, 4-week themed cycles. The article ships no .fmf files: Archivix rebuilds each day with FM27's sessions, steered by your target style. Copy it into the game's Training screen."
+      "source": "\"Freedom\" method (FM Scout, FM27 training schedules): 44 schedules, 4-week themed cycles. The article ships no .fmf files: Archivix rebuilds each day with FM27's sessions, steered by your target style. Copy it into the game's Training screen.",
+      "clubStatus": "Club status",
+      "status": {
+        "pro": "Professional",
+        "semi": "Semi-professional",
+        "amateur": "Amateur"
+      },
+      "trainingDays": "Training days",
+      "trainingDaysHelp": "A part-time club only trains on some evenings: tick the days offered in the game's Training screen. Other days without a match stay free; the last session before a match is used for preparation."
     }
   },
   "pz2": {
