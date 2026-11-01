@@ -290,7 +290,8 @@
         "suspended": "Suspendu",
         "contract": "Contrat",
         "condition": "Condition",
-        "status": "Statut"
+        "status": "Statut",
+        "sharpness": "Rythme"
       },
       "endsIn_one": "fin dans {{count}} mois",
       "endsIn_other": "fin dans {{count}} mois",
@@ -301,7 +302,13 @@
       "leastFit": "Le moins adapté : {{name}}.",
       "best": "Meilleurs joueurs",
       "young": "Jeunes à suivre",
-      "noYoung": "Aucun joueur de 21 ans ou moins."
+      "noYoung": "Aucun joueur de 21 ans ou moins.",
+      "training": "Entraînement de la semaine",
+      "trainingPreset": "Programme du jeu à charger : « {{preset}} ».",
+      "lowerIntensity_one": "{{count}} joueur à passer en faible intensité",
+      "lowerIntensity_other": "{{count}} joueurs à passer en faible intensité",
+      "rusty_one": "{{count}} joueur en manque de rythme",
+      "rusty_other": "{{count}} joueurs en manque de rythme"
     },
     "contracts": {
       "byYear": "Salaires mensuels libérés par année de fin de contrat",

@@ -290,7 +290,8 @@
         "suspended": "Suspended",
         "contract": "Contract",
         "condition": "Condition",
-        "status": "Status"
+        "status": "Status",
+        "sharpness": "Sharpness"
       },
       "endsIn_one": "ends in {{count}} month",
       "endsIn_other": "ends in {{count}} months",
@@ -301,7 +302,13 @@
       "leastFit": "Least suited: {{name}}.",
       "best": "Best players",
       "young": "Young players to watch",
-      "noYoung": "No players aged 21 or under."
+      "noYoung": "No players aged 21 or under.",
+      "training": "This week's training",
+      "trainingPreset": "Game schedule to load: \"{{preset}}\".",
+      "lowerIntensity_one": "{{count}} player to set to low intensity",
+      "lowerIntensity_other": "{{count}} players to set to low intensity",
+      "rusty_one": "{{count}} player lacking sharpness",
+      "rusty_other": "{{count}} players lacking sharpness"
     },
     "contracts": {
       "byYear": "Monthly wages freed by contract end year",

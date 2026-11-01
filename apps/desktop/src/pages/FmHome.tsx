@@ -1,9 +1,9 @@
-import { homeOverview, unavailable, type FmPlayer, type FmSnapshot } from '@simloom/module-fm';
+import { PART_TIME_DAYS, currentTrainingWeek, homeOverview, nearestPreset, trainingAlerts, trainingFor, unavailable, type FmPlayer, type FmSnapshot } from '@simloom/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FmSummary } from './FmSummary';
 import { useTacticEngine } from './FmTactic';
-import { Empty, Level, Panel, PlayerName, Pos, Row, Tag, type Tone } from './FmUi';
+import { Empty, Level, Panel, PlayerName, Pos, Row, Tag, useCoach, type Tone } from './FmUi';
 
 const KIND_TONE: Record<string, Tone> = { injured: 'bad', suspended: 'bad', contract: 'warn', condition: 'warn', status: 'info' };
 
@@ -14,6 +14,22 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
   const h = useMemo(() => homeOverview(players, snap.gameDate), [players, snap.gameDate]);
   const { engine } = useTacticEngine(folder, players);
   const ranked = useMemo(() => engine.rankStyles(players.filter((p) => !unavailable(p) && Object.keys(p.attributes).length)), [engine, players]);
+  const [coach] = useCoach();
+  const style = engine.ref.styles.find((s) => s.id === coach.style) ?? engine.ref.styles[0];
+  const week = useMemo(
+    () =>
+      currentTrainingWeek({
+        gameDate: snap.gameDate,
+        fixtures: snap.fixtures,
+        seasonStart: coach.seasonStart,
+        trainingDays: (coach.clubStatus ?? 'pro') === 'pro' ? undefined : (coach.trainingDays ?? PART_TIME_DAYS),
+        priorities: style ? trainingFor(style) : [],
+        style: style?.id,
+      }),
+    [snap.gameDate, snap.fixtures, coach.seasonStart, coach.clubStatus, coach.trainingDays, style],
+  );
+  const tr = useMemo(() => trainingAlerts(players), [players]);
+  const short = (list: FmPlayer[]) => list.map((p) => p.name.split(' ').at(-1)).join(', ');
   const pct = (f: number | null) => (f == null ? '–' : `${Math.round((f / 20) * 100)} %`);
   const link = (view: string, label: string) => (
     <button type="button" className="text-sm font-bold text-eau-fonce hover:underline" onClick={() => go(view)}>
@@ -62,6 +78,34 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
             <Empty>{t('fm.home.nothing')}</Empty>
           ) : null}
           {h.alerts.length > shown.length && <p className="mt-1 text-xs text-brun">{t('fm.home.more', { count: h.alerts.length - shown.length })}</p>}
+        </Panel>
+
+        <Panel title={t('fm.home.training')} action={link('training', t('fm.views.training'))}>
+          <Row>
+            <span>
+              <b>{t('fm.train.code', { code: week.code })}</b>
+              {week.theme && <span className="text-xs text-brun"> · {t(`fm.train.theme.${week.theme}`)}</span>}
+            </span>
+          </Row>
+          <p className="mb-1 text-xs text-brun">{t('fm.home.trainingPreset', { preset: t(`fm.train.preset.${nearestPreset(week)}`) })}</p>
+          {tr.lower.length > 0 && (
+            <Row>
+              <span>
+                <Tag tone="warn">{t('fm.home.kind.condition')}</Tag> <b>{t('fm.home.lowerIntensity', { count: tr.lower.length })}</b>
+                <br />
+                <span className="text-xs text-brun">{short(tr.lower)}</span>
+              </span>
+            </Row>
+          )}
+          {tr.rusty.length > 0 && (
+            <Row>
+              <span>
+                <Tag tone="info">{t('fm.home.kind.sharpness')}</Tag> <b>{t('fm.home.rusty', { count: tr.rusty.length })}</b>
+                <br />
+                <span className="text-xs text-brun">{short(tr.rusty)}</span>
+              </span>
+            </Row>
+          )}
         </Panel>
 
         {ranked.length > 0 && (
