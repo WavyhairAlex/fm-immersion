@@ -305,8 +305,8 @@
       "noYoung": "Aucun joueur de 21 ans ou moins.",
       "training": "Entraînement de la semaine",
       "trainingPreset": "Programme du jeu à charger : « {{preset}} ».",
-      "lowerIntensity_one": "{{count}} joueur à passer en faible intensité",
-      "lowerIntensity_other": "{{count}} joueurs à passer en faible intensité",
+      "lowerIntensity_one": "{{count}} joueur à passer en semi-intensité",
+      "lowerIntensity_other": "{{count}} joueurs à passer en semi-intensité",
       "rusty_one": "{{count}} joueur en manque de rythme",
       "rusty_other": "{{count}} joueurs en manque de rythme"
     },
@@ -1005,23 +1005,24 @@
       "individual": "Entraînement individuel",
       "intensity": "Intensité",
       "intensityLevel": {
-        "none": "Pas d'intensité",
-        "low": "Faible intensité",
-        "medium": "Intensité moyenne",
-        "high": "Haute intensité",
-        "veryHigh": "Intensité très élevée"
+        "noWork": "Aucun travail sur le terrain ou en salle de gym",
+        "rest": "Repos",
+        "half": "Semi-intensité",
+        "normal": "Intensité normale",
+        "double": "Double intensité"
       },
       "note": "Pourquoi",
       "reason": {
         "injured": "blessé",
         "veryTired": "condition sous 80 %",
         "tired": "condition sous 90 %",
-        "young": "jeune, progresse le plus",
+        "busyWeek": "jeune, mais semaine à deux matchs",
+        "young": "21 ans ou moins en pleine forme : progresse le plus",
         "veteran": "32 ans ou plus, ménager",
-        "normal": "intensité standard"
+        "normal": "pas de raison de doubler la charge"
       },
       "rusty": "manque de rythme : temps de jeu en réserve ou en fin de match",
-      "individualHelp": "Rôle et axes : ceux du projet (rôle de son poste dans le onze cible, sinon le rôle où il est le plus adapté) et ses 3 attributs clés les plus faibles, à mettre en priorité de l'entraînement individuel. Intensité : à régler dans « Intensité de l'entraînement individuel » ; jamais très élevée d'office (risque de blessure).",
+      "individualHelp": "Comme l'écran Entraîn. individuel du jeu. Rôles ALB et SLB : ceux de son poste dans le onze cible, sinon le rôle du projet où il est le plus adapté. Priorité : celle qui travaille son attribut clé le plus faible pour ce rôle (en dessous, ses 3 points faibles). Double intensité : seulement les 21 ans et moins en pleine forme, hors semaine à deux matchs ; pour les autres, intensité normale. Toute l'équipe en double intensité avec une charge « Intensive », c'est beaucoup de fatigue et de risque de blessure.",
       "mentoring": "Groupes d'encadrement",
       "mentor": "Tuteur",
       "mentees": "Jeunes encadrés",
@@ -1030,7 +1031,30 @@
       "noMentoring": "Aucun groupe à proposer : il faut des joueurs de 21 ans et moins et au moins un joueur de 24 ans et plus à la personnalité favorable (ou très déterminé). La personnalité vient de la lecture étendue des joueurs.",
       "avoid": "À tenir à l'écart des jeunes",
       "unassigned": "Sans tuteur disponible : {{list}}.",
-      "mentoringHelp": "Dans le jeu : Entraînement, Encadrement, Créer un groupe d'encadrement. La personnalité et la détermination des joueurs influents déteignent sur les jeunes du groupe, en bien comme en mal ; 3 jeunes au plus par tuteur, du même secteur de jeu quand c'est possible."
+      "mentoringHelp": "Dans le jeu : Entraînement, Encadrement, Créer un groupe d'encadrement. La personnalité et la détermination des joueurs influents déteignent sur les jeunes du groupe, en bien comme en mal ; 3 jeunes au plus par tuteur, du même secteur de jeu quand c'est possible.",
+      "roleIp": "Rôle ALB",
+      "roleOop": "Rôle SLB",
+      "focusCol": "Priorité de l'entraînement",
+      "focus": {
+        "gkShotStopping": "Arrêts du gardien",
+        "gkHandling": "Prises de balle (GB)",
+        "gkDistribution": "Relances (GB)",
+        "tackling": "Tacles",
+        "marking": "Marquage",
+        "defensivePositioning": "Placement défensif",
+        "containment": "Contenir l’adversaire",
+        "pressing": "Pressing",
+        "ballRetention": "Conservation du ballon",
+        "ballProgression": "Progression du ballon",
+        "chanceCreation": "Création d'occasions",
+        "chanceConversion": "Conversion des occasions",
+        "finalThird": "Trente derniers mètres",
+        "attackingMovement": "Déplacements offensifs",
+        "quickness": "Vivacité",
+        "agilityBalance": "Agilité et équilibre",
+        "endurance": "Endurance",
+        "resistance": "Résistance"
+      }
     },
     "intro": {
       "home": "Ce qui demande ton attention aujourd'hui, les styles qui collent à l'effectif, tes meilleurs joueurs et tes jeunes.",

@@ -387,9 +387,10 @@ export function nearestPreset(w: TrainingWeek): GamePreset {
 
 /* ---------- Entraînement individuel ---------- */
 
-export const INDIVIDUAL_INTENSITIES = ['none', 'low', 'medium', 'high', 'veryHigh'] as const;
+/** Intensités individuelles de FM27 (écran Entraîn. individuel), libellés dans fm.train.intensityLevel.<id>. */
+export const INDIVIDUAL_INTENSITIES = ['noWork', 'rest', 'half', 'normal', 'double'] as const;
 export type IndividualIntensity = (typeof INDIVIDUAL_INTENSITIES)[number];
-export type IntensityReason = 'injured' | 'veryTired' | 'tired' | 'young' | 'veteran' | 'normal';
+export type IntensityReason = 'injured' | 'veryTired' | 'tired' | 'busyWeek' | 'young' | 'veteran' | 'normal';
 export interface IndividualAdvice {
   intensity: IndividualIntensity;
   reason: IntensityReason;
@@ -398,17 +399,53 @@ export interface IndividualAdvice {
 }
 
 /**
- * Intensité individuelle conseillée : jamais « très élevée » d'office (risque de blessure),
- * baissée si la condition est entamée, montée pour les jeunes qui progressent le plus.
+ * Intensité individuelle conseillée. « Double intensité » accélère la progression mais charge le joueur
+ * et augmente le risque de blessure : seulement pour les 21 ans et moins en pleine forme, hors semaine
+ * à deux matchs. Condition entamée : semi-intensité ; blessé : aucun travail sur le terrain ou en salle.
  */
-export function individualAdvice(p: { age: number | null; condition: number | null; sharpness: number | null; injury: string | null }): IndividualAdvice {
+export function individualAdvice(
+  p: { age: number | null; condition: number | null; sharpness: number | null; injury: string | null },
+  o: { matches?: number } = {},
+): IndividualAdvice {
   const rusty = !p.injury && p.sharpness != null && p.sharpness < 70;
-  if (p.injury) return { intensity: 'none', reason: 'injured', rusty: false };
-  if (p.condition != null && p.condition < 80) return { intensity: 'low', reason: 'veryTired', rusty };
-  if (p.condition != null && p.condition < 90) return { intensity: 'medium', reason: 'tired', rusty };
-  if (p.age != null && p.age <= 21) return { intensity: 'high', reason: 'young', rusty };
-  if (p.age != null && p.age >= 32) return { intensity: 'medium', reason: 'veteran', rusty };
-  return { intensity: 'medium', reason: 'normal', rusty };
+  if (p.injury) return { intensity: 'noWork', reason: 'injured', rusty: false };
+  if (p.condition != null && p.condition < 80) return { intensity: 'half', reason: 'veryTired', rusty };
+  if (p.condition != null && p.condition < 90) return { intensity: 'normal', reason: 'tired', rusty };
+  if (p.age != null && p.age <= 21) return (o.matches ?? 1) >= 2 ? { intensity: 'normal', reason: 'busyWeek', rusty } : { intensity: 'double', reason: 'young', rusty };
+  if (p.age != null && p.age >= 32) return { intensity: 'normal', reason: 'veteran', rusty };
+  return { intensity: 'normal', reason: 'normal', rusty };
+}
+
+/** Priorités de l'entraînement individuel de FM27 et attributs qu'elles travaillent (libellés dans fm.train.focus.<id>). */
+export const INDIVIDUAL_FOCUS: Record<string, { attrs: string[]; gk?: boolean }> = {
+  gkShotStopping: { attrs: ['Reflexes', 'OneOnOnes', 'AerialReach'], gk: true },
+  gkHandling: { attrs: ['Handling', 'CommandOfArea', 'RushingOut'], gk: true },
+  gkDistribution: { attrs: ['Kicking', 'Throwing', 'Passing', 'FirstTouch'], gk: true },
+  tackling: { attrs: ['Tackling', 'Bravery', 'Aggression'] },
+  marking: { attrs: ['Marking', 'Heading', 'JumpingReach'] },
+  defensivePositioning: { attrs: ['Positioning', 'Anticipation', 'Concentration'] },
+  containment: { attrs: ['Decisions', 'Composure', 'Concentration'] },
+  pressing: { attrs: ['WorkRate', 'Teamwork', 'Aggression'] },
+  ballRetention: { attrs: ['FirstTouch', 'Technique', 'Composure'] },
+  ballProgression: { attrs: ['Dribbling', 'Passing', 'Vision'] },
+  chanceCreation: { attrs: ['Crossing', 'Vision', 'Flair'] },
+  chanceConversion: { attrs: ['Finishing', 'LongShots', 'PenaltyTaking'] },
+  finalThird: { attrs: ['Movement', 'Anticipation', 'Flair'] },
+  attackingMovement: { attrs: ['Movement', 'Acceleration'] },
+  quickness: { attrs: ['Pace', 'Acceleration'] },
+  agilityBalance: { attrs: ['Agility', 'Balance'] },
+  endurance: { attrs: ['Stamina', 'NaturalFitness'] },
+  resistance: { attrs: ['Strength'] },
+};
+
+/** Priorité individuelle qui travaille l'attribut clé le plus faible (puis le suivant) du rôle visé. */
+export function individualFocus(weak: { key: string }[], isGk: boolean): string | null {
+  const ids = Object.keys(INDIVIDUAL_FOCUS).filter((id) => !!INDIVIDUAL_FOCUS[id]!.gk === isGk || (!INDIVIDUAL_FOCUS[id]!.gk && isGk));
+  for (const w of weak) {
+    const hit = ids.find((id) => INDIVIDUAL_FOCUS[id]!.attrs.includes(w.key));
+    if (hit) return hit;
+  }
+  return null;
 }
 
 /* ---------- Groupes d'encadrement ---------- */
@@ -513,7 +550,7 @@ export function trainingAlerts<P extends { injury: string | null; age: number | 
   const squad = players.filter((p) => !p.team);
   const advice = squad.map((p) => ({ p, a: individualAdvice(p) }));
   return {
-    lower: advice.filter((x) => x.a.intensity === 'low').map((x) => x.p),
+    lower: advice.filter((x) => x.a.intensity === 'half').map((x) => x.p),
     rusty: advice.filter((x) => x.a.rusty).map((x) => x.p),
   };
 }
