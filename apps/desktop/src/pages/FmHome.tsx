@@ -12,7 +12,7 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
   const h = useMemo(() => homeOverview(players, snap.gameDate), [players, snap.gameDate]);
-  const { engine } = useTacticEngine(folder);
+  const { engine } = useTacticEngine(folder, players);
   const ranked = useMemo(() => engine.rankStyles(players.filter((p) => !unavailable(p) && Object.keys(p.attributes).length)), [engine, players]);
   const pct = (f: number | null) => (f == null ? '–' : `${Math.round((f / 20) * 100)} %`);
   const link = (view: string, label: string) => (

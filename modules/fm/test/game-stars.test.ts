@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { carryRoleStars, DEFAULT_TACTIC_REFERENCE, roleStarsIn, starsFromValue, TacticEngine, withExtended, type FmSnapshot } from '../src';
+import { carryRoleStars, DEFAULT_TACTIC_REFERENCE, roleKey, roleStarsIn, starsFromValue, TacticEngine, withExtended, type FmSnapshot } from '../src';
 import { normalizePlayer } from '../src/player';
 
 // Extrait réel de la lecture du 01/11 (D (C) avec ballon, Falkstrand Ransjö et Ilio).
@@ -34,5 +34,27 @@ describe('étoiles lues dans le jeu', () => {
     expect(engine.roleFit(il!, 'BPCB', 'ip', 'DC')).toBe(12);
     // Autre poste ou phase non lus : retour à la formule.
     expect(engine.roleFit(fr!, 'BPCB', 'ip', 'DD')).not.toBe(19);
+  });
+
+  it('ignore les caractères invisibles des libellés du jeu', () => {
+    expect(roleKey('Défenseur central\u200b stoppeur')).toBe(roleKey('Défenseur central stoppeur'));
+  });
+
+  it('ramène les notes calculées à l’échelle des étoiles lues', () => {
+    const attrs = (v: number) => Object.fromEntries(['Marking', 'Tackling', 'Heading', 'Positioning', 'Strength', 'JumpingReach', 'Concentration', 'Passing', 'Composure', 'FirstTouch', 'Vision', 'Technique', 'Decisions', 'Pace', 'Acceleration', 'Anticipation', 'Bravery', 'Aggression', 'Dribbling', 'Stamina', 'WorkRate'].map((k) => [k, v]));
+    // Trois défenseurs lus dans le jeu (valeur ≈ 2 × moyenne + 0), un quatrième non lu.
+    const mk = (id: number, v: number, read: number | null) =>
+      normalizePlayer({ id, name: `J${id}`, positions: 'D (C)', attributes: attrs(v), ...(read == null ? {} : { gameStars: { DC: { ip: { 'defenseur central': read, "defenseur central a l'aise au pied": read - 1 }, oop: { 'defenseur central': read } } } }) });
+    const list = [mk(1, 8, 16), mk(2, 9, 18), mk(3, 10, 20), mk(4, 9, null)];
+    const engine = new TacticEngine(DEFAULT_TACTIC_REFERENCE);
+    const raw = engine.roleFit(list[3]!, 'CB', 'ip', 'DC')!;
+    engine.calibrate(list);
+    expect(engine.cal).not.toBeNull();
+    // Le joueur non lu, de niveau égal au n°2, arrive près de la valeur lue du n°2 (18), pas à sa note brute.
+    const cal = engine.roleFit(list[3]!, 'CB', 'ip', 'DC')!;
+    expect(Math.abs(cal - 18)).toBeLessThan(Math.abs(raw - 18));
+    expect(cal).toBeGreaterThan(16);
+    // Les valeurs lues restent telles quelles.
+    expect(engine.roleFit(list[0]!, 'CB', 'ip', 'DC')).toBe(16);
   });
 });
