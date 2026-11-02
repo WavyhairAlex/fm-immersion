@@ -68,3 +68,39 @@ describe('cases de l’écran Consignes d’équipe', () => {
     expect(c.ip.filter((x) => x.set)).toHaveLength(7);
   });
 });
+
+describe('ancien fichier local de repères', () => {
+  it('ne remplace ni la mentalité ni les consignes du jeu, et les styles du jeu absents du code prennent leur préréglage', async () => {
+    const { mergeReference, gameMentality } = await import('../src');
+    const old = (id: string, mentality: string, ip: string[], oop: string[]) => ({ id, name: id, inPossession: ip, outOfPossession: oop, weights: {}, mentality, signatureRoles: { ip: [], oop: [] } });
+    const ref = mergeReference({
+      roles: [],
+      styles: [
+        old('possession', 'Équilibré', ['Passes plus courtes'], ['Pressing haut']),
+        old('counter-direct', 'Prudent', ['Plus de passes directes', 'Contre-attaque en transition', 'Relances rapides du GB'], ['Bloc bas', 'Ligne déf. descend plus bas']),
+        old('maison', 'Très prudent', ['Plus de passes directes'], []),
+      ],
+    } as never);
+    const by = Object.fromEntries(ref.styles.map((s) => [s.id, s]));
+    expect(by.possession!.mentality).toBe('Positive');
+    expect(by.possession!.inPossession).toContain('Jouer le ballon dans la surface');
+    expect(by['counter-direct']!.mentality).toBe('Prudente');
+    for (const s of ref.styles) expect(checkTeamInstructions([...s.inPossession, ...s.outOfPossession]), s.id).toEqual([]);
+    expect(by.maison!.mentality).toBe('Défensive');
+    expect(gameMentality('Offensif')).toBe('Offensive');
+    // Libellés de l'ancien fichier reconnus.
+    expect(teamInstructionOf('Ligne déf. descend plus bas')?.def.code).toBe('DefensiveLineBehaviour');
+    expect(teamInstructionOf('Relances rapides du GB')?.def.code).toBe('GoalkeeperDistributionSpeed');
+  });
+
+  it('les préréglages des styles du jeu sont valides', async () => {
+    const { mergeReference } = await import('../src');
+    const ids = ['tikitaka', 'tikitaka-v', 'counter-direct', 'catenaccio'];
+    const ref = mergeReference({ roles: [], styles: ids.map((id) => ({ id, name: id, inPossession: [], outOfPossession: [], weights: {}, signatureRoles: { ip: [], oop: [] } })) } as never);
+    for (const id of ids) {
+      const s = ref.styles.find((x) => x.id === id)!;
+      expect(checkTeamInstructions([...s.inPossession, ...s.outOfPossession]), id).toEqual([]);
+      expect(MENTALITIES_FM27 as readonly string[], id).toContain(s.mentality);
+    }
+  });
+});

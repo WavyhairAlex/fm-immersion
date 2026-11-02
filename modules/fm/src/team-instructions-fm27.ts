@@ -116,6 +116,13 @@ const ALIASES: Record<string, [number, number]> = {
   'regroupement en transition': [11, 0],
   'contre-attaque': [3, 2],
   'contre-attaquer': [3, 2],
+  // Fichier local simloom-roles.json du 31/10/2026 (inspection du 02/11).
+  'plus de passes directes': [1, 3],
+  'plus de passes courtes': [1, 1],
+  'contre-attaque en transition': [3, 2],
+  'relances rapides du gb': [17, 2],
+  'ligne def. descend plus bas': [15, 2],
+  'ligne defensive descend plus bas': [15, 2],
 };
 
 /** Consigne d'équipe du jeu correspondant à un libellé (option longue, « Titre : valeur » de la case, ou ancien libellé), ou null. */

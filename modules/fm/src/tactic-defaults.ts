@@ -215,11 +215,60 @@ const STYLES: StyleRef[] = [
 export const DEFAULT_TACTIC_REFERENCE: TacticReference = { roles: ROLES, styles: STYLES };
 
 /** Fusionne un fichier local de repères avec les repères maison : ses rôles et styles remplacent ceux de même code. */
+/**
+ * Styles du jeu absents des repères du code, avec leur préréglage FM27 (simatch.fmf, lu hors jeu le 01/11/2026) :
+ * mentalité et consignes d'équipe, aux mêmes corrections que les styles du code (ligne défensive et
+ * « Gagnez du temps » écartées). Les identifiants sont ceux du fichier local `simloom-roles.json`.
+ */
+const GAME_PRESETS: Record<string, Pick<StyleRef, 'inPossession' | 'outOfPossession' | 'mentality'>> = {
+  tikitaka: {
+    inPossession: ['Passes beaucoup plus courtes', 'Rythme beaucoup plus lent', 'Rester en place', 'Centres à ras de terre', 'Faites moins de dribbles', 'Dissuader de frapper de loin', 'Jouer le ballon dans la surface', 'Passer dans les pieds', 'Jouer malgré le pressing', 'Dégagements au pied courts', 'Relances rapides', 'Relancez vers défenseurs centraux'],
+    outOfPossession: ['Pressing haut', 'Déclenchez le pressing plus souvent', 'Effectuer un contre-pressing', 'Empêchez les relances courtes du GB'],
+    mentality: 'Positive',
+  },
+  'tikitaka-v': {
+    inPossession: ['Faites plus de passes courtes', 'Rythme plus lent', 'Beaucoup plus axiale', 'Contrez', 'Soyez plus expressifs', 'Jouer le ballon dans la surface', 'Centres à ras de terre', 'Cherchez le dédoublement intérieur', "Concentrez le jeu dans l'axe", 'Jouer malgré le pressing', 'Dégagements au pied courts', 'Relancez vers défenseurs centraux'],
+    outOfPossession: ['Pressing haut', 'Déclenchez le pressing plus souvent', 'Effectuer un contre-pressing', 'Empêchez les relances courtes du GB'],
+    mentality: 'Équilibrée',
+  },
+  'counter-direct': {
+    inPossession: ['Faites plus de passes directes', 'Rythme plus élevé', 'Contrez', 'Passer dans les espaces', 'Contourner le pressing', 'Relances rapides'],
+    outOfPossession: ['Bloc bas', 'Rester plus bas', 'Déclenchez le pressing plus souvent', "S'engager plus"],
+    mentality: 'Prudente',
+  },
+  catenaccio: {
+    inPossession: ['Faites plus de passes directes', 'Rythme plus lent', 'Beaucoup plus axiale', 'Contrez', 'Soyez plus disciplinés', 'Gagnez beaucoup plus de temps', 'Obtenir des coups de pied arrêtés', 'Contourner le pressing', 'Ralentissez le rythme'],
+    outOfPossession: ['Bloc bas', 'Rester plus bas', 'Déclenchez le pressing moins souvent', 'Regroupement', 'Ne pas se jeter'],
+    mentality: 'Défensive',
+  },
+};
+
+/**
+ * Fusionne un fichier local de repères avec les repères maison : ses rôles et styles remplacent ceux de même code,
+ * sauf ce qui vient du jeu. La mentalité et les consignes d'équipe d'un style connu du jeu restent celles du
+ * préréglage FM27 : un ancien fichier local (libellés d'avant le 01/11/2026) faisait sinon perdre des consignes
+ * et donnait d'anciennes mentalités.
+ */
 export function mergeReference(local: TacticReference | null | undefined): TacticReference {
   if (!local) return DEFAULT_TACTIC_REFERENCE;
   const roles = new Map(DEFAULT_TACTIC_REFERENCE.roles.map((r) => [r.code, r]));
   for (const r of local.roles) roles.set(r.code, r);
   const styles = new Map(DEFAULT_TACTIC_REFERENCE.styles.map((s) => [s.id, s]));
-  for (const s of local.styles) styles.set(s.id, s);
+  for (const s of local.styles) {
+    const game = styles.get(s.id) ?? GAME_PRESETS[s.id];
+    styles.set(s.id, game ? { ...s, inPossession: game.inPossession, outOfPossession: game.outOfPossession, mentality: game.mentality } : { ...s, mentality: gameMentality(s.mentality) });
+  }
   return { roles: [...roles.values()], styles: [...styles.values()] };
+}
+
+/** Ancien libellé de mentalité (« Équilibré », « Très prudent ») → libellé de FM27. */
+export function gameMentality(m: string | null | undefined): string | undefined {
+  if (!m) return undefined;
+  const n = m.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const map: Record<string, string> = {
+    'tres defensif': 'Très défensive', 'tres defensive': 'Très défensive', 'tres prudent': 'Défensive', 'tres prudente': 'Défensive',
+    defensif: 'Défensive', defensive: 'Défensive', prudent: 'Prudente', prudente: 'Prudente', equilibre: 'Équilibrée', equilibree: 'Équilibrée',
+    positif: 'Positive', positive: 'Positive', offensif: 'Offensive', offensive: 'Offensive', 'tres offensif': 'Très offensive', 'tres offensive': 'Très offensive',
+  };
+  return map[n] ?? m;
 }
