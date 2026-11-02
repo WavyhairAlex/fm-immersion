@@ -565,7 +565,10 @@ const influence = (p: MentorPlayer) => (/leader|meneur|chef/i.test(p.hierarchy ?
  * élevée, influent dans le vestiaire) avec jusqu'à 3 jeunes (21 ans et moins), du même secteur de préférence.
  * Les jeunes qui ont déjà une bonne personnalité passent après les autres.
  */
-export function mentoringGroups<P extends MentorPlayer>(players: P[], maxPerMentor = 3): Mentoring<P> {
+/** Taille d'un groupe d'encadrement dans FM27 : 3 joueurs (« Choisissez trois joueurs… »), tuteur compris. */
+export const MENTORING_GROUP_SIZE = 3;
+
+export function mentoringGroups<P extends MentorPlayer>(players: P[], groupSize = MENTORING_GROUP_SIZE): Mentoring<P> {
   const squad = players.filter((p) => !p.team);
   const det = (p: MentorPlayer) => p.attributes.Determination ?? 10;
   const mentorScore = (p: P) => (personalityTone(p.personality) === 'good' ? 3 : 0) + influence(p) * 1.5 + (det(p) - 10) / 4 + ((p.age ?? 0) >= 28 ? 1 : 0);
@@ -583,7 +586,7 @@ export function mentoringGroups<P extends MentorPlayer>(players: P[], maxPerMent
     // Tuteur du même secteur s'il a de la place, sinon le premier tuteur avec de la place.
     const open = (m: P) => {
       const g = groups.find((x) => x.mentor.id === m.id);
-      return !g || g.mentees.length < maxPerMentor;
+      return !g || g.mentees.length < groupSize - 1;
     };
     const m = mentors.find((x) => x.line === y.line && open(x)) ?? mentors.find(open);
     if (!m) {

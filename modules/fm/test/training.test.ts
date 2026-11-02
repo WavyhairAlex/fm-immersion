@@ -172,6 +172,17 @@ describe('groupes d’encadrement', () => {
     expect(m.avoid.map((x) => x.id)).toEqual(['caractere']);
   });
 
+  it('groupes de 3 joueurs au plus, tuteur compris', () => {
+    const m = mentoringGroups([
+      pl('tuteur', 30, 'DEF', 'Professionnel modèle', 'Leader de l’équipe'),
+      pl('j1', 18, 'DEF', 'Équilibré'),
+      pl('j2', 19, 'DEF', 'Équilibré'),
+      pl('j3', 20, 'DEF', 'Équilibré'),
+    ]);
+    expect(m.groups[0]!.mentees).toHaveLength(2);
+    expect(m.unassigned).toHaveLength(1);
+  });
+
   it('classe les personnalités, les défavorables avant les favorables', () => {
     expect(personalityTone('Peu professionnel')).toBe('bad');
     expect(personalityTone('Très professionnel')).toBe('good');
