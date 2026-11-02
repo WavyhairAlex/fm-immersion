@@ -1182,6 +1182,50 @@ pub async fn fm_memory_search(filter: SearchFilter) -> Result<Vec<DbPlayer>, Mem
     .map_err(|e| MemError::Unexpected(e.to_string()))?
 }
 
+/// CA et PA réels d'un joueur de l'effectif (0-200 ; PA négatif = fourchette du jeu).
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Ability {
+    pub id: i32,
+    pub ca: i16,
+    pub pa: i16,
+}
+
+/// CA/PA de l'effectif du manager humain, à la date de la partie en cours.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SquadAbilities {
+    pub game_date: Option<String>,
+    pub players: Vec<Ability>,
+}
+
+/// Joueurs du club (y compris prêtés ailleurs) réduits à leur CA/PA.
+pub fn squad_abilities<M: Mem>(db: &mut Database<M>) -> SquadAbilities {
+    let players = match db.humans().iter().find_map(|h| h.club_id) {
+        Some(club) => db
+            .players(120, |p| p.club_id == Some(club) || p.loan_club_id == Some(club))
+            .into_iter()
+            .map(|p| Ability { id: p.id, ca: p.ca, pa: p.pa })
+            .collect(),
+        None => Vec::new(),
+    };
+    SquadAbilities { game_date: db.today().and_then(|d| d.iso()), players }
+}
+
+/// CA/PA réels de l'effectif (lecture seule, de l'extérieur du jeu), pour suivre la progression sur une échelle
+/// fixe : les étoiles du jeu sont relatives à l'effectif. Lancé seulement si le joueur l'a activé.
+#[tauri::command]
+pub async fn fm_memory_abilities() -> Result<SquadAbilities, MemError> {
+    tauri::async_runtime::spawn_blocking(|| {
+        with_database(|db, _| {
+            db.check()?;
+            Ok(squad_abilities(db))
+        })
+    })
+    .await
+    .map_err(|e| MemError::Unexpected(e.to_string()))?
+}
+
 // ---------------------------------------------------------------------------------------------
 
 #[cfg(test)]

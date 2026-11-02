@@ -177,14 +177,14 @@ function wmean(p: FmPlayer, w: Record<string, number>) {
 
 /**
  * Rôles exigeants de FM27 (Attaquant désaxé, Rôle libre, Faux neuf…) : le jeu divise la valeur par 2 quand
- * la capacité actuelle du joueur est sous le seuil du rôle. Avec la capacité (`ca`), on applique la règle ;
- * sans elle (cas actuel, le plugin ne la lit pas), on retient un quart de moins, pour ne choisir ces rôles
- * que s'ils dépassent nettement les autres.
+ * la capacité actuelle du joueur est sous le seuil du rôle. Avec la capacité (`ca`, lue en mémoire si le joueur
+ * l'a activé), on applique la règle ; sans elle, on retient un quart de moins, pour ne choisir ces rôles que s'ils
+ * dépassent nettement les autres.
  */
 function thresholdFactor(p: FmPlayer, gameCode: string): number {
   const t = roleThreshold(gameCode);
   if (t == null) return 1;
-  const ca = (p as FmPlayer & { ca?: number | null }).ca;
+  const ca = p.ca;
   return ca == null ? 0.75 : ca < t ? 0.5 : 1;
 }
 

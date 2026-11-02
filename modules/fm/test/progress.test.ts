@@ -5,6 +5,22 @@ import type { FmSnapshot } from '../src/snapshot';
 
 const p = (id: number, pos: string, level: number, extra: Record<string, unknown> = {}) => normalizePlayer({ id, name: `J${id}`, positions: pos, level, ...extra });
 
+describe('progression sur le CA réel', () => {
+  it('mesure la tendance sur le CA, plafonnée par le PA, et en tire le niveau', async () => {
+    const { withAbilities } = await import('../src/player');
+    const at = (gameDate: string, ca: number) => ({ gameDate, players: [p(1, 'BT', 10, { age: 19, ca, pa: 120 })] });
+    // +20 de CA en un an : à ce rythme il atteindrait 140 en deux ans, mais son PA est 120.
+    const history = [at('2026-02-14', 80), at('2027-02-14', 100)];
+    const now = p(1, 'BT', 10, { age: 19, ca: 100, pa: 120 });
+    expect(projectLevel(now, 1, history)).toBeCloseTo(12);
+    expect(projectLevel(now, 2, history)).toBeCloseTo(12);
+    // Le CA/PA de la mémoire du jeu est joint aux joueurs par id.
+    const snap = withAbilities({ players: [{ id: 7, name: 'X' }], abilities: { '7': { ca: 55, pa: -75 } } });
+    const x = normalizePlayer(snap.players[0] as never);
+    expect([x.ca, x.pa]).toEqual([55, null]);
+  });
+});
+
 describe('progression et profondeur', () => {
   it('projette selon l’âge sans historique, selon la tendance avec', () => {
     const young = p(1, 'BT', 10, { age: 18 });

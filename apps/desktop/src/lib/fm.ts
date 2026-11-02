@@ -13,6 +13,8 @@ export interface FmSaveSettings {
   fmClub?: string;
   /** Date de jeu depuis laquelle le manager est sans club (lue dans l'état écrit par le plugin). */
   fmFreeSince?: string;
+  /** Lire le CA/PA réels de l'effectif dans la mémoire du jeu (lecture seule) à chaque nouvelle date. Désactivé par défaut. */
+  fmReadAbilities?: boolean;
 }
 
 /** Fichier .fm listé par Rust (métadonnées seulement). */
@@ -85,7 +87,9 @@ export function fmRepo(db: Db) {
       if (expected && parsed.club !== expected && !opts.force && !newJob) throw new FmOtherSaveError(parsed.club, expected);
       // Un ancien instantané (d'avant le départ) ne met pas fin à la période sans club.
       if (settings.fmClub !== parsed.club || newJob) await this.updateSettings(saveId, { fmClub: parsed.club, ...(newJob ? { fmFreeSince: undefined } : {}) });
-      const snap = carryRoleStars(parsed, prev?.club === parsed.club ? prev?.data : undefined);
+      let snap = carryRoleStars(parsed, prev?.club === parsed.club ? prev?.data : undefined);
+      // CA/PA lus en mémoire pour cette date : le plugin réécrit l'instantané, on les garde.
+      if (!snap.abilities && prev?.gameDate === snap.gameDate && prev.club === snap.club && prev.data.abilities) snap = { ...snap, abilities: prev.data.abilities };
       const values = { saveId, gameDate: snap.gameDate, club: snap.club, playerCount: snap.players.length, data: snap };
       await db
         .delete(fmSnapshots)
@@ -94,6 +98,23 @@ export function fmRepo(db: Db) {
       await this.saveTargets(saveId, snap);
       await db.update(saves).set({ updatedAt: new Date().toISOString() }).where(eq(saves.id, saveId));
       return snap;
+    },
+
+    /**
+     * Joint à l'instantané de cette date le CA/PA réels lus dans la mémoire du jeu (rien si l'instantané manque).
+     */
+    async attachAbilities(saveId: string, gameDate: string, players: { id: number | string; ca: number; pa: number }[]) {
+      const [row] = await db
+        .select()
+        .from(fmSnapshots)
+        .where(and(eq(fmSnapshots.saveId, saveId), eq(fmSnapshots.gameDate, gameDate)));
+      if (!row) return false;
+      const abilities = Object.fromEntries(players.map((p) => [String(p.id), { ca: p.ca, pa: p.pa }]));
+      await db
+        .update(fmSnapshots)
+        .set({ data: { ...row.data, abilities } })
+        .where(eq(fmSnapshots.id, row.id));
+      return true;
     },
 
     /** Cibles du mercato gardées pour la partie (y compris celles que le jeu ne liste plus). */

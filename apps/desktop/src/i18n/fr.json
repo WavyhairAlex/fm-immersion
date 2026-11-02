@@ -1338,6 +1338,7 @@
         "contract_other": "contrat : {{count}} mois",
         "unwanted": "statut du club : {{status}}",
         "potential": "potentiel {{stars}} ★",
+        "potentialPa": "PA {{pa}}, le titulaire est à {{ca}} de CA",
         "lowPotential": "potentiel limité",
         "overtakes_one": "au niveau de {{starter}} dans {{count}} saison",
         "overtakes_other": "au niveau de {{starter}} dans {{count}} saisons",
@@ -1510,6 +1511,10 @@
       "starts": "{{name}} devient titulaire ({{pos}})",
       "recruit": "Encore à recruter pour le projet : {{list}}",
       "foot": "Fenêtres calculées depuis le mois de reprise du championnat (réglage Entraînement). Coûts provisoires, choix de Simloom : changer de tactique demande un gain d'une demi-étoile ; un style trop complexe pour le groupe perd jusqu'à une demi-étoile."
+    },
+    "abilities": {
+      "toggle": "Lire le CA/PA",
+      "help": "Lit le CA et le PA réels (sur 200) de ton effectif dans la mémoire de FM27, en lecture seule, une fois par date de jeu. Les étoiles du jeu sont relatives à l'effectif ; le CA/PA donne une échelle fixe pour la progression et le potentiel. Attention : le PA est une valeur que le jeu te cache."
     }
   },
   "pz2": {

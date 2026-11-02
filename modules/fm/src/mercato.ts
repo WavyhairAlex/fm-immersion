@@ -41,6 +41,7 @@ export type MercatoReason =
   | { id: 'contract'; months: number }
   | { id: 'unwanted'; status: string }
   | { id: 'potential'; stars: number }
+  | { id: 'potentialPa'; pa: number; ca: number }
   | { id: 'lowPotential' }
   | { id: 'overtakes'; years: number; starter: string }
   | { id: 'decline'; age: number }
@@ -187,8 +188,10 @@ export function mercatoAdvice(engine: TacticEngine, players: FmPlayer[], gameDat
     // Les étoiles sont relatives à l'effectif (une grosse recrue les fait baisser pour tous) : un potentiel ne vaut que
     // comparé aux titulaires du même effectif, à la même date. Il compte s'il atteint le plus faible titulaire de son
     // poste ; sans titulaire noté pour comparer, on garde le repère fixe PROSPECT_STARS.
+    // Avec le CA/PA réels (échelle fixe), on compare directement son PA au CA du titulaire.
+    const realPa = p.pa != null && starter && starter.id !== p.id && starter.ca != null ? { pa: p.pa, ca: starter.ca } : null;
     const bar = starter && starter.id !== p.id && starter.stars?.current != null ? starter.stars.current : PROSPECT_STARS;
-    const highPot = pot != null && pot >= bar;
+    const highPot = realPa ? realPa.pa >= realPa.ca : pot != null && pot >= bar;
     const prospect = young && !off && (highPot || (overtakes != null && overtakes <= 3) || tier === 0);
     const reasons: MercatoReason[] = [];
     if (now.tier === 0 && now.pos) reasons.push({ id: 'starterNow', pos: now.pos });
@@ -201,7 +204,8 @@ export function mercatoAdvice(engine: TacticEngine, players: FmPlayer[], gameDat
       const pl = proj.pos ? proj : now;
       reasons.push(pl.pos && pl.rank ? { id: 'surplus', pos: pl.pos, rank: pl.rank, need: pl.need } : { id: 'noPosition' });
     }
-    if (young && pot != null) reasons.push(highPot ? { id: 'potential', stars: pot } : { id: 'lowPotential' });
+    if (young && realPa) reasons.push(highPot ? { id: 'potentialPa', pa: realPa.pa, ca: realPa.ca } : { id: 'lowPotential' });
+    else if (young && pot != null) reasons.push(highPot ? { id: 'potential', stars: pot } : { id: 'lowPotential' });
     if (young && overtakes != null && overtakes > 0 && starter) reasons.push({ id: 'overtakes', years: overtakes, starter: starter.name });
     if (months != null && months <= 12) reasons.push({ id: 'contract', months });
     if (isUnwanted(p.squadStatus)) reasons.push({ id: 'unwanted', status: p.squadStatus! });

@@ -25,9 +25,29 @@ export function levelSeries(history: SquadAt[], id: string): (number | null)[] {
 
 const YEAR_MS = 3.15e10;
 
-/** Niveau projeté dans `years` saisons. */
+/**
+ * Niveau projeté dans `years` saisons. Avec le CA réel (lu en mémoire), la progression se mesure sur le CA, échelle
+ * fixe, et le PA plafonne la projection ; le niveau suit le CA en proportion. Sans CA : progression des attributs
+ * mesurée sur les instantanés, sinon courbe d'âge.
+ */
 export function projectLevel(p: FmPlayer, years: number, history: SquadAt[] = []): number | null {
   if (p.level == null) return null;
+  if (p.ca != null) {
+    const caPts = history
+      .map((h) => ({ d: new Date(h.gameDate).getTime(), ca: h.players.find((x) => x.id === p.id)?.ca ?? null }))
+      .filter((x): x is { d: number; ca: number } => x.ca != null);
+    const caSpan = caPts.length >= 2 ? (caPts.at(-1)!.d - caPts[0]!.d) / YEAR_MS : 0;
+    let ca = p.ca;
+    if (caSpan >= 0.4) ca += ((caPts.at(-1)!.ca - caPts[0]!.ca) / caSpan) * years;
+    else {
+      // Courbe d'âge appliquée au CA (1 point de niveau sur 20 ≈ 1/level du CA).
+      let lvl = p.level;
+      for (let y = 0; y < years; y++) lvl += growthAt((p.age ?? 25) + y);
+      ca = (p.ca * lvl) / p.level;
+    }
+    if (p.pa != null) ca = Math.min(ca, Math.max(p.pa, p.ca));
+    return Math.max(1, Math.min(20, (p.level * Math.max(1, ca)) / p.ca));
+  }
   const pts = history
     .map((h) => ({ d: new Date(h.gameDate).getTime(), l: h.players.find((x) => x.id === p.id)?.level ?? null }))
     .filter((x): x is { d: number; l: number } => x.l != null);

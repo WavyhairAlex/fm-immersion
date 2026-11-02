@@ -20,6 +20,18 @@ describe('instantanés Football Manager', () => {
     fm = fmRepo(db);
   });
 
+  it('joint le CA/PA lus en mémoire à l’instantané de la date et les garde quand le plugin le réécrit', async () => {
+    const save = await saves.create({ gameId: 'fm', name: 'Malženice' });
+    await fm.importSnapshot(save.id, snap('2027-02-14', ['A', 'B']));
+    expect(await fm.attachAbilities(save.id, '2027-02-21', [{ id: 1, ca: 90, pa: 140 }])).toBe(false);
+    expect(await fm.attachAbilities(save.id, '2027-02-14', [{ id: 1, ca: 90, pa: 140 }])).toBe(true);
+    await fm.importSnapshot(save.id, snap('2027-02-14', ['A', 'B']));
+    expect((await fm.latest(save.id))?.data.abilities).toEqual({ '1': { ca: 90, pa: 140 } });
+    // Nouvelle date : pas de CA/PA tant qu'ils n'ont pas été relus.
+    await fm.importSnapshot(save.id, snap('2027-02-21', ['A', 'B']));
+    expect((await fm.latest(save.id))?.data.abilities).toBeUndefined();
+  });
+
   it("garde un instantané par date de jeu et renvoie le plus récent", async () => {
     const save = await saves.create({ gameId: 'fm', name: 'Vänersborg' });
     await fm.importSnapshot(save.id, snap('2026-08-29', ['A']));

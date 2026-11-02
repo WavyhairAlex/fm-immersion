@@ -48,6 +48,11 @@ export const fmSnapshotSchema = z
     players: z.array(fmPlayerSchema),
     /** Tactique active lue dans le jeu (provisoire : le plugin ne donne pas encore le joueur par poste). */
     tactic: z.object({ name: z.string().nullish(), formation: z.string().nullish() }).passthrough().nullish(),
+    /**
+     * CA et PA réels (0-200) lus par Simloom dans la mémoire du jeu (lecture seule, si le joueur l'a activé), par id
+     * de joueur, à la date de l'instantané. Échelle fixe, contrairement aux étoiles relatives à l'effectif.
+     */
+    abilities: z.record(z.object({ ca: z.number(), pa: z.number() })).nullish(),
   })
   .passthrough();
 

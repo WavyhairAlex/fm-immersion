@@ -35,6 +35,7 @@ pub fn run() {
             fm_memory::fm_memory_probe,
             fm_memory::fm_memory_find,
             fm_memory::fm_memory_search,
+            fm_memory::fm_memory_abilities,
             pz2::pz2_save_download
         ])
         .run(tauri::generate_context!())

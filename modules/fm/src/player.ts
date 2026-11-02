@@ -67,6 +67,12 @@ export interface FmPlayer {
   familiarity: Partial<Record<PosCode, number>> | null;
   /** Attributs connus (milieu de fourchette si le recrutement ne les a pas affinés), sans le préfixe « Attribute ». */
   attributes: Record<string, number>;
+  /**
+   * CA et PA réels (0-200) lus dans la mémoire du jeu, si le joueur l'a activé. Échelle fixe : à préférer aux
+   * étoiles (relatives à l'effectif) pour la progression et le potentiel. PA négatif = fourchette du jeu (inconnu).
+   */
+  ca: number | null;
+  pa: number | null;
 }
 
 export function normalizePlayer(p: FmPlayerRaw): FmPlayer {
@@ -115,7 +121,16 @@ export function normalizePlayer(p: FmPlayerRaw): FmPlayer {
     attributes,
     familiarity: familiarityOf(p.positionRatings),
     gameStars: p.gameStars && typeof p.gameStars === 'object' ? (p.gameStars as FmPlayer['gameStars']) : null,
+    ca: typeof p.ca === 'number' && p.ca > 0 ? p.ca : null,
+    pa: typeof p.pa === 'number' && p.pa > 0 ? p.pa : null,
   };
+}
+
+/** Joint aux joueurs bruts le CA/PA lu dans la mémoire du jeu (`snap.abilities`), s'il y en a. */
+export function withAbilities<S extends { players: { id: string | number }[]; abilities?: Record<string, { ca: number; pa: number }> | null }>(snap: S): S {
+  const ab = snap.abilities;
+  if (!ab || !Object.keys(ab).length) return snap;
+  return { ...snap, players: snap.players.map((p) => (ab[String(p.id)] ? { ...p, ...ab[String(p.id)] } : p)) };
 }
 
 function familiarityOf(raw: unknown): Partial<Record<PosCode, number>> | null {

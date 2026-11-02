@@ -1338,6 +1338,7 @@
         "contract_other": "contract: {{count}} months",
         "unwanted": "club status: {{status}}",
         "potential": "potential {{stars}} ★",
+        "potentialPa": "PA {{pa}}, the starter is at {{ca}} CA",
         "lowPotential": "limited potential",
         "overtakes_one": "at {{starter}}'s level in {{count}} season",
         "overtakes_other": "at {{starter}}'s level in {{count}} seasons",
@@ -1510,6 +1511,10 @@
       "starts": "{{name}} becomes a starter ({{pos}})",
       "recruit": "Still to recruit for the project: {{list}}",
       "foot": "Windows computed from the league restart month (Training settings). Provisional costs chosen by Simloom: changing tactic needs a half-star gain; a style too complex for the group loses up to half a star."
+    },
+    "abilities": {
+      "toggle": "Read CA/PA",
+      "help": "Reads your squad's real CA and PA (out of 200) from FM27's memory, read-only, once per game date. The game's stars are relative to the squad; CA/PA gives a fixed scale for progression and potential. Note: PA is a value the game hides from you."
     }
   },
   "pz2": {

@@ -150,4 +150,18 @@ describe('compatibilité avec le projet de jeu', () => {
     expect(after.verdict).toBe(before.verdict);
     expect(after.reasons.some((x) => x.id === 'potential')).toBe(true);
   });
+
+  it('avec le CA/PA réels, compare le PA du jeune au CA du titulaire', () => {
+    const starters = eleven.map((x) => normalizePlayer({ ...x, attributes: x.attributes, ca: 100, pa: 110, stars: { current: 3, potential: 3 } }));
+    const young = (pa: number) =>
+      mercatoAdvice(engine, [...starters, p(30, 'M (C)', 6, { age: 20, ca: 50, pa, stars: { current: 0.5, potential: 5 } })], DATE, { style: 'possession' })!.advice.find(
+        (a) => a.player.id === '30',
+      )!;
+    // 5 étoiles de potentiel, mais un PA sous le CA des titulaires : pas un espoir.
+    expect(young(90).prospect).toBe(false);
+    expect(young(90).reasons.some((x) => x.id === 'lowPotential')).toBe(true);
+    const good = young(130);
+    expect(good.prospect).toBe(true);
+    expect(good.reasons).toContainEqual({ id: 'potentialPa', pa: 130, ca: 100 });
+  });
 });

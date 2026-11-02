@@ -1,4 +1,4 @@
-import { buildProject, compatMap, gameFormationOf, gameLineup, loanedOutIds, normalizePlayer, squadSnapshot, withExtended, type FmPlayer, type FmSnapshot, type Line, type SquadAt } from '@simloom/module-fm';
+import { buildProject, compatMap, gameFormationOf, gameLineup, loanedOutIds, normalizePlayer, squadSnapshot, withAbilities, withExtended, type FmPlayer, type FmSnapshot, type Line, type SquadAt } from '@simloom/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -154,6 +154,7 @@ export function FmSave() {
   // Import automatique : le plugin réécrit son instantané toutes les 5 minutes ; on le relit chaque minute et
   // on l'enregistre dès qu'il a changé, pour que tout l'écran suive la partie sans bouton à presser.
   const lastText = useRef<string | null>(null);
+  const abilitiesDate = useRef<string | null>(null);
   useEffect(() => {
     if (!folder) return;
     let stop = false;
@@ -171,15 +172,31 @@ export function FmSave() {
       }
       try {
         const text = await invoke<string>('fm_read_snapshot', { folder });
-        if (stop || text === lastText.current) return;
-        lastText.current = text;
-        await fmData.importSnapshot(saveId, JSON.parse(text));
-        setOther(null);
-        qc.invalidateQueries({ queryKey: key });
-        qc.invalidateQueries({ queryKey: ['saves'] });
+        if (!stop && text !== lastText.current) {
+          lastText.current = text;
+          await fmData.importSnapshot(saveId, JSON.parse(text));
+          setOther(null);
+          qc.invalidateQueries({ queryKey: key });
+          qc.invalidateQueries({ queryKey: ['saves'] });
+        }
       } catch (e) {
         // Autre sauvegarde chargée : on le signale ; sinon fichier absent ou en cours d'écriture, nouvel essai dans une minute.
         if (e instanceof FmOtherSaveError) setOther(e);
+      }
+      // CA/PA réels (option du joueur) : lus une fois par date de jeu dans la mémoire de FM27, en lecture seule.
+      try {
+        if (stop || !(await fmData.settings(saveId)).fmReadAbilities) return;
+        const latest = await fmData.latest(saveId);
+        if (!latest || latest.data.abilities || latest.gameDate === abilitiesDate.current) return;
+        const r = await invoke<{ gameDate: string | null; players: { id: number; ca: number; pa: number }[] }>('fm_memory_abilities');
+        // La mémoire peut être en avance sur l'instantané (écrit toutes les 5 minutes) : on attend la même date.
+        if (stop || r.gameDate?.slice(0, 10) !== latest.gameDate.slice(0, 10) || !r.players.length) return;
+        if (await fmData.attachAbilities(saveId, latest.gameDate, r.players)) {
+          abilitiesDate.current = latest.gameDate;
+          qc.invalidateQueries({ queryKey: key });
+        }
+      } catch {
+        /* FM27 fermé ou version inconnue : nouvel essai dans une minute */
       }
     };
     void tick();
@@ -193,13 +210,13 @@ export function FmSave() {
 
   // Effectif sous contrat (hors essais) : salaires, contrats, finances. Les joueurs prêtés ailleurs n'entrent
   // pas dans les compos ni l'analyse : `players` est l'effectif présent au club.
-  const contracted = useMemo(() => (snapshot ? withExtended(squadSnapshot(snapshot.data)).players.map(normalizePlayer) : []), [snapshot]);
+  const contracted = useMemo(() => (snapshot ? withAbilities(withExtended(squadSnapshot(snapshot.data))).players.map(normalizePlayer) : []), [snapshot]);
   const players = useMemo(() => {
     const out = snapshot ? loanedOutIds(snapshot.data) : new Set<string>();
     return out.size ? contracted.filter((p) => !out.has(p.id)) : contracted;
   }, [snapshot, contracted]);
   const history = useMemo<SquadAt[]>(
-    () => (all ?? []).map((h) => ({ gameDate: h.gameDate, players: squadSnapshot(h.data as FmSnapshot).players.map(normalizePlayer) })),
+    () => (all ?? []).map((h) => ({ gameDate: h.gameDate, players: withAbilities(squadSnapshot(h.data as FmSnapshot)).players.map(normalizePlayer) })),
     [all],
   );
   const gameFormation = gameFormationOf(snapshot?.data.tactic);
@@ -315,6 +332,17 @@ export function FmSave() {
           {linkedFile?.modifiedMs != null && (
             <span className="text-xs text-brun">{t('fm.saveFile.saved', { date: stampFmt.format(new Date(linkedFile.modifiedMs)) })}</span>
           )}
+          <label className="flex items-center gap-1.5 text-xs text-brun" title={t('fm.abilities.help')}>
+            <input
+              type="checkbox"
+              checked={!!settings?.fmReadAbilities}
+              onChange={async (e) => {
+                await fmData.updateSettings(saveId, { fmReadAbilities: e.target.checked });
+                qc.invalidateQueries({ queryKey: [...key, 'settings'] });
+              }}
+            />
+            {t('fm.abilities.toggle')}
+          </label>
           <span className="text-xs text-brun">{t('fm.autoImport')}</span>
           <button className="btn-primary px-4 py-1.5 text-sm" disabled={importSnap.isPending || !folder}>
             {t('fm.import')}

@@ -39,6 +39,8 @@ function useReason() {
         return t('fm.merc.why.unwanted', { status: x.status });
       case 'potential':
         return t('fm.merc.why.potential', { stars: x.stars });
+      case 'potentialPa':
+        return t('fm.merc.why.potentialPa', { pa: x.pa, ca: x.ca });
       case 'overtakes':
         return t('fm.merc.why.overtakes', { count: x.years, starter: x.starter });
       case 'decline':
