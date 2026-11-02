@@ -321,6 +321,8 @@ export class TacticEngine {
       this.calBy.set(k, xs.reduce((s, x) => s + (x.v - a * x.c), 0) / xs.length);
     }
     // Ancrage sur les étoiles générales : valeur du meilleur rôle ≈ 10 + 2 × étoiles (échelle du jeu, 10 = 0 étoile).
+    // Les étoiles sont relatives à l'effectif : l'échelle calibrée sert à comparer des joueurs à une même date (onze,
+    // tactique, recrue face à l'effectif), jamais à suivre une progression dans le temps (voir `level`, tiré des attributs).
     for (const p of anchored) {
       const gk = p.positions.includes('GB');
       const k = `${p.id}|${gk ? 'g' : 'o'}`;

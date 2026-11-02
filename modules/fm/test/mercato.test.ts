@@ -135,4 +135,19 @@ describe('compatibilité avec le projet de jeu', () => {
       expect(x.reasons.some((r) => r.id === 'offProject')).toBe(true);
     }
   });
+
+  it('juge un potentiel face aux titulaires du même effectif : une grosse recrue ne change pas le verdict', () => {
+    // Les étoiles sont relatives à l'effectif : si une star signe, tout le monde perd des étoiles d'un coup.
+    const at = (shift: number) => {
+      const starters = eleven.map((x) => normalizePlayer({ ...x, attributes: x.attributes, stars: { current: 3 - shift, potential: 3 - shift } }));
+      const young = p(30, 'M (C)', 6, { age: 20, stars: { current: 0.5, potential: 3 - shift } });
+      return mercatoAdvice(engine, [...starters, young], DATE, { style: 'possession' })!.advice.find((a) => a.player.id === '30')!;
+    };
+    const before = at(0);
+    const after = at(2);
+    expect(before.prospect).toBe(true);
+    expect(after.prospect).toBe(before.prospect);
+    expect(after.verdict).toBe(before.verdict);
+    expect(after.reasons.some((x) => x.id === 'potential')).toBe(true);
+  });
 });
