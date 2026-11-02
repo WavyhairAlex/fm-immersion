@@ -1070,7 +1070,7 @@
       "individual": "Individual training",
       "intensity": "Intensity",
       "intensityLevel": {
-        "team": "Team intensity (auto)",
+        "team": "Automatic Intensity",
         "noWork": "No pitch or gym work",
         "rest": "Rest",
         "half": "Half Intensity",
@@ -1143,7 +1143,20 @@
         "excellent": "Excellent condition"
       },
       "teamIntensityHelp": "Recommended setting in Training > Team Intensity: the game then adjusts each player's intensity and rest by condition. No need to touch individual intensity, except for exceptions (a fully fit youngster on double intensity).",
-      "focusFromStats": "From matches"
+      "focusFromStats": "From matches",
+      "workload": {
+        "light": "Light",
+        "medium": "Medium",
+        "heavy": "Heavy"
+      },
+      "workloadHint": "Week workload in the game: {{level}}.",
+      "upcoming": "Coming weeks",
+      "weekOf": "Week of",
+      "planCol": "Plan",
+      "matchesCol": "Matches",
+      "scheduleFocus": "Schedule Focus",
+      "workloadCol": "Workload",
+      "upcomingHelp": "Set ahead in the game's Training Schedule screen: one Schedule Focus and one workload per week. Light in two-match weeks, medium with one match, heavy with no match and early in pre-season. Beyond the next known fixtures, Archivix assumes a Saturday match."
     },
     "intro": {
       "home": "What needs your attention today, the styles that suit the squad, your best players and your youngsters.",

@@ -612,9 +612,17 @@ export function currentTrainingWeek(o: {
   priorities?: EffArea[];
   style?: string;
 }): TrainingWeek {
-  const monday = mondayOf(o.gameDate);
+  return trainingWeekAt(mondayOf(o.gameDate), o);
+}
+
+type WeekOptions = Omit<Parameters<typeof currentTrainingWeek>[0], 'gameDate'>;
+
+/** Semaine type qui commence au lundi donné, d'après le calendrier et les réglages du coach. */
+export function trainingWeekAt(monday: string, o: WeekOptions): TrainingWeek {
   const { phase, week } = autoPhase(monday, o.seasonStart ?? 8, o.winterBreak);
-  const hasCalendar = Array.isArray(o.fixtures) && o.fixtures.length > 0;
+  // Le calendrier ne couvre que les prochains matchs : au-delà du dernier connu, jours de match par défaut.
+  const list = Array.isArray(o.fixtures) ? (o.fixtures as { date?: unknown }[]) : [];
+  const hasCalendar = list.some((f) => typeof f.date === 'string' && f.date.slice(0, 10) >= monday);
   const cal = weekMatches(o.fixtures, monday);
   const seasonal = phase === 'A' || phase === 'B' || phase === 'C';
   const matchDays = hasCalendar ? cal.days : defaultMatchDays(phase, week, seasonal ? 1 : 0);
@@ -628,4 +636,29 @@ export function trainingAlerts<P extends { injury: string | null; age: number | 
   return {
     rusty: advice.filter((x) => x.a.rusty).map((x) => x.p),
   };
+}
+
+/* ---------- Semaines à venir ---------- */
+
+/** Charge de travail de la semaine (réglage du jeu : Légère, Moyenne, Intensive) ; null en semaine de repos. */
+export type WeekWorkload = 'light' | 'medium' | 'heavy';
+export function weekWorkload(w: TrainingWeek): WeekWorkload | null {
+  if (w.phase === 'R') return null;
+  const matches = w.days.filter((d) => d.kind === 'match').length;
+  if (matches >= 2) return 'light';
+  if (w.phase === 'P' && w.week <= 2) return 'heavy';
+  if (matches === 1) return 'medium';
+  return w.phase === 'C' ? 'medium' : 'heavy';
+}
+
+/**
+ * Les prochaines semaines comme dans l'écran Programme d'entraînement du jeu : pour chacune, la
+ * « Priorité du calendrier » à choisir et la charge de travail.
+ */
+export function upcomingWeeks(o: WeekOptions & { gameDate: string }, count = 6) {
+  const first = mondayOf(o.gameDate);
+  return Array.from({ length: count }, (_, i) => {
+    const plan = trainingWeekAt(addDays(first, i * 7), o);
+    return { monday: plan.days[0]!.date, plan, preset: nearestPreset(plan), workload: weekWorkload(plan), matches: plan.days.filter((d) => d.kind === 'match').length };
+  });
 }

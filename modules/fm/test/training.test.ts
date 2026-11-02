@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { autoPhase, breakPhase, buildTrainingWeek, currentTrainingWeek, trainingAlerts, defaultMatchDays, individualAdvice, individualFocus, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, setupStatus, weekMatches } from '../src';
+import { autoPhase, breakPhase, upcomingWeeks, weekWorkload, buildTrainingWeek, currentTrainingWeek, trainingAlerts, defaultMatchDays, individualAdvice, individualFocus, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, setupStatus, weekMatches } from '../src';
 
 const MONDAY = '2026-08-31';
 
@@ -234,5 +234,17 @@ describe('trêve hivernale', () => {
     const w = buildTrainingWeek({ monday: '2026-12-28', phase: 'R', week: 1, matchDays: [] });
     expect(w.days.every((d) => d.kind === 'off' && d.sessions.every((x) => x === null))).toBe(true);
     expect(nearestPreset(w)).toBe('fullRest');
+  });
+});
+
+describe('semaines à venir', () => {
+  it('priorité du calendrier et charge pour chaque semaine, trêve comprise', () => {
+    const fixtures = [{ date: '2026-12-16' }, { date: '2026-12-19' }];
+    const weeks = upcomingWeeks({ gameDate: '2026-12-15', fixtures, seasonStart: 7, winterBreak: { from: '12-28', to: '02-08' } }, 4);
+    expect(weeks.map((w) => w.monday)).toEqual(['2026-12-14', '2026-12-21', '2026-12-28', '2027-01-04']);
+    expect(weeks[0]).toMatchObject({ matches: 2, preset: 'congestion', workload: 'light' });
+    expect(weeks[2]).toMatchObject({ preset: 'fullRest', workload: null });
+    // Au-delà du dernier match connu : match supposé le samedi.
+    expect(weekWorkload(weeks[1]!.plan)).toBe('medium');
   });
 });

@@ -1070,7 +1070,7 @@
       "individual": "Entraînement individuel",
       "intensity": "Intensité",
       "intensityLevel": {
-        "team": "Intensité de l'équipe (auto)",
+        "team": "Intensité auto",
         "noWork": "Aucun travail sur le terrain ou en salle de gym",
         "rest": "Repos",
         "half": "Semi-intensité",
@@ -1143,7 +1143,20 @@
         "excellent": "En très bonne forme"
       },
       "teamIntensityHelp": "Réglage conseillé dans Entraînement > Intensité de l'équipe : le jeu ajuste alors seul l'intensité et le repos de chaque joueur selon sa condition. Plus besoin de toucher à l'intensité individuelle, sauf exception (un jeune en pleine forme en double intensité).",
-      "focusFromStats": "D'après les matchs"
+      "focusFromStats": "D'après les matchs",
+      "workload": {
+        "light": "Légère",
+        "medium": "Moyenne",
+        "heavy": "Intensive"
+      },
+      "workloadHint": "Charge de travail de la semaine dans le jeu : {{level}}.",
+      "upcoming": "Semaines à venir",
+      "weekOf": "Semaine du",
+      "planCol": "Planning",
+      "matchesCol": "Matchs",
+      "scheduleFocus": "Priorité du calendrier",
+      "workloadCol": "Charge",
+      "upcomingHelp": "À régler d'avance dans l'écran Programme d'entraînement du jeu : une « Priorité du calendrier » et une charge par semaine. Charge légère les semaines à deux matchs, moyenne avec un match, intensive sans match et en début de présaison. Au-delà des prochains matchs connus, Archivix suppose un match le samedi."
     },
     "intro": {
       "home": "Ce qui demande ton attention aujourd'hui, les styles qui collent à l'effectif, tes meilleurs joueurs et tes jeunes.",
