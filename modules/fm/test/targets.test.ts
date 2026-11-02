@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addBaseTarget, baseTarget, mergeTargets, squadSnapshot, targetOf, trialistIds, shortlist, storedTargets, type TargetRecord } from '../src/targets';
+import { loanedOutIds, addBaseTarget, baseTarget, mergeTargets, squadSnapshot, targetOf, trialistIds, shortlist, storedTargets, type TargetRecord } from '../src/targets';
 import type { FmSnapshot } from '../src/snapshot';
 
 const snap = (gameDate: string, shortlist?: unknown[]): FmSnapshot => ({ schema: 'archivix/1', game: 'FM27', club: 'V', gameDate, players: [], ...(shortlist ? { shortlist } : {}) });
@@ -158,5 +158,19 @@ describe('valeurs inconnues du recrutement', () => {
       },
     });
     expect(t?.scout).toMatchObject({ wage: null, value: null, recommendation: null });
+  });
+});
+
+describe('joueurs prêtés ailleurs', () => {
+  it('les repère par le statut « Parti en prêt » ou la liste des prêts', () => {
+    const s = {
+      ...snap('2026-12-20'),
+      players: [
+        { id: 1, name: 'Arthur', squadStatus: 'Parti en prêt', contractEnd: '2027-06-30', wage: 1500, attributes: {} },
+        { id: 2, name: 'Présent', squadStatus: 'Joueur secondaire', contractEnd: '2027-06-30', wage: 1000, attributes: {} },
+      ],
+      loans: [{ id: 3, name: 'Autre prêté', loanClub: 'X' }],
+    } as unknown as FmSnapshot;
+    expect([...loanedOutIds(s)].sort()).toEqual(['1', '3']);
   });
 });

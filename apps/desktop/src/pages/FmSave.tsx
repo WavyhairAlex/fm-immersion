@@ -1,4 +1,4 @@
-import { buildProject, compatMap, gameFormationOf, gameLineup, normalizePlayer, squadSnapshot, withExtended, type FmPlayer, type FmSnapshot, type Line, type SquadAt } from '@simloom/module-fm';
+import { buildProject, compatMap, gameFormationOf, gameLineup, loanedOutIds, normalizePlayer, squadSnapshot, withExtended, type FmPlayer, type FmSnapshot, type Line, type SquadAt } from '@simloom/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -191,7 +191,13 @@ export function FmSave() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [folder, saveId]);
 
-  const players = useMemo(() => (snapshot ? withExtended(squadSnapshot(snapshot.data)).players.map(normalizePlayer) : []), [snapshot]);
+  // Effectif sous contrat (hors essais) : salaires, contrats, finances. Les joueurs prêtés ailleurs n'entrent
+  // pas dans les compos ni l'analyse : `players` est l'effectif présent au club.
+  const contracted = useMemo(() => (snapshot ? withExtended(squadSnapshot(snapshot.data)).players.map(normalizePlayer) : []), [snapshot]);
+  const players = useMemo(() => {
+    const out = snapshot ? loanedOutIds(snapshot.data) : new Set<string>();
+    return out.size ? contracted.filter((p) => !out.has(p.id)) : contracted;
+  }, [snapshot, contracted]);
   const history = useMemo<SquadAt[]>(
     () => (all ?? []).map((h) => ({ gameDate: h.gameDate, players: squadSnapshot(h.data as FmSnapshot).players.map(normalizePlayer) })),
     [all],
@@ -239,11 +245,11 @@ export function FmSave() {
       case 'depth':
         return <FmDepth players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameDate={snapshot.gameDate} history={history} />;
       case 'finances':
-        return <FmFinances snap={snapshot.data} players={players} />;
+        return <FmFinances snap={snapshot.data} players={contracted} />;
       case 'wages':
-        return <FmWages players={players} gameDate={snapshot.gameDate} />;
+        return <FmWages players={contracted} gameDate={snapshot.gameDate} />;
       case 'contracts':
-        return <FmContracts players={players} gameDate={snapshot.gameDate} />;
+        return <FmContracts players={contracted} gameDate={snapshot.gameDate} />;
       case 'progression':
         return <FmProgression history={history} />;
       default:

@@ -134,6 +134,23 @@ export function trialistIds(snap: FmSnapshot): Set<string> {
   return new Set(players.filter((x) => !hasContract(x) && empty((x as Raw).squadStatus)).map((x) => String((x as Raw).id)));
 }
 
+/**
+ * Joueurs prêtés à un autre club : encore sous contrat (salaires, contrats, progression), mais pas au club,
+ * donc hors des compos, de la tactique et du projet. Repérés par la liste des prêts du plugin ou par le statut
+ * « Parti en prêt » du jeu.
+ */
+export function loanedOutIds(snap: FmSnapshot): Set<string> {
+  const ids = new Set<string>();
+  for (const x of Array.isArray(snap.loans) ? (snap.loans as unknown[]) : []) {
+    const id = (x as Raw | null)?.id;
+    if (id != null) ids.add(String(id));
+  }
+  for (const p of Array.isArray(snap.players) ? (snap.players as Raw[]) : []) {
+    if (typeof p.squadStatus === 'string' && /prêt|loan/i.test(p.squadStatus)) ids.add(String(p.id));
+  }
+  return ids;
+}
+
 /** Instantané sans les joueurs à l'essai : l'effectif sous contrat. */
 export function squadSnapshot(snap: FmSnapshot): FmSnapshot {
   const trial = trialistIds(snap);
