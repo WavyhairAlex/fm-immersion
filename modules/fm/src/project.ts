@@ -244,6 +244,47 @@ export interface TacticPick {
   plan: FormationPlan;
   /** Le projet du coach est devenu le meilleur choix. */
   project: boolean;
+  /**
+   * Tactique de base gardée (celle jouée dans FM27) alors qu'une autre note un peu mieux : le gain ne paie pas
+   * la compréhension tactique perdue en changeant.
+   */
+  kept?: { style: StyleRef; form: string; gain: number };
+}
+
+/**
+ * Gain de note d'équipe (sur 20) qu'il faut pour quitter la tactique de base : 1 point = ½ étoile.
+ * Dans FM27, l'efficacité tactique = 0,50 × compréhension + 0,15 × niveau aux rôles (+ adhésion, infos du match) :
+ * la compréhension pèse plus de trois fois le niveau, et elle repart de bas sur une nouvelle tactique. Une
+ * tactique un peu mieux adaptée aux joueurs ne compense donc pas ce qu'elle fait perdre pendant l'apprentissage.
+ * Valeur provisoire (choix de Simloom, pas du jeu), à mesurer sur l'écran Efficacité.
+ */
+export const SWITCH_POINTS = 1;
+
+/** Nom des styles dans FM27 (fin du nom d'une tactique : « 4-1-5 MD 2MO Jeu large - Positive - Contrôle de la possession »). */
+const GAME_STYLE_NAMES: Record<string, string> = {
+  possession: 'Contrôle de la possession',
+  gegenpress: 'Gegenpress',
+  tikitaka: 'Tiki-Taka',
+  'tikitaka-v': 'Tiki-Taka vertical',
+  wings: 'Jeu sur les ailes',
+  longball: 'Longs ballons devant',
+  'counter-fluid': 'Contre-attaques fluides',
+  'counter-direct': 'Contre-attaques directes',
+  catenaccio: 'Catenaccio',
+  'ultra-def': 'Jeu ultra-défensif',
+};
+
+/** Style de la tactique jouée dans FM27, d'après son nom (null si le nom ne le dit pas). */
+export function styleOfGameTactic(name: string | null | undefined, styles: StyleRef[]): StyleRef | null {
+  if (!name) return null;
+  const n = name.toLowerCase();
+  // Le nom le plus long d'abord : « Tiki-Taka vertical » avant « Tiki-Taka ».
+  const found = styles
+    .map((st) => ({ st, names: [GAME_STYLE_NAMES[st.id], st.name].filter((x): x is string => !!x) }))
+    .flatMap(({ st, names }) => names.map((x) => ({ st, x: x.toLowerCase() })))
+    .filter(({ x }) => n.includes(x))
+    .sort((a, b) => b.x.length - a.x.length)[0];
+  return found?.st ?? null;
 }
 
 /**
@@ -281,14 +322,18 @@ export function rankTactics(engine: TacticEngine, list: FmPlayer[]): { style: St
  * note d'équipe. Le projet du coach sert à orienter l'entraînement et le mercato ; dès que son onze
  * vaut le meilleur (à TACTIC_TIE près), il devient automatiquement la tactique conseillée.
  */
-export function bestTactic(engine: TacticEngine, list: FmPlayer[], coach: CoachPrefs = {}, ranked = rankTactics(engine, list)): TacticPick | null {
+export function bestTactic(engine: TacticEngine, list: FmPlayer[], coach: CoachPrefs = {}, ranked = rankTactics(engine, list), base?: StyleRef | null): TacticPick | null {
   const top = ranked[0];
   if (!top) return null;
-  const best: TacticPick = { style: top.style, form: top.form, plan: top.plan, project: false };
+  let best: TacticPick = { style: top.style, form: top.form, plan: top.plan, project: false };
   const mine = ranked.find((r) => r.style.id === coach.style);
   const projPlan = mine && (coach.form ? mine.plans.find((p) => p.form === coach.form) : mine.plan);
   const bestScore = Math.max(...ranked.map((r) => r.fit));
-  if (mine && projPlan && projPlan.score > bestScore - TACTIC_TIE) return { style: mine.style, form: projPlan.form, plan: projPlan, project: true };
+  if (mine && projPlan && projPlan.score > bestScore - TACTIC_TIE) best = { style: mine.style, form: projPlan.form, plan: projPlan, project: true };
+  // Une base, des ajustements : on garde la tactique jouée tant qu'une autre ne gagne pas SWITCH_POINTS.
+  const kept = base && best.style.id !== base.id ? ranked.find((r) => r.style.id === base.id) : null;
+  if (kept && best.plan.score - kept.fit < SWITCH_POINTS)
+    return { style: kept.style, form: kept.form, plan: kept.plan, project: coach.style === kept.style.id, kept: { style: best.style, form: best.form, gain: best.plan.score - kept.fit } };
   return best;
 }
 

@@ -262,6 +262,8 @@
       "auto": "Automatic: best choice",
       "bestNow": "Best applicable tactic",
       "projectBest": "Your project is now the best choice",
+      "baseKept": "Your base tactic, kept",
+      "baseKeptHelp": "Another tactic ({{other}}) rates slightly higher, +{{gain}} star, but it would take at least +{{need}} star to make up for the tactical understanding lost by switching. Your base stays; only the players change, match after match.",
       "teamTitle": "Team instructions · {{style}}",
       "teamHelp": "Every card of the game's Team Instructions screen, in its order; in bold, those the style sets, the others stay on the default. Set them with the mentality.",
       "oppTitle": "Against {{name}}",

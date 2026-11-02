@@ -243,7 +243,7 @@ export function FmSave() {
       case 'targets':
         return <FmTargets saveId={saveId} snap={snapshot.data} players={players} folder={folder} go={go} />;
       case 'depth':
-        return <FmDepth players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameDate={snapshot.gameDate} history={history} />;
+        return <FmDepth players={players} folder={folder} gameFormation={gameFormation} gameTactic={typeof snapshot.data.tactic?.name === 'string' ? snapshot.data.tactic.name : null} lineup={lineup} gameDate={snapshot.gameDate} history={history} />;
       case 'finances':
         return <FmFinances snap={snapshot.data} players={contracted} />;
       case 'wages':

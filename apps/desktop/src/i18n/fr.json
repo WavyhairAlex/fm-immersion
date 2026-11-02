@@ -262,6 +262,8 @@
       "auto": "Automatique : meilleur choix",
       "bestNow": "Meilleure tactique applicable",
       "projectBest": "Ton projet est devenu le meilleur choix",
+      "baseKept": "Ta tactique de base, gardée",
+      "baseKeptHelp": "Une autre tactique ({{other}}) note un peu mieux, +{{gain}} étoile, mais il faudrait au moins +{{need}} étoile pour compenser la compréhension tactique perdue en changeant. On garde ta base et on change seulement les joueurs, match après match.",
       "teamTitle": "Consignes d'équipe · {{style}}",
       "teamHelp": "Toutes les cases de l'écran Consignes d'équipe du jeu, dans son ordre ; en gras, celles que le style règle, les autres restent sur la valeur par défaut. À régler avec la mentalité.",
       "oppTitle": "Contre {{name}}",

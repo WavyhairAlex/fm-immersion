@@ -9,6 +9,8 @@ import {
   mergeReference,
   opponentReport,
   rankForMatch,
+  styleOfGameTactic,
+  SWITCH_POINTS,
   phaseXY,
   planFromLineup,
   playerInstructions,
@@ -69,7 +71,7 @@ export function useTacticEngine(folder: string, players: FmPlayer[] = []) {
  * Style, schéma et onze choisis en Tactique > Composition (retenus d'une vue à l'autre) :
  * les autres vues de l'effectif s'appuient dessus pour rester cohérentes.
  */
-export function useTacticChoice(players: FmPlayer[], folder: string, gameFormation: string | null, lineup: GameSlot[] | null = null) {
+export function useTacticChoice(players: FmPlayer[], folder: string, gameFormation: string | null, lineup: GameSlot[] | null = null, gameTactic: string | null = null) {
   const { engine, local } = useTacticEngine(folder, players);
   // Choix retenus par partie : chaque carrière a son style et son schéma.
   const scope = useFmSaveScope();
@@ -84,7 +86,9 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
   const ranked = useMemo(() => rankTactics(engine, avail), [engine, avail]);
   const [coach] = useCoach();
   // Sans choix du joueur : la meilleure tactique applicable, ou le projet dès qu'il devient le meilleur.
-  const pick = useMemo(() => bestTactic(engine, avail, coach, ranked), [engine, avail, coach, ranked]);
+  // Tactique de base : celle jouée dans FM27 (d'après son nom), gardée tant qu'une autre ne gagne pas nettement.
+  const base = useMemo(() => styleOfGameTactic(gameTactic, engine.ref.styles), [gameTactic, engine]);
+  const pick = useMemo(() => bestTactic(engine, avail, coach, ranked, base), [engine, avail, coach, ranked, base]);
   const auto = !prefs.style;
   const style = (auto ? pick?.style : ranked.find((r) => r.style.id === prefs.style)?.style) ?? ranked[0]?.style;
   const gameForm = knownFormation(gameFormation);
@@ -101,9 +105,10 @@ const DOT: Record<BalanceCheck['status'], string> = { good: 'bg-eau', warn: 'bg-
 
 /** Tactique : style conseillé, schéma, onze par rôles, formes avec et sans ballon, équilibre. */
 export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupStatus, go }: { snap?: FmSnapshot; players: FmPlayer[]; folder: string; gameFormation: string | null; lineup: GameSlot[] | null; lineupStatus?: string | null; go?: (view: string) => void }) {
+  const gameTactic = typeof snap?.tactic?.name === 'string' ? snap.tactic.name : null;
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
-  const { engine, local, prefs, update, avail, ranked, style, natural, form, plans, plan, gamePlan, fromGame, auto, pick } = useTacticChoice(players, folder, gameFormation, lineup);
+  const { engine, local, prefs, update, avail, ranked, style, natural, form, plans, plan, gamePlan, fromGame, auto, pick } = useTacticChoice(players, folder, gameFormation, lineup, gameTactic);
   const phase: Phase = prefs.phase ?? 'ip';
   const opp = useMemo(() => (snap ? opponentReport(snap) : null), [snap]);
   // Tactique du match : la meilleure combinaison style × schéma contre le prochain adversaire.
@@ -176,7 +181,12 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
           </div>
         )}
         {auto && pick && !fromGame && (
-          <span className="rounded-full bg-eau/20 px-2.5 py-0.5 text-xs font-bold text-canard">{t(pick.project ? 'fm.tac.projectBest' : 'fm.tac.bestNow')}</span>
+          <span className="rounded-full bg-eau/20 px-2.5 py-0.5 text-xs font-bold text-canard">{t(pick.kept ? 'fm.tac.baseKept' : pick.project ? 'fm.tac.projectBest' : 'fm.tac.bestNow')}</span>
+        )}
+        {auto && pick?.kept && !fromGame && (
+          <p className="w-full text-xs text-brun">
+            {t('fm.tac.baseKeptHelp', { other: `${pick.kept.form} ${styleName(pick.kept.style)}`, gain: nf1.format(Math.max(0, pick.kept.gain) / 2), need: nf1.format(SWITCH_POINTS / 2) })}
+          </p>
         )}
         {gameFormation && <span className="rounded-full bg-eau/20 px-2.5 py-0.5 text-xs text-canard">{t('fm.tac.inGame', { form: gameFormation })}</span>}
         {local?.ref && <span className="rounded-full bg-eau/20 px-2.5 py-0.5 text-xs text-canard">{t('fm.tac.localRef')}</span>}

@@ -5,11 +5,11 @@ import { useTacticChoice } from './FmTactic';
 import { Kpi, Level, Panel, Tag, useNames } from './FmUi';
 
 /** Titulaires et remplaçants : qui joue à chaque poste, et quelle doublure peut passer devant d'ici deux saisons. */
-export function FmDepth({ players, folder, gameFormation, lineup, gameDate, history }: { players: FmPlayer[]; folder: string; gameFormation: string | null; lineup: GameSlot[] | null; gameDate: string; history: SquadAt[] }) {
+export function FmDepth({ players, folder, gameFormation, gameTactic = null, lineup, gameDate, history }: { players: FmPlayer[]; folder: string; gameFormation: string | null; gameTactic?: string | null; lineup: GameSlot[] | null; gameDate: string; history: SquadAt[] }) {
   const { t } = useTranslation();
   const names = useNames();
   // Même style, même schéma et même onze que Tactique > Composition ; la formation du jeu n'est qu'une indication.
-  const { plan, style, fromGame } = useTacticChoice(players, folder, gameFormation, lineup);
+  const { plan, style, fromGame } = useTacticChoice(players, folder, gameFormation, lineup, gameTactic);
   const form = plan?.form ?? formationKey(gameFormation);
   const rows = useMemo(() => (plan ? depthFromPlan(plan, players, history) : depthChart(players, form, history)), [plan, players, form, history]);
   const alerts = useMemo(() => depthAlerts(rows), [rows]);

@@ -153,3 +153,25 @@ describe('tactique à jouer maintenant', () => {
     expect(tied.map((t) => t.style.id)).toEqual(order);
   });
 });
+
+describe('une base, des ajustements', () => {
+  it('garde la tactique jouée dans FM27 tant qu’une autre ne gagne pas une demi-étoile', async () => {
+    const { bestTactic, rankTactics, styleOfGameTactic, SWITCH_POINTS } = await import('../src/project');
+    const { DEFAULT_TACTIC_REFERENCE, TacticEngine, normalizePlayer } = await import('../src');
+    const engine = new TacticEngine(DEFAULT_TACTIC_REFERENCE);
+    const squad = ['GB', 'D (C)', 'D (C)', 'D (D)', 'D (G)', 'MD', 'M (C)', 'M (C)', 'MO (G)', 'MO (D)', 'BT'].map((pos, i) =>
+      normalizePlayer({ id: i + 1, name: `J${i + 1}`, positions: pos, attributes: { Passing: 12, Tackling: 12, Finishing: 12, Reflexes: 12, Handling: 12, Pace: 12, Stamina: 12 } }),
+    );
+    const styles = DEFAULT_TACTIC_REFERENCE.styles;
+    expect(styleOfGameTactic('4-1-5 MD 2MO Jeu large - Positive - Contrôle de la possession', styles)?.id).toBe('possession');
+    expect(styleOfGameTactic('4231 FM27', styles)).toBeNull();
+    const ranked = rankTactics(engine, squad);
+    const free = bestTactic(engine, squad, {}, ranked)!;
+    const other = ranked.find((r) => r.style.id !== free.style.id)!;
+    const kept = bestTactic(engine, squad, {}, ranked, other.style)!;
+    if (free.plan.score - other.fit < SWITCH_POINTS) {
+      expect(kept.style.id).toBe(other.style.id);
+      expect(kept.kept?.style.id).toBe(free.style.id);
+    } else expect(kept.style.id).toBe(free.style.id);
+  });
+});
