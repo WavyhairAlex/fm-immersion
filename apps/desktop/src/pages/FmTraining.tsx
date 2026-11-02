@@ -14,6 +14,8 @@ import {
   matchStats,
   statsBoard,
   mentoringGroups,
+  upcomingWeeks,
+  weekWorkload,
   nearestPreset,
   defaultMatchDays,
   mondayOf,
@@ -164,6 +166,10 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
   const names = useNames();
   const mentoring = useMemo(() => mentoringGroups(players), [players]);
   const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
+  const upcoming = useMemo(
+    () => upcomingWeeks({ gameDate: snap.gameDate, fixtures, seasonStart, winterBreak, trainingDays, priorities, style: style?.id }),
+    [snap.gameDate, fixtures, seasonStart, winterBreak?.from, winterBreak?.to, trainingDays?.join(), priorities.join(), style?.id],
+  );
   const plan = useMemo(
     () => buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: before, priorities, style: style?.id, trainingDays }),
     [monday, phase, week, matchDays.join(), before, priorities.join(), style?.id, trainingDays?.join()],
@@ -335,6 +341,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
         </p>
         <p className="mt-1 text-xs text-brun">{t(`fm.train.phaseHelp.${plan.phase}`)}</p>
         <p className="mt-1 text-xs text-brun">{t('fm.train.presetHint', { preset: t(`fm.train.preset.${nearestPreset(plan)}`) })}</p>
+        {weekWorkload(plan) && <p className="mt-1 text-xs text-brun">{t('fm.train.workloadHint', { level: t(`fm.train.workload.${weekWorkload(plan)}`) })}</p>}
         {weakest.length > 0 && <p className="mt-1 text-xs text-brun">{t('fm.train.weakest', { list: weakest.map((a) => t(`fm.train.session.${a}`)).join(', ') })}</p>}
         {priorities.length > 0 && <p className="mt-1 text-xs text-brun">{t('fm.train.priorities', { list: priorities.map((a) => t(`fm.train.session.${a}`)).join(', ') })}</p>}
 
@@ -376,6 +383,36 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
             </span>
           ))}
         </div>
+      </Panel>
+
+      <Panel title={t('fm.train.upcoming')}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-left text-canard/70">
+              <tr>
+                <th className="px-2 py-1">{t('fm.train.weekOf')}</th>
+                <th className="px-2 py-1">{t('fm.train.planCol')}</th>
+                <th className="px-2 py-1 text-right">{t('fm.train.matchesCol')}</th>
+                <th className="px-2 py-1">{t('fm.train.scheduleFocus')}</th>
+                <th className="px-2 py-1">{t('fm.train.workloadCol')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {upcoming.map((w) => (
+                <tr key={w.monday} className={`border-t border-canard/5 ${w.monday === monday ? 'bg-eau/10' : ''}`}>
+                  <td className="px-2 py-1.5">{dayMonth.format(new Date(`${w.monday}T00:00:00Z`))}</td>
+                  <td className="px-2 py-1.5">
+                    <b>{w.plan.code}</b> <span className="text-xs text-brun">{t(`fm.train.phase.${w.plan.phase}`)}</span>
+                  </td>
+                  <td className="px-2 py-1.5 text-right tabular-nums">{w.matches}</td>
+                  <td className="px-2 py-1.5 font-bold">{t(`fm.train.preset.${w.preset}`)}</td>
+                  <td className="px-2 py-1.5">{w.workload ? <Tag tone={w.workload === 'heavy' ? 'good' : w.workload === 'medium' ? 'info' : 'warn'}>{t(`fm.train.workload.${w.workload}`)}</Tag> : '–'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-2 text-xs text-brun">{t('fm.train.upcomingHelp')}</p>
       </Panel>
 
       <Panel title={t('fm.train.teamIntensity')}>
