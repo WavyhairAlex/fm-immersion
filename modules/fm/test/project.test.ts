@@ -169,9 +169,59 @@ describe('une base, des ajustements', () => {
     const free = bestTactic(engine, squad, {}, ranked)!;
     const other = ranked.find((r) => r.style.id !== free.style.id)!;
     const kept = bestTactic(engine, squad, {}, ranked, other.style)!;
-    if (free.plan.score - other.fit < SWITCH_POINTS) {
+    const freeFit = ranked.find((r) => r.style.id === free.style.id)!.fit;
+    if (freeFit - other.fit < SWITCH_POINTS) {
       expect(kept.style.id).toBe(other.style.id);
       expect(kept.kept?.style.id).toBe(free.style.id);
     } else expect(kept.style.id).toBe(free.style.id);
+  });
+});
+
+describe('complexité tactique', () => {
+  it('un style trop complexe pour l’effectif coûte des points, plafonnés, et réduit les consignes individuelles', async () => {
+    const { complexityCost, instructionBudget, abilityNeeded, COMPLEXITY_MAX } = await import('../src/project');
+    const style = (id: string) => engine.ref.styles.find((s) => s.id === id)!;
+    const poss = style('possession');
+    const need = abilityNeeded(poss);
+    expect(complexityCost(poss, need + 1)).toBe(0);
+    expect(complexityCost(poss, need - 2)).toBeCloseTo(0.4);
+    expect(complexityCost(poss, 1)).toBe(COMPLEXITY_MAX);
+    expect(complexityCost(poss, null)).toBe(0);
+    expect(instructionBudget(poss, need)).toBe(3);
+    expect(instructionBudget(poss, need - 1)).toBe(2);
+    expect(instructionBudget(poss, need - 3)).toBe(1);
+  });
+});
+
+describe('plan d’évolution', () => {
+  it('place les fenêtres de mercato après la date du jeu', async () => {
+    const { nextWindows } = await import('../src/evolution');
+    expect(nextWindows('2027-02-14', 8, 3)).toEqual([
+      { kind: 'summer', date: '2027-08-01' },
+      { kind: 'winter', date: '2028-02-01' },
+      { kind: 'summer', date: '2028-08-01' },
+    ]);
+  });
+
+  it('fait partir les fins de contrat non prolongées et fait monter les jeunes', async () => {
+    const { evolutionPlan } = await import('../src/evolution');
+    const team = [
+      ...squad.slice(0, 10),
+      // Avant-centre âgé en fin de contrat, doublé par un jeune qui progresse.
+      p(11, 'BT', 13, { age: 34, contractEnd: '2027-06-30' }),
+      p(12, 'BT', 11, { age: 18, contractEnd: '2030-06-30' }),
+    ];
+    const plan = evolutionPlan(engine, team, '2027-02-14', { style: 'possession' }, [], null, 3)!;
+    expect(plan.stages.map((s) => s.kind)).toEqual(['now', 'summer', 'winter', 'summer']);
+    const now = plan.stages[0]!;
+    expect(now.tactic.plan.slots.some((s) => s.player?.id === '11')).toBe(true);
+    // Titulaire de 34 ans : prolongé d'un an, il part à l'été suivant et le jeune prend sa place.
+    expect(plan.extend.map((a) => a.player.id)).toEqual(['11']);
+    expect(plan.stages[1]!.left).toEqual([]);
+    const later = plan.stages[3]!;
+    expect(later.left.map((x) => x.id)).toEqual(['11']);
+    expect(later.newStarters.map((c) => [c.player.id, c.replaces?.id])).toEqual([['12', '11']]);
+    // Une seule tactique par étape, gardée d'une fenêtre à l'autre sauf gain net.
+    for (const s of plan.stages) expect([1, 2, 3]).toContain(s.perPlayer);
   });
 });

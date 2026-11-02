@@ -199,7 +199,7 @@ const r1 = (x: number | null) => (x == null ? '–' : Math.round(x * 10) / 10);
  * d'abord. Les consignes avec ballon tiennent compte du rôle avec ballon, celles sans ballon du rôle
  * sans ballon. Une consigne verrouillée par le rôle devient un changement de rôle proposé.
  */
-export function playerInstructions(engine: TacticEngine, slot: Slot, style: StyleRef | null, team: Slot[] = []): PlayerAdvice {
+export function playerInstructions(engine: TacticEngine, slot: Slot, style: StyleRef | null, team: Slot[] = [], max = MAX_PER_PLAYER): PlayerAdvice {
   const p = slot.player;
   if (!p || !Object.keys(p.attributes).length) return { list: [], switches: [] };
   const ipRole = engine.roles.get(slot.ip);
@@ -225,7 +225,7 @@ export function playerInstructions(engine: TacticEngine, slot: Slot, style: Styl
     else if (hi('Kicking', 1.5)) add('gkLong', 'ip', a('Kicking')! - lv, 'gkLong', { a: r1(a('Kicking')) });
     if (lo('Passing', 2) && possession) add('slowDown', 'ip', lv - a('Passing')!, 'slowDown');
     if (hi('RushingOut', 2) && style && styleBlock(style) === 'high') add('rushOut', 'oop', a('RushingOut')! - lv, 'rushOut');
-    return pick(wanted, ipRole, oopRole, engine, slot, 3, 3, ctxOf(slot, team));
+    return pick(wanted, ipRole, oopRole, engine, slot, 3, 3, ctxOf(slot, team), max);
   }
 
   const attack = g === 'WG' || g === 'AM' || g === 'ST';
@@ -275,7 +275,7 @@ export function playerInstructions(engine: TacticEngine, slot: Slot, style: Styl
   else if (lo('Tackling') && (g === 'CB' || g === 'FB' || g === 'DM')) add('tackleLess', 'oop', lv - a('Tackling')!, 'tackleLess');
   if (strong(['Marking', 'Strength'], 2) && (g === 'CB' || g === 'FB' || g === 'DM')) add('markTighter', 'oop', m('Marking', 'Strength') - lv, 'markTighter', { a: r1(a('Marking')), b: r1(a('Strength')) });
 
-  return pick(wanted, ipRole, oopRole, engine, slot, 3, 2, ctxOf(slot, team));
+  return pick(wanted, ipRole, oopRole, engine, slot, 3, 2, ctxOf(slot, team), max);
 }
 
 const SWITCHABLE = new Set<InstructionId>(['pressMore', 'pressLess', 'markTighter', 'riskMore', 'riskLess', 'dribbleMore', 'dribbleLess', 'shortPass', 'directPass']);
@@ -289,7 +289,7 @@ function ctxOf(slot: Slot, team: Slot[]): SlotCtx {
 /** Consignes individuelles au plus par joueur (complexité tactique). */
 export const MAX_PER_PLAYER = 3;
 
-function pick(wanted: PlayerInstruction[], ipRole: RoleRef | undefined, oopRole: RoleRef | undefined, engine: TacticEngine, slot: Slot, maxIp: number, maxOop: number, ctx: SlotCtx): PlayerAdvice {
+function pick(wanted: PlayerInstruction[], ipRole: RoleRef | undefined, oopRole: RoleRef | undefined, engine: TacticEngine, slot: Slot, maxIp: number, maxOop: number, ctx: SlotCtx, max = MAX_PER_PLAYER): PlayerAdvice {
   const seen = new Set<string>();
   const sorted = [...wanted].sort((x, y) => y.weight - x.weight).filter((x) => !seen.has(x.id) && !!seen.add(x.id));
   const list: PlayerInstruction[] = [];
@@ -304,9 +304,10 @@ function pick(wanted: PlayerInstruction[], ipRole: RoleRef | undefined, oopRole:
     }
   }
   // Complexité tactique (FUN_1846d4060) : chaque consigne individuelle alourdit la charge du joueur et fait baisser
-  // sa compréhension tactique, la moitié de l'efficacité (FUN_182a49c90). On garde les 3 plus utiles au total.
+  // sa compréhension tactique, la moitié de l'efficacité (FUN_182a49c90). On garde les plus utiles, 3 au plus, moins
+  // quand l'effectif manque de capacité tactique pour le style (instructionBudget).
   const kept = new Set([...list.filter((x) => x.phase === 'ip').slice(0, maxIp), ...list.filter((x) => x.phase === 'oop').slice(0, maxOop)]);
-  const top = list.filter((x) => kept.has(x)).slice(0, MAX_PER_PLAYER);
+  const top = list.filter((x) => kept.has(x)).slice(0, Math.min(max, MAX_PER_PLAYER));
   return {
     list: [...top.filter((x) => x.phase === 'ip'), ...top.filter((x) => x.phase === 'oop')],
     switches: switches.slice(0, 1),

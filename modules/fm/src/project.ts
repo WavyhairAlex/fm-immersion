@@ -295,20 +295,43 @@ export function styleOfGameTactic(name: string | null | undefined, styles: Style
 export const TACTIC_TIE = 0.2;
 
 /**
+ * Coût de la complexité (note d'équipe sur 20) par point de capacité tactique qui manque à l'effectif pour le style.
+ * Sports Interactive : une tactique trop complexe pour les joueurs se comprend mal et plafonne, surtout dans les
+ * divisions inférieures ; la compréhension pèse la moitié de l'efficacité. Valeur provisoire (choix de Simloom).
+ */
+export const COMPLEXITY_POINTS = 0.2;
+/** Le coût est plafonné : un style trop dur n'est pas interdit, il doit juste valoir nettement mieux. */
+export const COMPLEXITY_MAX = 1;
+export const complexityCost = (st: StyleRef, ability: number | null) =>
+  ability == null ? 0 : Math.min(COMPLEXITY_MAX, Math.max(0, abilityNeeded(st) - ability) * COMPLEXITY_POINTS);
+
+/**
+ * Consignes individuelles par joueur que l'effectif peut absorber pour un style : 3 quand sa capacité tactique
+ * suffit, 2 s'il lui manque un peu, 1 sinon. On en ajoute au fil de la progression plutôt que tout d'un coup.
+ */
+export function instructionBudget(st: StyleRef, ability: number | null): 1 | 2 | 3 {
+  if (ability == null) return 3;
+  const gap = ability - abilityNeeded(st);
+  return gap >= 0 ? 3 : gap >= -1.5 ? 2 : 1;
+}
+
+/**
  * Chaque style avec son meilleur schéma et la note d'équipe de son onze applicable, du meilleur au moins bon.
  * C'est le classement commun à tous les onglets (accueil, style de jeu, composition).
  * Les styles à égalité avec le premier (moins de TACTIC_TIE d'écart) sont départagés par l'adéquation de
  * l'effectif au style (attributs mis en avant par le style, `rankStyles`) : sans cela, le choix tient au hasard.
  */
-export function rankTactics(engine: TacticEngine, list: FmPlayer[]): { style: StyleRef; form: string; plan: FormationPlan; fit: number; plans: FormationPlan[] }[] {
+export function rankTactics(engine: TacticEngine, list: FmPlayer[]): { style: StyleRef; form: string; plan: FormationPlan; fit: number; complexity: number; plans: FormationPlan[] }[] {
   const squadFit = new Map(engine.rankStyles(list).map((x) => [x.style.id, x.fit ?? 0]));
+  const ability = tactAbility(list);
   const all = engine.ref.styles
     .map((style) => {
       const plans = Object.keys(FORMATIONS)
         .map((form) => engine.formationPlan(form, style, list))
         .sort((a, b) => b.score - a.score);
       const plan = plans[0]!;
-      return { style, form: plan.form, plan, fit: plan.score, plans };
+      const complexity = complexityCost(style, ability);
+      return { style, form: plan.form, plan, fit: plan.score - complexity, complexity, plans };
     })
     .sort((a, b) => b.fit - a.fit);
   if (!all.length) return all;
@@ -326,14 +349,18 @@ export function bestTactic(engine: TacticEngine, list: FmPlayer[], coach: CoachP
   const top = ranked[0];
   if (!top) return null;
   let best: TacticPick = { style: top.style, form: top.form, plan: top.plan, project: false };
+  let bestFit = top.fit;
   const mine = ranked.find((r) => r.style.id === coach.style);
   const projPlan = mine && (coach.form ? mine.plans.find((p) => p.form === coach.form) : mine.plan);
   const bestScore = Math.max(...ranked.map((r) => r.fit));
-  if (mine && projPlan && projPlan.score > bestScore - TACTIC_TIE) best = { style: mine.style, form: projPlan.form, plan: projPlan, project: true };
+  if (mine && projPlan && projPlan.score - mine.complexity > bestScore - TACTIC_TIE) {
+    best = { style: mine.style, form: projPlan.form, plan: projPlan, project: true };
+    bestFit = projPlan.score - mine.complexity;
+  }
   // Une base, des ajustements : on garde la tactique jouée tant qu'une autre ne gagne pas SWITCH_POINTS.
   const kept = base && best.style.id !== base.id ? ranked.find((r) => r.style.id === base.id) : null;
-  if (kept && best.plan.score - kept.fit < SWITCH_POINTS)
-    return { style: kept.style, form: kept.form, plan: kept.plan, project: coach.style === kept.style.id, kept: { style: best.style, form: best.form, gain: best.plan.score - kept.fit } };
+  if (kept && bestFit - kept.fit < SWITCH_POINTS)
+    return { style: kept.style, form: kept.form, plan: kept.plan, project: coach.style === kept.style.id, kept: { style: best.style, form: best.form, gain: bestFit - kept.fit } };
   return best;
 }
 

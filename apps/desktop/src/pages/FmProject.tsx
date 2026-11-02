@@ -1,4 +1,4 @@
-import { FORMATIONS, POS_LABEL, TARGETS, buildProject, recruitAttrs, switchAnalysis, trainingFor, type FmPlayer, type FmSnapshot, type SquadAt } from '@simloom/module-fm';
+import { FORMATIONS, POS_LABEL, TARGETS, buildProject, evolutionPlan, recruitAttrs, styleOfGameTactic, switchAnalysis, trainingFor, type FmPlayer, type FmSnapshot, type SquadAt } from '@simloom/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
@@ -17,6 +17,9 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
   const list = useMemo(() => players.filter((p) => Object.keys(p.attributes).length), [players]);
   const pr = useMemo(() => buildProject(engine, list, coach), [engine, list, coach]);
   const sw = useMemo(() => switchAnalysis(engine, list, coach, history), [engine, list, coach, history]);
+  const gameTactic = typeof snap.tactic?.name === 'string' ? snap.tactic.name : null;
+  const base = useMemo(() => styleOfGameTactic(gameTactic, engine.ref.styles), [gameTactic, engine]);
+  const evo = useMemo(() => evolutionPlan(engine, list, snap.gameDate, coach, history, base), [engine, list, snap.gameDate, coach, history, base]);
   if (!list.length || !pr || !sw) return <Empty>{t('fm.tac.noAttributes')}</Empty>;
 
   const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -34,8 +37,48 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
     c.id === 'fit' ? `${c.gap != null && c.gap >= 0 ? '+' : ''}${c.gap == null ? '–' : Math.round((c.gap / 20) * 100)} pts` : c.id === 'ready' ? `${st.ready} / 11` : `${st.ability == null ? '–' : nf1.format(st.ability)} / ${nf1.format(st.need)}`;
   const select = 'input mt-1 min-w-[10rem]';
 
+  const dateOf = (iso: string) => month.format(new Date(`${iso}T00:00:00Z`));
+  const pct = (v: number) => `${Math.round((v / 20) * 100)} %`;
+
   return (
     <div className="space-y-4">
+      {evo && (
+        <Panel title={t('fm.evo.title')}>
+          <p className="-mt-1 mb-3 text-sm text-brun">{t('fm.evo.help')}</p>
+          {evo.extend.length > 0 && (
+            <p className="mb-3 rounded-xl bg-canard/10 px-3 py-2 text-sm">
+              <b>{t('fm.evo.extendFirst')}</b> {evo.extend.map((a) => `${a.player.name} (${a.player.contractEnd ? dateOf(a.player.contractEnd.slice(0, 10)) : '–'})`).join(', ')}
+            </p>
+          )}
+          <ol className="space-y-3">
+            {evo.stages.map((s, i) => (
+              <li key={s.date} className="rounded-xl bg-creme/50 px-3 py-2 text-sm">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <b className="text-canard">{s.kind === 'now' ? t('fm.proj.today') : t(`fm.evo.window.${s.kind}`, { date: dateOf(s.date) })}</b>
+                  <span className="flex items-center gap-2">
+                    {names.style(s.tactic.style)} · {s.tactic.form}
+                    {i > 0 && <Tag tone={s.changed ? 'warn' : 'good'}>{t(s.changed ? 'fm.evo.changed' : 'fm.evo.same')}</Tag>}
+                  </span>
+                </div>
+                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-brun">
+                  <span>{t('fm.evo.score', { value: pct(s.score) })}</span>
+                  <span title={t('fm.evo.perPlayerHelp', { ability: s.ability == null ? '–' : nf1.format(s.ability), need: nf1.format(s.need) })}>{t('fm.evo.perPlayer', { count: s.perPlayer })}</span>
+                  <span>{t('fm.evo.ready', { count: s.ready, style: names.style(pr.style) })}</span>
+                </div>
+                {s.changed && <p className="mt-1">▸ {t('fm.evo.changeTip')}</p>}
+                {s.left.length > 0 && <p className="mt-1">▸ {t('fm.evo.left', { list: s.left.map((p) => p.name).join(', ') })}</p>}
+                {s.newStarters.map((c) => (
+                  <p key={c.player.id} className="mt-1">
+                    ▸ {c.replaces ? t('fm.evo.replaces', { name: c.player.name, other: c.replaces.name, pos: POS_LABEL[c.pos] }) : t('fm.evo.starts', { name: c.player.name, pos: POS_LABEL[c.pos] })}
+                  </p>
+                ))}
+                {s.recruit.length > 0 && <p className="mt-1">▸ {t('fm.evo.recruit', { list: [...new Set(s.recruit.map((r) => POS_LABEL[r.pos]))].join(', ') })}</p>}
+              </li>
+            ))}
+          </ol>
+          <p className="mt-2 text-xs text-brun">{t('fm.evo.foot')}</p>
+        </Panel>
+      )}
       <Panel title={t('fm.proj.coach')}>
         <div className="flex flex-wrap gap-3">
           <label className="flex flex-col text-xs font-bold text-canard/70">

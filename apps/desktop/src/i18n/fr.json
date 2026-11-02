@@ -917,7 +917,10 @@
         "markTighter": "marquage {{a}}, puissance {{b}}"
       },
       "custom": "perso",
-      "inGame": "Dans le jeu :"
+      "inGame": "Dans le jeu :",
+      "budgetLow_one": "Au plus {{count}} consigne par joueur pour l'instant : le groupe manque encore de capacité tactique pour ce style. On en ajoutera quand il progresse (voir Plan d'évolution).",
+      "budgetLow_other": "Au plus {{count}} consignes par joueur pour l'instant : le groupe manque encore de capacité tactique pour ce style. On en ajoutera quand il progresse (voir Plan d'évolution).",
+      "budgetFull": "Au plus 3 consignes par joueur : au-delà, la complexité fait baisser la compréhension tactique."
     },
     "train": {
       "session": {
@@ -1484,6 +1487,29 @@
       "years_other": "{{count}} ans",
       "wage": "salaire {{wage}}",
       "legend": "Prolonger : titulaire, doublure utile de moins de 29 ans ou jeune prometteur au profil du projet. Prolonger 1 an : titulaire de 31 ans ou plus, doublure de 29-30 ans, ou titulaire hors projet le temps de trouver mieux. Vendre en janvier : pas de place dans les deux onze ou profil hors projet, mais une valeur marchande. Laisser partir : idem sans valeur, ou doublure de 31 ans ou plus."
+    },
+    "evo": {
+      "title": "Plan d'évolution",
+      "help": "Ce que deviennent ta tactique et ton effectif aux prochains mercatos si tu suis Simloom : départs conseillés et fins de contrat faits, joueurs vieillis selon leur progression mesurée. On garde la même base tant qu'une autre tactique ne gagne pas nettement, et on ajoute des consignes à mesure que le groupe progresse. Aucune recrue n'est inventée : un poste à recruter le reste tant que personne n'a signé.",
+      "extendFirst": "À prolonger d'abord :",
+      "window": {
+        "summer": "Mercato d'été · {{date}}",
+        "winter": "Mercato d'hiver · {{date}}"
+      },
+      "changed": "Changement de tactique",
+      "same": "Même base",
+      "score": "Note d'équipe {{value}}",
+      "perPlayer_one": "{{count}} consigne individuelle par joueur au plus",
+      "perPlayer_other": "{{count}} consignes individuelles par joueur au plus",
+      "perPlayerHelp": "Capacité tactique du groupe {{ability}} pour {{need}} souhaitée : moins elle suffit, moins on charge les joueurs.",
+      "ready_one": "{{count}} poste prêt pour {{style}}",
+      "ready_other": "{{count}} postes prêts pour {{style}}",
+      "changeTip": "Le changement tombe sur la fenêtre : profite de la présaison ou de la trêve pour travailler la nouvelle tactique avant les matchs.",
+      "left": "Partis : {{list}}",
+      "replaces": "{{name}} prend la place de {{other}} ({{pos}})",
+      "starts": "{{name}} devient titulaire ({{pos}})",
+      "recruit": "Encore à recruter pour le projet : {{list}}",
+      "foot": "Fenêtres calculées depuis le mois de reprise du championnat (réglage Entraînement). Coûts provisoires, choix de Simloom : changer de tactique demande un gain d'une demi-étoile ; un style trop complexe pour le groupe perd jusqu'à une demi-étoile."
     }
   },
   "pz2": {

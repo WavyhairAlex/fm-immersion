@@ -917,7 +917,10 @@
         "markTighter": "marking {{a}}, strength {{b}}"
       },
       "custom": "custom",
-      "inGame": "In game:"
+      "inGame": "In game:",
+      "budgetLow_one": "At most {{count}} instruction per player for now: the group still lacks tactical ability for this style. More will come as it improves (see Development plan).",
+      "budgetLow_other": "At most {{count}} instructions per player for now: the group still lacks tactical ability for this style. More will come as it improves (see Development plan).",
+      "budgetFull": "At most 3 instructions per player: beyond that, complexity lowers tactical understanding."
     },
     "train": {
       "session": {
@@ -1484,6 +1487,29 @@
       "years_other": "{{count}} years",
       "wage": "wage {{wage}}",
       "legend": "Renew: starter, useful backup under 29, or promising youngster who suits the project. Renew 1 year: starter aged 31+, backup aged 29-30, or off-project starter while you find better. Sell in January: no place in either eleven or off-project profile, but has market value. Let go: same without value, or backup aged 31+."
+    },
+    "evo": {
+      "title": "Development plan",
+      "help": "What your tactic and squad become over the next transfer windows if you follow Simloom: advised departures and contract expiries applied, players aged by their measured progression. The same base is kept unless another tactic is clearly better, and instructions are added as the group improves. No signing is invented: a position to recruit stays open until someone signs.",
+      "extendFirst": "Extend first:",
+      "window": {
+        "summer": "Summer window · {{date}}",
+        "winter": "Winter window · {{date}}"
+      },
+      "changed": "Tactic change",
+      "same": "Same base",
+      "score": "Team rating {{value}}",
+      "perPlayer_one": "At most {{count}} player instruction each",
+      "perPlayer_other": "At most {{count}} player instructions each",
+      "perPlayerHelp": "Group tactical ability {{ability}} for {{need}} wanted: the less it covers, the less we load the players.",
+      "ready_one": "{{count}} position ready for {{style}}",
+      "ready_other": "{{count}} positions ready for {{style}}",
+      "changeTip": "The change falls on the window: use pre-season or the winter break to work on the new tactic before matches.",
+      "left": "Gone: {{list}}",
+      "replaces": "{{name}} takes {{other}}'s place ({{pos}})",
+      "starts": "{{name}} becomes a starter ({{pos}})",
+      "recruit": "Still to recruit for the project: {{list}}",
+      "foot": "Windows computed from the league restart month (Training settings). Provisional costs chosen by Simloom: changing tactic needs a half-star gain; a style too complex for the group loses up to half a star."
     }
   },
   "pz2": {

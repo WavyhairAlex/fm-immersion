@@ -14,6 +14,8 @@ import {
   phaseXY,
   planFromLineup,
   playerInstructions,
+  instructionBudget,
+  tactAbility,
   shapeOf,
   spreadXY,
   unavailable,
@@ -122,6 +124,8 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   if (!avail.length || !style || !plan) return <p className="card mt-6 text-brun">{t('fm.tac.noAttributes')}</p>;
 
   const block = styleBlock(style);
+  // Complexité : moins l'effectif lit le jeu, moins on charge chaque joueur de consignes individuelles.
+  const budget = instructionBudget(style, tactAbility(avail));
   // Rôle avec ballon : FM27 fixe la mission d'après le rôle, on l'affiche à côté (« Milieu axial (Soutien) »).
   const roleName = (code: string, ph?: Phase) => {
     const r = engine.roles.get(code);
@@ -424,11 +428,12 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
 
       <section className="card">
         <h2 className="text-xl font-semibold">{t('fm.pi.title')}</h2>
+        <p className="mt-1 text-sm text-brun">{budget < 3 ? t('fm.pi.budgetLow', { count: budget }) : t('fm.pi.budgetFull')}</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {plan.slots
             .filter((sl) => sl.player)
             .map((sl, i) => {
-              const adv = playerInstructions(engine, sl, style, plan.slots);
+              const adv = playerInstructions(engine, sl, style, plan.slots, budget);
               return (
                 <div key={i} className="rounded-xl bg-creme/50 px-3 py-2 text-sm">
                   <div className="flex items-baseline gap-2">
