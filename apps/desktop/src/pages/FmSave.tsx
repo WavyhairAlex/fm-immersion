@@ -226,7 +226,7 @@ export function FmSave() {
     if (!snapshot) return null;
     switch (v) {
       case 'home':
-        return <FmHome snap={snapshot.data} players={players} folder={folder} go={go} />;
+        return <FmHome snap={snapshot.data} players={players} folder={folder} history={history} go={go} />;
       case 'squad':
         return <SquadTable players={players} folder={folder} />;
       case 'analysis':

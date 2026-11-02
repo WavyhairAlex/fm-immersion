@@ -1,7 +1,7 @@
-import { PART_TIME_DAYS, currentTrainingWeek, mercatoAdvice, snapshotFixtures, homeOverview, nearestPreset, trainingAlerts, trainingFor, type FmPlayer, type FmSnapshot } from '@simloom/module-fm';
+import { PART_TIME_DAYS, currentTrainingWeek, snapshotFixtures, homeOverview, nearestPreset, trainingAlerts, trainingFor, type FmPlayer, type FmSnapshot, type SquadAt } from '@simloom/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ContractsToDecide } from './FmMercato';
+import { FmDecisions } from './FmDecisions';
 import { FmSummary } from './FmSummary';
 import { useTacticChoice } from './FmTactic';
 import { useIndividualSetups } from './FmTraining';
@@ -10,7 +10,7 @@ import { Empty, fitPct, Level, Panel, PlayerName, Pos, Row, Tag, useCoach, type 
 const KIND_TONE: Record<string, Tone> = { injured: 'bad', suspended: 'bad', contract: 'warn', condition: 'warn', status: 'info' };
 
 /** Accueil de la partie : chiffres clés, ce qui est à traiter, styles adaptés, meilleurs joueurs et jeunes. */
-export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; players: FmPlayer[]; folder: string; go: (view: string) => void }) {
+export function FmHome({ snap, players, folder, history, go }: { snap: FmSnapshot; players: FmPlayer[]; folder: string; history?: SquadAt[]; go: (view: string) => void }) {
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
   const h = useMemo(() => homeOverview(players, snap.gameDate), [players, snap.gameDate]);
@@ -32,8 +32,6 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
     [snap, coach.seasonStart, coach.winterBreak, coach.clubStatus, coach.trainingDays, style],
   );
   const tr = useMemo(() => trainingAlerts(players), [players]);
-  // Fins de contrat à décider (message de FM27 à six mois) : la décision conseillée pour chaque joueur.
-  const merc = useMemo(() => mercatoAdvice(engine, players, snap.gameDate, coach), [engine, players, snap.gameDate, coach]);
   const setups = useIndividualSetups(engine, players, folder, week.days.filter((d) => d.kind === 'match').length, snap);
   const toChange = setups.rows.filter((r) => r.status === 'change').map((r) => r.plan.player);
   const short = (list: FmPlayer[]) => list.map((p) => p.name.split(' ').at(-1)).join(', ');
@@ -59,7 +57,7 @@ export function FmHome({ snap, players, folder, go }: { snap: FmSnapshot; player
   return (
     <div className="space-y-4">
       <FmSummary snap={snap} players={players} />
-      {merc && <ContractsToDecide r={merc} go={go} />}
+      <FmDecisions snap={snap} players={players} folder={folder} history={history} go={go} />
       <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-4">
         <Panel title={t('fm.home.todo')} action={link('squad', t('fm.views.squad'))}>
           {h.contracts && (

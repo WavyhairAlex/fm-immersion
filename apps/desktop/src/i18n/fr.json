@@ -1515,6 +1515,53 @@
     "abilities": {
       "toggle": "Lire le CA/PA",
       "help": "Lit le CA et le PA réels (sur 200) de ton effectif dans la mémoire de FM27, en lecture seule, une fois par date de jeu. Les étoiles du jeu sont relatives à l'effectif ; le CA/PA donne une échelle fixe pour la progression et le potentiel. Attention : le PA est une valeur que le jeu te cache."
+    },
+    "dec": {
+      "title_one": "{{count}} décision à prendre",
+      "title_other": "{{count}} décisions à prendre",
+      "help": "Ce que Simloom te conseille, de la plus urgente à la moins urgente. Tu restes seul juge : clique une carte pour voir le détail.",
+      "none": "Rien à décider pour l'instant : garde ta base et ton onze du jour.",
+      "before": "avant le {{date}}",
+      "anytime": "pas d'échéance",
+      "kind": {
+        "contract": "Contrat",
+        "recruit": "Recrutement",
+        "departure": "Départ",
+        "tactic": "Tactique"
+      },
+      "action": {
+        "extend_one": "Prolonger {{names}} ({{count}} an)",
+        "extend_other": "Prolonger {{names}} ({{count}} ans)",
+        "extendShort": "Prolonger {{names}} d'un an seulement",
+        "sellNow": "Vendre {{names}} avant la fin du contrat",
+        "letGo": "Laisser partir {{names}} en fin de contrat",
+        "keepTactic": "Garder {{style}}",
+        "changeTactic": "Passer à {{style}} ({{form}})",
+        "recruit": "Chercher un joueur en {{pos}}",
+        "sell": "Vendre {{names}}",
+        "loan": "Prêter {{names}}",
+        "release": "Libérer {{names}}"
+      },
+      "why": {
+        "potentialPa": "PA {{pa}} : il peut dépasser le titulaire de son poste (CA {{ca}}).",
+        "potential": "Potentiel {{stars}} ★ selon ton staff, relatif à l'effectif actuel.",
+        "starter": "Titulaire aujourd'hui ({{age}} ans).",
+        "backup": "Doublure utile ({{age}} ans).",
+        "surplus": "Ne joue pas et n'a pas sa place dans le projet ({{age}} ans).",
+        "smallGain": "{{other}} ferait mieux de {{gain}} ★ seulement : pas assez pour perdre la compréhension tactique (il faut {{need}} ★).",
+        "bigGain": "Gain d'au moins {{need}} ★ sur {{other}} : il paie l'apprentissage. Change pendant la présaison ou la trêve.",
+        "weakSlot": "Le meilleur joueur du poste n'atteint que {{fit}} % d'adéquation dans le projet.",
+        "emptySlot": "Personne dans l'effectif ne tient ce poste du projet.",
+        "blocked": "Jeune prometteur sans temps de jeu ici : un prêt le fera progresser."
+      },
+      "unless": {
+        "bigGain": "À revoir si l'écart dépasse {{need}} ★ (blessures, recrues)."
+      },
+      "basis": {
+        "read": "lu dans le jeu",
+        "real": "CA/PA réels",
+        "computed": "calcul Simloom"
+      }
     }
   },
   "pz2": {

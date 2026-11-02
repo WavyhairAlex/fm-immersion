@@ -33,5 +33,6 @@ export * from './opponent';
 export * from './matchup';
 export * from './mercato';
 export * from './evolution';
+export * from './decisions';
 export * from './compat';
 export * from './stats';

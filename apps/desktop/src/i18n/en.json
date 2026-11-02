@@ -1515,6 +1515,53 @@
     "abilities": {
       "toggle": "Read CA/PA",
       "help": "Reads your squad's real CA and PA (out of 200) from FM27's memory, read-only, once per game date. The game's stars are relative to the squad; CA/PA gives a fixed scale for progression and potential. Note: PA is a value the game hides from you."
+    },
+    "dec": {
+      "title_one": "{{count}} decision to make",
+      "title_other": "{{count}} decisions to make",
+      "help": "What Simloom advises, most urgent first. You remain the judge: click a card for details.",
+      "none": "Nothing to decide right now: keep your base tactic and today's XI.",
+      "before": "before {{date}}",
+      "anytime": "no deadline",
+      "kind": {
+        "contract": "Contract",
+        "recruit": "Recruitment",
+        "departure": "Departure",
+        "tactic": "Tactic"
+      },
+      "action": {
+        "extend_one": "Extend {{names}} ({{count}} year)",
+        "extend_other": "Extend {{names}} ({{count}} years)",
+        "extendShort": "Extend {{names}} by one year only",
+        "sellNow": "Sell {{names}} before the contract ends",
+        "letGo": "Let {{names}} leave at the end of the contract",
+        "keepTactic": "Keep {{style}}",
+        "changeTactic": "Switch to {{style}} ({{form}})",
+        "recruit": "Find a player for {{pos}}",
+        "sell": "Sell {{names}}",
+        "loan": "Loan out {{names}}",
+        "release": "Release {{names}}"
+      },
+      "why": {
+        "potentialPa": "PA {{pa}}: he can overtake the starter in his position (CA {{ca}}).",
+        "potential": "{{stars}} ★ potential per your staff, relative to the current squad.",
+        "starter": "Starter today ({{age}} years old).",
+        "backup": "Useful backup ({{age}} years old).",
+        "surplus": "Doesn't play and has no place in the project ({{age}} years old).",
+        "smallGain": "{{other}} would only be {{gain}} ★ better: not enough to lose tactical understanding ({{need}} ★ needed).",
+        "bigGain": "At least {{need}} ★ better than {{other}}: worth the learning time. Switch during pre-season or the winter break.",
+        "weakSlot": "The best player for this position only reaches {{fit}}% suitability in the project.",
+        "emptySlot": "Nobody in the squad covers this project position.",
+        "blocked": "Promising youngster without game time here: a loan will help him develop."
+      },
+      "unless": {
+        "bigGain": "Review if the gap exceeds {{need}} ★ (injuries, signings)."
+      },
+      "basis": {
+        "read": "read from the game",
+        "real": "real CA/PA",
+        "computed": "Simloom estimate"
+      }
     }
   },
   "pz2": {
