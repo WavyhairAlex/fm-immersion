@@ -1427,7 +1427,8 @@
         "possWon90": "Possession won /90",
         "fouls90": "Fouls /90",
         "xgPrevented90": "xG prevented /90",
-        "savePct": "Saves"
+        "savePct": "Saves",
+        "trend": "Trend"
       },
       "raw": {
         "Minutes": "Minutes played",
@@ -1541,6 +1542,24 @@
         "xgPrevented90": "Goals the keeper prevented relative to shot quality faced, per 90 minutes.",
         "savePct": "Share of shots on target saved.",
         "points90": "Points won per match by the team with this player on the pitch."
+      },
+      "trend": {
+        "title": "Progress since {{date}}",
+        "titleNone": "Match progress",
+        "up": "Improving",
+        "down": "Declining",
+        "noneUp": "Nobody clearly improved over the period.",
+        "noneDown": "Nobody clearly declined over the period.",
+        "help": "Recent period (stats since that date) compared with the season up to it. A player needs at least 180 minutes on each side. Threshold: 3 points for a percentage, 15% for a per-90 stat. Shows whether training and instructions pay off.",
+        "wait": "The comparison appears once Simloom has at least one in-game week of snapshots with stats (the first is from {{date}}). Keep playing with the plugin on.",
+        "waitNone": "No snapshots with match stats yet.",
+        "team": {
+          "passPct": "Pass completion",
+          "pressSuccess": "Successful pressures",
+          "tacklePct": "Tackles won",
+          "headerPct": "Aerial duels",
+          "xgPerMatch": "xG per match"
+        }
       }
     },
     "dbSearch": {

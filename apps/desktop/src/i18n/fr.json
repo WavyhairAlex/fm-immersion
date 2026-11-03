@@ -1427,7 +1427,8 @@
         "possWon90": "Ballons récupérés /90",
         "fouls90": "Fautes /90",
         "xgPrevented90": "xG évités /90",
-        "savePct": "Arrêts"
+        "savePct": "Arrêts",
+        "trend": "Tendance"
       },
       "raw": {
         "Minutes": "Minutes jouées",
@@ -1541,6 +1542,24 @@
         "xgPrevented90": "Buts évités par le gardien par rapport à la qualité des tirs subis, par 90 minutes.",
         "savePct": "Part des tirs cadrés arrêtés.",
         "points90": "Points pris par l'équipe par match quand il joue."
+      },
+      "trend": {
+        "title": "Progrès depuis le {{date}}",
+        "titleNone": "Progrès en match",
+        "up": "En progrès",
+        "down": "En recul",
+        "noneUp": "Personne ne progresse nettement sur la période.",
+        "noneDown": "Personne ne recule nettement sur la période.",
+        "help": "Période récente (stats depuis cette date) comparée à la saison jusque-là. Un joueur doit avoir joué au moins 180 minutes de chaque côté. Seuil : 3 points pour un pourcentage, 15 % pour une stat par 90 minutes. Sert à voir si l'entraînement et les consignes paient.",
+        "wait": "La comparaison apparaît quand Simloom a au moins une semaine de jeu de relevés avec stats (le premier date du {{date}}). Continue à jouer avec le plugin actif.",
+        "waitNone": "Pas encore de relevés avec stats de match.",
+        "team": {
+          "passPct": "Passes réussies",
+          "pressSuccess": "Pressings réussis",
+          "tacklePct": "Tacles réussis",
+          "headerPct": "Duels aériens",
+          "xgPerMatch": "xG par match"
+        }
       }
     },
     "dbSearch": {

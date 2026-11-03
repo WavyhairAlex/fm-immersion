@@ -232,7 +232,7 @@ export function FmSave() {
       case 'analysis':
         return <FmAnalysis players={players} gameDate={snapshot.gameDate} />;
       case 'stats':
-        return <FmStats snap={snapshot.data} players={players} />;
+        return <FmStats snap={snapshot.data} players={players} history={all as { gameDate: string; data: FmSnapshot }[] | undefined} />;
       case 'compare':
         return <FmCompare saveId={saveId} snap={snapshot.data} players={players} folder={folder} history={history} />;
       case 'dressing':

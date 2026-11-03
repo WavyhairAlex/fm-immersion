@@ -1,4 +1,4 @@
-import { matchStatsFull, MIN_STAT_MINUTES, RAW_GROUPS, STAT_METRICS, statsBoard, type FmPlayer, type FmSnapshot, type PlayerStatReport, type StatKey, type StatMark } from '@simloom/module-fm';
+import { matchStatsFull, MIN_STAT_MINUTES, RAW_GROUPS, STAT_METRICS, statsBoard, statsTrends, type FmPlayer, type FmSnapshot, type PlayerStatReport, type StatKey, type PlayerTrend, type StatMark, type StatTrend } from '@simloom/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Chips, Empty, Kpi, Panel, Pos, Tag } from './FmUi';
@@ -25,9 +25,10 @@ function Cell({ r, k }: { r: PlayerStatReport; k: StatKey }) {
 }
 
 /** Centre de données : stats de la saison par joueur, comparées dans chaque ligne, et ce qu'elles disent à travailler. */
-export function FmStats({ snap, players }: { snap: FmSnapshot; players: FmPlayer[] }) {
+export function FmStats({ snap, players, history }: { snap: FmSnapshot; players: FmPlayer[]; history?: { gameDate: string; data: FmSnapshot }[] }) {
   const { t, i18n } = useTranslation();
   const full = useMemo(() => matchStatsFull(snap), [snap]);
+  const trends = useMemo(() => statsTrends(history ?? [], players), [history, players]);
   const board = useMemo(() => statsBoard(players, new Map([...full].map(([id, m]) => [id, m.stats]))), [players, full]);
   const [picked, setPicked] = useState<string | null>(null);
   const [line, setLine] = useState<LineFilter>('all');
@@ -55,6 +56,17 @@ export function FmStats({ snap, players }: { snap: FmSnapshot; players: FmPlayer
   const team = board.team!;
   const stat = (k: StatKey) => t(`fm.stats.col.${k}`);
   const marks = (list: StatMark[]) => list.slice(0, 2).map((m) => stat(m.key)).join(', ');
+  const date = (d: string) => new Intl.DateTimeFormat(i18n.resolvedLanguage, { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(d));
+  const fmtStat = (k: StatKey, v: number) => (PCT.has(k) ? `${num(v, 0)} %` : num(v, k === 'distance90' ? 1 : 2));
+  const move = (x: StatTrend) => `${stat(x.key)} ${fmtStat(x.key, x.before)} → ${fmtStat(x.key, x.recent)}`;
+  const named = (dir: 'up' | 'down') =>
+    rows
+      .map((r) => ({ r, tr: trends.players.get(r.player.id) }))
+      .filter((x) => x.tr && (dir === 'up' ? x.tr.improved : x.tr.declined).length)
+      .map((x) => ({ name: x.r.player.name, list: dir === 'up' ? x.tr!.improved : x.tr!.declined }));
+  const ups = named('up');
+  const downs = named('down');
+  const teamVal = (k: string, v: number) => (k === 'xgPerMatch' ? num(v, 2) : `${num(v, 0)} %`);
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -79,6 +91,47 @@ export function FmStats({ snap, players }: { snap: FmSnapshot; players: FmPlayer
           </ul>
         ) : (
           <Empty>{team.matches >= 3 ? t('fm.stats.noAlert') : t('fm.stats.tooEarly')}</Empty>
+        )}
+      </Panel>
+
+      <Panel title={trends.since ? t('fm.stats.trend.title', { date: date(trends.since) }) : t('fm.stats.trend.titleNone')}>
+        {trends.since ? (
+          <div className="space-y-3 text-sm">
+            {trends.team.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {trends.team.map((x) => (
+                  <span key={x.key} className={`rounded-full px-3 py-1 text-xs font-bold ${x.dir === 'up' ? 'bg-eau-fonce text-white' : x.dir === 'down' ? 'bg-corail/20 text-canard' : 'bg-canard/10 text-canard'}`}>
+                    {x.dir === 'up' ? '↑ ' : x.dir === 'down' ? '↓ ' : ''}
+                    {t(`fm.stats.trend.team.${x.key}`)} {teamVal(x.key, x.before)} → {teamVal(x.key, x.recent)}
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="grid gap-3 md:grid-cols-2">
+              {(['up', 'down'] as const).map((dir) => {
+                const list = dir === 'up' ? ups : downs;
+                return (
+                  <div key={dir}>
+                    <h3 className={`mb-1 font-bold ${dir === 'up' ? 'text-eau-fonce' : 'text-canard'}`}>{t(`fm.stats.trend.${dir}`)}</h3>
+                    {list.length ? (
+                      <ul className="space-y-1">
+                        {list.map((x) => (
+                          <li key={x.name}>
+                            <span className="font-bold">{x.name}</span> <span className="text-brun">{x.list.slice(0, 2).map(move).join(' · ')}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <Empty>{t(dir === 'up' ? 'fm.stats.trend.noneUp' : 'fm.stats.trend.noneDown')}</Empty>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs text-brun">{t('fm.stats.trend.help')}</p>
+          </div>
+        ) : (
+          <Empty>{trends.firstDate ? t('fm.stats.trend.wait', { date: date(trends.firstDate) }) : t('fm.stats.trend.waitNone')}</Empty>
         )}
       </Panel>
 
@@ -113,6 +166,7 @@ export function FmStats({ snap, players }: { snap: FmSnapshot; players: FmPlayer
                   </th>
                 ))}
                 <th className="px-2 py-1">{t('fm.stats.col.strengths')}</th>
+                {trends.since && <th className="px-2 py-1">{t('fm.stats.col.trend')}</th>}
                 <th className="px-2 py-1">{t('fm.stats.col.focus')}</th>
               </tr>
             </thead>
@@ -131,6 +185,11 @@ export function FmStats({ snap, players }: { snap: FmSnapshot; players: FmPlayer
                   <td className="px-2 py-1.5 text-xs">
                     {r.strengths.length ? <span className="font-bold text-eau-fonce">{marks(r.strengths)}</span> : <span className="text-canard/40">–</span>}
                   </td>
+                  {trends.since && (
+                    <td className="px-2 py-1.5 text-xs">
+                      <TrendCell tr={trends.players.get(r.player.id)} label={stat} />
+                    </td>
+                  )}
                   <td className="px-2 py-1.5 text-xs">
                     {r.weaknesses.length > 0 && <div className="text-brun">{marks(r.weaknesses)}</div>}
                     {r.focus ? <Tag tone="warn">{t(`fm.train.focus.${r.focus}`)}</Tag> : !r.weaknesses.length && <span className="text-canard/40">–</span>}
@@ -144,6 +203,18 @@ export function FmStats({ snap, players }: { snap: FmSnapshot; players: FmPlayer
       </Panel>
 
       <AllStats rows={rows} full={full} picked={picked ?? rows[0]?.player.id ?? null} onPick={setPicked} />
+    </div>
+  );
+}
+
+/** Tendance d'un joueur : ce qui progresse (↑) et recule (↓) sur la période récente. */
+function TrendCell({ tr, label }: { tr: PlayerTrend | undefined; label: (k: StatKey) => string }) {
+  if (!tr) return <span className="text-canard/40">–</span>;
+  if (!tr.improved.length && !tr.declined.length) return <span className="text-brun">=</span>;
+  return (
+    <div className="space-y-0.5">
+      {tr.improved.length > 0 && <div className="font-bold text-eau-fonce">↑ {tr.improved.slice(0, 2).map((x) => label(x.key)).join(', ')}</div>}
+      {tr.declined.length > 0 && <div className="text-brun">↓ {tr.declined.slice(0, 2).map((x) => label(x.key)).join(', ')}</div>}
     </div>
   );
 }

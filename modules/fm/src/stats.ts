@@ -324,3 +324,145 @@ export const RAW_GROUPS: { id: string; props: string[] }[] = [
   { id: 'keeper', props: ['Conceded', 'CleanSheets', 'TotalSaves', 'SavesHeld', 'SavesParried', 'SavesTipped', 'TotalSavePercentage', 'TotalExpectedSavePercentage', 'ExpectedGoalsPrevented', 'PenaltiesFaced', 'PenaltiesSaved'] },
   { id: 'discipline', props: ['FoulsMade', 'YellowCards', 'RedCards'] },
 ];
+
+/**
+ * Suivi des progrès : les stats du jeu sont des cumuls de saison. En retranchant les totaux d'un instantané plus
+ * ancien, on obtient les stats de la période récente seule, comparées à celles d'avant. Seules les mesures
+ * calculées à partir de totaux (par 90 et %) s'y prêtent ; les valeurs déjà moyennées par le jeu sont ignorées.
+ */
+export const TREND_KEYS: StatKey[] = STAT_METRICS.map((m) => m.key).filter((k) => k !== 'mistakes' && k !== 'savePct');
+const TREND_PCT = new Set<StatKey>(['passPct', 'tacklePct', 'headerPct', 'shotsOnTargetPct', 'crossPct']);
+/** Écart d'une période à l'autre jugé significatif : 3 points pour un %, 15 % de la valeur pour un « par 90 ». */
+function significant(k: StatKey, before: number, recent: number): boolean {
+  const d = Math.abs(recent - before);
+  if (TREND_PCT.has(k)) return d >= 3;
+  if (k === 'distance90') return d >= Math.max(0.3, 0.04 * Math.abs(before));
+  return d >= Math.max(0.1, 0.15 * Math.abs(before));
+}
+/** Écart à partir duquel on parle d'une période : une semaine de jeu, et au moins 2 matchs joués entre les deux. */
+export const TREND_MIN_DAYS = 7;
+export const TREND_MIN_MINUTES = 180;
+/** Fenêtre visée pour la période récente (jours de jeu). */
+export const TREND_WINDOW_DAYS = 28;
+
+export interface StatTrend {
+  key: StatKey;
+  before: number;
+  recent: number;
+  /** 'up' = mieux, 'down' = moins bien (sens `better` appliqué), 'flat' = écart non significatif. */
+  dir: 'up' | 'down' | 'flat';
+}
+export interface PlayerTrend {
+  /** Minutes jouées pendant la période récente. */
+  minutes: number;
+  trends: Partial<Record<StatKey, StatTrend>>;
+  improved: StatTrend[];
+  declined: StatTrend[];
+}
+export type TeamTrendKey = 'passPct' | 'pressSuccess' | 'tacklePct' | 'headerPct' | 'xgPerMatch';
+export interface TeamTrend {
+  key: TeamTrendKey;
+  before: number;
+  recent: number;
+  dir: 'up' | 'down' | 'flat';
+}
+export interface StatsTrends {
+  /** Date de jeu de l'instantané de référence (début de la période récente), ou null si l'historique est trop court. */
+  since: string | null;
+  /** Date du plus ancien instantané qui contient des stats (pour dire quand la tendance sera disponible). */
+  firstDate: string | null;
+  players: Map<string, PlayerTrend>;
+  team: TeamTrend[];
+}
+
+const DAY_MS = 86_400_000;
+const daysBetween = (a: string, b: string) => (new Date(b).getTime() - new Date(a).getTime()) / DAY_MS;
+
+/** Totaux d'une période : différence des cumuls, ou null si la saison a changé entre les deux (cumuls remis à zéro). */
+function rawDelta(now: RawStats, ref: RawStats): RawStats | null {
+  if ((now.Minutes ?? 0) < (ref.Minutes ?? 0)) return null;
+  const out: RawStats = {};
+  for (const [k, v] of Object.entries(now)) out[k] = v - (ref[k] ?? 0);
+  return out;
+}
+
+function teamRates(rows: RawStats[]): Record<TeamTrendKey, number | null> {
+  const tot = (k: string) => sum(rows.map((r) => r[k] ?? 0));
+  const pct = (ok: string, all: string) => (tot(all) > 0 ? (100 * tot(ok)) / tot(all) : null);
+  // Gardiens exclus : 10 joueurs de champ × 90 minutes = un match.
+  const matches = tot('Minutes') / 900;
+  return {
+    passPct: pct('PassCompleted', 'PassAttempts'),
+    pressSuccess: pct('PressuresCompleted', 'PressuresAttempted'),
+    tacklePct: pct('TackleCompleted', 'TackleAttempts'),
+    headerPct: pct('HeaderCompleted', 'HeaderAttempts'),
+    xgPerMatch: matches >= 1 ? tot('ExpectedGoals') / matches : null,
+  };
+}
+
+/**
+ * Progrès en match : période récente (depuis l'instantané le plus proche de TREND_WINDOW_DAYS jours avant le
+ * dernier) comparée à la saison jusque-là, pour chaque joueur et pour l'équipe. `history` : instantanés du plus
+ * ancien au plus récent, le dernier étant l'instantané courant.
+ */
+export function statsTrends(history: { gameDate: string; data: FmSnapshot }[], players: FmPlayer[]): StatsTrends {
+  const withStats = history.map((h) => ({ gameDate: h.gameDate, stats: matchStatsFull(h.data) })).filter((h) => [...h.stats.values()].some((m) => m.raw.Minutes != null));
+  const empty: StatsTrends = { since: null, firstDate: withStats[0]?.gameDate ?? null, players: new Map(), team: [] };
+  const now = withStats.at(-1);
+  if (!now) return empty;
+  // Référence : le plus récent instantané au moins TREND_WINDOW_DAYS jours avant, sinon le plus ancien s'il est à plus d'une semaine.
+  const older = withStats.filter((h) => daysBetween(h.gameDate, now.gameDate) >= TREND_MIN_DAYS);
+  const ref = older.filter((h) => daysBetween(h.gameDate, now.gameDate) >= TREND_WINDOW_DAYS).at(-1) ?? older[0];
+  if (!ref) return empty;
+
+  const out = new Map<string, PlayerTrend>();
+  const recentRows: RawStats[] = [];
+  const beforeRows: RawStats[] = [];
+  const byId = new Map(players.map((p) => [p.id, p]));
+  for (const [id, m] of now.stats) {
+    const r = ref.stats.get(id);
+    if (!r || r.raw.Minutes == null) continue;
+    const delta = rawDelta(m.raw, r.raw);
+    if (!delta) continue;
+    const p = byId.get(id);
+    if (p?.line !== 'GB') {
+      recentRows.push(delta);
+      beforeRows.push(r.raw);
+    }
+    if ((delta.Minutes ?? 0) < TREND_MIN_MINUTES || (r.raw.Minutes ?? 0) < TREND_MIN_MINUTES) continue;
+    const recent = deriveStats(delta);
+    const before = deriveStats(r.raw);
+    const line = p?.line ?? null;
+    const trends: Partial<Record<StatKey, StatTrend>> = {};
+    for (const metric of STAT_METRICS) {
+      const k = metric.key;
+      if (!TREND_KEYS.includes(k) || (line && !metric.lines.includes(line))) continue;
+      const b = before[k];
+      const n = recent[k];
+      if (b == null || n == null) continue;
+      const better = metric.better === 'high' ? n > b : n < b;
+      trends[k] = { key: k, before: b, recent: n, dir: significant(k, b, n) ? (better ? 'up' : 'down') : 'flat' };
+    }
+    const list = Object.values(trends) as StatTrend[];
+    // Plus grand écart relatif d'abord.
+    const gap = (t: StatTrend) => Math.abs(t.recent - t.before) / Math.max(Math.abs(t.before), TREND_PCT.has(t.key) ? 1 : 0.1);
+    out.set(id, {
+      minutes: delta.Minutes ?? 0,
+      trends,
+      improved: list.filter((t) => t.dir === 'up').sort((a, b) => gap(b) - gap(a)),
+      declined: list.filter((t) => t.dir === 'down').sort((a, b) => gap(b) - gap(a)),
+    });
+  }
+
+  const team: TeamTrend[] = [];
+  const rb = teamRates(beforeRows);
+  const rn = teamRates(recentRows);
+  for (const k of ['passPct', 'pressSuccess', 'tacklePct', 'headerPct', 'xgPerMatch'] as TeamTrendKey[]) {
+    const b = rb[k];
+    const n = rn[k];
+    if (b == null || n == null) continue;
+    const sig = k === 'xgPerMatch' ? Math.abs(n - b) >= Math.max(0.15, 0.15 * b) : Math.abs(n - b) >= 3;
+    team.push({ key: k, before: b, recent: n, dir: sig ? (n > b ? 'up' : 'down') : 'flat' });
+  }
+  return { since: ref.gameDate, firstDate: withStats[0]!.gameDate, players: out, team };
+}
