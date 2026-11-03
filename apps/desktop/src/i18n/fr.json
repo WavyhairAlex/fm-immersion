@@ -1171,7 +1171,8 @@
       "matchesCol": "Matchs",
       "scheduleFocus": "Priorité du calendrier",
       "workloadCol": "Charge",
-      "upcomingHelp": "À régler d'avance dans l'écran Programme d'entraînement du jeu : une « Priorité du calendrier » et une charge par semaine. Charge légère les semaines à deux matchs, moyenne avec un match, intensive sans match et en début de présaison. Au-delà des prochains matchs connus, Archivix suppose un match le samedi."
+      "upcomingHelp": "À régler d'avance dans l'écran Programme d'entraînement du jeu : une « Priorité du calendrier » et une charge par semaine. Charge légère les semaines à deux matchs, moyenne avec un match, intensive sans match et en début de présaison. Au-delà des prochains matchs connus, Archivix suppose un match le samedi.",
+      "reasonHint": "Survole l'intensité d'un joueur pour voir pourquoi elle est conseillée."
     },
     "intro": {
       "home": "Ce qui demande ton attention aujourd'hui, les styles qui collent à l'effectif, tes meilleurs joueurs et tes jeunes.",

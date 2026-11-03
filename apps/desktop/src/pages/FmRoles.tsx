@@ -65,14 +65,14 @@ export function FmRoles({ players, folder }: { players: FmPlayer[]; folder: stri
             <input type="checkbox" checked={opts.nat} onChange={(e) => update({ nat: e.target.checked })} /> {t('fm.roles.natOnly')}
           </label>
         </div>
-        <div className="overflow-x-auto">
-          <table className="data-table text-xs">
+        <div className="table-scroll">
+          <table className="data-table wide text-xs">
             <thead>
               <tr>
                 <th className="sticky left-0 bg-white px-2 py-1 text-left text-sm">{t('fm.prog.player')}</th>
                 {POS_ORDER.map((pos) => (
                   <th key={pos} className="px-1 py-1">
-                    <span className="rounded-full bg-eau/20 px-1.5 py-0.5 font-bold">{POS_LABEL[pos]}</span>
+                    <span className="whitespace-nowrap rounded-full bg-eau/20 px-1.5 py-0.5 font-bold">{POS_LABEL[pos]}</span>
                   </th>
                 ))}
               </tr>

@@ -25,5 +25,11 @@
   .data-table th button { text-transform: inherit; letter-spacing: inherit; }
   .data-table td { @apply px-2 py-1.5; }
   .data-table tbody tr { @apply border-b border-canard/5 last:border-0 hover:bg-creme/50; }
+  /* Grands tableaux : défilement dans un cadre, en-tête et première colonne (le joueur) toujours visibles. */
+  .table-scroll { @apply max-h-[75vh] overflow-auto; }
+  .data-table.wide thead th { @apply sticky top-0 z-10 bg-white; }
+  .data-table.wide th:first-child, .data-table.wide td:first-child { @apply sticky left-0 z-[5] whitespace-nowrap bg-white; }
+  .data-table.wide thead th:first-child { @apply z-20; }
+  .data-table.wide td { @apply whitespace-nowrap; }
   .card { @apply rounded-3xl bg-white p-6 shadow-sm ring-1 ring-canard/5; }
 }
