@@ -1,6 +1,6 @@
 {
   "name": "@simloom/desktop",
-  "version": "0.1.84",
+  "version": "0.1.85",
   "private": true,
   "type": "module",
   "scripts": {
@@ -17,6 +17,8 @@
     "@fontsource-variable/nunito": "^5.1.1",
     "@fontsource/alfa-slab-one": "^5",
     "@fontsource/atkinson-hyperlegible": "^5",
+    "@fontsource/barlow": "^5",
+    "@fontsource/barlow-condensed": "^5",
     "@fontsource/bricolage-grotesque": "^5",
     "@fontsource/caveat": "^5",
     "@fontsource/caveat-brush": "^5",
@@ -28,6 +30,7 @@
     "@simloom/db": "workspace:*",
     "@simloom/module-fm": "workspace:*",
     "@simloom/module-pz2": "workspace:*",
+    "@simloom/module-tf3": "workspace:*",
     "@simloom/shared": "workspace:*",
     "@tanstack/react-query": "^5.62.8",
     "@tauri-apps/api": "^2.2.0",

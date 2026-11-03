@@ -29,6 +29,12 @@ importers:
       '@fontsource/atkinson-hyperlegible':
         specifier: ^5
         version: 5.3.0
+      '@fontsource/barlow':
+        specifier: ^5
+        version: 5.3.0
+      '@fontsource/barlow-condensed':
+        specifier: ^5
+        version: 5.3.0
       '@fontsource/bricolage-grotesque':
         specifier: ^5
         version: 5.3.0
@@ -62,6 +68,9 @@ importers:
       '@simloom/module-pz2':
         specifier: workspace:*
         version: link:../../modules/pz2
+      '@simloom/module-tf3':
+        specifier: workspace:*
+        version: link:../../modules/tf3
       '@simloom/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -176,9 +185,15 @@ importers:
 
   modules/tf3:
     dependencies:
+      '@simloom/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@simloom/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      drizzle-orm:
+        specifier: ^0.38.3
+        version: 0.38.4(@types/react@18.3.31)(postgres@3.4.9)(react@18.3.1)
     devDependencies:
       typescript:
         specifier: ^5.7.2
@@ -1042,6 +1057,12 @@ packages:
 
   '@fontsource/atkinson-hyperlegible@5.3.0':
     resolution: {integrity: sha512-Sp8Ve8+rQmENY2Lv02VH7sLpntzTTvnncnJMTbRE7DX6TLxGraN4ykZfzaUWIoCFmaomwkvNiqmlPkrKBuDoSA==}
+
+  '@fontsource/barlow-condensed@5.3.0':
+    resolution: {integrity: sha512-RA7MmIx0v3eQ6Gcf74qLVLOwLB0GpPOzx+eU9iG/AmCnSJGcIWYeU8y6CEMGZ210MGwGg5CZhzLkkvyZdTTk1g==}
+
+  '@fontsource/barlow@5.3.0':
+    resolution: {integrity: sha512-tGR0y6QObRtKv71MOth44222+mdNFM/ZWFWDV1VLzNbG4oK9PNRlyJzmkck4vHAi9ibHBXgt4SlY51amFP55CA==}
 
   '@fontsource/bricolage-grotesque@5.3.0':
     resolution: {integrity: sha512-MdOVb/5in11IfN/IQJOExMuu6AroCIQbirl0yX7NUvKk+h0HYIKfGaVAXRS/gCPil4aFxWhjZnOw28tUwv7tFw==}
@@ -2729,6 +2750,10 @@ snapshots:
   '@fontsource/alfa-slab-one@5.3.0': {}
 
   '@fontsource/atkinson-hyperlegible@5.3.0': {}
+
+  '@fontsource/barlow-condensed@5.3.0': {}
+
+  '@fontsource/barlow@5.3.0': {}
 
   '@fontsource/bricolage-grotesque@5.3.0': {}
 

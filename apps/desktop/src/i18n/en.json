@@ -1740,5 +1740,9 @@
     "loading": "Opening the Zoologix register…",
     "error": "This game's Zoologix register could not be opened. Restart Simloom, then try again.",
     "frame": "Zoologix, your Planet Zoo 2 register"
+  },
+  "tf3": {
+    "back": "My games",
+    "frame": "Line calculator, for Transport Fever 3"
   }
 }
