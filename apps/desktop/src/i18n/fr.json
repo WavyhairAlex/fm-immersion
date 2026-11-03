@@ -36,6 +36,9 @@
     "folderHelp": "Le plugin écrit archivix-snapshot.json dans ce dossier (par exemple D:\\Sports Interactive\\Football Manager 27\\archivix). Simloom le lit seulement, sans toucher à ta sauvegarde.",
     "import": "Importer depuis FM27",
     "autoImport": "mise à jour automatique chaque minute",
+    "sync": "Importé le {{time}}",
+    "settings": "Réglages",
+    "howItWorks": "Comment c'est calculé",
     "importError": "Import impossible : {{reason}}",
     "saveFile": {
       "label": "Sauvegarde FM27",
@@ -332,7 +335,8 @@
       "progression": "Progression",
       "training": "Entraînement",
       "mercato": "Départs et jeunes",
-      "targets": "Cibles du mercato"
+      "targets": "Cibles du mercato",
+      "instructions": "Consignes individuelles"
     },
     "home": {
       "todo": "À traiter",
@@ -1185,13 +1189,14 @@
       "style": "Étape 1 : quel style de jeu ton effectif peut jouer aujourd'hui, et lequel viser.",
       "project": "Étape 2 : le onze qu'il faut pour le style visé, poste par poste : prêt, à faire progresser ou à recruter.",
       "training": "Étape 3 : le programme d'entraînement collectif et individuel qui rapproche l'effectif du projet.",
-      "targets": "Étape 5 : ta liste de suivi du jeu, classée selon ce que chaque joueur apporterait au projet.",
+      "targets": "Ta liste de suivi du jeu, classée selon ce que chaque joueur apporterait au projet.",
       "finances": "Budgets, simulateur de prolongations et attentes du board.",
       "wages": "Les salaires regroupés par statut, et ce qui détonne.",
       "contracts": "Les fins de contrat à anticiper.",
       "progression": "L'évolution du niveau de chaque joueur depuis le premier instantané.",
       "opponent": "Le prochain adversaire tel que le décrit le rapport d'équipe du jeu, et comment le jouer.",
-      "mercato": "Étape 4 : qui faire partir (vente, prêt, fin de contrat), qui prolonger, et quels jeunes valent le coup pour le projet."
+      "mercato": "Étape 4 : qui faire partir (vente, prêt, fin de contrat), qui prolonger, et quels jeunes valent le coup pour le projet.",
+      "instructions": "Au plus 3 consignes par joueur du onze, pour coller au style sans trop charger la compréhension tactique."
     },
     "nextStep": "Étape suivante : {{view}}",
     "opp": {
@@ -1610,14 +1615,6 @@
       "mercato": "Mercato",
       "finances": "Finances et contrats"
     },
-    "pageIntro": {
-      "squad": "Tous les joueurs de l'équipe première, à trier par niveau, forme, contrat ou salaire ; puis le vestiaire et tes prêtés.",
-      "analysis": "Le diagnostic de l'effectif, l'adéquation de chaque joueur à chaque poste, les statistiques de match et la progression.",
-      "tactic": "La meilleure formation et le meilleur onze possibles aujourd'hui, le titulaire et les remplaçants à chaque poste, puis l'efficacité tactique.",
-      "opponent": "L'adversaire du prochain match, puis le calendrier et qui faire tourner selon la fatigue.",
-      "mercato": "Étape 4 : qui faire partir, quels jeunes garder, puis ta liste de suivi classée selon ce que chaque joueur apporterait au projet.",
-      "finances": "Budgets et attentes du board, masse salariale, puis les fins de contrat à anticiper."
-    },
     "compat": {
       "yes": "Projet ✓",
       "partial": "Projet ~",
@@ -1714,6 +1711,9 @@
         "real": "CA/PA réels",
         "computed": "calcul Simloom"
       }
+    },
+    "subtabs": {
+      "tactic": "Le onze"
     }
   },
   "pz2": {

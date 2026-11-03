@@ -36,6 +36,9 @@
     "folderHelp": "The plugin writes archivix-snapshot.json to this folder (for example D:\\Sports Interactive\\Football Manager 27\\archivix). Simloom only reads it and never touches your save.",
     "import": "Import from FM27",
     "autoImport": "updates automatically every minute",
+    "sync": "Imported {{time}}",
+    "settings": "Settings",
+    "howItWorks": "How it works",
     "importError": "Import failed: {{reason}}",
     "saveFile": {
       "label": "FM27 save",
@@ -332,7 +335,8 @@
       "progression": "Progression",
       "training": "Training",
       "mercato": "Departures and youth",
-      "targets": "Transfer targets"
+      "targets": "Transfer targets",
+      "instructions": "Player instructions"
     },
     "home": {
       "todo": "To deal with",
@@ -1185,13 +1189,14 @@
       "style": "Step 1: which playing style your squad can play today, and which one to aim for.",
       "project": "Step 2: the eleven the target style needs, position by position: ready, to develop or to sign.",
       "training": "Step 3: the team and individual training schedule that moves the squad towards the project.",
-      "targets": "Step 5: your in-game shortlist, ranked by what each player would add to the project.",
+      "targets": "Your in-game shortlist, ranked by what each player would add to the project.",
       "finances": "Budgets, contract-extension simulator and board expectations.",
       "wages": "Wages grouped by squad status, and what stands out.",
       "contracts": "Contract expiries to plan for.",
       "progression": "Each player's level since the first snapshot.",
       "opponent": "The next opponent as the game's team report describes it, and how to play them.",
-      "mercato": "Step 4: who to move on (sale, loan, contract end), who to renew, and which youngsters are worth it for the project."
+      "mercato": "Step 4: who to move on (sale, loan, contract end), who to renew, and which youngsters are worth it for the project.",
+      "instructions": "Up to 3 instructions per starter, to fit the style without overloading tactical familiarity."
     },
     "nextStep": "Next step: {{view}}",
     "opp": {
@@ -1610,14 +1615,6 @@
       "mercato": "Transfers",
       "finances": "Finances and contracts"
     },
-    "pageIntro": {
-      "squad": "Every first-team player, sortable by level, condition, contract or wage; then the dressing room and your loaned-out players.",
-      "analysis": "The squad diagnosis, each player's fit for each position, match statistics and progression.",
-      "tactic": "The best formation and starting eleven available today, the starter and backups in each position, then tactical effectiveness.",
-      "opponent": "The next opponent, then the fixtures and who to rotate based on fatigue.",
-      "mercato": "Step 4: who to let go, which youngsters to keep, then your shortlist ranked by what each player would add to the project.",
-      "finances": "Budgets and board expectations, the wage bill, then contract expiries to plan for."
-    },
     "compat": {
       "yes": "Project ✓",
       "partial": "Project ~",
@@ -1714,6 +1711,9 @@
         "real": "real CA/PA",
         "computed": "Simloom estimate"
       }
+    },
+    "subtabs": {
+      "tactic": "The XI"
     }
   },
   "pz2": {

@@ -119,7 +119,7 @@ export function FmMemory() {
 
   const p = probe.data;
   return (
-    <section className="card mt-6 p-5">
+    <section className="rounded-xl bg-creme/60 p-4 ring-1 ring-canard/10">
       <div className="flex items-start justify-between gap-3">
         <h2 className="font-display text-lg font-semibold">{t('fm.memory.title')}</h2>
         <button type="button" className="text-sm font-bold text-eau-fonce hover:underline" onClick={() => setOpen(false)}>

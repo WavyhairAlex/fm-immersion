@@ -33,7 +33,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
-import { fitPct, setFitScale, TeamCards, useCoach } from './FmUi';
+import { fitPct, setFitScale, TeamCards, useCoach, More } from './FmUi';
 
 // v2 : le choix automatique (meilleure tactique applicable) devient la valeur par défaut.
 const PREFS_KEY = 'simloom.fm.tactic.v2';
@@ -106,7 +106,10 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
 const DOT: Record<BalanceCheck['status'], string> = { good: 'bg-eau', warn: 'bg-ambre', bad: 'bg-corail' };
 
 /** Tactique : style conseillé, schéma, onze par rôles, formes avec et sans ballon, équilibre. */
-export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupStatus, go }: { snap?: FmSnapshot; players: FmPlayer[]; folder: string; gameFormation: string | null; lineup: GameSlot[] | null; lineupStatus?: string | null; go?: (view: string) => void }) {
+export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupStatus, go, part }: { snap?: FmSnapshot; players: FmPlayer[]; folder: string; gameFormation: string | null; lineup: GameSlot[] | null; lineupStatus?: string | null; go?: (view: string) => void; part?: 'lineup' | 'instructions' }) {
+  // Sous-onglet affiché : le onze (et ses consignes d'équipe) ou les consignes individuelles ; les deux sans `part`.
+  const showLineup = part !== 'instructions';
+  const showPi = part !== 'lineup';
   const gameTactic = typeof snap?.tactic?.name === 'string' ? snap.tactic.name : null;
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
@@ -198,9 +201,9 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
           <span className="rounded-full bg-eau/20 px-2.5 py-0.5 text-xs font-bold text-canard">{t(pick.kept ? 'fm.tac.baseKept' : pick.project ? 'fm.tac.projectBest' : 'fm.tac.bestNow')}</span>
         )}
         {auto && pick?.kept && !fromGame && (
-          <p className="w-full text-xs text-brun">
-            {t('fm.tac.baseKeptHelp', { other: `${pick.kept.form} ${styleName(pick.kept.style)}`, gain: nf1.format(Math.max(0, pick.kept.gain) / 2), need: nf1.format(SWITCH_POINTS / 2) })}
-          </p>
+          <div className="-mt-2 w-full">
+            <More>{t('fm.tac.baseKeptHelp', { other: `${pick.kept.form} ${styleName(pick.kept.style)}`, gain: nf1.format(Math.max(0, pick.kept.gain) / 2), need: nf1.format(SWITCH_POINTS / 2) })}</More>
+          </div>
         )}
         {gameFormation && <span className="rounded-full bg-eau/20 px-2.5 py-0.5 text-xs text-canard">{t('fm.tac.inGame', { form: gameFormation })}</span>}
         {local?.ref && <span className="rounded-full bg-eau/20 px-2.5 py-0.5 text-xs text-canard">{t('fm.tac.localRef')}</span>}
@@ -208,6 +211,8 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
       </div>
       
 
+      {showLineup && (
+      <>
       {opp && best && !fromGame && (
         <section className="card">
           <h2 className="text-xl font-semibold">{t('fm.tac.matchTitle', { name: opp.name ?? t('fm.opp.club') })}</h2>
@@ -240,7 +245,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
               </button>
             )}
           </div>
-          <p className="mt-2 text-xs text-brun">{t(opp.formations.faced?.length ? 'fm.tac.matchHelpMeasured' : 'fm.tac.matchHelp')}</p>
+          <More>{t(opp.formations.faced?.length ? 'fm.tac.matchHelpMeasured' : 'fm.tac.matchHelp')}</More>
         </section>
       )}
 
@@ -377,12 +382,12 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                 </tbody>
               </table>
             </div>
-            <p className="mt-2 text-xs text-brun">{t(fromGame ? 'fm.tac.pitchHelpGame' : 'fm.tac.pitchHelp')}</p>
+            <More>{t(fromGame ? 'fm.tac.pitchHelpGame' : 'fm.tac.pitchHelp')}</More>
           </div>
         </div>
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-2">
         <section className="card">
           <h2 className="text-xl font-semibold">{t('fm.tac.balance')}</h2>
           <ul className="mt-3 space-y-3">
@@ -399,7 +404,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-xs text-brun">{t('fm.tac.balanceHelp')}</p>
+          <More>{t('fm.tac.balanceHelp')}</More>
 
           <h3 className="mt-6 font-semibold">{t('fm.tac.forms')}</h3>
           <ol className="mt-2 space-y-1 text-sm">
@@ -429,32 +434,12 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
           </div>
           <p className="mt-3 text-xs text-brun">{t('fm.tac.teamHelp')}</p>
         </section>
-        <section className="card">
-          <h2 className="text-xl font-semibold">{opp?.name ? t('fm.tac.oppTitle', { name: opp.name }) : t('fm.opp.club')}</h2>
-          {opp ? (
-            <>
-              <p className="mt-1 text-sm text-brun">
-                {[opp.formations.ip[0] ? t('fm.opp.withBall', { value: opp.formations.ip[0].form }) : opp.manager.formation, opp.formations.oop[0] && t('fm.opp.withoutBall', { value: opp.formations.oop[0].form }), opp.manager.mentality, opp.manager.pressing && t('fm.opp.pressShort', { value: opp.manager.pressing }), opp.manager.marking && t('fm.opp.marking', { value: opp.manager.marking })]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </p>
-              <ul className="mt-2 space-y-1 text-sm">
-                {opp.advice.map((a) => (
-                  <li key={a.id}>• {t(`fm.opp.advice.${a.id}`, { name: a.name })}</li>
-                ))}
-              </ul>
-              {go && (
-                <button type="button" className="mt-2 text-sm font-bold text-eau-fonce hover:underline" onClick={() => go('opponent')}>
-                  {t('fm.tac.oppMore')} →
-                </button>
-              )}
-            </>
-          ) : (
-            <p className="mt-1 text-sm text-brun">{t('fm.opp.none')}</p>
-          )}
-        </section>
       </div>
 
+      </>
+      )}
+
+      {showPi && (
       <section className="card">
         <h2 className="text-xl font-semibold">{t('fm.pi.title')}</h2>
         <p className="mt-1 text-sm text-brun">{budget < 3 ? t('fm.pi.budgetLow', { count: budget }) : t('fm.pi.budgetFull')}</p>
@@ -507,8 +492,9 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
             })}
         </div>
         <p className="mt-3 text-xs text-brun">{t('fm.pi.help')}</p>
-        <p className="mt-1 text-xs text-brun">{t('fm.pi.locks')}</p>
+        <More>{t('fm.pi.locks')}</More>
       </section>
+      )}
     </div>
   );
 }

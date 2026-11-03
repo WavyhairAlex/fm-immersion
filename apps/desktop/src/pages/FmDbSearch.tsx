@@ -15,7 +15,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { fmData } from "../lib/data";
-import { Fit, Level, Tag, useNames, type Tone } from "./FmUi";
+import { Fit, Level, More, Tag, useNames, type Tone } from "./FmUi";
 
 type Engine = Parameters<typeof rankTargets>[0];
 
@@ -200,7 +200,7 @@ export function FmDbSearch({
           {t("fm.bridge.hide")}
         </button>
       </div>
-      <p className="help">{t("fm.dbSearch.help")}</p>
+      <More>{t("fm.dbSearch.help")}</More>
 
       <div className="mt-3">
         <p className="text-xs font-bold text-canard">

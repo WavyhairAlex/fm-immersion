@@ -33,7 +33,7 @@ const isNewer = (a: string, b: string) => {
 };
 
 /** Installation et mise à jour du plugin FM27 depuis GitHub Releases (sur demande, jeu fermé). */
-export function FmBridge({ dataFolder }: { dataFolder: string }) {
+export function FmBridge({ dataFolder, onHealth }: { dataFolder: string; onHealth?: (ok: boolean) => void }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [gameDir, setGameDir] = useState(read(GAME_DIR_KEY) ?? '');
@@ -73,6 +73,11 @@ export function FmBridge({ dataFolder }: { dataFolder: string }) {
 
   // Tout va bien : une seule ligne discrète. La carte complète reste affichée dès qu'il y a quelque chose à faire.
   const healthy = !!status?.gameFound && status.bepinex && !!installed && (upToDate || latest.isError);
+  // Signale à l'en-tête si le plugin demande une action (réglages ouverts d'office, pastille sur le bouton).
+  const known = !gameDir || !!status;
+  useEffect(() => {
+    if (known) onHealth?.(healthy);
+  }, [known, healthy, onHealth]);
   if (gameDir && !status) return null;
   if (healthy && !open)
     return (
@@ -86,7 +91,7 @@ export function FmBridge({ dataFolder }: { dataFolder: string }) {
     );
 
   return (
-    <section className="card mt-6 p-5">
+    <section className="rounded-xl bg-creme/60 p-4 ring-1 ring-canard/10">
       <div className="flex items-start justify-between gap-3">
         <h2 className="font-display text-lg font-semibold">{t('fm.bridge.title')}</h2>
         {healthy && (

@@ -53,7 +53,7 @@ const SECTIONS = [
 const PARTS: Record<string, readonly string[]> = {
   squad: ['squad', 'dressing', 'loans'],
   analysis: ['analysis', 'roles', 'progression'],
-  tactic: ['tactic', 'depth', 'effectiveness'],
+  tactic: ['tactic', 'instructions', 'depth', 'effectiveness'],
   opponent: ['opponent', 'calendar'],
   mercato: ['mercato', 'targets'],
   finances: ['finances', 'wages', 'contracts'],
@@ -67,10 +67,10 @@ const pageOf = (v: string): View => (isView(v) ? v : ((Object.keys(PARTS).find((
 const VIEW_KEY = 'simloom.fm.view';
 /** Nom d'un onglet : son nom propre s'il regroupe plusieurs écrans, sinon celui de l'écran. */
 const pageLabel = (t: (k: string, o?: Record<string, unknown>) => string, v: string) => t(`fm.pages.${v}`, { defaultValue: t(`fm.views.${v}`) });
-const readView = (): View => {
+/** Dernier écran ouvert : un onglet, ou une partie d'onglet regroupé (rouverte telle quelle). */
+const readView = (): string => {
   try {
-    const v = localStorage.getItem(VIEW_KEY);
-    return v ? pageOf(v) : 'home';
+    return localStorage.getItem(VIEW_KEY) ?? 'home';
   } catch {
     return 'home';
   }
@@ -99,21 +99,23 @@ export function FmSave() {
     queryFn: () => invoke<string | null>('fm_default_folder'),
   });
 
-  const [view, setView] = useState<View>(readView);
+  // Onglet affiché et, pour un onglet regroupé, la partie choisie (sous-onglet) ; sinon sa première partie.
+  const [current, setCurrent] = useState<string>(readView);
+  const view = pageOf(current);
   const go = (v: string) => {
-    const page = pageOf(v);
-    setView(page);
+    setCurrent(v);
     try {
-      localStorage.setItem(VIEW_KEY, page);
+      localStorage.setItem(VIEW_KEY, v);
     } catch {
       /* stockage indisponible : l'écran n'est pas retenu */
     }
-    // Écran regroupé : on descend jusqu'à sa partie une fois l'onglet affiché.
-    if (v !== page) setTimeout(() => document.getElementById(`part-${v}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-    else window.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0 });
   };
   const section = SECTIONS.find((s) => (s.views as readonly string[]).includes(view)) ?? SECTIONS[0];
   const [folder, setFolder] = useState('');
+  // Réglages repliés quand tout va bien ; ouverts d'office sans instantané ou quand le plugin demande une action.
+  const [settingsToggle, setSettingsToggle] = useState<boolean | null>(null);
+  const [bridgeOk, setBridgeOk] = useState<boolean | null>(null);
   useEffect(() => {
     setFolder(settings?.fmFolder ?? defaultFolder ?? '');
   }, [settings?.fmFolder, defaultFolder]);
@@ -240,7 +242,9 @@ export function FmSave() {
       case 'loans':
         return <FmLoans snap={snapshot.data} />;
       case 'tactic':
-        return <FmTactic snap={snapshot.data} go={go} players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} lineupStatus={(snapshot.data as { collecte?: { compo?: string } }).collecte?.compo ?? null} />;
+        return <FmTactic part="lineup" snap={snapshot.data} go={go} players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} lineupStatus={(snapshot.data as { collecte?: { compo?: string } }).collecte?.compo ?? null} />;
+      case 'instructions':
+        return <FmTactic part="instructions" snap={snapshot.data} go={go} players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} lineupStatus={(snapshot.data as { collecte?: { compo?: string } }).collecte?.compo ?? null} />;
       case 'opponent':
         return <FmOpponent snap={snapshot.data} />;
       case 'calendar':
@@ -273,12 +277,13 @@ export function FmSave() {
         return null;
     }
   };
+  const settingsOpen = settingsToggle ?? ((!isLoading && !snapshot) || bridgeOk === false);
   const dateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' });
   const stampFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'short', timeStyle: 'short' });
 
   return (
     <div className="w-full px-6 py-4 xl:px-10">
-      {/* En-tête compact : partie et contexte à gauche, import et plugin à droite. */}
+      {/* En-tête sur une ligne : partie, club et date de jeu à gauche ; état de l'import et réglages à droite. */}
       <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
         <div className="flex min-w-0 flex-wrap items-baseline gap-x-3">
           <Link to="/" className="text-sm font-bold text-canard/70 hover:text-canard" title={t('fm.back')}>
@@ -297,24 +302,42 @@ export function FmSave() {
             </span>
           )}
         </div>
+        <div className="flex items-center gap-3">
+          {snapshot && (
+            <span className="flex items-center gap-1.5 text-xs text-brun" title={t('fm.autoImport')}>
+              <span className={`h-2 w-2 rounded-full ${importSnap.isError ? 'bg-corail' : 'bg-eau'}`} aria-hidden />
+              {t('fm.sync', { time: stampFmt.format(new Date(snapshot.importedAt)) })}
+            </span>
+          )}
+          <button
+            type="button"
+            className="btn-secondary flex items-center gap-1.5 px-3 py-1 text-sm"
+            aria-expanded={settingsOpen}
+            onClick={() => setSettingsToggle(!settingsOpen)}
+          >
+            {bridgeOk === false && <span className="h-2 w-2 rounded-full bg-ambre" aria-hidden />}
+            {t('fm.settings')}
+          </button>
+        </div>
+      </div>
+      {/* Réglages de la partie : ouverts d'office tant que rien n'est importé ou que le plugin demande une action. */}
+      <div className={settingsOpen ? 'card mt-3 space-y-3 p-4' : 'hidden'}>
         <form
-          className="flex flex-wrap items-center gap-3"
+          className="flex flex-wrap items-end gap-x-5 gap-y-3"
           onSubmit={(e) => {
             e.preventDefault();
             importSnap.mutate({});
           }}
         >
-          <details className="relative text-sm" open={!snapshot}>
-            <summary className="cursor-pointer font-bold text-canard/70">{t('fm.folder')}</summary>
-            <div className={snapshot ? 'absolute right-0 z-20 mt-2 w-[28rem] rounded-xl bg-white p-3 shadow-lg ring-1 ring-canard/10' : 'mt-2'}>
-              <input className="input w-full" required value={folder} onChange={(e) => setFolder(e.target.value)} aria-label={t('fm.folder')} />
-              <p className="mt-1 text-xs text-canard/60">{t('fm.folderHelp')}</p>
-            </div>
-          </details>
-          <label className="flex items-center gap-2 text-sm">
-            <span className="font-bold text-canard/70">{t('fm.saveFile.label')}</span>
+          <label className="block min-w-[18rem] flex-1 text-sm font-bold text-canard">
+            {t('fm.folder')}
+            <input className="input mt-1 w-full font-normal" required value={folder} onChange={(e) => setFolder(e.target.value)} />
+            <span className="mt-1 block text-xs font-normal text-brun">{t('fm.folderHelp')}</span>
+          </label>
+          <label className="block text-sm font-bold text-canard">
+            {t('fm.saveFile.label')}
             <select
-              className="input max-w-[16rem] py-1 text-sm"
+              className="input mt-1 block max-w-[16rem] py-1.5 font-normal"
               value={linked}
               disabled={link.isPending}
               onChange={(e) => link.mutate(e.target.value)}
@@ -328,26 +351,32 @@ export function FmSave() {
                 </option>
               ))}
             </select>
+            {linkedFile?.modifiedMs != null && (
+              <span className="mt-1 block text-xs font-normal text-brun">{t('fm.saveFile.saved', { date: stampFmt.format(new Date(linkedFile.modifiedMs)) })}</span>
+            )}
           </label>
-          {linkedFile?.modifiedMs != null && (
-            <span className="text-xs text-brun">{t('fm.saveFile.saved', { date: stampFmt.format(new Date(linkedFile.modifiedMs)) })}</span>
-          )}
-          <label className="flex items-center gap-1.5 text-xs text-brun" title={t('fm.abilities.help')}>
-            <input
-              type="checkbox"
-              checked={!!settings?.fmReadAbilities}
-              onChange={async (e) => {
-                await fmData.updateSettings(saveId, { fmReadAbilities: e.target.checked });
-                qc.invalidateQueries({ queryKey: [...key, 'settings'] });
-              }}
-            />
-            {t('fm.abilities.toggle')}
-          </label>
-          <span className="text-xs text-brun">{t('fm.autoImport')}</span>
-          <button className="btn-primary px-4 py-1.5 text-sm" disabled={importSnap.isPending || !folder}>
-            {t('fm.import')}
-          </button>
+          <div className="space-y-1.5">
+            <label className="flex items-center gap-1.5 text-sm text-canard" title={t('fm.abilities.help')}>
+              <input
+                type="checkbox"
+                checked={!!settings?.fmReadAbilities}
+                onChange={async (e) => {
+                  await fmData.updateSettings(saveId, { fmReadAbilities: e.target.checked });
+                  qc.invalidateQueries({ queryKey: [...key, 'settings'] });
+                }}
+              />
+              {t('fm.abilities.toggle')}
+            </label>
+            <div className="flex items-center gap-3">
+              <button className="btn-primary px-4 py-1.5 text-sm" disabled={importSnap.isPending || !folder}>
+                {t('fm.import')}
+              </button>
+              <span className="text-xs text-brun">{t('fm.autoImport')}</span>
+            </div>
+          </div>
         </form>
+        <FmBridge dataFolder={folder} onHealth={setBridgeOk} />
+        <FmMemory />
       </div>
       {other && (
         <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-white px-4 py-3 text-sm ring-1 ring-corail/40" role="alert">
@@ -359,9 +388,6 @@ export function FmSave() {
         </div>
       )}
       {importSnap.isError && !other && <p className="mt-2 text-sm text-corail">{t('fm.importError', { reason: String(importSnap.error?.message ?? importSnap.error) })}</p>}
-
-      <FmBridge dataFolder={folder} />
-      <FmMemory />
 
       {!isLoading && !snapshot && (
         <div className="card mt-6 flex flex-col items-center gap-3 py-10 text-center">
@@ -429,8 +455,8 @@ export function FmSave() {
           )}
           </div>
           <div className="mt-4 lg:mt-0">
-            <ViewHeader section={section.id} view={view} />
-            <PageParts page={view} go={go} render={part} />
+            <ViewHeader section={section.id} view={view} part={(PARTS[view] ?? [view]).includes(current) ? current : view} />
+            <PageParts page={view} current={current} go={go} render={part} />
             {STEPPED.has(section.id) && <NextStep views={section.views} view={view} go={go} />}
           </div>
           </div>
@@ -441,40 +467,44 @@ export function FmSave() {
   );
 }
 
-/** Parties d'un onglet, à la suite : la première sans titre (l'en-tête de l'onglet suffit), les suivantes titrées. */
-function PageParts({ page, go, render }: { page: string; go: (v: string) => void; render: (v: string) => ReactNode }) {
+/** Parties d'un onglet regroupé : une à la fois, choisie par des sous-onglets (la première par défaut). */
+function PageParts({ page, current, go, render }: { page: string; current: string; go: (v: string) => void; render: (v: string) => ReactNode }) {
   const { t } = useTranslation();
   const parts = PARTS[page] ?? [page];
+  const active = parts.includes(current) ? current : parts[0]!;
   return (
     <>
       {parts.length > 1 && (
-        <p className="-mt-2 mb-4 flex flex-wrap items-center gap-2 text-sm text-brun">
-          {t('fm.onThisPage')}
+        <div className="mb-5 flex flex-wrap gap-1 border-b border-canard/10" role="tablist" aria-label={t('fm.onThisPage')}>
           {parts.map((v) => (
-            <button key={v} type="button" className="pill hover:bg-eau/40" onClick={() => go(v)}>
-              {t(`fm.views.${v}`)}
+            <button
+              key={v}
+              type="button"
+              role="tab"
+              aria-selected={v === active}
+              onClick={() => go(v)}
+              className={`-mb-px rounded-t-lg border-b-2 px-3 py-1.5 text-sm font-bold ${v === active ? 'border-eau-fonce text-canard' : 'border-transparent text-canard/60 hover:text-canard'}`}
+            >
+              {t(`fm.subtabs.${v}`, { defaultValue: t(`fm.views.${v}`) })}
             </button>
           ))}
-        </p>
+        </div>
       )}
-      {parts.map((v, i) => (
-        <section key={v} id={`part-${v}`} className={i ? 'mt-10 scroll-mt-4' : 'scroll-mt-4'}>
-          {i > 0 && <h2 className="mb-3 border-t border-canard/10 pt-6 text-xl font-semibold">{t(`fm.views.${v}`)}</h2>}
-          {render(v)}
-        </section>
-      ))}
+      <section key={active} role={parts.length > 1 ? 'tabpanel' : undefined}>
+        {render(active)}
+      </section>
     </>
   );
 }
 
 /** En-tête commun à tous les écrans : section, nom de l'écran et la question à laquelle il répond. */
-function ViewHeader({ section, view }: { section: string; view: string }) {
+function ViewHeader({ section, view, part }: { section: string; view: string; part: string }) {
   const { t } = useTranslation();
   return (
     <header className="mb-4">
       {section !== view && <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t(`fm.sections.${section}`)}</p>}
       <h2 className="text-2xl font-semibold">{pageLabel(t, view)}</h2>
-      <p className="mt-0.5 max-w-3xl text-sm text-brun">{t(`fm.pageIntro.${view}`, { defaultValue: t(`fm.intro.${view}`) })}</p>
+      <p className="mt-0.5 max-w-3xl text-sm text-brun">{t(`fm.intro.${part}`)}</p>
     </header>
   );
 }
@@ -508,6 +538,7 @@ function SquadTable({ players, folder }: { players: FmPlayer[]; folder: string }
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'level', desc: true });
   const money = new Intl.NumberFormat(i18n.resolvedLanguage, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
   const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium' });
+  const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
   const rows = useMemo(() => {
     const list = line ? players.filter((p) => p.line === line) : players;
@@ -587,7 +618,7 @@ function SquadTable({ players, folder }: { players: FmPlayer[]; folder: string }
                 </td>
                 <td className="px-3 py-2">{p.age ?? '–'}</td>
                 <td className="px-3 py-2 font-bold">
-                  {p.level?.toFixed(1) ?? '–'}
+                  {p.level != null ? nf1.format(p.level) : '–'}
                   {p.stars?.current != null && (
                     <span className="ml-2 text-xs font-normal text-brun" title={t('fm.col.starsHelp')}>
                       ★ {p.stars.current}

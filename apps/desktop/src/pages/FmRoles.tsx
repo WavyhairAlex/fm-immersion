@@ -2,7 +2,7 @@ import { POS_LABEL, POS_ORDER, roleMatrix, type FmPlayer, type Line, type Phase 
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
-import { Chips, Empty, Fit, fitPct, Panel, Tag, useNames } from './FmUi';
+import { Chips, Empty, Fit, fitPct, Panel, Tag, useNames, More } from './FmUi';
 
 const OPTS_KEY = 'simloom.fm.matrix';
 interface Opts {
@@ -46,7 +46,7 @@ export function FmRoles({ players, folder }: { players: FmPlayer[]; folder: stri
   return (
     <div className="space-y-4">
       <Panel title={t('fm.roles.gridTitle')}>
-        <p className="help">{t('fm.roles.help', { phase: t(`fm.tac.phase.${opts.phase}`).toLowerCase() })}</p>
+        <More>{t('fm.roles.help', { phase: t(`fm.tac.phase.${opts.phase}`).toLowerCase() })}</More>
         <div className="mb-3 flex flex-wrap items-center gap-4">
           <Chips
             value={opts.phase}

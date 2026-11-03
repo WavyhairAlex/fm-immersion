@@ -29,11 +29,13 @@ export function Panel({ title, action, children, className = '' }: { title: stri
   );
 }
 
-export function Kpi({ label, value, sub, tone }: { label: string; value: ReactNode; sub?: ReactNode; tone?: 'good' | 'bad' }) {
+/** Chiffre clé. Un zéro (ou `dim`) s'affiche en retrait : rien à signaler, l'œil passe aux tuiles utiles. */
+export function Kpi({ label, value, sub, tone, dim }: { label: string; value: ReactNode; sub?: ReactNode; tone?: 'good' | 'bad'; dim?: boolean }) {
+  const quiet = dim ?? value === 0;
   return (
     <div className="card p-4">
       <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{label}</p>
-      <p className={`mt-1 font-display text-2xl font-semibold ${tone === 'bad' ? 'text-corail' : ''}`}>{value}</p>
+      <p className={`mt-1 font-display text-2xl font-semibold ${quiet ? 'text-canard/30' : tone === 'bad' ? 'text-corail' : ''}`}>{value}</p>
       {sub && <p className="mt-0.5 text-xs text-brun">{sub}</p>}
     </div>
   );
@@ -201,5 +203,16 @@ export function TeamCards({ inPossession, outOfPossession, wide = false }: { inP
         </p>
       ))}
     </div>
+  );
+}
+
+/** Explication repliée (« Comment c'est calculé ») : l'écran montre le résultat, le détail reste à un clic. */
+export function More({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
+  return (
+    <details className="mt-2 max-w-3xl text-xs text-brun">
+      <summary className="w-fit cursor-pointer select-none font-bold text-canard/60 hover:text-canard">{t('fm.howItWorks')}</summary>
+      <div className="mt-1">{children}</div>
+    </details>
   );
 }

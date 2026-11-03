@@ -21,6 +21,7 @@ import {
   Empty,
   Fit,
   Level,
+  More,
   Panel,
   Tag,
   useCoach,
@@ -157,7 +158,7 @@ export function FmTargets({
           ) : undefined
         }
       >
-        <p className="help">{t("fm.targets.help")}</p>
+        <More>{t("fm.targets.help")}</More>
         {ranked.length ? (
           <div className="overflow-x-auto">
             <table className="data-table">

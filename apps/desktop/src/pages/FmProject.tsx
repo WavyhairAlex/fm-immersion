@@ -2,7 +2,7 @@ import { FORMATIONS, POS_LABEL, TARGETS, buildProject, evolutionPlan, recruitAtt
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
-import { Empty, Fit, Kpi, Panel, Pos, Tag, useCoach, useNames } from './FmUi';
+import { Empty, Fit, Kpi, Panel, Pos, Tag, useCoach, useNames, More } from './FmUi';
 
 const STATUS_TONE = { ready: 'good', develop: 'info', recruit: 'bad' } as const;
 const ICON = { good: '✓', warn: '~', bad: '✗' } as const;
@@ -44,7 +44,7 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
     <div className="space-y-4">
       {evo && (
         <Panel title={t('fm.evo.title')}>
-          <p className="-mt-1 mb-3 text-sm text-brun">{t('fm.evo.help')}</p>
+          <More>{t('fm.evo.help')}</More>
           {evo.extend.length > 0 && (
             <p className="mb-3 rounded-xl bg-canard/10 px-3 py-2 text-sm">
               <b>{t('fm.evo.extendFirst')}</b> {evo.extend.map((a) => `${a.player.name} (${a.player.contractEnd ? dateOf(a.player.contractEnd.slice(0, 10)) : '–'})`).join(', ')}
@@ -76,7 +76,7 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
               </li>
             ))}
           </ol>
-          <p className="mt-2 text-xs text-brun">{t('fm.evo.foot')}</p>
+          <More>{t('fm.evo.foot')}</More>
         </Panel>
       )}
       <Panel title={t('fm.proj.coach')}>
