@@ -1171,7 +1171,8 @@
       "matchesCol": "Matches",
       "scheduleFocus": "Schedule Focus",
       "workloadCol": "Workload",
-      "upcomingHelp": "Set ahead in the game's Training Schedule screen: one Schedule Focus and one workload per week. Light in two-match weeks, medium with one match, heavy with no match and early in pre-season. Beyond the next known fixtures, Archivix assumes a Saturday match."
+      "upcomingHelp": "Set ahead in the game's Training Schedule screen: one Schedule Focus and one workload per week. Light in two-match weeks, medium with one match, heavy with no match and early in pre-season. Beyond the next known fixtures, Archivix assumes a Saturday match.",
+      "reasonHint": "Hover a player's intensity to see why it is advised."
     },
     "intro": {
       "home": "What needs your attention today, the styles that suit the squad, your best players and your youngsters.",

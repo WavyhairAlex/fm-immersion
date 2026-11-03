@@ -20,7 +20,7 @@ function Cell({ r, k }: { r: PlayerStatReport; k: StatKey }) {
   const digits = PCT.has(k) || k === 'mistakes' ? 0 : k === 'distance90' ? 1 : 2;
   const txt = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(v) + (PCT.has(k) ? ' %' : '');
   const rank = r.marks[k]?.rank;
-  const cls = rank == null ? 'text-canard' : rank >= 0.75 ? 'bg-eau-fonce text-white' : rank <= 0.25 ? 'bg-corail/20 text-canard' : 'bg-canard/10 text-canard';
+  const cls = rank == null ? 'text-canard' : rank >= 0.75 ? 'bg-eau-fonce text-white' : rank <= 0.25 ? 'bg-corail/20 text-canard' : 'text-canard';
   return <span className={`inline-block min-w-[2.8rem] rounded-full px-2 py-0.5 text-center text-xs font-bold tabular-nums ${cls}`}>{txt}</span>;
 }
 
@@ -144,15 +144,15 @@ export function FmStats({ snap, players, history }: { snap: FmSnapshot; players:
             <span className="inline-block h-3 w-5 rounded-full bg-eau-fonce" /> {t('fm.stats.legend.best')}
           </span>
           <span className="flex items-center gap-1">
-            <span className="inline-block h-3 w-5 rounded-full bg-canard/10" /> {t('fm.stats.legend.mid')}
+            <span className="inline-block h-3 w-5 rounded-full ring-1 ring-canard/20" /> {t('fm.stats.legend.mid')}
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block h-3 w-5 rounded-full bg-corail/20" /> {t('fm.stats.legend.worst')}
           </span>
           <span>{t('fm.stats.legend.sort')}</span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="data-table">
+        <div className="table-scroll">
+          <table className="data-table wide">
             <thead className="text-left text-canard/70">
               <tr>
                 <th className="px-2 py-1">{t('fm.stats.col.player')}</th>
@@ -191,7 +191,7 @@ export function FmStats({ snap, players, history }: { snap: FmSnapshot; players:
                     </td>
                   )}
                   <td className="px-2 py-1.5 text-xs">
-                    {r.weaknesses.length > 0 && <div className="text-brun">{marks(r.weaknesses)}</div>}
+                    {r.weaknesses.length > 0 && <span className="mr-1.5 text-brun">{marks(r.weaknesses)}</span>}
                     {r.focus ? <Tag tone="warn">{t(`fm.train.focus.${r.focus}`)}</Tag> : !r.weaknesses.length && <span className="text-canard/40">–</span>}
                   </td>
                 </tr>
@@ -212,7 +212,7 @@ function TrendCell({ tr, label }: { tr: PlayerTrend | undefined; label: (k: Stat
   if (!tr) return <span className="text-canard/40">–</span>;
   if (!tr.improved.length && !tr.declined.length) return <span className="text-brun">=</span>;
   return (
-    <div className="space-y-0.5">
+    <div className="flex gap-2">
       {tr.improved.length > 0 && <div className="font-bold text-eau-fonce">↑ {tr.improved.slice(0, 2).map((x) => label(x.key)).join(', ')}</div>}
       {tr.declined.length > 0 && <div className="text-brun">↓ {tr.declined.slice(0, 2).map((x) => label(x.key)).join(', ')}</div>}
     </div>

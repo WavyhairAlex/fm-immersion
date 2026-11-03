@@ -447,18 +447,17 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
               </>
             )}
           </p>
-          <div className="overflow-x-auto">
-            <table className="data-table">
+          <div className="table-scroll">
+            <table className="data-table wide">
               <thead className="text-left text-canard/70">
                 <tr>
-                  <th className="px-2 py-1">{t('fm.train.inGame')}</th>
                   <th className="px-2 py-1">{t('fm.prog.player')}</th>
+                  <th className="px-2 py-1">{t('fm.train.inGame')}</th>
                   <th className="px-2 py-1">{t('fm.train.roleIp')}</th>
                   <th className="px-2 py-1">{t('fm.train.roleOop')}</th>
                   <th className="px-2 py-1">{t('fm.train.focusCol')}</th>
                   <th className="px-2 py-1">{t('fm.train.intensity')}</th>
                   <th className="px-2 py-1 text-right">{t('fm.proj.fit')}</th>
-                  <th className="px-2 py-1">{t('fm.train.note')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -486,14 +485,14 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
                     );
                   return (
                     <tr key={x.player.id} className={`border-t border-canard/5 ${status === 'change' ? 'bg-ambre/10' : ''}`}>
+                      <td className="px-2 py-1.5 font-bold">
+                        {x.player.name} <Pos player={x.player} />
+                      </td>
                       <td className="px-2 py-1.5">
                         <label className="flex items-center gap-1.5">
                           <input type="checkbox" checked={status === 'ok'} onChange={(e) => setups.mark([x.player.id], e.target.checked)} />
                           {status === 'change' ? <Tag tone="warn">{t('fm.train.setupStatus.change')}</Tag> : status === 'todo' ? <span className="whitespace-nowrap text-xs text-brun">{t('fm.train.setupStatus.todo')}</span> : null}
                         </label>
-                      </td>
-                      <td className="px-2 py-1.5 font-bold">
-                        {x.player.name} <Pos player={x.player} />
                       </td>
                       <td className="px-2 py-1.5">{cell('ip', ip ? names.role(ip) : '–')}</td>
                       <td className="px-2 py-1.5">{cell('oop', oop ? names.role(oop) : '–')}</td>
@@ -505,15 +504,13 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
                             <Tag>{t('fm.train.focusFromStats')}</Tag>
                           </>
                         )}
-                        <br />
-                        <span className="text-xs text-brun">{x.weak.map((w) => `${attr(w.key)} ${Math.round(w.value)}`).join(', ')}</span>
+                        <span className="ml-1.5 text-xs text-brun">{x.weak.map((w) => `${attr(w.key)} ${Math.round(w.value)}`).join(', ')}</span>
                       </td>
-                      <td className="px-2 py-1.5">{cell('intensity', <Tag tone={INTENSITY_TONE[a.intensity]}>{t(`fm.train.intensityLevel.${a.intensity}`)}</Tag>)}</td>
+                      <td className="px-2 py-1.5" title={[t(`fm.train.reason.${a.reason}`), a.rusty ? t('fm.train.rusty') : null].filter(Boolean).join(' · ')}>
+                        {cell('intensity', <Tag tone={INTENSITY_TONE[a.intensity]}>{t(`fm.train.intensityLevel.${a.intensity}`)}</Tag>)}
+                      </td>
                       <td className="px-2 py-1.5 text-right">
                         <Fit value={x.fit} />
-                      </td>
-                      <td className="px-2 py-1.5 text-xs text-brun">
-                        {[t(`fm.train.reason.${a.reason}`), a.rusty ? t('fm.train.rusty') : null].filter(Boolean).join(' · ')}
                       </td>
                     </tr>
                   );
@@ -521,8 +518,11 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
               </tbody>
             </table>
           </div>
-          <More>{t('fm.train.setupHelp')}</More>
-          <More>{t('fm.train.individualHelp')}</More>
+          <More>
+            <p>{t('fm.train.setupHelp')}</p>
+            <p className="mt-1">{t('fm.train.individualHelp')}</p>
+            <p className="mt-1">{t('fm.train.reasonHint')}</p>
+          </More>
         </Panel>
       )}
 
