@@ -72,3 +72,18 @@ export const fmStatusSchema = z
   .passthrough();
 
 export type FmStatus = z.infer<typeof fmStatusSchema>;
+
+/** Source des joueurs prêtés dans le bloc `shortlist` (section `cibles` de chemins.json, 03/11/2026). */
+export const LOAN_SOURCE = 'pretes';
+
+/**
+ * Joueurs prêtés lus par le plugin comme une liste de cibles (`Club/PlayersOutOnLoan`, source `pretes`) :
+ * mêmes données que l'effectif, `club` = club où le joueur évolue.
+ */
+export function loanShortlist(snap: FmSnapshot): Record<string, unknown>[] {
+  const list = Array.isArray(snap.shortlist) ? (snap.shortlist as unknown[]) : [];
+  return list.filter((x): x is Record<string, unknown> => {
+    const s = (x as Record<string, unknown> | null)?.sources;
+    return Array.isArray(s) && s.includes(LOAN_SOURCE);
+  });
+}

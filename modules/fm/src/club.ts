@@ -1,7 +1,7 @@
 import { monthsBetween } from './alerts';
 import type { FmPlayer } from './player';
 import { normalizePlayer, toNumber } from './player';
-import type { FmSnapshot } from './snapshot';
+import { loanShortlist, type FmSnapshot } from './snapshot';
 
 /**
  * Vues « club » et « vestiaire » portées de la page Archivix : salaires, contrats, finances,
@@ -194,7 +194,8 @@ export interface Loan {
 
 export function loans(snap: FmSnapshot): Loan[] {
   const raw = Array.isArray(snap.loans) ? (snap.loans as Record<string, unknown>[]) : [];
-  return raw.map((x) => {
+  const verdict = (apps: number | null, rating: number | null): Loan['verdict'] => ((apps ?? 0) < 3 ? 'idle' : (rating ?? 0) >= 6.9 ? 'shines' : 'plays');
+  const out: Loan[] = raw.map((x) => {
     const apps = toNumber(x.loanApps);
     const rating = toNumber(x.loanRating);
     return {
@@ -204,9 +205,27 @@ export function loans(snap: FmSnapshot): Loan[] {
       goals: toNumber(x.loanGoals),
       rating,
       end: str(x.loanEnd),
-      verdict: (apps ?? 0) < 3 ? 'idle' : (rating ?? 0) >= 6.9 ? 'shines' : 'plays',
+      verdict: verdict(apps, rating),
     };
   });
+  // Prêtés lus comme une liste du jeu (source « pretes ») : stats de la saison au club d'accueil.
+  const known = new Set(out.map((l) => l.player.id));
+  for (const x of loanShortlist(snap)) {
+    if (x.id == null || known.has(String(x.id))) continue;
+    const apps = toNumber(x.apps);
+    const rating = toNumber(x.avgRating);
+    const club = str(x.club);
+    out.push({
+      player: normalizePlayer(x as never),
+      club: club && club !== snap.club ? club : null,
+      apps,
+      goals: toNumber(x.goals),
+      rating,
+      end: null,
+      verdict: verdict(apps, rating),
+    });
+  }
+  return out;
 }
 
 /* ---------- Vestiaire ---------- */

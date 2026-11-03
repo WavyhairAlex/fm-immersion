@@ -1,11 +1,13 @@
 {
-  "_aide": "Données supplémentaires lues dans FM27 à chaque instantané, sans recompiler ni réinstaller le plugin. Clé = nom dans l'instantané (bloc custom), valeur = chemin de propriétés FM27 séparées par /. Racines : partie (game.), equipe (équipe du club), club, tactique, joueur (chaque joueur). profond = clés dont la valeur composée (liste, objet) est convertie en JSON. cibles (plugin 0.4.0, réglage LireCibles) : sources des joueurs suivis hors du club, chemin depuis game. ; une source peut renvoyer une liste de joueurs ou de fiches qui en contiennent. Clés stat_<Propriété> (centre de données, 03/11/2026) : toutes les stats de match de la saison par joueur (toutes compétitions), propriétés de PersonReference sans contexte, surtout des totaux ; lues en profond (le jeu renvoie une DynamicReference { PropertyValue, Count }) ; Simloom en déduit les valeurs par 90 et les pourcentages (modules/fm/src/stats.ts).",
+  "_aide": "Données supplémentaires lues dans FM27 à chaque instantané, sans recompiler ni réinstaller le plugin. Clé = nom dans l'instantané (bloc custom), valeur = chemin de propriétés FM27 séparées par /. Racines : partie (game.), equipe (équipe du club), club, tactique, joueur (chaque joueur). profond = clés dont la valeur composée (liste, objet) est convertie en JSON. cibles (plugin 0.4.0, réglage LireCibles) : sources des joueurs suivis hors du club, chemin depuis game. ; une source peut renvoyer une liste de joueurs ou de fiches qui en contiennent. Clés stat_<Propriété> (centre de données, 03/11/2026) : toutes les stats de match de la saison par joueur (toutes compétitions), propriétés de PersonReference sans contexte, surtout des totaux ; lues en profond (le jeu renvoie une DynamicReference { PropertyValue, Count }) ; Simloom en déduit les valeurs par 90 et les pourcentages (modules/fm/src/stats.ts). Source pretes (03/11/2026) : joueurs du club prêtés ailleurs (Club/PlayersOutOnLoan), lus comme les cibles ; Simloom les range dans l'onglet Prêtés, pas dans les cibles.",
   "partie": {},
   "equipe": {
     "formationLaPlusUtilisee": "MostUsedFormation",
     "joursAvantProchainMatch": "NextMatchDaysText",
     "suspensionsEnCours": "AllCompsActiveBans",
-    "nbSuspensionsEnCours": "AllCompsActiveBansCount"
+    "nbSuspensionsEnCours": "AllCompsActiveBansCount",
+    "calendrierListe": "FixtureList{PreviousAmount=0,FutureAmount=60,FixturePadding=0,YearIndex=0}",
+    "calendrierChampionnatRestant": "RemainingLeagueFixtures"
   },
   "club": {
     "reputationDivision": "DivisionReputation"
@@ -162,6 +164,7 @@
     "stat_YellowCards"
   ],
   "cibles": {
+    "pretes": "GameCurrentManagerClubTeam/Club/PlayersOutOnLoan",
     "selection": "GameCurrentManager/HumanPersonSearch{team=@team,Type=0}/PersonList",
     "cibles": "GameCurrentManagerClubTeam/Club/PlayerTargetsList{human=@human}"
   }
