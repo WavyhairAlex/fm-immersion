@@ -294,6 +294,12 @@
         "concedesLess": "Contre ce schéma, ils ne concèdent qu'une occasion franche toutes les {{every}} min ({{minutes}} min observées).",
         "changeStyle": "Changer de style coûte de la compréhension tactique (estimation : −0,2).",
         "changeForm": "Changer de schéma coûte de la compréhension tactique (estimation : −0,3) : proposé seulement sur une faille mesurée d'au moins 270 min."
+      },
+      "team": {
+        "label": "Équipe",
+        "A": "Équipe A",
+        "B": "Équipe B",
+        "help": "Équipe B : le meilleur onze sans les titulaires de l'équipe A, même schéma et même style, pour faire tourner (coupes, matchs rapprochés, fatigue). Note d'équipe : A {{a}}, B {{b}}."
       }
     },
     "nav": "Sections de la partie",

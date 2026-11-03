@@ -294,6 +294,12 @@
         "concedesLess": "Against this formation they concede a clear-cut chance only every {{every}} min ({{minutes}} min observed).",
         "changeStyle": "Changing style costs tactical understanding (estimate: −0.2).",
         "changeForm": "Changing formation costs tactical understanding (estimate: −0.3): only suggested on a weakness measured over at least 270 min."
+      },
+      "team": {
+        "label": "Team",
+        "A": "Team A",
+        "B": "Team B",
+        "help": "Team B: the best XI without Team A's starters, same formation and style, for rotation (cups, congested fixtures, fatigue). Team rating: A {{a}}, B {{b}}."
       }
     },
     "nav": "Save sections",

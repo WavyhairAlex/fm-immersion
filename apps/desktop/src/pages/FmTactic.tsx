@@ -110,8 +110,18 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   const gameTactic = typeof snap?.tactic?.name === 'string' ? snap.tactic.name : null;
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
-  const { engine, local, prefs, update, avail, ranked, style, natural, form, plans, plan, gamePlan, fromGame, auto, pick } = useTacticChoice(players, folder, gameFormation, lineup, gameTactic);
+  const { engine, local, prefs, update, avail, ranked, style, natural, form, plans, plan: planA, gamePlan, fromGame, auto, pick } = useTacticChoice(players, folder, gameFormation, lineup, gameTactic);
   const phase: Phase = prefs.phase ?? 'ip';
+  // Équipe B : le meilleur onze possible sans les titulaires de l'équipe A, même schéma et même style
+  // (rotation, coupes, matchs rapprochés). Au poste, toujours le meilleur joueur restant.
+  const [team, setTeam] = useState<'A' | 'B'>('A');
+  const planB = useMemo(() => {
+    if (!planA || !style) return null;
+    const starters = new Set(planA.slots.flatMap((sl) => (sl.player ? [sl.player.id] : [])));
+    const bForm = FORMATIONS[form] ? form : (pick?.form ?? '4-3-3');
+    return engine.formationPlan(bForm, style, avail.filter((p) => !starters.has(p.id)));
+  }, [engine, planA, style, form, pick, avail]);
+  const plan = team === 'B' && planB ? planB : planA;
   const opp = useMemo(() => (snap ? opponentReport(snap) : null), [snap]);
   // Tactique du match : la meilleure combinaison style × schéma contre le prochain adversaire.
   // Une base, des ajustements : on part de la tactique de base, un changement doit rapporter plus qu'il ne coûte.
@@ -236,9 +246,28 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
 
       {/* Le onze : terrain compact à gauche, liste prête à appliquer dans FM27 à droite. Survoler l'un met l'autre en évidence. */}
       <section className="card">
-          <h2 className="text-xl font-semibold">
-            {form} · {styleName(style)} <span className="text-sm font-normal text-brun">{t('fm.tac.fit', { value: note(plan.score) })}</span>
-          </h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold">
+              {team === 'B' ? plan.form : form} · {styleName(style)} <span className="text-sm font-normal text-brun">{t('fm.tac.fit', { value: note(plan.score) })}</span>
+            </h2>
+            <div className="flex gap-1" role="tablist" aria-label={t('fm.tac.team.label')}>
+              {(['A', 'B'] as const).map((k) => (
+                <button
+                  key={k}
+                  type="button"
+                  role="tab"
+                  aria-selected={team === k}
+                  onClick={() => setTeam(k)}
+                  className={`rounded-full px-3 py-1.5 text-sm font-bold ${team === k ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
+                >
+                  {t(`fm.tac.team.${k}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+          {team === 'B' && planB && planA && (
+            <p className="mt-1 text-sm text-brun">{t('fm.tac.team.help', { a: note(planA.score), b: note(planB.score) })}</p>
+          )}
           <p className="mt-1 text-sm text-brun">
             <span className="mr-2 rounded-full bg-eau/20 px-2 py-0.5 text-xs font-bold text-canard">{t(fromGame ? 'fm.tac.fromGame' : 'fm.tac.suggested')}</span>
             {t(fromGame ? 'fm.tac.fromGameHelp' : gamePlan ? 'fm.tac.suggestedHelpGame' : 'fm.tac.suggestedHelp')}
