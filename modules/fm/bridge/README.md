@@ -12,7 +12,7 @@ le club et le prochain match via le système de bindings de l'interface du jeu, 
 
 | Fichier | Rôle |
 |---|---|
-| `src/Plugin.cs` | Point d'entrée BepInEx, boucle d'instantanés, petit serveur local `http://localhost:8727` (sonde) |
+| `src/Plugin.cs` | Point d'entrée BepInEx, boucle d'instantanés, serveur local facultatif `http://localhost:8727` (sonde, coupé par défaut) |
 | `src/FmBindingReader.cs` | Lecture groupée des bindings (chemins texte, ex. `game.GameCurrentManagerClubTeam/Club/Squad`) |
 | `src/Probe.cs` | Sonde de découverte (`/api/probe`, `/api/properties`, `/api/refprops`) et file du thread principal |
 | `config/chemins.json` | **Données supplémentaires sans recompiler** : chemins lus à chaque instantané (bloc `custom`) |
@@ -24,7 +24,8 @@ Par défaut `Documents\Sports Interactive\Football Manager 27\archivix`. Simloom
 
 Autres clés : `LireTactique` (non par défaut), `LireEfficacite` (non par défaut, expérimental),
 `LireCompo` (non par défaut, expérimental : joueur à chaque poste), `LireJoueursEtendus` (non par défaut, expérimental : moral, hiérarchie, étoiles du staff), `LireCibles` (non par défaut, expérimental : cibles du mercato), `Decouverte` (oui par défaut : rapport
-`archivix\config\decouverte.json`), `RelectureSecondes` (300 par défaut, 60 au minimum : relecture complète même sans
+`archivix\config\decouverte.json`), `ServeurLocal` (non par défaut depuis 0.4.5 : serveur `http://localhost:8727`, sans
+en-tête CORS, inutile pour Simloom ; un port déjà pris n'empêche plus le plugin de démarrer), `RelectureSecondes` (300 par défaut, 60 au minimum : relecture complète même sans
 changement de date).
 
 ## Garde-fou « écran Tactique » (0.3.0)

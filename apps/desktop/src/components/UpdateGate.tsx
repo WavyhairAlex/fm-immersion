@@ -11,12 +11,15 @@ type State =
 
 /**
  * Au démarrage : s'il existe une nouvelle version, on la télécharge, on l'installe
- * et on relance l'appli. Sans réseau ou en cas d'erreur, on démarre normalement.
+ * et on relance l'appli. Sans réseau ou en cas d'erreur (y compris pendant le
+ * téléchargement), on démarre normalement.
  */
 export function UpdateGate({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const [state, setState] = useState<State>(isTauri() && import.meta.env.PROD ? { step: 'checking' } : { step: 'ready' });
 
+  // Une seule recherche, au montage. L'effet ne dépend pas de `state.step` : sinon, le passage à « Installation »
+  // le nettoyait (cancelled = true) et une erreur de téléchargement laissait l'écran bloqué sur « Installation… ».
   useEffect(() => {
     if (state.step !== 'checking') return;
     let cancelled = false;
@@ -46,7 +49,8 @@ export function UpdateGate({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [state.step]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (state.step === 'ready') return <>{children}</>;
 

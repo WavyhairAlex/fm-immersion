@@ -13,16 +13,17 @@ using BepInEx.Unity.IL2CPP;
 namespace Archivix;
 
 // Pont en lecture seule entre FM27 et le compagnon Archivix.
-// GET / (archivix.html à côté de la DLL), GET /api/snapshot, GET /api/discover?q=
+// Serveur local facultatif (réglage ServeurLocal, coupé par défaut depuis 0.4.5) : GET / (archivix.html à côté de la DLL),
+// GET /api/snapshot, GET /api/discover?q=, sondes /api/probe… Simloom ne s'en sert pas : il lit les fichiers JSON.
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.4.4";
+    public const string Version = "0.4.5";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que Simloom renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
     internal static string DataDir = null!;
-    internal static bool ReadTactic = true, ReadEffectiveness, ReadLineup, ReadExtended, ReadTargets, WriteDiscovery = true;
+    internal static bool ReadTactic = true, ReadEffectiveness, ReadLineup, ReadExtended, ReadTargets, WriteDiscovery = true, LocalServer;
     bool _discovered;
     internal static int RereadSeconds = 300;
     const string Prefix = "http://localhost:8727/";
@@ -56,13 +57,32 @@ public class Plugin : BasePlugin
             "Écrire archivix\\config\\decouverte.json (propriétés et contextes du jeu, sans requête au jeu) une fois par lancement.").Value;
         RereadSeconds = Math.Max(60, Config.Bind("Archivix", "RelectureSecondes", 300,
             "Relecture complète au plus tard toutes les N secondes même sans changement de date (60 au minimum).").Value);
-        _http = new HttpListener();
-        _http.Prefixes.Add(Prefix);
-        _http.Start();
+        // 0.4.5 (audit du 03/11/2026) : serveur local coupé par défaut. Ouvert, n'importe quelle page web du navigateur
+        // pouvait l'appeler et déclencher des lectures dans le jeu (/api/probe, /api/squad). Simloom ne s'en sert pas.
+        LocalServer = Config.Bind("Archivix", "ServeurLocal", false,
+            "Ouvrir le serveur local http://localhost:8727 (ancienne page archivix.html et sondes de découverte). Inutile pour Simloom ; à n'activer que pour du diagnostic.").Value;
         AddComponent<MainThread>();
-        new Thread(Serve) { IsBackground = true, Name = "ArchivixHttp" }.Start();
         new Thread(RefreshLoop) { IsBackground = true, Name = "ArchivixRefresh" }.Start();
-        Log.LogInfo($"Archivix Bridge {Version} à l'écoute sur {Prefix}, instantanés dans {DataDir}");
+        if (LocalServer) StartServer();
+        Log.LogInfo($"Archivix Bridge {Version} : instantanés dans {DataDir}" + (_http != null ? $", serveur local sur {Prefix}" : ""));
+    }
+
+    // Un port déjà pris ne doit pas empêcher le plugin de démarrer : les instantanés continuent sans serveur.
+    void StartServer()
+    {
+        try
+        {
+            var http = new HttpListener();
+            http.Prefixes.Add(Prefix);
+            http.Start();
+            _http = http;
+            new Thread(Serve) { IsBackground = true, Name = "ArchivixHttp" }.Start();
+        }
+        catch (Exception e)
+        {
+            _http = null;
+            Log.LogWarning($"Serveur local {Prefix} impossible à ouvrir ({e.Message}) : instantanés seulement.");
+        }
     }
 
     // Vérifie la date de jeu toutes les 10 s ; instantané complet au chargement d'une partie, à chaque nouveau
@@ -168,9 +188,9 @@ public class Plugin : BasePlugin
         }
     }
 
+    // Pas d'en-tête CORS : seule la page servie par le plugin lui-même (même origine) peut lire ses réponses.
     void Handle(HttpListenerContext ctx)
     {
-        ctx.Response.AddHeader("Access-Control-Allow-Origin", "*");
         switch (ctx.Request.Url!.AbsolutePath)
         {
             case "/":
