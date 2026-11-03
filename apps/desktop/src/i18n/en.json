@@ -1419,7 +1419,15 @@
         "mistakes": "Errors → goal",
         "focus": "To work on",
         "possLost90": "Possession lost /90",
-        "points90": "Points /90"
+        "points90": "Points /90",
+        "strengths": "Strengths",
+        "chances90": "Chances created /90",
+        "dribbles90": "Dribbles /90",
+        "shotsOnTargetPct": "Shots on target",
+        "possWon90": "Possession won /90",
+        "fouls90": "Fouls /90",
+        "xgPrevented90": "xG prevented /90",
+        "savePct": "Saves"
       },
       "raw": {
         "Minutes": "Minutes played",
@@ -1505,7 +1513,35 @@
       "allTitle": "All stats for {{name}}",
       "allPick": "Player",
       "allNone": "Full stats arrive with the plugin's next snapshot (updated chemins.json).",
-      "allHelp": "Current season, all competitions, as in the game's Data Centre (totals unless marked /90 or %)."
+      "allHelp": "Current season, all competitions, as in the game's Data Centre (totals unless marked /90 or %).",
+      "legend": {
+        "best": "Top quarter of their line",
+        "mid": "Average",
+        "worst": "Bottom quarter",
+        "sort": "Click a column to sort, hover it for its definition."
+      },
+      "def": {
+        "passPct": "Share of attempted passes that reach a teammate.",
+        "progPass90": "Passes that clearly move the ball towards goal, per 90 minutes.",
+        "keyPass90": "Passes that lead directly to a shot, per 90 minutes.",
+        "chances90": "Clear chances set up for a teammate, per 90 minutes.",
+        "dribbles90": "Successful dribbles, per 90 minutes.",
+        "xgPer90": "Expected goals: quality of shooting chances, per 90 minutes.",
+        "xaPer90": "Expected assists: quality of chances set up, per 90 minutes.",
+        "shotsOnTargetPct": "Share of shots on target.",
+        "press90": "Pressures that win the ball or force an error, per 90 minutes.",
+        "tacklePct": "Share of attempted tackles won.",
+        "interc90": "Opposition passes cut out, per 90 minutes.",
+        "headerPct": "Share of aerial duels won.",
+        "distance90": "Kilometres covered, per 90 minutes.",
+        "possLost90": "Possession lost, per 90 minutes (lower is better).",
+        "possWon90": "Possession won, per 90 minutes.",
+        "fouls90": "Fouls committed, per 90 minutes (lower is better).",
+        "mistakes": "Mistakes leading to an opposition goal (lower is better).",
+        "xgPrevented90": "Goals the keeper prevented relative to shot quality faced, per 90 minutes.",
+        "savePct": "Share of shots on target saved.",
+        "points90": "Points won per match by the team with this player on the pitch."
+      }
     },
     "dbSearch": {
       "title": "Search the whole database",

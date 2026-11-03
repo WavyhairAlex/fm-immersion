@@ -1419,7 +1419,15 @@
         "mistakes": "Erreurs → but",
         "focus": "À travailler",
         "possLost90": "Ballons perdus /90",
-        "points90": "Points /match"
+        "points90": "Points /match",
+        "strengths": "Points forts",
+        "chances90": "Occasions créées /90",
+        "dribbles90": "Dribbles réussis /90",
+        "shotsOnTargetPct": "Tirs cadrés",
+        "possWon90": "Ballons récupérés /90",
+        "fouls90": "Fautes /90",
+        "xgPrevented90": "xG évités /90",
+        "savePct": "Arrêts"
       },
       "raw": {
         "Minutes": "Minutes jouées",
@@ -1505,7 +1513,35 @@
       "allTitle": "Toutes les stats de {{name}}",
       "allPick": "Joueur",
       "allNone": "Les stats complètes arrivent avec le prochain instantané du plugin (chemins.json à jour).",
-      "allHelp": "Saison en cours, toutes compétitions, valeurs du Centre de données du jeu (totaux, sauf mention « /90 » ou « % »)."
+      "allHelp": "Saison en cours, toutes compétitions, valeurs du Centre de données du jeu (totaux, sauf mention « /90 » ou « % »).",
+      "legend": {
+        "best": "Meilleur quart de sa ligne",
+        "mid": "Dans la moyenne",
+        "worst": "Moins bon quart",
+        "sort": "Clique sur une colonne pour trier, survole-la pour sa définition."
+      },
+      "def": {
+        "passPct": "Part des passes tentées qui arrivent à un coéquipier.",
+        "progPass90": "Passes qui font avancer nettement le ballon vers le but adverse, par 90 minutes.",
+        "keyPass90": "Passes qui mènent directement à un tir, par 90 minutes.",
+        "chances90": "Occasions franches offertes à un coéquipier, par 90 minutes.",
+        "dribbles90": "Dribbles réussis, par 90 minutes.",
+        "xgPer90": "Buts attendus : qualité des occasions de tir, par 90 minutes.",
+        "xaPer90": "Passes décisives attendues : qualité des occasions offertes, par 90 minutes.",
+        "shotsOnTargetPct": "Part des tirs cadrés.",
+        "press90": "Pressings qui récupèrent le ballon ou forcent une erreur, par 90 minutes.",
+        "tacklePct": "Part des tacles tentés qui sont réussis.",
+        "interc90": "Passes adverses coupées, par 90 minutes.",
+        "headerPct": "Part des duels aériens gagnés.",
+        "distance90": "Kilomètres parcourus, par 90 minutes.",
+        "possLost90": "Ballons perdus, par 90 minutes (moins = mieux).",
+        "possWon90": "Ballons récupérés, par 90 minutes.",
+        "fouls90": "Fautes commises, par 90 minutes (moins = mieux).",
+        "mistakes": "Erreurs qui ont mené à un but adverse (moins = mieux).",
+        "xgPrevented90": "Buts évités par le gardien par rapport à la qualité des tirs subis, par 90 minutes.",
+        "savePct": "Part des tirs cadrés arrêtés.",
+        "points90": "Points pris par l'équipe par match quand il joue."
+      }
     },
     "dbSearch": {
       "title": "Chercher dans toute la base",

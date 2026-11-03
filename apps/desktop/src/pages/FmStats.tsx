@@ -1,11 +1,16 @@
-import { matchStatsFull, MIN_STAT_MINUTES, RAW_GROUPS, statsBoard, type FmPlayer, type FmSnapshot, type PlayerStatReport, type StatKey } from '@simloom/module-fm';
+import { matchStatsFull, MIN_STAT_MINUTES, RAW_GROUPS, STAT_METRICS, statsBoard, type FmPlayer, type FmSnapshot, type PlayerStatReport, type StatKey, type StatMark } from '@simloom/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Empty, Kpi, Panel, Pos, Tag } from './FmUi';
+import { Chips, Empty, Kpi, Panel, Pos, Tag } from './FmUi';
 
+type LineFilter = 'all' | 'GB' | 'DEF' | 'MIL' | 'ATT';
 const LINE_ORDER = { GB: 0, DEF: 1, MIL: 2, ATT: 3 } as const;
 const COLS: StatKey[] = ['passPct', 'progPass90', 'keyPass90', 'xgPer90', 'xaPer90', 'press90', 'tacklePct', 'interc90', 'headerPct', 'possLost90', 'distance90', 'mistakes', 'points90'];
+/** Colonnes d'une ligne : les mesures qui comptent pour elle (celles qui servent à la comparer), puis les points pris. */
+const lineCols = (l: LineFilter): StatKey[] => (l === 'all' ? COLS : [...STAT_METRICS.filter((m) => m.lines.includes(l)).map((m) => m.key), 'points90']);
 const PCT = new Set<StatKey>(['passPct', 'tacklePct', 'headerPct', 'shotsOnTargetPct', 'crossPct', 'savePct']);
+/** Mesures où moins vaut mieux (tri croissant). */
+const LOW = new Set<StatKey>(STAT_METRICS.filter((m) => m.better === 'low').map((m) => m.key));
 
 /** Valeur d'une stat dans une pastille : verte dans le meilleur quart de sa ligne, corail dans le moins bon. */
 function Cell({ r, k }: { r: PlayerStatReport; k: StatKey }) {
@@ -25,6 +30,8 @@ export function FmStats({ snap, players }: { snap: FmSnapshot; players: FmPlayer
   const full = useMemo(() => matchStatsFull(snap), [snap]);
   const board = useMemo(() => statsBoard(players, new Map([...full].map(([id, m]) => [id, m.stats]))), [players, full]);
   const [picked, setPicked] = useState<string | null>(null);
+  const [line, setLine] = useState<LineFilter>('all');
+  const [sort, setSort] = useState<StatKey | null>(null);
   const num = (x: number | null | undefined, d = 1) => (x == null ? '–' : new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: d, minimumFractionDigits: d }).format(x));
   if (!board.players.length)
     return (
@@ -33,8 +40,21 @@ export function FmStats({ snap, players }: { snap: FmSnapshot; players: FmPlayer
       </Panel>
     );
   const rows = [...board.players].sort((a, b) => (LINE_ORDER[a.player.line ?? 'ATT'] ?? 4) - (LINE_ORDER[b.player.line ?? 'ATT'] ?? 4) || b.minutes - a.minutes);
+  const cols = lineCols(line);
+  const shown = rows.filter((r) => line === 'all' || r.player.line === line);
+  if (sort && cols.includes(sort)) {
+    // Tri par la colonne choisie : le meilleur en haut, les joueurs sans valeur en bas.
+    const dir = LOW.has(sort) ? 1 : -1;
+    shown.sort((a, b) => {
+      const x = a.stats[sort],
+        y = b.stats[sort];
+      if (x == null || y == null) return x == null ? (y == null ? 0 : 1) : -1;
+      return Number(b.enough) - Number(a.enough) || dir * (x - y);
+    });
+  }
   const team = board.team!;
   const stat = (k: StatKey) => t(`fm.stats.col.${k}`);
+  const marks = (list: StatMark[]) => list.slice(0, 2).map((m) => stat(m.key)).join(', ');
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -62,34 +82,59 @@ export function FmStats({ snap, players }: { snap: FmSnapshot; players: FmPlayer
         )}
       </Panel>
 
-      <Panel title={t('fm.stats.title')}>
+      <Panel
+        title={t('fm.stats.title')}
+        action={<Chips<LineFilter> value={line} onChange={setLine} options={(['all', 'GB', 'DEF', 'MIL', 'ATT'] as const).map((l) => [l, t(`fm.line.${l}`)])} />}
+      >
+        <div className="mb-2 flex flex-wrap items-center gap-3 text-xs text-brun">
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-3 w-5 rounded-full bg-eau-fonce" /> {t('fm.stats.legend.best')}
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-3 w-5 rounded-full bg-canard/10" /> {t('fm.stats.legend.mid')}
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-3 w-5 rounded-full bg-corail/20" /> {t('fm.stats.legend.worst')}
+          </span>
+          <span>{t('fm.stats.legend.sort')}</span>
+        </div>
         <div className="overflow-x-auto">
           <table className="data-table">
             <thead className="text-left text-canard/70">
               <tr>
                 <th className="px-2 py-1">{t('fm.stats.col.player')}</th>
                 <th className="px-2 py-1">{t('fm.stats.col.minutes')}</th>
-                {COLS.map((k) => (
-                  <th key={k} className="px-2 py-1">
-                    {stat(k)}
+                {cols.map((k) => (
+                  <th key={k} className="px-2 py-1" title={t(`fm.stats.def.${k}`)}>
+                    <button type="button" onClick={() => setSort(sort === k ? null : k)} className={`text-left font-bold ${sort === k ? 'text-canard underline' : ''}`}>
+                      {stat(k)}
+                      {sort === k ? ' ▾' : ''}
+                    </button>
                   </th>
                 ))}
+                <th className="px-2 py-1">{t('fm.stats.col.strengths')}</th>
                 <th className="px-2 py-1">{t('fm.stats.col.focus')}</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {shown.map((r) => (
                 <tr key={r.player.id} className={`border-t border-canard/5 ${r.enough ? '' : 'opacity-60'}`}>
                   <td className="px-2 py-1.5 font-bold">
                     {r.player.name} <Pos player={r.player} />
                   </td>
                   <td className="px-2 py-1.5 tabular-nums">{r.minutes}</td>
-                  {COLS.map((k) => (
+                  {cols.map((k) => (
                     <td key={k} className="px-2 py-1.5">
                       <Cell r={r} k={k} />
                     </td>
                   ))}
-                  <td className="px-2 py-1.5">{r.focus ? <Tag tone="warn">{t(`fm.train.focus.${r.focus}`)}</Tag> : <span className="text-canard/40">–</span>}</td>
+                  <td className="px-2 py-1.5 text-xs">
+                    {r.strengths.length ? <span className="font-bold text-eau-fonce">{marks(r.strengths)}</span> : <span className="text-canard/40">–</span>}
+                  </td>
+                  <td className="px-2 py-1.5 text-xs">
+                    {r.weaknesses.length > 0 && <div className="text-brun">{marks(r.weaknesses)}</div>}
+                    {r.focus ? <Tag tone="warn">{t(`fm.train.focus.${r.focus}`)}</Tag> : !r.weaknesses.length && <span className="text-canard/40">–</span>}
+                  </td>
                 </tr>
               ))}
             </tbody>
