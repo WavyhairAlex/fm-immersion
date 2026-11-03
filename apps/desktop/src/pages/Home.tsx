@@ -61,7 +61,7 @@ export function Home() {
                   {t('home.updated', { date: dateFmt.format(new Date(s.updatedAt)) })}
                 </p>
                 <div className="mt-4 flex items-center gap-4">
-                  {(s.gameId === 'fm' || s.gameId === 'pz2') && (
+                  {(s.gameId === 'fm' || s.gameId === 'pz2' || s.gameId === 'tf3') && (
                     <Link to={`/${s.gameId}/${s.id}`} className="btn-secondary px-4 py-1.5 text-sm">
                       {t('home.open')}
                     </Link>

@@ -3,6 +3,7 @@ mod fm;
 mod fm_bridge;
 mod fm_memory;
 mod pz2;
+mod tf3;
 
 use std::sync::Mutex;
 use tauri::Manager;
@@ -36,7 +37,9 @@ pub fn run() {
             fm_memory::fm_memory_find,
             fm_memory::fm_memory_search,
             fm_memory::fm_memory_abilities,
-            pz2::pz2_save_download
+            pz2::pz2_save_download,
+            tf3::tf3_entry_status,
+            tf3::tf3_entry_read
         ])
         .run(tauri::generate_context!())
         .expect("impossible de démarrer Simloom");

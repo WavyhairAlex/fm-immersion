@@ -1740,5 +1740,9 @@
     "loading": "Ouverture du registre Zoologix…",
     "error": "Le registre Zoologix de cette partie n'a pas pu être ouvert. Relance Simloom, puis réessaie.",
     "frame": "Zoologix, ton registre Planet Zoo 2"
+  },
+  "tf3": {
+    "back": "Mes parties",
+    "frame": "Calculateur de lignes, pour Transport Fever 3"
   }
 }

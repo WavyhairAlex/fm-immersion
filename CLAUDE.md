@@ -49,6 +49,7 @@ Monorepo pnpm + Turborepo.
 | `packages/shared` | Schémas zod, types partagés, liste des jeux, contrat des modules |
 | `modules/<jeu>` | Un module par jeu : manifeste, `src/schema.ts` (tables préfixées `<jeu>_`), carte de tableau de bord |
 | `apps/desktop/zoologix`, `apps/desktop/public/zoologix` | Zoologix (Planet Zoo 2) : page ouverte dans un cadre par `/pz2/:saveId` |
+| `apps/desktop/tf3`, `apps/desktop/public/tf3` | Calculateur de lignes (Transport Fever 3) : page ouverte dans un cadre par `/tf3/:saveId` |
 | `brand/source` | Sources de l'identité (PNG mascottes, SVG logo) — ne pas embarquer directement |
 
 ### Accès aux données
@@ -110,6 +111,17 @@ la publie et la marque « Latest » une fois latest.json envoyé. Plus de public
   polices locales pour les exports. Aucun portrait d'espèce du jeu n'est embarqué : icônes du joueur
   (`public/zoologix/ico`, liste dans `src/zoologix/seed-icones.json`) ou pastille à initiales.
 - Données d'un ancien Zoologix : bouton Sauvegarder dans l'artifact, puis Restaurer dans l'appli.
+
+## Calculateur de lignes (Transport Fever 3)
+- Repris tel quel depuis l'artifact claude.ai « Calculateur de lignes TF3 » (choix du 03/11/2026), même schéma que
+  Zoologix : `public/tf3/app.js` (script d'origine, adaptations marquées « Simloom »), `public/tf3/tf3.css`,
+  `src/tf3/entry.ts` remplace `window.claude.use("db" | "user" | "assets")` par les tables `tf3_docs`/`tf3_blobs`
+  via `src/lib/tf3-host.ts`. Exceptions assumées : interface en français seulement, palette et polices (Barlow) propres.
+- Images des marchandises et industries du jeu et saves d'exemple retirées (aucun visuel ni donnée de partie embarqués).
+- `entry.json` (résumé de save produit par `simloom_save.py` du joueur) est lu par Rust dans `Documents\Simloom`
+  (`tf3_entry_status`, `tf3_entry_read`) : plus de serveur local 127.0.0.1:8765, interdit par la CSP. Sinon, bouton
+  « Choisir entry.json ». Le même bouton accepte un fichier `simloom-tf3/1` (état + save) pour reprendre une partie
+  de l'artifact.
 
 ## Commandes
 ```bash
