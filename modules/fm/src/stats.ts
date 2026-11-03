@@ -5,23 +5,30 @@ import type { EffArea } from './project';
 import type { FmSnapshot } from './snapshot';
 
 /**
- * Statistiques de la saison (écran Centre de données de FM27), lues par chemins.json : clés `stat*` de la
- * section `joueur` (`custom.joueurs[i]`), propriétés de PersonReference sans contexte (decouverte.json, 01/11/2026).
- * Valeurs du jeu en nombre ou en texte (« 84 % », « 10,4 km ») ; null si le jeu ne répond pas.
+ * Statistiques de la saison (écran Centre de données de FM27), lues par chemins.json dans la section `joueur`
+ * (`custom.joueurs[i]`) : propriétés de PersonReference sans contexte (decouverte.json, 01/11/2026).
+ * - Depuis le 03/11/2026 : toutes les stats de match, en clés `stat_<Propriété>` (totaux surtout) ; les valeurs
+ *   « par 90 » et les pourcentages sont recalculés ici à partir des totaux et des minutes, pour lire deux fois moins.
+ * - Avant : 29 clés nommées (`statPassPct`, `statXgPer90`…), encore lues pour les anciens instantanés.
  */
 export const STAT_KEYS = [
   'minutes', 'starts', 'xg', 'xgPer90', 'xa', 'xaPer90', 'shots90', 'shotsOnTargetPct',
   'passPct', 'passAtt90', 'progPass90', 'keyPass90', 'chances90', 'crossPct', 'dribbles90',
   'pressAtt90', 'press90', 'tacklePct', 'tackles90', 'interc90', 'blocks90', 'clear90',
   'headerPct', 'headersLost90', 'distance90', 'sprints90', 'mistakes', 'xgPrevented90', 'savePct',
+  'possLost90', 'possWon90', 'fouls90', 'yellow', 'red', 'motm', 'winPct', 'points90', 'xgOverperf',
+  'openPlayKeyPass90', 'keyTackles90', 'keyHeaders90', 'shotsBlocked90', 'npxg90',
 ] as const;
 export type StatKey = (typeof STAT_KEYS)[number];
 export type PlayerStats = Partial<Record<StatKey, number>>;
+/** Toutes les stats lues, par nom de propriété du jeu (`PassAttempts`, `PossessionLost`…). */
+export type RawStats = Record<string, number>;
 
 /** Minutes jouées en dessous desquelles les stats « par 90 » ne disent rien (3 matchs complets). */
 export const MIN_STAT_MINUTES = 270;
 
-const rawKey = (k: StatKey) => `stat${k[0]!.toUpperCase()}${k.slice(1)}`;
+const legacyKey = (k: StatKey) => `stat${k[0]!.toUpperCase()}${k.slice(1)}`;
+export const RAW_PREFIX = 'stat_';
 type Raw = Record<string, unknown>;
 
 /**
@@ -41,21 +48,94 @@ export function statValue(v: unknown): number | null {
   return null;
 }
 
-/** Stats par id de joueur ; vide si chemins.json ne les lit pas encore. */
-export function matchStats(snap: FmSnapshot): Map<string, PlayerStats> {
-  const out = new Map<string, PlayerStats>();
+/** Stats nommées déduites des propriétés brutes du jeu (totaux → par 90 et pourcentages). */
+export function deriveStats(raw: RawStats): PlayerStats {
+  const s: PlayerStats = {};
+  const min = raw.Minutes;
+  const set = (k: StatKey, v: number | null | undefined) => {
+    if (v != null && Number.isFinite(v)) s[k] = v;
+  };
+  const per90 = (k: StatKey, total: string) => set(k, min && raw[total] != null ? (raw[total]! * 90) / min : null);
+  const pct = (k: StatKey, ok: string, all: string) => set(k, raw[all] ? (100 * (raw[ok] ?? 0)) / raw[all]! : null);
+  set('minutes', min);
+  set('starts', raw.StartingAppearances);
+  set('xg', raw.ExpectedGoals);
+  per90('xgPer90', 'ExpectedGoals');
+  set('xa', raw.ExpectedAssists);
+  per90('xaPer90', 'ExpectedAssists');
+  per90('shots90', 'ShotAttempts');
+  pct('shotsOnTargetPct', 'ShotsOnTarget', 'ShotAttempts');
+  pct('passPct', 'PassCompleted', 'PassAttempts');
+  per90('passAtt90', 'PassAttempts');
+  per90('progPass90', 'ProgressivePasses');
+  per90('keyPass90', 'KeyPasses');
+  per90('openPlayKeyPass90', 'OpenPlayKeyPasses');
+  per90('chances90', 'ChancesCreated');
+  pct('crossPct', 'CrossesCompleted', 'CrossAttempts');
+  per90('dribbles90', 'DribblesMade');
+  per90('pressAtt90', 'PressuresAttempted');
+  per90('press90', 'PressuresCompleted');
+  pct('tacklePct', 'TackleCompleted', 'TackleAttempts');
+  per90('tackles90', 'TackleCompleted');
+  per90('keyTackles90', 'KeyTackles');
+  per90('interc90', 'Interceptions');
+  per90('blocks90', 'Blocks');
+  per90('shotsBlocked90', 'ShotsBlockedDefending');
+  per90('clear90', 'Clearances');
+  pct('headerPct', 'HeaderCompleted', 'HeaderAttempts');
+  set('headersLost90', min && raw.HeaderAttempts != null ? ((raw.HeaderAttempts - (raw.HeaderCompleted ?? 0)) * 90) / min : null);
+  per90('keyHeaders90', 'KeyHeaders');
+  per90('distance90', 'DistanceRan');
+  set('sprints90', raw.SprintsPer90);
+  set('mistakes', raw.GoalMistakes);
+  per90('xgPrevented90', 'ExpectedGoalsPrevented');
+  set('savePct', raw.TotalSavePercentage);
+  per90('possLost90', 'PossessionLost');
+  per90('possWon90', 'PossessionWon');
+  per90('fouls90', 'FoulsMade');
+  set('yellow', raw.YellowCards);
+  set('red', raw.RedCards);
+  set('motm', raw.ManOfMatch);
+  set('winPct', raw.GamesWinPercentage);
+  set('points90', raw.PointsWonPer90);
+  set('xgOverperf', raw.ExpectedGoalsOverperformance);
+  per90('npxg90', 'NonPenaltyExpectedGoals');
+  return s;
+}
+
+export interface MatchStats {
+  stats: PlayerStats;
+  raw: RawStats;
+}
+
+/** Stats par id de joueur : nommées (comparables) et brutes (toutes) ; vide si chemins.json ne les lit pas encore. */
+export function matchStatsFull(snap: FmSnapshot): Map<string, MatchStats> {
+  const out = new Map<string, MatchStats>();
   const custom = (snap as Raw).custom as Raw | null | undefined;
   const rows = custom && typeof custom === 'object' ? Object.values((custom.joueurs ?? {}) as Record<string, Raw>) : [];
   for (const r of rows) {
     if (!r || r.id == null) continue;
-    const s: PlayerStats = {};
-    for (const k of STAT_KEYS) {
-      const n = statValue(r[rawKey(k)]);
-      if (n != null) s[k] = n;
+    const raw: RawStats = {};
+    for (const [k, v] of Object.entries(r)) {
+      if (!k.startsWith(RAW_PREFIX)) continue;
+      const n = statValue(v);
+      if (n != null) raw[k.slice(RAW_PREFIX.length)] = n;
     }
-    if (Object.keys(s).length) out.set(String(r.id), s);
+    const stats = deriveStats(raw);
+    // Anciens instantanés : clés nommées lues telles quelles.
+    for (const k of STAT_KEYS) {
+      if (stats[k] != null) continue;
+      const n = statValue(r[legacyKey(k)]);
+      if (n != null) stats[k] = n;
+    }
+    if (Object.keys(stats).length || Object.keys(raw).length) out.set(String(r.id), { stats, raw });
   }
   return out;
+}
+
+/** Stats nommées par id de joueur. */
+export function matchStats(snap: FmSnapshot): Map<string, PlayerStats> {
+  return new Map([...matchStatsFull(snap)].map(([id, m]) => [id, m.stats]));
 }
 
 /**
@@ -81,6 +161,9 @@ export const STAT_METRICS: StatMetric[] = [
   { key: 'interc90', lines: ['DEF', 'MIL'], better: 'high', focus: 'defensivePositioning' },
   { key: 'headerPct', lines: ['DEF', 'ATT'], better: 'high', focus: 'marking' },
   { key: 'distance90', lines: ['DEF', 'MIL', 'ATT'], better: 'high', focus: 'endurance' },
+  { key: 'possLost90', lines: ['MIL', 'ATT'], better: 'low', focus: 'ballRetention' },
+  { key: 'possWon90', lines: ['DEF', 'MIL'], better: 'high', focus: 'defensivePositioning' },
+  { key: 'fouls90', lines: ['DEF', 'MIL'], better: 'low', focus: 'tackling' },
   { key: 'mistakes', lines: ['GB', 'DEF', 'MIL'], better: 'low', focus: 'containment' },
   { key: 'xgPrevented90', lines: ['GB'], better: 'high', focus: 'gkShotStopping' },
   { key: 'savePct', lines: ['GB'], better: 'high', focus: 'gkShotStopping' },
@@ -119,7 +202,7 @@ export interface TeamStats {
   mistakes: number;
 }
 
-export type StatAlertKind = 'possession' | 'creation' | 'finishing' | 'pressing' | 'duels' | 'aerial' | 'mistakes';
+export type StatAlertKind = 'possession' | 'creation' | 'finishing' | 'pressing' | 'duels' | 'aerial' | 'mistakes' | 'discipline';
 export interface StatAlert {
   kind: StatAlertKind;
   level: 'warning' | 'info';
@@ -221,6 +304,8 @@ export function statsBoard(players: FmPlayer[], stats: Map<string, PlayerStats>)
     push(t.tacklePct != null && t.tacklePct < 65, { kind: 'duels', level: 'info', value: t.tacklePct!, areas: ['outOfPossessionShape'] }, 'tacklePct', ['DEF', 'MIL']);
     push(t.headerPct != null && t.headerPct < 45, { kind: 'aerial', level: 'info', value: t.headerPct!, areas: ['outOfPossessionShape'] }, 'headerPct', ['DEF', 'ATT']);
     push(t.mistakes / matches >= 0.3, { kind: 'mistakes', level: 'warning', value: t.mistakes, areas: ['outOfPossessionShape', 'lineOfEngagement'] }, 'mistakes', ['GB', 'DEF', 'MIL']);
+    const cards = sum(used.map((r) => r.stats.yellow ?? 0)) + 2 * sum(used.map((r) => r.stats.red ?? 0));
+    push(cards / matches >= 2.5, { kind: 'discipline', level: 'info', value: cards / matches, areas: [] }, 'fouls90', ['DEF', 'MIL']);
     const finishing = sum(used.map((r) => r.stats.xg ?? 0));
     const goals = sum(used.map((r) => r.player.goals ?? 0));
     push(finishing >= 5 && goals < finishing * 0.75, { kind: 'finishing', level: 'info', value: goals - finishing, areas: [] }, 'shotsOnTargetPct', ['ATT']);
@@ -228,3 +313,14 @@ export function statsBoard(players: FmPlayer[], stats: Map<string, PlayerStats>)
   alerts.sort((a, b) => (a.level === b.level ? 0 : a.level === 'warning' ? -1 : 1));
   return { players: rows, team, alerts, areas: [...new Set(alerts.flatMap((a) => a.areas))] };
 }
+
+/** Rangement des stats brutes du jeu pour l'affichage complet (libellés dans fm.stats.raw.<Propriété>). */
+export const RAW_GROUPS: { id: string; props: string[] }[] = [
+  { id: 'time', props: ['Minutes', 'StartingAppearances', 'SubAppearances', 'GamesWon', 'GamesLost', 'GamesWinPercentage', 'PointsWonPer90', 'TeamLeaguePointsPer90', 'TeamGoals', 'TeamConceded', 'ManOfMatch'] },
+  { id: 'attack', props: ['GoalsPer90', 'ExpectedGoals', 'NonPenaltyExpectedGoals', 'ExpectedGoalsOverperformance', 'ExpectedGoalsPerShot', 'GoalsPerShotPercentage', 'ShotAttempts', 'ShotsOnTarget', 'ShotsOutsideBoxPer90', 'FreeKickShots', 'PenaltiesTaken', 'PenaltiesScored', 'Offsides', 'DribblesMade', 'FoulsAgainst'] },
+  { id: 'passing', props: ['AssistsPer90', 'ExpectedAssists', 'PassAttempts', 'PassCompleted', 'ProgressivePasses', 'KeyPasses', 'OpenPlayKeyPasses', 'ChancesCreated', 'CrossAttempts', 'CrossesCompleted', 'OpenPlayCrossesAttempted', 'OpenPlayCrossesCompleted', 'Possession', 'PossessionLost'] },
+  { id: 'defence', props: ['PressuresAttempted', 'PressuresCompleted', 'PossessionWon', 'TackleAttempts', 'TackleCompleted', 'KeyTackles', 'Interceptions', 'Blocks', 'ShotsBlockedDefending', 'Clearances', 'HeaderAttempts', 'HeaderCompleted', 'KeyHeaders', 'GoalMistakes'] },
+  { id: 'physical', props: ['DistanceRan', 'SprintsPer90'] },
+  { id: 'keeper', props: ['Conceded', 'CleanSheets', 'TotalSaves', 'SavesHeld', 'SavesParried', 'SavesTipped', 'TotalSavePercentage', 'TotalExpectedSavePercentage', 'ExpectedGoalsPrevented', 'PenaltiesFaced', 'PenaltiesSaved'] },
+  { id: 'discipline', props: ['FoulsMade', 'YellowCards', 'RedCards'] },
+];
