@@ -38,6 +38,7 @@
     "autoImport": "updates automatically every minute",
     "sync": "Imported {{time}}",
     "settings": "Settings",
+    "howItWorks": "How it works",
     "importError": "Import failed: {{reason}}",
     "saveFile": {
       "label": "FM27 save",
@@ -334,7 +335,8 @@
       "progression": "Progression",
       "training": "Training",
       "mercato": "Departures and youth",
-      "targets": "Transfer targets"
+      "targets": "Transfer targets",
+      "instructions": "Player instructions"
     },
     "home": {
       "todo": "To deal with",
@@ -1193,7 +1195,8 @@
       "contracts": "Contract expiries to plan for.",
       "progression": "Each player's level since the first snapshot.",
       "opponent": "The next opponent as the game's team report describes it, and how to play them.",
-      "mercato": "Step 4: who to move on (sale, loan, contract end), who to renew, and which youngsters are worth it for the project."
+      "mercato": "Step 4: who to move on (sale, loan, contract end), who to renew, and which youngsters are worth it for the project.",
+      "instructions": "Up to 3 instructions per starter, to fit the style without overloading tactical familiarity."
     },
     "nextStep": "Next step: {{view}}",
     "opp": {
@@ -1708,6 +1711,9 @@
         "real": "real CA/PA",
         "computed": "Simloom estimate"
       }
+    },
+    "subtabs": {
+      "tactic": "The XI"
     }
   },
   "pz2": {

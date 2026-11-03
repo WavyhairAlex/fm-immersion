@@ -2,7 +2,7 @@ import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, contractDecisions, mercatoAdv
 import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
-import { CompatTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone } from './FmUi';
+import { CompatTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone, More } from './FmUi';
 
 const TONE: Record<MercatoVerdict, Tone> = { sell: 'bad', release: 'bad', loan: 'warn', extend: 'warn', develop: 'good', replace: 'warn', backup: 'info', core: 'good' };
 /** Groupes affichés en détail : ce qui demande une décision au mercato. */
@@ -103,7 +103,7 @@ export function ContractsToDecide({ r, go }: { r: MercatoReport; go?: (view: str
         )
       }
     >
-      <p className="help">{t('fm.decide.help')}</p>
+      <More>{t('fm.decide.help')}</More>
       <p className="mb-2 flex flex-wrap gap-1.5 text-sm">
         {CONTRACT_CALLS.filter(count).map((c) => (
           <Tag key={c} tone={CALL_TONE[c]}>
@@ -124,7 +124,7 @@ export function ContractsToDecide({ r, go }: { r: MercatoReport; go?: (view: str
           extra={<span className="tabular-nums">{t('fm.decide.wage', { wage: f.money(a.player.wage) })}</span>}
         />
       ))}
-      <p className="mt-2 text-xs text-brun">{t('fm.decide.legend')}</p>
+      <More>{t('fm.decide.legend')}</More>
     </Panel>
   );
 }
@@ -151,16 +151,16 @@ export function FmMercato({ players, folder, gameDate, history }: { players: FmP
       <ContractsToDecide r={r} />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Kpi label={t('fm.merc.kpi.leave')} value={n('sell') + n('release')} tone={n('sell') + n('release') ? 'bad' : undefined} sub={t('fm.merc.kpi.leaveSub', { sell: n('sell'), release: n('release') })} />
-        <Kpi label={t('fm.merc.kpi.income')} value={f.money(r.income)} sub={t('fm.merc.kpi.incomeSub', { wages: f.money(r.wagesFreed) })} />
+        <Kpi label={t('fm.merc.kpi.income')} value={f.money(r.income)} dim={!r.income} sub={t('fm.merc.kpi.incomeSub', { wages: f.money(r.wagesFreed) })} />
         <Kpi label={t('fm.merc.kpi.prospects')} value={prospects.length} sub={t('fm.merc.kpi.prospectsSub', { loan: n('loan') })} />
         <Kpi label={t('fm.merc.kpi.extend')} value={n('extend')} sub={t('fm.merc.kpi.extendSub')} />
         <Kpi label={t('fm.merc.kpi.off')} value={r.advice.filter((a) => a.compat?.compat === 'no').length} sub={t('fm.merc.kpi.offSub')} />
       </div>
-      <p className="help">{t('fm.merc.help', { form: r.nowForm ?? '–', style: names.style(style), projectForm: r.projectForm ?? '–' })}</p>
+      <More>{t('fm.merc.help', { form: r.nowForm ?? '–', style: names.style(style), projectForm: r.projectForm ?? '–' })}</More>
 
       <Panel title={t('fm.merc.youth', { count: r.youth.length })}>
         {r.youth.length ? r.youth.map((a) => <AdviceLine key={a.player.id} a={a} tag={<Tag tone={TONE[a.verdict]}>{t(`fm.merc.verdict.${a.verdict}`)}</Tag>} />) : <Empty>{t('fm.merc.noYouth')}</Empty>}
-        <p className="mt-2 text-xs text-brun">{t('fm.merc.youthHelp')}</p>
+        <More>{t('fm.merc.youthHelp')}</More>
       </Panel>
 
       <div className="grid gap-4 lg:grid-cols-2">

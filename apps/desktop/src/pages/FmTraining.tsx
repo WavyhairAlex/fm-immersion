@@ -44,7 +44,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticEngine } from './FmTactic';
-import { Chips, Fit, Panel, Pos, Tag, useCoach, useNames } from './FmUi';
+import { Chips, Fit, Panel, Pos, Tag, useCoach, useNames, More } from './FmUi';
 
 /** Couleur des pastilles par catégorie de séance (texte toujours canard, sauf le match en bouton principal). */
 const CAT_CLS: Record<SessionCategory, string> = {
@@ -305,7 +305,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
                 </button>
               ))}
             </div>
-            <p className="mt-1 text-xs text-brun">{t('fm.train.trainingDaysHelp')}</p>
+            <More>{t('fm.train.trainingDaysHelp')}</More>
           </div>
         )}
 
@@ -412,7 +412,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
             </tbody>
           </table>
         </div>
-        <p className="mt-2 text-xs text-brun">{t('fm.train.upcomingHelp')}</p>
+        <More>{t('fm.train.upcomingHelp')}</More>
       </Panel>
 
       <Panel title={t('fm.train.teamIntensity')}>
@@ -424,7 +424,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
             </div>
           ))}
         </div>
-        <p className="mt-2 text-xs text-brun">{t('fm.train.teamIntensityHelp')}</p>
+        <More>{t('fm.train.teamIntensityHelp')}</More>
       </Panel>
 
       {setups.rows.length > 0 && (
@@ -521,8 +521,8 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-xs text-brun">{t('fm.train.setupHelp')}</p>
-          <p className="mt-1 text-xs text-brun">{t('fm.train.individualHelp')}</p>
+          <More>{t('fm.train.setupHelp')}</More>
+          <More>{t('fm.train.individualHelp')}</More>
         </Panel>
       )}
 
@@ -554,7 +554,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
           </p>
         )}
         {mentoring.unassigned.length > 0 && <p className="mt-2 text-xs text-brun">{t('fm.train.unassigned', { list: mentoring.unassigned.map((p) => p.name).join(', ') })}</p>}
-        <p className="mt-2 text-xs text-brun">{t('fm.train.mentoringHelp')}</p>
+        <More>{t('fm.train.mentoringHelp')}</More>
       </Panel>
 
       <Panel title={t('fm.train.rules')}>
@@ -563,7 +563,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
             <li key={i}>{t(`fm.train.rule${i}`)}</li>
           ))}
         </ul>
-        <p className="mt-3 text-xs text-brun">{t('fm.train.source')}</p>
+        <More>{t('fm.train.source')}</More>
       </Panel>
     </div>
   );

@@ -1,7 +1,7 @@
 import { matchStatsFull, MIN_STAT_MINUTES, RAW_GROUPS, STAT_METRICS, statsBoard, statsTrends, type FmPlayer, type FmSnapshot, type PlayerStatReport, type StatKey, type PlayerTrend, type StatMark, type StatTrend } from '@simloom/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Chips, Empty, Kpi, Panel, Pos, Tag } from './FmUi';
+import { Chips, Empty, Kpi, Panel, Pos, Tag, More } from './FmUi';
 
 type LineFilter = 'all' | 'GB' | 'DEF' | 'MIL' | 'ATT';
 const LINE_ORDER = { GB: 0, DEF: 1, MIL: 2, ATT: 3 } as const;
@@ -199,7 +199,7 @@ export function FmStats({ snap, players, history }: { snap: FmSnapshot; players:
             </tbody>
           </table>
         </div>
-        <p className="mt-2 text-xs text-brun">{t('fm.stats.help', { min: MIN_STAT_MINUTES })}</p>
+        <More>{t('fm.stats.help', { min: MIN_STAT_MINUTES })}</More>
       </Panel>
 
       <AllStats rows={rows} full={full} picked={picked ?? rows[0]?.player.id ?? null} onPick={setPicked} />

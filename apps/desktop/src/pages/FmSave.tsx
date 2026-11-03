@@ -53,7 +53,7 @@ const SECTIONS = [
 const PARTS: Record<string, readonly string[]> = {
   squad: ['squad', 'dressing', 'loans'],
   analysis: ['analysis', 'roles', 'progression'],
-  tactic: ['tactic', 'depth', 'effectiveness'],
+  tactic: ['tactic', 'instructions', 'depth', 'effectiveness'],
   opponent: ['opponent', 'calendar'],
   mercato: ['mercato', 'targets'],
   finances: ['finances', 'wages', 'contracts'],
@@ -242,7 +242,9 @@ export function FmSave() {
       case 'loans':
         return <FmLoans snap={snapshot.data} />;
       case 'tactic':
-        return <FmTactic snap={snapshot.data} go={go} players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} lineupStatus={(snapshot.data as { collecte?: { compo?: string } }).collecte?.compo ?? null} />;
+        return <FmTactic part="lineup" snap={snapshot.data} go={go} players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} lineupStatus={(snapshot.data as { collecte?: { compo?: string } }).collecte?.compo ?? null} />;
+      case 'instructions':
+        return <FmTactic part="instructions" snap={snapshot.data} go={go} players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} lineupStatus={(snapshot.data as { collecte?: { compo?: string } }).collecte?.compo ?? null} />;
       case 'opponent':
         return <FmOpponent snap={snapshot.data} />;
       case 'calendar':
@@ -483,7 +485,7 @@ function PageParts({ page, current, go, render }: { page: string; current: strin
               onClick={() => go(v)}
               className={`-mb-px rounded-t-lg border-b-2 px-3 py-1.5 text-sm font-bold ${v === active ? 'border-eau-fonce text-canard' : 'border-transparent text-canard/60 hover:text-canard'}`}
             >
-              {t(`fm.views.${v}`)}
+              {t(`fm.subtabs.${v}`, { defaultValue: t(`fm.views.${v}`) })}
             </button>
           ))}
         </div>
@@ -536,6 +538,7 @@ function SquadTable({ players, folder }: { players: FmPlayer[]; folder: string }
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({ key: 'level', desc: true });
   const money = new Intl.NumberFormat(i18n.resolvedLanguage, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
   const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium' });
+  const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
   const rows = useMemo(() => {
     const list = line ? players.filter((p) => p.line === line) : players;
@@ -615,7 +618,7 @@ function SquadTable({ players, folder }: { players: FmPlayer[]; folder: string }
                 </td>
                 <td className="px-3 py-2">{p.age ?? '–'}</td>
                 <td className="px-3 py-2 font-bold">
-                  {p.level?.toFixed(1) ?? '–'}
+                  {p.level != null ? nf1.format(p.level) : '–'}
                   {p.stars?.current != null && (
                     <span className="ml-2 text-xs font-normal text-brun" title={t('fm.col.starsHelp')}>
                       ★ {p.stars.current}
