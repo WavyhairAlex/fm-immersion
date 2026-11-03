@@ -2,9 +2,9 @@ import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, contractDecisions, mercatoAdv
 import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
-import { CompatTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone, More } from './FmUi';
+import { CompatTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone, More, PlayerLink } from './FmUi';
 
-const TONE: Record<MercatoVerdict, Tone> = { sell: 'bad', release: 'bad', loan: 'warn', extend: 'warn', develop: 'good', replace: 'warn', backup: 'info', core: 'good' };
+export const TONE: Record<MercatoVerdict, Tone> = { sell: 'bad', release: 'bad', loan: 'warn', extend: 'warn', develop: 'good', replace: 'warn', backup: 'info', core: 'good' };
 /** Groupes affichés en détail : ce qui demande une décision au mercato. */
 const ACTION: MercatoVerdict[] = ['sell', 'release', 'loan', 'extend', 'replace'];
 
@@ -22,7 +22,7 @@ function Stars({ p }: { p: FmPlayer }) {
 }
 
 /** Texte d'une raison du conseil mercato. */
-function useReason() {
+export function useReason() {
   const { t } = useTranslation();
   return (x: MercatoReason) => {
     switch (x.id) {
@@ -60,7 +60,7 @@ function AdviceLine({ a, tag, extra }: { a: MercatoAdvice; tag?: ReactNode; extr
     <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1 border-b border-canard/5 py-2 last:border-0">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
-          <b>{a.player.name}</b> <Pos player={a.player} />
+          <PlayerLink player={a.player} /> <Pos player={a.player} />
           <span className="text-xs text-brun">{t('fm.contracts.age', { count: a.player.age ?? 0 })}</span>
           {a.player.team && <Tag>{a.player.team}</Tag>}
           <CompatTag c={a.compat} />
@@ -145,6 +145,9 @@ export function FmMercato({ players, folder, gameDate, history }: { players: FmP
 
   const n = (v: MercatoVerdict) => r.byVerdict[v].length;
   const prospects = r.youth.filter((a) => a.prospect);
+  // Chaque joueur n'apparaît qu'une fois : les jeunes sont dans leur cadre (avec leur étiquette), pas aussi dans les groupes.
+  const youthIds = new Set(r.youth.map((a) => a.player.id));
+  const rest = (v: MercatoVerdict) => r.byVerdict[v].filter((a) => !youthIds.has(a.player.id));
 
   return (
     <div className="space-y-4">
@@ -164,21 +167,22 @@ export function FmMercato({ players, folder, gameDate, history }: { players: FmP
       </Panel>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        {ACTION.filter((v) => n(v)).map((v) => (
-          <Panel key={v} title={t(`fm.merc.group.${v}`, { count: n(v) })}>
+        {ACTION.filter((v) => rest(v).length).map((v) => (
+          <Panel key={v} title={t(`fm.merc.group.${v}`, { count: rest(v).length })}>
             <p className="help">{t(`fm.merc.groupHelp.${v}`)}</p>
-            {r.byVerdict[v].map((a) => <AdviceLine key={a.player.id} a={a} />)}
+            {rest(v).map((a) => <AdviceLine key={a.player.id} a={a} />)}
           </Panel>
         ))}
       </div>
 
       <Panel title={t('fm.merc.stay')}>
-        {MERCATO_ORDER.filter((v) => !ACTION.includes(v) && n(v)).map((v) => (
+        <p className="help">{t('fm.merc.stayNoYouth')}</p>
+        {MERCATO_ORDER.filter((v) => !ACTION.includes(v) && rest(v).length).map((v) => (
           <div key={v} className="mb-2 last:mb-0">
             <p className="mb-1 text-sm">
               <Tag tone={TONE[v]}>{t(`fm.merc.verdict.${v}`)}</Tag> <span className="text-brun">{t(`fm.merc.groupHelp.${v}`)}</span>
             </p>
-            <p className="text-sm">{r.byVerdict[v].map((a) => a.player.name).join(', ')}</p>
+            <p className="text-sm">{rest(v).map((a) => a.player.name).join(', ')}</p>
           </div>
         ))}
       </Panel>

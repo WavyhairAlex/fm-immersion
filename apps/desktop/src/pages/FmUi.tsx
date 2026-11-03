@@ -1,5 +1,5 @@
 import { POS_LABEL, teamInstructionCards, teamInstructionOf, type CoachPrefs, type FmPlayer, type ProjectCompat } from '@simloom/module-fm';
-import { useState, type ReactNode } from 'react';
+import { createContext, useContext, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 
@@ -75,10 +75,25 @@ export function Level({ value }: { value: number | null | undefined }) {
   return <span className={`inline-block min-w-[2.6rem] rounded-full px-2 py-0.5 text-center text-xs font-bold tabular-nums ${cls}`}>{new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value)}</span>;
 }
 
+/** Ouvre la fiche d'un joueur (fournie par la page de la partie) ; absente, les noms restent du texte. */
+export const PlayerSheetContext = createContext<((id: string) => void) | null>(null);
+
+/** Nom de joueur cliquable : ouvre sa fiche. */
+export function PlayerLink({ player, className = 'font-bold' }: { player: FmPlayer; className?: string }) {
+  const { t } = useTranslation();
+  const open = useContext(PlayerSheetContext);
+  if (!open) return <span className={className}>{player.name}</span>;
+  return (
+    <button type="button" className={`${className} text-left hover:text-eau-fonce hover:underline`} title={t('fm.sheet.open', { name: player.name })} onClick={() => open(player.id)}>
+      {player.name}
+    </button>
+  );
+}
+
 export function PlayerName({ player }: { player: FmPlayer }) {
   return (
     <span className="font-bold">
-      {player.name}
+      <PlayerLink player={player} />
       {player.team && (
         <span className="ml-2">
           <Tag>{player.team}</Tag>

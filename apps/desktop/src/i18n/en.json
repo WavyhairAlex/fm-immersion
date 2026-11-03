@@ -367,7 +367,9 @@
       "rusty_one": "{{count}} player lacking sharpness",
       "rusty_other": "{{count}} players lacking sharpness",
       "setupChanges_one": "{{count}} individual training to change",
-      "setupChanges_other": "{{count}} individual trainings to change"
+      "setupChanges_other": "{{count}} individual trainings to change",
+      "tired_one": "{{count}} player under 80% condition",
+      "tired_other": "{{count}} players under 80% condition"
     },
     "contracts": {
       "byYear": "Monthly wages freed by contract end year",
@@ -1357,7 +1359,8 @@
         "decline": "{{age}}, declining",
         "youthTeam": "develops with the youth team",
         "offProject": "profile off the game plan"
-      }
+      },
+      "stayNoYouth": "Players aged 21 or under are in their own panel above."
     },
     "stats": {
       "title": "Data centre",
@@ -1715,6 +1718,21 @@
     },
     "subtabs": {
       "tactic": "The XI"
+    },
+    "sheet": {
+      "close": "Close",
+      "morale": "Morale",
+      "value": "Value",
+      "roles": "Best positions",
+      "progress": "Level progression",
+      "stats": "Match stats · {{minutes}} minutes",
+      "strengths": "Strengths",
+      "weaknesses": "To work on",
+      "focus": "Focus",
+      "fewMinutes": "Under 270 minutes: confirm over more matches.",
+      "mercato": "Transfers",
+      "inTwo": "In two seasons:",
+      "open": "Open {{name}}'s profile"
     }
   },
   "pz2": {

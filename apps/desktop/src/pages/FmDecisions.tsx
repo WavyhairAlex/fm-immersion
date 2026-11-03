@@ -2,7 +2,7 @@ import { POS_LABEL, decisions, styleOfGameTactic, type Basis, type Decision, typ
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticChoice } from './FmTactic';
-import { Empty, Panel, Tag, useCoach, useNames, type Tone } from './FmUi';
+import { Empty, More, Panel, Tag, useCoach, useNames, type Tone } from './FmUi';
 
 const KIND_TONE: Record<Decision['kind'], Tone> = { contract: 'warn', recruit: 'info', departure: 'info', tactic: 'good' };
 const BASIS_TONE: Record<Basis, Tone> = { read: 'good', real: 'good', computed: 'info' };
@@ -29,9 +29,17 @@ export function FmDecisions({ snap, players, folder, history = [], go }: { snap:
     count: Number(d.values.years ?? 0),
   });
 
+  // Rien à décider : une ligne discrète plutôt qu'un grand cadre vide.
+  if (!list.length)
+    return (
+      <p className="card flex items-center gap-2 px-5 py-3 text-sm text-brun">
+        <span className="h-2 w-2 rounded-full bg-eau" aria-hidden />
+        {t('fm.dec.none')}
+      </p>
+    );
   return (
     <Panel title={t('fm.dec.title', { count: list.length })}>
-      <p className="help">{t('fm.dec.help')}</p>
+      <More>{t('fm.dec.help')}</More>
       {list.length ? (
         <ul className="space-y-2">
           {list.map((d, i) => {

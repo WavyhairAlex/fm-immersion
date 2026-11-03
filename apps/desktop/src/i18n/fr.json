@@ -367,7 +367,9 @@
       "rusty_one": "{{count}} joueur en manque de rythme",
       "rusty_other": "{{count}} joueurs en manque de rythme",
       "setupChanges_one": "{{count}} entraînement individuel à changer",
-      "setupChanges_other": "{{count}} entraînements individuels à changer"
+      "setupChanges_other": "{{count}} entraînements individuels à changer",
+      "tired_one": "{{count}} joueur sous 80 % de condition",
+      "tired_other": "{{count}} joueurs sous 80 % de condition"
     },
     "contracts": {
       "byYear": "Salaires mensuels libérés par année de fin de contrat",
@@ -1357,7 +1359,8 @@
         "decline": "{{age}} ans, en déclin",
         "youthTeam": "progresse avec les jeunes",
         "offProject": "profil hors projet de jeu"
-      }
+      },
+      "stayNoYouth": "Les jeunes de 21 ans ou moins sont dans leur cadre plus haut."
     },
     "stats": {
       "title": "Centre de données",
@@ -1715,6 +1718,21 @@
     },
     "subtabs": {
       "tactic": "Le onze"
+    },
+    "sheet": {
+      "close": "Fermer",
+      "morale": "Moral",
+      "value": "Valeur",
+      "roles": "Meilleurs postes",
+      "progress": "Progression du niveau",
+      "stats": "Stats de match · {{minutes}} minutes",
+      "strengths": "Points forts",
+      "weaknesses": "À travailler",
+      "focus": "Priorité",
+      "fewMinutes": "Moins de 270 minutes : à confirmer avec plus de matchs.",
+      "mercato": "Mercato",
+      "inTwo": "Dans deux saisons :",
+      "open": "Voir la fiche de {{name}}"
     }
   },
   "pz2": {

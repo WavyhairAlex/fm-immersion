@@ -30,7 +30,8 @@ import { FmTactic, useTacticEngine } from './FmTactic';
 import { FmTargets } from './FmTargets';
 import { FmTraining } from './FmTraining';
 import { FmWages } from './FmWages';
-import { CompatTag, useCoach } from './FmUi';
+import { CompatTag, PlayerLink, PlayerSheetContext, useCoach } from './FmUi';
+import { FmPlayerSheet } from './FmPlayerSheet';
 
 const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
 
@@ -111,6 +112,8 @@ export function FmSave() {
     }
     window.scrollTo({ top: 0 });
   };
+  // Fiche joueur ouverte depuis n'importe quel nom cliquable.
+  const [sheet, setSheet] = useState<string | null>(null);
   const section = SECTIONS.find((s) => (s.views as readonly string[]).includes(view)) ?? SECTIONS[0];
   const [folder, setFolder] = useState('');
   // Réglages repliés quand tout va bien ; ouverts d'office sans instantané ou quand le plugin demande une action.
@@ -398,6 +401,7 @@ export function FmSave() {
 
       {snapshot && players.length > 0 && scope && (
         <FmSaveScopeContext.Provider value={scope}>
+        <PlayerSheetContext.Provider value={setSheet}>
         <div className="mt-4 lg:grid lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-6">
           {/* Navigation : colonne à gauche sur grand écran, onglets au-dessus sinon. */}
           <nav className="hidden lg:block" aria-label={t('fm.nav')}>
@@ -461,6 +465,8 @@ export function FmSave() {
           </div>
           </div>
         </div>
+        {sheet && <FmPlayerSheet id={sheet} players={players} snap={snapshot.data} history={history} folder={folder} gameDate={snapshot.gameDate} onClose={() => setSheet(null)} />}
+        </PlayerSheetContext.Provider>
         </FmSaveScopeContext.Provider>
       )}
     </div>
@@ -603,7 +609,7 @@ function SquadTable({ players, folder }: { players: FmPlayer[]; folder: string }
             {rows.map((p) => (
               <tr key={p.id} className="border-b border-canard/5 odd:bg-creme/40">
                 <td className="px-3 py-2 font-bold">
-                  {p.name}
+                  <PlayerLink player={p} />
                   {p.injury && <span className="ml-2 rounded-full bg-corail/15 px-2 py-0.5 text-xs text-canard">{p.injury}</span>}
                   {p.suspension && <span className="ml-2 rounded-full bg-corail/15 px-2 py-0.5 text-xs text-canard">{p.suspension === 'Suspendu' ? t('fm.home.kind.suspended') : `${t('fm.home.kind.suspended')} : ${p.suspension}`}</span>}
                 </td>

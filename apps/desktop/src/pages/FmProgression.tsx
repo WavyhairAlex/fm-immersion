@@ -1,10 +1,10 @@
 import { progression, type SquadAt } from '@simloom/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Level, Panel, Pos, useFormat } from './FmUi';
+import { Level, Panel, PlayerLink, Pos, useFormat } from './FmUi';
 
 /** Petite courbe du niveau au fil des instantanés. */
-function Spark({ values }: { values: (number | null)[] }) {
+export function Spark({ values }: { values: (number | null)[] }) {
   const { t } = useTranslation();
   const v = values.filter((x): x is number => x != null);
   if (v.length < 2) return <span className="text-xs text-brun">{t('fm.prog.onePoint')}</span>;
@@ -54,7 +54,7 @@ export function FmProgression({ history }: { history: SquadAt[] }) {
             {rows.map(({ player: p, series, delta }) => (
               <tr key={p.id} className="border-t border-canard/5">
                 <td className="px-2 py-1.5 font-bold">
-                  {p.name} <Pos player={p} />
+                  <PlayerLink player={p} /> <Pos player={p} />
                 </td>
                 <td className="px-2 py-1.5 text-right tabular-nums">{p.age ?? '–'}</td>
                 <td className="px-2 py-1.5">
