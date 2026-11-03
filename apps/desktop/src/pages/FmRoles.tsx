@@ -2,7 +2,7 @@ import { POS_LABEL, POS_ORDER, roleMatrix, type FmPlayer, type Line, type Phase 
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
-import { Chips, Empty, Fit, fitPct, Panel, Tag, useNames, More } from './FmUi';
+import { Chips, Empty, Fit, fitPct, More, Panel, PlayerLink, Tag, useNames } from './FmUi';
 
 const OPTS_KEY = 'simloom.fm.matrix';
 interface Opts {
@@ -83,7 +83,7 @@ export function FmRoles({ players, folder }: { players: FmPlayer[]; folder: stri
                 return (
                   <tr key={p.id} className="border-t border-canard/5">
                     <td className="sticky left-0 whitespace-nowrap bg-white px-2 py-1 text-sm font-bold">
-                      {p.name} <span className="text-xs font-normal text-brun">{p.age}</span>
+                      <PlayerLink player={p} /> <span className="text-xs font-normal text-brun">{p.age}</span>
                     </td>
                     {cells.map((c, i) => {
                       if (!c || (!c.natural && (opts.nat || gk !== (c.pos === 'GB'))))

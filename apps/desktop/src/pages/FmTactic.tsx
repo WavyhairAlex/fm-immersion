@@ -33,7 +33,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
-import { fitPct, setFitScale, TeamCards, useCoach, More } from './FmUi';
+import { fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach } from './FmUi';
 
 // v2 : le choix automatique (meilleure tactique applicable) devient la valeur par défaut.
 const PREFS_KEY = 'simloom.fm.tactic.v2';
@@ -366,7 +366,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                           <span className="pill">{POS_LABEL[sl.pos]}</span>
                         </td>
                         <td className="font-bold text-canard">
-                          {p?.name ?? <span className="text-corail">{t('fm.tac.nobody')}</span>}
+                          {p ? <PlayerLink player={p} /> : <span className="text-corail">{t('fm.tac.nobody')}</span>}
                           {p && !p.positions.includes(sl.pos) && <span className="ml-2 text-xs font-normal text-brun">{t('fm.tac.offPos')}</span>}
                         </td>
                         {(['ip', 'oop'] as const).map((ph) => (
@@ -452,7 +452,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                 <div key={i} className="rounded-xl bg-creme/50 px-3 py-2 text-sm">
                   <div className="flex items-baseline gap-2">
                     <span className="rounded-full bg-eau/20 px-2 py-0.5 text-xs font-bold text-canard">{POS_LABEL[sl.pos]}</span>
-                    <b className="text-canard">{sl.player!.name}</b>
+                    <PlayerLink player={sl.player!} className="font-bold text-canard" />
                   </div>
                   <p className="mb-1 mt-0.5 text-xs text-brun">
                     {roleName(sl.ip, 'ip')} · {roleName(sl.oop)}

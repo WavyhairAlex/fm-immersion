@@ -44,7 +44,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticEngine } from './FmTactic';
-import { Chips, Fit, Panel, Pos, Tag, useCoach, useNames, More } from './FmUi';
+import { Chips, Fit, Panel, Pos, Tag, useCoach, useNames, More, PlayerLink } from './FmUi';
 
 /** Couleur des pastilles par catégorie de séance (texte toujours canard, sauf le match en bouton principal). */
 const CAT_CLS: Record<SessionCategory, string> = {
@@ -486,7 +486,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
                   return (
                     <tr key={x.player.id} className={`border-t border-canard/5 ${status === 'change' ? 'bg-ambre/10' : ''}`}>
                       <td className="px-2 py-1.5 font-bold">
-                        {x.player.name} <Pos player={x.player} />
+                        <PlayerLink player={x.player} /> <Pos player={x.player} />
                       </td>
                       <td className="px-2 py-1.5">
                         <label className="flex items-center gap-1.5">

@@ -51,7 +51,9 @@ export function FmHome({ snap, players, folder, history, go }: { snap: FmSnapsho
           ? `${Math.round(a.condition)} %`
           : a.detail;
   // Les joueurs fatigués sont déjà regroupés dans le cadre Entraînement : pas de doublon ligne par ligne ici.
-  const alerts = h.alerts;
+  // Condition physique : un seul résumé (« 8 joueurs sous 80 % ») au lieu d'une ligne par joueur.
+  const tired = h.alerts.filter((a) => a.kind === 'condition').map((a) => a.player);
+  const alerts = h.alerts.filter((a) => a.kind !== 'condition');
   const shown = alerts.slice(0, 8);
 
   return (
@@ -72,6 +74,15 @@ export function FmHome({ snap, players, folder, history, go }: { snap: FmSnapsho
               </Row>
             </button>
           )}
+          {tired.length > 0 && (
+            <Row>
+              <span>
+                <Tag tone="warn">{t('fm.home.kind.condition')}</Tag> <b>{t('fm.home.tired', { count: tired.length })}</b>
+                <br />
+                <span className="text-xs text-brun">{short(tired)}</span>
+              </span>
+            </Row>
+          )}
           {shown.length ? (
             shown.map((a, i) => (
               <Row key={i}>
@@ -81,7 +92,7 @@ export function FmHome({ snap, players, folder, history, go }: { snap: FmSnapsho
                 <span className="text-xs text-brun">{alertText(a)}</span>
               </Row>
             ))
-          ) : !h.contracts ? (
+          ) : !h.contracts && !tired.length ? (
             <Empty>{t('fm.home.nothing')}</Empty>
           ) : null}
           {alerts.length > shown.length && <p className="mt-1 text-xs text-brun">{t('fm.home.more', { count: alerts.length - shown.length })}</p>}

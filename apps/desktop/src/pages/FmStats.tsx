@@ -1,7 +1,7 @@
 import { matchStatsFull, MIN_STAT_MINUTES, RAW_GROUPS, STAT_METRICS, statsBoard, statsTrends, type FmPlayer, type FmSnapshot, type PlayerStatReport, type StatKey, type PlayerTrend, type StatMark, type StatTrend } from '@simloom/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Chips, Empty, Kpi, Panel, Pos, Tag, More } from './FmUi';
+import { Chips, Empty, Kpi, Panel, Pos, Tag, More, PlayerLink } from './FmUi';
 
 type LineFilter = 'all' | 'GB' | 'DEF' | 'MIL' | 'ATT';
 const LINE_ORDER = { GB: 0, DEF: 1, MIL: 2, ATT: 3 } as const;
@@ -174,7 +174,7 @@ export function FmStats({ snap, players, history }: { snap: FmSnapshot; players:
               {shown.map((r) => (
                 <tr key={r.player.id} className={`border-t border-canard/5 ${r.enough ? '' : 'opacity-60'}`}>
                   <td className="px-2 py-1.5 font-bold">
-                    {r.player.name} <Pos player={r.player} />
+                    <PlayerLink player={r.player} /> <Pos player={r.player} />
                   </td>
                   <td className="px-2 py-1.5 tabular-nums">{r.minutes}</td>
                   {cols.map((k) => (
