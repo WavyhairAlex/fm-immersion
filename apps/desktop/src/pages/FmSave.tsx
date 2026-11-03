@@ -41,7 +41,7 @@ const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
  */
 const SECTIONS = [
   { id: 'home', views: ['home'] },
-  { id: 'squad', views: ['squad', 'analysis', 'compare'] },
+  { id: 'squad', views: ['squad', 'analysis', 'stats', 'compare'] },
   { id: 'tactic', views: ['tactic', 'opponent'] },
   { id: 'project', views: ['style', 'project', 'training', 'mercato'] },
   { id: 'club', views: ['finances'] },
@@ -52,7 +52,7 @@ const SECTIONS = [
  */
 const PARTS: Record<string, readonly string[]> = {
   squad: ['squad', 'dressing', 'loans'],
-  analysis: ['analysis', 'roles', 'stats', 'progression'],
+  analysis: ['analysis', 'roles', 'progression'],
   tactic: ['tactic', 'depth', 'effectiveness'],
   opponent: ['opponent', 'calendar'],
   mercato: ['mercato', 'targets'],
