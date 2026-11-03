@@ -434,7 +434,7 @@
     "loans": {
       "title_one": "Joueurs prêtés ({{count}})",
       "title_other": "Joueurs prêtés ({{count}})",
-      "none": "Aucun prêt dans l'instantané. Le plugin ne lit pas encore les joueurs prêtés.",
+      "none": "Aucun joueur prêté. Les prêtés sont lus avec les cibles du mercato (réglage LireCibles, source « pretes » de chemins.json), au changement de date dans le jeu.",
       "help": "Un jeune qui ne joue pas en prêt progresse peu : à rappeler ou à replacer au prochain mercato.",
       "col": {
         "player": "Joueur",

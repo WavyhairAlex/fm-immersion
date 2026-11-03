@@ -1,7 +1,7 @@
 import { starsOf, withExtended } from './lineup';
 import { normalizePlayer, toNumber, type FmPlayer } from './player';
 import { range, type Range } from './project';
-import { fmPlayerSchema, type FmSnapshot } from './snapshot';
+import { fmPlayerSchema, LOAN_SOURCE, loanShortlist, type FmSnapshot } from './snapshot';
 
 /**
  * Cibles du mercato : joueurs d'autres clubs que le joueur suit dans FM27 (liste de suivi, cibles du recrutement),
@@ -141,7 +141,7 @@ export function trialistIds(snap: FmSnapshot): Set<string> {
  */
 export function loanedOutIds(snap: FmSnapshot): Set<string> {
   const ids = new Set<string>();
-  for (const x of Array.isArray(snap.loans) ? (snap.loans as unknown[]) : []) {
+  for (const x of [...(Array.isArray(snap.loans) ? (snap.loans as unknown[]) : []), ...loanShortlist(snap)]) {
     const id = (x as Raw | null)?.id;
     if (id != null) ids.add(String(id));
   }
@@ -162,7 +162,8 @@ export function squadSnapshot(snap: FmSnapshot): FmSnapshot {
  * (réglage désactivé, plugin antérieur à 0.4.0, aucun essai en cours).
  */
 export function snapshotTargets(snap: FmSnapshot): unknown[] | null {
-  const read = Array.isArray(snap.shortlist) ? (snap.shortlist as unknown[]) : null;
+  // Les prêtés (source « pretes ») sont les joueurs du club, pas des cibles : retirés de la liste.
+  const read = Array.isArray(snap.shortlist) ? (snap.shortlist as unknown[]).flatMap(withoutLoanSource) : null;
   const trial = trialistIds(snap);
   if (!trial.size) return read;
   const out = [...(read ?? [])];
@@ -176,6 +177,14 @@ export function snapshotTargets(snap: FmSnapshot): unknown[] | null {
     }
   }
   return out;
+}
+
+function withoutLoanSource(x: unknown): unknown[] {
+  const o = x as Raw | null;
+  const s = o?.sources;
+  if (!Array.isArray(s) || !s.includes(LOAN_SOURCE)) return [x];
+  const rest = s.filter((v) => v !== LOAN_SOURCE);
+  return rest.length ? [{ ...o, sources: rest }] : [];
 }
 
 /** Une cible ne vient que des essais (pas des listes du jeu). */

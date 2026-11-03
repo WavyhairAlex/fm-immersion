@@ -434,7 +434,7 @@
     "loans": {
       "title_one": "Players on loan ({{count}})",
       "title_other": "Players on loan ({{count}})",
-      "none": "No loans in the snapshot. The plugin does not read loaned players yet.",
+      "none": "No loaned-out players. They are read with the transfer targets (LireCibles setting, \"pretes\" source in chemins.json) when the game date changes.",
       "help": "A young player who doesn't play on loan barely progresses: recall him or find another club next window.",
       "col": {
         "player": "Player",
