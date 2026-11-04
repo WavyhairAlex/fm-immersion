@@ -41,3 +41,4 @@ export * from './rules';
 export * from './results';
 export * from './replacement';
 export * from './diagnose';
+export * from './staff';

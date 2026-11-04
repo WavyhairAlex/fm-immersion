@@ -154,6 +154,27 @@ pub const KNOWN: Globals = Globals { database: 0x57036D0, humans: 0x56F3008, dat
 /// le contrat de prêt (`[ACTUAL_PERSON+0x88]+0`) mais n'en est pas un (vérifié en partie le 01/11, 1 cas).
 pub const KNOWN_TRIAL_VTABLE: u64 = 0x4C8EB78;
 
+/// FM27 mis à jour le 03/11/2026 (game_plugin.dll de 404 308 480 octets, SHA-256 252ff8fb…89e66c6a) :
+/// mêmes motifs, points d'entrée décalés de 0x2000 ; vtable du contrat d'essai retrouvée par la RTTI.
+pub const KNOWN_1103: Globals = Globals { database: 0x57056D0, humans: 0x56F5008, date: 0x56AF378 };
+pub const KNOWN_1103_TRIAL_VTABLE: u64 = 0x4C90B78;
+
+/// Vtable du contrat d'essai pour une version connue.
+fn trial_vtable_for(globals: Globals) -> Option<u64> {
+    if globals == KNOWN {
+        Some(KNOWN_TRIAL_VTABLE)
+    } else if globals == KNOWN_1103 {
+        Some(KNOWN_1103_TRIAL_VTABLE)
+    } else {
+        None
+    }
+}
+
+/// Points d'entrée d'une version analysée.
+pub fn is_known(globals: Globals) -> bool {
+    trial_vtable_for(globals).is_some()
+}
+
 struct Sig {
     pattern: &'static str,
     /// Position du déplacement 32 bits relatif à RIP dans le motif.
@@ -325,6 +346,12 @@ mod off {
     /// Contrat de prêt : équipe d'accueil `+0x10`, fin du prêt `+0x48` (sans condition).
     pub const L_TEAM: u64 = 0x10;
     pub const L_END: u64 = 0x48;
+
+    /// `DATABASE` : table des personnes (`DATABASE_TABLE<PERSON>*`), vecteur par index à `+0x60`.
+    pub const DB_PERSONS: u64 = 0x68;
+    pub const TABLE_BY_INDEX: u64 = 0x60;
+    /// Fonction (poste) d'un membre du staff : octet du contrat (slot 0x50 de la vtable des contrats).
+    pub const C_JOB: u64 = 0x26;
 
     // TEAM (ses noms sont vides en partie : on prend celui du club)
     pub const T_NATIONAL: u64 = 0x2F;
@@ -762,7 +789,7 @@ impl<'a, M: Mem> Database<'a, M> {
         if players.is_empty() {
             return Err(MemError::NoSave);
         }
-        let trial_vtable = (globals == KNOWN).then_some(module_base + KNOWN_TRIAL_VTABLE);
+        let trial_vtable = trial_vtable_for(globals).map(|v| module_base + v);
         Ok(Database { ctx: Ctx { r, today, trial_vtable, clubs: HashMap::new(), names: HashMap::new() }, module_base, globals, players })
     }
 
@@ -849,6 +876,220 @@ pub struct Human {
     pub name: Option<String>,
     pub club: Option<String>,
     pub club_id: Option<i32>,
+}
+
+// ---------------------------------------------------------------------------------------------
+// Staff (`ACTUAL_NON_PLAYER`) — analyse hors jeu de game_plugin.dll (patch du 03/11), pas encore vu en partie
+
+/// Nom RTTI de la classe des membres du staff.
+const STAFF_CLASS: &[u8] = b".?AVACTUAL_NON_PLAYER@db@@\0";
+/// Sous-objets virtuels d'un membre du staff (vbptr en `+0`).
+const STAFF_PERSON: i32 = 0x100;
+const STAFF_ACTUAL_PERSON: i32 = 0x128;
+/// Octets lus d'un coup à partir du début de l'objet (couvre toutes les notes).
+const STAFF_BLOCK: usize = 0x50;
+/// Adaptabilité : dans `ACTUAL_PERSON`, valeur directe 1-20.
+const STAFF_ADAPTABILITY: u64 = 0x48;
+/// Nombre maximal de personnes acceptées dans la table (joueurs, staff, managers…).
+const MAX_PERSONS: usize = 5_000_000;
+
+/// Notes du staff : clé Simloom, position dans l'objet, stockée sur 100 (convertie en 1-20 comme le jeu).
+/// Retrouvées par l'accesseur des notes (RVA 0x17D40C0, table de sauts 0x4D8EB14) et le dictionnaire des codes.
+const STAFF_ATTRIBUTES: [(&str, usize, bool); 21] = [
+    ("Attacking", 0x32, true),
+    ("Defending", 0x33, true),
+    ("Fitness", 0x34, true),
+    ("Goalkeeping", 0x2B, true),
+    ("Possession", 0x35, true),
+    ("Technical", 0x36, true),
+    ("Tactical", 0x37, true),
+    ("SetPieces", 0x43, true),
+    ("TacticalKnowledge", 0x31, true),
+    ("WorkingWithYoungsters", 0x1C, false),
+    ("PeopleManagement", 0x2E, true),
+    ("Determination", 0x1D, true),
+    ("Authority", 0x14, false),
+    ("Motivating", 0x2F, true),
+    ("JudgingPlayerAbility", 0x2C, true),
+    ("JudgingPlayerPotential", 0x2D, true),
+    ("JudgingStaffAbility", 0x42, true),
+    ("Negotiating", 0x41, true),
+    ("Physiotherapy", 0x30, true),
+    ("SportsScience", 0x3F, true),
+    ("AnalysingData", 0x3C, true),
+];
+
+/// Conversion 1-100 → 1-20 du jeu : `(v × 0x6667 + 0xCCCE) >> 17`, bornée à 1-20.
+fn staff_scale(v: u8) -> u8 {
+    (((v as u32) * 0x6667 + 0xCCCE) >> 17).clamp(1, 20) as u8
+}
+
+/// Un membre du staff lu dans la base.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DbStaff {
+    pub id: i32,
+    pub name: String,
+    pub birth_date: Option<String>,
+    pub age: Option<u16>,
+    pub club: Option<String>,
+    pub club_id: Option<i32>,
+    pub nation: Option<String>,
+    /// Code brut de la fonction dans le contrat (`contrat+0x26`) ; correspondance avec les intitulés à confirmer.
+    pub job_code: Option<u8>,
+    pub wage_weekly: Option<i32>,
+    pub contract_end: Option<String>,
+    /// Notes 1-20 (21 notes, plus l'adaptabilité).
+    pub attributes: BTreeMap<&'static str, u8>,
+}
+
+impl<M: Mem> Ctx<'_, M> {
+    /// Décalage du sous-objet `PERSON` si la vtable `vt` est celle d'un membre du staff (lu par le RTTI).
+    fn staff_offset(&self, module_base: u64, vt: u64) -> Option<i32> {
+        let col = self.r.ptr(vt.checked_sub(8)?)?;
+        if self.r.i32(col)? != 1 {
+            return None;
+        }
+        let offset = self.r.i32(col + 4)?;
+        let td = self.r.i32(col + 12)?;
+        let name = self.r.bytes(module_base + td as u32 as u64 + 16, STAFF_CLASS.len())?;
+        (name == STAFF_CLASS).then_some(offset)
+    }
+
+    fn staff(&mut self, base: u64) -> Option<DbStaff> {
+        let vb = self.r.ptr(base)?;
+        if self.r.i32(vb + 4)? != STAFF_PERSON || self.r.i32(vb + 8)? != STAFF_ACTUAL_PERSON {
+            return None;
+        }
+        let person = base + STAFF_PERSON as u64;
+        let actual = base + STAFF_ACTUAL_PERSON as u64;
+        let id = self.r.i32(person + off::P_UID).filter(|&id| id > 0)?;
+        let b = self.r.bytes(base, STAFF_BLOCK)?;
+        let mut attributes = BTreeMap::new();
+        for (key, pos, scaled) in STAFF_ATTRIBUTES {
+            let v = b[pos];
+            let v = if scaled { staff_scale(v) } else { v };
+            if !(1..=20).contains(&v) {
+                return None;
+            }
+            attributes.insert(key, v);
+        }
+        let adaptability = self.r.u8(actual + STAFF_ADAPTABILITY).filter(|v| (1..=20).contains(v));
+        if let Some(a) = adaptability {
+            attributes.insert("Adaptability", a);
+        }
+
+        let first = self.r.string_indirect(actual + off::A_FIRST_NAME);
+        let last = self.r.string_indirect(actual + off::A_LAST_NAME);
+        let name = self
+            .r
+            .string_indirect(actual + off::A_COMMON_NAME)
+            .or_else(|| match (&first, &last) {
+                (Some(f), Some(l)) => Some(format!("{f} {l}")),
+                (f, l) => f.clone().or_else(|| l.clone()),
+            })
+            .or_else(|| self.r.string(actual + off::A_FULL_NAME))?;
+        let birth = date_at(&self.r, actual + off::A_BIRTH);
+        let contract = self.r.ptr(actual + off::A_CONTRACT);
+        let club = contract.and_then(|c| self.r.ptr(c + off::C_TEAM)).and_then(|t| self.club_of_team(t));
+        let nation = self.r.ptr(actual + off::A_NATION).and_then(|n| self.nation(n));
+        Some(DbStaff {
+            id,
+            name,
+            birth_date: birth.and_then(|d| d.iso()),
+            age: match (birth, self.today) {
+                (Some(b), Some(t)) => b.age_at(&t),
+                _ => None,
+            },
+            club_id: club.as_ref().map(|c| c.id),
+            club: club.and_then(|c| c.name),
+            nation: nation.and_then(|n| n.name),
+            job_code: contract.and_then(|c| self.r.u8(c + off::C_JOB)),
+            wage_weekly: contract.and_then(|c| self.r.i32(c + off::C_WAGE)).filter(|&w| w >= 0),
+            contract_end: contract.and_then(|c| date_at(&self.r, c + off::C_END)).and_then(|d| d.iso()),
+            attributes,
+        })
+    }
+}
+
+impl<M: Mem> Database<'_, M> {
+    /// Toutes les personnes de la base (`PERSON*`) : table `[DATABASE+0x68]`, vecteur par index à `+0x60`.
+    fn persons(&self) -> Option<Vec<u64>> {
+        let table = self.ctx.r.ptr(self.module_base + self.globals.database + off::DB_PERSONS)?;
+        pointer_vec(&self.ctx.r, table + off::TABLE_BY_INDEX, MAX_PERSONS)
+    }
+
+    /// Membres du staff acceptés par `keep`, jusqu'à `limit` (classe reconnue par son nom RTTI, mis en cache par vtable).
+    pub fn staff(&mut self, limit: usize, mut keep: impl FnMut(&DbStaff) -> bool) -> Result<Vec<DbStaff>, MemError> {
+        let persons = self.persons().ok_or_else(|| MemError::Unexpected("table des personnes illisible".into()))?;
+        let mut classes: HashMap<u64, Option<i32>> = HashMap::new();
+        let mut out = Vec::new();
+        for p in persons {
+            if out.len() >= limit {
+                break;
+            }
+            let Some(vt) = self.ctx.r.ptr(p) else { continue };
+            let offset = match classes.get(&vt) {
+                Some(o) => *o,
+                None => {
+                    let o = self.ctx.staff_offset(self.module_base, vt);
+                    classes.insert(vt, o);
+                    o
+                }
+            };
+            let Some(offset) = offset.filter(|&o| o == STAFF_PERSON) else { continue };
+            if let Some(s) = self.ctx.staff(p - offset as u64) {
+                if keep(&s) {
+                    out.push(s);
+                }
+            }
+        }
+        Ok(out)
+    }
+}
+
+/// Staff du club du manager humain, et membres du staff sans club (recrutables sans indemnité).
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ClubStaff {
+    pub game_date: Option<String>,
+    pub club_id: Option<i32>,
+    pub staff: Vec<DbStaff>,
+    pub free_agents: Vec<DbStaff>,
+}
+
+/// Nombre maximal de membres du staff renvoyés par liste.
+const MAX_STAFF: usize = 3_000;
+
+pub fn club_staff<M: Mem>(db: &mut Database<M>, free_agents: bool) -> Result<ClubStaff, MemError> {
+    let club_id = db.humans().iter().find_map(|h| h.club_id);
+    let mut staff = Vec::new();
+    let mut free = Vec::new();
+    if club_id.is_some() || free_agents {
+        for s in db.staff(usize::MAX, |s| (club_id.is_some() && s.club_id == club_id) || (free_agents && s.club_id.is_none()))? {
+            if club_id.is_some() && s.club_id == club_id {
+                if staff.len() < MAX_STAFF {
+                    staff.push(s);
+                }
+            } else if free.len() < MAX_STAFF {
+                free.push(s);
+            }
+        }
+    }
+    Ok(ClubStaff { game_date: db.today().and_then(|d| d.iso()), club_id, staff, free_agents: free })
+}
+
+/// Staff du club (et, sur demande, staff libre) : lecture seule, à la demande du joueur.
+#[tauri::command]
+pub async fn fm_memory_staff(free_agents: Option<bool>) -> Result<ClubStaff, MemError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        with_database(|db, _| {
+            db.check()?;
+            club_staff(db, free_agents.unwrap_or(false))
+        })
+    })
+    .await
+    .map_err(|e| MemError::Unexpected(e.to_string()))?
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1046,7 +1287,7 @@ fn probe() -> Result<Probe, MemError> {
             module_path: module.path.display().to_string(),
             module_size: module.size,
             globals: db.globals,
-            known_version: db.globals == KNOWN,
+            known_version: is_known(db.globals),
             game_date: today.and_then(|d| d.iso()),
             game_date_raw: today,
             player_count: db.count(),
@@ -1460,6 +1701,82 @@ mod tests {
         assert_eq!(d.own_club_id, None);
         assert!(division_players(&mut db, Some("Allsvenskan")).players.is_empty());
         assert!(division_players(&mut db, None).players.is_empty());
+    }
+
+    #[test]
+    fn lit_le_staff_du_club() {
+        let mut m = world();
+        let (table, list) = (0x3000_0000u64, 0x3000_1000u64);
+        let (staff, vb, vt, col) = (0x3100_0000u64, 0x3100_1000u64, 0x3100_2000u64, 0x3100_3000u64);
+        let (contract, td) = (0x3100_4000u64, 0x0010_0000u32);
+        let player_person = 0x2000_0000u64 + 0x288;
+        let (pvt, pcol, ptd) = (0x3200_0000u64, 0x3200_1000u64, 0x0010_1000u32);
+
+        // Table des personnes : le joueur de `world()` (classe différente), un trou et le membre du staff.
+        m.put_u64(BASE + KNOWN.database + off::DB_PERSONS, table);
+        m.put_u64(table + off::TABLE_BY_INDEX, list);
+        m.put_u64(table + off::TABLE_BY_INDEX + 8, list + 24);
+        m.put_u64(list, player_person);
+        m.put_u64(list + 8, 0);
+        m.put_u64(list + 16, staff + 0x100);
+        m.put_u64(player_person, pvt);
+        m.put_u64(pvt - 8, pcol);
+        m.put(pcol, [1i32, 0x288, 0, ptd as i32].iter().flat_map(|v| v.to_le_bytes()).collect());
+        m.put(BASE + ptd as u64 + 16, b".?AVACTUAL_PLAYER@db@@\0".to_vec());
+
+        // RTTI : vtable du sous-objet PERSON → COL (signature 1, décalage 0x100) → nom de classe.
+        m.put_u64(vt - 8, col);
+        m.put(col, [1i32, 0x100, 0, td as i32].iter().flat_map(|v| v.to_le_bytes()).collect());
+        m.put(BASE + td as u64 + 16, STAFF_CLASS.to_vec());
+
+        let mut b = vec![0u8; 0x200];
+        for (_, pos, scaled) in STAFF_ATTRIBUTES {
+            b[pos] = if scaled { 50 } else { 12 };
+        }
+        b[0x32] = 100; // Attaque 20
+        b[0x2B] = 1; // Gardiens 1
+        m.put(staff, b);
+        m.put_u64(staff, vb);
+        m.put_i32(vb + 4, 0x100);
+        m.put_i32(vb + 8, 0x128);
+        m.put_u64(staff + 0x100, vt);
+        m.put_i32(staff + 0x100 + 0xC, 9_000_001);
+        let actual = staff + 0x128;
+        m.put_u64(actual + 0x18, 0);
+        m.put_u64(actual + 0x28, 0x3300_0000);
+        m.put_u64(0x3300_0000, 0x3300_0100);
+        m.put_str(0x3300_0100, "Ján");
+        m.put_u64(actual + 0x30, 0x3300_0200);
+        m.put_u64(0x3300_0200, 0x3300_0300);
+        m.put_str(0x3300_0300, "Novák");
+        m.put_u64(actual + 0x38, 0);
+        m.put(actual + 0x48, vec![14]);
+        m.put(actual + 0x60, date(1, 1980));
+        m.put_u64(actual + 0x80, contract);
+        m.put(contract, vec![0u8; 0x60]);
+        m.put_u64(contract + 0x10, 0x2300_0000); // même équipe que le joueur de `world()`
+        m.put(contract + 0x26, vec![2]);
+        m.put_i32(contract + 0x20, 900);
+
+        let mut db = Database::open(&m, BASE, KNOWN).unwrap();
+        let all = db.staff(10, |_| true).unwrap();
+        assert_eq!(all.len(), 1);
+        let s = &all[0];
+        assert_eq!((s.id, s.name.as_str()), (9_000_001, "Ján Novák"));
+        assert_eq!((s.club_id, s.club.as_deref()), (Some(7_001), Some("Vänersborgs IF")));
+        assert_eq!((s.job_code, s.wage_weekly, s.age), (Some(2), Some(900), Some(46)));
+        assert_eq!(s.attributes.len(), 22);
+        assert_eq!((s.attributes["Attacking"], s.attributes["Goalkeeping"], s.attributes["Tactical"]), (20, 1, 10));
+        assert_eq!((s.attributes["Authority"], s.attributes["WorkingWithYoungsters"], s.attributes["Adaptability"]), (12, 12, 14));
+        // Sans manager humain : rien à lister pour « notre » club ; le staff libre est demandé à part.
+        let c = club_staff(&mut db, true).unwrap();
+        assert!(c.staff.is_empty() && c.free_agents.is_empty());
+    }
+
+    #[test]
+    fn echelle_des_notes_du_staff() {
+        assert_eq!([staff_scale(0), staff_scale(5), staff_scale(50), staff_scale(98), staff_scale(100)], [1, 1, 10, 20, 20]);
+        assert_eq!(staff_scale(73), 15);
     }
 
     #[test]

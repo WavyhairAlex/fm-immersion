@@ -341,7 +341,8 @@
       "targets": "Transfer targets",
       "instructions": "Player instructions",
       "results": "Results",
-      "diagnosis": "Why they underperform"
+      "diagnosis": "Why they underperform",
+      "staff": "Staff"
     },
     "home": {
       "todo": "To deal with",
@@ -1976,6 +1977,60 @@
         "better": "{{name}} would be rated higher in this slot ({{fit}})."
       },
       "how": "Same eleven as Tactic > Line-up. The rating comes from the latest matches found in Results (otherwise the season) and is compared to the starters' average: a player is flagged 0.25 below it, or under 6.6. Causes come from what Simloom already reads: position familiarity, foot, role rating and key attributes (FM27 scale), threshold of demanding roles, Data Hub stats compared to his line, condition, sharpness, morale, and higher-rated subs for the same slot."
+    },
+    "staff": {
+      "title": "Coaching staff",
+      "teaser": "Your coaches rated by area, who should handle what, and the unattached staff who would do better where we are weak.",
+      "read": "Read staff",
+      "withFree": "Include staff without a club",
+      "reading": "Reading the database…",
+      "noClub": "No club found for the human manager (is a save loaded?).",
+      "none": "No staff member found.",
+      "help": "Read-only access to the FM27 database, on demand, with a save open. The 1-20 attributes are the game's; an area score is a Simloom formula, not the game's stars: the area attribute counts three times, plus determination, authority and motivating, divided by 6. Assignments give each area to the best available coach, two areas at most each, keeping for last those who are better off the pitch (physio, scout, analyst…). Below 12 an area needs strengthening. Unattached staff can be hired without compensation.",
+      "planTitle": "Suggested assignments",
+      "weak_one": "1 area to strengthen: {{list}}.",
+      "weak_other": "{{count}} areas to strengthen: {{list}}.",
+      "domain": "Area",
+      "coach": "Coach",
+      "score": "Score /20",
+      "freeBetter": "Unattached staff who would do better",
+      "nobody": "Nobody (already two areas each)",
+      "toStrengthen": "To strengthen",
+      "age": "{{age}} y/o",
+      "listTitle": "Our staff ({{count}})",
+      "name": "Name",
+      "job": "Job",
+      "bestJob": "Best off the pitch",
+      "jobCode": "#{{code}}",
+      "jobNote": "Job: raw code read from the contract; the game's job titles still need matching (tell me the job of two or three staff members and they will show here). Each person's two best areas are highlighted.",
+      "freeTitle": "Staff without a club ({{count}})",
+      "freeFor": "Best for",
+      "k": {
+        "Attacking": "Attacking",
+        "Defending": "Defending",
+        "Possession": "Possession",
+        "Technical": "Technical",
+        "Tactical": "Tactical",
+        "Fitness": "Fitness",
+        "Goalkeeping": "Goalkeeping",
+        "SetPieces": "Set pieces",
+        "assistant": "Assistant manager",
+        "youth": "Youth development",
+        "scout": "Scout",
+        "physio": "Physio",
+        "sportsScientist": "Sports scientist",
+        "analyst": "Data analyst"
+      },
+      "short": {
+        "Attacking": "Att",
+        "Defending": "Def",
+        "Possession": "Pos",
+        "Technical": "Tec",
+        "Tactical": "Tac",
+        "Fitness": "Fit",
+        "Goalkeeping": "GK",
+        "SetPieces": "SP"
+      }
     }
   },
   "pz2": {
