@@ -73,7 +73,8 @@ describe('centre de données, toutes les stats (stat_<Propriété>)', () => {
   it('garde toutes les stats brutes et recalcule par 90 et pourcentages', () => {
     const m = matchStatsFull(full).get('9')!;
     expect(m.raw).toMatchObject({ Minutes: 900, PassAttempts: 500, YellowCards: 3 });
-    expect(m.raw.TackleAttempts).toBeUndefined();
+    // Total à zéro ({ PropertyValue: 0, Count: 0 }) : zéro tentative, gardé tel quel ; le pourcentage reste vide.
+    expect(m.raw.TackleAttempts).toBe(0);
     expect(m.stats.passPct).toBe(90);
     expect(m.stats.passAtt90).toBe(50);
     expect(m.stats.possLost90).toBe(8);
