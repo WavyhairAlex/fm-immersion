@@ -33,3 +33,17 @@
   .data-table.wide td { @apply whitespace-nowrap; }
   .card { @apply rounded-3xl bg-white p-6 shadow-sm ring-1 ring-canard/5; }
 }
+
+/* Module Football Manager : présentation « logiciel de foot », plus dense et régulière (cadres nets, titres de
+   cadre en petites capitales, tableaux rayés). Limité à `.fm` pour ne pas toucher les autres modules. */
+@layer components {
+  .fm .card { @apply rounded-xl p-5 shadow-none ring-1 ring-canard/10; }
+  .fm .card h2 { @apply font-sans text-sm font-extrabold uppercase tracking-wider text-canard; }
+  .fm .card h3 { @apply font-sans text-xs font-extrabold uppercase tracking-wider text-canard/60; }
+  .fm .card .help { @apply mt-1 text-xs; }
+  .fm .pill { @apply rounded-md; }
+  .fm .data-table thead { @apply bg-canard/[0.04]; }
+  .fm .data-table tbody tr:nth-child(even) { @apply bg-creme/40; }
+  .fm .data-table tbody tr { @apply hover:bg-eau/10; }
+  .fm .data-table.wide thead th { @apply bg-[#f6f8f8]; }
+}
