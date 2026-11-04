@@ -149,6 +149,8 @@ export interface CoachPrefs {
   /** Statut du club (pro, semi, amateur) et jours d'entraînement d'un club à temps partiel. */
   clubStatus?: 'pro' | 'semi' | 'amateur';
   trainingDays?: number[];
+  /** Méthode des semaines de saison (« meta » par défaut, ou « freedom »). */
+  trainingMethod?: 'meta' | 'freedom';
 }
 export const TARGETS = [45, 50, 55, 60, 65, 70];
 

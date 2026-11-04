@@ -1,5 +1,7 @@
 import {
   CLUB_STATUSES,
+  TRAINING_METHODS,
+  metaProgramme,
   CONDITION_LEVELS,
   TEAM_INTENSITY,
   PART_TIME_DAYS,
@@ -137,6 +139,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
   const [coach, setCoach] = useCoach();
   const seasonStart = coach.seasonStart ?? 8;
   const clubStatus: ClubStatus = coach.clubStatus ?? 'pro';
+  const method = coach.trainingMethod ?? 'meta';
   const trainingDays = clubStatus === 'pro' ? undefined : coach.trainingDays ?? PART_TIME_DAYS;
   const [offset, setOffset] = useState<'0' | '1'>('0');
   const [phaseOverride, setPhase] = useState<TrainingPhase | null>(null);
@@ -167,13 +170,16 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
   const mentoring = useMemo(() => mentoringGroups(players), [players]);
   const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
   const upcoming = useMemo(
-    () => upcomingWeeks({ gameDate: snap.gameDate, fixtures, seasonStart, winterBreak, trainingDays, priorities, style: style?.id }),
-    [snap.gameDate, fixtures, seasonStart, winterBreak?.from, winterBreak?.to, trainingDays?.join(), priorities.join(), style?.id],
+    () => upcomingWeeks({ gameDate: snap.gameDate, fixtures, seasonStart, winterBreak, trainingDays, priorities, style: style?.id, method }),
+    [snap.gameDate, fixtures, seasonStart, winterBreak?.from, winterBreak?.to, trainingDays?.join(), priorities.join(), style?.id, method],
   );
   const plan = useMemo(
-    () => buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: before, priorities, style: style?.id, trainingDays }),
-    [monday, phase, week, matchDays.join(), before, priorities.join(), style?.id, trainingDays?.join()],
+    () => buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: before, priorities, style: style?.id, trainingDays, method }),
+    [monday, phase, week, matchDays.join(), before, priorities.join(), style?.id, trainingDays?.join(), method],
   );
+  // Programme .fmf d'AlexJeuVideal à charger : dernier match de la semaine précédente (dimanche si on le sait), puis ceux de la semaine.
+  const prevLast = before ? 6 : (weekMatches(fixtures, addDays(monday, -7)).days.at(-1) ?? null);
+  const metaFile = method === 'meta' && (phase === 'A' || phase === 'B' || phase === 'C') && !plan.congested ? metaProgramme(matchDays, prevLast) : null;
   const load = weekLoad(plan);
   const resetWeek = () => {
     setManualDays(null);
@@ -235,6 +241,16 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
                 <option key={w} value={w}>
                   {phase}
                   {w}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className={label}>
+            {t('fm.train.method')}
+            <select className="input mt-1" value={method} onChange={(e) => setCoach({ trainingMethod: e.target.value as 'meta' | 'freedom' })}>
+              {TRAINING_METHODS.map((m) => (
+                <option key={m} value={m}>
+                  {t(`fm.train.methods.${m}`)}
                 </option>
               ))}
             </select>
@@ -339,8 +355,14 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
           {plan.theme && <> · {t(`fm.train.theme.${plan.theme}`)}</>}
           {plan.variant != null && <> · {plan.congested ? t('fm.train.congested') : t(`fm.train.variant_${plan.variant}`)}</>}
         </p>
-        <p className="mt-1 text-xs text-brun">{t(`fm.train.phaseHelp.${plan.phase}`)}</p>
-        <p className="mt-1 text-xs text-brun">{t('fm.train.presetHint', { preset: t(`fm.train.preset.${nearestPreset(plan)}`) })}</p>
+        <p className="mt-1 text-xs text-brun">{method === 'meta' && plan.theme == null && 'ABC'.includes(plan.phase) ? t('fm.train.metaHelp') : t(`fm.train.phaseHelp.${plan.phase}`)}</p>
+        {metaFile ? (
+          <p className="mt-1 text-sm">
+            {t('fm.train.metaFile')} <b className="text-canard">{metaFile.trim()}.fmf</b>
+          </p>
+        ) : (
+          <p className="mt-1 text-xs text-brun">{t('fm.train.presetHint', { preset: t(`fm.train.preset.${nearestPreset(plan)}`) })}</p>
+        )}
         {weekWorkload(plan) && <p className="mt-1 text-xs text-brun">{t('fm.train.workloadHint', { level: t(`fm.train.workload.${weekWorkload(plan)}`) })}</p>}
         {weakest.length > 0 && <p className="mt-1 text-xs text-brun">{t('fm.train.weakest', { list: weakest.map((a) => t(`fm.train.session.${a}`)).join(', ') })}</p>}
         {priorities.length > 0 && <p className="mt-1 text-xs text-brun">{t('fm.train.priorities', { list: priorities.map((a) => t(`fm.train.session.${a}`)).join(', ') })}</p>}
@@ -405,7 +427,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
                     <b>{w.plan.code}</b> <span className="text-xs text-brun">{t(`fm.train.phase.${w.plan.phase}`)}</span>
                   </td>
                   <td className="px-2 py-1.5 text-right tabular-nums">{w.matches}</td>
-                  <td className="px-2 py-1.5 font-bold">{t(`fm.train.preset.${w.preset}`)}</td>
+                  <td className="px-2 py-1.5 font-bold">{w.file ? `${w.file.trim()}.fmf` : t(`fm.train.preset.${w.preset}`)}</td>
                   <td className="px-2 py-1.5">{w.workload ? <Tag tone={w.workload === 'heavy' ? 'good' : w.workload === 'medium' ? 'info' : 'warn'}>{t(`fm.train.workload.${w.workload}`)}</Tag> : '–'}</td>
                 </tr>
               ))}

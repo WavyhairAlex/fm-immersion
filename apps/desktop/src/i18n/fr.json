@@ -1052,6 +1052,13 @@
       "variant_0": "aucun match",
       "variant_1": "un match",
       "variant_2": "deux matchs",
+      "method": "Méthode en saison",
+      "methods": {
+        "meta": "Méta efficacité 1.1 (AlexJeuVideal)",
+        "freedom": "Freedom (FM Scout)"
+      },
+      "metaFile": "Programme à charger dans le jeu :",
+      "metaHelp": "Méthode d'AlexJeuVideal (pack « ENTRAÎNEMENT FM 27 META EFFICACITÉ 1.1 ») : un bloc Piège du pressing, Hauteur du pressing, Construction ; un bloc Piège du pressing, Création d'occasions, Organisation avec le ballon ; la veille du match Progression du ballon, Bloc défensif, Condition physique. Tout le reste au repos. Charge le fichier .fmf indiqué dans l'écran Entraînement.",
       "congested": "trois matchs ou plus : semaine entière de repos entre les matchs (les résultats priment sur la progression)",
       "priorities": "Zones du style visé travaillées en priorité : {{list}}.",
       "load": "Dans la semaine",
@@ -1777,6 +1784,49 @@
       "suspended": "suspendus",
       "rating": "note moy.",
       "topScorer": "Meilleur buteur :"
+    },
+    "matchSheet": {
+      "title": "Feuille de match",
+      "help": "Prévue avant le coup d'envoi, sans changer la tactique de base. FM27 : l'Endurance pèse plus en fin de match et les remplaçants frais ont plus d'impact ; les ajustements se règlent depuis la ligne de touche.",
+      "subs": "Remplacements prévus",
+      "noSubs": "Personne à sortir d'avance : change selon le match.",
+      "reason": {
+        "stamina": "endurance faible : il baisse en fin de match",
+        "condition": "condition entamée avant le match",
+        "running": "rôle qui court beaucoup"
+      },
+      "tweaks": "Ajustements selon le score",
+      "when": {
+        "leading": "On mène",
+        "drawing": "Égalité contre un bloc bas",
+        "losing": "Mené, à partir de 60'",
+        "lateLosing": "Mené, 10 dernières minutes",
+        "tired": "Équipe fatiguée",
+        "opponentChange": "L'adversaire change de tactique"
+      },
+      "tweak": {
+        "moreUrgency": "Jouer avec plus d'urgence",
+        "longerPasses": "Passes plus longues",
+        "exploitWidth": "Exploiter la largeur",
+        "reducePressing": "Réduire le pressing",
+        "swapWingers": "Inverser les ailiers",
+        "keeperUp": "Gardien qui monte sur le dernier coup de pied arrêté"
+      },
+      "followStaff": "Suivre le conseil du staff, garder la base",
+      "rules": "Règles {{competition}} :",
+      "competition": "de la compétition",
+      "subsRule": "{{count}} changements en {{windows}} fois, on en prévoit moins pour garder de la marge.",
+      "check": {
+        "u21Xi": "au moins {{need}} joueur de moins de 21 ans formé au pays dans le onze (moins de 21 ans : {{have}})",
+        "u21Squad": "au moins {{need}} joueur de moins de 21 ans formé au pays sur la feuille (moins de 21 ans : {{have}})",
+        "nonEu": "{{need}} joueurs hors UE au plus sur la feuille"
+      },
+      "status": {
+        "ok": "respecté si ce jeune est formé au pays",
+        "bad": "à corriger",
+        "unknown": "à vérifier (nationalités pas encore lues)"
+      },
+      "unverified": "Règles reprises d'un récapitulatif FM, pas encore lues dans le jeu : vérifie l'écran Règles de la compétition."
     },
     "squadPitch": {
       "label": "Affichage de l'effectif",

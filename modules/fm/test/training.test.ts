@@ -11,7 +11,7 @@ describe('planning d’entraînement (méthode Freedom)', () => {
   });
 
   it('semaine à un match (samedi) : veille = préparation, lendemain = repos, récupération + esprit d’équipe', () => {
-    const w = buildTrainingWeek({ monday: MONDAY, phase: 'A', week: 1, matchDays: [5], style: 'possession', priorities: ['buildUpStrategy', 'passingStyle'] });
+    const w = buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase: 'A', week: 1, matchDays: [5], style: 'possession', priorities: ['buildUpStrategy', 'passingStyle'] });
     expect(w.code).toBe('A1-1');
     expect(w.theme).toBe('buildUp');
     expect(w.days.map((d) => d.kind)).toEqual(['dev', 'dev', 'dev', 'dev', 'prep', 'match', 'recovery']);
@@ -21,13 +21,13 @@ describe('planning d’entraînement (méthode Freedom)', () => {
   });
 
   it('semaine à deux matchs : mardi et vendredi en préparation, jeudi et dimanche en récupération', () => {
-    const w = buildTrainingWeek({ monday: MONDAY, phase: 'B', week: 2, matchDays: [2, 5] });
+    const w = buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase: 'B', week: 2, matchDays: [2, 5] });
     expect(w.code).toBe('B2-2');
     expect(w.days.map((d) => d.kind)).toEqual(['dev', 'prep', 'match', 'recovery', 'prep', 'match', 'recovery']);
   });
 
   it('un match le dimanche précédent rend le lundi à la récupération', () => {
-    const w = buildTrainingWeek({ monday: MONDAY, phase: 'C', week: 3, matchDays: [], matchBeforeMonday: true });
+    const w = buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase: 'C', week: 3, matchDays: [], matchBeforeMonday: true });
     expect(w.code).toBe('C3-0');
     expect(w.days[0]!.kind).toBe('recovery');
   });
@@ -36,7 +36,7 @@ describe('planning d’entraînement (méthode Freedom)', () => {
     for (const phase of ['A', 'B', 'C'] as const)
       for (const week of [1, 2, 3, 4] as const)
         for (const days of [[], [5], [2, 5]]) {
-          const w = buildTrainingWeek({ monday: MONDAY, phase, week, matchDays: days });
+          const w = buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase, week, matchDays: days });
           for (const d of w.days) {
             if (d.kind !== 'recovery') expect(d.sessions).not.toContain('rest');
             if (days.includes(d.weekday + 1) || days.includes(d.weekday + 2)) {
@@ -49,7 +49,7 @@ describe('planning d’entraînement (méthode Freedom)', () => {
 
   it('la zone n° 1 du style visé est travaillée chaque semaine de saison', () => {
     for (const week of [1, 2, 3, 4] as const) {
-      const w = buildTrainingWeek({ monday: MONDAY, phase: 'A', week, matchDays: [5], priorities: ['pressingTrap'] });
+      const w = buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase: 'A', week, matchDays: [5], priorities: ['pressingTrap'] });
       expect(w.days.some((d) => d.sessions.includes('pressingTrap'))).toBe(true);
     }
   });
@@ -58,7 +58,7 @@ describe('planning d’entraînement (méthode Freedom)', () => {
     for (const phase of ['T', 'A', 'B', 'C'] as const)
       for (const week of [1, 2, 3, 4] as const)
         for (const days of [[], [5], [2]]) {
-          const w = buildTrainingWeek({ monday: MONDAY, phase, week, matchDays: days, priorities: ['passingStyle'] });
+          const w = buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase, week, matchDays: days, priorities: ['passingStyle'] });
           const n = w.days.reduce((k, d) => k + d.sessions.filter((s) => s === 'pressingTrap').length, 0);
           expect(n, w.code).toBeGreaterThanOrEqual(2);
           // La zone n° 1 du style reste travaillée.
@@ -68,29 +68,29 @@ describe('planning d’entraînement (méthode Freedom)', () => {
 
   it('les zones qui rapportent le plus passent devant les autres zones du thème', () => {
     // Thème pressing : le piège de pressing passe devant l'intensité du pressing.
-    const w = buildTrainingWeek({ monday: MONDAY, phase: 'A', week: 2, matchDays: [5] });
+    const w = buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase: 'A', week: 2, matchDays: [5] });
     expect(w.days[0]!.sessions[0]).toBe('pressingTrap');
   });
 
   it('semaine à trois matchs : repos complet entre les matchs', () => {
-    const w = buildTrainingWeek({ monday: MONDAY, phase: 'B', week: 1, matchDays: [1, 3, 6] });
+    const w = buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase: 'B', week: 1, matchDays: [1, 3, 6] });
     expect(w.congested).toBe(true);
     for (const d of w.days) if (d.kind !== 'match') expect(d.sessions).toEqual(['rest', 'rest', null]);
     expect(nearestPreset(w)).toBe('fullRest');
     expect(weekWorkload(w)).toBeNull();
-    expect(buildTrainingWeek({ monday: MONDAY, phase: 'B', week: 1, matchDays: [2, 5] }).congested).toBe(false);
+    expect(buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase: 'B', week: 1, matchDays: [2, 5] }).congested).toBe(false);
   });
 
   it('variantes offensives et défensives selon le style', () => {
-    const att = buildTrainingWeek({ monday: MONDAY, phase: 'A', week: 3, matchDays: [], style: 'wings' });
+    const att = buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase: 'A', week: 3, matchDays: [], style: 'wings' });
     expect(att.days.some((d) => d.sessions.includes('attackingWings'))).toBe(true);
-    const def = buildTrainingWeek({ monday: MONDAY, phase: 'A', week: 2, matchDays: [], style: 'gegenpress' });
+    const def = buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase: 'A', week: 2, matchDays: [], style: 'gegenpress' });
     expect(def.days.some((d) => d.sessions.includes('defendingEngaged'))).toBe(true);
   });
 
   it('présaison : P1 et P2 uniquement physiques', () => {
     for (const week of [1, 2] as const) {
-      const w = buildTrainingWeek({ monday: MONDAY, phase: 'P', week, matchDays: [] });
+      const w = buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase: 'P', week, matchDays: [] });
       expect(w.code).toBe(`P${week}`);
       for (const d of w.days) for (const s of d.sessions) if (s) expect(sessionCategory(s)).toBe('physical');
     }
@@ -129,7 +129,7 @@ describe('planning d’entraînement (méthode Freedom)', () => {
 
 describe('club semi-professionnel', () => {
   it('ne s’entraîne que les jours choisis ; la dernière séance avant le match sert de préparation', () => {
-    const w = buildTrainingWeek({ monday: MONDAY, phase: 'B', week: 1, matchDays: [5], trainingDays: [1, 3], priorities: ['passingStyle'] });
+    const w = buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase: 'B', week: 1, matchDays: [5], trainingDays: [1, 3], priorities: ['passingStyle'] });
     expect(w.days.map((d) => d.kind)).toEqual(['off', 'dev', 'off', 'prep', 'off', 'match', 'off']);
     for (const d of w.days.filter((x) => x.kind === 'off')) expect(d.sessions).toEqual([null, null, null]);
     expect(sessionCategory(w.days[3]!.sessions[0]!)).toBe('matchPrep');
@@ -137,14 +137,14 @@ describe('club semi-professionnel', () => {
   });
 
   it('séance le lendemain d’un match = récupération', () => {
-    const w = buildTrainingWeek({ monday: MONDAY, phase: 'A', week: 1, matchDays: [2, 5], trainingDays: [1, 3] });
+    const w = buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase: 'A', week: 1, matchDays: [2, 5], trainingDays: [1, 3] });
     expect(w.days.map((d) => d.kind)).toEqual(['off', 'prep', 'match', 'recovery', 'off', 'match', 'off']);
   });
 });
 
 describe('programme du jeu et entraînement individuel', () => {
   it('propose le programme prédéfini le plus proche', () => {
-    const at = (phase: 'P' | 'T' | 'A' | 'B' | 'C', week: 1 | 2 | 3 | 4, days: number[]) => nearestPreset(buildTrainingWeek({ monday: MONDAY, phase, week, matchDays: days }));
+    const at = (phase: 'P' | 'T' | 'A' | 'B' | 'C', week: 1 | 2 | 3 | 4, days: number[]) => nearestPreset(buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase, week, matchDays: days }));
     expect(at('P', 1, [])).toBe('preSeason');
     expect(at('A', 1, [2, 5])).toBe('congestion');
     expect(at('A', 1, [5])).toBe('devIP');
@@ -258,7 +258,7 @@ describe('trêve hivernale', () => {
     expect(autoPhase('2027-02-10', 7, wb).phase).toBe('C');
   });
   it('semaine de repos : aucune séance, programme « Semaine complète de repos »', () => {
-    const w = buildTrainingWeek({ monday: '2026-12-28', phase: 'R', week: 1, matchDays: [] });
+    const w = buildTrainingWeek({ method: 'freedom', monday: '2026-12-28', phase: 'R', week: 1, matchDays: [] });
     expect(w.days.every((d) => d.kind === 'off' && d.sessions.every((x) => x === null))).toBe(true);
     expect(nearestPreset(w)).toBe('fullRest');
   });
@@ -273,5 +273,60 @@ describe('semaines à venir', () => {
     expect(weeks[2]).toMatchObject({ preset: 'fullRest', workload: null });
     // Au-delà du dernier match connu : match supposé le samedi.
     expect(weekWorkload(weeks[1]!.plan)).toBe('medium');
+  });
+});
+
+describe('méthode « Méta efficacité 1.1 » (AlexJeuVideal)', () => {
+  const sess = (w: ReturnType<typeof buildTrainingWeek>) => w.days.map((d) => d.sessions.join(','));
+  it('reproduit le programme « 06 - Dim - Sam » : repos, bloc 1, bloc 2, veille, match, repos', () => {
+    const w = buildTrainingWeek({ monday: MONDAY, phase: 'A', week: 1, matchDays: [5], matchBeforeMonday: true });
+    expect(sess(w)).toEqual([
+      'rest,rest,rest',
+      'rest,rest,rest',
+      'pressingTrap,lineOfEngagement,buildUpStrategy',
+      'pressingTrap,chanceCreation,inPossessionShape',
+      'ballProgression,defensiveBlock,conditioning',
+      'rest,match,rest',
+      'rest,rest,rest',
+    ]);
+  });
+
+  it('reproduit « 01 - Dim - Mer - Sam » : un seul jour libre pour les blocs, veille du dernier match', () => {
+    const w = buildTrainingWeek({ monday: MONDAY, phase: 'B', week: 2, matchDays: [2, 5], matchBeforeMonday: true });
+    expect(sess(w)).toEqual([
+      'rest,rest,rest',
+      'pressingTrap,lineOfEngagement,buildUpStrategy',
+      'rest,match,rest',
+      'rest,rest,rest',
+      'ballProgression,defensiveBlock,conditioning',
+      'rest,match,rest',
+      'rest,rest,rest',
+    ]);
+    const all = w.days.flatMap((d) => d.sessions);
+    expect(all).not.toContain('passingStyle');
+    expect(all).not.toContain('pressingIntensity');
+  });
+
+  it('la méthode Freedom reste disponible', () => {
+    const w = buildTrainingWeek({ monday: MONDAY, phase: 'A', week: 1, matchDays: [5], method: 'freedom' });
+    expect(w.theme).toBe('buildUp');
+  });
+
+  it('trouve le programme .fmf à charger', async () => {
+    const { metaProgramme } = await import('../src');
+    expect(metaProgramme([5], 6)).toBe('06 - Dim - Sam');
+    expect(metaProgramme([5])).toBe('19 - Sam - Sam');
+    expect(metaProgramme([1, 4], 4)).toBe('27 - Ven - Mar - Ven');
+    expect(metaProgramme([0])).toBe('33 - Lun - Lun');
+    expect(metaProgramme([0, 6])).toBe('36 - Lun - Dim');
+    expect(metaProgramme([3, 6], 6)?.trim()).toBe('04 - Dim - Jeu - Dim');
+    expect(metaProgramme([1, 3, 5])).toBeNull();
+  });
+});
+
+describe('méthode Méta : semaine sans match', () => {
+  it('place les deux blocs et la séance de veille sur les derniers jours', () => {
+    const w = buildTrainingWeek({ monday: MONDAY, phase: 'C', week: 1, matchDays: [] });
+    expect(w.days.slice(4).map((d) => d.sessions[0])).toEqual(['pressingTrap', 'pressingTrap', 'ballProgression']);
   });
 });
