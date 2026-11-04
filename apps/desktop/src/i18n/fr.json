@@ -337,7 +337,8 @@
       "mercato": "Départs et jeunes",
       "targets": "Cibles du mercato",
       "instructions": "Consignes individuelles",
-      "results": "Résultats"
+      "results": "Résultats",
+      "diagnosis": "Pourquoi ils ne performent pas"
     },
     "home": {
       "todo": "À traiter",
@@ -1936,6 +1937,30 @@
       "vsTop3": "sur le haut de tableau",
       "rank": "Notre onze est le n° {{rank}} sur {{count}}.",
       "help": "Lecture seule de la base de FM27, à la demande, partie ouverte. Pour chaque club : ses joueurs sous contrat (prêtés ailleurs exclus, blessés écartés), placés dans le schéma du projet avec le même calcul que ton effectif ; la note est la moyenne des titulaires. Le CA est la moyenne des onze meilleurs CA réels. Pour l'échelon au-dessus, écris le nom de la division (ex. « Niké liga ») : ton onze se compare à leurs repères."
+    },
+    "diag": {
+      "title": "Pourquoi ils ne performent pas à leur poste",
+      "recent_one": "Note {{rating}} sur le dernier match",
+      "recent_other": "Note {{rating}} sur {{count}} matchs",
+      "season": "Note {{rating}} sur la saison",
+      "allGood": "Aucun titulaire du onze n'est sous la moyenne de l'équipe en ce moment.",
+      "noReason": "Aucune cause visible dans les données : à surveiller sur les prochains matchs (adversaire, temps de jeu).",
+      "others_one": "{{count}} autre titulaire dans la moyenne mais avec un point à surveiller",
+      "others_other": "{{count}} autres titulaires dans la moyenne mais avec un point à surveiller",
+      "reason": {
+        "familiarity": "Pas naturel à ce poste (familiarité {{value}}/20) : il perd en décisions et en placement.",
+        "footL": "Pied fort du mauvais côté pour ce rôle à gauche.",
+        "footR": "Pied fort du mauvais côté pour ce rôle à droite.",
+        "roleFit": "Note au rôle {{fit}}, bien en dessous du reste du onze ({{xi}}).",
+        "keyAttrs": "Attributs clés du rôle trop bas : {{list}}.",
+        "threshold": "Rôle exigeant : FM27 divise sa note par deux sous un niveau de {{t}} (lui : {{ca}}). Un rôle plus simple au même poste lui irait mieux.",
+        "stats": "En match, dans le moins bon quart de sa ligne : {{list}}.",
+        "condition": "Condition à {{value}} % : il baisse en fin de match.",
+        "sharpness": "Rythme de match à {{value}} % : il manque de matchs.",
+        "morale": "Moral : {{text}}.",
+        "better": "{{name}} serait mieux noté à ce créneau ({{fit}})."
+      },
+      "how": "Même onze que Tactique > Composition. La note vient des derniers matchs retrouvés dans Résultats (sinon de la saison) et elle est comparée à la moyenne des titulaires : un joueur est signalé à 0,25 point sous cette moyenne, ou sous 6,6. Les causes viennent de ce que Simloom lit déjà : familiarité au poste, pied, note au rôle et attributs clés du rôle (barème FM27), seuil des rôles exigeants, stats du Centre de données comparées à sa ligne, condition, rythme, moral, et les remplaçants mieux notés au même créneau."
     }
   },
   "pz2": {

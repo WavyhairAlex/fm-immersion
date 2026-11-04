@@ -337,7 +337,8 @@
       "mercato": "Departures and youth",
       "targets": "Transfer targets",
       "instructions": "Player instructions",
-      "results": "Results"
+      "results": "Results",
+      "diagnosis": "Why they underperform"
     },
     "home": {
       "todo": "To deal with",
@@ -1936,6 +1937,30 @@
       "vsTop3": "vs the top of the table",
       "rank": "Our XI ranks {{rank}} of {{count}}.",
       "help": "Read-only read of the FM27 database, on demand, with the save open. For each club: its contracted players (loaned out excluded, injured left out), placed in the project's formation with the same calculation as your squad; the rating is the starters' average. CA is the average of the eleven best real CAs. For the division above, type its name (e.g. \"Niké liga\"): your XI is compared with their benchmarks."
+    },
+    "diag": {
+      "title": "Why they underperform in their position",
+      "recent_one": "Rating {{rating}} last match",
+      "recent_other": "Rating {{rating}} over {{count}} matches",
+      "season": "Season rating {{rating}}",
+      "allGood": "No starter is below the team average right now.",
+      "noReason": "No visible cause in the data: keep an eye on the next matches (opponent, playing time).",
+      "others_one": "{{count}} other starter in the average but with something to watch",
+      "others_other": "{{count}} other starters in the average but with something to watch",
+      "reason": {
+        "familiarity": "Not natural in this position (familiarity {{value}}/20): he loses decisions and positioning.",
+        "footL": "Strong foot on the wrong side for this role on the left.",
+        "footR": "Strong foot on the wrong side for this role on the right.",
+        "roleFit": "Role rating {{fit}}, well below the rest of the eleven ({{xi}}).",
+        "keyAttrs": "Key attributes of the role too low: {{list}}.",
+        "threshold": "Demanding role: FM27 halves his rating below an ability of {{t}} (his: {{ca}}). A simpler role in the same position would suit him better.",
+        "stats": "In matches, in the bottom quarter of his line: {{list}}.",
+        "condition": "Condition at {{value}}%: he fades late in matches.",
+        "sharpness": "Match sharpness at {{value}}%: he lacks games.",
+        "morale": "Morale: {{text}}.",
+        "better": "{{name}} would be rated higher in this slot ({{fit}})."
+      },
+      "how": "Same eleven as Tactic > Line-up. The rating comes from the latest matches found in Results (otherwise the season) and is compared to the starters' average: a player is flagged 0.25 below it, or under 6.6. Causes come from what Simloom already reads: position familiarity, foot, role rating and key attributes (FM27 scale), threshold of demanding roles, Data Hub stats compared to his line, condition, sharpness, morale, and higher-rated subs for the same slot."
     }
   },
   "pz2": {
