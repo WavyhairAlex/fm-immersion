@@ -1,12 +1,15 @@
-import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, contractDecisions, mercatoAdvice, type ContractCall, type FmPlayer, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type SquadAt } from '@simloom/module-fm';
-import { useMemo, type ReactNode } from 'react';
+import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, buildProject, contractDecisions, mercatoAdvice, type ContractCall, type FmPlayer, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type SquadAt } from '@simloom/module-fm';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
+import { DivisionLevelPanel, ReplacementFinder } from './FmReplacement';
 import { CompatTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone, More, PlayerLink } from './FmUi';
 
 export const TONE: Record<MercatoVerdict, Tone> = { sell: 'bad', release: 'bad', loan: 'warn', extend: 'warn', develop: 'good', replace: 'warn', backup: 'info', core: 'good' };
 /** Groupes affichés en détail : ce qui demande une décision au mercato. */
 const ACTION: MercatoVerdict[] = ['sell', 'release', 'loan', 'extend', 'replace'];
+/** Groupes où l'on cherche un remplaçant : le joueur part, ou il faut mieux à son poste. */
+const REPLACE: MercatoVerdict[] = ['sell', 'release', 'replace'];
 
 /** Étoiles du staff « 1,5 ★ → 4 ★ » (niveau actuel → potentiel). */
 function Stars({ p }: { p: FmPlayer }) {
@@ -52,7 +55,7 @@ export function useReason() {
 }
 
 /** Une ligne joueur : nom, poste, âge, compatibilité, raisons ; étoiles, niveau projeté et valeur à droite. */
-function AdviceLine({ a, tag, extra }: { a: MercatoAdvice; tag?: ReactNode; extra?: ReactNode }) {
+function AdviceLine({ a, tag, extra, after }: { a: MercatoAdvice; tag?: ReactNode; extra?: ReactNode; after?: ReactNode }) {
   const { t } = useTranslation();
   const f = useFormat();
   const reason = useReason();
@@ -76,9 +79,16 @@ function AdviceLine({ a, tag, extra }: { a: MercatoAdvice; tag?: ReactNode; extr
         </span>
         <span className="tabular-nums">{f.money(a.player.value)}</span>
       </div>
+      {after && <div className="w-full">{after}</div>}
     </div>
   );
 }
+
+/** Adéquation moyenne des titulaires du onze cible. */
+const xiFit = (pr: { slots: { fit: number | null }[] }) => {
+  const xs = pr.slots.flatMap((s) => (s.fit == null ? [] : [s.fit]));
+  return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+};
 
 const CALL_TONE: Record<ContractCall, Tone> = { extend: 'good', extendShort: 'info', sellNow: 'warn', letGo: 'bad' };
 
@@ -133,13 +143,17 @@ export function ContractsToDecide({ r, go }: { r: MercatoReport; go?: (view: str
  * Départs et jeunes : qui faire partir (vente, fin de contrat, prêt), qui prolonger, et quels jeunes valent le coup.
  * Calculé sur l'effectif importé ; aucune lecture supplémentaire dans le jeu.
  */
-export function FmMercato({ players, folder, gameDate, history }: { players: FmPlayer[]; folder: string; gameDate: string; history: SquadAt[] }) {
+export function FmMercato({ saveId, players, folder, gameDate, history }: { saveId: string; players: FmPlayer[]; folder: string; gameDate: string; history: SquadAt[] }) {
   const { t } = useTranslation();
   const f = useFormat();
   const names = useNames();
   const { engine } = useTacticEngine(folder, players);
   const [coach] = useCoach();
   const r = useMemo(() => mercatoAdvice(engine, players, gameDate, coach, history), [engine, players, gameDate, coach, history]);
+  // Onze cible, comme pour les cibles du mercato : sert au remplaçant d'un partant et au niveau de la division.
+  const own = useMemo(() => players.filter((p) => !p.injury && Object.keys(p.attributes).length), [players]);
+  const pr = useMemo(() => buildProject(engine, own, coach), [engine, own, coach]);
+  const [replacing, setReplacing] = useState<string | null>(null);
   if (!r) return <Empty>{t('fm.tac.noAttributes')}</Empty>;
   const style = engine.ref.styles.find((s) => s.id === r.projectStyle);
 
@@ -170,10 +184,33 @@ export function FmMercato({ players, folder, gameDate, history }: { players: FmP
         {ACTION.filter((v) => rest(v).length).map((v) => (
           <Panel key={v} title={t(`fm.merc.group.${v}`, { count: rest(v).length })}>
             <p className="help">{t(`fm.merc.groupHelp.${v}`)}</p>
-            {rest(v).map((a) => <AdviceLine key={a.player.id} a={a} />)}
+            {rest(v).map((a) =>
+              pr && REPLACE.includes(v) ? (
+                <AdviceLine
+                  key={a.player.id}
+                  a={a}
+                  tag={
+                    replacing !== a.player.id && (
+                      <button type="button" className="text-xs font-bold text-eau-fonce hover:underline" onClick={() => setReplacing(a.player.id)}>
+                        {t('fm.repl.open')}
+                      </button>
+                    )
+                  }
+                  after={
+                    replacing === a.player.id && (
+                      <ReplacementFinder saveId={saveId} gameDate={gameDate} engine={engine} project={pr} leaving={a.player} squad={own} onClose={() => setReplacing(null)} />
+                    )
+                  }
+                />
+              ) : (
+                <AdviceLine key={a.player.id} a={a} />
+              ),
+            )}
           </Panel>
         ))}
       </div>
+
+      {pr && <DivisionLevelPanel engine={engine} project={pr} ownXiFit={xiFit(pr)} />}
 
       <Panel title={t('fm.merc.stay')}>
         <p className="help">{t('fm.merc.stayNoYouth')}</p>

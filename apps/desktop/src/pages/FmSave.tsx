@@ -412,6 +412,7 @@ export function FmSave() {
       case "mercato":
         return (
           <FmMercato
+            saveId={saveId}
             players={players}
             folder={folder}
             gameDate={snapshot.gameDate}

@@ -1226,6 +1226,50 @@ pub async fn fm_memory_abilities() -> Result<SquadAbilities, MemError> {
     .map_err(|e| MemError::Unexpected(e.to_string()))?
 }
 
+/// Joueurs d'une division, pour situer le niveau de l'équipe dans son championnat (ou celui d'au-dessus).
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DivisionPlayers {
+    /// Club du manager humain, et sa division (celle de ses joueurs sous contrat).
+    pub own_club_id: Option<i32>,
+    pub own_division: Option<String>,
+    pub own_division_id: Option<i32>,
+    /// Joueurs sous contrat avec un club des divisions retenues (prêtés ailleurs exclus).
+    pub players: Vec<DbPlayer>,
+}
+
+/// Nombre maximal de joueurs renvoyés (une division compte rarement plus de 30 clubs de 40 joueurs).
+const MAX_DIVISION_PLAYERS: usize = 4_000;
+
+/// Joueurs de la division du club humain (`division` vide) ou des divisions dont le nom contient `division`.
+pub fn division_players<M: Mem>(db: &mut Database<M>, division: Option<&str>) -> DivisionPlayers {
+    let own_club_id = db.humans().iter().find_map(|h| h.club_id);
+    let own = own_club_id.and_then(|c| db.players(1, |p| p.club_id == Some(c) && p.loan_club_id.is_none() && p.division_id.is_some()).pop());
+    let own_division_id = own.as_ref().and_then(|p| p.division_id);
+    let own_division = own.and_then(|p| p.division);
+    let query = division.map(str::trim).filter(|q| !q.is_empty()).map(String::from);
+    let players = match (&query, own_division_id) {
+        (Some(_), _) => db.players(MAX_DIVISION_PLAYERS, |p| p.club_id.is_some() && p.loan_club_id.is_none() && p.division.is_some() && matches(&query, &p.division)),
+        (None, Some(d)) => db.players(MAX_DIVISION_PLAYERS, |p| p.club_id.is_some() && p.loan_club_id.is_none() && p.division_id == Some(d)),
+        (None, None) => Vec::new(),
+    };
+    DivisionPlayers { own_club_id, own_division, own_division_id, players }
+}
+
+/// Joueurs d'une division (lecture seule, à la demande) : la nôtre si `division` est vide, sinon celles dont le
+/// nom contient ce texte (sans casse ni accents).
+#[tauri::command]
+pub async fn fm_memory_division(division: Option<String>) -> Result<DivisionPlayers, MemError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        with_database(|db, _| {
+            db.check()?;
+            Ok(division_players(db, division.as_deref()))
+        })
+    })
+    .await
+    .map_err(|e| MemError::Unexpected(e.to_string()))?
+}
+
 // ---------------------------------------------------------------------------------------------
 
 #[cfg(test)]
@@ -1404,6 +1448,18 @@ mod tests {
         assert_eq!(run(&mut db, f("", "", Some(100))), 0);
         // Potentiel négatif (fourchette du jeu) : gardé.
         assert_eq!(run(&mut db, SearchFilter { min_pa: Some(170), ..Default::default() }), 1);
+    }
+
+    #[test]
+    fn joueurs_d_une_division() {
+        let m = world();
+        let mut db = Database::open(&m, BASE, KNOWN).unwrap();
+        // Recherche par nom de division (sans accents) ; sans manager humain, pas de division « à nous ».
+        let d = division_players(&mut db, Some("sodra"));
+        assert_eq!(d.players.len(), 1);
+        assert_eq!(d.own_club_id, None);
+        assert!(division_players(&mut db, Some("Allsvenskan")).players.is_empty());
+        assert!(division_players(&mut db, None).players.is_empty());
     }
 
     #[test]

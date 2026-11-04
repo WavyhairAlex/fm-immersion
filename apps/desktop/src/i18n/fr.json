@@ -1903,6 +1903,38 @@
         "merged_one": "{{count}} période regroupe plusieurs matchs joués entre deux relectures (le plugin relit toutes les 5 minutes) : en avançant moins vite autour des matchs, chaque match a son détail.",
         "merged_other": "{{count}} périodes regroupent plusieurs matchs joués entre deux relectures (le plugin relit toutes les 5 minutes) : en avançant moins vite autour des matchs, chaque match a son détail."
       }
+    },
+    "repl": {
+      "open": "Remplaçant",
+      "slotStarter": "{{name}} est titulaire du onze cible à ce poste :",
+      "slot": "{{name}} jouerait au mieux ici dans le onze cible :",
+      "noSlot": "{{name}} ne joue à aucun poste du schéma du projet : pas de remplaçant à chercher.",
+      "internal": "Solution interne : {{name}}",
+      "noInternal": "Aucun autre joueur de l'effectif ne tient ce poste.",
+      "search": "Chercher dans la base",
+      "searching": "Lecture de la base…",
+      "found": "{{count}} joueurs lus au même poste, CA {{min}} à {{max}}",
+      "foundNoCa": "{{count}} joueurs lus au même poste (CA du partant inconnu : pas de bande de CA)",
+      "gap": "Écart",
+      "none": "Aucune cible suivie ne joue à ce poste. Lance la recherche dans la base.",
+      "help": "Les candidats sont notés au même poste et au même rôle que le partant, dans le onze du projet ; l'écart est la différence de note avec lui. La recherche lit la base de FM27 en lecture seule, partie ouverte : joueurs des autres clubs, non blessés, au même poste, d'un CA réel un peu inférieur à nettement supérieur au sien. « Suivre » les ajoute aux cibles."
+    },
+    "divLevel": {
+      "title": "Niveau de la division",
+      "teaser": "Le meilleur onze de chaque club du championnat, sur le schéma du projet, pour savoir où se situe ton équipe et quel niveau viser.",
+      "own": "Lire ma division",
+      "other": "Ou une autre division",
+      "compare": "Comparer",
+      "reading": "Lecture de la base…",
+      "none": "Aucun club trouvé (division inconnue ou partie non chargée).",
+      "reputation": "réputation {{value}}",
+      "top3": "Haut de tableau (3 meilleurs)",
+      "median": "Milieu",
+      "bottom": "Plus faible",
+      "ours": "Notre onze",
+      "vsTop3": "sur le haut de tableau",
+      "rank": "Notre onze est le n° {{rank}} sur {{count}}.",
+      "help": "Lecture seule de la base de FM27, à la demande, partie ouverte. Pour chaque club : ses joueurs sous contrat (prêtés ailleurs exclus, blessés écartés), placés dans le schéma du projet avec le même calcul que ton effectif ; la note est la moyenne des titulaires. Le CA est la moyenne des onze meilleurs CA réels. Pour l'échelon au-dessus, écris le nom de la division (ex. « Niké liga ») : ton onze se compare à leurs repères."
     }
   },
   "pz2": {

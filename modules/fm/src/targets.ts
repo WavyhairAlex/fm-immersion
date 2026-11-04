@@ -290,10 +290,12 @@ export interface DbPlayer {
   birthDate: string | null;
   club: string | null;
   clubShort: string | null;
+  clubId?: number | null;
   loanClub: string | null;
   loanEnd: string | null;
   nation?: string | null;
   division?: string | null;
+  divisionId?: number | null;
   divisionReputation?: number | null;
   ca: number;
   pa: number;
