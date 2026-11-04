@@ -40,6 +40,7 @@ import { FmProgression } from "./FmProgression";
 import { FmProject } from "./FmProject";
 import { FmRoles } from "./FmRoles";
 import { FmStats } from "./FmStats";
+import { FmResults } from "./FmResults";
 import { FmStyle } from "./FmStyle";
 import { FmTactic, useTacticEngine } from "./FmTactic";
 import { FmTargets } from "./FmTargets";
@@ -58,7 +59,7 @@ const LINES: Line[] = ["GB", "DEF", "MIL", "ATT"];
 const SECTIONS = [
   { id: "home", views: ["home"] },
   { id: "squad", views: ["squad", "analysis", "stats", "compare"] },
-  { id: "tactic", views: ["tactic", "opponent"] },
+  { id: "tactic", views: ["tactic", "opponent", "results"] },
   { id: "project", views: ["style", "project", "training", "mercato"] },
   { id: "club", views: ["finances"] },
 ] as const;
@@ -376,6 +377,15 @@ export function FmSave() {
         );
       case "opponent":
         return <FmOpponent snap={snapshot.data} />;
+      case "results":
+        return (
+          <FmResults
+            players={players}
+            history={
+              all as { gameDate: string; data: FmSnapshot }[] | undefined
+            }
+          />
+        );
       case "calendar":
         return <FmCalendar snap={snapshot.data} players={players} />;
       case "roles":
