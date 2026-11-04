@@ -38,6 +38,7 @@ pub fn run() {
             fm_memory::fm_memory_search,
             fm_memory::fm_memory_abilities,
             fm_memory::fm_memory_division,
+            fm_memory::fm_memory_staff,
             pz2::pz2_save_download,
             tf3::tf3_entry_status,
             tf3::tf3_entry_read

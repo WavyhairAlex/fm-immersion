@@ -41,6 +41,7 @@ import { FmOpponent } from './FmOpponent';
 import { FmProgression } from './FmProgression';
 import { FmProject } from './FmProject';
 import { FmRoles } from './FmRoles';
+import { FmStaff } from './FmStaff';
 import { FmStats } from './FmStats';
 import { FmResults } from './FmResults';
 import { FmDiagnosis } from './FmDiagnosis';
@@ -78,7 +79,7 @@ const PARTS: Record<string, readonly string[]> = {
   tactic: ['tactic', 'instructions', 'opponent', 'calendar', 'depth', 'effectiveness'],
   squad: ['squad', 'dressing', 'progression', 'roles', 'compare', 'loans'],
   results: ['results', 'diagnosis', 'stats', 'analysis'],
-  style: ['style', 'project', 'training'],
+  style: ['style', 'project', 'training', 'staff'],
   mercato: ['mercato', 'targets', 'finances', 'wages', 'contracts'],
 };
 /** Sections dont les écrans s'enchaînent comme des étapes (numérotées, avec « étape suivante »). */
@@ -357,6 +358,8 @@ export function FmSave() {
         return <FmProject snap={snapshot.data} players={players} folder={folder} history={history} />;
       case 'training':
         return <FmTraining snap={snapshot.data} players={players} folder={folder} />;
+      case 'staff':
+        return <FmStaff />;
       case 'mercato':
         return <FmMercato saveId={saveId} players={players} folder={folder} gameDate={snapshot.gameDate} history={history} />;
       case 'targets':

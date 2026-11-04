@@ -341,7 +341,8 @@
       "targets": "Cibles du mercato",
       "instructions": "Consignes individuelles",
       "results": "Résultats",
-      "diagnosis": "Pourquoi ils ne performent pas"
+      "diagnosis": "Pourquoi ils ne performent pas",
+      "staff": "Staff"
     },
     "home": {
       "todo": "À traiter",
@@ -1976,6 +1977,60 @@
         "better": "{{name}} serait mieux noté à ce créneau ({{fit}})."
       },
       "how": "Même onze que Tactique > Composition. La note vient des derniers matchs retrouvés dans Résultats (sinon de la saison) et elle est comparée à la moyenne des titulaires : un joueur est signalé à 0,25 point sous cette moyenne, ou sous 6,6. Les causes viennent de ce que Simloom lit déjà : familiarité au poste, pied, note au rôle et attributs clés du rôle (barème FM27), seuil des rôles exigeants, stats du Centre de données comparées à sa ligne, condition, rythme, moral, et les remplaçants mieux notés au même créneau."
+    },
+    "staff": {
+      "title": "Staff technique",
+      "teaser": "Les notes de tes entraîneurs par domaine, qui devrait s'occuper de quoi, et le staff libre qui ferait mieux là où on est faible.",
+      "read": "Lire le staff",
+      "withFree": "Inclure le staff sans club",
+      "reading": "Lecture de la base…",
+      "noClub": "Aucun club trouvé pour le manager humain (partie non chargée ?).",
+      "none": "Aucun membre du staff trouvé.",
+      "help": "Lecture seule de la base de FM27, à la demande, partie ouverte. Les notes (1-20) sont celles du jeu ; la note d'un domaine est un calcul Simloom, pas les étoiles du jeu : la note du domaine compte triple, plus la détermination, l'autorité et la motivation, divisé par 6. Les affectations donnent chaque domaine au meilleur entraîneur disponible, deux domaines au plus chacun, en gardant pour la fin ceux qui sont meilleurs hors du terrain (kiné, recruteur, analyste…). Sous 12, le domaine est à renforcer. Le staff sans club se recrute sans indemnité.",
+      "planTitle": "Affectations proposées",
+      "weak_one": "1 domaine à renforcer : {{list}}.",
+      "weak_other": "{{count}} domaines à renforcer : {{list}}.",
+      "domain": "Domaine",
+      "coach": "Entraîneur",
+      "score": "Note /20",
+      "freeBetter": "Staff libre qui ferait mieux",
+      "nobody": "Personne (déjà deux domaines chacun)",
+      "toStrengthen": "À renforcer",
+      "age": "{{age}} ans",
+      "listTitle": "Notre staff ({{count}})",
+      "name": "Nom",
+      "job": "Fonction",
+      "bestJob": "Meilleur hors du terrain",
+      "jobCode": "n° {{code}}",
+      "jobNote": "Fonction : code brut lu dans le contrat ; les intitulés du jeu restent à faire correspondre (dis-moi la fonction de deux ou trois membres du staff et je les afficherai). Les deux meilleurs domaines de chacun sont surlignés.",
+      "freeTitle": "Staff sans club ({{count}})",
+      "freeFor": "Les meilleurs pour",
+      "k": {
+        "Attacking": "Attaque",
+        "Defending": "Défense",
+        "Possession": "Possession",
+        "Technical": "Technique",
+        "Tactical": "Tactique",
+        "Fitness": "Condition physique",
+        "Goalkeeping": "Gardiens",
+        "SetPieces": "Coups de pied arrêtés",
+        "assistant": "Adjoint",
+        "youth": "Formation des jeunes",
+        "scout": "Recruteur",
+        "physio": "Kiné",
+        "sportsScientist": "Scientifique du sport",
+        "analyst": "Analyste vidéo et données"
+      },
+      "short": {
+        "Attacking": "Att",
+        "Defending": "Déf",
+        "Possession": "Pos",
+        "Technical": "Tec",
+        "Tactical": "Tac",
+        "Fitness": "Phy",
+        "Goalkeeping": "GB",
+        "SetPieces": "CPA"
+      }
     }
   },
   "pz2": {
