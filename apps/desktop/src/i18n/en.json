@@ -1733,6 +1733,56 @@
       "mercato": "Transfers",
       "inTwo": "In two seasons:",
       "open": "Open {{name}}'s profile"
+    },
+    "foot": {
+      "profile": "Profile",
+      "profileHelp": "Attribute averages out of 20; dotted: the average of his line in the squad.",
+      "attributes": "Attributes",
+      "form": "Form",
+      "sharpness": "Match sharpness",
+      "apps": "Apps",
+      "goals": "Goals",
+      "rating": "Avg rating",
+      "foot": "strong foot: {{foot}}",
+      "statsHelp": "Bar: where he ranks in his line, from worst (left) to best (right).",
+      "axis": {
+        "attack": "Finishing",
+        "creation": "Creation",
+        "dribble": "Ball carrying",
+        "defence": "Defending",
+        "mental": "Mental",
+        "physical": "Physical",
+        "shotStopping": "Shot stopping",
+        "aerial": "Aerial",
+        "distribution": "Distribution",
+        "sweeping": "Sweeping",
+        "communication": "Command"
+      }
+    },
+    "mc": {
+      "next": "Next match",
+      "home": "Home",
+      "away": "Away",
+      "homeShort": "H",
+      "awayShort": "A",
+      "today": "Today",
+      "then": "After that",
+      "prepare": "Prepare the XI",
+      "calendar": "Fixtures",
+      "xi": "Probable XI",
+      "bench": "Bench:",
+      "state": "Squad state",
+      "injured": "injured",
+      "suspended": "suspended",
+      "rating": "avg rating",
+      "topScorer": "Top scorer:"
+    },
+    "squadPitch": {
+      "label": "Squad display",
+      "pitch": "Pitch",
+      "table": "Table",
+      "help": "Each player at their main natural position, best first. Click a name for their profile.",
+      "empty": "Nobody at: {{list}}."
     }
   },
   "pz2": {
