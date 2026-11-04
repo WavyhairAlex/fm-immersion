@@ -1,5 +1,6 @@
 import {
   activeSituations,
+  backForMatch,
   competitionRules,
   liveSubs,
   matchTweaks,
@@ -86,7 +87,9 @@ export function FmMatchCenter({
     maximumFractionDigits: 2,
   });
   const suspended = players.filter((p) => p.suspension);
-  const injured = players.filter((p) => p.injury);
+  // Blessés encore absents le jour du match ; ceux qui seront rétablis d'ici là sont listés à part.
+  const injured = players.filter((p) => p.injury && !backForMatch(p));
+  const back = players.filter((p) => backForMatch(p));
   const xy = plan
     ? spreadXY(
         plan.slots.map((sl) => [sl.x, sl.y] as [number, number]),
@@ -272,22 +275,24 @@ export function FmMatchCenter({
             </div>
           ))}
         </div>
-        {[...injured, ...suspended].length > 0 && (
+        {[...injured, ...suspended, ...back].length > 0 && (
           <ul className="space-y-1 text-sm">
-            {[...injured, ...suspended].slice(0, 5).map((p) => (
+            {[...injured, ...suspended, ...back].slice(0, 6).map((p) => (
               <li
                 key={p.id + (p.injury ? "i" : "s")}
                 className="flex items-center gap-2"
               >
                 <span
-                  className={`h-2 w-2 shrink-0 rounded-full ${p.injury ? "bg-corail" : LINE_COLOR.GB.bg}`}
+                  className={`h-2 w-2 shrink-0 rounded-full ${backForMatch(p) ? "bg-eau-fonce" : p.injury ? "bg-corail" : LINE_COLOR.GB.bg}`}
                   aria-hidden
                 />
                 <PlayerLink player={p} />
                 <span className="truncate text-xs text-brun">
-                  {p.injury
-                    ? p.injury + (p.injuryDays ? ` (${p.injuryDays} j)` : "")
-                    : p.suspension}
+                  {backForMatch(p)
+                    ? t("fm.mc.backForMatch", { days: p.injuryDays })
+                    : p.injury
+                      ? p.injury + (p.injuryDays ? ` (${p.injuryDays} j)` : "")
+                      : p.suspension}
                 </span>
               </li>
             ))}

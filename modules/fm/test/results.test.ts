@@ -112,3 +112,16 @@ describe('ce qui marche ou pas', () => {
     expect(an.results[0]!.date).toBe('2027-03-09');
   });
 });
+
+describe('blessés rétablis pour le match', () => {
+  it('un blessé rétabli avant le match compte, pas celui qui manque encore', async () => {
+    const { backForMatch, forNextMatch, unavailable, nextMatchInDays } = await import('../src');
+    const base = { injury: 'Torsion du genou', suspension: null } as const;
+    const [a, b] = forNextMatch([{ ...base, injuryDays: 7 }, { ...base, injuryDays: 27 }] as never, 10);
+    expect(backForMatch(a!)).toBe(true);
+    expect(unavailable(a!)).toBe(false);
+    expect(unavailable(b!)).toBe(true);
+    expect(unavailable({ ...a!, suspension: 'Suspendu' })).toBe(true);
+    expect(nextMatchInDays({ gameDate: '2027-03-21', nextMatch: { next5: [{ DisplayValue: 'Dans 10 jours' }] } })).toBe(10);
+  });
+});

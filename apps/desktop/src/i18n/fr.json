@@ -1784,7 +1784,8 @@
       "injured": "blessés",
       "suspended": "suspendus",
       "rating": "note moy.",
-      "topScorer": "Meilleur buteur :"
+      "topScorer": "Meilleur buteur :",
+      "backForMatch": "Rétabli pour le match (blessé encore {{days}} j)"
     },
     "matchSheet": {
       "title": "Feuille de match",

@@ -3,7 +3,9 @@ import {
   compatMap,
   gameFormationOf,
   gameLineup,
+  forNextMatch,
   loanedOutIds,
+  nextMatchInDays,
   normalizePlayer,
   squadSnapshot,
   withAbilities,
@@ -50,6 +52,8 @@ import { CompatTag, PlayerLink, PlayerSheetContext, useCoach } from "./FmUi";
 import { FmPlayerSheet } from "./FmPlayerSheet";
 
 const LINES: Line[] = ["GB", "DEF", "MIL", "ATT"];
+/** Relecture des fichiers du plugin (instantané, état du manager). */
+const LIVE_POLL_MS = 10_000;
 
 /**
  * Les écrans de la page, rangés en 5 sections qui répondent chacune à une question :
@@ -197,10 +201,12 @@ export function FmSave() {
     onError: (e) => setOther(e instanceof FmOtherSaveError ? e : null),
   });
 
-  // Import automatique : le plugin réécrit son instantané toutes les 5 minutes ; on le relit chaque minute et
-  // on l'enregistre dès qu'il a changé, pour que tout l'écran suive la partie sans bouton à presser.
+  // Import automatique : le plugin réécrit son instantané à chaque nouveau jour de jeu (et toutes les 5 minutes) ;
+  // on relit le fichier toutes les 10 secondes (lecture locale, rien dans le jeu) et on l'enregistre dès qu'il a
+  // changé, pour que tout l'écran suive la partie presque en direct, sans bouton à presser.
   const lastText = useRef<string | null>(null);
   const abilitiesDate = useRef<string | null>(null);
+  const abilitiesTry = useRef(0);
   useEffect(() => {
     if (!folder) return;
     let stop = false;
@@ -226,12 +232,15 @@ export function FmSave() {
           qc.invalidateQueries({ queryKey: ["saves"] });
         }
       } catch (e) {
-        // Autre sauvegarde chargée : on le signale ; sinon fichier absent ou en cours d'écriture, nouvel essai dans une minute.
+        // Autre sauvegarde chargée : on le signale ; sinon fichier absent ou en cours d'écriture, nouvel essai au prochain passage.
         if (e instanceof FmOtherSaveError) setOther(e);
       }
       // CA/PA réels (option du joueur) : lus une fois par date de jeu dans la mémoire de FM27, en lecture seule.
       try {
+        // La lecture mémoire garde son rythme d'une tentative par minute, même si les fichiers sont relus plus souvent.
+        if (Date.now() - abilitiesTry.current < 60_000) return;
         if (stop || !(await fmData.settings(saveId)).fmReadAbilities) return;
+        abilitiesTry.current = Date.now();
         const latest = await fmData.latest(saveId);
         if (
           !latest ||
@@ -259,7 +268,7 @@ export function FmSave() {
       }
     };
     void tick();
-    const id = setInterval(() => void tick(), 60_000);
+    const id = setInterval(() => void tick(), LIVE_POLL_MS);
     return () => {
       stop = true;
       clearInterval(id);
@@ -280,7 +289,9 @@ export function FmSave() {
   );
   const players = useMemo(() => {
     const out = snapshot ? loanedOutIds(snapshot.data) : new Set<string>();
-    return out.size ? contracted.filter((p) => !out.has(p.id)) : contracted;
+    const present = out.size ? contracted.filter((p) => !out.has(p.id)) : contracted;
+    // Un blessé rétabli d'ici le prochain match compte pour les compos de ce match.
+    return snapshot ? forNextMatch(present, nextMatchInDays(snapshot.data)) : present;
   }, [snapshot, contracted]);
   const history = useMemo<SquadAt[]>(
     () =>
