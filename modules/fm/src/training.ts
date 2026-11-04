@@ -10,8 +10,15 @@ import type { EffArea } from './project';
  *   et une nouvelle phase repart à la semaine 1 ;
  * - chaque semaine de saison existe en 3 variantes selon les matchs : -0 (aucun), -1 (samedi),
  *   -2 (mercredi et samedi) ;
- * - veille de match = préparation de match ; lendemain de match = Récupération, Récupération,
- *   Esprit d'équipe ; aucune séance de Repos.
+ * - veille de match = préparation de match ; lendemain de match = Repos, Récupération, Esprit d'équipe.
+ * Corrigé d'après le banc d'essai d'AlexJeuVideal (« La vérité sur l'efficacité tactique », 10 saisons par
+ * réglage, mesure en points attendus) :
+ * - le repos est l'un des blocs qui rapportent le plus en match : une séance de Repos chaque lendemain de match ;
+ * - semaine à 3 matchs ou plus : semaine entière de repos, les résultats priment sur la progression ;
+ * - les zones qui rapportent le plus : piège de pressing, stratégie de construction, création d'occasions, puis
+ *   ligne d'engagement (hauteur) et organisation sans ballon ; la jauge du jeu ne le montre pas ;
+ * - piège de pressing : 2 séances par semaine, c'est le seuil (4 n'apportent rien, 1 coûte ~2 points attendus) ;
+ * - aucune double intensité individuelle.
  * L'article ne fournit pas les fichiers .fmf : Archivix reconstruit chaque journée en appliquant ces
  * règles avec les séances de FM27 (noms relevés dans les textes du jeu), orientées par le style visé.
  */
@@ -108,6 +115,8 @@ export interface TrainingWeek {
   /** Variante de saison (0, 1 ou 2 matchs) ; null en présaison et en bloc tactique. */
   variant: 0 | 1 | 2 | null;
   theme: WeekTheme | null;
+  /** Semaine à 3 matchs ou plus : repos complet entre les matchs. */
+  congested: boolean;
   days: TrainingDay[];
 }
 
@@ -259,6 +268,16 @@ const THEMES: Record<WeekTheme, ThemeContent> = {
   },
 };
 
+/**
+ * Zones de compréhension qui rapportent le plus en match (banc d'essai d'AlexJeuVideal), dans l'ordre. Elles passent
+ * devant les autres zones du thème ; les priorités du style visé gardent la première place.
+ */
+export const KEY_AREAS: EffArea[] = ['pressingTrap', 'buildUpStrategy', 'chanceCreation', 'lineOfEngagement', 'outOfPossessionShape'];
+/** Séances de piège de pressing par semaine : 2 est le seuil, au-delà rien ne s'ajoute. */
+export const PRESSING_TRAP_SESSIONS = 2;
+/** À partir de ce nombre de matchs dans la semaine, semaine entière de repos. */
+export const CONGESTED_MATCHES = 3;
+
 /** Variante offensive et défensive des séances avec ballon selon le style visé. */
 const ATTACK_BY_STYLE: Record<string, SessionId> = {
   possession: 'attackingPatient',
@@ -287,7 +306,9 @@ const DEFENCE_BY_STYLE: Record<string, SessionId> = {
 function byPriority(list: EffArea[], priorities: EffArea[]): EffArea[] {
   const rank = (a: EffArea) => {
     const i = priorities.indexOf(a);
-    return i < 0 ? 99 : i;
+    if (i >= 0) return i;
+    const k = KEY_AREAS.indexOf(a);
+    return k < 0 ? 99 : 50 + k;
   };
   return [...list].sort((a, b) => rank(a) - rank(b));
 }
@@ -304,6 +325,8 @@ export function buildTrainingWeek(input: TrainingInput): TrainingWeek {
   const matchDays = new Set(input.matchDays.filter((d) => d >= 0 && d <= 6));
   const seasonal = phase === 'A' || phase === 'B' || phase === 'C';
   const variant = seasonal ? (Math.min(2, matchDays.size) as 0 | 1 | 2) : null;
+  // Semaine à 3 matchs ou plus : repos tous les jours sans match (préparation et entraînement sacrifiés).
+  const congested = phase !== 'R' && matchDays.size >= CONGESTED_MATCHES;
   const theme: WeekTheme | null = phase === 'P' || phase === 'R' ? null : WEEK_THEMES[week - 1]!;
   const code = seasonal ? `${phase}${week}-${variant}` : `${phase}${week}`;
 
@@ -312,6 +335,7 @@ export function buildTrainingWeek(input: TrainingInput): TrainingWeek {
     if (matchDays.has(d)) return 'match';
     if (phase === 'R') return 'off';
     if (training && !training.has(d)) return 'off';
+    if (congested) return 'recovery';
     if (d === 0 ? input.matchBeforeMonday : matchDays.has(d - 1)) return 'recovery';
     if (matchDays.has(d + 1)) return 'prep';
     return 'dev';
@@ -382,7 +406,7 @@ export function buildTrainingWeek(input: TrainingInput): TrainingWeek {
     weekday: d,
     kind,
     sessions:
-      kind === 'off' ? [null, null, null] : kind === 'match' ? ['match', null, null] : kind === 'recovery' ? ['recovery', 'recovery', 'teamBonding'] : kind === 'prep' ? prepSessions() : devSessions(d),
+      kind === 'off' ? [null, null, null] : kind === 'match' ? ['match', null, null] : kind === 'recovery' ? (congested ? ['rest', 'rest', null] : ['rest', 'recovery', 'teamBonding']) : kind === 'prep' ? prepSessions() : devSessions(d),
   }));
 
   // Le projet oriente l'entraînement : la zone n° 1 du style visé est travaillée au moins une fois par semaine.
@@ -393,7 +417,22 @@ export function buildTrainingWeek(input: TrainingInput): TrainingWeek {
     if (first) first.sessions[0] = top;
     else if (prepDay) prepDay.sessions[1] = top;
   }
-  return { code, phase, week, variant, theme, days };
+  // Piège de pressing : 2 séances par semaine dès qu'il y a des journées de travail tactique (saison et bloc tactique).
+  if (seasonal || phase === 'T') {
+    let missing = PRESSING_TRAP_SESSIONS - days.reduce((n, x) => n + x.sessions.filter((s) => s === 'pressingTrap').length, 0);
+    // On remplace d'abord les séances tactiques des zones qui rapportent le moins, en gardant la zone n° 1 du style.
+    const slots = days
+      .filter((x) => x.kind === 'dev')
+      .flatMap((x) => [0, 1].map((i) => ({ x, i, s: x.sessions[i] })))
+      .filter(({ s }) => s && SESSIONS[s] === 'tactical' && s !== 'pressingTrap' && s !== top)
+      .sort((a, b) => KEY_AREAS.indexOf(a.s as EffArea) - KEY_AREAS.indexOf(b.s as EffArea));
+    for (const { x, i } of slots) {
+      if (missing <= 0) break;
+      x.sessions[i] = 'pressingTrap';
+      missing--;
+    }
+  }
+  return { code, phase, week, variant, theme, congested, days };
 }
 
 /** Nombre de séances de chaque catégorie dans la semaine (hors match). */
@@ -411,7 +450,7 @@ export type GamePreset = (typeof GAME_PRESETS)[number];
 
 /** Programme prédéfini du jeu le plus proche de la semaine, à charger puis ajuster séance par séance. */
 export function nearestPreset(w: TrainingWeek): GamePreset {
-  if (w.phase === 'R') return 'fullRest';
+  if (w.phase === 'R' || w.congested) return 'fullRest';
   if (w.phase === 'P') return 'preSeason';
   if (w.variant === 2) return 'congestion';
   const side = w.theme === 'pressing' ? 'OOP' : w.theme === 'balance' ? 'Balanced' : 'IP';
@@ -447,13 +486,9 @@ export interface IndividualAdvice {
 }
 
 /**
- * Intensité individuelle conseillée. « Double intensité » accélère la progression mais charge le joueur
- * et augmente le risque de blessure : seulement pour les 21 ans et moins en pleine forme, hors semaine
- * à deux matchs. Condition entamée : semi-intensité ; blessé : aucun travail sur le terrain ou en salle.
- */
-/**
  * Intensité individuelle : le jeu règle déjà chacun selon sa condition (intensité de l'équipe), donc on
- * laisse « team » sauf exception : un jeune en pleine forme hors semaine à deux matchs passe en double.
+ * laisse « team ». Jamais de double intensité : le banc d'essai d'AlexJeuVideal n'en met à personne, la
+ * fraîcheur rapporte plus en match que le surplus de progression. Les jeunes restent signalés (« young »).
  */
 export function individualAdvice(
   p: { age: number | null; condition: number | null; sharpness: number | null; injury: string | null },
@@ -463,7 +498,7 @@ export function individualAdvice(
   if (p.injury) return { intensity: 'team', reason: 'injured', rusty: false };
   if (p.condition != null && p.condition < 80) return { intensity: 'team', reason: 'veryTired', rusty };
   if (p.condition != null && p.condition < 90) return { intensity: 'team', reason: 'tired', rusty };
-  if (p.age != null && p.age <= 21) return (o.matches ?? 1) >= 2 ? { intensity: 'team', reason: 'busyWeek', rusty } : { intensity: 'double', reason: 'young', rusty };
+  if (p.age != null && p.age <= 21) return { intensity: 'team', reason: (o.matches ?? 1) >= 2 ? 'busyWeek' : 'young', rusty };
   if (p.age != null && p.age >= 32) return { intensity: 'team', reason: 'veteran', rusty };
   return { intensity: 'team', reason: 'normal', rusty };
 }
@@ -643,7 +678,7 @@ export function trainingAlerts<P extends { injury: string | null; age: number | 
 /** Charge de travail de la semaine (réglage du jeu : Légère, Moyenne, Intensive) ; null en semaine de repos. */
 export type WeekWorkload = 'light' | 'medium' | 'heavy';
 export function weekWorkload(w: TrainingWeek): WeekWorkload | null {
-  if (w.phase === 'R') return null;
+  if (w.phase === 'R' || w.congested) return null;
   const matches = w.days.filter((d) => d.kind === 'match').length;
   if (matches >= 2) return 'light';
   if (w.phase === 'P' && w.week <= 2) return 'heavy';

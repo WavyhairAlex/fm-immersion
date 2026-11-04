@@ -10,12 +10,12 @@ describe('planning d’entraînement (méthode Freedom)', () => {
     expect(mondayOf('2026-09-06')).toBe('2026-08-31');
   });
 
-  it('semaine à un match (samedi) : veille = préparation, lendemain = récupération + esprit d’équipe', () => {
+  it('semaine à un match (samedi) : veille = préparation, lendemain = repos, récupération + esprit d’équipe', () => {
     const w = buildTrainingWeek({ monday: MONDAY, phase: 'A', week: 1, matchDays: [5], style: 'possession', priorities: ['buildUpStrategy', 'passingStyle'] });
     expect(w.code).toBe('A1-1');
     expect(w.theme).toBe('buildUp');
     expect(w.days.map((d) => d.kind)).toEqual(['dev', 'dev', 'dev', 'dev', 'prep', 'match', 'recovery']);
-    expect(w.days[6]!.sessions).toEqual(['recovery', 'recovery', 'teamBonding']);
+    expect(w.days[6]!.sessions).toEqual(['rest', 'recovery', 'teamBonding']);
     expect(sessionCategory(w.days[4]!.sessions[0]!)).toBe('matchPrep');
     expect(w.days[0]!.sessions[0]).toBe('buildUpStrategy');
   });
@@ -32,13 +32,13 @@ describe('planning d’entraînement (méthode Freedom)', () => {
     expect(w.days[0]!.kind).toBe('recovery');
   });
 
-  it('aucune séance de Repos ni de condition physique intensive la veille ou l’avant-veille d’un match', () => {
+  it('Repos seulement les lendemains de match, pas de condition physique la veille ou l’avant-veille', () => {
     for (const phase of ['A', 'B', 'C'] as const)
       for (const week of [1, 2, 3, 4] as const)
         for (const days of [[], [5], [2, 5]]) {
           const w = buildTrainingWeek({ monday: MONDAY, phase, week, matchDays: days });
           for (const d of w.days) {
-            expect(d.sessions).not.toContain('rest');
+            if (d.kind !== 'recovery') expect(d.sessions).not.toContain('rest');
             if (days.includes(d.weekday + 1) || days.includes(d.weekday + 2)) {
               expect(d.sessions).not.toContain('heavyConditioning');
               expect(d.sessions).not.toContain('conditioning');
@@ -52,6 +52,33 @@ describe('planning d’entraînement (méthode Freedom)', () => {
       const w = buildTrainingWeek({ monday: MONDAY, phase: 'A', week, matchDays: [5], priorities: ['pressingTrap'] });
       expect(w.days.some((d) => d.sessions.includes('pressingTrap'))).toBe(true);
     }
+  });
+
+  it('deux séances de piège de pressing par semaine, ni plus ni moins quand il y a de la place', () => {
+    for (const phase of ['T', 'A', 'B', 'C'] as const)
+      for (const week of [1, 2, 3, 4] as const)
+        for (const days of [[], [5], [2]]) {
+          const w = buildTrainingWeek({ monday: MONDAY, phase, week, matchDays: days, priorities: ['passingStyle'] });
+          const n = w.days.reduce((k, d) => k + d.sessions.filter((s) => s === 'pressingTrap').length, 0);
+          expect(n, w.code).toBeGreaterThanOrEqual(2);
+          // La zone n° 1 du style reste travaillée.
+          expect(w.days.some((d) => d.sessions.includes('passingStyle')), w.code).toBe(true);
+        }
+  });
+
+  it('les zones qui rapportent le plus passent devant les autres zones du thème', () => {
+    // Thème pressing : le piège de pressing passe devant l'intensité du pressing.
+    const w = buildTrainingWeek({ monday: MONDAY, phase: 'A', week: 2, matchDays: [5] });
+    expect(w.days[0]!.sessions[0]).toBe('pressingTrap');
+  });
+
+  it('semaine à trois matchs : repos complet entre les matchs', () => {
+    const w = buildTrainingWeek({ monday: MONDAY, phase: 'B', week: 1, matchDays: [1, 3, 6] });
+    expect(w.congested).toBe(true);
+    for (const d of w.days) if (d.kind !== 'match') expect(d.sessions).toEqual(['rest', 'rest', null]);
+    expect(nearestPreset(w)).toBe('fullRest');
+    expect(weekWorkload(w)).toBeNull();
+    expect(buildTrainingWeek({ monday: MONDAY, phase: 'B', week: 1, matchDays: [2, 5] }).congested).toBe(false);
   });
 
   it('variantes offensives et défensives selon le style', () => {
@@ -130,7 +157,7 @@ describe('programme du jeu et entraînement individuel', () => {
   it('règle l’intensité individuelle selon l’état du joueur', () => {
     expect(individualAdvice({ age: 25, condition: 95, sharpness: 90, injury: 'Entorse' }).intensity).toBe('team');
     expect(individualAdvice({ age: 25, condition: 75, sharpness: 90, injury: null })).toEqual({ intensity: 'team', reason: 'veryTired', rusty: false });
-    expect(individualAdvice({ age: 19, condition: 98, sharpness: 50, injury: null })).toEqual({ intensity: 'double', reason: 'young', rusty: true });
+    expect(individualAdvice({ age: 19, condition: 98, sharpness: 50, injury: null })).toEqual({ intensity: 'team', reason: 'young', rusty: true });
     expect(individualAdvice({ age: 19, condition: 85, sharpness: 90, injury: null }).intensity).toBe('team');
     expect(individualAdvice({ age: 19, condition: 98, sharpness: 90, injury: null }, { matches: 2 }).intensity).toBe('team');
     expect(individualAdvice({ age: 33, condition: 98, sharpness: 90, injury: null }).intensity).toBe('team');

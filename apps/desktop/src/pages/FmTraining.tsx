@@ -337,7 +337,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
         <p className="text-sm">
           <b>{t(`fm.train.phase.${plan.phase}`)}</b>
           {plan.theme && <> · {t(`fm.train.theme.${plan.theme}`)}</>}
-          {plan.variant != null && <> · {t(`fm.train.variant_${plan.variant}`)}</>}
+          {plan.variant != null && <> · {plan.congested ? t('fm.train.congested') : t(`fm.train.variant_${plan.variant}`)}</>}
         </p>
         <p className="mt-1 text-xs text-brun">{t(`fm.train.phaseHelp.${plan.phase}`)}</p>
         <p className="mt-1 text-xs text-brun">{t('fm.train.presetHint', { preset: t(`fm.train.preset.${nearestPreset(plan)}`) })}</p>
