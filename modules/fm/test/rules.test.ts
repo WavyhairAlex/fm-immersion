@@ -25,3 +25,9 @@ describe('règles de compétition', () => {
     expect(ok.find((c) => c.id === 'nonEu')?.status).toBe('unknown');
   });
 });
+
+describe('nom de la 2. liga dans FM27', () => {
+  it('reconnaît « 2. slovenská futbalová liga »', () => {
+    expect(competitionRules('2. slovenská futbalová liga').u21Xi).toBe(1);
+  });
+});

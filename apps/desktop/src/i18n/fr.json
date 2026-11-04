@@ -336,7 +336,8 @@
       "training": "Entraînement",
       "mercato": "Départs et jeunes",
       "targets": "Cibles du mercato",
-      "instructions": "Consignes individuelles"
+      "instructions": "Consignes individuelles",
+      "results": "Résultats"
     },
     "home": {
       "todo": "À traiter",
@@ -1813,6 +1814,20 @@
         "keeperUp": "Gardien qui monte sur le dernier coup de pied arrêté"
       },
       "followStaff": "Suivre le conseil du staff, garder la base",
+      "live": {
+        "start": "Suivre le match",
+        "on": "En direct",
+        "help": "Pendant le match : règle la minute et le score au fil du jeu. Simloom surligne les changements à faire et les ajustements à activer maintenant. Rien n'est lu dans le jeu.",
+        "minute": "Minute",
+        "score": "Score",
+        "scored": "But marqué",
+        "conceded": "But encaissé",
+        "ahead": "+{{n}}",
+        "behind": "−{{n}}",
+        "level": "égalité",
+        "now": "maintenant",
+        "done": "Changement fait"
+      },
       "rules": "Règles {{competition}} :",
       "competition": "de la compétition",
       "subsRule": "{{count}} changements en {{windows}} fois, on en prévoit moins pour garder de la marge.",
@@ -1834,6 +1849,60 @@
       "table": "Tableau",
       "help": "Chaque joueur à son poste naturel principal, du meilleur au moins bon. Clique un nom pour sa fiche.",
       "empty": "Personne au poste : {{list}}."
+    },
+    "results": {
+      "title": "Résultats",
+      "none": "Aucun match retrouvé pour l'instant. Il faut une relecture de l'effectif avant un match et une après : le plugin relit toutes les 5 minutes et Simloom garde une relecture par jour de jeu, le premier match suivi apparaîtra donc au prochain match joué.",
+      "how": "Rien de nouveau n'est lu dans le jeu. Entre deux relectures, Simloom fait la différence des cumuls de saison du Centre de données (minutes, titularisations, buts de l'équipe pendant que le joueur est sur le terrain, victoires, xG…) : avec un seul match entre les deux, on retrouve le score exact (le joueur resté 90 minutes a tout vu), le onze de départ et la note de chaque joueur. L'adversaire vient du « prochain match » de la relecture d'avant, la tactique de celle d'après. Plusieurs matchs entre deux relectures sont regroupés en un bilan.",
+      "kpi": {
+        "matches": "Matchs suivis",
+        "record": "V-N-D",
+        "recordSub": "victoires, nuls, défaites",
+        "ppm": "Points / match",
+        "goals": "Buts pour - contre",
+        "form": "Forme"
+      },
+      "outcome": {
+        "W": "V",
+        "D": "N",
+        "L": "D"
+      },
+      "works": "Ce qui marche ou pas",
+      "fewMatches": "Pas encore assez de matchs pour conclure (au moins {{min}} de chaque côté pour comparer).",
+      "byTactic": "Par tactique",
+      "byPlayer": "Avec ou sans chaque titulaire",
+      "col": {
+        "tactic": "Tactique",
+        "matches": "Matchs",
+        "player": "Joueur",
+        "starts": "Titulaire",
+        "with": "Pts/m avec",
+        "without": "Pts/m sans",
+        "rating": "Note",
+        "minutes": "Min",
+        "goals": "Buts"
+      },
+      "withHelp": "Points par match quand le joueur est titulaire, puis quand il ne l'est pas. Un écart compte à partir de {{min}} matchs de chaque côté (en vert ou corail).",
+      "unknownTactic": "Tactique inconnue",
+      "unknownOpponent": "Adversaire inconnu",
+      "list": "Matchs",
+      "merged_one": "{{count}} match",
+      "merged_other": "{{count}} matchs",
+      "home": "contre {{team}} (dom.)",
+      "away": "à {{team}} (ext.)",
+      "xg": "xG {{xg}}",
+      "sub": "(entré)",
+      "insight": {
+        "tacticBest": "{{name}} rapporte {{ppm}} pt/match sur {{matches}} matchs, contre {{otherPpm}} pour {{other}}.",
+        "tacticWorst": "{{name}} ne rapporte que {{ppm}} pt/match.",
+        "playerPlus": "Avec {{name}} titulaire ({{starts}} matchs) : {{with}} pt/match, sans lui : {{without}}.",
+        "playerMinus": "Avec {{name}} titulaire ({{starts}} matchs) : {{with}} pt/match seulement, sans lui : {{without}}. À regarder (poste, rôle, forme).",
+        "wasteful": "On marque {{goals}} buts par match pour {{xg}} xG : on gâche des occasions, la finition est à travailler.",
+        "lucky": "On marque {{goals}} buts par match pour {{xg}} xG : au-dessus des occasions créées, ça risque de ne pas durer.",
+        "leaky": "On encaisse {{ga}} buts par match : la défense est la priorité.",
+        "merged_one": "{{count}} période regroupe plusieurs matchs joués entre deux relectures (le plugin relit toutes les 5 minutes) : en avançant moins vite autour des matchs, chaque match a son détail.",
+        "merged_other": "{{count}} périodes regroupent plusieurs matchs joués entre deux relectures (le plugin relit toutes les 5 minutes) : en avançant moins vite autour des matchs, chaque match a son détail."
+      }
     },
     "repl": {
       "open": "Remplaçant",

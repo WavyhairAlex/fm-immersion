@@ -336,7 +336,8 @@
       "training": "Training",
       "mercato": "Departures and youth",
       "targets": "Transfer targets",
-      "instructions": "Player instructions"
+      "instructions": "Player instructions",
+      "results": "Results"
     },
     "home": {
       "todo": "To deal with",
@@ -1813,6 +1814,20 @@
         "keeperUp": "Keeper up for the last set piece"
       },
       "followStaff": "Follow the staff's advice, keep the base",
+      "live": {
+        "start": "Follow the match",
+        "on": "Live",
+        "help": "During the match: set the minute and score as play goes on. Simloom highlights the substitutions to make and tweaks to switch on now. Nothing is read from the game.",
+        "minute": "Minute",
+        "score": "Score",
+        "scored": "Goal scored",
+        "conceded": "Goal conceded",
+        "ahead": "+{{n}}",
+        "behind": "−{{n}}",
+        "level": "level",
+        "now": "now",
+        "done": "Substitution made"
+      },
       "rules": "{{competition}} rules:",
       "competition": "Competition",
       "subsRule": "{{count}} substitutions in {{windows}} windows; we plan fewer to keep a margin.",
@@ -1834,6 +1849,60 @@
       "table": "Table",
       "help": "Each player at their main natural position, best first. Click a name for their profile.",
       "empty": "Nobody at: {{list}}."
+    },
+    "results": {
+      "title": "Results",
+      "none": "No match found yet. It takes one squad read before a match and one after: the plugin reads every 5 minutes and Simloom keeps one read per game day, so the first tracked match will show after the next match played.",
+      "how": "Nothing new is read in the game. Between two reads, Simloom takes the difference of the Data Hub season totals (minutes, starts, team goals while the player is on the pitch, wins, xG…): with a single match in between, it finds the exact score (the player who stayed 90 minutes saw everything), the starting eleven and each player's rating. The opponent comes from the previous read's \"next match\", the tactic from the following one. Several matches between two reads are grouped into one summary.",
+      "kpi": {
+        "matches": "Matches tracked",
+        "record": "W-D-L",
+        "recordSub": "wins, draws, losses",
+        "ppm": "Points / match",
+        "goals": "Goals for - against",
+        "form": "Form"
+      },
+      "outcome": {
+        "W": "W",
+        "D": "D",
+        "L": "L"
+      },
+      "works": "What works and what doesn't",
+      "fewMatches": "Not enough matches to conclude yet (at least {{min}} on each side to compare).",
+      "byTactic": "By tactic",
+      "byPlayer": "With or without each starter",
+      "col": {
+        "tactic": "Tactic",
+        "matches": "Matches",
+        "player": "Player",
+        "starts": "Starts",
+        "with": "Pts/m with",
+        "without": "Pts/m without",
+        "rating": "Rating",
+        "minutes": "Min",
+        "goals": "Goals"
+      },
+      "withHelp": "Points per match when the player starts, then when he doesn't. A gap counts from {{min}} matches on each side (green or coral).",
+      "unknownTactic": "Unknown tactic",
+      "unknownOpponent": "Unknown opponent",
+      "list": "Matches",
+      "merged_one": "{{count}} match",
+      "merged_other": "{{count}} matches",
+      "home": "vs {{team}} (home)",
+      "away": "at {{team}} (away)",
+      "xg": "xG {{xg}}",
+      "sub": "(sub)",
+      "insight": {
+        "tacticBest": "{{name}} earns {{ppm}} pts/match over {{matches}} matches, against {{otherPpm}} for {{other}}.",
+        "tacticWorst": "{{name}} only earns {{ppm}} pts/match.",
+        "playerPlus": "With {{name}} starting ({{starts}} matches): {{with}} pts/match, without: {{without}}.",
+        "playerMinus": "With {{name}} starting ({{starts}} matches): only {{with}} pts/match, without: {{without}}. Worth a look (position, role, form).",
+        "wasteful": "We score {{goals}} goals per match from {{xg}} xG: chances are wasted, finishing needs work.",
+        "lucky": "We score {{goals}} goals per match from {{xg}} xG: above the chances created, it may not last.",
+        "leaky": "We concede {{ga}} goals per match: defence is the priority.",
+        "merged_one": "{{count}} period groups several matches played between two reads (the plugin reads every 5 minutes): advancing more slowly around matches gives each match its detail.",
+        "merged_other": "{{count}} periods group several matches played between two reads (the plugin reads every 5 minutes): advancing more slowly around matches gives each match its detail."
+      }
     },
     "repl": {
       "open": "Replacement",
