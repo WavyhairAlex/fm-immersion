@@ -118,7 +118,8 @@ export function matchStatsFull(snap: FmSnapshot): Map<string, MatchStats> {
     const raw: RawStats = {};
     for (const [k, v] of Object.entries(r)) {
       if (!k.startsWith(RAW_PREFIX)) continue;
-      const n = statValue(v);
+      // Totaux : { PropertyValue: 0, Count: 0 } veut dire zéro (aucun but encaissé), pas « pas de donnée ».
+      const n = v && typeof v === 'object' && 'PropertyValue' in (v as Raw) ? toNumber((v as Raw).PropertyValue) : statValue(v);
       if (n != null) raw[k.slice(RAW_PREFIX.length)] = n;
     }
     const stats = deriveStats(raw);

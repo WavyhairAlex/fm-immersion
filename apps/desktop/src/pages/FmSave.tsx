@@ -43,6 +43,7 @@ import { FmProject } from "./FmProject";
 import { FmRoles } from "./FmRoles";
 import { FmStats } from "./FmStats";
 import { FmResults } from "./FmResults";
+import { FmDiagnosis } from "./FmDiagnosis";
 import { FmStyle } from "./FmStyle";
 import { FmTactic, useTacticEngine } from "./FmTactic";
 import { FmTargets } from "./FmTargets";
@@ -76,6 +77,7 @@ const PARTS: Record<string, readonly string[]> = {
   analysis: ["analysis", "roles", "progression"],
   tactic: ["tactic", "instructions", "depth", "effectiveness"],
   opponent: ["opponent", "calendar"],
+  results: ["results", "diagnosis"],
   mercato: ["mercato", "targets"],
   finances: ["finances", "wages", "contracts"],
 };
@@ -388,6 +390,24 @@ export function FmSave() {
         );
       case "opponent":
         return <FmOpponent snap={snapshot.data} />;
+      case "diagnosis":
+        return (
+          <FmDiagnosis
+            snap={snapshot.data}
+            players={players}
+            folder={folder}
+            gameFormation={gameFormation}
+            lineup={lineup}
+            gameTactic={
+              typeof snapshot.data.tactic?.name === "string"
+                ? snapshot.data.tactic.name
+                : null
+            }
+            history={
+              all as { gameDate: string; data: FmSnapshot }[] | undefined
+            }
+          />
+        );
       case "results":
         return (
           <FmResults
