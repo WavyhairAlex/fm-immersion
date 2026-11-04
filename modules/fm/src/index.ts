@@ -38,3 +38,4 @@ export * from './compat';
 export * from './stats';
 export * from './subs';
 export * from './rules';
+export * from './replacement';
