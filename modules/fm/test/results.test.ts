@@ -4,7 +4,10 @@ import { analyzeResults, resultBetween, type FmSnapshot } from '../src';
 type P = { id: string; min: number; starts: number; subs?: number; tg: number; tc: number; won?: number; lost?: number; xg?: number; apps?: number; avg?: number; goals?: number };
 
 /** Instantané minimal : cumuls de saison par joueur dans custom.joueurs (comme chemins.json). */
-function snap(date: string, ps: P[], extra: Record<string, unknown> = {}): FmSnapshot {
+function snap(date: string, given: P[], extra: Record<string, unknown> = {}): FmSnapshot {
+  // Neuf coéquipiers qui jouent comme le gardien : un match de l'équipe première compte 11 titularisations.
+  const gk = given.find((p) => p.id === 'gk');
+  const ps = gk ? [...given, ...Array.from({ length: 9 }, (_, i) => ({ ...gk, id: `f${i}`, xg: 0, goals: 0, avg: undefined }))] : given;
   return {
     schema: 'archivix/1',
     game: 'FM27',
@@ -53,6 +56,17 @@ describe('résultats entre deux instantanés', () => {
     expect(a).toMatchObject({ started: true, minutes: 70, goals: 1 });
     expect(a.rating).toBeCloseTo(8.0);
     expect(r.players.find((p) => p.id === 'b')!.started).toBe(false);
+  });
+
+  it('un seul joueur qui bouge (réserve, recrue) ou un changement de club : pas un match', () => {
+    const reserve = snap('2027-02-15', [
+      { id: 'gk', min: 900, starts: 10, tg: 12, tc: 10, apps: 10, avg: 6.8 },
+      { id: 'a', min: 800, starts: 9, tg: 11, tc: 9, xg: 3, apps: 9, avg: 7.0, goals: 4 },
+      { id: 'b', min: 190, starts: 2, subs: 2, tg: 1, tc: 2, apps: 4, avg: 6.5 },
+    ]);
+    expect(resultBetween(before, reserve)).toBeNull();
+    const other = { ...before, club: 'Vänersborgs IF', gameDate: '2027-02-17' } as FmSnapshot;
+    expect(resultBetween(other, before)).toBeNull();
   });
 
   it('pas de match entre deux instantanés : rien', () => {

@@ -1209,7 +1209,9 @@
       "progression": "L'évolution du niveau de chaque joueur depuis le premier instantané.",
       "opponent": "Le prochain adversaire tel que le décrit le rapport d'équipe du jeu, et comment le jouer.",
       "mercato": "Étape 4 : qui faire partir (vente, prêt, fin de contrat), qui prolonger, et quels jeunes valent le coup pour le projet.",
-      "instructions": "Au plus 3 consignes par joueur du onze, pour coller au style sans trop charger la compréhension tactique."
+      "instructions": "Au plus 3 consignes par joueur du onze, pour coller au style sans trop charger la compréhension tactique.",
+      "results": "Les matchs joués depuis que Simloom suit la partie : score, onze, note de chaque joueur, et ce qui rapporte des points.",
+      "diagnosis": "Les titulaires sous la moyenne du onze, et ce qui l'explique."
     },
     "nextStep": "Étape suivante : {{view}}",
     "opp": {
@@ -1862,7 +1864,8 @@
         "recordSub": "victoires, nuls, défaites",
         "ppm": "Points / match",
         "goals": "Buts pour - contre",
-        "form": "Forme"
+        "form": "Forme",
+        "matchesSub": "depuis que Simloom suit la partie"
       },
       "outcome": {
         "W": "V",
@@ -1902,8 +1905,8 @@
         "wasteful": "On marque {{goals}} buts par match pour {{xg}} xG : on gâche des occasions, la finition est à travailler.",
         "lucky": "On marque {{goals}} buts par match pour {{xg}} xG : au-dessus des occasions créées, ça risque de ne pas durer.",
         "leaky": "On encaisse {{ga}} buts par match : la défense est la priorité.",
-        "merged_one": "{{count}} période regroupe plusieurs matchs joués entre deux relectures (le plugin relit toutes les 5 minutes) : en avançant moins vite autour des matchs, chaque match a son détail.",
-        "merged_other": "{{count}} périodes regroupent plusieurs matchs joués entre deux relectures (le plugin relit toutes les 5 minutes) : en avançant moins vite autour des matchs, chaque match a son détail."
+        "merged_one": "{{count}} période regroupe plusieurs matchs joués entre deux relectures : chaque match n'y a pas son détail.",
+        "merged_other": "{{count}} périodes regroupent plusieurs matchs joués entre deux relectures : chaque match n'y a pas son détail."
       }
     },
     "repl": {

@@ -87,6 +87,8 @@ function nextOpponent(snap: FmSnapshot, until: string): { opponent: string | nul
 
 /** Le match (ou les matchs) joué(s) entre deux instantanés, ou null s'il n'y en a pas. */
 export function resultBetween(prev: FmSnapshot, cur: FmSnapshot): MatchResult | null {
+  // Changement de club entre les deux : les cumuls n'ont rien à voir.
+  if (prev.club !== cur.club) return null;
   const before = matchStatsFull(prev);
   const after = matchStatsFull(cur);
   const prevPlayers = new Map(prev.players.map((p) => [String(p.id), p]));
@@ -100,7 +102,10 @@ export function resultBetween(prev: FmSnapshot, cur: FmSnapshot): MatchResult | 
   }
   // Nouvelle saison entre les deux : les cumuls repartent de zéro, la différence ne veut rien dire.
   if (reset > rows.length) return null;
-  const matches = Math.max(0, ...rows.map((r) => apps(r.d)));
+  // Un match de l'équipe première = 11 titularisations chez nous. Les cumuls bougent aussi pour un joueur qui joue
+  // avec la réserve ou les U19, ou une recrue qui arrive avec ses stats d'un autre club : ce n'est pas un match.
+  const starts = sum(rows.map((r) => Math.max(0, r.d.StartingAppearances ?? 0)));
+  const matches = Math.min(Math.round(starts / 11), Math.max(0, ...rows.map((r) => apps(r.d))));
   if (!matches) return null;
 
   // Le joueur resté le plus longtemps sur le terrain voit tout le score (souvent le gardien).

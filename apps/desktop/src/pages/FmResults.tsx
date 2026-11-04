@@ -36,7 +36,7 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Kpi label={t('fm.results.kpi.matches')} value={rec.matches} />
+        <Kpi label={t('fm.results.kpi.matches')} value={rec.matches} sub={t('fm.results.kpi.matchesSub')} />
         <Kpi label={t('fm.results.kpi.record')} value={`${rec.wins}-${rec.draws}-${rec.losses}`} sub={t('fm.results.kpi.recordSub')} />
         <Kpi label={t('fm.results.kpi.ppm')} value={num(rec.ppm, 2)} />
         <Kpi label={t('fm.results.kpi.goals')} value={`${rec.goalsFor} - ${rec.goalsAgainst}`} />

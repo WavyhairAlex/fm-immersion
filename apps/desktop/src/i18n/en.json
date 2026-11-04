@@ -1209,7 +1209,9 @@
       "progression": "Each player's level since the first snapshot.",
       "opponent": "The next opponent as the game's team report describes it, and how to play them.",
       "mercato": "Step 4: who to move on (sale, loan, contract end), who to renew, and which youngsters are worth it for the project.",
-      "instructions": "Up to 3 instructions per starter, to fit the style without overloading tactical familiarity."
+      "instructions": "Up to 3 instructions per starter, to fit the style without overloading tactical familiarity.",
+      "results": "Matches played since Simloom started following the save: score, eleven, each player's rating, and what earns points.",
+      "diagnosis": "Starters below the eleven's average, and why."
     },
     "nextStep": "Next step: {{view}}",
     "opp": {
@@ -1862,7 +1864,8 @@
         "recordSub": "wins, draws, losses",
         "ppm": "Points / match",
         "goals": "Goals for - against",
-        "form": "Form"
+        "form": "Form",
+        "matchesSub": "since Simloom started following the save"
       },
       "outcome": {
         "W": "W",
@@ -1902,8 +1905,8 @@
         "wasteful": "We score {{goals}} goals per match from {{xg}} xG: chances are wasted, finishing needs work.",
         "lucky": "We score {{goals}} goals per match from {{xg}} xG: above the chances created, it may not last.",
         "leaky": "We concede {{ga}} goals per match: defence is the priority.",
-        "merged_one": "{{count}} period groups several matches played between two reads (the plugin reads every 5 minutes): advancing more slowly around matches gives each match its detail.",
-        "merged_other": "{{count}} periods group several matches played between two reads (the plugin reads every 5 minutes): advancing more slowly around matches gives each match its detail."
+        "merged_one": "{{count}} period groups several matches played between two reads: those matches have no detail.",
+        "merged_other": "{{count}} periods group several matches played between two reads: those matches have no detail."
       }
     },
     "repl": {
