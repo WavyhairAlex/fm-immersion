@@ -1733,6 +1733,56 @@
       "mercato": "Mercato",
       "inTwo": "Dans deux saisons :",
       "open": "Voir la fiche de {{name}}"
+    },
+    "foot": {
+      "profile": "Profil",
+      "profileHelp": "Moyennes d'attributs sur 20 ; en pointillé, la moyenne de sa ligne dans l'effectif.",
+      "attributes": "Attributs",
+      "form": "Forme",
+      "sharpness": "Rythme de match",
+      "apps": "Matchs",
+      "goals": "Buts",
+      "rating": "Note moy.",
+      "foot": "pied fort : {{foot}}",
+      "statsHelp": "Barre : sa place dans sa ligne, du moins bon (à gauche) au meilleur (à droite).",
+      "axis": {
+        "attack": "Finition",
+        "creation": "Création",
+        "dribble": "Percussion",
+        "defence": "Défense",
+        "mental": "Mental",
+        "physical": "Physique",
+        "shotStopping": "Arrêts",
+        "aerial": "Jeu aérien",
+        "distribution": "Relance",
+        "sweeping": "Sorties",
+        "communication": "Commandement"
+      }
+    },
+    "mc": {
+      "next": "Prochain match",
+      "home": "À domicile",
+      "away": "À l'extérieur",
+      "homeShort": "Dom.",
+      "awayShort": "Ext.",
+      "today": "Aujourd'hui",
+      "then": "Ensuite",
+      "prepare": "Préparer le onze",
+      "calendar": "Calendrier",
+      "xi": "Onze probable",
+      "bench": "Banc :",
+      "state": "État de l'équipe",
+      "injured": "blessés",
+      "suspended": "suspendus",
+      "rating": "note moy.",
+      "topScorer": "Meilleur buteur :"
+    },
+    "squadPitch": {
+      "label": "Affichage de l'effectif",
+      "pitch": "Terrain",
+      "table": "Tableau",
+      "help": "Chaque joueur à son poste naturel principal, du meilleur au moins bon. Clique un nom pour sa fiche.",
+      "empty": "Personne au poste : {{list}}."
     }
   },
   "pz2": {
