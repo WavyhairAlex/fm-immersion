@@ -1778,6 +1778,35 @@
       "rating": "avg rating",
       "topScorer": "Top scorer:"
     },
+    "matchSheet": {
+      "title": "Match sheet",
+      "help": "Planned before kick-off, without changing the base tactic. FM27: Stamina matters more late in matches and fresh substitutes have more impact; tweaks are set from the touchline.",
+      "subs": "Planned substitutions",
+      "noSubs": "Nobody to take off in advance: decide during the match.",
+      "reason": {
+        "stamina": "low stamina: fades late in the match",
+        "condition": "below full condition before the match",
+        "running": "high-running role"
+      },
+      "tweaks": "Tweaks by scoreline",
+      "when": {
+        "leading": "Leading",
+        "drawing": "Level against a low block",
+        "losing": "Losing, from 60'",
+        "lateLosing": "Losing, last 10 minutes",
+        "tired": "Team tired",
+        "opponentChange": "Opponent changes tactics"
+      },
+      "tweak": {
+        "moreUrgency": "Play with more urgency",
+        "longerPasses": "Longer passes",
+        "exploitWidth": "Exploit the width",
+        "reducePressing": "Reduce pressing",
+        "swapWingers": "Swap wingers",
+        "keeperUp": "Keeper up for the last set piece"
+      },
+      "followStaff": "Follow the staff's advice, keep the base"
+    },
     "squadPitch": {
       "label": "Squad display",
       "pitch": "Pitch",

@@ -1,5 +1,7 @@
 import {
+  matchTweaks,
   snapshotFixtures,
+  substitutionPlan,
   spreadXY,
   summarize,
   type FmPlayer,
@@ -48,6 +50,8 @@ export function FmMatchCenter({
     lineup,
     gameTactic,
   );
+  const subs = useMemo(() => (plan ? substitutionPlan(plan) : []), [plan]);
+  const tweaks = useMemo(() => matchTweaks(style?.id), [style]);
   const nm = s.nextMatch;
   const day = new Intl.DateTimeFormat(lang, { day: "numeric", month: "short" });
   const rating = new Intl.NumberFormat(lang, {
@@ -270,6 +274,49 @@ export function FmMatchCenter({
           </p>
         )}
       </div>
+
+      {/* Feuille de match : remplacements prévus et ajustements selon le score. */}
+      {plan && (
+        <div className="card p-4 lg:col-span-3">
+          <p className="font-display text-lg font-semibold">{t("fm.matchSheet.title")}</p>
+          <p className="mb-3 text-xs text-brun">{t("fm.matchSheet.help")}</p>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <p className="mb-2 text-sm font-bold text-canard">{t("fm.matchSheet.subs")}</p>
+              {subs.length ? (
+                <ul className="space-y-1.5 text-sm">
+                  {subs.map((c) => (
+                    <li key={c.slot} className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                      <span className="w-10 shrink-0 font-bold tabular-nums text-eau-fonce">{c.minute}'</span>
+                      <PlayerLink player={c.out} />
+                      <span className="text-brun" aria-hidden>
+                        →
+                      </span>
+                      <PlayerLink player={c.in} />
+                      <span className="w-full pl-12 text-xs text-brun">{t(`fm.matchSheet.reason.${c.reason}`)}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-brun">{t("fm.matchSheet.noSubs")}</p>
+              )}
+            </div>
+            <div>
+              <p className="mb-2 text-sm font-bold text-canard">{t("fm.matchSheet.tweaks")}</p>
+              <dl className="space-y-1.5 text-sm">
+                {tweaks.map((x) => (
+                  <div key={x.situation}>
+                    <dt className="font-bold text-canard">{t(`fm.matchSheet.when.${x.situation}`)}</dt>
+                    <dd className="text-brun">
+                      {x.tweaks.length ? x.tweaks.map((k) => t(`fm.matchSheet.tweak.${k}`)).join(" + ") : t("fm.matchSheet.followStaff")}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
