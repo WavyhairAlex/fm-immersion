@@ -18,7 +18,7 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.4.5";
+    public const string Version = "0.4.6";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que Simloom renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).

@@ -88,7 +88,8 @@ minute au plus, et écrit le même fichier avec `"club": null`. La date du menu 
 
 - **Pas de lecture pendant un chargement (0.4.2).** Après le chargement d'une partie, le plugin attend 45 s de partie
   chargée sans interruption avant le premier instantané, et il vérifie entre chaque bloc de lecture que la partie est
-  toujours chargée, au même jour. Sinon il abandonne l'instantané. Un contexte vide (`@team` non résolu) n'est jamais
+  toujours chargée, avec le même club. Sinon il abandonne l'instantané. Depuis 0.4.6, un jour qui passe pendant la
+  lecture ne l'arrête plus (avant, rien n'était écrit tant que le joueur avançait dans le calendrier). Un contexte vide (`@team` non résolu) n'est jamais
   envoyé au jeu. Cela fait suite au plantage du 01/11 à 18h02 : une lecture avait démarré 2 s après un chargement, puis
   le joueur avait quitté la partie.
 - Chaque requête de binding est **désinscrite** dès sa réponse, même tardive, et **au délai dépassé** (0.2.2).

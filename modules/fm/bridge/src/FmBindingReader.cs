@@ -134,8 +134,17 @@ public class FmBindingReader : IGameReader
         var club = CleanName(head[0] as string) ?? "";
         var date = DecodeDate(head[1] as string) ?? DateTime.Today.ToString("yyyy-MM-dd");
         int count = head[3] is double c ? (int)c : 0;
-        // Entre deux blocs de lecture : la partie est-elle toujours chargée, au même jour ? Sinon on arrête tout.
-        void Guard() { if (CurrentDate() != date) throw new GameChanged(); }
+        // Entre deux blocs de lecture : la partie est-elle toujours chargée, avec le même club ? Sinon on arrête tout.
+        // 0.4.6 : un jour qui passe pendant la lecture (le joueur avance dans le calendrier) ne l'arrête plus. Avant,
+        // chaque lecture lancée pendant que le jeu avançait était abandonnée, et Simloom n'avait rien de neuf tant que
+        // le joueur ne s'arrêtait pas assez longtemps sur un écran (04/11/2026 : aucun instantané de 20h10 à 21h36).
+        // L'instantané garde la date de son début ; le suivant relit le nouveau jour.
+        void Guard()
+        {
+            var now = Batch.Run(new[] { new Req(null, Team + "/Name"), new Req(null, "game.CurrentGameDate") }, 3000);
+            var d = DecodeDate(now[1] as string);
+            if (d == null || d.StartsWith("1900") || (CleanName(now[0] as string) ?? "") != club) throw new GameChanged();
+        }
         Guard();
 
         var reqs = new List<Req>();
