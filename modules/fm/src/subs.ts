@@ -1,4 +1,4 @@
-import type { FmPlayer } from './player';
+import { unavailable, type FmPlayer } from './player';
 import { attrOf, type FormationPlan } from './tactic';
 
 /**
@@ -56,7 +56,7 @@ export function substitutionPlan(plan: FormationPlan, max = PLANNED_SUBS): SubCh
   const out: SubChange[] = [];
   for (const c of cands) {
     if (out.length >= max) break;
-    const sub = (plan.subs[c.slot] ?? []).find((p) => !used.has(p.id) && !p.injury && !p.suspension);
+    const sub = (plan.subs[c.slot] ?? []).find((p) => !used.has(p.id) && !unavailable(p));
     if (!sub) continue;
     used.add(sub.id);
     out.push({ slot: c.slot, out: c.s.player!, in: sub, minute: c.risk >= 5 ? 60 : 70, reason: c.reason });

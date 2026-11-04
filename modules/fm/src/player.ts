@@ -46,6 +46,11 @@ export interface FmPlayer {
   injury: string | null;
   injuryDays: number | null;
   /**
+   * Jours avant le prochain match (date du jeu de l'instantané), posé par `forNextMatch` : un blessé rétabli d'ici là
+   * compte pour le match.
+   */
+  matchInDays?: number | null;
+  /**
    * Suspension en cours lue par chemins.json (`custom.joueurs[].suspensions`, `custom.equipe.suspensionsEnCours`) :
    * texte du jeu (« Championnat national, 1 match, 3 cartons jaunes ») ou « Suspendu » si le détail manque.
    */
@@ -144,7 +149,17 @@ function familiarityOf(raw: unknown): Partial<Record<PosCode, number>> | null {
   return Object.keys(out).length ? out : null;
 }
 
-/** Joueur indisponible pour le prochain match : blessé ou suspendu. */
+/** Blessé aujourd'hui mais rétabli le jour du prochain match (durée de la blessure ≤ jours avant le match). */
+export function backForMatch(p: Pick<FmPlayer, 'injury' | 'injuryDays' | 'matchInDays'>): boolean {
+  return !!p.injury && p.injuryDays != null && p.matchInDays != null && p.injuryDays <= p.matchInDays;
+}
+
+/** Joueur indisponible pour le prochain match : suspendu, ou blessé encore absent le jour du match. */
 export function unavailable(p: FmPlayer): boolean {
-  return !!p.injury || !!p.suspension;
+  return (!!p.injury && !backForMatch(p)) || !!p.suspension;
+}
+
+/** Pose sur chaque joueur le nombre de jours avant le prochain match (null : pas de match connu). */
+export function forNextMatch(players: FmPlayer[], days: number | null): FmPlayer[] {
+  return players.map((p) => ({ ...p, matchInDays: days }));
 }

@@ -68,3 +68,11 @@ export function snapshotFixtures(snap: Pick<FmSnapshot, 'gameDate'> & { fixtures
   });
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
+
+/** Jours avant le prochain match de l'instantané (0 = aujourd'hui), ou null s'il n'est pas connu. */
+export function nextMatchInDays(snap: Pick<FmSnapshot, 'gameDate'> & { fixtures?: unknown; nextMatch?: unknown }): number | null {
+  const first = snapshotFixtures(snap).find((f) => f.date >= snap.gameDate);
+  if (first) return Math.round((new Date(first.date).getTime() - new Date(snap.gameDate).getTime()) / 86_400_000);
+  const next = snap.nextMatch && typeof snap.nextMatch === 'object' ? (snap.nextMatch as Record<string, unknown>) : null;
+  return typeof next?.inDays === 'number' ? next.inDays : daysUntil(next?.inDays);
+}

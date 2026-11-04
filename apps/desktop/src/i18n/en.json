@@ -1784,7 +1784,8 @@
       "injured": "injured",
       "suspended": "suspended",
       "rating": "avg rating",
-      "topScorer": "Top scorer:"
+      "topScorer": "Top scorer:",
+      "backForMatch": "Fit for the match (injured for {{days}} more days)"
     },
     "matchSheet": {
       "title": "Match sheet",
