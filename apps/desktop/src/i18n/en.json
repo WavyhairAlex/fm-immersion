@@ -1834,6 +1834,38 @@
       "table": "Table",
       "help": "Each player at their main natural position, best first. Click a name for their profile.",
       "empty": "Nobody at: {{list}}."
+    },
+    "repl": {
+      "open": "Replacement",
+      "slotStarter": "{{name}} starts in this position in the target XI:",
+      "slot": "{{name}} would fit best here in the target XI:",
+      "noSlot": "{{name}} plays no position in the project's formation: no replacement to look for.",
+      "internal": "In-house option: {{name}}",
+      "noInternal": "No other squad player covers this position.",
+      "search": "Search the database",
+      "searching": "Reading the database…",
+      "found": "{{count}} players read in the same position, CA {{min}} to {{max}}",
+      "foundNoCa": "{{count}} players read in the same position (leaving player's CA unknown: no CA band)",
+      "gap": "Gap",
+      "none": "No followed target plays this position. Run the database search.",
+      "help": "Candidates are rated in the same position and role as the leaving player, in the project's XI; the gap is the rating difference with him. The search reads the FM27 database read-only, with the save open: players from other clubs, not injured, in the same position, with a real CA slightly below to well above his. \"Follow\" adds them to your targets."
+    },
+    "divLevel": {
+      "title": "Division level",
+      "teaser": "Each club's best XI in your league, on the project's formation, to see where your team stands and what level to aim for.",
+      "own": "Read my division",
+      "other": "Or another division",
+      "compare": "Compare",
+      "reading": "Reading the database…",
+      "none": "No club found (unknown division or no save loaded).",
+      "reputation": "reputation {{value}}",
+      "top3": "Top of the table (best 3)",
+      "median": "Middle",
+      "bottom": "Weakest",
+      "ours": "Our XI",
+      "vsTop3": "vs the top of the table",
+      "rank": "Our XI ranks {{rank}} of {{count}}.",
+      "help": "Read-only read of the FM27 database, on demand, with the save open. For each club: its contracted players (loaned out excluded, injured left out), placed in the project's formation with the same calculation as your squad; the rating is the starters' average. CA is the average of the eleven best real CAs. For the division above, type its name (e.g. \"Niké liga\"): your XI is compared with their benchmarks."
     }
   },
   "pz2": {
