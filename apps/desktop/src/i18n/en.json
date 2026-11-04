@@ -1812,7 +1812,21 @@
         "swapWingers": "Swap wingers",
         "keeperUp": "Keeper up for the last set piece"
       },
-      "followStaff": "Follow the staff's advice, keep the base"
+      "followStaff": "Follow the staff's advice, keep the base",
+      "rules": "{{competition}} rules:",
+      "competition": "Competition",
+      "subsRule": "{{count}} substitutions in {{windows}} windows; we plan fewer to keep a margin.",
+      "check": {
+        "u21Xi": "at least {{need}} homegrown under-21 player in the starting XI (under-21s: {{have}})",
+        "u21Squad": "at least {{need}} homegrown under-21 player in the matchday squad (under-21s: {{have}})",
+        "nonEu": "at most {{need}} non-EU players in the matchday squad"
+      },
+      "status": {
+        "ok": "met if that youngster is homegrown",
+        "bad": "to fix",
+        "unknown": "to check (nationalities not read yet)"
+      },
+      "unverified": "Rules taken from an FM league summary, not read from the game yet: check the competition's Rules screen."
     },
     "squadPitch": {
       "label": "Squad display",

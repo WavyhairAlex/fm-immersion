@@ -1812,7 +1812,21 @@
         "swapWingers": "Inverser les ailiers",
         "keeperUp": "Gardien qui monte sur le dernier coup de pied arrêté"
       },
-      "followStaff": "Suivre le conseil du staff, garder la base"
+      "followStaff": "Suivre le conseil du staff, garder la base",
+      "rules": "Règles {{competition}} :",
+      "competition": "de la compétition",
+      "subsRule": "{{count}} changements en {{windows}} fois, on en prévoit moins pour garder de la marge.",
+      "check": {
+        "u21Xi": "au moins {{need}} joueur de moins de 21 ans formé au pays dans le onze (moins de 21 ans : {{have}})",
+        "u21Squad": "au moins {{need}} joueur de moins de 21 ans formé au pays sur la feuille (moins de 21 ans : {{have}})",
+        "nonEu": "{{need}} joueurs hors UE au plus sur la feuille"
+      },
+      "status": {
+        "ok": "respecté si ce jeune est formé au pays",
+        "bad": "à corriger",
+        "unknown": "à vérifier (nationalités pas encore lues)"
+      },
+      "unverified": "Règles reprises d'un récapitulatif FM, pas encore lues dans le jeu : vérifie l'écran Règles de la compétition."
     },
     "squadPitch": {
       "label": "Affichage de l'effectif",

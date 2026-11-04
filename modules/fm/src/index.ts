@@ -37,3 +37,4 @@ export * from './decisions';
 export * from './compat';
 export * from './stats';
 export * from './subs';
+export * from './rules';
