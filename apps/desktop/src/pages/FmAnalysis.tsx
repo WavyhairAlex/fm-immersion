@@ -1,6 +1,7 @@
 import { analyseSquad, POS_LABEL, type FmPlayer, type PosCode, type Todo } from '@simloom/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Pitch, POS_XY } from './FmFoot';
 
 const DOT: Record<Todo['level'], string> = { urgent: 'bg-corail', warning: 'bg-ambre', info: 'bg-eau' };
 /** Barres de la pyramide des âges : du plus clair (jeunes) au plus foncé. */
@@ -99,22 +100,29 @@ export function FmAnalysis({ players, gameDate }: { players: FmPlayer[]; gameDat
       <section className="card">
         <h2 className="text-xl font-semibold">{t('fm.an.depth')}</h2>
         <p className="mt-1 text-sm text-brun">{t('fm.an.depthHelp')}</p>
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+        {/* Sur un terrain à plat (attaque à droite) : chaque poste à sa place, couleur selon le nombre de joueurs. */}
+        <Pitch horizontal className="mx-auto mt-4 w-full max-w-3xl">
           {a.depth.map((d) => {
             const n = d.players.length;
             // Pistons et ailiers dépendent du schéma : un vide n'y est pas une alerte.
             const core = CORE.includes(d.pos);
-            const tone =
-              n === 0 ? (core ? 'ring-corail bg-corail/10' : 'ring-canard/10 bg-creme/60') : n === 1 && core ? 'ring-ambre bg-ambre/15' : 'ring-eau bg-eau/10';
+            const tone = n === 0 ? (core ? 'bg-corail text-white' : 'bg-white/40 text-canard') : n === 1 && core ? 'bg-ambre text-canard' : 'bg-white text-canard';
+            const [x, y] = POS_XY[d.pos];
             return (
-              <div key={d.pos} className={`rounded-2xl p-3 ring-1 ${tone}`} title={d.players.map((p) => p.name).join(', ')}>
-                <p className="text-xs font-bold">{POS_LABEL[d.pos]}</p>
-                <p className="font-display text-2xl font-semibold">{n}</p>
-                <p className="truncate text-xs text-brun">{d.players[0]?.name ?? '–'}</p>
+              <div
+                key={d.pos}
+                className={`absolute w-28 -translate-x-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-center shadow ${tone}`}
+                style={{ left: `${Math.min(92, Math.max(8, 100 - y))}%`, top: `${Math.min(86, Math.max(14, x))}%` }}
+                title={d.players.map((p) => p.name).join(', ')}
+              >
+                <p className="text-[0.65rem] font-bold">
+                  {POS_LABEL[d.pos]} · <span className="font-display text-base">{n}</span>
+                </p>
+                <p className="truncate text-[0.65rem]">{d.players[0]?.name.split(/\s+/).at(-1) ?? '–'}</p>
               </div>
             );
           })}
-        </div>
+        </Pitch>
       </section>
     </div>
   );
@@ -122,9 +130,9 @@ export function FmAnalysis({ players, gameDate }: { players: FmPlayer[]; gameDat
 
 function Kpi({ label, value, sub }: { label: string; value: string; sub: string }) {
   return (
-    <div className="card p-5">
+    <div className="card border-l-4 border-eau-fonce !p-4">
       <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{label}</p>
-      <p className="mt-1 font-display text-3xl font-semibold">{value}</p>
+      <p className="mt-1 font-display text-2xl font-semibold">{value}</p>
       <p className="mt-1 text-xs text-brun">{sub}</p>
     </div>
   );

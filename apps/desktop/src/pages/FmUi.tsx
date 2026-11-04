@@ -14,14 +14,14 @@ const TAG: Record<Tone, string> = {
 };
 
 export function Tag({ tone = 'info', children }: { tone?: Tone; children: ReactNode }) {
-  return <span className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-bold ${TAG[tone]}`}>{children}</span>;
+  return <span className={`inline-block whitespace-nowrap rounded-md px-1.5 py-0.5 text-xs font-bold ${TAG[tone]}`}>{children}</span>;
 }
 
 export function Panel({ title, action, children, className = '' }: { title: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
     <section className={`card p-5 ${className}`}>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">{title}</h2>
+      <div className="-mx-5 -mt-1 mb-3 flex items-center justify-between gap-3 border-b border-canard/10 px-5 pb-3">
+        <h2>{title}</h2>
         {action}
       </div>
       {children}
@@ -33,9 +33,9 @@ export function Panel({ title, action, children, className = '' }: { title: stri
 export function Kpi({ label, value, sub, tone, dim }: { label: string; value: ReactNode; sub?: ReactNode; tone?: 'good' | 'bad'; dim?: boolean }) {
   const quiet = dim ?? value === 0;
   return (
-    <div className="card p-4">
+    <div className="card border-l-4 border-eau-fonce !p-4">
       <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{label}</p>
-      <p className={`mt-1 font-display text-2xl font-semibold ${quiet ? 'text-canard/30' : tone === 'bad' ? 'text-corail' : ''}`}>{value}</p>
+      <p className={`mt-1 font-display text-2xl font-semibold tabular-nums ${quiet ? 'text-canard/30' : tone === 'bad' ? 'text-corail' : ''}`}>{value}</p>
       {sub && <p className="mt-0.5 text-xs text-brun">{sub}</p>}
     </div>
   );
