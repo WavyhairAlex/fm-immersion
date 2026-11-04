@@ -57,32 +57,32 @@ const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
 const LIVE_POLL_MS = 10_000;
 
 /**
- * Les écrans de la page, rangés en 5 sections qui répondent chacune à une question :
- * qui ai-je (Effectif), qui joue le prochain match (Tactique), où va l'équipe (Mon projet, à suivre
- * dans l'ordre : style visé, feuille de route, entraînement, recrutement), et le club.
+ * Six onglets, dans l'ordre où on s'en sert : l'accueil, le prochain match (compo, consignes, adversaire,
+ * rotation), l'effectif, les performances (résultats, stats, analyse), le projet de jeu (style, feuille de
+ * route, entraînement) et le mercato avec le club (départs, cibles, finances, contrats). Chaque onglet montre
+ * ses parties en sous-onglets, une à la fois.
  */
 const SECTIONS = [
   { id: 'home', views: ['home'] },
-  { id: 'squad', views: ['squad', 'analysis', 'stats', 'compare'] },
-  { id: 'tactic', views: ['tactic', 'opponent', 'results'] },
-  { id: 'project', views: ['style', 'project', 'training', 'mercato'] },
-  { id: 'club', views: ['finances'] },
+  { id: 'tactic', views: ['tactic'] },
+  { id: 'squad', views: ['squad'] },
+  { id: 'results', views: ['results'] },
+  { id: 'style', views: ['style'] },
+  { id: 'mercato', views: ['mercato'] },
 ] as const;
 /**
- * Écrans regroupés : un onglet affiche plusieurs parties à la suite (22 onglets ramenés à 11).
- * Les anciens noms d'écran restent valides : `go('contracts')` ouvre Finances et descend à Contrats.
+ * Parties de chaque onglet (sous-onglets). Les anciens noms d'écran restent valides : `go('contracts')`
+ * ouvre Mercato et club sur Contrats.
  */
 const PARTS: Record<string, readonly string[]> = {
-  squad: ['squad', 'dressing', 'loans'],
-  analysis: ['analysis', 'roles', 'progression'],
-  tactic: ['tactic', 'instructions', 'depth', 'effectiveness'],
-  opponent: ['opponent', 'calendar'],
-  results: ['results', 'diagnosis'],
-  mercato: ['mercato', 'targets'],
-  finances: ['finances', 'wages', 'contracts'],
+  tactic: ['tactic', 'instructions', 'opponent', 'calendar', 'depth', 'effectiveness'],
+  squad: ['squad', 'dressing', 'progression', 'roles', 'compare', 'loans'],
+  results: ['results', 'diagnosis', 'stats', 'analysis'],
+  style: ['style', 'project', 'training'],
+  mercato: ['mercato', 'targets', 'finances', 'wages', 'contracts'],
 };
 /** Sections dont les écrans s'enchaînent comme des étapes (numérotées, avec « étape suivante »). */
-const STEPPED = new Set<string>(['project']);
+const STEPPED = new Set<string>([]);
 type View = (typeof SECTIONS)[number]['views'][number];
 const isView = (v: string): v is View => SECTIONS.some((s) => (s.views as readonly string[]).includes(v));
 /** Onglet qui contient un écran (lui-même, ou l'onglet où il a été regroupé). */
@@ -416,7 +416,7 @@ export function FmSave() {
           )}
         </div>
         {snapshot && players.length > 0 && (
-          <nav className="flex-1 space-y-4 py-4" aria-label={t('fm.nav')}>
+          <nav className="flex-1 space-y-0.5 py-3" aria-label={t('fm.nav')}>
             {SECTIONS.map((s) => (
               <div key={s.id}>
                 {s.views.length > 1 && <p className="px-3 pb-1 text-[0.65rem] font-extrabold uppercase tracking-widest text-white/45">{t(`fm.sections.${s.id}`)}</p>}
@@ -426,7 +426,7 @@ export function FmSave() {
                     type="button"
                     aria-current={v === view ? 'page' : undefined}
                     onClick={() => go(v)}
-                    className={`flex w-full items-center border-l-[3px] px-3 py-1.5 text-left text-sm font-bold ${v === view ? 'border-eau bg-white/10 text-white' : 'border-transparent text-white/75 hover:bg-white/5 hover:text-white'}`}
+                    className={`flex w-full items-center border-l-[3px] px-4 py-2.5 text-left font-bold ${v === view ? 'border-eau bg-white/10 text-white' : 'border-transparent text-white/75 hover:bg-white/5 hover:text-white'}`}
                   >
                     {STEPPED.has(s.id) && <span className="mr-1.5 tabular-nums text-eau">{s.views.indexOf(v as never) + 1}.</span>}
                     {pageLabel(t, v)}

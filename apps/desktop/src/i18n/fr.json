@@ -309,9 +309,12 @@
     "sections": {
       "home": "Accueil",
       "squad": "Effectif",
-      "tactic": "Tactique",
+      "tactic": "Prochain match",
       "project": "Mon projet",
-      "club": "Club"
+      "club": "Club",
+      "results": "Performances",
+      "style": "Projet de jeu",
+      "mercato": "Mercato et club"
     },
     "views": {
       "home": "Accueil",
@@ -1199,16 +1202,16 @@
       "calendar": "Les prochains matchs et qui faire tourner selon la fatigue.",
       "roles": "Pour chaque joueur, son adéquation à chaque poste et rôle.",
       "effectiveness": "Les jauges d'efficacité tactique du jeu et ce qu'il faut travailler cette semaine.",
-      "style": "Étape 1 : quel style de jeu ton effectif peut jouer aujourd'hui, et lequel viser.",
-      "project": "Étape 2 : le onze qu'il faut pour le style visé, poste par poste : prêt, à faire progresser ou à recruter.",
-      "training": "Étape 3 : le programme d'entraînement collectif et individuel qui rapproche l'effectif du projet.",
+      "style": "Quel style de jeu ton effectif peut jouer aujourd'hui, et lequel viser.",
+      "project": "Le onze qu'il faut pour le style visé, poste par poste : prêt, à faire progresser ou à recruter.",
+      "training": "Le programme d'entraînement collectif et individuel qui rapproche l'effectif du projet.",
       "targets": "Ta liste de suivi du jeu, classée selon ce que chaque joueur apporterait au projet.",
       "finances": "Budgets, simulateur de prolongations et attentes du board.",
       "wages": "Les salaires regroupés par statut, et ce qui détonne.",
       "contracts": "Les fins de contrat à anticiper.",
       "progression": "L'évolution du niveau de chaque joueur depuis le premier instantané.",
       "opponent": "Le prochain adversaire tel que le décrit le rapport d'équipe du jeu, et comment le jouer.",
-      "mercato": "Étape 4 : qui faire partir (vente, prêt, fin de contrat), qui prolonger, et quels jeunes valent le coup pour le projet.",
+      "mercato": "Qui faire partir (vente, prêt, fin de contrat), qui prolonger, et quels jeunes valent le coup pour le projet.",
       "instructions": "Au plus 3 consignes par joueur du onze, pour coller au style sans trop charger la compréhension tactique.",
       "results": "Les matchs joués depuis que Simloom suit la partie : score, onze, note de chaque joueur, et ce qui rapporte des points.",
       "diagnosis": "Les titulaires sous la moyenne du onze, et ce qui l'explique."
@@ -1628,8 +1631,12 @@
     "onThisPage": "Sur cette page :",
     "pages": {
       "opponent": "Prochain match",
-      "mercato": "Mercato",
-      "finances": "Finances et contrats"
+      "mercato": "Mercato et club",
+      "finances": "Finances et contrats",
+      "tactic": "Prochain match",
+      "squad": "Effectif",
+      "results": "Performances",
+      "style": "Projet de jeu"
     },
     "compat": {
       "yes": "Projet ✓",
@@ -1729,7 +1736,12 @@
       }
     },
     "subtabs": {
-      "tactic": "Le onze"
+      "tactic": "Le onze",
+      "squad": "Joueurs",
+      "style": "Style de jeu",
+      "mercato": "Départs et jeunes",
+      "opponent": "Adversaire",
+      "finances": "Finances et board"
     },
     "sheet": {
       "close": "Fermer",

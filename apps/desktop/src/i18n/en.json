@@ -309,9 +309,12 @@
     "sections": {
       "home": "Home",
       "squad": "Squad",
-      "tactic": "Tactics",
+      "tactic": "Next match",
       "project": "My project",
-      "club": "Club"
+      "club": "Club",
+      "results": "Performance",
+      "style": "Game plan",
+      "mercato": "Transfers & club"
     },
     "views": {
       "home": "Home",
@@ -1199,16 +1202,16 @@
       "calendar": "Upcoming matches and who to rotate based on fatigue.",
       "roles": "How well each player suits each position and role.",
       "effectiveness": "The game's tactical effectiveness gauges and what to work on this week.",
-      "style": "Step 1: which playing style your squad can play today, and which one to aim for.",
-      "project": "Step 2: the eleven the target style needs, position by position: ready, to develop or to sign.",
-      "training": "Step 3: the team and individual training schedule that moves the squad towards the project.",
+      "style": "Which playing style your squad can play today, and which one to aim for.",
+      "project": "The eleven the target style needs, position by position: ready, to develop or to sign.",
+      "training": "The team and individual training schedule that moves the squad towards the project.",
       "targets": "Your in-game shortlist, ranked by what each player would add to the project.",
       "finances": "Budgets, contract-extension simulator and board expectations.",
       "wages": "Wages grouped by squad status, and what stands out.",
       "contracts": "Contract expiries to plan for.",
       "progression": "Each player's level since the first snapshot.",
       "opponent": "The next opponent as the game's team report describes it, and how to play them.",
-      "mercato": "Step 4: who to move on (sale, loan, contract end), who to renew, and which youngsters are worth it for the project.",
+      "mercato": "Who to move on (sale, loan, contract end), who to renew, and which youngsters are worth it for the project.",
       "instructions": "Up to 3 instructions per starter, to fit the style without overloading tactical familiarity.",
       "results": "Matches played since Simloom started following the save: score, eleven, each player's rating, and what earns points.",
       "diagnosis": "Starters below the eleven's average, and why."
@@ -1628,8 +1631,12 @@
     "onThisPage": "On this page:",
     "pages": {
       "opponent": "Next match",
-      "mercato": "Transfers",
-      "finances": "Finances and contracts"
+      "mercato": "Transfers & club",
+      "finances": "Finances and contracts",
+      "tactic": "Next match",
+      "squad": "Squad",
+      "results": "Performance",
+      "style": "Game plan"
     },
     "compat": {
       "yes": "Project ✓",
@@ -1729,7 +1736,12 @@
       }
     },
     "subtabs": {
-      "tactic": "The XI"
+      "tactic": "The XI",
+      "squad": "Players",
+      "style": "Playing style",
+      "mercato": "Departures and youth",
+      "opponent": "Opponent",
+      "finances": "Finances and board"
     },
     "sheet": {
       "close": "Close",
