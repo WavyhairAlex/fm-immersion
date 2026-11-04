@@ -99,3 +99,39 @@ export function matchTweaks(styleId: string | null | undefined): { situation: Ma
     { situation: 'opponentChange', tweaks: [] },
   ];
 }
+
+/* ---------- Pendant le match ---------- */
+
+/** Ce que le coach saisit pendant le match (rien n'est lu dans le jeu) : minute, écart au score, équipe fatiguée. */
+export interface LiveState {
+  minute: number;
+  /** Buts marqués moins buts encaissés. */
+  diff: number;
+  tired: boolean;
+  opponentChanged: boolean;
+}
+
+/** Situations qui s'appliquent maintenant, dans l'ordre de matchTweaks. */
+export function activeSituations(st: LiveState): MatchSituation[] {
+  const out: MatchSituation[] = [];
+  if (st.diff > 0) out.push('leading');
+  if (st.diff === 0 && st.minute >= 45) out.push('drawing');
+  if (st.diff < 0 && st.minute >= 60 && st.minute < 80) out.push('losing');
+  if (st.diff < 0 && st.minute >= 80) out.push('lateLosing');
+  if (st.tired) out.push('tired');
+  if (st.opponentChanged) out.push('opponentChange');
+  return out;
+}
+
+/**
+ * État de chaque changement prévu à la minute saisie : « now » quand sa minute est atteinte (5 min plus tôt si
+ * l'équipe est fatiguée), « done » quand le coach l'a coché, « later » sinon. Mené en fin de match, on fait tous les
+ * changements restants.
+ */
+export function liveSubs(subs: SubChange[], st: LiveState, done: ReadonlySet<number>): ('now' | 'done' | 'later')[] {
+  return subs.map((c) => {
+    if (done.has(c.slot)) return 'done';
+    const at = c.minute - (st.tired ? 5 : 0);
+    return st.minute >= at || (st.diff < 0 && st.minute >= 75) ? 'now' : 'later';
+  });
+}

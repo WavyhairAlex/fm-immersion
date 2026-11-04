@@ -28,7 +28,7 @@ export const DEFAULT_RULES: CompetitionRules = { subs: 5, windows: 3, bench: nul
 
 /** Règles connues par nom de compétition (minuscules, sans accents). */
 const KNOWN: { match: RegExp; rules: CompetitionRules }[] = [
-  { match: /^(2\.?\s*liga|monacobet liga|slovak.*(second|2))/i, rules: { subs: 5, windows: 3, bench: null, nonEuMax: 5, u21Squad: 1, u21Xi: 1, unverified: true } },
+  { match: /^(2\.?\s*(liga|slovenska futbalova liga)|monacobet liga|slovak.*(second|2))/i, rules: { subs: 5, windows: 3, bench: null, nonEuMax: 5, u21Squad: 1, u21Xi: 1, unverified: true } },
 ];
 
 const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim();

@@ -42,3 +42,21 @@ describe('feuille de match', () => {
     expect(matchTweaks('possession').find((x) => x.situation === 'lateLosing')!.tweaks).toContain('keeperUp');
   });
 });
+
+describe('feuille de match pendant le match', () => {
+  it('active les situations selon la minute et le score', async () => {
+    const { activeSituations } = await import('../src');
+    expect(activeSituations({ minute: 30, diff: 1, tired: false, opponentChanged: false })).toEqual(['leading']);
+    expect(activeSituations({ minute: 65, diff: -1, tired: true, opponentChanged: false })).toEqual(['losing', 'tired']);
+    expect(activeSituations({ minute: 85, diff: -1, tired: false, opponentChanged: true })).toEqual(['lateLosing', 'opponentChange']);
+    expect(activeSituations({ minute: 20, diff: 0, tired: false, opponentChanged: false })).toEqual([]);
+  });
+
+  it('dit quels changements faire maintenant', async () => {
+    const { liveSubs } = await import('../src');
+    const subs = [{ slot: 1, minute: 60 }, { slot: 2, minute: 70 }] as never;
+    expect(liveSubs(subs, { minute: 62, diff: 0, tired: false, opponentChanged: false }, new Set())).toEqual(['now', 'later']);
+    expect(liveSubs(subs, { minute: 66, diff: 0, tired: true, opponentChanged: false }, new Set([1]))).toEqual(['done', 'now']);
+    expect(liveSubs(subs, { minute: 76, diff: -1, tired: false, opponentChanged: false }, new Set())).toEqual(['now', 'now']);
+  });
+});

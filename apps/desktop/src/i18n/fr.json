@@ -1813,6 +1813,20 @@
         "keeperUp": "Gardien qui monte sur le dernier coup de pied arrêté"
       },
       "followStaff": "Suivre le conseil du staff, garder la base",
+      "live": {
+        "start": "Suivre le match",
+        "on": "En direct",
+        "help": "Pendant le match : règle la minute et le score au fil du jeu. Simloom surligne les changements à faire et les ajustements à activer maintenant. Rien n'est lu dans le jeu.",
+        "minute": "Minute",
+        "score": "Score",
+        "scored": "But marqué",
+        "conceded": "But encaissé",
+        "ahead": "+{{n}}",
+        "behind": "−{{n}}",
+        "level": "égalité",
+        "now": "maintenant",
+        "done": "Changement fait"
+      },
       "rules": "Règles {{competition}} :",
       "competition": "de la compétition",
       "subsRule": "{{count}} changements en {{windows}} fois, on en prévoit moins pour garder de la marge.",

@@ -1813,6 +1813,20 @@
         "keeperUp": "Keeper up for the last set piece"
       },
       "followStaff": "Follow the staff's advice, keep the base",
+      "live": {
+        "start": "Follow the match",
+        "on": "Live",
+        "help": "During the match: set the minute and score as play goes on. Simloom highlights the substitutions to make and tweaks to switch on now. Nothing is read from the game.",
+        "minute": "Minute",
+        "score": "Score",
+        "scored": "Goal scored",
+        "conceded": "Goal conceded",
+        "ahead": "+{{n}}",
+        "behind": "−{{n}}",
+        "level": "level",
+        "now": "now",
+        "done": "Substitution made"
+      },
       "rules": "{{competition}} rules:",
       "competition": "Competition",
       "subsRule": "{{count}} substitutions in {{windows}} windows; we plan fewer to keep a margin.",
