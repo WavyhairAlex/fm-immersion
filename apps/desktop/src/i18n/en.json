@@ -1052,6 +1052,13 @@
       "variant_0": "no match",
       "variant_1": "one match",
       "variant_2": "two matches",
+      "method": "In-season method",
+      "methods": {
+        "meta": "Meta effectiveness 1.1 (AlexJeuVideal)",
+        "freedom": "Freedom (FM Scout)"
+      },
+      "metaFile": "Schedule to load in the game:",
+      "metaHelp": "AlexJeuVideal's method (\"ENTRAINEMENT FM 27 META EFFICACITÉ 1.1\" pack): one block Pressing Trap, Line of Engagement, Build-Up; one block Pressing Trap, Chance Creation, In-Possession Shape; the day before the match Ball Progression, Defensive Block, Conditioning. Everything else is rest. Load the .fmf file shown in the Training screen.",
       "congested": "three or more matches: full rest between matches (results come before development)",
       "priorities": "Areas of your target style worked first: {{list}}.",
       "load": "This week",

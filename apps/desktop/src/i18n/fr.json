@@ -1052,6 +1052,13 @@
       "variant_0": "aucun match",
       "variant_1": "un match",
       "variant_2": "deux matchs",
+      "method": "Méthode en saison",
+      "methods": {
+        "meta": "Méta efficacité 1.1 (AlexJeuVideal)",
+        "freedom": "Freedom (FM Scout)"
+      },
+      "metaFile": "Programme à charger dans le jeu :",
+      "metaHelp": "Méthode d'AlexJeuVideal (pack « ENTRAÎNEMENT FM 27 META EFFICACITÉ 1.1 ») : un bloc Piège du pressing, Hauteur du pressing, Construction ; un bloc Piège du pressing, Création d'occasions, Organisation avec le ballon ; la veille du match Progression du ballon, Bloc défensif, Condition physique. Tout le reste au repos. Charge le fichier .fmf indiqué dans l'écran Entraînement.",
       "congested": "trois matchs ou plus : semaine entière de repos entre les matchs (les résultats priment sur la progression)",
       "priorities": "Zones du style visé travaillées en priorité : {{list}}.",
       "load": "Dans la semaine",

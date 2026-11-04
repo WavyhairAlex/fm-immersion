@@ -138,7 +138,13 @@ export interface TrainingInput {
   priorities?: EffArea[];
   /** Identifiant du style visé, pour choisir la variante des séances offensives et défensives. */
   style?: string;
+  /** Méthode des semaines de saison : « meta » (AlexJeuVideal, par défaut) ou « freedom » (FM Scout). */
+  method?: TrainingMethod;
 }
+
+/** Méthodes de planning de saison. La présaison, le bloc tactique et la trêve restent ceux de la méthode Freedom. */
+export const TRAINING_METHODS = ['meta', 'freedom'] as const;
+export type TrainingMethod = (typeof TRAINING_METHODS)[number];
 
 /* ---------- Dates ---------- */
 
@@ -321,6 +327,7 @@ function cycler<T>(list: T[]) {
 
 export function buildTrainingWeek(input: TrainingInput): TrainingWeek {
   const { phase, week, monday } = input;
+  if ((input.method ?? 'meta') === 'meta' && (phase === 'A' || phase === 'B' || phase === 'C')) return buildMetaWeek(input);
   const priorities = input.priorities ?? [];
   const matchDays = new Set(input.matchDays.filter((d) => d >= 0 && d <= 6));
   const seasonal = phase === 'A' || phase === 'B' || phase === 'C';
@@ -433,6 +440,95 @@ export function buildTrainingWeek(input: TrainingInput): TrainingWeek {
     }
   }
   return { code, phase, week, variant, theme, congested, days };
+}
+
+/* ---------- Méthode « Méta efficacité 1.1 » (AlexJeuVideal) ---------- */
+
+/**
+ * Les trois journées de travail de la semaine, relevées dans les 37 programmes .fmf « ENTRAÎNEMENT FM 27 META
+ * EFFICACITÉ 1.1 » d'AlexJeuVideal (numéros de séance du jeu entre parenthèses, même ordre que SESSIONS) :
+ * - bloc 1 : Piège du pressing (6), Hauteur du pressing (4), Construction (1) ;
+ * - bloc 2 : Piège du pressing (6), Création d'occasions (2), Organisation avec le ballon (3) ;
+ * - veille de match : Progression du ballon (201), Bloc défensif (203), Condition physique (303).
+ * Tout le reste est du Repos (300), lendemains de match compris ; le jour du match : Repos, Match, Repos.
+ * Aucune séance de style de passes, d'intensité du pressing ni de positionnement sans ballon : d'après son banc
+ * d'essai, elles ne rapportent rien en match. Le n° 303 est déduit de l'ordre des séances, à vérifier à l'écran.
+ */
+export const META_BLOCKS = {
+  b1: ['pressingTrap', 'lineOfEngagement', 'buildUpStrategy'],
+  b2: ['pressingTrap', 'chanceCreation', 'inPossessionShape'],
+  prep: ['ballProgression', 'defensiveBlock', 'conditioning'],
+} as const satisfies Record<string, readonly SessionId[]>;
+
+const REST3: TrainingDay['sessions'] = ['rest', 'rest', 'rest'];
+
+/**
+ * Semaine de saison façon AlexJeuVideal : un bloc 1, un bloc 2 et une veille de match par semaine (donc 2 pièges du
+ * pressing), le reste au repos. La veille sert le dernier match de la semaine ; les blocs prennent les derniers jours
+ * libres avant elle (ni match, ni lendemain de match). Semaine à 3 matchs : repos complet.
+ */
+function buildMetaWeek(input: TrainingInput): TrainingWeek {
+  const { phase, week, monday } = input;
+  const matchDays = new Set(input.matchDays.filter((d) => d >= 0 && d <= 6));
+  const variant = Math.min(2, matchDays.size) as 0 | 1 | 2;
+  const congested = matchDays.size >= CONGESTED_MATCHES;
+  const training = input.trainingDays ? new Set(input.trainingDays) : null;
+  const after = (d: number) => (d === 0 ? !!input.matchBeforeMonday : matchDays.has(d - 1));
+  const days: TrainingDay[] = Array.from({ length: 7 }, (_, d) => ({
+    date: addDays(monday, d),
+    weekday: d,
+    kind: matchDays.has(d) ? 'match' : training && !training.has(d) ? 'off' : after(d) ? 'recovery' : 'dev',
+    sessions: matchDays.has(d) ? ['rest', 'match', 'rest'] : training && !training.has(d) ? [null, null, null] : [...REST3],
+  }));
+  if (!congested) {
+    const free = days.filter((x) => x.kind === 'dev').map((x) => x.weekday);
+    const last = [...matchDays].sort((a, b) => b - a)[0];
+    // Veille du dernier match si elle est libre, sinon le dernier jour libre avant un match.
+    // Pas de match dans la semaine : la « veille » prend le dernier jour libre.
+    const prepDay = last != null ? (free.includes(last - 1) ? last - 1 : [...free].reverse().find((d) => [...matchDays].some((m) => m > d))) : free.at(-1);
+    // Blocs 1 puis 2 sur les derniers jours libres avant la veille (comme ses programmes), sinon sur les autres.
+    const before = free.filter((d) => prepDay == null || d < prepDay);
+    const others = free.filter((d) => d !== prepDay && !before.includes(d));
+    const rest = [...before.slice(-2), ...before.slice(0, -2), ...others].slice(0, 2).sort((a, b) => a - b);
+    const set = (d: number | undefined, s: readonly SessionId[], kind: DayKind) => {
+      if (d == null) return;
+      days[d]!.sessions = [s[0]!, s[1]!, s[2]!];
+      days[d]!.kind = kind;
+    };
+    set(prepDay, META_BLOCKS.prep, 'prep');
+    set(rest[0], META_BLOCKS.b1, 'dev');
+    set(rest[1], META_BLOCKS.b2, 'dev');
+  }
+  // Les jours restés au repos complet s'affichent comme des jours de repos.
+  for (const x of days) if (x.kind === 'dev' && x.sessions.every((s) => s === 'rest')) x.kind = 'recovery';
+  return { code: `${phase}${week}-${variant}`, phase, week, variant, theme: null, congested, days };
+}
+
+const DAY_FR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+/**
+ * Programmes du pack « TOUTES SÉANCES » d'AlexJeuVideal, par nom de fichier (sans .fmf) : le premier jour est le
+ * dernier match de la semaine précédente (ou lundi si on joue le lundi), puis les matchs de la semaine.
+ */
+export const META_FILES = [
+  '0 - Dim - Mer', '01 - Dim - Mer - Sam', '02 - Dim - Mer - Dim', '03 - Dim - Jeu', '04 - Dim - Jeu - Dim ', '05 - Dim - Ven', '06 - Dim - Sam', '07 - Dim - Dim',
+  '08 - Sam - Mar', '09 - Sam - Mar - Ven', '10 - Sam - Mar - Sam', '11 - Sam - Mar - Dim', '12 - Sam - Mer', '13 - Sam - Mer - Sam', '14 - Sam - Mer - Ven', '15 - Sam - Mer - Dim',
+  '16 - Sam - Jeu', '17 - Sam - Jeu - Dim', '18 - Sam - Ven', '19 - Sam - Sam', '20 - Sam - Dim',
+  '21 - Ven - Mar', '22 - Ven - Mer', '23 - Ven - Jeu', '24 - Ven - Ven', '25 - Ven - Sam', '26 - Ven - Dim', '27 - Ven - Mar - Ven', '28 - Ven - Mar - Sam', '29 - Ven - Mar - Dim',
+  '30 - Ven - Mer - Sam', '31 - Ven - Mer - Dim', '32 - Ven - Jeu - Dim', '33 - Lun - Lun', '34 - Lun - Ven', '35 - Lun - Sam', '36 - Lun - Dim',
+] as const;
+
+/**
+ * Programme .fmf d'AlexJeuVideal à charger pour la semaine. `prevLast` : jour (0-6) du dernier match de la semaine
+ * précédente ; inconnu, on suppose le même rythme que cette semaine. Null si aucun fichier ne correspond.
+ */
+export function metaProgramme(matchDays: number[], prevLast?: number | null): string | null {
+  const days = [...new Set(matchDays)].filter((d) => d >= 0 && d <= 6).sort((a, b) => a - b);
+  if (!days.length || days.length > 2) return null;
+  const head = days[0] === 0 ? 0 : prevLast ?? days.at(-1)!;
+  // On joue le lundi : le fichier commence par ce match (« Lun - Lun » quand c'est le seul).
+  const parts = days[0] === 0 ? (days.length === 1 ? [0, 0] : days) : [head, ...days];
+  const want = parts.map((d) => DAY_FR[d]).join(' - ');
+  return META_FILES.find((f) => f.split(' - ').slice(1).join(' - ').trim() === want) ?? null;
 }
 
 /** Nombre de séances de chaque catégorie dans la semaine (hors match). */
@@ -646,6 +742,7 @@ export function currentTrainingWeek(o: {
   trainingDays?: number[];
   priorities?: EffArea[];
   style?: string;
+  method?: TrainingMethod;
 }): TrainingWeek {
   return trainingWeekAt(mondayOf(o.gameDate), o);
 }
@@ -661,7 +758,7 @@ export function trainingWeekAt(monday: string, o: WeekOptions): TrainingWeek {
   const cal = weekMatches(o.fixtures, monday);
   const seasonal = phase === 'A' || phase === 'B' || phase === 'C';
   const matchDays = hasCalendar ? cal.days : defaultMatchDays(phase, week, seasonal ? 1 : 0);
-  return buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: hasCalendar && cal.before, trainingDays: o.trainingDays, priorities: o.priorities, style: o.style });
+  return buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: hasCalendar && cal.before, trainingDays: o.trainingDays, priorities: o.priorities, style: o.style, method: o.method });
 }
 
 /** Ce qui demande une action côté entraînement : joueurs en manque de rythme (l'intensité, le jeu la règle). */
@@ -692,8 +789,15 @@ export function weekWorkload(w: TrainingWeek): WeekWorkload | null {
  */
 export function upcomingWeeks(o: WeekOptions & { gameDate: string }, count = 6) {
   const first = mondayOf(o.gameDate);
+  let prevLast: number | null = null;
   return Array.from({ length: count }, (_, i) => {
     const plan = trainingWeekAt(addDays(first, i * 7), o);
-    return { monday: plan.days[0]!.date, plan, preset: nearestPreset(plan), workload: weekWorkload(plan), matches: plan.days.filter((d) => d.kind === 'match').length };
+    const days = plan.days.filter((d) => d.kind === 'match').map((d) => d.weekday);
+    const seasonal = plan.phase === 'A' || plan.phase === 'B' || plan.phase === 'C';
+    // Programme .fmf d'AlexJeuVideal à charger (méthode Méta), d'après le dernier match de la semaine d'avant.
+    const file = (o.method ?? 'meta') === 'meta' && seasonal && !plan.congested ? metaProgramme(days, i === 0 ? null : prevLast) : null;
+    if (days.length) prevLast = days.at(-1)!;
+    else prevLast = null;
+    return { monday: plan.days[0]!.date, plan, preset: nearestPreset(plan), file, workload: weekWorkload(plan), matches: days.length };
   });
 }
