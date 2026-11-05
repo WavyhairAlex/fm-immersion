@@ -2072,6 +2072,27 @@
         "sold": "Vendu",
         "wantsOut": "Veut partir"
       }
+    },
+    "needs": {
+      "title": "Postes à recruter ({{count}})",
+      "help": "La liste de courses du mercato, du plus urgent au confort de banc. Chaque poste se juge sur le onze du projet, sans les partants.",
+      "priority": {
+        "1": "Urgent",
+        "2": "Projet",
+        "3": "Anticiper"
+      },
+      "why": {
+        "leaving": "{{name}} part et personne ne le remplace au niveau.",
+        "projectGap": "Personne au niveau du projet à ce poste.",
+        "replace": "Titulaire à remplacer à terme.",
+        "succession": "Titulaire de 31 ans ou plus : préparer la suite.",
+        "noBackup": "Pas de doublure au poste."
+      },
+      "target": "Viser",
+      "search": "Chercher",
+      "attrs": "À chercher : {{list}}",
+      "none": "Aucun poste à pourvoir : l'effectif couvre le projet, doublures comprises.",
+      "more": "Urgent : avant la prochaine fenêtre. Projet : pour atteindre le style visé. Anticiper : profondeur et relève. « Chercher » compare tes cibles suivies et peut lancer une recherche dans la base du jeu."
     }
   },
   "pz2": {

@@ -1,8 +1,9 @@
-import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, buildProject, contractDecisions, mercatoAdvice, type ContractCall, type FmPlayer, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type SquadAt } from '@simloom/module-fm';
+import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, buildProject, contractDecisions, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type SquadAt } from '@simloom/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
 import { LeaveButton, useLeaving } from './FmLeaving';
+import { NeedsPanel } from './FmNeeds';
 import { DivisionLevelPanel, ReplacementFinder } from './FmReplacement';
 import { CompatTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone, More, PlayerLink } from './FmUi';
 
@@ -162,6 +163,8 @@ export function FmMercato({ saveId, players, folder, gameDate, history }: { save
   // Onze cible, comme pour les cibles du mercato : sert au remplaçant d'un partant et au niveau de la division.
   const own = useMemo(() => players.filter((p) => !p.injury && Object.keys(p.attributes).length), [players]);
   const pr = useMemo(() => buildProject(engine, own, coach), [engine, own, coach]);
+  // Liste de courses : partants sans remplaçant, trous du projet, titulaires à remplacer, successions, banc.
+  const needs = useMemo(() => recruitmentNeeds(engine, players, gameDate, coach, history, leavingIds), [engine, players, gameDate, coach, history, leavingIds]);
   const [replacing, setReplacing] = useState<string | null>(null);
   if (!r) return <Empty>{t('fm.tac.noAttributes')}</Empty>;
   const style = engine.ref.styles.find((s) => s.id === r.projectStyle);
@@ -207,6 +210,8 @@ export function FmMercato({ saveId, players, folder, gameDate, history }: { save
         <Kpi label={t('fm.merc.kpi.off')} value={r.advice.filter((a) => a.compat?.compat === 'no').length} sub={t('fm.merc.kpi.offSub')} />
       </div>
       <More>{t('fm.merc.help', { form: r.nowForm ?? '–', style: names.style(style), projectForm: r.projectForm ?? '–' })}</More>
+
+      {needs && <NeedsPanel needs={needs.needs} saveId={saveId} gameDate={gameDate} engine={engine} project={pr} squad={own.filter((x) => !leavingIds.has(x.id))} />}
 
       <Panel title={t('fm.merc.youth', { count: r.youth.length })}>
         {r.youth.length ? r.youth.map((a) => <AdviceLine key={a.player.id} a={a} tag={<Tag tone={TONE[a.verdict]}>{t(`fm.merc.verdict.${a.verdict}`)}</Tag>} />) : <Empty>{t('fm.merc.noYouth')}</Empty>}

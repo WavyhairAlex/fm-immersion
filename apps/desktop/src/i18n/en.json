@@ -2072,6 +2072,27 @@
         "sold": "Sold",
         "wantsOut": "Wants out"
       }
+    },
+    "needs": {
+      "title": "Positions to sign ({{count}})",
+      "help": "The transfer shopping list, from most urgent to bench depth. Each position is judged on the project XI, without the departing players.",
+      "priority": {
+        "1": "Urgent",
+        "2": "Project",
+        "3": "Plan ahead"
+      },
+      "why": {
+        "leaving": "{{name}} is leaving and nobody in the squad matches their level.",
+        "projectGap": "Nobody at the project's level in this position.",
+        "replace": "Starter to replace in time.",
+        "succession": "Starter aged 31 or more: plan the succession.",
+        "noBackup": "No backup in this position."
+      },
+      "target": "Aim for",
+      "search": "Search",
+      "attrs": "Look for: {{list}}",
+      "none": "No position to fill: the squad covers the project, backups included.",
+      "more": "Urgent: before the next window. Project: to reach the target style. Plan ahead: depth and succession. “Search” compares your tracked targets and can run a search in the game database."
     }
   },
   "pz2": {

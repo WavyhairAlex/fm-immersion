@@ -40,5 +40,6 @@ export * from './subs';
 export * from './rules';
 export * from './results';
 export * from './replacement';
+export * from './needs';
 export * from './diagnose';
 export * from './staff';

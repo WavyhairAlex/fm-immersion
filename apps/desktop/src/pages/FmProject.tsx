@@ -1,6 +1,7 @@
 import { FORMATIONS, POS_LABEL, TARGETS, buildProject, evolutionPlan, recruitAttrs, styleOfGameTactic, switchAnalysis, trainingFor, type FmPlayer, type FmSnapshot, type SquadAt } from '@simloom/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useLeaving } from './FmLeaving';
 import { useTacticEngine } from './FmTactic';
 import { Empty, Fit, Kpi, Panel, Pos, Tag, useCoach, useNames, More } from './FmUi';
 
@@ -19,7 +20,9 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
   const sw = useMemo(() => switchAnalysis(engine, list, coach, history), [engine, list, coach, history]);
   const gameTactic = typeof snap.tactic?.name === 'string' ? snap.tactic.name : null;
   const base = useMemo(() => styleOfGameTactic(gameTactic, engine.ref.styles), [gameTactic, engine]);
-  const evo = useMemo(() => evolutionPlan(engine, list, snap.gameDate, coach, history, base), [engine, list, snap.gameDate, coach, history, base]);
+  // Les partants signalés quittent l'effectif à la première fenêtre du plan.
+  const { ids: leavingIds } = useLeaving();
+  const evo = useMemo(() => evolutionPlan(engine, list, snap.gameDate, coach, history, base, 4, leavingIds), [engine, list, snap.gameDate, coach, history, base, leavingIds]);
   if (!list.length || !pr || !sw) return <Empty>{t('fm.tac.noAttributes')}</Empty>;
 
   const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
