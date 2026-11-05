@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildProject, contractDecisions, mercatoAdvice, mergeReference, projectCompat, TacticEngine } from '../src';
+import { buildProject, contractDecisions, decisions, mercatoAdvice, mergeReference, projectCompat, TacticEngine } from '../src';
 import { normalizePlayer } from '../src/player';
 
 const ATTRS = ['Passing', 'FirstTouch', 'Technique', 'Composure', 'Vision', 'Decisions', 'Teamwork', 'WorkRate', 'Stamina', 'Strength', 'Pace', 'Acceleration', 'Tackling', 'Marking', 'Positioning', 'Anticipation', 'Heading', 'JumpingReach', 'Finishing', 'Movement', 'Crossing', 'Dribbling', 'Flair', 'Concentration', 'Agility', 'Aggression', 'Reflexes', 'Handling', 'OneOnOnes', 'AerialReach', 'CommandOfArea', 'Kicking', 'RushingOut'];
@@ -163,5 +163,28 @@ describe('compatibilité avec le projet de jeu', () => {
     const good = young(130);
     expect(good.prospect).toBe(true);
     expect(good.reasons).toContainEqual({ id: 'potentialPa', pa: 130, ca: 100 });
+  });
+});
+
+describe('joueurs signalés partants', () => {
+  it('planifie sans eux : la doublure devient titulaire, leur contrat sort des décisions', () => {
+    const end = '2027-05-31';
+    const squad = [...eleven.map((x) => (x.id === '3' ? { ...x, contractEnd: end } : x)), p(12, 'D (C)', 11), p(13, 'D (C)', 10.5), p(14, 'D (C)', 10)];
+    const before = mercatoAdvice(engine, squad, DATE, { style: 'possession' })!;
+    expect(contractDecisions(before).some((d) => d.advice.player.id === '3')).toBe(true);
+    const r = mercatoAdvice(engine, squad, DATE, { style: 'possession' }, [], new Set(['3']))!;
+    expect(r.leaving.map((x) => x.id)).toEqual(['3']);
+    expect(r.advice.some((a) => a.player.id === '3')).toBe(false);
+    expect(contractDecisions(r).some((d) => d.advice.player.id === '3')).toBe(false);
+    // Le meilleur DC restant prend la place de titulaire.
+    expect(r.advice.find((a) => a.player.id === '12')!.project.tier).toBe(0);
+  });
+
+  it('ajoute une décision « trouver son remplaçant » à son poste', () => {
+    const d = decisions(engine, eleven, DATE, { style: 'possession' }, [], null, new Set(['3']));
+    const repl = d.find((x) => x.action === 'replaceLeaving');
+    expect(repl?.players[0]!.id).toBe('3');
+    expect(repl?.pos).toBe('DC');
+    expect(repl?.why).toBe('leavingStarter');
   });
 });

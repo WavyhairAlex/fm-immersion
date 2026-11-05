@@ -15,6 +15,7 @@ import {
 import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AttrValue, Avatar, Gauge, LINE_COLOR, PosBadge, PositionMap, ProfileRadar, profileAxes, RankBar } from './FmFoot';
+import { LeaveButton, useLeaving } from './FmLeaving';
 import { TONE, useReason } from './FmMercato';
 import { Spark } from './FmProgression';
 import { useTacticEngine } from './FmTactic';
@@ -80,7 +81,11 @@ export function FmPlayerSheet({
     const full = matchStatsFull(snap);
     return statsBoard(players, new Map([...full].map(([k, m]) => [k, m.stats]))).players.find((r) => r.player.id === id) ?? null;
   }, [snap, players, id]);
-  const advice = useMemo(() => mercatoAdvice(engine, players, gameDate, coach, history)?.advice.find((a) => a.player.id === id) ?? null, [engine, players, gameDate, coach, history, id]);
+  const { ids: leavingIds } = useLeaving();
+  const advice = useMemo(
+    () => mercatoAdvice(engine, players, gameDate, coach, history, leavingIds)?.advice.find((a) => a.player.id === id) ?? null,
+    [engine, players, gameDate, coach, history, id, leavingIds],
+  );
   const series = useMemo(() => levelSeries(history, id), [history, id]);
   if (!p) return null;
   const isGk = p.positions.includes('GB');
@@ -270,14 +275,24 @@ export function FmPlayerSheet({
             </section>
           )}
 
-          {advice && (
-            <section className="card p-4">
-              <h3 className="flex flex-wrap items-center gap-2 font-semibold">
-                {t('fm.sheet.mercato')} <Tag tone={TONE[advice.verdict]}>{t(`fm.merc.verdict.${advice.verdict}`)}</Tag> <CompatTag c={advice.compat} />
-              </h3>
+          <section className="card p-4">
+            <h3 className="flex flex-wrap items-center gap-2 font-semibold">
+              {t('fm.sheet.mercato')}
+              {advice && (
+                <>
+                  <Tag tone={TONE[advice.verdict]}>{t(`fm.merc.verdict.${advice.verdict}`)}</Tag> <CompatTag c={advice.compat} />
+                </>
+              )}
+              <span className="ml-auto font-normal">
+                <LeaveButton player={p} gameDate={gameDate} />
+              </span>
+            </h3>
+            {advice ? (
               <p className="mt-1.5 text-sm text-brun">{advice.reasons.map(reason).join(' · ')}</p>
-            </section>
-          )}
+            ) : (
+              leavingIds.has(p.id) && <p className="mt-1.5 text-sm text-brun">{t('fm.leave.sheet')}</p>
+            )}
+          </section>
         </div>
       </aside>
     </div>

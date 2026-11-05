@@ -2,6 +2,7 @@ import { POS_LABEL, decisions, styleOfGameTactic, type Basis, type Decision, typ
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticChoice } from './FmTactic';
+import { useLeaving } from './FmLeaving';
 import { Empty, More, Panel, Tag, useCoach, useNames, type Tone } from './FmUi';
 
 const KIND_TONE: Record<Decision['kind'], Tone> = { contract: 'warn', recruit: 'info', departure: 'info', tactic: 'good' };
@@ -17,7 +18,8 @@ export function FmDecisions({ snap, players, folder, history = [], go }: { snap:
   const [coach] = useCoach();
   const gameTactic = typeof snap.tactic?.name === 'string' ? snap.tactic.name : null;
   const base = useMemo(() => styleOfGameTactic(gameTactic, engine.ref.styles), [gameTactic, engine]);
-  const list = useMemo(() => decisions(engine, players, snap.gameDate, coach, history, base), [engine, players, snap.gameDate, coach, history, base]);
+  const { ids: leavingIds } = useLeaving();
+  const list = useMemo(() => decisions(engine, players, snap.gameDate, coach, history, base, leavingIds), [engine, players, snap.gameDate, coach, history, base, leavingIds]);
   const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { day: 'numeric', month: 'short', year: 'numeric' });
   const when = (d: Decision) => (d.deadline ? t('fm.dec.before', { date: date.format(new Date(`${d.deadline}T00:00:00Z`)) }) : t('fm.dec.anytime'));
   const vals = (d: Decision) => ({

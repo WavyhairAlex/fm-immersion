@@ -81,6 +81,17 @@ describe('instantanés Football Manager', () => {
     expect((await fm.targets(save.id)).find((t) => t.playerId === '10')?.dismissed).toBe(true);
   });
 
+  it('garde les partants signalés dans la partie et annule un signalement', async () => {
+    const save = await saves.create({ gameId: 'fm', name: 'Malženice' });
+    await fm.setLeaving(save.id, '7', { reason: 'refused', since: '2026-12-01', name: 'Nicolás Gorosito' });
+    await fm.setLeaving(save.id, '8', { reason: 'sold', since: '2026-12-02', name: 'Marek Fábry' });
+    expect(Object.keys((await fm.settings(save.id)).fmLeaving ?? {})).toEqual(['7', '8']);
+    expect((await fm.settings(save.id)).fmLeaving?.['7']?.reason).toBe('refused');
+    await fm.setLeaving(save.id, '8', null);
+    await fm.setLeaving(save.id, '7', null);
+    expect((await fm.settings(save.id)).fmLeaving).toBeUndefined();
+  });
+
   it("lie la partie à une sauvegarde FM27 et défait le lien", async () => {
     const save = await saves.create({ gameId: 'fm', name: 'V' });
     await fm.setFolder(save.id, 'D:\\FM\\archivix');

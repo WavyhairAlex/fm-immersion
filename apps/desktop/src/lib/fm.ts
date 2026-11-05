@@ -1,5 +1,5 @@
 import { saves } from '@simloom/db';
-import { addBaseTarget, carryRoleStars, fmSnapshotSchema, fmStatusSchema, type DbPlayer, type FmStatus, mergeTargets, type FmSnapshot, type TargetRecord } from '@simloom/module-fm';
+import { addBaseTarget, carryRoleStars, fmSnapshotSchema, fmStatusSchema, type DbPlayer, type FmStatus, type LeavingMark, type LeavingMarks, mergeTargets, type FmSnapshot, type TargetRecord } from '@simloom/module-fm';
 import { fmSnapshots, fmTargets } from '@simloom/module-fm/schema';
 import { and, asc, desc, eq } from 'drizzle-orm';
 import type { Db } from './db';
@@ -15,6 +15,8 @@ export interface FmSaveSettings {
   fmFreeSince?: string;
   /** Lire le CA/PA réels de l'effectif dans la mémoire du jeu (lecture seule) à chaque nouvelle date. Désactivé par défaut. */
   fmReadAbilities?: boolean;
+  /** Joueurs signalés partants par le coach, par identifiant FM27. */
+  fmLeaving?: LeavingMarks;
 }
 
 /** Fichier .fm listé par Rust (métadonnées seulement). */
@@ -187,6 +189,14 @@ export function fmRepo(db: Db) {
 
     setFolder(saveId: string, fmFolder: string) {
       return this.updateSettings(saveId, { fmFolder });
+    },
+
+    /** Signale un joueur partant (ou annule le signalement avec `null`). */
+    async setLeaving(saveId: string, playerId: string, mark: LeavingMark | null) {
+      const next: LeavingMarks = { ...((await this.settings(saveId)).fmLeaving ?? {}) };
+      if (mark) next[playerId] = mark;
+      else delete next[playerId];
+      return this.updateSettings(saveId, { fmLeaving: Object.keys(next).length ? next : undefined });
     },
 
     /** Lie la partie à une sauvegarde FM27 (ou défait le lien avec `null`). */

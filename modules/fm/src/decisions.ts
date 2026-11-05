@@ -50,12 +50,22 @@ function contractWhy(a: MercatoAdvice): { why: string; values: Record<string, st
   return { why: 'surplus', values: { age: a.player.age ?? '–' }, basis: 'computed' };
 }
 
-export function decisions(engine: TacticEngine, players: FmPlayer[], gameDate: string, coach: CoachPrefs = {}, history: SquadAt[] = [], base?: StyleRef | null): Decision[] {
-  const list = players.filter((p) => Object.keys(p.attributes).length);
+export function decisions(
+  engine: TacticEngine,
+  players: FmPlayer[],
+  gameDate: string,
+  coach: CoachPrefs = {},
+  history: SquadAt[] = [],
+  base?: StyleRef | null,
+  leavingIds: ReadonlySet<string> = new Set(),
+): Decision[] {
+  const all = players.filter((p) => Object.keys(p.attributes).length);
+  // Partants signalés : hors recrutement et départs conseillés (on planifie sans eux), mais leur remplacement est une décision.
+  const list = all.filter((p) => !leavingIds.has(p.id));
   if (!list.length) return [];
   const out: Decision[] = [];
   const window = nextWindows(gameDate, coach.seasonStart ?? 8, 1)[0]?.date ?? null;
-  const report = mercatoAdvice(engine, list, gameDate, coach, history);
+  const report = mercatoAdvice(engine, all, gameDate, coach, history, leavingIds);
 
   // 1. Contrats : ce que FM27 demande de trancher (six mois ou moins).
   if (report)
@@ -72,7 +82,8 @@ export function decisions(engine: TacticEngine, players: FmPlayer[], gameDate: s
     }
 
   // 2. Tactique : garder la base, ou en changer si le gain le vaut.
-  const avail = list.filter((p) => !unavailable(p));
+  // La tactique du prochain match compte encore les partants : ils jouent jusqu'à leur départ.
+  const avail = all.filter((p) => !unavailable(p));
   const ranked = rankTactics(engine, avail);
   const pick = bestTactic(engine, avail, coach, ranked, base);
   if (pick) {
@@ -105,6 +116,21 @@ export function decisions(engine: TacticEngine, players: FmPlayer[], gameDate: s
 
   // 3. Recrutement : postes du projet sans joueur au niveau, à chercher pour la prochaine fenêtre.
   const project = buildProject(engine, list, coach);
+  // Remplaçant de chaque partant signalé, à son poste du onze cible (calculé avec lui), avant la prochaine fenêtre.
+  const withThem = report?.leaving.length ? buildProject(engine, all, coach) : null;
+  for (const p of report?.leaving ?? []) {
+    const slot = withThem?.slots.find((sl) => sl.player?.id === p.id);
+    out.push({
+      kind: 'departure',
+      action: 'replaceLeaving',
+      players: [p],
+      pos: slot?.pos ?? p.positions[0] ?? null,
+      deadline: window,
+      why: slot ? 'leavingStarter' : 'leaving',
+      values: { age: p.age ?? '–' },
+      basis: 'computed',
+    });
+  }
   if (project)
     for (const sl of project.slots.filter((s) => s.status === 'recruit' && s.tone === 'bad'))
       out.push({

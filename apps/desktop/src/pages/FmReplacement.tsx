@@ -15,7 +15,7 @@ import {
 } from '@simloom/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { fmData } from '../lib/data';
 import { Empty, Fit, More, Panel, Tag, fitGap, useNames } from './FmUi';
@@ -43,6 +43,7 @@ export function ReplacementFinder({
   leaving,
   squad,
   onClose,
+  autoSearch = false,
 }: {
   saveId: string;
   gameDate: string;
@@ -50,7 +51,10 @@ export function ReplacementFinder({
   project: Project;
   leaving: FmPlayer;
   squad: FmPlayer[];
-  onClose: () => void;
+  /** Sans bouton Masquer (cadre toujours ouvert, ex. joueur signalé partant). */
+  onClose?: () => void;
+  /** Lancer d'emblée la recherche dans la base (le joueur vient d'être signalé partant : c'est son action). */
+  autoSearch?: boolean;
 }) {
   const { t } = useTranslation();
   const names = useNames();
@@ -77,6 +81,14 @@ export function ReplacementFinder({
       return { ca, found };
     },
   });
+  // Une seule fois par signalement : la lecture de la base reste une action du joueur.
+  const started = useRef(false);
+  useEffect(() => {
+    if (autoSearch && !started.current) {
+      started.current = true;
+      search.mutate();
+    }
+  }, [autoSearch, search]);
   const add = useMutation({
     mutationFn: (p: DbPlayer) => fmData.addBaseTarget(saveId, p, gameDate),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['fm', saveId, 'targets'] }),
@@ -129,9 +141,11 @@ export function ReplacementFinder({
             t('fm.repl.noSlot', { name: leaving.name })
           )}
         </p>
-        <button type="button" className="text-sm font-bold text-eau-fonce hover:underline" onClick={onClose}>
-          {t('fm.bridge.hide')}
-        </button>
+        {onClose && (
+          <button type="button" className="text-sm font-bold text-eau-fonce hover:underline" onClick={onClose}>
+            {t('fm.bridge.hide')}
+          </button>
+        )}
       </div>
       {r.slot && (
         <>

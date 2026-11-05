@@ -67,8 +67,25 @@ export interface MercatoAdvice {
   compat: ProjectCompat | null;
 }
 
+/**
+ * Joueur signalé partant par le coach (il refuse de prolonger, on le laisse libre, il est vendu, il veut partir).
+ * Gardé dans la partie (saves.extra) ; le mercato le retire de l'effectif à planifier et cherche son remplaçant.
+ */
+export type LeavingReason = 'refused' | 'released' | 'sold' | 'wantsOut';
+export const LEAVING_REASONS: LeavingReason[] = ['refused', 'released', 'sold', 'wantsOut'];
+export interface LeavingMark {
+  reason: LeavingReason;
+  /** Date de jeu (ISO) du signalement. */
+  since: string;
+  /** Nom au moment du signalement, pour l'afficher même s'il a déjà quitté l'effectif. */
+  name: string;
+}
+export type LeavingMarks = Record<string, LeavingMark>;
+
 export interface MercatoReport {
   advice: MercatoAdvice[];
+  /** Joueurs de l'effectif signalés partants : hors conseils, leur poste est à pourvoir. */
+  leaving: FmPlayer[];
   byVerdict: Record<MercatoVerdict, MercatoAdvice[]>;
   /** Jeunes (21 ans ou moins), du plus prometteur au moins prometteur. */
   youth: MercatoAdvice[];
@@ -151,8 +168,17 @@ function weakestStarter(slots: Slot[], pos: PosCode | null): FmPlayer | null {
   return xs.sort((a, b) => a.level! - b.level!)[0] ?? null;
 }
 
-export function mercatoAdvice(engine: TacticEngine, players: FmPlayer[], gameDate: string, coach: CoachPrefs = {}, history: SquadAt[] = []): MercatoReport | null {
-  const list = players.filter((p) => Object.keys(p.attributes).length);
+export function mercatoAdvice(
+  engine: TacticEngine,
+  players: FmPlayer[],
+  gameDate: string,
+  coach: CoachPrefs = {},
+  history: SquadAt[] = [],
+  leavingIds: ReadonlySet<string> = new Set(),
+): MercatoReport | null {
+  // Les partants signalés ne comptent plus : l'effectif se planifie sans eux (titulaires, doublures, contrats).
+  const leaving = players.filter((p) => leavingIds.has(p.id));
+  const list = players.filter((p) => Object.keys(p.attributes).length && !leavingIds.has(p.id));
   if (!list.length) return null;
   // Le mercato prépare l'effectif dans la durée : les blessés et suspendus comptent.
   const pick = bestTactic(engine, list, coach);
@@ -250,13 +276,14 @@ export function mercatoAdvice(engine: TacticEngine, players: FmPlayer[], gameDat
   const youth = advice
     .filter((a) => a.young)
     .sort((a, b) => Number(b.prospect) - Number(a.prospect) || (b.player.stars?.potential ?? -1) - (a.player.stars?.potential ?? -1) || (a.overtakes ?? 9) - (b.overtakes ?? 9) || (b.player.level ?? 0) - (a.player.level ?? 0));
-  const leaving = advice.filter((a) => a.verdict === 'sell' || a.verdict === 'release' || a.verdict === 'loan');
+  const goingOut = advice.filter((a) => a.verdict === 'sell' || a.verdict === 'release' || a.verdict === 'loan');
   return {
     advice,
+    leaving,
     byVerdict,
     youth,
     income: byVerdict.sell.reduce((s, a) => s + (a.player.value ?? 0), 0),
-    wagesFreed: leaving.reduce((s, a) => s + (a.player.wage ?? 0), 0),
+    wagesFreed: [...goingOut.map((a) => a.player), ...leaving].reduce((s, p) => s + (p.wage ?? 0), 0),
     nowForm: pick?.form ?? null,
     projectForm: project?.form ?? null,
     projectStyle: project?.style.id ?? null,
