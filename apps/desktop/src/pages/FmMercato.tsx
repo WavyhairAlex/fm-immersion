@@ -2,6 +2,7 @@ import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, buildProject, contractDecisio
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
+import { LeaveButton, useLeaving } from './FmLeaving';
 import { DivisionLevelPanel, ReplacementFinder } from './FmReplacement';
 import { CompatTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone, More, PlayerLink } from './FmUi';
 
@@ -96,7 +97,7 @@ const CALL_TONE: Record<ContractCall, Tone> = { extend: 'good', extendShort: 'in
  * Contrats à décider : les fins de contrat à six mois ou moins (celles que FM27 envoie en message), avec pour
  * chacun la décision à prendre dans le jeu et pourquoi. Rien n'est affiché s'il n'y en a pas.
  */
-export function ContractsToDecide({ r, go }: { r: MercatoReport; go?: (view: string) => void }) {
+export function ContractsToDecide({ r, go, gameDate, onMarked }: { r: MercatoReport; go?: (view: string) => void; gameDate: string; onMarked?: (id: string) => void }) {
   const { t } = useTranslation();
   const f = useFormat();
   const list = useMemo(() => contractDecisions(r), [r]);
@@ -131,7 +132,12 @@ export function ContractsToDecide({ r, go }: { r: MercatoReport; go?: (view: str
               {years ? ` · ${t('fm.decide.years', { count: years })}` : ''}
             </Tag>
           }
-          extra={<span className="tabular-nums">{t('fm.decide.wage', { wage: f.money(a.player.wage) })}</span>}
+          extra={
+            <>
+              <LeaveButton player={a.player} gameDate={gameDate} onMarked={onMarked} />
+              <span className="tabular-nums">{t('fm.decide.wage', { wage: f.money(a.player.wage) })}</span>
+            </>
+          }
         />
       ))}
       <More>{t('fm.decide.legend')}</More>
@@ -149,7 +155,10 @@ export function FmMercato({ saveId, players, folder, gameDate, history }: { save
   const names = useNames();
   const { engine } = useTacticEngine(folder, players);
   const [coach] = useCoach();
-  const r = useMemo(() => mercatoAdvice(engine, players, gameDate, coach, history), [engine, players, gameDate, coach, history]);
+  // Partants signalés : le mercato planifie sans eux ; un signalement lance la recherche de son remplaçant.
+  const { ids: leavingIds, marks } = useLeaving();
+  const [justMarked, setJustMarked] = useState<string | null>(null);
+  const r = useMemo(() => mercatoAdvice(engine, players, gameDate, coach, history, leavingIds), [engine, players, gameDate, coach, history, leavingIds]);
   // Onze cible, comme pour les cibles du mercato : sert au remplaçant d'un partant et au niveau de la division.
   const own = useMemo(() => players.filter((p) => !p.injury && Object.keys(p.attributes).length), [players]);
   const pr = useMemo(() => buildProject(engine, own, coach), [engine, own, coach]);
@@ -165,7 +174,31 @@ export function FmMercato({ saveId, players, folder, gameDate, history }: { save
 
   return (
     <div className="space-y-4">
-      <ContractsToDecide r={r} />
+      {pr && r.leaving.length > 0 && (
+        <Panel title={t('fm.leave.title', { count: r.leaving.length })}>
+          <More>{t('fm.leave.help')}</More>
+          {r.leaving.map((p) => (
+            <div key={p.id} className="border-b border-canard/5 py-2 last:border-0">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <PlayerLink player={p} /> <Pos player={p} />
+                <span className="text-xs text-brun">{t('fm.contracts.age', { count: p.age ?? 0 })}</span>
+                <LeaveButton player={p} gameDate={gameDate} />
+                {marks[p.id] && <span className="text-xs text-brun">{t('fm.leave.since', { date: f.date(marks[p.id]!.since) })}</span>}
+              </div>
+              <ReplacementFinder
+                saveId={saveId}
+                gameDate={gameDate}
+                engine={engine}
+                project={pr}
+                leaving={p}
+                squad={own.filter((x) => !leavingIds.has(x.id))}
+                autoSearch={justMarked === p.id}
+              />
+            </div>
+          ))}
+        </Panel>
+      )}
+      <ContractsToDecide r={r} gameDate={gameDate} onMarked={setJustMarked} />
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Kpi label={t('fm.merc.kpi.leave')} value={n('sell') + n('release')} tone={n('sell') + n('release') ? 'bad' : undefined} sub={t('fm.merc.kpi.leaveSub', { sell: n('sell'), release: n('release') })} />
         <Kpi label={t('fm.merc.kpi.income')} value={f.money(r.income)} dim={!r.income} sub={t('fm.merc.kpi.incomeSub', { wages: f.money(r.wagesFreed) })} />
@@ -196,6 +229,7 @@ export function FmMercato({ saveId, players, folder, gameDate, history }: { save
                       </button>
                     )
                   }
+                  extra={<LeaveButton player={a.player} gameDate={gameDate} onMarked={setJustMarked} />}
                   after={
                     replacing === a.player.id && (
                       <ReplacementFinder saveId={saveId} gameDate={gameDate} engine={engine} project={pr} leaving={a.player} squad={own} onClose={() => setReplacing(null)} />

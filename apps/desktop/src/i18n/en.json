@@ -1713,7 +1713,8 @@
         "recruit": "Find a player for {{pos}}",
         "sell": "Sell {{names}}",
         "loan": "Loan out {{names}}",
-        "release": "Release {{names}}"
+        "release": "Release {{names}}",
+        "replaceLeaving": "Find a replacement for {{names}} at {{pos}}"
       },
       "why": {
         "potentialPa": "PA {{pa}}: he can overtake the starter in his position (CA {{ca}}).",
@@ -1725,7 +1726,9 @@
         "bigGain": "At least {{need}} ★ better than {{other}}: worth the learning time. Switch during pre-season or the winter break.",
         "weakSlot": "The best player for this position only reaches {{fit}}% suitability in the project.",
         "emptySlot": "Nobody in the squad covers this project position.",
-        "blocked": "Promising youngster without game time here: a loan will help him develop."
+        "blocked": "Promising youngster without game time here: a loan will help him develop.",
+        "leaving": "Flagged as leaving ({{age}}): the position is open, they no longer count in planning.",
+        "leavingStarter": "Project starter flagged as leaving ({{age}}): the position must be filled before the next window."
       },
       "unless": {
         "bigGain": "Review if the gap exceeds {{need}} ★ (injuries, signings)."
@@ -2030,6 +2033,22 @@
         "Fitness": "Fit",
         "Goalkeeping": "GK",
         "SetPieces": "SP"
+      }
+    },
+    "leave": {
+      "title_one": "Announced departures · {{count}}",
+      "title_other": "Announced departures · {{count}}",
+      "help": "Players you flagged as leaving. Simloom plans the squad without them (starters, backups, contracts, youngsters) and looks for their replacement at the same position of the project eleven: first among your followed targets and the squad, then in the game database (run straight away when you flag them). Cancel the flag if they end up staying.",
+      "mark": "Leaving…",
+      "cancel": "Cancel",
+      "close": "Close",
+      "since": "flagged on {{date}}",
+      "sheet": "Flagged as leaving: no longer part of the transfer advice. Find the replacement in Transfers › Departures and youth.",
+      "reason": {
+        "refused": "Refuses to renew",
+        "released": "Let go",
+        "sold": "Sold",
+        "wantsOut": "Wants out"
       }
     }
   },
