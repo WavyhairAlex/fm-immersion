@@ -37,6 +37,7 @@ import { FmEffectiveness } from './FmEffectiveness';
 import { FmFinances } from './FmFinances';
 import { FmHome } from './FmHome';
 import { FmLoans } from './FmLoans';
+import { FmShirts } from './FmShirts';
 import { FmOpponent } from './FmOpponent';
 import { FmProgression } from './FmProgression';
 import { FmProject } from './FmProject';
@@ -77,7 +78,7 @@ const SECTIONS = [
  */
 const PARTS: Record<string, readonly string[]> = {
   tactic: ['tactic', 'instructions', 'opponent', 'calendar', 'depth', 'effectiveness'],
-  squad: ['squad', 'dressing', 'progression', 'roles', 'compare', 'loans'],
+  squad: ['squad', 'dressing', 'progression', 'roles', 'compare', 'numbers', 'loans'],
   results: ['results', 'diagnosis', 'stats', 'analysis'],
   style: ['style', 'project', 'training', 'staff'],
   mercato: ['mercato', 'targets', 'finances', 'wages', 'contracts'],
@@ -304,6 +305,8 @@ export function FmSave() {
         return <FmDressing players={players} />;
       case 'loans':
         return <FmLoans snap={snapshot.data} />;
+      case 'numbers':
+        return <FmShirts players={players} folder={folder} gameFormation={gameFormation} gameTactic={typeof snapshot.data.tactic?.name === 'string' ? snapshot.data.tactic.name : null} />;
       case 'tactic':
         return (
           <FmTactic

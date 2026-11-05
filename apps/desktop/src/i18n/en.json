@@ -342,7 +342,8 @@
       "instructions": "Player instructions",
       "results": "Results",
       "diagnosis": "Why they underperform",
-      "staff": "Staff"
+      "staff": "Staff",
+      "numbers": "Shirt numbers"
     },
     "home": {
       "todo": "To deal with",
@@ -1215,7 +1216,8 @@
       "mercato": "Who to move on (sale, loan, contract end), who to renew, and which youngsters are worth it for the project.",
       "instructions": "Up to 3 instructions per starter, to fit the style without overloading tactical familiarity.",
       "results": "Matches played since Simloom started following the save: score, eleven, each player's rating, and what earns points.",
-      "diagnosis": "Starters below the eleven's average, and why."
+      "diagnosis": "Starters below the eleven's average, and why.",
+      "numbers": "Suggested squad numbers for the season: 1 to 11 for the starters by position, each position's backup right behind."
     },
     "nextStep": "Next step: {{view}}",
     "opp": {
@@ -2093,6 +2095,18 @@
       "attrs": "Look for: {{list}}",
       "none": "No position to fill: the squad covers the project, backups included.",
       "more": "Urgent: before the next window. Project: to reach the target style. Plan ahead: depth and succession. “Search” compares your tracked targets and can run a search in the game database."
+    },
+    "shirts": {
+      "pitch": "Starters and backups · {{form}}",
+      "legend": "Big number: the starter. Below: their backup (starter's number + 10, 30 for the goalkeeper).",
+      "rest": "Rest of the squad ({{count}})",
+      "noRest": "Every player is a starter or a backup.",
+      "col": {
+        "number": "No.",
+        "player": "Player",
+        "pos": "Position"
+      },
+      "how": "Starters: the best eleven in the base tactic (same style and formation as Next match > Line-up), ignoring today's form, injuries and suspensions, since a number lasts the season. Each position takes its classic number: 1 goalkeeper, 2 right back, 3 left back, 4 and 5 centre backs, 6 defensive midfielder, 8 central midfielder, 7 and 11 wide, 10 playmaker, 9 striker. Backups: the best eleven without the starters (team B), the starter's number + 10, and 30 for the goalkeeper. The others follow from 22, line by line (defence, midfield, attack), best rated first; other goalkeepers take 40, 50… Players out on loan get no number."
     }
   },
   "pz2": {

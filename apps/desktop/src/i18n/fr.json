@@ -342,7 +342,8 @@
       "instructions": "Consignes individuelles",
       "results": "Résultats",
       "diagnosis": "Pourquoi ils ne performent pas",
-      "staff": "Staff"
+      "staff": "Staff",
+      "numbers": "Numéros"
     },
     "home": {
       "todo": "À traiter",
@@ -1215,7 +1216,8 @@
       "mercato": "Qui faire partir (vente, prêt, fin de contrat), qui prolonger, et quels jeunes valent le coup pour le projet.",
       "instructions": "Au plus 3 consignes par joueur du onze, pour coller au style sans trop charger la compréhension tactique.",
       "results": "Les matchs joués depuis que Simloom suit la partie : score, onze, note de chaque joueur, et ce qui rapporte des points.",
-      "diagnosis": "Les titulaires sous la moyenne du onze, et ce qui l'explique."
+      "diagnosis": "Les titulaires sous la moyenne du onze, et ce qui l'explique.",
+      "numbers": "Une proposition de numéros pour la saison : 1 à 11 pour les titulaires selon leur poste, la doublure de chaque poste juste derrière."
     },
     "nextStep": "Étape suivante : {{view}}",
     "opp": {
@@ -2093,6 +2095,18 @@
       "attrs": "À chercher : {{list}}",
       "none": "Aucun poste à pourvoir : l'effectif couvre le projet, doublures comprises.",
       "more": "Urgent : avant la prochaine fenêtre. Projet : pour atteindre le style visé. Anticiper : profondeur et relève. « Chercher » compare tes cibles suivies et peut lancer une recherche dans la base du jeu."
+    },
+    "shirts": {
+      "pitch": "Titulaires et doublures · {{form}}",
+      "legend": "Gros numéro : le titulaire. En dessous : sa doublure (numéro du titulaire + 10, 30 pour le gardien).",
+      "rest": "Reste de l'effectif ({{count}})",
+      "noRest": "Tout l'effectif est titulaire ou doublure.",
+      "col": {
+        "number": "N°",
+        "player": "Joueur",
+        "pos": "Poste"
+      },
+      "how": "Titulaires : le meilleur onze dans la tactique de base (même style et même schéma que Prochain match > Composition), sans tenir compte de la forme du jour, des blessures ni des suspensions, puisqu'un numéro vaut pour la saison. Chaque poste prend son numéro classique : 1 gardien, 2 latéral droit, 3 latéral gauche, 4 et 5 défenseurs centraux, 6 milieu défensif, 8 milieu axial, 7 et 11 côtés, 10 meneur, 9 avant-centre. Doublures : le meilleur onze sans les titulaires (l'équipe B), le numéro du titulaire + 10, et 30 pour le gardien. Les autres suivent à partir de 22, ligne par ligne (défense, milieu, attaque), le mieux noté d'abord ; les autres gardiens prennent 40, 50… Les joueurs prêtés ne sont pas numérotés."
     }
   },
   "pz2": {
