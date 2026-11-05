@@ -1,7 +1,8 @@
 import { squadPlaces } from './mercato';
 import type { FmPlayer } from './player';
 import type { PosCode } from './positions';
-import type { Project, ProjectSlot } from './project';
+import { projectCompat, type ProjectCompat } from './compat';
+import { shiftPlayer, type Project, type ProjectSlot } from './project';
 import type { DbPlayer } from './targets';
 import { baseTarget } from './targets';
 import type { Slot, TacticEngine } from './tactic';
@@ -25,7 +26,23 @@ export interface ReplacementCandidate<T extends FmPlayer = FmPlayer> {
   fit: number;
   /** Écart avec le partant (sur 20) : positif = mieux que lui. */
   delta: number;
+  /** Compatibilité de son profil avec le projet de jeu. */
+  compat: ProjectCompat;
+  /** Adéquation au poste projetée dans deux saisons (progression selon l'âge). */
+  fitIn2: number | null;
 }
+
+/**
+ * Le remplaçant s'inscrit-il dans la progression de l'équipe ?
+ * - `better` : la solution interne fait déjà mieux que le partant, avec un profil du projet ;
+ * - `holds` : elle tient le poste (au niveau du partant, ou l'atteint dans deux saisons) sans l'améliorer ;
+ * - `recruit` : elle fait moins bien, n'a pas le profil du projet, ou il n'y a personne : il faut recruter.
+ * `upgrade` : la meilleure cible au profil du projet qui ferait mieux que le partant ET que la solution interne.
+ */
+export type ReplacementVerdict = 'better' | 'holds' | 'recruit';
+export type ReplacementWhy = 'internalBetter' | 'internalHolds' | 'internalGrows' | 'internalWeak' | 'internalOff' | 'noInternal';
+/** Marge (sur 20) sous laquelle deux adéquations sont jugées égales : 0,25 = un huitième d'étoile. */
+export const REPLACE_MARGIN = 0.25;
 
 export interface Replacement<T extends FmPlayer = FmPlayer> {
   leaving: FmPlayer;
@@ -37,6 +54,9 @@ export interface Replacement<T extends FmPlayer = FmPlayer> {
   /** Meilleure solution de l'effectif (hors partant et hors autres titulaires). */
   internal: ReplacementCandidate | null;
   candidates: ReplacementCandidate<T>[];
+  verdict: ReplacementVerdict;
+  why: ReplacementWhy;
+  upgrade: ReplacementCandidate<T> | null;
 }
 
 /** Poste du onze cible tenu par le joueur, sinon celui de ses postes où il serait le meilleur. */
@@ -66,7 +86,7 @@ export function replacementFor<T extends FmPlayer>(
   squad: FmPlayer[] = [],
 ): Replacement<T> {
   const { slot, starter } = slotOf(engine, project, leaving);
-  if (!slot) return { leaving, slot: null, starter, fit: null, internal: null, candidates: [] };
+  if (!slot) return { leaving, slot: null, starter, fit: null, internal: null, candidates: [], verdict: 'recruit', why: 'noInternal', upgrade: null };
   const fit = fitAt(engine, leaving, slot);
   const ref = fit ?? 0;
   const rank = <P extends FmPlayer>(list: P[]): ReplacementCandidate<P>[] =>
@@ -74,12 +94,30 @@ export function replacementFor<T extends FmPlayer>(
       .filter((c) => c.id !== leaving.id && c.positions.includes(slot.pos))
       .flatMap((c) => {
         const f = fitAt(engine, c, slot);
-        return f == null ? [] : [{ player: c, fit: f, delta: f - ref }];
+        if (f == null) return [];
+        const later = shiftPlayer(c, 2);
+        return [{ player: c, fit: f, delta: f - ref, compat: projectCompat(engine, project, c), fitIn2: later === c ? f : fitAt(engine, later, slot) }];
       })
-      .sort((a, b) => b.fit - a.fit);
+      // Profils du projet d'abord : un joueur hors projet ne fait pas progresser l'équipe vers le style visé.
+      .sort((a, b) => Number(a.compat.compat === 'no') - Number(b.compat.compat === 'no') || b.fit - a.fit);
   const others = new Set(project.slots.flatMap((sl) => (sl !== slot && sl.player ? [sl.player.id] : [])));
   const internal = rank(squad.filter((p) => !others.has(p.id)))[0] ?? null;
-  return { leaving, slot, starter, fit, internal, candidates: rank(candidates) };
+  const list = rank(candidates);
+  let verdict: ReplacementVerdict = 'recruit';
+  let why: ReplacementWhy = 'noInternal';
+  if (internal) {
+    const age = internal.player.age ?? 25;
+    if (internal.compat.compat === 'no') why = 'internalOff';
+    else if (internal.delta >= REPLACE_MARGIN) [verdict, why] = ['better', 'internalBetter'];
+    else if (internal.delta > -REPLACE_MARGIN) [verdict, why] = ['holds', 'internalHolds'];
+    // Un jeune un peu en dessous qui rattrape le partant d'ici deux saisons tient aussi le poste.
+    else if (age <= 23 && internal.fitIn2 != null && internal.fitIn2 >= ref - REPLACE_MARGIN) [verdict, why] = ['holds', 'internalGrows'];
+    else why = 'internalWeak';
+  }
+  // Recrue qui améliore le poste : profil du projet, meilleure que le partant et que la solution interne.
+  const bar = Math.max(ref, verdict === 'recruit' ? 0 : (internal?.fit ?? 0)) + REPLACE_MARGIN;
+  const upgrade = list.find((c) => c.compat.compat !== 'no' && c.fit >= bar) ?? null;
+  return { leaving, slot, starter, fit, internal, candidates: list, verdict, why, upgrade };
 }
 
 /* ---------- Niveau de la division ---------- */

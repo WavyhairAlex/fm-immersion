@@ -18,9 +18,11 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { fmData } from '../lib/data';
-import { Empty, Fit, More, Panel, Tag, fitGap, useNames } from './FmUi';
+import { CompatTag, Empty, Fit, More, Panel, Tag, fitGap, useNames, type Tone } from './FmUi';
 
 type Engine = TacticEngine;
+
+const VERDICT_TONE: Record<'better' | 'holds' | 'recruit', Tone> = { better: 'good', holds: 'info', recruit: 'warn' };
 
 /** Écart de note signé, en vert s'il gagne, en corail s'il perd. */
 function Gap({ d }: { d: number }) {
@@ -108,7 +110,9 @@ export function ReplacementFinder({
         <td className="py-1.5 pr-2 font-bold">
           {c.player.name}
           {followedIds.has(c.player.id) && <> <Tag tone="good">{t('fm.dbSearch.followed')}</Tag></>}
+          {r.upgrade?.player.id === c.player.id && <> <Tag tone="good">{t('fm.repl.best')}</Tag></>}
         </td>
+        <td className="px-2 py-1.5"><CompatTag c={c.compat} /></td>
         <td className="px-2 py-1.5 tabular-nums">{c.player.age ?? '–'}</td>
         <td className="px-2 py-1.5">
           {c.player.club ?? '–'}
@@ -152,10 +156,21 @@ export function ReplacementFinder({
           <p className="mt-1 text-xs text-brun">
             {r.internal ? (
               <>
-                {t('fm.repl.internal', { name: r.internal.player.name })} <Fit value={r.internal.fit} /> <Gap d={r.internal.delta} />
+                {t('fm.repl.internal', { name: r.internal.player.name })} <Fit value={r.internal.fit} /> <Gap d={r.internal.delta} /> <CompatTag c={r.internal.compat} />
               </>
             ) : (
               t('fm.repl.noInternal')
+            )}
+          </p>
+          {/* Verdict : le remplaçant fait-il progresser l'équipe vers le projet, ou faut-il recruter ? */}
+          <p className="mt-2 rounded-lg bg-white/70 px-3 py-2 text-sm">
+            <Tag tone={VERDICT_TONE[r.verdict]}>{t(`fm.repl.verdict.${r.verdict}`)}</Tag>{' '}
+            {t(`fm.repl.why.${r.why}`, { name: r.internal?.player.name ?? '', leaving: leaving.name })}
+            {r.upgrade && (
+              <>
+                {' '}
+                {t('fm.repl.upgrade', { name: r.upgrade.player.name })} <Gap d={r.upgrade.delta} />
+              </>
             )}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -175,6 +190,7 @@ export function ReplacementFinder({
                 <thead className="text-xs text-canard/60">
                   <tr>
                     <th className="py-1 pr-2">{t('fm.dbSearch.col.player')}</th>
+                    <th className="px-2 py-1">{t('fm.col.compat')}</th>
                     <th className="px-2 py-1">{t('fm.dbSearch.col.age')}</th>
                     <th className="px-2 py-1">{t('fm.dbSearch.col.club')}</th>
                     <th className="px-2 py-1">{t('fm.dbSearch.col.caPa')}</th>

@@ -38,6 +38,23 @@ describe('remplaçant d’un partant', () => {
     expect(r.internal!.delta).toBeLessThan(0);
   });
 
+  it('juge si la doublure fait progresser l’équipe ou s’il faut recruter', () => {
+    const bt = squad.find((x) => x.id === '11')!;
+    // Doublure nettement plus faible : recruter, et la cible au profil du projet qui fait mieux est proposée.
+    const weak = replacementFor(engine, pr, bt, [p(20, 'BT', 15), p(21, 'BT', 9)], squad);
+    expect(weak.verdict).toBe('recruit');
+    expect(weak.why).toBe('internalWeak');
+    expect(weak.upgrade?.player.id).toBe('20');
+    // Doublure meilleure que le partant : pas besoin de recruter.
+    const better = replacementFor(engine, pr, bt, [], [...squad.filter((x) => x.id !== '12'), p(13, 'BT', 15)]);
+    expect(better.verdict).toBe('better');
+    expect(better.upgrade).toBeNull();
+    // Jeune un peu en dessous qui rattrape le partant dans deux saisons : il tient le poste.
+    const young = normalizePlayer({ id: 14, name: 'J14', positions: 'BT', age: 18, attributes: attrs(12) });
+    const grows = replacementFor(engine, pr, bt, [], [...squad.filter((x) => x.id !== '12'), young]);
+    expect(['holds', 'better']).toContain(grows.verdict);
+  });
+
   it('sans poste dans le schéma, aucun candidat', () => {
     const r = replacementFor(engine, pr, p(30, 'GB', 10), [p(20, 'BT', 15)]);
     expect(r.slot?.pos).toBe('GB');

@@ -1,4 +1,5 @@
 import { nextWindows } from './evolution';
+import { replacementFor } from './replacement';
 import { contractDecisions, mercatoAdvice, type ContractCall, type MercatoAdvice } from './mercato';
 import { unavailable, type FmPlayer } from './player';
 import type { PosCode } from './positions';
@@ -120,14 +121,17 @@ export function decisions(
   const withThem = report?.leaving.length ? buildProject(engine, all, coach) : null;
   for (const p of report?.leaving ?? []) {
     const slot = withThem?.slots.find((sl) => sl.player?.id === p.id);
+    // La solution interne suffit-elle (profil du projet, au moins au niveau du partant) ? Sinon, recruter.
+    const r = withThem ? replacementFor(engine, withThem, p, [], list) : null;
+    const covered = r && r.verdict !== 'recruit' && r.internal;
     out.push({
       kind: 'departure',
-      action: 'replaceLeaving',
-      players: [p],
-      pos: slot?.pos ?? p.positions[0] ?? null,
+      action: covered ? 'leavingCovered' : 'replaceLeaving',
+      players: covered ? [p, r.internal!.player] : [p],
+      pos: r?.slot?.pos ?? slot?.pos ?? p.positions[0] ?? null,
       deadline: window,
-      why: slot ? 'leavingStarter' : 'leaving',
-      values: { age: p.age ?? '–' },
+      why: r ? `repl_${r.why}` : slot ? 'leavingStarter' : 'leaving',
+      values: { age: p.age ?? '–', leaving: p.name, name: r?.internal?.player.name ?? '' },
       basis: 'computed',
     });
   }

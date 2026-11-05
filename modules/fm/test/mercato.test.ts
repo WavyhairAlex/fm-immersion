@@ -180,11 +180,19 @@ describe('joueurs signalés partants', () => {
     expect(r.advice.find((a) => a.player.id === '12')!.project.tier).toBe(0);
   });
 
-  it('ajoute une décision « trouver son remplaçant » à son poste', () => {
-    const d = decisions(engine, eleven, DATE, { style: 'possession' }, [], null, new Set(['3']));
+  it('ajoute une décision « trouver son remplaçant » quand personne ne tient le poste au niveau', () => {
+    // Seule doublure en DC : bien plus faible que le partant.
+    const d = decisions(engine, [...eleven, p(12, 'D (C)', 8)], DATE, { style: 'possession' }, [], null, new Set(['3']));
     const repl = d.find((x) => x.action === 'replaceLeaving');
     expect(repl?.players[0]!.id).toBe('3');
     expect(repl?.pos).toBe('DC');
-    expect(repl?.why).toBe('leavingStarter');
+    expect(repl?.why).toBe('repl_internalWeak');
+  });
+
+  it('dit qu’aucune recrue n’est nécessaire quand la doublure fait aussi bien avec un profil du projet', () => {
+    const d = decisions(engine, [...eleven, p(12, 'D (C)', 13)], DATE, { style: 'possession' }, [], null, new Set(['3']));
+    const c = d.find((x) => x.action === 'leavingCovered');
+    expect(c?.players.map((x) => x.id)).toEqual(['3', '12']);
+    expect(d.some((x) => x.action === 'replaceLeaving')).toBe(false);
   });
 });

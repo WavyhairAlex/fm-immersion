@@ -1714,7 +1714,8 @@
         "sell": "Vendre {{names}}",
         "loan": "Prêter {{names}}",
         "release": "Libérer {{names}}",
-        "replaceLeaving": "Trouver le remplaçant de {{names}} en {{pos}}"
+        "replaceLeaving": "Trouver le remplaçant de {{names}} en {{pos}}",
+        "leavingCovered": "Pas de recrue nécessaire pour remplacer {{leaving}} en {{pos}} : {{name}} prend la place"
       },
       "why": {
         "potentialPa": "PA {{pa}} : il peut dépasser le titulaire de son poste (CA {{ca}}).",
@@ -1728,7 +1729,13 @@
         "emptySlot": "Personne dans l'effectif ne tient ce poste du projet.",
         "blocked": "Jeune prometteur sans temps de jeu ici : un prêt le fera progresser.",
         "leaving": "Signalé partant ({{age}} ans) : son poste est à pourvoir, il ne compte plus dans la planification.",
-        "leavingStarter": "Titulaire du projet signalé partant ({{age}} ans) : son poste est à pourvoir avant la prochaine fenêtre."
+        "leavingStarter": "Titulaire du projet signalé partant ({{age}} ans) : son poste est à pourvoir avant la prochaine fenêtre.",
+        "repl_internalBetter": "{{name}} prend la place, a un profil du projet et fait déjà mieux que {{leaving}} : l'équipe progresse sans recrue.",
+        "repl_internalHolds": "{{name}} prend la place avec un profil du projet, au niveau de {{leaving}} : le poste ne baisse pas, mais ne progresse pas non plus.",
+        "repl_internalGrows": "{{name}} est un peu en dessous de {{leaving}} mais, jeune et au profil du projet, rattrape son niveau d'ici deux saisons.",
+        "repl_internalWeak": "{{name}} prendrait la place, mais en dessous de {{leaving}} : le poste baisserait. Il faut recruter.",
+        "repl_internalOff": "{{name}} prendrait la place, mais son profil ne colle pas au projet de jeu : il ne fait pas avancer l'équipe vers le style visé. Il faut recruter.",
+        "repl_noInternal": "Personne dans l'effectif ne tient ce poste : il faut recruter."
       },
       "unless": {
         "bigGain": "À revoir si l'écart dépasse {{need}} ★ (blessures, recrues)."
@@ -1938,7 +1945,22 @@
       "foundNoCa": "{{count}} joueurs lus au même poste (CA du partant inconnu : pas de bande de CA)",
       "gap": "Écart",
       "none": "Aucune cible suivie ne joue à ce poste. Lance la recherche dans la base.",
-      "help": "Les candidats sont notés au même poste et au même rôle que le partant, dans le onze du projet ; l'écart est la différence de note avec lui. La recherche lit la base de FM27 en lecture seule, partie ouverte : joueurs des autres clubs, non blessés, au même poste, d'un CA réel un peu inférieur à nettement supérieur au sien. « Suivre » les ajoute aux cibles."
+      "help": "Les candidats sont notés au même poste et au même rôle que le partant, dans le onze du projet ; l'écart est la différence de note avec lui. La recherche lit la base de FM27 en lecture seule, partie ouverte : joueurs des autres clubs, non blessés, au même poste, d'un CA réel un peu inférieur à nettement supérieur au sien. « Suivre » les ajoute aux cibles.",
+      "best": "Le meilleur choix",
+      "upgrade": "À recruter de préférence : {{name}}, profil du projet, qui améliore le poste",
+      "verdict": {
+        "better": "La doublure fait mieux",
+        "holds": "La doublure tient le poste",
+        "recruit": "Recruter"
+      },
+      "why": {
+        "internalBetter": "{{name}} prend la place, a un profil du projet et fait déjà mieux que {{leaving}} : l'équipe progresse sans recrue.",
+        "internalHolds": "{{name}} prend la place avec un profil du projet, au niveau de {{leaving}} : le poste ne baisse pas, mais ne progresse pas non plus.",
+        "internalGrows": "{{name}} est un peu en dessous de {{leaving}} mais, jeune et au profil du projet, rattrape son niveau d'ici deux saisons.",
+        "internalWeak": "{{name}} prendrait la place, mais en dessous de {{leaving}} : le poste baisserait. Il faut recruter.",
+        "internalOff": "{{name}} prendrait la place, mais son profil ne colle pas au projet de jeu : il ne fait pas avancer l'équipe vers le style visé. Il faut recruter.",
+        "noInternal": "Personne dans l'effectif ne tient ce poste : il faut recruter."
+      }
     },
     "divLevel": {
       "title": "Niveau de la division",
