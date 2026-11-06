@@ -1,14 +1,15 @@
 {
   "nav": {
     "language": "English",
-    "version": "version {{version}}"
+    "version": "version {{version}}",
+    "modes": "Modes"
   },
   "update": {
     "checking": "Recherche de mises à jour…",
     "installing": "Installation de la version {{version}}…"
   },
   "home": {
-    "title": "Tes parties",
+    "title": "FM Coach : tes parties",
     "empty": "Aucune partie pour l'instant. Ajoute ta première partie pour commencer à la suivre.",
     "add": "Nouvelle partie",
     "name": "Nom de la partie",
@@ -2112,5 +2113,56 @@
       },
       "how": "Titulaires : le meilleur onze dans la tactique de base (même style et même schéma que Prochain match > Composition), sans tenir compte de la forme du jour, des blessures ni des suspensions, puisqu'un numéro vaut pour la saison. Chaque poste prend son numéro classique : 1 gardien, 2 latéral droit, 3 latéral gauche, 4 et 5 défenseurs centraux, 6 milieu défensif, 8 milieu axial, 7 et 11 côtés, 10 meneur, 9 avant-centre. Doublures : le meilleur onze sans les titulaires (l'équipe B), le numéro du titulaire + 10, et 30 pour le gardien. Les autres suivent à partir de 22, ligne par ligne (défense, milieu, attaque), le mieux noté d'abord ; les autres gardiens prennent 40, 50… Les joueurs prêtés ne sont pas numérotés."
     }
+  },
+  "modes": {
+    "soon": "Bientôt",
+    "available": "Disponible",
+    "open": "Ouvrir",
+    "home": {
+      "title": "Accueil",
+      "heading": "Bienvenue dans FM Immersion",
+      "intro": "Choisis un mode. Chacun fonctionne seul : tu n'utilises que ce qui t'intéresse."
+    },
+    "faces": {
+      "title": "Visages photoréalistes",
+      "summary": "Remplace les visages générés de FM27 par des portraits photoréalistes, et les remet après une mise à jour Steam."
+    },
+    "coach": {
+      "title": "FM Coach",
+      "summary": "Ton assistant de carrière : effectif, tactique, entraînement, mercato, adversaire et finances, lus dans ta partie."
+    },
+    "gazette": {
+      "title": "Gazette",
+      "summary": "Le journal de la semaine de ta carrière : résultats, transferts, licenciements et rumeurs.",
+      "details": "Chaque semaine de jeu, FM Immersion rédige un journal à partir de ta partie : la une, les brèves, le mercato et « la chaise du coach ». Les anciens numéros restent archivés."
+    },
+    "discord": {
+      "title": "Live Discord",
+      "summary": "Raconte ta carrière en direct dans un salon Discord, en solo ou dans un monde partagé.",
+      "details": "Les moments forts de ta partie (victoires, défaites, transferts, blessures, place au classement) sont postés dans un salon Discord. En solo, il suffit d'un lien webhook ; dans un monde partagé, un bot publie aussi les matchs entre humains et le classement officiel."
+    },
+    "world": {
+      "title": "Monde partagé",
+      "summary": "Multijoueur asynchrone : chacun joue sa partie à son rythme, dans le même monde.",
+      "details": "Chaque coach joue sa propre sauvegarde. Les résultats, transferts et changements de poste des autres humains arrivent dans ta partie à la bonne date, avec un rendez-vous commun tous les six mois."
+    }
+  },
+  "faces": {
+    "intro": "Les visages générés (jeunes joueurs, staff, entraîneurs) passent de la 3D du jeu à des portraits photoréalistes. Coche ensuite dans FM27 l'option « Utilisez des images pré-générées des joueurs et du personnel ».",
+    "statusTitle": "État dans ton jeu",
+    "gameDir": "Dossier de Football Manager 27",
+    "size": "({{mb}} Mo)",
+    "state": {
+      "noGame": "FM27 introuvable dans ce dossier (fm.exe absent).",
+      "missing": "Fichier des portraits introuvable : vérifie les fichiers du jeu dans Steam.",
+      "original": "Portraits d'origine du jeu : le pack n'est pas installé.",
+      "photorealV1": "Pack photoréaliste v1.0 installé.",
+      "unknown": "Fichier des portraits modifié ou mis à jour par Steam : réinstalle le pack."
+    },
+    "installTitle": "Installer le pack",
+    "installSoon": "L'installation en un clic arrive dans la prochaine version. En attendant :",
+    "step1": "Ferme FM27, puis télécharge le dernier zip à l'adresse ci-dessous.",
+    "step2": "Décompresse-le et lance INSTALLER.bat (DESINSTALLER.bat pour revenir aux visages d'origine).",
+    "step3": "Relance FM27 et coche l'option des images pré-générées dans les préférences."
   }
 }

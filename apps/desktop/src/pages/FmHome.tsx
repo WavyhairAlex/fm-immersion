@@ -74,7 +74,7 @@ export function FmHome({
   const toChange = setups.rows.filter((r) => r.status === 'change').map((r) => r.plan.player);
   const short = (list: FmPlayer[]) => list.map((p) => p.name.split(' ').at(-1)).join(', ');
   const link = (view: string, label: string) => (
-    <button type="button" className="shrink-0 whitespace-nowrap text-sm font-bold text-eau-fonce hover:underline" onClick={() => go(view)}>
+    <button type="button" className="shrink-0 whitespace-nowrap text-sm font-bold text-orange-fonce hover:underline" onClick={() => go(view)}>
       {label} →
     </button>
   );

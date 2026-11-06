@@ -1,4 +1,5 @@
 mod db;
+mod faces;
 mod fm;
 mod fm_bridge;
 mod fm_memory;
@@ -36,7 +37,8 @@ pub fn run() {
             fm_memory::fm_memory_search,
             fm_memory::fm_memory_abilities,
             fm_memory::fm_memory_division,
-            fm_memory::fm_memory_staff
+            fm_memory::fm_memory_staff,
+            faces::faces_status
         ])
         .run(tauri::generate_context!())
         .expect("impossible de démarrer FM Immersion");

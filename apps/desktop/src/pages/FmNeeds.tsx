@@ -49,7 +49,7 @@ export function NeedsPanel({
                 </span>
               )}
               {project && n.player && open !== i && (
-                <button type="button" className="text-xs font-bold text-eau-fonce hover:underline" onClick={() => setOpen(i)}>
+                <button type="button" className="text-xs font-bold text-orange-fonce hover:underline" onClick={() => setOpen(i)}>
                   {t('fm.needs.search')}
                 </button>
               )}

@@ -1,14 +1,15 @@
 {
   "nav": {
     "language": "Français",
-    "version": "version {{version}}"
+    "version": "version {{version}}",
+    "modes": "Modes"
   },
   "update": {
     "checking": "Checking for updates…",
     "installing": "Installing version {{version}}…"
   },
   "home": {
-    "title": "Your playthroughs",
+    "title": "FM Coach: your saves",
     "empty": "No playthrough yet. Add your first one to start tracking it.",
     "add": "New playthrough",
     "name": "Playthrough name",
@@ -2112,5 +2113,56 @@
       },
       "how": "Starters: the best eleven in the base tactic (same style and formation as Next match > Line-up), ignoring today's form, injuries and suspensions, since a number lasts the season. Each position takes its classic number: 1 goalkeeper, 2 right back, 3 left back, 4 and 5 centre backs, 6 defensive midfielder, 8 central midfielder, 7 and 11 wide, 10 playmaker, 9 striker. Backups: the best eleven without the starters (team B), the starter's number + 10, and 30 for the goalkeeper. The others follow from 22, line by line (defence, midfield, attack), best rated first; other goalkeepers take 40, 50… Players out on loan get no number."
     }
+  },
+  "modes": {
+    "soon": "Soon",
+    "available": "Available",
+    "open": "Open",
+    "home": {
+      "title": "Home",
+      "heading": "Welcome to FM Immersion",
+      "intro": "Pick a mode. Each one works on its own: use only what you like."
+    },
+    "faces": {
+      "title": "Photorealistic faces",
+      "summary": "Replaces FM27's generated faces with photorealistic portraits, and puts them back after a Steam update."
+    },
+    "coach": {
+      "title": "FM Coach",
+      "summary": "Your career assistant: squad, tactics, training, transfers, opponent and finances, read from your save."
+    },
+    "gazette": {
+      "title": "Gazette",
+      "summary": "Your career's weekly newspaper: results, transfers, sackings and rumours.",
+      "details": "Every in-game week, FM Immersion writes a newspaper from your save: front page, news in brief, transfers and the manager's hot seat. Past issues stay archived."
+    },
+    "discord": {
+      "title": "Discord live",
+      "summary": "Tell your career live in a Discord channel, solo or in a shared world.",
+      "details": "The key moments of your save (wins, losses, transfers, injuries, league position) are posted in a Discord channel. Solo, a webhook link is enough; in a shared world, a bot also posts human-vs-human matches and the official table."
+    },
+    "world": {
+      "title": "Shared world",
+      "summary": "Asynchronous multiplayer: everyone plays their own save at their own pace, in the same world.",
+      "details": "Each manager plays their own save. Other humans' results, transfers and job changes reach your save on the right date, with a common checkpoint every six months."
+    }
+  },
+  "faces": {
+    "intro": "Generated faces (youngsters, staff, managers) switch from the game's 3D to photorealistic portraits. Then tick FM27's \"Use pre-generated images of players and staff\" option.",
+    "statusTitle": "Status in your game",
+    "gameDir": "Football Manager 27 folder",
+    "size": "({{mb}} MB)",
+    "state": {
+      "noGame": "FM27 not found in this folder (no fm.exe).",
+      "missing": "Portraits file not found: verify the game files in Steam.",
+      "original": "Original game portraits: the pack is not installed.",
+      "photorealV1": "Photorealistic pack v1.0 installed.",
+      "unknown": "Portraits file modified or updated by Steam: reinstall the pack."
+    },
+    "installTitle": "Install the pack",
+    "installSoon": "One-click install comes in the next version. Meanwhile:",
+    "step1": "Close FM27, then download the latest zip from the address below.",
+    "step2": "Unzip it and run INSTALL.bat (UNINSTALL.bat to go back to the original faces).",
+    "step3": "Restart FM27 and tick the pre-generated images option in the preferences."
   }
 }

@@ -109,7 +109,7 @@ export function ContractsToDecide({ r, go, gameDate, onMarked }: { r: MercatoRep
       title={t('fm.decide.title', { count: list.length })}
       action={
         go && (
-          <button type="button" className="text-sm font-bold text-eau-fonce hover:underline" onClick={() => go('mercato')}>
+          <button type="button" className="text-sm font-bold text-orange-fonce hover:underline" onClick={() => go('mercato')}>
             {t('fm.views.mercato')} →
           </button>
         )
@@ -229,7 +229,7 @@ export function FmMercato({ saveId, players, folder, gameDate, history }: { save
                   a={a}
                   tag={
                     replacing !== a.player.id && (
-                      <button type="button" className="text-xs font-bold text-eau-fonce hover:underline" onClick={() => setReplacing(a.player.id)}>
+                      <button type="button" className="text-xs font-bold text-orange-fonce hover:underline" onClick={() => setReplacing(a.player.id)}>
                         {t('fm.repl.open')}
                       </button>
                     )

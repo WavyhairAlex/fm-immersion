@@ -195,7 +195,7 @@ export function FmDbSearch({
         <h2 className="text-lg font-semibold">{t("fm.dbSearch.title")}</h2>
         <button
           type="button"
-          className="text-sm font-bold text-eau-fonce hover:underline"
+          className="text-sm font-bold text-orange-fonce hover:underline"
           onClick={() => setOpen(false)}
         >
           {t("fm.bridge.hide")}
@@ -381,7 +381,7 @@ export function FmDbSearch({
                         ) : (
                           <button
                             type="button"
-                            className="text-xs font-bold text-eau-fonce hover:underline"
+                            className="text-xs font-bold text-orange-fonce hover:underline"
                             disabled={add.isPending || !d}
                             onClick={() => d && add.mutate(d)}
                           >

@@ -8,10 +8,6 @@ import { useUi } from '../lib/ui-store';
 
 const savesKey = ['saves'] as const;
 
-const ILLUSTRATION: Record<GameId, string> = {
-  fm: '/brand/football-sm.webp',
-};
-
 export function Home() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
@@ -38,7 +34,6 @@ export function Home() {
 
       {!isLoading && saves.length === 0 && !createSaveOpen && (
         <div className="card mt-8 flex flex-col items-center gap-3 py-10 text-center">
-          <img src="/brand/mascotte-sm.webp" alt="" className="h-32 w-auto" />
           <p className="max-w-md text-brun">{t('home.empty')}</p>
         </div>
       )}
@@ -77,27 +72,6 @@ export function Home() {
         })}
       </div>
 
-      <section className="mt-14">
-        <h2 className="text-xl font-semibold">{t('home.modules')}</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          {GAME_IDS.map((id) => (
-            <div key={id} className="card flex items-center gap-4 p-4">
-              <img src={ILLUSTRATION[id]} alt="" className="h-16 w-16 rounded-2xl object-cover" loading="lazy" />
-              <div>
-                <p className="font-display font-semibold">{t('home.for', { game: GAMES[id].name })}</p>
-                <p className="text-xs font-bold text-canard/60">
-                  {GAMES[id].status === 'available' ? t('home.available') : t('home.soon')}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <footer className="mt-12 border-t border-canard/10 py-6 text-xs text-canard/60">
-        <p>{t('footer.disclaimer')}</p>
-        <p className="mt-1">{t('footer.privacy')}</p>
-      </footer>
     </div>
   );
 }

@@ -85,7 +85,7 @@ export function PlayerLink({ player, className = 'font-bold' }: { player: FmPlay
   const open = useContext(PlayerSheetContext);
   if (!open) return <span className={className}>{player.name}</span>;
   return (
-    <button type="button" className={`${className} text-left hover:text-eau-fonce hover:underline`} title={t('fm.sheet.open', { name: player.name })} onClick={() => open(player.id)}>
+    <button type="button" className={`${className} text-left hover:text-orange-fonce hover:underline`} title={t('fm.sheet.open', { name: player.name })} onClick={() => open(player.id)}>
       {player.name}
     </button>
   );

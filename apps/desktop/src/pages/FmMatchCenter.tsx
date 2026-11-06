@@ -223,7 +223,7 @@ export function FmMatchCenter({
               <div className="flex flex-wrap items-center gap-3">
                 <label className="flex items-center gap-2 font-bold text-canard">
                   {t('fm.matchSheet.live.minute')}
-                  <input type="range" min={0} max={95} step={5} value={minute} onChange={(e) => setMinute(Number(e.target.value))} className="w-40 accent-[#1B7F67]" />
+                  <input type="range" min={0} max={95} step={5} value={minute} onChange={(e) => setMinute(Number(e.target.value))} className="w-40 accent-[#C2410C]" />
                   <span className="w-10 tabular-nums">{minute}'</span>
                 </label>
                 <div className="flex items-center gap-1">
@@ -276,7 +276,7 @@ export function FmMatchCenter({
                       className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg ${subState[i] === 'now' ? 'bg-eau/15 p-1.5 ring-1 ring-eau-fonce/40' : subState[i] === 'done' ? 'opacity-50 line-through' : ''}`}
                     >
                       {live ? (
-                        <input type="checkbox" className="h-4 w-4 accent-[#1B7F67]" checked={subState[i] === 'done'} onChange={() => toggleDone(c.slot)} aria-label={t('fm.matchSheet.live.done')} />
+                        <input type="checkbox" className="h-4 w-4 accent-[#C2410C]" checked={subState[i] === 'done'} onChange={() => toggleDone(c.slot)} aria-label={t('fm.matchSheet.live.done')} />
                       ) : null}
                       <span className="w-10 shrink-0 font-bold tabular-nums text-eau-fonce">{c.minute}'</span>
                       <PlayerLink player={c.out} />

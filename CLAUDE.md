@@ -73,21 +73,20 @@ Voir l'en-tête de `.github/workflows/release.yml` : version dans `apps/desktop/
 `src-tauri/Cargo.toml`, fusion sur main : la CI crée le tag et la release dans ce dépôt,
 la publie et la marque « Latest » une fois latest.json envoyé. Plus de publication manuelle.
 
-## Identité visuelle — règles strictes
-- **Rester loin d'Amazon** : aucune courbe orange sous le mot, **pas d'orange dans le logo ni dans l'interface**.
-- Logo : vrai SVG (`apps/desktop/public/brand/logo.svg`), fil vert `#2FA88A`, point du i = pelote, « oo » remplacé par un infini incliné.
-- Mascotte (esprit à capuche, besace, fil) : illustrations **PNG/WebP**, jamais vectorisées.
-- Palette (tokens Tailwind) :
-  - `canard` #0F4B58 — texte principal, fonds sombres
-  - `eau` #63D1B1 — boutons secondaires (texte canard, 5,2) ; `eau-soutenu` #2FA88A — fil du logo uniquement (texte blanc dessus : 2,96, interdit)
-  - `eau-fonce` #1B7F67 — boutons principaux, texte blanc (4,9)
-  - `ambre` #FFB347 — **illustrations et pastilles d'alerte uniquement**
-  - `corail` #FF6B6B — erreurs, suppression
-  - `creme` #F7EFE3 — fond
-  - `brun` #8B5E3C — texte secondaire
-  - Le texte est toujours en canard ou brun.
+## Identité visuelle (choix du 06/11/2026)
+- **Anthracite et orange**, les couleurs d'Amnesix. Toujours lisible : texte anthracite sur fond clair, texte blanc
+  sur anthracite ou sur orange foncé, jamais de texte blanc sur l'orange vif.
+- Mise en page : barre latérale anthracite avec un lien par **mode** (`src/lib/modes.ts`), le mode ouvert souligné
+  d'orange ; chaque mode est indépendant (Visages, FM Coach, Gazette, Live Discord, Monde partagé).
+- Les jetons Tailwind gardent leurs noms hérités de Simloom pour ne pas réécrire les écrans :
+  - `canard` #25282D — anthracite : texte principal, fonds sombres, barre latérale
+  - `orange` #F26B1D — marque : liserés, sélection, logo ; `orange-fonce` #C2410C — boutons principaux et liens (texte blanc : 5,2) ;
+    `orange-clair` #FFE4D3 — boutons secondaires et pastilles (texte anthracite)
+  - `eau` / `eau-soutenu` / `eau-fonce` — vert des états « bon / OK » uniquement
+  - `ambre` #F5B700 — alertes ; `corail` #D93C3C — erreurs, suppression
+  - `creme` #F2F2F0 — fond ; `brun` #5C6067 — texte secondaire
 - Polices embarquées (`@fontsource`) : **Fraunces** pour les titres, **Nunito** pour le texte.
-- Jeux : toujours écrire « pour <Jeu> », mention de non-affiliation, **aucun logo ni visuel des jeux**.
+- Jeux : mention de non-affiliation, **aucun logo ni visuel du jeu**. La mascotte Simloom n'est plus affichée.
 
 ## Conventions
 - Interface : **français et anglais dès le départ**. Aucune chaîne en dur dans les composants :
@@ -103,7 +102,6 @@ la publie et la marque « Latest » une fois latest.json envoyé. Plus de public
 - Les migrations SQL publiées par Simloom sont gardées telles quelles (elles créent aussi des tables `pz2_`/`tf3_`
   inutilisées) : ne pas les modifier, ajouter les suivantes après.
 - Le fichier local `simloom-roles.json` (dossier du plugin) garde son nom pour rester compatible.
-- L'identité visuelle (palette, polices, mascotte) vient encore de Simloom ; une identité FM Immersion est à faire.
 
 ## Commandes
 ```bash

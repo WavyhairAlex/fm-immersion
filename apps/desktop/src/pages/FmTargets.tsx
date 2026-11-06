@@ -294,7 +294,7 @@ export function FmTargets({
                       <td className="px-2 py-1.5 text-right">
                         <button
                           type="button"
-                          className="text-xs font-bold text-eau-fonce hover:underline"
+                          className="text-xs font-bold text-orange-fonce hover:underline"
                           onClick={() =>
                             dismiss.mutate({ id: pid, on: !p.dismissed })
                           }
@@ -321,7 +321,7 @@ export function FmTargets({
             </Empty>
             <button
               type="button"
-              className="mt-3 text-sm font-bold text-eau-fonce hover:underline"
+              className="mt-3 text-sm font-bold text-orange-fonce hover:underline"
               onClick={() => go("project")}
             >
               {t("fm.targets.toProject")} →

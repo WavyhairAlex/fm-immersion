@@ -124,7 +124,7 @@ export function ReplacementFinder({
         <td className="px-2 py-1.5"><Gap d={c.delta} /></td>
         <td className="px-2 py-1.5 text-right">
           {d && !followedIds.has(c.player.id) && (
-            <button type="button" className="text-xs font-bold text-eau-fonce hover:underline" disabled={add.isPending} onClick={() => add.mutate(d)}>
+            <button type="button" className="text-xs font-bold text-orange-fonce hover:underline" disabled={add.isPending} onClick={() => add.mutate(d)}>
               {t('fm.dbSearch.add')}
             </button>
           )}
@@ -147,7 +147,7 @@ export function ReplacementFinder({
           )}
         </p>
         {onClose && (
-          <button type="button" className="text-sm font-bold text-eau-fonce hover:underline" onClick={onClose}>
+          <button type="button" className="text-sm font-bold text-orange-fonce hover:underline" onClick={onClose}>
             {t('fm.bridge.hide')}
           </button>
         )}
