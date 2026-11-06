@@ -1061,6 +1061,7 @@
       "variant_2": "deux matchs",
       "method": "Méthode en saison",
       "methods": {
+        "metaAdapt": "Méta adaptée à tes faiblesses",
         "meta": "Méta efficacité 1.1 (AlexJeuVideal)",
         "freedom": "Freedom (FM Scout)"
       },
@@ -1189,7 +1190,9 @@
       "scheduleFocus": "Priorité du calendrier",
       "workloadCol": "Charge",
       "upcomingHelp": "À régler d'avance dans l'écran Programme d'entraînement du jeu : une « Priorité du calendrier » et une charge par semaine. Charge légère les semaines à deux matchs, moyenne avec un match, intensive sans match et en début de présaison. Au-delà des prochains matchs connus, Archivix suppose un match le samedi.",
-      "reasonHint": "Survole l'intensité d'un joueur pour voir pourquoi elle est conseillée."
+      "reasonHint": "Survole l'intensité d'un joueur pour voir pourquoi elle est conseillée.",
+      "metaAdaptHelp": "Base Méta d'AlexJeuVideal : 2 pièges du pressing par semaine, la veille du match Progression du ballon, Bloc défensif, Condition physique, le reste au repos. Les 4 autres séances tactiques suivent tes zones prioritaires (les plus faibles d'après le jeu et tes matchs) parmi celles que le banc d'essai juge utiles : Hauteur du pressing, Construction, Création d'occasions, Organisation avec et sans le ballon. Elles changent quand tes faiblesses changent.",
+      "metaSwaps": "Après chargement, remplace : {{list}}."
     },
     "intro": {
       "home": "Ce qui demande ton attention aujourd'hui, les styles qui collent à l'effectif, tes meilleurs joueurs et tes jeunes.",
