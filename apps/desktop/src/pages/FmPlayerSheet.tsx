@@ -11,7 +11,7 @@ import {
   type PosCode,
   type SquadAt,
   type StatKey,
-} from '@simloom/module-fm';
+} from '@fm-immersion/module-fm';
 import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AttrValue, Avatar, Gauge, LINE_COLOR, PosBadge, PositionMap, ProfileRadar, profileAxes, RankBar } from './FmFoot';

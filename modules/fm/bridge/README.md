@@ -2,7 +2,7 @@
 
 Plugin **BepInEx 6 (Unity IL2CPP)** pour Football Manager 27, en **lecture seule** : il lit l'effectif, la tactique,
 le club et le prochain match via le système de bindings de l'interface du jeu, puis écrit
-`archivix-snapshot.json` (format `archivix/1`) que le module `fm` de Simloom importe.
+`archivix-snapshot.json` (format `archivix/1`) que le module `fm` de FM Immersion importe.
 
 - Jamais d'écriture dans la mémoire du jeu ni dans les sauvegardes, jamais d'action de jeu (`SendEvent`, `ActionID`).
 - Un instantané au chargement d'une partie, puis à chaque nouveau jour de jeu (au plus tard toutes les 60 s).
@@ -20,12 +20,12 @@ le club et le prochain match via le système de bindings de l'interface du jeu, 
 ## Réglage
 
 `BepInEx\config\fr.archivix.bridge.cfg`, clé `Dossier` : dossier où écrire les instantanés.
-Par défaut `Documents\Sports Interactive\Football Manager 27\archivix`. Simloom le renseigne à l'installation.
+Par défaut `Documents\Sports Interactive\Football Manager 27\archivix`. FM Immersion le renseigne à l'installation.
 
 Autres clés : `LireTactique` (non par défaut), `LireEfficacite` (non par défaut, expérimental),
 `LireCompo` (non par défaut, expérimental : joueur à chaque poste), `LireJoueursEtendus` (non par défaut, expérimental : moral, hiérarchie, étoiles du staff), `LireCibles` (non par défaut, expérimental : cibles du mercato), `Decouverte` (oui par défaut : rapport
 `archivix\config\decouverte.json`), `ServeurLocal` (non par défaut depuis 0.4.5 : serveur `http://localhost:8727`, sans
-en-tête CORS, inutile pour Simloom ; un port déjà pris n'empêche plus le plugin de démarrer), `RelectureSecondes` (300 par défaut, 60 au minimum : relecture complète même sans
+en-tête CORS, inutile pour FM Immersion ; un port déjà pris n'empêche plus le plugin de démarrer), `RelectureSecondes` (300 par défaut, 60 au minimum : relecture complète même sans
 changement de date).
 
 ## Garde-fou « écran Tactique » (0.3.0)
@@ -62,7 +62,7 @@ des tables statiques de l'interface (aucune requête au jeu).
 
 ## Cibles du mercato (0.4.0, réglage `LireCibles`)
 
-Joueurs d'autres clubs que le joueur suit, pour la page « Cibles du mercato » de Simloom. Sources (propriétés trouvées
+Joueurs d'autres clubs que le joueur suit, pour la page « Cibles du mercato » de FM Immersion. Sources (propriétés trouvées
 dans `decouverte.json`, remplaçables sans recompiler par la section `cibles` de `chemins.json`) :
 
 - `selection` : `GameCurrentManager/HumanPersonSearch{team=@team,Type=0}/PersonList` (joueurs de la sélection, Recrutement > Sélections). **Le jeu ne remplit cette liste que pendant que l'écran Sélections est affiché** : ailleurs elle revient vide, et le plugin garde alors la dernière liste lue (0.4.3). `HumanSelectedShortlist` ne donne que la fiche de la sélection (nom, nombre) ;
@@ -80,7 +80,7 @@ la forme de la réponse du jeu (pour corriger le chemin). Aucune lecture liée �
 
 À chaque instantané, le plugin écrit aussi `archivix-status.json` dans son dossier :
 `{"schema":"archivix-status/1","gameDate":"yyyy-MM-dd","club":"Nom"}`. Les valeurs viennent de l'instantané, sans lecture
-de plus. Simloom s'en sert pour savoir quelle partie est chargée et si le manager a un club.
+de plus. FM Immersion s'en sert pour savoir quelle partie est chargée et si le manager a un club.
 Sans équipe chargée depuis 45 s (manager sans club), le plugin lit seulement `game.CurrentGameDate`, une fois par
 minute au plus, et écrit le même fichier avec `"club": null`. La date du menu (1900-01-01) est ignorée.
 
@@ -104,11 +104,11 @@ minute au plus, et écrit le même fichier avec `"club": null`. La date du menu 
 
 ## Mises à jour
 
-1. **Données à lire** : modifier `config/chemins.json`. Simloom le redéploie avec le plugin ; le plugin le relit à chaque
+1. **Données à lire** : modifier `config/chemins.json`. FM Immersion le redéploie avec le plugin ; le plugin le relit à chaque
    instantané (pas de recompilation, pas de redémarrage du jeu).
 2. **Code du plugin** : le plugin se compile contre les DLL d'interop générées par BepInEx dans le dossier du jeu.
    Elles appartiennent à l'éditeur : elles ne sont **ni versionnées ni publiées**, et la CI ne peut pas compiler le plugin.
-   Il n'est donc **pas embarqué dans l'installeur Simloom** (construit par la CI, sans composant propriétaire,
+   Il n'est donc **pas embarqué dans l'installeur FM Immersion** (construit par la CI, sans composant propriétaire,
    condition de la signature SignPath). Il est publié à part :
 
    ```powershell
@@ -119,14 +119,14 @@ minute au plus, et écrit le même fichier avec `"club": null`. La date du menu 
    Le script compile en local, calcule les empreintes SHA-256 et crée la release `fm-bridge-vX.Y.Z`
    (`ArchivixBridge.dll`, `chemins.json`, `fm-bridge.json`) **sans la marquer « latest »** : ce statut reste à la
    release de l'appli, que `tauri-plugin-updater` lit.
-3. **Côté joueur** : carte « Plugin FM27 » dans une partie Football Manager. Simloom compare la version installée
+3. **Côté joueur** : carte « Plugin FM27 » dans une partie Football Manager. FM Immersion compare la version installée
    à la dernière release, télécharge, vérifie les empreintes, puis installe — seulement sur demande et jeu fermé
    (`src-tauri/src/fm_bridge.rs`).
 
 ## Prérequis côté joueur
 
 BepInEx 6 « bleeding edge » pour Unity IL2CPP win-x64 dézippé à côté de `fm.exe`, puis un premier lancement du jeu
-pour générer `BepInEx\interop`. Simloom n'installe pas BepInEx lui-même.
+pour générer `BepInEx\interop`. FM Immersion n'installe pas BepInEx lui-même.
 
 ## Compiler en local
 
@@ -143,6 +143,6 @@ Toutes les statistiques de match de la saison de chaque joueur (écran Centre de
 temps de jeu, victoires et points, xG, tirs, passes, centres, occasions, ballons perdus et récupérés, pressings,
 tacles, interceptions, duels aériens, distance, gardien, fautes et cartons) sont lues par les clés `stat_<Propriété>`
 de la section `joueur` de `config/chemins.json` (70 propriétés de `PersonReference` sans contexte, relevées dans
-`decouverte.json`), en profond (`{ PropertyValue, Count }`). Surtout des totaux : Simloom en déduit les valeurs par 90
+`decouverte.json`), en profond (`{ PropertyValue, Count }`). Surtout des totaux : FM Immersion en déduit les valeurs par 90
 et les pourcentages. Aucune recompilation ; aucune lecture liée à la tactique. Import : `modules/fm/src/stats.ts`,
 page Effectif > Centre de données.

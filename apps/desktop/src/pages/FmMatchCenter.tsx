@@ -13,7 +13,7 @@ import {
   type FmPlayer,
   type FmSnapshot,
   type GameSlot,
-} from '@simloom/module-fm';
+} from '@fm-immersion/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, Gauge, LINE_COLOR, Pitch } from './FmFoot';

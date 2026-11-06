@@ -1,4 +1,4 @@
-import { opponentReport, type FmSnapshot } from '@simloom/module-fm';
+import { opponentReport, type FmSnapshot } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Empty, Kpi, Panel } from './FmUi';

@@ -1,4 +1,4 @@
-import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, buildProject, contractDecisions, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type SquadAt } from '@simloom/module-fm';
+import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, buildProject, contractDecisions, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type SquadAt } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';

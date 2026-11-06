@@ -1,4 +1,4 @@
-import { EFF_COMPONENTS, EFF_SUBSCORES, effectiveness, type FmSnapshot, type Range, type SquadAt } from '@simloom/module-fm';
+import { EFF_COMPONENTS, EFF_SUBSCORES, effectiveness, type FmSnapshot, type Range, type SquadAt } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Empty, Kpi, Panel, Tag } from './FmUi';

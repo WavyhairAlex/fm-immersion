@@ -9,8 +9,8 @@ describe('parties', () => {
   });
 
   it('crée, liste, renomme et supprime une partie', async () => {
-    const created = await repo.create({ gameId: 'tf3', name: '  Europe 1850 ', gameVersion: '1.0' });
-    expect(created).toMatchObject({ gameId: 'tf3', name: 'Europe 1850', gameVersion: '1.0', extra: {} });
+    const created = await repo.create({ gameId: 'fm', name: '  Toulouse 2026 ', gameVersion: '1.0' });
+    expect(created).toMatchObject({ gameId: 'fm', name: 'Toulouse 2026', gameVersion: '1.0', extra: {} });
     expect(created.id).toMatch(/^[0-9a-f-]{36}$/);
 
     expect(await repo.list()).toHaveLength(1);
@@ -25,6 +25,6 @@ describe('parties', () => {
 
   it('refuse un jeu inconnu ou un nom vide', async () => {
     await expect(repo.create({ gameId: 'sims' as never, name: 'x' })).rejects.toThrow();
-    await expect(repo.create({ gameId: 'pz2', name: '   ' })).rejects.toThrow();
+    await expect(repo.create({ gameId: 'fm', name: '   ' })).rejects.toThrow();
   });
 });

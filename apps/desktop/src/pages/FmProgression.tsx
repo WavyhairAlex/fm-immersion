@@ -1,4 +1,4 @@
-import { progression, type SquadAt } from '@simloom/module-fm';
+import { progression, type SquadAt } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Level, Panel, PlayerLink, Pos, useFormat } from './FmUi';

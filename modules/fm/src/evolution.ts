@@ -6,7 +6,7 @@ import type { SquadAt } from './progress';
 import type { StyleRef, TacticEngine } from './tactic';
 
 /*
- * Plan d'évolution : ce que deviennent la tactique et l'effectif aux prochains mercatos si l'on suit Simloom.
+ * Plan d'évolution : ce que deviennent la tactique et l'effectif aux prochains mercatos si l'on suit FM Immersion.
  * À chaque fenêtre, l'effectif est vieilli (progression mesurée sur les instantanés, sinon courbe d'âge), les départs
  * conseillés sont faits (ventes, prêts, fins de contrat non prolongées), puis on recalcule :
  * - la tactique : celle de l'étape précédente est gardée tant qu'une autre ne gagne pas SWITCH_POINTS (une base,

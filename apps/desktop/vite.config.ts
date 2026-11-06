@@ -16,12 +16,8 @@ export default defineConfig({
     target: process.env.TAURI_ENV_PLATFORM === 'windows' ? 'chrome105' : 'safari13',
     sourcemap: !!process.env.TAURI_ENV_DEBUG,
     rollupOptions: {
-      // Trois pages : l'appli, et celles qu'elle ouvre dans un cadre : Zoologix (Planet Zoo 2)
-      // et le calculateur de lignes (Transport Fever 3).
       input: {
         main: resolve(__dirname, 'index.html'),
-        zoologix: resolve(__dirname, 'zoologix/index.html'),
-        tf3: resolve(__dirname, 'tf3/index.html'),
       },
     },
   },

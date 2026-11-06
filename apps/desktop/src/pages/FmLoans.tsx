@@ -1,4 +1,4 @@
-import { loans, type FmSnapshot } from '@simloom/module-fm';
+import { loans, type FmSnapshot } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Empty, Level, Panel, Pos, Tag, useFormat } from './FmUi';

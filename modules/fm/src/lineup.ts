@@ -145,7 +145,7 @@ export function matchRole(engine: TacticEngine, raw: string | null, pos: PosCode
   return best?.r ?? null;
 }
 
-// Coordonnées par défaut d'un poste sur le terrain (en %), quand le schéma du jeu n'est pas connu de Simloom.
+// Coordonnées par défaut d'un poste sur le terrain (en %), quand le schéma du jeu n'est pas connu de FM Immersion.
 const XY: Record<PosCode, [number, number]> = {
   GB: [50, 92], DD: [85, 72], DC: [50, 76], DG: [15, 72], DLD: [90, 56], DLG: [10, 56], MDF: [50, 58],
   MD: [85, 44], MC: [50, 46], MG: [15, 44], MOD: [85, 24], MOC: [50, 30], MOG: [15, 24], BT: [50, 12],

@@ -1,4 +1,4 @@
-import { POS_LABEL, type FmPlayer, type PosCode } from '@simloom/module-fm';
+import { POS_LABEL, type FmPlayer, type PosCode } from '@fm-immersion/module-fm';
 import { useContext, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, LINE_COLOR, Pitch, POS_XY } from './FmFoot';

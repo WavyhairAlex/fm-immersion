@@ -1,4 +1,4 @@
-import { contractsByYear, upcomingContracts, type FmPlayer } from '@simloom/module-fm';
+import { contractsByYear, upcomingContracts, type FmPlayer } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Empty, Level, Panel, Row, Tag, useFormat, PlayerLink } from './FmUi';

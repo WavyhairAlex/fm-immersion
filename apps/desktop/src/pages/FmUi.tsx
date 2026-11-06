@@ -1,4 +1,4 @@
-import { POS_LABEL, teamInstructionCards, teamInstructionOf, type CoachPrefs, type FmPlayer, type ProjectCompat } from '@simloom/module-fm';
+import { POS_LABEL, teamInstructionCards, teamInstructionOf, type CoachPrefs, type FmPlayer, type ProjectCompat } from '@fm-immersion/module-fm';
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
@@ -157,7 +157,7 @@ export function Fit({ value }: { value: number | null | undefined }) {
 }
 
 /** Choix du coach (style aimé, schéma, niveau visé), partagés entre « Mon projet » et « Cibles », par partie. */
-const COACH_KEY = 'simloom.fm.coach';
+const COACH_KEY = 'fmi.coach';
 export function useCoach() {
   const scope = useFmSaveScope();
   const [coach, setCoach] = useState<CoachPrefs>(() => readScoped<CoachPrefs>(COACH_KEY, scope, {}));

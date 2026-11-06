@@ -1,4 +1,4 @@
-import type { DashboardAlert, DashboardCard } from '@simloom/shared';
+import type { DashboardAlert, DashboardCard } from '@fm-immersion/shared';
 import type { FmPlayer } from './player';
 
 /** Mois entiers entre deux dates ISO (date du jeu → fin de contrat). */

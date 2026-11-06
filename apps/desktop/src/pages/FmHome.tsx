@@ -10,7 +10,7 @@ import {
   type FmSnapshot,
   type GameSlot,
   type SquadAt,
-} from '@simloom/module-fm';
+} from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FmDecisions } from './FmDecisions';

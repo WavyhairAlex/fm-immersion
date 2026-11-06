@@ -1,4 +1,4 @@
-import { saves } from '@simloom/db';
+import { saves } from '@fm-immersion/db';
 import { index, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import type { FmSnapshot } from './snapshot';
 
@@ -47,7 +47,7 @@ export const fmTargets = sqliteTable(
     firstSeen: text('first_seen').notNull(),
     lastSeen: text('last_seen').notNull(),
     inList: integer('in_list', { mode: 'boolean' }).notNull().default(true),
-    /** Écartée à la main dans Simloom (masquée, le jeu n'est pas modifié). */
+    /** Écartée à la main dans FM Immersion (masquée, le jeu n'est pas modifié). */
     dismissed: integer('dismissed', { mode: 'boolean' }).notNull().default(false),
     data: text('data', { mode: 'json' }).notNull(),
     updatedAt: text('updated_at')

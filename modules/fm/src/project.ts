@@ -258,7 +258,7 @@ export interface TacticPick {
  * Dans FM27, l'efficacité tactique = 0,50 × compréhension + 0,15 × niveau aux rôles (+ adhésion, infos du match) :
  * la compréhension pèse plus de trois fois le niveau, et elle repart de bas sur une nouvelle tactique. Une
  * tactique un peu mieux adaptée aux joueurs ne compense donc pas ce qu'elle fait perdre pendant l'apprentissage.
- * Valeur provisoire (choix de Simloom, pas du jeu), à mesurer sur l'écran Efficacité.
+ * Valeur provisoire (choix de FM Immersion, pas du jeu), à mesurer sur l'écran Efficacité.
  */
 export const SWITCH_POINTS = 1;
 
@@ -299,7 +299,7 @@ export const TACTIC_TIE = 0.2;
 /**
  * Coût de la complexité (note d'équipe sur 20) par point de capacité tactique qui manque à l'effectif pour le style.
  * Sports Interactive : une tactique trop complexe pour les joueurs se comprend mal et plafonne, surtout dans les
- * divisions inférieures ; la compréhension pèse la moitié de l'efficacité. Valeur provisoire (choix de Simloom).
+ * divisions inférieures ; la compréhension pèse la moitié de l'efficacité. Valeur provisoire (choix de FM Immersion).
  */
 export const COMPLEXITY_POINTS = 0.2;
 /** Le coût est plafonné : un style trop dur n'est pas interdit, il doit juste valoir nettement mieux. */

@@ -1,4 +1,4 @@
-import { matchStatsFull, MIN_STAT_MINUTES, RAW_GROUPS, STAT_METRICS, statsBoard, statsTrends, type FmPlayer, type FmSnapshot, type PlayerStatReport, type StatKey, type PlayerTrend, type StatMark, type StatTrend } from '@simloom/module-fm';
+import { matchStatsFull, MIN_STAT_MINUTES, RAW_GROUPS, STAT_METRICS, statsBoard, statsTrends, type FmPlayer, type FmSnapshot, type PlayerStatReport, type StatKey, type PlayerTrend, type StatMark, type StatTrend } from '@fm-immersion/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Chips, Empty, Kpi, Panel, Pos, Tag, More, PlayerLink } from './FmUi';

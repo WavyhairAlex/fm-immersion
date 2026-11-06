@@ -1,4 +1,4 @@
-import { GAME_IDS, GAMES, type GameId } from '@simloom/shared';
+import { GAME_IDS, GAMES, type GameId } from '@fm-immersion/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -9,8 +9,6 @@ import { useUi } from '../lib/ui-store';
 const savesKey = ['saves'] as const;
 
 const ILLUSTRATION: Record<GameId, string> = {
-  tf3: '/brand/transport-sm.webp',
-  pz2: '/brand/zoo-sm.webp',
   fm: '/brand/football-sm.webp',
 };
 
@@ -61,7 +59,7 @@ export function Home() {
                   {t('home.updated', { date: dateFmt.format(new Date(s.updatedAt)) })}
                 </p>
                 <div className="mt-4 flex items-center gap-4">
-                  {(s.gameId === 'fm' || s.gameId === 'pz2' || s.gameId === 'tf3') && (
+                  {s.gameId === 'fm' && (
                     <Link to={`/${s.gameId}/${s.id}`} className="btn-secondary px-4 py-1.5 text-sm">
                       {t('home.open')}
                     </Link>
@@ -108,7 +106,7 @@ function CreateSaveForm({ onDone }: { onDone: () => void }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const available = GAME_IDS.filter((id) => GAMES[id].status === 'available');
-  const [gameId, setGameId] = useState<GameId>(available[0] ?? 'tf3');
+  const [gameId, setGameId] = useState<GameId>(available[0] ?? 'fm');
   const [name, setName] = useState('');
   const [gameVersion, setGameVersion] = useState('');
 

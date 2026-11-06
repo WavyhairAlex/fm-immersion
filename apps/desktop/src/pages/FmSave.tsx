@@ -14,7 +14,7 @@ import {
   type FmSnapshot,
   type Line,
   type SquadAt,
-} from '@simloom/module-fm';
+} from '@fm-immersion/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -89,7 +89,7 @@ type View = (typeof SECTIONS)[number]['views'][number];
 const isView = (v: string): v is View => SECTIONS.some((s) => (s.views as readonly string[]).includes(v));
 /** Onglet qui contient un écran (lui-même, ou l'onglet où il a été regroupé). */
 const pageOf = (v: string): View => (isView(v) ? v : ((Object.keys(PARTS).find((k) => PARTS[k]!.includes(v)) as View | undefined) ?? 'home'));
-const VIEW_KEY = 'simloom.fm.view';
+const VIEW_KEY = 'fmi.view';
 /** Nom d'un onglet : son nom propre s'il regroupe plusieurs écrans, sinon celui de l'écran. */
 const pageLabel = (t: (k: string, o?: Record<string, unknown>) => string, v: string) => t(`fm.pages.${v}`, { defaultValue: t(`fm.views.${v}`) });
 /** Dernier écran ouvert : un onglet, ou une partie d'onglet regroupé (rouverte telle quelle). */
@@ -708,7 +708,7 @@ function SquadViews({ players, folder }: { players: FmPlayer[]; folder: string }
   const { t } = useTranslation();
   const [mode, setMode] = useState<'pitch' | 'table'>(() => {
     try {
-      return localStorage.getItem('simloom.fm.squadView') === 'table' ? 'table' : 'pitch';
+      return localStorage.getItem('fmi.squadView') === 'table' ? 'table' : 'pitch';
     } catch {
       return 'pitch';
     }
@@ -716,7 +716,7 @@ function SquadViews({ players, folder }: { players: FmPlayer[]; folder: string }
   const choose = (m: 'pitch' | 'table') => {
     setMode(m);
     try {
-      localStorage.setItem('simloom.fm.squadView', m);
+      localStorage.setItem('fmi.squadView', m);
     } catch {
       /* stockage indisponible : le choix vaut pour cette visite */
     }

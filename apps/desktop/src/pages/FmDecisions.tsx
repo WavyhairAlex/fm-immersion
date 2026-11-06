@@ -1,4 +1,4 @@
-import { POS_LABEL, decisions, styleOfGameTactic, type Basis, type Decision, type FmPlayer, type FmSnapshot, type SquadAt } from '@simloom/module-fm';
+import { POS_LABEL, decisions, styleOfGameTactic, type Basis, type Decision, type FmPlayer, type FmSnapshot, type SquadAt } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticChoice } from './FmTactic';

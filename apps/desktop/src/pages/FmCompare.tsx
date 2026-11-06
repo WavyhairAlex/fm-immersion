@@ -1,4 +1,4 @@
-import { ATTR_GROUPS, attrKey, attrOf, bestOf, POS_LABEL, projectLevel, storedTargets, type FmPlayer, type FmSnapshot, type SquadAt } from '@simloom/module-fm';
+import { ATTR_GROUPS, attrKey, attrOf, bestOf, POS_LABEL, projectLevel, storedTargets, type FmPlayer, type FmSnapshot, type SquadAt } from '@fm-immersion/module-fm';
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -9,7 +9,7 @@ import { Level, Panel, Tag, useFormat } from './FmUi';
 
 type Person = FmPlayer & { target?: boolean; club?: string | null };
 
-const CMP_KEY = 'simloom.fm.compare';
+const CMP_KEY = 'fmi.compare';
 /** Joueurs du club et cibles du mercato gardées dans la base (sauf celles écartées). */
 const pool = (players: FmPlayer[], targets: FmPlayer[]): Person[] =>
   [...players, ...targets.map((t) => ({ ...t, target: true }))].filter((p) => Object.keys(p.attributes).length);

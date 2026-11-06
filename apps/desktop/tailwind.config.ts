@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 /**
- * Palette Simloom (voir CLAUDE.md, « Identité »).
+ * Palette FM Immersion (voir CLAUDE.md, « Identité »).
  * Pas d'orange dans l'interface : l'ambre est réservé aux illustrations et aux pastilles d'alerte.
  */
 export default {

@@ -1,4 +1,4 @@
-import { analyseSquad, POS_LABEL, type FmPlayer, type PosCode, type Todo } from '@simloom/module-fm';
+import { analyseSquad, POS_LABEL, type FmPlayer, type PosCode, type Todo } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pitch, POS_XY } from './FmFoot';

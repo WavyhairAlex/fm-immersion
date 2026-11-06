@@ -1,15 +1,15 @@
 //! Installation et mise à jour du plugin FM27 (Archivix Bridge) depuis GitHub Releases.
 //!
 //! Le plugin se compile contre les DLL d'interop du jeu (propriété de l'éditeur) : il n'est donc pas
-//! embarqué dans l'installeur Simloom, construit par la CI. Il est publié à part, dans une release
+//! embarqué dans l'installeur FM Immersion, construit par la CI. Il est publié à part, dans une release
 //! « fm-bridge-vX.Y.Z » du dépôt, avec un manifeste `fm-bridge.json` qui donne l'empreinte SHA-256
-//! de chaque fichier. Simloom ne télécharge et n'installe que sur demande du joueur, quand FM27 est fermé.
+//! de chaque fichier. FM Immersion ne télécharge et n'installe que sur demande du joueur, quand FM27 est fermé.
 
 use serde::{Deserialize, Serialize, Serializer};
 use sha2::{Digest, Sha256};
 use std::path::{Path, PathBuf};
 
-const REPO: &str = "amnesix-nt/simloom";
+const REPO: &str = "amnesix-nt/fm-immersion";
 const TAG_PREFIX: &str = "fm-bridge-v";
 const MANIFEST: &str = "fm-bridge.json";
 const DLL: &str = "ArchivixBridge.dll";
@@ -69,7 +69,7 @@ fn plugin_dir(game: &Path) -> PathBuf {
     game.join("BepInEx").join("plugins").join("Archivix")
 }
 
-/// Version installée : écrite par Simloom à côté de la DLL (`version.json`).
+/// Version installée : écrite par FM Immersion à côté de la DLL (`version.json`).
 fn installed_version(game: &Path) -> Option<String> {
     let text = std::fs::read_to_string(plugin_dir(game).join("version.json")).ok()?;
     let v: serde_json::Value = serde_json::from_str(&text).ok()?;
@@ -163,7 +163,7 @@ pub fn merged_config_text(existing: Option<&str>, data_dir: &str) -> String {
 
 fn get(url: &str) -> Result<Vec<u8>, BridgeError> {
     let resp = ureq::get(url)
-        .set("User-Agent", "Simloom")
+        .set("User-Agent", "FM Immersion")
         .set("Accept", "application/octet-stream, application/json")
         .call()
         .map_err(|e| BridgeError::Network(e.to_string()))?;

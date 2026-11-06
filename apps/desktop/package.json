@@ -1,6 +1,6 @@
 {
-  "name": "@simloom/desktop",
-  "version": "0.1.105",
+  "name": "@fm-immersion/desktop",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -27,11 +27,9 @@
     "@fontsource/ibm-plex-mono": "^5",
     "@fontsource/kalam": "^5",
     "@fontsource/nunito": "^5",
-    "@simloom/db": "workspace:*",
-    "@simloom/module-fm": "workspace:*",
-    "@simloom/module-pz2": "workspace:*",
-    "@simloom/module-tf3": "workspace:*",
-    "@simloom/shared": "workspace:*",
+    "@fm-immersion/db": "workspace:*",
+    "@fm-immersion/module-fm": "workspace:*",
+    "@fm-immersion/shared": "workspace:*",
     "@tanstack/react-query": "^5.62.8",
     "@tauri-apps/api": "^2.2.0",
     "@tauri-apps/plugin-process": "^2.2.0",

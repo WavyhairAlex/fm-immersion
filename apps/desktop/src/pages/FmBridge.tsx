@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 type BridgeStatus = { gameFound: boolean; bepinex: boolean; running: boolean; installedVersion: string | null };
 
-const GAME_DIR_KEY = 'simloom.fm.gameDir';
+const GAME_DIR_KEY = 'fmi.gameDir';
 const read = (k: string) => {
   try {
     return localStorage.getItem(k);

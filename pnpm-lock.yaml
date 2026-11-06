@@ -17,6 +17,15 @@ importers:
 
   apps/desktop:
     dependencies:
+      '@fm-immersion/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@fm-immersion/module-fm':
+        specifier: workspace:*
+        version: link:../../modules/fm
+      '@fm-immersion/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@fontsource-variable/fraunces':
         specifier: ^5.1.1
         version: 5.3.0
@@ -59,21 +68,6 @@ importers:
       '@fontsource/nunito':
         specifier: ^5
         version: 5.3.0
-      '@simloom/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@simloom/module-fm':
-        specifier: workspace:*
-        version: link:../../modules/fm
-      '@simloom/module-pz2':
-        specifier: workspace:*
-        version: link:../../modules/pz2
-      '@simloom/module-tf3':
-        specifier: workspace:*
-        version: link:../../modules/tf3
-      '@simloom/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
       '@tanstack/react-query':
         specifier: ^5.62.8
         version: 5.104.2(react@18.3.1)
@@ -147,10 +141,10 @@ importers:
 
   modules/fm:
     dependencies:
-      '@simloom/db':
+      '@fm-immersion/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@simloom/shared':
+      '@fm-immersion/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       drizzle-orm:
@@ -166,38 +160,6 @@ importers:
       vitest:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.20.5)
-
-  modules/pz2:
-    dependencies:
-      '@simloom/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@simloom/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
-      drizzle-orm:
-        specifier: ^0.38.3
-        version: 0.38.4(@types/react@18.3.31)(postgres@3.4.9)(react@18.3.1)
-    devDependencies:
-      typescript:
-        specifier: ^5.7.2
-        version: 5.9.3
-
-  modules/tf3:
-    dependencies:
-      '@simloom/db':
-        specifier: workspace:*
-        version: link:../../packages/db
-      '@simloom/shared':
-        specifier: workspace:*
-        version: link:../../packages/shared
-      drizzle-orm:
-        specifier: ^0.38.3
-        version: 0.38.4(@types/react@18.3.31)(postgres@3.4.9)(react@18.3.1)
-    devDependencies:
-      typescript:
-        specifier: ^5.7.2
-        version: 5.9.3
 
   packages/db:
     dependencies:

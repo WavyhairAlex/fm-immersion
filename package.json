@@ -1,7 +1,7 @@
 {
-  "name": "simloom",
+  "name": "fm-immersion",
   "private": true,
-  "description": "Simloom — le compagnon de bureau de tes jeux de gestion. Every game, one thread.",
+  "description": "FM Immersion — le compagnon de bureau de tes jeux de gestion. Every game, one thread.",
   "packageManager": "pnpm@9.15.0",
   "engines": {
     "node": ">=22"
@@ -11,9 +11,9 @@
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "db:generate": "pnpm --filter @simloom/db generate",
-    "app": "pnpm --filter @simloom/desktop dev",
-    "app:bundle": "pnpm --filter @simloom/desktop bundle"
+    "db:generate": "pnpm --filter @fm-immersion/db generate",
+    "app": "pnpm --filter @fm-immersion/desktop dev",
+    "app:bundle": "pnpm --filter @fm-immersion/desktop bundle"
   },
   "devDependencies": {
     "turbo": "^2.3.3",

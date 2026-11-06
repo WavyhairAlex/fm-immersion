@@ -3,8 +3,6 @@ import { Header } from './components/Header';
 import { UpdateGate } from './components/UpdateGate';
 import { FmSave } from './pages/FmSave';
 import { Home } from './pages/Home';
-import { Pz2Save } from './pages/Pz2Save';
-import { Tf3Save } from './pages/Tf3Save';
 
 export function App() {
   return (
@@ -15,8 +13,6 @@ export function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/fm/:saveId" element={<FmSave />} />
-            <Route path="/pz2/:saveId" element={<Pz2Save />} />
-            <Route path="/tf3/:saveId" element={<Tf3Save />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

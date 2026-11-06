@@ -8,8 +8,8 @@ export function Header() {
   return (
     <header className="flex w-full items-center justify-between px-6 py-4 xl:px-10">
       <div className="flex items-end gap-2">
-        <Link to="/" aria-label="Simloom">
-          <img src="/brand/logo.svg" alt="Simloom" className="h-9 w-auto" />
+        <Link to="/" aria-label="FM Immersion">
+          <span className="font-display text-2xl font-semibold text-canard">FM Immersion</span>
         </Link>
         <span className="pb-0.5 text-xs font-bold text-canard/60">{t('nav.version', { version: __APP_VERSION__ })}</span>
       </div>

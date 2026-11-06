@@ -9,7 +9,7 @@ import {
   type Project,
   type Target,
   type TargetVerdict,
-} from "@simloom/module-fm";
+} from "@fm-immersion/module-fm";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";
 import { useMemo, useState } from "react";

@@ -1,4 +1,4 @@
-import { summarize, type FmPlayer, type FmSnapshot } from '@simloom/module-fm';
+import { summarize, type FmPlayer, type FmSnapshot } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 

@@ -1,17 +1,16 @@
-# Simloom — contexte pour Claude Code
+# FM Immersion — contexte pour Claude Code
 
-Simloom est une **application de bureau Windows gratuite et open source (MIT)** : le tableau de bord personnel
-des jeux de gestion d'un joueur. On remplace les « 36 feuilles Excel » qu'on tient à côté de ses parties par
-un cockpit unique, avec un module par jeu. Projet loisir, publié à titre personnel, financé par dons (Buy Me a Coffee).
-
-Le cadrage complet est dans le document « Simloom — Cadrage » (Claude Docs). Ce fichier en reprend l'essentiel pour le code.
+FM Immersion est une **application de bureau Windows gratuite et open source (MIT)** dédiée à Football Manager 27 :
+visages photoréalistes, assistant FM Coach, plugin en jeu, et plus tard gazette, live Discord et monde partagé.
+Projet loisir, publié à titre personnel. Il est né le 06/11/2026 de la partie FM de **Simloom** (dépôt Archivix),
+extraite avec son historique ; Simloom garde Planet Zoo 2 et Transport Fever 3.
 
 ## Choix structurants
 
 - **Appli de bureau, pas de site web** : aucun serveur à payer ni à maintenir. (Une première version web avec
   comptes et API a été abandonnée en octobre 2026 pour cette raison.)
 - **Tout est local** : pas de compte, pas de connexion, aucune donnée envoyée. Les parties sont dans une base
-  SQLite sur le PC (`%APPDATA%\app.simloom.desktop\simloom.db`). Les seules requêtes réseau vont vers GitHub
+  SQLite sur le PC (`%APPDATA%\app.fmimmersion.desktop\fm-immersion.db`). Les seules requêtes réseau vont vers GitHub
   Releases : la recherche de mise à jour au démarrage, et, à la demande du joueur, le téléchargement du plugin FM27
   (`modules/fm/bridge`, vérifié par SHA-256, voir son README).
 - **Mises à jour automatiques** au lancement (`UpdateGate`) via `tauri-plugin-updater`. Les fichiers de mise à
@@ -22,19 +21,21 @@ Le cadrage complet est dans le document « Simloom — Cadrage » (Claude Docs).
   propriétaire, réputation vérifiable avant candidature, section « Code signing policy » et déclaration de
   confidentialité (dans le README). Tant que ce n'est pas accepté, l'installeur n'est pas signé.
 - **Lecture des sauvegardes** des jeux : côté Rust, en local. Jamais d'envoi des fichiers.
-- **FM27, lecture directe en mémoire** (`src-tauri/src/fm_memory.rs`) : Simloom ouvre `fm.exe` en lecture seule
+- **FM27, lecture directe en mémoire** (`src-tauri/src/fm_memory.rs`) : FM Immersion ouvre `fm.exe` en lecture seule
   (`PROCESS_VM_READ`) et lit la base native de `game_plugin.dll`, seulement sur action du joueur (bouton, ou option « Lire le CA/PA » qu'il coche : une lecture de l'effectif par date de jeu). Jamais d'écriture
   ni d'injection. Adresses issues de notre propre analyse hors jeu (rien repris de FM27 Live Editor, dont la licence
   interdit l'analyse) ; points d'entrée retrouvés par motifs dans le fichier du module.
 - Windows uniquement pour l'instant (Tauri permettra macOS plus tard).
+- Mention de non-affiliation partout : « projet indépendant, sans lien avec Sports Interactive ni SEGA ».
 
 ## Feuille de route
 
-1. Socle : appli Tauri, base locale, parties, mise à jour automatique, release Windows. ← on est ici
-2. Modules **Transport Fever 3** (`modules/tf3`) et **Planet Zoo 2** (`modules/pz2`). Planet Zoo 2 = **Zoologix**,
-   repris tel quel depuis son artifact (v448, 01/11/2026), voir « Zoologix » plus bas.
-3. Module **Football Manager** (`fm`) en novembre/décembre (sortie du jeu le 10 novembre).
-4. Lecture des fichiers de sauvegarde (Rust), puis candidature SignPath une fois des utilisateurs réels.
+1. Socle repris de Simloom : appli Tauri, base locale, FM Coach, plugin, mise à jour automatique. ← on est ici
+2. Module **Visages photoréalistes** : installation en un clic du pack (bundle + correction du CRC dans le catalogue
+   Addressables), désinstallation, détection d'une mise à jour Steam (remplace les .bat du dépôt
+   FM27-Photorealistic-Faces).
+3. **Gazette** de la semaine, puis **Live Discord** (solo : webhook ; monde partagé : bot sur le serveur).
+4. **Monde partagé** (multijoueur asynchrone, journal sur le serveur).
 
 ## Architecture
 
@@ -48,8 +49,6 @@ Monorepo pnpm + Turborepo.
 | `packages/db` | Schéma Drizzle (dialecte SQLite) du socle ; les modules ajoutent le leur |
 | `packages/shared` | Schémas zod, types partagés, liste des jeux, contrat des modules |
 | `modules/<jeu>` | Un module par jeu : manifeste, `src/schema.ts` (tables préfixées `<jeu>_`), carte de tableau de bord |
-| `apps/desktop/zoologix`, `apps/desktop/public/zoologix` | Zoologix (Planet Zoo 2) : page ouverte dans un cadre par `/pz2/:saveId` |
-| `apps/desktop/tf3`, `apps/desktop/public/tf3` | Calculateur de lignes (Transport Fever 3) : page ouverte dans un cadre par `/tf3/:saveId` |
 | `brand/source` | Sources de l'identité (PNG mascottes, SVG logo) — ne pas embarquer directement |
 
 ### Accès aux données
@@ -71,7 +70,7 @@ Défini dans `packages/shared/src/module.ts` (`GameModuleManifest`, `GameModule`
 
 ## Publier une version
 Voir l'en-tête de `.github/workflows/release.yml` : version dans `apps/desktop/package.json` **et**
-`src-tauri/Cargo.toml`, fusion sur main : la CI crée le tag et la release dans amnesix-nt/simloom,
+`src-tauri/Cargo.toml`, fusion sur main : la CI crée le tag et la release dans ce dépôt,
 la publie et la marque « Latest » une fois latest.json envoyé. Plus de publication manuelle.
 
 ## Identité visuelle — règles strictes
@@ -94,34 +93,17 @@ la publie et la marque « Latest » une fois latest.json envoyé. Plus de public
 - Interface : **français et anglais dès le départ**. Aucune chaîne en dur dans les composants :
   tout passe par `apps/desktop/src/i18n/{fr,en}.json` (mêmes clés dans les deux).
 - Commentaires et messages de commit en français.
-- Validation des entrées avec les schémas zod de `@simloom/shared`.
+- Validation des entrées avec les schémas zod de `@fm-immersion/shared`.
 - Imports internes sans extension (`./games`, pas `./games.js`).
 - Pas de données de jeu propriétaires dans le dépôt, pas de dépendance propriétaire (condition SignPath).
 - CSP stricte dans `tauri.conf.json` : aucun contenu distant dans la webview. Seule souplesse :
-  `style-src-attr 'unsafe-inline'` (attributs `style=""` de Zoologix) ; aucun script en ligne.
+  `style-src-attr 'unsafe-inline'` ; aucun script en ligne.
 
-## Zoologix (Planet Zoo 2)
-- Repris tel quel depuis l'artifact claude.ai (choix du 01/11/2026) : `public/zoologix/app.js` est le script
-  d'origine, `public/zoologix/zoologix.css` sa feuille de style. Exceptions assumées aux conventions : interface en
-  français seulement, palette et polices propres à Zoologix. Un alignement sur Simloom viendra ensuite.
-- `src/zoologix/entry.ts` remplace les services claude.ai (`window.claude.use("db" | "assets" | "downloads")`)
-  par la base locale (tables `pz2_docs`, `pz2_blobs`) via `src/lib/zoologix-host.ts`, préparé par la page parente.
-- Adaptations du script (en tête et en fin de `app.js`, marquées « Simloom ») : gestionnaires `onclick`/`onerror`/
-  `ontoggle` remplacés par `data-zx`/`data-ze`/`data-zt`, `<style>` en ligne doublés en feuilles construites,
-  polices locales pour les exports. Aucun portrait d'espèce du jeu n'est embarqué : icônes du joueur
-  (`public/zoologix/ico`, liste dans `src/zoologix/seed-icones.json`) ou pastille à initiales.
-- Données d'un ancien Zoologix : bouton Sauvegarder dans l'artifact, puis Restaurer dans l'appli.
-
-## Calculateur de lignes (Transport Fever 3)
-- Repris tel quel depuis l'artifact claude.ai « Calculateur de lignes TF3 » (choix du 03/11/2026), même schéma que
-  Zoologix : `public/tf3/app.js` (script d'origine, adaptations marquées « Simloom »), `public/tf3/tf3.css`,
-  `src/tf3/entry.ts` remplace `window.claude.use("db" | "user" | "assets")` par les tables `tf3_docs`/`tf3_blobs`
-  via `src/lib/tf3-host.ts`. Exceptions assumées : interface en français seulement, palette et polices (Barlow) propres.
-- Images des marchandises et industries du jeu et saves d'exemple retirées (aucun visuel ni donnée de partie embarqués).
-- `entry.json` (résumé de save produit par `simloom_save.py` du joueur) est lu par Rust dans `Documents\Simloom`
-  (`tf3_entry_status`, `tf3_entry_read`) : plus de serveur local 127.0.0.1:8765, interdit par la CSP. Sinon, bouton
-  « Choisir entry.json ». Le même bouton accepte un fichier `simloom-tf3/1` (état + save) pour reprendre une partie
-  de l'artifact.
+## Héritage de Simloom
+- Les migrations SQL publiées par Simloom sont gardées telles quelles (elles créent aussi des tables `pz2_`/`tf3_`
+  inutilisées) : ne pas les modifier, ajouter les suivantes après.
+- Le fichier local `simloom-roles.json` (dossier du plugin) garde son nom pour rester compatible.
+- L'identité visuelle (palette, polices, mascotte) vient encore de Simloom ; une identité FM Immersion est à faire.
 
 ## Commandes
 ```bash

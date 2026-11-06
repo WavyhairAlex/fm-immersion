@@ -14,14 +14,14 @@ namespace Archivix;
 
 // Pont en lecture seule entre FM27 et le compagnon Archivix.
 // Serveur local facultatif (réglage ServeurLocal, coupé par défaut depuis 0.4.5) : GET / (archivix.html à côté de la DLL),
-// GET /api/snapshot, GET /api/discover?q=, sondes /api/probe… Simloom ne s'en sert pas : il lit les fichiers JSON.
+// GET /api/snapshot, GET /api/discover?q=, sondes /api/probe… FM Immersion ne s'en sert pas : il lit les fichiers JSON.
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
     public const string Version = "0.4.6";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
-    // que Simloom renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
+    // que FM Immersion renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
     internal static string DataDir = null!;
     internal static bool ReadTactic = true, ReadEffectiveness, ReadLineup, ReadExtended, ReadTargets, WriteDiscovery = true, LocalServer;
     bool _discovered;
@@ -58,9 +58,9 @@ public class Plugin : BasePlugin
         RereadSeconds = Math.Max(60, Config.Bind("Archivix", "RelectureSecondes", 300,
             "Relecture complète au plus tard toutes les N secondes même sans changement de date (60 au minimum).").Value);
         // 0.4.5 (audit du 03/11/2026) : serveur local coupé par défaut. Ouvert, n'importe quelle page web du navigateur
-        // pouvait l'appeler et déclencher des lectures dans le jeu (/api/probe, /api/squad). Simloom ne s'en sert pas.
+        // pouvait l'appeler et déclencher des lectures dans le jeu (/api/probe, /api/squad). FM Immersion ne s'en sert pas.
         LocalServer = Config.Bind("Archivix", "ServeurLocal", false,
-            "Ouvrir le serveur local http://localhost:8727 (ancienne page archivix.html et sondes de découverte). Inutile pour Simloom ; à n'activer que pour du diagnostic.").Value;
+            "Ouvrir le serveur local http://localhost:8727 (ancienne page archivix.html et sondes de découverte). Inutile pour FM Immersion ; à n'activer que pour du diagnostic.").Value;
         AddComponent<MainThread>();
         new Thread(RefreshLoop) { IsBackground = true, Name = "ArchivixRefresh" }.Start();
         if (LocalServer) StartServer();
@@ -155,7 +155,7 @@ public class Plugin : BasePlugin
         }
     }
 
-    // État courant pour Simloom (0.4.2) : date de jeu et club du manager (null = sans club). Aucune lecture en plus :
+    // État courant pour FM Immersion (0.4.2) : date de jeu et club du manager (null = sans club). Aucune lecture en plus :
     // reprend les valeurs de l'instantané. Format : {"schema":"archivix-status/1","gameDate":"yyyy-MM-dd","club":"Nom"|null}
     internal static void WriteStatus(string gameDate, string? club)
     {

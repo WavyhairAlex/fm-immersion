@@ -1,4 +1,4 @@
-import { POS_LABEL, lineOf, type FmPlayer, type Line, type PosCode } from '@simloom/module-fm';
+import { POS_LABEL, lineOf, type FmPlayer, type Line, type PosCode } from '@fm-immersion/module-fm';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
  * colorés comme sur la fiche du jeu, carte des postes et profil en radar.
  */
 
-/** Couleur de chaque ligne (gardien, défense, milieu, attaque), dans la palette Simloom (pas d'orange). */
+/** Couleur de chaque ligne (gardien, défense, milieu, attaque), dans la palette FM Immersion (pas d'orange). */
 export const LINE_COLOR: Record<Line, { bg: string; text: string; ring: string; fill: string }> = {
   GB: { bg: 'bg-brun', text: 'text-white', ring: 'ring-brun', fill: '#8B5E3C' },
   DEF: {
