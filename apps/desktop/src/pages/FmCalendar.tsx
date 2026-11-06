@@ -1,7 +1,7 @@
 import { rotation, upcomingFixtures, type FmPlayer, type FmSnapshot } from '@simloom/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Empty, Level, Panel, Pos, Row, Tag, useFormat } from './FmUi';
+import { Empty, Level, Panel, Pos, Row, Tag, useFormat, PlayerLink } from './FmUi';
 
 /** Calendrier et rotation : prochains matchs rapprochés, joueurs à faire souffler ou à relancer. */
 export function FmCalendar({ snap, players }: { snap: FmSnapshot; players: FmPlayer[] }) {
@@ -37,7 +37,7 @@ export function FmCalendar({ snap, players }: { snap: FmSnapshot; players: FmPla
           tired.map((p) => (
             <Row key={p.id}>
               <span className="flex items-center gap-2">
-                <b>{p.name}</b> <Pos player={p} />
+                <PlayerLink player={p} /> <Pos player={p} />
               </span>
               <Tag tone={p.condition! < 80 ? 'bad' : 'warn'}>{pct(p.condition!)}</Tag>
             </Row>
@@ -50,7 +50,7 @@ export function FmCalendar({ snap, players }: { snap: FmSnapshot; players: FmPla
           rusty.map((p) => (
             <Row key={p.id}>
               <span className="flex items-center gap-2">
-                <b>{p.name}</b> <Pos player={p} /> <Level value={p.level} />
+                <PlayerLink player={p} /> <Pos player={p} /> <Level value={p.level} />
               </span>
               <span className="flex items-center gap-1 text-xs text-brun">
                 {t('fm.cal.sharpness')} <Tag tone="warn">{pct(p.sharpness!)}</Tag>

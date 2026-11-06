@@ -478,7 +478,7 @@ export function FmSave() {
               </span>
             )}
             {freeSince && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-0.5 text-sm font-bold text-canard ring-1 ring-canard/15">
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-white px-1.5 py-0.5 text-sm font-bold text-canard ring-1 ring-canard/15">
                 <span className="inline-block h-2 w-2 rounded-full bg-ambre" aria-hidden />
                 {t('fm.saveFile.free', {
                   date: dateFmt.format(new Date(freeSince)),
@@ -608,7 +608,7 @@ export function FmSave() {
                           role="tab"
                           aria-selected={s === section}
                           onClick={() => go(s.views[0])}
-                          className={`rounded-full px-4 py-1.5 font-bold ${s === section ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
+                          className={`chip ${s === section ? 'chip-on' : ''}`}
                         >
                           {t(`fm.sections.${s.id}`)}
                         </button>
@@ -655,7 +655,7 @@ function PageParts({ page, current, go, render }: { page: string; current: strin
   return (
     <>
       {parts.length > 1 && (
-        <div className="mb-5 flex flex-wrap gap-1 border-b border-canard/10" role="tablist" aria-label={t('fm.onThisPage')}>
+        <div className="sticky top-0 z-30 -mx-1 mb-5 flex flex-wrap gap-1 border-b border-canard/10 bg-creme px-1 pt-2" role="tablist" aria-label={t('fm.onThisPage')}>
           {parts.map((v) => (
             <button
               key={v}
@@ -731,7 +731,7 @@ function SquadViews({ players, folder }: { players: FmPlayer[]; folder: string }
             role="tab"
             aria-selected={mode === k}
             onClick={() => choose(k)}
-            className={`rounded-full px-3 py-1.5 text-sm font-bold ${mode === k ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
+            className={`chip ${mode === k ? 'chip-on' : ''}`}
           >
             {t(`fm.squadPitch.${k}`)}
           </button>
@@ -811,7 +811,7 @@ function SquadTable({ players, folder }: { players: FmPlayer[]; folder: string }
               key={l ?? 'all'}
               type="button"
               onClick={() => setLine(l)}
-              className={`rounded-full px-3 py-1 text-sm font-bold ${line === l ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
+              className={`chip ${line === l ? 'chip-on' : ''}`}
             >
               {t(`fm.line.${l ?? 'all'}`)} · {l ? players.filter((p) => p.line === l).length : players.length}
             </button>
@@ -840,9 +840,9 @@ function SquadTable({ players, folder }: { players: FmPlayer[]; folder: string }
               <tr key={p.id} className="border-b border-canard/5 odd:bg-creme/40">
                 <td className="px-3 py-2 font-bold">
                   <PlayerLink player={p} />
-                  {p.injury && <span className="ml-2 rounded-full bg-corail/15 px-2 py-0.5 text-xs text-canard">{p.injury}</span>}
+                  {p.injury && <span className="ml-2 rounded-md bg-corail/15 px-1.5 py-0.5 text-xs text-canard">{p.injury}</span>}
                   {p.suspension && (
-                    <span className="ml-2 rounded-full bg-corail/15 px-2 py-0.5 text-xs text-canard">
+                    <span className="ml-2 rounded-md bg-corail/15 px-1.5 py-0.5 text-xs text-canard">
                       {p.suspension === 'Suspendu' ? t('fm.home.kind.suspended') : `${t('fm.home.kind.suspended')} : ${p.suspension}`}
                     </span>
                   )}

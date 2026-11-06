@@ -1,6 +1,7 @@
 import { POS_LABEL, POS_ORDER, roleMatrix, type FmPlayer, type Line, type Phase } from '@simloom/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PosBadge } from './FmFoot';
 import { useTacticEngine } from './FmTactic';
 import { Chips, Empty, Fit, fitPct, More, Panel, PlayerLink, Tag, useNames } from './FmUi';
 
@@ -72,7 +73,7 @@ export function FmRoles({ players, folder }: { players: FmPlayer[]; folder: stri
                 <th className="sticky left-0 bg-white px-2 py-1 text-left text-sm">{t('fm.prog.player')}</th>
                 {POS_ORDER.map((pos) => (
                   <th key={pos} className="px-1 py-1">
-                    <span className="whitespace-nowrap rounded-full bg-eau/20 px-1.5 py-0.5 font-bold">{POS_LABEL[pos]}</span>
+                    <PosBadge pos={pos} />
                   </th>
                 ))}
               </tr>

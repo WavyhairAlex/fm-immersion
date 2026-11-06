@@ -1,7 +1,7 @@
 import { contractsByYear, upcomingContracts, type FmPlayer } from '@simloom/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Empty, Level, Panel, Row, Tag, useFormat } from './FmUi';
+import { Empty, Level, Panel, Row, Tag, useFormat, PlayerLink } from './FmUi';
 
 /** Contrats : salaires libérés par année de fin, et échéances à traiter dans les 18 mois. */
 export function FmContracts({ players, gameDate }: { players: FmPlayer[]; gameDate: string }) {
@@ -51,7 +51,7 @@ export function FmContracts({ players, gameDate }: { players: FmPlayer[]; gameDa
           soon.map(({ player: p, months }) => (
             <Row key={p.id}>
               <div>
-                <div className="font-bold">{p.name}</div>
+                <div><PlayerLink player={p} /></div>
                 <div className="flex flex-wrap items-center gap-1 text-xs text-brun">
                   {[p.age != null ? t('fm.contracts.age', { count: p.age }) : null, p.positionsLabel, f.money(p.wage)].filter(Boolean).join(' · ')} <Level value={p.level} />
                 </div>

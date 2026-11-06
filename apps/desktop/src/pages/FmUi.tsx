@@ -1,6 +1,7 @@
 import { POS_LABEL, teamInstructionCards, teamInstructionOf, type CoachPrefs, type FmPlayer, type ProjectCompat } from '@simloom/module-fm';
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PosBadge } from './FmFoot';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 
 /** Petits éléments communs aux écrans du module Football Manager. */
@@ -64,7 +65,7 @@ export function CompatTag({ c }: { c: ProjectCompat | null | undefined }) {
 
 export function Pos({ player }: { player: FmPlayer }) {
   const c = player.positions[0];
-  return c ? <span className="pill">{POS_LABEL[c]}</span> : null;
+  return c ? <PosBadge pos={c} /> : null;
 }
 
 /** Niveau /20 dans une pastille dont la couleur suit la valeur. */
@@ -72,7 +73,7 @@ export function Level({ value }: { value: number | null | undefined }) {
   const { i18n } = useTranslation();
   if (value == null) return <span className="text-canard/40">–</span>;
   const cls = value >= 14 ? 'bg-eau-fonce text-white' : value >= 11 ? 'bg-eau/40 text-canard' : value >= 8 ? 'bg-canard/10 text-canard' : 'bg-corail/20 text-canard';
-  return <span className={`inline-block min-w-[2.6rem] rounded-full px-2 py-0.5 text-center text-xs font-bold tabular-nums ${cls}`}>{new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value)}</span>;
+  return <span className={`num-pill ${cls}`}>{new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value)}</span>;
 }
 
 /** Ouvre la fiche d'un joueur (fournie par la page de la partie) ; absente, les noms restent du texte. */
@@ -152,7 +153,7 @@ export function Fit({ value }: { value: number | null | undefined }) {
   const pc = starScale ? (toStars(value) / 5) * 100 : (value / 20) * 100;
   const [hi, mid, lo] = starScale ? [70, 50, 30] : [65, 55, 45];
   const cls = pc >= hi ? 'bg-eau-fonce text-white' : pc >= mid ? 'bg-eau/40 text-canard' : pc >= lo ? 'bg-canard/10 text-canard' : 'bg-corail/20 text-canard';
-  return <span className={`inline-block min-w-[3rem] rounded-full px-2 py-0.5 text-center text-xs font-bold tabular-nums ${cls}`}>{fitPct(value)}</span>;
+  return <span className={`num-pill ${cls}`}>{fitPct(value)}</span>;
 }
 
 /** Choix du coach (style aimé, schéma, niveau visé), partagés entre « Mon projet » et « Cibles », par partie. */
@@ -177,7 +178,7 @@ export function Chips<T extends string>({ value, options, onChange }: { value: T
           key={v}
           type="button"
           onClick={() => onChange(v)}
-          className={`rounded-full px-3 py-1 text-sm font-bold ${v === value ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
+          className={`chip ${v === value ? 'chip-on' : ''}`}
         >
           {label}
         </button>

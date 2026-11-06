@@ -21,7 +21,7 @@ function Cell({ r, k }: { r: PlayerStatReport; k: StatKey }) {
   const txt = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(v) + (PCT.has(k) ? ' %' : '');
   const rank = r.marks[k]?.rank;
   const cls = rank == null ? 'text-canard' : rank >= 0.75 ? 'bg-eau-fonce text-white' : rank <= 0.25 ? 'bg-corail/20 text-canard' : 'text-canard';
-  return <span className={`inline-block min-w-[2.8rem] rounded-full px-2 py-0.5 text-center text-xs font-bold tabular-nums ${cls}`}>{txt}</span>;
+  return <span className={`num-pill ${cls}`}>{txt}</span>;
 }
 
 /** Centre de données : stats de la saison par joueur, comparées dans chaque ligne, et ce qu'elles disent à travailler. */
@@ -100,7 +100,7 @@ export function FmStats({ snap, players, history }: { snap: FmSnapshot; players:
             {trends.team.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 {trends.team.map((x) => (
-                  <span key={x.key} className={`rounded-full px-3 py-1 text-xs font-bold ${x.dir === 'up' ? 'bg-eau-fonce text-white' : x.dir === 'down' ? 'bg-corail/20 text-canard' : 'bg-canard/10 text-canard'}`}>
+                  <span key={x.key} className={`rounded-md px-1.5 py-0.5 text-xs font-bold ${x.dir === 'up' ? 'bg-eau-fonce text-white' : x.dir === 'down' ? 'bg-corail/20 text-canard' : 'bg-canard/10 text-canard'}`}>
                     {x.dir === 'up' ? '↑ ' : x.dir === 'down' ? '↓ ' : ''}
                     {t(`fm.stats.trend.team.${x.key}`)} {teamVal(x.key, x.before)} → {teamVal(x.key, x.recent)}
                   </span>
@@ -233,7 +233,7 @@ function AllStats({ rows, full, picked, onPick }: { rows: PlayerStatReport[]; fu
       action={
         <label className="flex items-center gap-2 text-xs font-bold text-canard/70">
           {t('fm.stats.allPick')}
-          <select className="rounded-lg border border-canard/15 bg-white px-2 py-1 text-sm text-canard" value={row.player.id} onChange={(e) => onPick(e.target.value)}>
+          <select className="input" value={row.player.id} onChange={(e) => onPick(e.target.value)}>
             {rows.map((r) => (
               <option key={r.player.id} value={r.player.id}>
                 {r.player.name}

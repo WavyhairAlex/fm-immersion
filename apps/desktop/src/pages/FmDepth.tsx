@@ -1,8 +1,9 @@
 import { depthAlerts, depthChart, depthFromPlan, formationKey, POS_LABEL, seasonStart, type DepthEntry, type FmPlayer, type GameSlot, type SquadAt } from '@simloom/module-fm';
 import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PosBadge } from './FmFoot';
 import { useTacticChoice } from './FmTactic';
-import { Kpi, Level, Panel, Tag, useNames } from './FmUi';
+import { Kpi, Level, Panel, Tag, useNames, PlayerLink } from './FmUi';
 
 /** Titulaires et remplaçants : qui joue à chaque poste, et quelle doublure peut passer devant d'ici deux saisons. */
 export function FmDepth({ players, folder, gameFormation, gameTactic = null, lineup, gameDate, history }: { players: FmPlayer[]; folder: string; gameFormation: string | null; gameTactic?: string | null; lineup: GameSlot[] | null; gameDate: string; history: SquadAt[] }) {
@@ -20,7 +21,7 @@ export function FmDepth({ players, folder, gameFormation, gameTactic = null, lin
   const line = (e: DepthEntry, extra: ReactNode) => (
     <div key={e.player.id} className="flex items-center justify-between gap-2 border-b border-canard/5 py-1.5 last:border-0">
       <span className="min-w-0 flex-1">
-        <b>{e.player.name}</b> <span className="text-xs text-brun">{t('fm.contracts.age', { count: e.player.age ?? 0 })}</span>
+        <PlayerLink player={e.player} /> <span className="text-xs text-brun">{t('fm.contracts.age', { count: e.player.age ?? 0 })}</span>
         {e.player.team && (
           <>
             {' '}
@@ -63,7 +64,7 @@ export function FmDepth({ players, folder, gameFormation, gameTactic = null, lin
           {alerts.map(({ pos, sub, starter }) => (
             <div key={sub.player.id} className="flex items-center justify-between gap-3 border-b border-canard/5 py-1.5 last:border-0">
               <span>
-                <span className="pill">{POS_LABEL[pos]}</span>{' '}
+                <PosBadge pos={pos} />{' '}
                 {t(sub.when === 0 ? 'fm.depth.already' : 'fm.depth.may', { sub: sub.player.name, starter: starter.name })}
               </span>
               <Tag tone={sub.when === 0 ? 'good' : 'info'}>{sub.when === 0 ? t('fm.depth.now') : t('fm.depth.in', { season: season(sub.when!) })}</Tag>

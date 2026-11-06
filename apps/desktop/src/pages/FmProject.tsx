@@ -1,9 +1,10 @@
 import { FORMATIONS, POS_LABEL, TARGETS, buildProject, evolutionPlan, recruitAttrs, styleOfGameTactic, switchAnalysis, trainingFor, type FmPlayer, type FmSnapshot, type SquadAt } from '@simloom/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PosBadge } from './FmFoot';
 import { useLeaving } from './FmLeaving';
 import { useTacticEngine } from './FmTactic';
-import { Empty, Fit, Kpi, Panel, Pos, Tag, useCoach, useNames, More } from './FmUi';
+import { Empty, Fit, Kpi, Panel, Pos, Tag, useCoach, useNames, More, PlayerLink } from './FmUi';
 
 const STATUS_TONE = { ready: 'good', develop: 'info', recruit: 'bad' } as const;
 const ICON = { good: '✓', warn: '~', bad: '✗' } as const;
@@ -208,9 +209,9 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
           {pr.slots.map((sl, i) => (
             <div key={i} className="flex items-center justify-between gap-3 border-b border-canard/5 py-1.5 text-sm last:border-0">
               <span className="min-w-0">
-                <span className="rounded-full bg-eau/20 px-2 py-0.5 text-xs font-bold">{POS_LABEL[sl.pos]}</span> <span className="text-brun">{names.role(engine.roles.get(sl.ip))}</span>
+                <PosBadge pos={sl.pos} /> <span className="text-brun">{names.role(engine.roles.get(sl.ip))}</span>
                 <br />
-                {sl.player ? <b>{sl.player.name}</b> : <span className="text-brun">{t('fm.tac.nobody')}</span>}
+                {sl.player ? <PlayerLink player={sl.player} /> : <span className="text-brun">{t('fm.tac.nobody')}</span>}
               </span>
               <span className="flex items-center gap-2">
                 <Fit value={sl.fit} />

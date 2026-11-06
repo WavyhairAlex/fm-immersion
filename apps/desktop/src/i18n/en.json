@@ -1220,7 +1220,8 @@
       "instructions": "Up to 3 instructions per starter, to fit the style without overloading tactical familiarity.",
       "results": "Matches played since Simloom started following the save: score, eleven, each player's rating, and what earns points.",
       "diagnosis": "Starters below the eleven's average, and why.",
-      "numbers": "Suggested squad numbers for the season: 1 to 11 for the starters by position, each position's backup right behind."
+      "numbers": "Suggested squad numbers for the season: 1 to 11 for the starters by position, each position's backup right behind.",
+      "staff": "Your coaches' ratings by area: who should handle what, and which free coach would fill a gap."
     },
     "nextStep": "Next step: {{view}}",
     "opp": {

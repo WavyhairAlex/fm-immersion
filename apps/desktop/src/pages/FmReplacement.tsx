@@ -17,6 +17,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PosBadge } from './FmFoot';
 import { fmData } from '../lib/data';
 import { CompatTag, Empty, Fit, More, Panel, Tag, fitGap, useNames, type Tone } from './FmUi';
 
@@ -139,7 +140,7 @@ export function ReplacementFinder({
           {r.slot ? (
             <>
               {t(r.starter ? 'fm.repl.slotStarter' : 'fm.repl.slot', { name: leaving.name })}{' '}
-              <span className="pill">{POS_LABEL[r.slot.pos]}</span> {names.role(engine.roles.get(r.slot.ip))} · <Fit value={r.fit} />
+              <PosBadge pos={r.slot.pos} /> {names.role(engine.roles.get(r.slot.ip))} · <Fit value={r.fit} />
             </>
           ) : (
             t('fm.repl.noSlot', { name: leaving.name })

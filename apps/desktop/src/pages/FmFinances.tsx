@@ -1,7 +1,7 @@
 import { boardTone, clubFinances, upcomingContracts, type FmPlayer, type FmSnapshot } from '@simloom/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Empty, Kpi, Level, Panel, Row, Tag, useFormat } from './FmUi';
+import { Empty, Kpi, Level, Panel, Row, Tag, useFormat, PlayerLink } from './FmUi';
 
 /** Finances et board : budgets, simulateur de prolongations, attentes de la direction. */
 export function FmFinances({ snap, players }: { snap: FmSnapshot; players: FmPlayer[] }) {
@@ -35,7 +35,7 @@ export function FmFinances({ snap, players }: { snap: FmSnapshot; players: FmPla
             ext.map(({ player: p }) => (
               <Row key={p.id}>
                 <span className="flex flex-wrap items-center gap-2">
-                  <b>{p.name}</b>
+                  <PlayerLink player={p} />
                   <span className="text-xs text-brun">{t('fm.fin.ends', { date: f.date(p.contractEnd) })}</span>
                   <Level value={p.level} />
                 </span>
