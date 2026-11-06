@@ -32,6 +32,7 @@ import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PosBadge } from './FmFoot';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach } from './FmUi';
 
@@ -190,7 +191,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                 role="tab"
                 aria-selected={(src === 'game') === fromGame}
                 onClick={() => update({ source: src })}
-                className={`rounded-full px-3 py-1.5 text-sm font-bold ${(src === 'game') === fromGame ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
+                className={`chip ${(src === 'game') === fromGame ? 'chip-on' : ''}`}
               >
                 {t(`fm.tac.source.${src}`)}
               </button>
@@ -198,16 +199,16 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
           </div>
         )}
         {auto && pick && !fromGame && (
-          <span className="rounded-full bg-eau/20 px-2.5 py-0.5 text-xs font-bold text-canard">{t(pick.kept ? 'fm.tac.baseKept' : pick.project ? 'fm.tac.projectBest' : 'fm.tac.bestNow')}</span>
+          <span className="rounded-md bg-eau/20 px-1.5 py-0.5 text-xs font-bold text-canard">{t(pick.kept ? 'fm.tac.baseKept' : pick.project ? 'fm.tac.projectBest' : 'fm.tac.bestNow')}</span>
         )}
         {auto && pick?.kept && !fromGame && (
           <div className="-mt-2 w-full">
             <More>{t('fm.tac.baseKeptHelp', { other: `${pick.kept.form} ${styleName(pick.kept.style)}`, gain: nf1.format(Math.max(0, pick.kept.gain) / 2), need: nf1.format(SWITCH_POINTS / 2) })}</More>
           </div>
         )}
-        {gameFormation && <span className="rounded-full bg-eau/20 px-2.5 py-0.5 text-xs text-canard">{t('fm.tac.inGame', { form: gameFormation })}</span>}
-        {local?.ref && <span className="rounded-full bg-eau/20 px-2.5 py-0.5 text-xs text-canard">{t('fm.tac.localRef')}</span>}
-        {local?.error && <span className="rounded-full bg-corail/15 px-3 py-1 text-sm text-canard">{t('fm.tac.localRefError')}</span>}
+        {gameFormation && <span className="rounded-md bg-eau/20 px-1.5 py-0.5 text-xs text-canard">{t('fm.tac.inGame', { form: gameFormation })}</span>}
+        {local?.ref && <span className="rounded-md bg-eau/20 px-1.5 py-0.5 text-xs text-canard">{t('fm.tac.localRef')}</span>}
+        {local?.error && <span className="rounded-md bg-corail/15 px-1.5 py-0.5 text-sm text-canard">{t('fm.tac.localRefError')}</span>}
       </div>
       
 
@@ -263,7 +264,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   role="tab"
                   aria-selected={team === k}
                   onClick={() => setTeam(k)}
-                  className={`rounded-full px-3 py-1.5 text-sm font-bold ${team === k ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
+                  className={`chip ${team === k ? 'chip-on' : ''}`}
                 >
                   {t(`fm.tac.team.${k}`)}
                 </button>
@@ -274,7 +275,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
             <p className="mt-1 text-sm text-brun">{t('fm.tac.team.help', { a: note(planA.score), b: note(planB.score) })}</p>
           )}
           <p className="mt-1 text-sm text-brun">
-            <span className="mr-2 rounded-full bg-eau/20 px-2 py-0.5 text-xs font-bold text-canard">{t(fromGame ? 'fm.tac.fromGame' : 'fm.tac.suggested')}</span>
+            <span className="mr-2 rounded-md bg-eau/20 px-1.5 py-0.5 text-xs font-bold text-canard">{t(fromGame ? 'fm.tac.fromGame' : 'fm.tac.suggested')}</span>
             {t(fromGame ? 'fm.tac.fromGameHelp' : gamePlan ? 'fm.tac.suggestedHelpGame' : 'fm.tac.suggestedHelp')}
           </p>
           {!gamePlan && lineupStatus && lineupStatus !== 'lue' && <p className="mt-1 text-xs text-brun">{t('fm.tac.lineupStatus', { status: lineupStatus })}</p>}
@@ -335,7 +336,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   role="tab"
                   aria-selected={phase === ph}
                   onClick={() => update({ phase: ph })}
-                  className={`rounded-full px-3 py-1 text-sm font-bold ${phase === ph ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
+                  className={`chip ${phase === ph ? 'chip-on' : ''}`}
                 >
                   {t(`fm.tac.phase.${ph}`)} {shape(ph)}
                 </button>
@@ -363,7 +364,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                     return (
                       <tr key={i} className={hover === i ? 'bg-creme/70' : ''} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
                         <td>
-                          <span className="pill">{POS_LABEL[sl.pos]}</span>
+                          <PosBadge pos={sl.pos} />
                         </td>
                         <td className="font-bold text-canard">
                           {p ? <PlayerLink player={p} /> : <span className="text-corail">{t('fm.tac.nobody')}</span>}
@@ -451,7 +452,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
               return (
                 <div key={i} className="rounded-xl bg-creme/50 px-3 py-2 text-sm">
                   <div className="flex items-baseline gap-2">
-                    <span className="rounded-full bg-eau/20 px-2 py-0.5 text-xs font-bold text-canard">{POS_LABEL[sl.pos]}</span>
+                    <PosBadge pos={sl.pos} />
                     <PlayerLink player={sl.player!} className="font-bold text-canard" />
                   </div>
                   <p className="mb-1 mt-0.5 text-xs text-brun">
@@ -466,7 +467,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   {adv.list.length ? (
                     adv.list.map((x) => (
                       <div key={x.id} className="py-0.5">
-                        <span className={`mr-1 rounded-full px-2 py-0.5 text-xs font-bold ${x.phase === 'ip' ? 'bg-eau/30 text-canard' : 'bg-canard/10 text-canard'}`}>
+                        <span className={`mr-1 rounded-md px-1.5 py-0.5 text-xs font-bold ${x.phase === 'ip' ? 'bg-eau/30 text-canard' : 'bg-canard/10 text-canard'}`}>
                           {t(`fm.pi.${x.phase}`)}
                         </span>
                         <b className="text-canard">{t(`fm.pi.id.${x.id}`)}</b>{' '}

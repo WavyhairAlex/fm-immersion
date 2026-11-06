@@ -12,6 +12,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { PosBadge } from './FmFoot';
 import { fmData } from "../lib/data";
 import { useFmSaveScope, writeScoped } from "../lib/save-store";
 import { FmDbSearch } from "./FmDbSearch";
@@ -149,7 +150,7 @@ export function FmTargets({
                   key={k}
                   type="button"
                   onClick={() => setFilter(k)}
-                  className={`rounded-full px-3 py-1 font-bold ${filter === k ? "bg-canard text-white" : "bg-canard/5 text-canard hover:bg-canard/10"}`}
+                  className={`chip ${filter === k ? 'chip-on' : ''}`}
                 >
                   {t(`fm.targets.filter.${k}`, { n: counts[k] })}
                 </button>
@@ -218,9 +219,7 @@ export function FmTargets({
                       <td className="px-2 py-1.5">
                         {best ? (
                           <>
-                            <span className="pill">
-                              {POS_LABEL[best.slot.pos]}
-                            </span>{" "}
+                            <PosBadge pos={best.slot.pos} />{" "}
                             {names.role(engine.roles.get(best.slot.ip))}
                           </>
                         ) : (

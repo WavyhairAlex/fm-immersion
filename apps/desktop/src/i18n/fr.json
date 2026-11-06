@@ -1220,7 +1220,8 @@
       "instructions": "Au plus 3 consignes par joueur du onze, pour coller au style sans trop charger la compréhension tactique.",
       "results": "Les matchs joués depuis que Simloom suit la partie : score, onze, note de chaque joueur, et ce qui rapporte des points.",
       "diagnosis": "Les titulaires sous la moyenne du onze, et ce qui l'explique.",
-      "numbers": "Une proposition de numéros pour la saison : 1 à 11 pour les titulaires selon leur poste, la doublure de chaque poste juste derrière."
+      "numbers": "Une proposition de numéros pour la saison : 1 à 11 pour les titulaires selon leur poste, la doublure de chaque poste juste derrière.",
+      "staff": "Les notes de tes entraîneurs par domaine : qui doit s'occuper de quoi, et quel entraîneur libre comblerait un manque."
     },
     "nextStep": "Étape suivante : {{view}}",
     "opp": {

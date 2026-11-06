@@ -315,7 +315,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
                   key={d}
                   type="button"
                   onClick={() => setCoach({ trainingDays: trainingDays.includes(d) ? trainingDays.filter((x) => x !== d) : [...trainingDays, d].sort() })}
-                  className={`rounded-full px-3 py-1 text-sm font-bold ${trainingDays.includes(d) ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
+                  className={`chip ${trainingDays.includes(d) ? 'chip-on' : ''}`}
                 >
                   {t(`fm.train.days.${d}`)}
                 </button>
@@ -335,7 +335,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
                 key={d}
                 type="button"
                 onClick={() => toggleDay(d)}
-                className={`rounded-full px-3 py-1 text-sm font-bold ${matchDays.includes(d) ? 'bg-eau-fonce text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`}
+                className={`chip ${matchDays.includes(d) ? 'chip-on' : ''}`}
               >
                 {t(`fm.train.days.${d}`)}
               </button>

@@ -71,7 +71,7 @@ export function FmMatchCenter({
       else n.add(slot);
       return n;
     });
-  const chip = (on: boolean) => `rounded-full px-3 py-1 text-sm font-bold ${on ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/15'}`;
+  const chip = (on: boolean) => `chip ${on ? 'chip-on' : ''}`;
   const tweaks = useMemo(() => matchTweaks(style?.id), [style]);
   const nm = s.nextMatch;
   const day = new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short' });

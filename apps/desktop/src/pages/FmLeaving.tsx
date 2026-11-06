@@ -55,7 +55,7 @@ export function LeaveButton({ player, gameDate, onMarked }: { player: FmPlayer; 
         <button
           key={reason}
           type="button"
-          className="rounded-full bg-white px-2 py-0.5 text-xs font-bold text-canard ring-1 ring-canard/15 hover:bg-creme"
+          className="chip !px-2 !py-0.5 !text-xs"
           disabled={set.isPending}
           onClick={() =>
             set.mutate(

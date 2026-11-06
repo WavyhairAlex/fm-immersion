@@ -14,6 +14,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { PosBadge } from './FmFoot';
 import { fmData } from "../lib/data";
 import { Fit, Level, More, Tag, useNames, type Tone } from "./FmUi";
 
@@ -212,7 +213,7 @@ export function FmDbSearch({
               key={p}
               type="button"
               onClick={() => togglePos(p)}
-              className={`rounded-full px-3 py-1 text-xs font-bold ${filter.positions.includes(p) ? "bg-canard text-white" : "bg-canard/5 text-canard hover:bg-canard/10"}`}
+              className={`chip ${filter.positions.includes(p) ? 'chip-on' : ''}`}
             >
               {POS_LABEL[p]}
             </button>
@@ -335,9 +336,7 @@ export function FmDbSearch({
                       <td className="px-2 py-1.5">
                         {best ? (
                           <>
-                            <span className="pill">
-                              {POS_LABEL[best.slot.pos]}
-                            </span>{" "}
+                            <PosBadge pos={best.slot.pos} />{" "}
                             {names.role(engine.roles.get(best.slot.ip))}
                           </>
                         ) : (

@@ -31,6 +31,11 @@
   .data-table.wide th:first-child, .data-table.wide td:first-child { @apply sticky left-0 z-[5] whitespace-nowrap bg-white; }
   .data-table.wide thead th:first-child { @apply z-20; }
   .data-table.wide td { @apply whitespace-nowrap; }
+  /* Bouton de choix (filtre, mode d'affichage, jour…) : le même partout ; `chip-on` = choisi. */
+  .chip { @apply inline-flex items-center rounded-md bg-white px-2.5 py-1 text-sm font-bold text-canard ring-1 ring-canard/15 transition hover:bg-creme; }
+  .chip-on { @apply bg-canard text-white ring-canard hover:bg-canard; }
+  /* Chiffre dans une pastille (niveau, adéquation, stat) : même forme partout, la couleur suit la valeur. */
+  .num-pill { @apply inline-block min-w-[2.75rem] rounded-md px-1.5 py-0.5 text-center text-xs font-bold tabular-nums; }
   .card { @apply rounded-3xl bg-white p-6 shadow-sm ring-1 ring-canard/5; }
 }
 
@@ -41,7 +46,11 @@
   .fm .card h2 { @apply font-sans text-sm font-extrabold uppercase tracking-wider text-canard; }
   .fm .card h3 { @apply font-sans text-xs font-extrabold uppercase tracking-wider text-canard/60; }
   .fm .card .help { @apply mt-1 text-xs; }
-  .fm .pill { @apply rounded-md; }
+  .fm .pill { @apply rounded-md bg-canard/10; }
+  /* Un seul style par usage : boutons, choix, sélecteurs, pastilles de chiffre. */
+  .fm .btn { @apply rounded-lg px-4 py-2 text-sm; }
+  .fm .input { @apply rounded-lg px-3 py-1.5 text-sm; }
+  .fm select.input { @apply w-auto pr-8; }
   .fm .data-table thead { @apply bg-canard/[0.04]; }
   .fm .data-table tbody tr:nth-child(even) { @apply bg-creme/40; }
   .fm .data-table tbody tr { @apply hover:bg-eau/10; }
