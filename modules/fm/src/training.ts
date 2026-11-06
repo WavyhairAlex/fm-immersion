@@ -118,6 +118,8 @@ export interface TrainingWeek {
   /** Semaine à 3 matchs ou plus : repos complet entre les matchs. */
   congested: boolean;
   days: TrainingDay[];
+  /** Méthode Méta adaptée : séances du fichier d'AlexJeuVideal à remplacer (avant, après) après chargement. */
+  swaps?: [SessionId, SessionId][];
 }
 
 export interface TrainingInput {
@@ -138,12 +140,16 @@ export interface TrainingInput {
   priorities?: EffArea[];
   /** Identifiant du style visé, pour choisir la variante des séances offensives et défensives. */
   style?: string;
-  /** Méthode des semaines de saison : « meta » (AlexJeuVideal, par défaut) ou « freedom » (FM Scout). */
+  /**
+   * Méthode des semaines de saison : « metaAdapt » (par défaut : Méta d'AlexJeuVideal dont les séances hors piège du
+   * pressing suivent les priorités), « meta » (fichiers d'AlexJeuVideal tels quels) ou « freedom » (FM Scout).
+   */
   method?: TrainingMethod;
 }
 
 /** Méthodes de planning de saison. La présaison, le bloc tactique et la trêve restent ceux de la méthode Freedom. */
-export const TRAINING_METHODS = ['meta', 'freedom'] as const;
+export const TRAINING_METHODS = ['metaAdapt', 'meta', 'freedom'] as const;
+export const isMeta = (m: TrainingMethod | undefined) => (m ?? 'metaAdapt') !== 'freedom';
 export type TrainingMethod = (typeof TRAINING_METHODS)[number];
 
 /* ---------- Dates ---------- */
@@ -327,7 +333,7 @@ function cycler<T>(list: T[]) {
 
 export function buildTrainingWeek(input: TrainingInput): TrainingWeek {
   const { phase, week, monday } = input;
-  if ((input.method ?? 'meta') === 'meta' && (phase === 'A' || phase === 'B' || phase === 'C')) return buildMetaWeek(input);
+  if (isMeta(input.method) && (phase === 'A' || phase === 'B' || phase === 'C')) return buildMetaWeek(input);
   const priorities = input.priorities ?? [];
   const matchDays = new Set(input.matchDays.filter((d) => d >= 0 && d <= 6));
   const seasonal = phase === 'A' || phase === 'B' || phase === 'C';
@@ -463,12 +469,39 @@ export const META_BLOCKS = {
 const REST3: TrainingDay['sessions'] = ['rest', 'rest', 'rest'];
 
 /**
+ * Séances tactiques jugées utiles par le banc d'essai, dans l'ordre des fichiers d'AlexJeuVideal (Hauteur du pressing,
+ * Construction, Création d'occasions, Organisation avec le ballon), plus l'Organisation défensive.
+ */
+const META_POOL: EffArea[] = ['lineOfEngagement', 'buildUpStrategy', 'chanceCreation', 'inPossessionShape', 'outOfPossessionShape'];
+
+/**
+ * Blocs de la méthode Méta adaptée : les 2 pièges du pressing et la veille de match restent ceux d'AlexJeuVideal ; les
+ * 4 autres séances tactiques prennent d'abord les zones prioritaires de la semaine (les plus faibles en match), puis
+ * celles de ses fichiers. Sans priorité, ce sont exactement ses blocs.
+ */
+export function metaBlocks(priorities: EffArea[] = []): { b1: SessionId[]; b2: SessionId[]; prep: SessionId[]; swaps: [SessionId, SessionId][] } {
+  const picked = [...new Set([...priorities.filter((a) => META_POOL.includes(a)), ...META_POOL])].slice(0, 4);
+  const alex: SessionId[] = [META_BLOCKS.b1[1], META_BLOCKS.b1[2], META_BLOCKS.b2[1], META_BLOCKS.b2[2]];
+  // Garde chaque séance du fichier à sa place quand elle reste retenue, pour limiter les changements à faire en jeu.
+  const slots: (SessionId | null)[] = alex.map((s) => (picked.includes(s as EffArea) ? s : null));
+  const extra = picked.filter((a) => !slots.includes(a));
+  const swaps: [SessionId, SessionId][] = [];
+  slots.forEach((s, i) => {
+    if (s) return;
+    slots[i] = extra.shift()!;
+    swaps.push([alex[i]!, slots[i]!]);
+  });
+  return { b1: ['pressingTrap', slots[0]!, slots[1]!], b2: ['pressingTrap', slots[2]!, slots[3]!], prep: [...META_BLOCKS.prep], swaps };
+}
+
+/**
  * Semaine de saison façon AlexJeuVideal : un bloc 1, un bloc 2 et une veille de match par semaine (donc 2 pièges du
  * pressing), le reste au repos. La veille sert le dernier match de la semaine ; les blocs prennent les derniers jours
  * libres avant elle (ni match, ni lendemain de match). Semaine à 3 matchs : repos complet.
  */
 function buildMetaWeek(input: TrainingInput): TrainingWeek {
   const { phase, week, monday } = input;
+  const blocks = input.method === 'meta' ? { ...META_BLOCKS, swaps: [] as [SessionId, SessionId][] } : metaBlocks(input.priorities);
   const matchDays = new Set(input.matchDays.filter((d) => d >= 0 && d <= 6));
   const variant = Math.min(2, matchDays.size) as 0 | 1 | 2;
   const congested = matchDays.size >= CONGESTED_MATCHES;
@@ -495,13 +528,13 @@ function buildMetaWeek(input: TrainingInput): TrainingWeek {
       days[d]!.sessions = [s[0]!, s[1]!, s[2]!];
       days[d]!.kind = kind;
     };
-    set(prepDay, META_BLOCKS.prep, 'prep');
-    set(rest[0], META_BLOCKS.b1, 'dev');
-    set(rest[1], META_BLOCKS.b2, 'dev');
+    set(prepDay, blocks.prep, 'prep');
+    set(rest[0], blocks.b1, 'dev');
+    set(rest[1], blocks.b2, 'dev');
   }
   // Les jours restés au repos complet s'affichent comme des jours de repos.
   for (const x of days) if (x.kind === 'dev' && x.sessions.every((s) => s === 'rest')) x.kind = 'recovery';
-  return { code: `${phase}${week}-${variant}`, phase, week, variant, theme: null, congested, days };
+  return { code: `${phase}${week}-${variant}`, phase, week, variant, theme: null, congested, days, swaps: congested ? [] : blocks.swaps };
 }
 
 const DAY_FR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
@@ -795,7 +828,7 @@ export function upcomingWeeks(o: WeekOptions & { gameDate: string }, count = 6) 
     const days = plan.days.filter((d) => d.kind === 'match').map((d) => d.weekday);
     const seasonal = plan.phase === 'A' || plan.phase === 'B' || plan.phase === 'C';
     // Programme .fmf d'AlexJeuVideal à charger (méthode Méta), d'après le dernier match de la semaine d'avant.
-    const file = (o.method ?? 'meta') === 'meta' && seasonal && !plan.congested ? metaProgramme(days, i === 0 ? null : prevLast) : null;
+    const file = isMeta(o.method) && seasonal && !plan.congested ? metaProgramme(days, i === 0 ? null : prevLast) : null;
     if (days.length) prevLast = days.at(-1)!;
     else prevLast = null;
     return { monday: plan.days[0]!.date, plan, preset: nearestPreset(plan), file, workload: weekWorkload(plan), matches: days.length };

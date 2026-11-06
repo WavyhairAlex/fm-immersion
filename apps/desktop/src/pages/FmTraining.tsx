@@ -139,7 +139,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
   const [coach, setCoach] = useCoach();
   const seasonStart = coach.seasonStart ?? 8;
   const clubStatus: ClubStatus = coach.clubStatus ?? 'pro';
-  const method = coach.trainingMethod ?? 'meta';
+  const method = coach.trainingMethod ?? 'metaAdapt';
   const trainingDays = clubStatus === 'pro' ? undefined : coach.trainingDays ?? PART_TIME_DAYS;
   const [offset, setOffset] = useState<'0' | '1'>('0');
   const [phaseOverride, setPhase] = useState<TrainingPhase | null>(null);
@@ -179,7 +179,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
   );
   // Programme .fmf d'AlexJeuVideal à charger : dernier match de la semaine précédente (dimanche si on le sait), puis ceux de la semaine.
   const prevLast = before ? 6 : (weekMatches(fixtures, addDays(monday, -7)).days.at(-1) ?? null);
-  const metaFile = method === 'meta' && (phase === 'A' || phase === 'B' || phase === 'C') && !plan.congested ? metaProgramme(matchDays, prevLast) : null;
+  const metaFile = method !== 'freedom' && (phase === 'A' || phase === 'B' || phase === 'C') && !plan.congested ? metaProgramme(matchDays, prevLast) : null;
   const load = weekLoad(plan);
   const resetWeek = () => {
     setManualDays(null);
@@ -247,7 +247,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
           </label>
           <label className={label}>
             {t('fm.train.method')}
-            <select className="input mt-1" value={method} onChange={(e) => setCoach({ trainingMethod: e.target.value as 'meta' | 'freedom' })}>
+            <select className="input mt-1" value={method} onChange={(e) => setCoach({ trainingMethod: e.target.value as 'metaAdapt' | 'meta' | 'freedom' })}>
               {TRAINING_METHODS.map((m) => (
                 <option key={m} value={m}>
                   {t(`fm.train.methods.${m}`)}
@@ -355,10 +355,18 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
           {plan.theme && <> · {t(`fm.train.theme.${plan.theme}`)}</>}
           {plan.variant != null && <> · {plan.congested ? t('fm.train.congested') : t(`fm.train.variant_${plan.variant}`)}</>}
         </p>
-        <p className="mt-1 text-xs text-brun">{method === 'meta' && plan.theme == null && 'ABC'.includes(plan.phase) ? t('fm.train.metaHelp') : t(`fm.train.phaseHelp.${plan.phase}`)}</p>
+        <p className="mt-1 text-xs text-brun">{method !== 'freedom' && plan.theme == null && 'ABC'.includes(plan.phase) ? t(method === 'meta' ? 'fm.train.metaHelp' : 'fm.train.metaAdaptHelp') : t(`fm.train.phaseHelp.${plan.phase}`)}</p>
         {metaFile ? (
           <p className="mt-1 text-sm">
             {t('fm.train.metaFile')} <b className="text-canard">{metaFile.trim()}.fmf</b>
+            {plan.swaps && plan.swaps.length > 0 && (
+              <>
+                <br />
+                <span className="text-xs text-brun">
+                  {t('fm.train.metaSwaps', { list: plan.swaps.map(([a, b]) => `${t(`fm.train.session.${a}`)} → ${t(`fm.train.session.${b}`)}`).join(', ') })}
+                </span>
+              </>
+            )}
           </p>
         ) : (
           <p className="mt-1 text-xs text-brun">{t('fm.train.presetHint', { preset: t(`fm.train.preset.${nearestPreset(plan)}`) })}</p>

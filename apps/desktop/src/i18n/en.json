@@ -1061,6 +1061,7 @@
       "variant_2": "two matches",
       "method": "In-season method",
       "methods": {
+        "metaAdapt": "Meta adapted to your weaknesses",
         "meta": "Meta effectiveness 1.1 (AlexJeuVideal)",
         "freedom": "Freedom (FM Scout)"
       },
@@ -1189,7 +1190,9 @@
       "scheduleFocus": "Schedule Focus",
       "workloadCol": "Workload",
       "upcomingHelp": "Set ahead in the game's Training Schedule screen: one Schedule Focus and one workload per week. Light in two-match weeks, medium with one match, heavy with no match and early in pre-season. Beyond the next known fixtures, Archivix assumes a Saturday match.",
-      "reasonHint": "Hover a player's intensity to see why it is advised."
+      "reasonHint": "Hover a player's intensity to see why it is advised.",
+      "metaAdaptHelp": "AlexJeuVideal's Meta base: 2 pressing-trap sessions a week, the day before the match Ball Progression, Defensive Block, Conditioning, rest otherwise. The other 4 tactical sessions follow your priority areas (the weakest from the game and your matches) among those the benchmark finds useful: Line of Engagement, Build-Up, Chance Creation, In and Out of Possession Shape. They change when your weaknesses change.",
+      "metaSwaps": "After loading it, replace: {{list}}."
     },
     "intro": {
       "home": "What needs your attention today, the styles that suit the squad, your best players and your youngsters.",

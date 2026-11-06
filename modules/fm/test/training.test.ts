@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { autoPhase, breakPhase, upcomingWeeks, weekWorkload, buildTrainingWeek, currentTrainingWeek, trainingAlerts, defaultMatchDays, individualAdvice, individualFocus, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, setupStatus, weekMatches } from '../src';
+import { metaBlocks, autoPhase, breakPhase, upcomingWeeks, weekWorkload, buildTrainingWeek, currentTrainingWeek, trainingAlerts, defaultMatchDays, individualAdvice, individualFocus, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, setupStatus, weekMatches } from '../src';
 
 const MONDAY = '2026-08-31';
 
@@ -328,5 +328,28 @@ describe('méthode Méta : semaine sans match', () => {
   it('place les deux blocs et la séance de veille sur les derniers jours', () => {
     const w = buildTrainingWeek({ monday: MONDAY, phase: 'C', week: 1, matchDays: [] });
     expect(w.days.slice(4).map((d) => d.sessions[0])).toEqual(['pressingTrap', 'pressingTrap', 'ballProgression']);
+  });
+});
+
+describe('méthode Méta adaptée', () => {
+  it('sans priorité : exactement les blocs d’AlexJeuVideal', () => {
+    const b = metaBlocks([]);
+    expect(b.b1).toEqual(['pressingTrap', 'lineOfEngagement', 'buildUpStrategy']);
+    expect(b.b2).toEqual(['pressingTrap', 'chanceCreation', 'inPossessionShape']);
+    expect(b.swaps).toEqual([]);
+  });
+  it('les zones faibles remplacent les séances du fichier, piège du pressing gardé', () => {
+    const b = metaBlocks(['outOfPossessionShape', 'passingStyle', 'buildUpStrategy']);
+    expect(b.b1[0]).toBe('pressingTrap');
+    expect(b.b2[0]).toBe('pressingTrap');
+    expect([...b.b1, ...b.b2]).toContain('outOfPossessionShape');
+    expect([...b.b1, ...b.b2]).not.toContain('passingStyle');
+    expect(b.swaps).toEqual([['inPossessionShape', 'outOfPossessionShape']]);
+  });
+  it('la semaine suit les priorités, la méthode stricte non', () => {
+    const base = { monday: '2026-11-09', phase: 'B' as const, week: 1 as const, matchDays: [5], priorities: ['outOfPossessionShape' as const] };
+    const all = (w: ReturnType<typeof buildTrainingWeek>) => w.days.flatMap((d) => d.sessions);
+    expect(all(buildTrainingWeek(base))).toContain('outOfPossessionShape');
+    expect(all(buildTrainingWeek({ ...base, method: 'meta' }))).not.toContain('outOfPossessionShape');
   });
 });
