@@ -2425,5 +2425,44 @@
       "final_1": "Final whistle, {{score}}.",
       "final_2": "It's over: {{home}} {{score}} {{away}}."
     }
+  },
+  "season": {
+    "title": "Season review {{season}}",
+    "special": "Special issue · Season review",
+    "label": "Season {{season}}",
+    "headline": {
+      "champion": "{{club}} are champions!",
+      "podium": "{{club}} on the podium, {{position}}",
+      "finish": "{{club}} finish {{position}}",
+      "done": "{{club}}'s season is over"
+    },
+    "ordinal1": "{{n}}st",
+    "ordinal2": "{{n}}nd",
+    "ordinal3": "{{n}}rd",
+    "ordinal": "{{n}}th",
+    "finalPosition": "Final position",
+    "curve": "Run-in",
+    "played": "Matches",
+    "record": "W-D-L",
+    "goals": "Goals for – against",
+    "unbeaten": "Unbeaten run",
+    "biggestWin": "Biggest win",
+    "worstLoss": "Heaviest defeat",
+    "untracked_one": "{{count}} more match played without details (not counted).",
+    "untracked_other": "{{count}} more matches played without details (not counted).",
+    "awards": "The awards",
+    "topScorer": "Top scorer",
+    "goalsCount_one": "{{name}}, {{count}} goal",
+    "goalsCount_other": "{{name}}, {{count}} goals",
+    "potm": "Player of the match",
+    "potmCount_one": "{{name}}, {{count}} time",
+    "potmCount_other": "{{name}}, {{count}} times",
+    "bestRated": "Best average rating",
+    "mercato": "Transfers",
+    "arrivals": "In:",
+    "departures": "Out:",
+    "footer": "See you next season, {{club}}!",
+    "send": "Send the review to Discord",
+    "sent": "Review sent to Discord."
   }
 }

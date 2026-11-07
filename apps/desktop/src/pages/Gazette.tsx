@@ -1,14 +1,15 @@
-import { gazetteIssues, type GazetteIssue } from '@fm-immersion/module-fm';
+import { gazetteIssues, seasonReviews, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { fmData, savesData } from '../lib/data';
 import { getWebhook, isWebhook } from '../lib/discord';
-import { GAZETTE_SAVE_KEY, markGazetteSent, sendGazette } from '../lib/gazette-auto';
+import { GAZETTE_SAVE_KEY, markGazetteSent, markSeasonSent, sendGazette, sendSeason } from '../lib/gazette-auto';
 import { paperName, storyText, weekLabel } from '../lib/gazette-text';
 import { drawUne, recentForm } from '../lib/gazette-une';
 import { loadFace } from '../lib/player-face';
+import { drawSeason } from '../lib/season-une';
 
 const SAVE_KEY = GAZETTE_SAVE_KEY;
 const readSave = () => {
@@ -38,6 +39,7 @@ export function Gazette() {
 
   const { data: history = [], isLoading } = useQuery({ queryKey: ['fm', 'all', saveId], queryFn: () => fmData.all(saveId), enabled: !!saveId });
   const issues = useMemo(() => gazetteIssues(history), [history]);
+  const season = useMemo(() => seasonReviews(history)[0] ?? null, [history]);
   const [index, setIndex] = useState(0);
   useEffect(() => setIndex(0), [saveId]);
   const issue = issues[index];
@@ -66,6 +68,8 @@ export function Gazette() {
         </div>
       )}
       {!!fmSaves.length && !isLoading && !issues.length && <p className="card mt-6 max-w-3xl text-brun">{t('gazette.empty')}</p>}
+
+      {season && <SeasonSection saveId={saveId} review={season} />}
 
       {issue && (
         <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
@@ -162,5 +166,46 @@ function SendButton({ saveId, issues, index }: { saveId: string; issues: Gazette
       {send.isSuccess && <p className="text-xs font-bold text-eau-fonce">{t('gazette.sent')}</p>}
       {send.isError && <p className="text-xs font-bold text-corail">{String(send.error)}</p>}
     </>
+  );
+}
+
+/** Numéro spécial « Bilan de la saison », dès que le dernier match de championnat est joué. */
+function SeasonSection({ saveId, review }: { saveId: string; review: SeasonReview }) {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage;
+  const { data: url } = useQuery({
+    queryKey: ['gazette', 'season', saveId, review.end, review.club, lang],
+    queryFn: async () => (await drawSeason(t, review, { face: await loadFace(review.topScorer?.id), lang })).toDataURL('image/png'),
+  });
+  const send = useMutation({
+    mutationFn: async () => {
+      await sendSeason(t, review, lang);
+      markSeasonSent(saveId, review);
+    },
+  });
+  return (
+    <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
+      <div className="min-w-0">
+        <h2 className="text-xl font-semibold">{t('season.title', { season: review.label })}</h2>
+        {url ? (
+          <img src={url} alt={t('season.title', { season: review.label })} className="mt-3 w-full rounded-xl shadow-sm ring-1 ring-canard/10" />
+        ) : (
+          <div className="mt-3 aspect-video w-full animate-pulse rounded-xl bg-canard/5" />
+        )}
+      </div>
+      <aside className="flex flex-col gap-2 xl:pt-10">
+        {isWebhook(getWebhook()) ? (
+          <button type="button" className="btn-primary text-sm" disabled={send.isPending} onClick={() => send.mutate()}>
+            {t('season.send')}
+          </button>
+        ) : (
+          <Link to="/discord" className="btn-secondary text-sm">
+            {t('gazette.setupDiscord')}
+          </Link>
+        )}
+        {send.isSuccess && <p className="text-xs font-bold text-eau-fonce">{t('season.sent')}</p>}
+        {send.isError && <p className="text-xs font-bold text-corail">{String(send.error)}</p>}
+      </aside>
+    </section>
   );
 }
