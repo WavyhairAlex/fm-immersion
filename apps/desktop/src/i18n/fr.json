@@ -1909,7 +1909,12 @@
         "unknown": "à vérifier (nationalités pas encore lues)"
       },
       "unverified": "Règles reprises d'un récapitulatif FM, pas encore lues dans le jeu : vérifie l'écran Règles de la compétition.",
-      "friendly": "Match amical : rien en jeu et changements libres. Fais tourner, donne du temps aux jeunes et à ceux qui manquent de rythme, ménage les cadres. Il ne compte ni dans le bilan ni dans le temps de jeu promis."
+      "friendly": "Match amical : rien en jeu et changements libres. Fais tourner, donne du temps aux jeunes et à ceux qui manquent de rythme, ménage les cadres. Il ne compte ni dans le bilan ni dans le temps de jeu promis.",
+      "weight": {
+        "cup": "Coupe : match secondaire par rapport au championnat. Fais tourner sans brader : garde la colonne vertébrale (gardien, un central, le meneur) et donne du temps à ceux qui en manquent.",
+        "congested": "Calendrier chargé : un autre match dans les 3 jours. Fais tourner les joueurs entamés, les remplaçants frais comptent en fin de match.",
+        "high": "{{competition}} : match prioritaire, meilleur onze disponible."
+      }
     },
     "squadPitch": {
       "label": "Affichage de l'effectif",
@@ -1972,7 +1977,17 @@
         "merged_one": "{{count}} période regroupe plusieurs matchs joués entre deux relectures : chaque match n'y a pas son détail.",
         "merged_other": "{{count}} périodes regroupent plusieurs matchs joués entre deux relectures : chaque match n'y a pas son détail."
       },
-      "friendly": "Amical"
+      "friendly": "Amical",
+      "filter": {
+        "label": "Compétition",
+        "all": "Toutes",
+        "league": "Championnat",
+        "cup": "Coupe",
+        "europe": "Europe",
+        "friendly": "Amicaux",
+        "other": "Autres"
+      },
+      "filtered": "{{label}} : {{record}}, buts {{goals}}"
     },
     "repl": {
       "open": "Remplaçant",
@@ -2296,7 +2311,9 @@
         "training": "Changer l'entraînement",
         "mercato": "Ouvrir le mercato",
         "trialists": "Juger l'essai",
-        "friendly": "Répartir le temps de jeu"
+        "friendly": "Répartir le temps de jeu",
+        "rotation": "Faire tourner",
+        "congested": "Préparer la rotation"
       },
       "tabBadge_one": "{{count}} chose à faire ici",
       "tabBadge_other": "{{count}} choses à faire ici",
@@ -2304,7 +2321,11 @@
       "trialists_other": "{{names}} sont à l'essai au club : regarde s'ils valent mieux que ton effectif avant de leur proposer un contrat.",
       "friendly_one": "Match amical demain contre {{opponent}}{{where}} : rien en jeu, fais jouer ceux qui manquent de temps de jeu et ménage les cadres.",
       "friendly_other": "Match amical dans {{count}} jours contre {{opponent}}{{where}} : rien en jeu, fais jouer ceux qui manquent de temps de jeu et ménage les cadres.",
-      "friendlyToday": "Match amical aujourd'hui contre {{opponent}}{{where}} : rien en jeu, fais tourner et donne du temps de jeu."
+      "friendlyToday": "Match amical aujourd'hui contre {{opponent}}{{where}} : rien en jeu, fais tourner et donne du temps de jeu.",
+      "rotation_one": "{{competition}} : match secondaire, fais tourner. {{names}} manque de temps de jeu ou de fraîcheur, garde la colonne vertébrale.",
+      "rotation_other": "{{competition}} : match secondaire, fais tourner. {{names}} manquent de temps de jeu ou de fraîcheur, garde la colonne vertébrale.",
+      "congested_one": "Calendrier chargé (deux matchs à 3 jours ou moins) : prévois une rotation, {{names}} est le premier concerné.",
+      "congested_other": "Calendrier chargé (deux matchs à 3 jours ou moins) : prévois une rotation, {{names}} en premier."
     }
   },
   "modes": {

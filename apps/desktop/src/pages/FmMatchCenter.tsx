@@ -2,6 +2,8 @@ import {
   activeSituations,
   backForMatch,
   competitionRules,
+  competitionWeight,
+  isCongested,
   isFriendly,
   fmLiveSchema,
   liveCoachState,
@@ -56,6 +58,8 @@ export function FmMatchCenter({
   const fixtures = useMemo(() => snapshotFixtures(snap), [snap]);
   const { plan, style } = useTacticChoice(players, folder, gameFormation, lineup, gameTactic);
   const rules = competitionRules(s.nextMatch?.competition);
+  // Poids du match : coupe ou calendrier chargé = faire tourner, championnat / Europe = meilleur onze.
+  const weight = competitionWeight(s.nextMatch?.competition, { congested: isCongested(fixtures, snap.gameDate) });
   const subs = useMemo(() => (plan ? substitutionPlan(plan, plannedSubs(rules)) : []), [plan, rules]);
   const benchPlayers = plan ? [...new Map(plan.subs.flatMap((l) => l.slice(0, 1)).map((p) => [p.id, p])).values()].slice(0, rules.bench ?? 9) : [];
   const checks = plan ? ruleChecks(plan, rules, benchPlayers) : [];
@@ -301,6 +305,11 @@ export function FmMatchCenter({
             <p className="mb-3 rounded-lg bg-orange-clair p-2.5 text-sm text-canard">{t('fm.matchSheet.friendly')}</p>
           ) : (
             <div className="mb-3 rounded-lg bg-canard/5 p-2.5 text-sm">
+              {s.nextMatch && (
+                <p className={`mb-1 ${weight.rotate ? 'text-brun' : 'font-bold text-canard'}`}>
+                  {weight.reason === 'cup' || weight.reason === 'congested' ? t(`fm.matchSheet.weight.${weight.reason}`) : weight.importance === 'high' ? t('fm.matchSheet.weight.high', { competition: s.nextMatch.competition ?? '' }) : null}
+                </p>
+              )}
               <p>
                 <b className="text-canard">{t('fm.matchSheet.rules', { competition: s.nextMatch?.competition ?? t('fm.matchSheet.competition') })}</b>{' '}
                 {t('fm.matchSheet.subsRule', { count: rules.subs, windows: rules.windows ?? '–' })}

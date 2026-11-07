@@ -38,6 +38,51 @@ export function isFriendly(name: string | null | undefined): boolean {
   return /amical|friendl|testspiel/i.test(fold(name ?? ''));
 }
 
+/** Nature d'une compétition d'après son nom (FR, EN et quelques langues du jeu). */
+export type CompetitionKind = 'friendly' | 'league' | 'cup' | 'europe' | 'other';
+
+export function competitionKind(name: string | null | undefined): CompetitionKind {
+  const n = fold(name ?? '').toLowerCase();
+  if (!n) return 'other';
+  if (isFriendly(n)) return 'friendly';
+  if (/champions|europa|conference|uefa|europe|libertadores|sudamericana|afc |concacaf/.test(n)) return 'europe';
+  if (/\bcup\b|coupe|pokal|copa|pohar|coppa|taca|beker|trophy|trophee|shield|supercup|super cup|community/.test(n)) return 'cup';
+  if (/liga|league|ligue|division|championnat|premier|serie|bundesliga|eredivisie|primeira|national|championship|\bl1\b|\bl2\b/.test(n)) return 'league';
+  return 'other';
+}
+
+/**
+ * Poids d'un match pour la gestion de l'effectif : le championnat et l'Europe passent en premier, une coupe nationale
+ * est l'occasion de faire tourner (sans brader : la colonne vertébrale reste), un amical n'a rien en jeu.
+ * `congested` : un autre match à 3 jours ou moins, donc rotation conseillée quelle que soit la compétition.
+ */
+export interface CompetitionWeight {
+  kind: CompetitionKind;
+  importance: 'low' | 'normal' | 'high';
+  /** L'adjoint conseille de faire tourner avant ce match. */
+  rotate: boolean;
+  reason: 'friendly' | 'cup' | 'congested' | null;
+}
+
+export function competitionWeight(name: string | null | undefined, opts: { congested?: boolean } = {}): CompetitionWeight {
+  const kind = competitionKind(name);
+  if (kind === 'friendly') return { kind, importance: 'low', rotate: true, reason: 'friendly' };
+  if (kind === 'cup') return { kind, importance: 'normal', rotate: true, reason: 'cup' };
+  const importance = kind === 'other' ? 'normal' : 'high';
+  return opts.congested ? { kind, importance, rotate: true, reason: 'congested' } : { kind, importance, rotate: false, reason: null };
+}
+
+/** Deux matchs à 3 jours ou moins : calendrier chargé. */
+export const CONGESTED_DAYS = 3;
+
+/** Calendrier chargé autour du prochain match : un autre match dans les `CONGESTED_DAYS` jours qui le suivent. */
+export function isCongested(fixtures: { date: string }[], gameDate: string): boolean {
+  const next = [...fixtures].filter((f) => f.date >= gameDate).sort((a, b) => a.date.localeCompare(b.date));
+  if (next.length < 2) return false;
+  const gap = (Date.parse(next[1]!.date) - Date.parse(next[0]!.date)) / 86_400_000;
+  return gap <= CONGESTED_DAYS;
+}
+
 export function competitionRules(name: string | null | undefined): CompetitionRules {
   const n = fold(name ?? '');
   return KNOWN.find((k) => k.match.test(n))?.rules ?? DEFAULT_RULES;
