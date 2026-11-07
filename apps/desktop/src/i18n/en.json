@@ -2320,7 +2320,7 @@
   },
   "live": {
     "title": "Live match",
-    "intro": "During your FM27 matches, a scoreboard is posted to your channel and updated every 15 seconds: minute, score and scorers. A short message goes out for each goal and at the final whistle.",
+    "intro": "During your FM27 matches, a single card is posted to your channel and updated every 15 seconds: minute, score, scorers and latest goal, up to full time.",
     "enable": "Tell my matches live on Discord",
     "needWebhook": "First link a channel with the webhook link above.",
     "plugin": "Requires the FM27 plugin 0.5.0 or later, and FM Immersion open during the match. Only the score and scorers are sent.",
@@ -2329,8 +2329,7 @@
     "kickoff": "Kick-off",
     "ended": "Full time",
     "scorers": "Scorers",
-    "goal": "⚽ **GOAL for {{team}}!**{{scorer}}\n{{home}} **{{score}}** {{away}}",
-    "goalAgainst": "😬 {{team}} score…{{scorer}}\n{{home}} **{{score}}** {{away}}",
-    "finalMessage": "🏁 **Full time**: {{home}} **{{score}}** {{away}}"
+    "lastGoal": "⚽ Latest goal: **{{team}}** {{scorer}}",
+    "lastGoalAgainst": "😬 Latest goal: **{{team}}** {{scorer}}"
   }
 }

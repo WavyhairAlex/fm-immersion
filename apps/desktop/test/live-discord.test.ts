@@ -33,18 +33,19 @@ describe('direct Discord', () => {
     calls.length = 0;
   });
 
-  it('poste le tableau, le modifie, annonce le but et la fin', async () => {
+  it('poste un seul encart puis le modifie : but, puis fin du match', async () => {
     let s = await liveStep(t, base, 'Malženice', null, now);
     expect(calls.map((c) => c.cmd)).toEqual(['discord_post']);
     expect(s?.messageId).toBe('42');
     calls.length = 0;
     s = await liveStep(t, { ...base, awayScore: 1, minute: '11 min.', scorers: "M. Fábry 11'" }, 'Malženice', s, now);
-    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit', 'discord_send']);
-    expect(String((calls[1]!.args.payload as { content: string }).content)).toContain('live.goal ');
-    expect(String((calls[1]!.args.payload as { content: string }).content)).toContain('M. Fábry');
+    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit']);
+    const desc = (calls[0]!.args.payload as { embeds: { description: string }[] }).embeds[0]!.description;
+    expect(desc).toContain('live.lastGoal ');
+    expect(desc).toContain('M. Fábry');
     calls.length = 0;
     s = await liveStep(t, { ...s!.last, minute: 'FDM', final: true }, 'Malženice', s, now);
-    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit', 'discord_send']);
+    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit']);
     expect(s?.done).toBe(true);
     calls.length = 0;
     await liveStep(t, { ...s!.last }, 'Malženice', s, now);
