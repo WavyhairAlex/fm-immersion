@@ -2317,5 +2317,20 @@
     "whatTitle": "Ce qui est envoyé",
     "what": "Pour l'instant, la gazette de la semaine, quand tu cliques sur « Envoyer sur Discord » dans la Gazette. L'envoi automatique des moments forts (buts, résultats, transferts) arrivera ensuite.",
     "privacy": "Le lien reste sur ton PC. FM Immersion n'envoie rien à Discord sans ton clic, et seulement vers l'adresse des webhooks de Discord."
+  },
+  "live": {
+    "title": "Match en direct",
+    "intro": "Pendant tes matchs dans FM27, un tableau de score est posté dans ton salon puis mis à jour toutes les 15 secondes : minute, score et buteurs. Un petit message part à chaque but et au coup de sifflet final.",
+    "enable": "Raconter mes matchs en direct sur Discord",
+    "needWebhook": "Relie d'abord un salon avec le lien webhook ci-dessus.",
+    "plugin": "Il faut le plugin FM27 0.5.0 ou plus récent, et FM Immersion ouvert pendant le match. Seuls le score et les buteurs sont envoyés.",
+    "liveTag": "🔴 EN DIRECT",
+    "finalTag": "🏁 SCORE FINAL",
+    "kickoff": "Coup d'envoi",
+    "ended": "Fin du match",
+    "scorers": "Buteurs",
+    "goal": "⚽ **BUT pour {{team}} !**{{scorer}}\n{{home}} **{{score}}** {{away}}",
+    "goalAgainst": "😬 But de {{team}}…{{scorer}}\n{{home}} **{{score}}** {{away}}",
+    "finalMessage": "🏁 **Fin du match** : {{home}} **{{score}}** {{away}}"
   }
 }

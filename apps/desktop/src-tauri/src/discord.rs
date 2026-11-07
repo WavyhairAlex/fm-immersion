@@ -68,6 +68,64 @@ pub fn discord_send(webhook: String, payload: serde_json::Value) -> Result<(), D
     }
 }
 
+fn refused(code: u16, resp: ureq::Response) -> DiscordError {
+    let detail = resp.into_string().unwrap_or_default();
+    DiscordError::Refused(format!("{code} {}", detail.chars().take(200).collect::<String>()))
+}
+
+fn checked(webhook: &str, payload: &serde_json::Value) -> Result<String, DiscordError> {
+    if !valid_webhook(webhook) {
+        return Err(DiscordError::BadUrl);
+    }
+    let body = payload.to_string();
+    if body.len() > 20_000 {
+        return Err(DiscordError::TooLong);
+    }
+    Ok(body)
+}
+
+/// Identifiant du message renvoyé par Discord (`?wait=true`) : des chiffres seulement.
+pub fn message_id(answer: &str) -> Option<String> {
+    let v: serde_json::Value = serde_json::from_str(answer).ok()?;
+    let id = v.get("id")?.as_str()?;
+    (!id.is_empty() && id.len() <= 25 && id.chars().all(|c| c.is_ascii_digit())).then(|| id.to_string())
+}
+
+/// Envoie un message et renvoie son identifiant, pour le modifier ensuite (tableau de score du match en direct).
+#[tauri::command]
+pub fn discord_post(webhook: String, payload: serde_json::Value) -> Result<String, DiscordError> {
+    let webhook = webhook.trim();
+    let body = checked(webhook, &payload)?;
+    match ureq::post(&format!("{webhook}?wait=true"))
+        .set("Content-Type", "application/json")
+        .set("User-Agent", "FM-Immersion")
+        .send_string(&body)
+    {
+        Ok(resp) => message_id(&resp.into_string().unwrap_or_default()).ok_or_else(|| DiscordError::Refused("réponse sans identifiant".into())),
+        Err(ureq::Error::Status(code, resp)) => Err(refused(code, resp)),
+        Err(e) => Err(DiscordError::Network(e.to_string())),
+    }
+}
+
+/// Modifie un message envoyé par ce même webhook (seulement les siens : Discord refuse les autres).
+#[tauri::command]
+pub fn discord_edit(webhook: String, message_id: String, payload: serde_json::Value) -> Result<(), DiscordError> {
+    let webhook = webhook.trim();
+    let body = checked(webhook, &payload)?;
+    if message_id.is_empty() || message_id.len() > 25 || !message_id.chars().all(|c| c.is_ascii_digit()) {
+        return Err(DiscordError::BadUrl);
+    }
+    match ureq::request("PATCH", &format!("{webhook}/messages/{message_id}"))
+        .set("Content-Type", "application/json")
+        .set("User-Agent", "FM-Immersion")
+        .send_string(&body)
+    {
+        Ok(_) => Ok(()),
+        Err(ureq::Error::Status(code, resp)) => Err(refused(code, resp)),
+        Err(e) => Err(DiscordError::Network(e.to_string())),
+    }
+}
+
 /// Corps multipart d'un message avec une image jointe (`files[0]`, nommée `name`) : Discord l'affiche dans
 /// l'encart quand le JSON y fait référence par `attachment://<name>`.
 pub fn multipart(boundary: &str, payload: &str, name: &str, png: &[u8]) -> Vec<u8> {
@@ -132,6 +190,18 @@ mod tests {
     fn refuse_un_lien_invalide_sans_reseau() {
         let err = discord_send("https://example.com/hook".into(), serde_json::json!({ "content": "x" })).unwrap_err();
         assert!(matches!(err, DiscordError::BadUrl));
+    }
+
+    #[test]
+    fn identifiant_du_message_et_modification() {
+        assert_eq!(message_id(r#"{"id":"1305012345678901234","type":0}"#).as_deref(), Some("1305012345678901234"));
+        assert_eq!(message_id(r#"{"id":"../x"}"#), None);
+        assert_eq!(message_id("pas du json"), None);
+        assert!(matches!(
+            discord_edit("https://discord.com/api/webhooks/1/x".into(), "12/../3".into(), serde_json::json!({})),
+            Err(DiscordError::BadUrl)
+        ));
+        assert!(matches!(discord_post("https://evil.io/x".into(), serde_json::json!({})), Err(DiscordError::BadUrl)));
     }
 
     #[test]

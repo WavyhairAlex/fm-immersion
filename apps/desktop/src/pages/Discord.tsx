@@ -1,8 +1,15 @@
-import { useMutation } from '@tanstack/react-query';
-import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
-import { getWebhook, isWebhook, sendDiscord, setWebhook } from '../lib/discord';
+import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
+import {
+  getLiveEnabled,
+  getWebhook,
+  isWebhook,
+  sendDiscord,
+  setLiveEnabled,
+  setWebhook,
+} from "../lib/discord";
 
 /** Mode Live Discord (solo) : le joueur colle le lien webhook de son salon, puis envoie ses gazettes. */
 export function Discord() {
@@ -10,23 +17,30 @@ export function Discord() {
   const [url, setUrl] = useState(getWebhook());
   const [saved, setSaved] = useState(isWebhook(getWebhook()));
   const valid = isWebhook(url);
+  const [live, setLive] = useState(getLiveEnabled());
 
-  const test = useMutation({ mutationFn: () => sendDiscord({ username: 'FM Immersion', content: t('discord.testMessage') }, url) });
+  const test = useMutation({
+    mutationFn: () =>
+      sendDiscord(
+        { username: "FM Immersion", content: t("discord.testMessage") },
+        url,
+      ),
+  });
 
   return (
     <div className="w-full px-6 py-6 xl:px-10">
-      <h1 className="text-3xl font-semibold">{t('modes.discord.title')}</h1>
-      <p className="mt-2 max-w-3xl text-brun">{t('discord.intro')}</p>
+      <h1 className="text-3xl font-semibold">{t("modes.discord.title")}</h1>
+      <p className="mt-2 max-w-3xl text-brun">{t("discord.intro")}</p>
 
       <section className="card mt-6 max-w-3xl">
-        <h2 className="text-xl font-semibold">{t('discord.webhookTitle')}</h2>
+        <h2 className="text-xl font-semibold">{t("discord.webhookTitle")}</h2>
         <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm">
-          <li>{t('discord.step1')}</li>
-          <li>{t('discord.step2')}</li>
-          <li>{t('discord.step3')}</li>
+          <li>{t("discord.step1")}</li>
+          <li>{t("discord.step2")}</li>
+          <li>{t("discord.step3")}</li>
         </ol>
         <label className="mt-4 block text-sm font-bold">
-          {t('discord.webhook')}
+          {t("discord.webhook")}
           <input
             className="input mt-1 font-mono text-sm"
             value={url}
@@ -38,7 +52,11 @@ export function Discord() {
             spellCheck={false}
           />
         </label>
-        {url && !valid && <p className="mt-2 text-sm font-bold text-corail">{t('discord.invalid')}</p>}
+        {url && !valid && (
+          <p className="mt-2 text-sm font-bold text-corail">
+            {t("discord.invalid")}
+          </p>
+        )}
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button
             type="button"
@@ -49,24 +67,63 @@ export function Discord() {
               setSaved(isWebhook(url));
             }}
           >
-            {url ? t('discord.save') : t('discord.remove')}
+            {url ? t("discord.save") : t("discord.remove")}
           </button>
-          <button type="button" className="btn-secondary" disabled={!valid || test.isPending} onClick={() => test.mutate()}>
-            {t('discord.test')}
+          <button
+            type="button"
+            className="btn-secondary"
+            disabled={!valid || test.isPending}
+            onClick={() => test.mutate()}
+          >
+            {t("discord.test")}
           </button>
-          {saved && <span className="text-sm font-bold text-eau-fonce">{t('discord.saved')}</span>}
+          {saved && (
+            <span className="text-sm font-bold text-eau-fonce">
+              {t("discord.saved")}
+            </span>
+          )}
         </div>
-        {test.isSuccess && <p className="mt-2 text-sm font-bold text-eau-fonce">{t('discord.testOk')}</p>}
-        {test.isError && <p className="mt-2 text-sm font-bold text-corail">{String(test.error)}</p>}
+        {test.isSuccess && (
+          <p className="mt-2 text-sm font-bold text-eau-fonce">
+            {t("discord.testOk")}
+          </p>
+        )}
+        {test.isError && (
+          <p className="mt-2 text-sm font-bold text-corail">
+            {String(test.error)}
+          </p>
+        )}
       </section>
 
       <section className="card mt-6 max-w-3xl">
-        <h2 className="text-xl font-semibold">{t('discord.whatTitle')}</h2>
-        <p className="mt-2 text-sm text-brun">{t('discord.what')}</p>
+        <h2 className="text-xl font-semibold">{t("live.title")}</h2>
+        <p className="mt-2 text-sm text-brun">{t("live.intro")}</p>
+        <label className="mt-4 flex items-center gap-3 text-sm font-bold">
+          <input
+            type="checkbox"
+            className="h-5 w-5 accent-orange-fonce"
+            checked={live}
+            disabled={!saved}
+            onChange={(e) => {
+              setLiveEnabled(e.target.checked);
+              setLive(e.target.checked);
+            }}
+          />
+          {t("live.enable")}
+        </label>
+        {!saved && (
+          <p className="mt-2 text-xs text-brun">{t("live.needWebhook")}</p>
+        )}
+        <p className="mt-3 text-xs text-brun">{t("live.plugin")}</p>
+      </section>
+
+      <section className="card mt-6 max-w-3xl">
+        <h2 className="text-xl font-semibold">{t("discord.whatTitle")}</h2>
+        <p className="mt-2 text-sm text-brun">{t("discord.what")}</p>
         <Link to="/gazette" className="btn-secondary mt-4 text-sm">
-          {t('modes.gazette.title')}
+          {t("modes.gazette.title")}
         </Link>
-        <p className="mt-4 text-xs text-brun">{t('discord.privacy')}</p>
+        <p className="mt-4 text-xs text-brun">{t("discord.privacy")}</p>
       </section>
     </div>
   );

@@ -121,6 +121,61 @@ public class FmBindingReader : IGameReader
         return d == null || d.StartsWith("1900") ? null : d;
     }
 
+    // --- Match en direct (0.5.0) ---
+
+    // Vrai pendant un match du manager humain (match en direct ou résultat rapide), null si le jeu ne répond pas.
+    public static bool? DuringMatch()
+    {
+        var v = Batch.Run(new[] { new Req(null, "game.IsDuringMatch") }, 3000)[0];
+        return v switch
+        {
+            double d => d != 0,
+            string s => s.Equals("true", StringComparison.OrdinalIgnoreCase) || s == "1",
+            _ => null,
+        };
+    }
+
+    const string LiveFixture = "game.GameCurrentManager/LatestScoresHumanFixtures/#0/";
+    static readonly (string Key, string Path, bool Deep)[] LiveFields =
+    {
+        ("home", "HomeTeam/Name", false), ("away", "AwayTeam/Name", false),
+        ("result", "Result", false), ("minute", "LatestScoreTime", false), ("final", "HasFinalResult", false),
+        ("scorers", "GoalscorersString", false),
+        ("homeEvents", "HomeEventInfos", true), ("awayEvents", "AwayEventInfos", true),
+    };
+
+    // Match du manager humain en cours (chemins validés en jeu le 07/11/2026 avec la sonde Carnet : 15 lectures en
+    // 15-20 s sans gêne). Format archivix-live/1 : home, away, homeScore, awayScore, result ("2 - 5"), minute ("19 min.",
+    // "FDM" à la fin), final, scorers (texte du jeu), homeEvents/awayEvents [{type: 0 but, 2 penalty, time: "11', 90+1'"}].
+    // null si aucun match n'est lisible.
+    public static Dictionary<string, object?>? ReadLive()
+    {
+        var res = Batch.Run(LiveFields.Select(f => new Req(null, LiveFixture + f.Path, f.Deep)).ToArray(), 4000);
+        var d = new Dictionary<string, object?>();
+        for (int i = 0; i < LiveFields.Length; i++) d[LiveFields[i].Key] = res[i];
+        d["home"] = CleanName(d["home"] as string);
+        d["away"] = CleanName(d["away"] as string);
+        if (d["home"] == null || d["away"] == null) return null;
+        var score = Regex.Match(d["result"] as string ?? "", @"^\s*(\d+)\s*-\s*(\d+)");
+        d["homeScore"] = score.Success ? int.Parse(score.Groups[1].Value) : null;
+        d["awayScore"] = score.Success ? int.Parse(score.Groups[2].Value) : null;
+        d["final"] = d["final"] switch { double x => x != 0, string s => s.Equals("true", StringComparison.OrdinalIgnoreCase), _ => false };
+        d["homeEvents"] = LiveEvents(d["homeEvents"]);
+        d["awayEvents"] = LiveEvents(d["awayEvents"]);
+        return d;
+    }
+
+    // Garde de chaque événement le type et le temps affiché (le joueur est une référence que l'on ne résout pas).
+    static List<Dictionary<string, object?>> LiveEvents(object? raw) =>
+        raw is List<object?> l
+            ? l.OfType<Dictionary<string, object?>>().Select(e => new Dictionary<string, object?>
+            {
+                ["type"] = e.GetValueOrDefault("EventType"),
+                ["time"] = e.GetValueOrDefault("TimeString"),
+                ["slice"] = e.GetValueOrDefault("MatchTimeSlice"),
+            }).ToList()
+            : new();
+
     /// <summary>La partie a été quittée ou remplacée pendant une lecture : on abandonne l'instantané.</summary>
     public sealed class GameChanged : Exception { }
 

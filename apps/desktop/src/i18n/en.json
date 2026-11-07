@@ -2317,5 +2317,20 @@
     "whatTitle": "What gets sent",
     "what": "For now, the weekly gazette, when you click \"Send to Discord\" in the Gazette. Automatic posting of key moments (goals, results, transfers) comes next.",
     "privacy": "The link stays on your PC. FM Immersion sends nothing to Discord without your click, and only to Discord's webhook address."
+  },
+  "live": {
+    "title": "Live match",
+    "intro": "During your FM27 matches, a scoreboard is posted to your channel and updated every 15 seconds: minute, score and scorers. A short message goes out for each goal and at the final whistle.",
+    "enable": "Tell my matches live on Discord",
+    "needWebhook": "First link a channel with the webhook link above.",
+    "plugin": "Requires the FM27 plugin 0.5.0 or later, and FM Immersion open during the match. Only the score and scorers are sent.",
+    "liveTag": "🔴 LIVE",
+    "finalTag": "🏁 FULL TIME",
+    "kickoff": "Kick-off",
+    "ended": "Full time",
+    "scorers": "Scorers",
+    "goal": "⚽ **GOAL for {{team}}!**{{scorer}}\n{{home}} **{{score}}** {{away}}",
+    "goalAgainst": "😬 {{team}} score…{{scorer}}\n{{home}} **{{score}}** {{away}}",
+    "finalMessage": "🏁 **Full time**: {{home}} **{{score}}** {{away}}"
   }
 }

@@ -18,12 +18,12 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.4.6";
+    public const string Version = "0.5.0";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que FM Immersion renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
     internal static string DataDir = null!;
-    internal static bool ReadTactic = true, ReadEffectiveness, ReadLineup, ReadExtended, ReadTargets, WriteDiscovery = true, LocalServer;
+    internal static bool ReadTactic = true, ReadEffectiveness, ReadLineup, ReadExtended, ReadTargets, WriteDiscovery = true, LocalServer, ReadLive = true;
     bool _discovered;
     internal static int RereadSeconds = 300;
     const string Prefix = "http://localhost:8727/";
@@ -61,8 +61,11 @@ public class Plugin : BasePlugin
         // pouvait l'appeler et déclencher des lectures dans le jeu (/api/probe, /api/squad). FM Immersion ne s'en sert pas.
         LocalServer = Config.Bind("Archivix", "ServeurLocal", false,
             "Ouvrir le serveur local http://localhost:8727 (ancienne page archivix.html et sondes de découverte). Inutile pour FM Immersion ; à n'activer que pour du diagnostic.").Value;
+        ReadLive = Config.Bind("Archivix", "LireMatchDirect", true,
+            "Pendant un match, écrire toutes les 15 s archivix-live.json (score, minute, buteurs) pour le direct Discord de FM Immersion.").Value;
         AddComponent<MainThread>();
         new Thread(RefreshLoop) { IsBackground = true, Name = "ArchivixRefresh" }.Start();
+        if (ReadLive) new Thread(LiveLoop) { IsBackground = true, Name = "ArchivixLive" }.Start();
         if (LocalServer) StartServer();
         Log.LogInfo($"Archivix Bridge {Version} : instantanés dans {DataDir}" + (_http != null ? $", serveur local sur {Prefix}" : ""));
     }
@@ -132,6 +135,37 @@ public class Plugin : BasePlugin
             }
             catch (FmBindingReader.GameChanged) { lastDate = null; loadedSince = null; Log.LogInfo("Partie quittée ou changée pendant la lecture : instantané abandonné."); }
             catch (Exception e) { Log.LogWarning($"Instantané impossible : {e.Message}"); }
+        }
+    }
+
+    // Match en direct (0.5.0) : toutes les 20 s, le plugin demande au jeu si un match est en cours ; pendant le match,
+    // il relit toutes les 15 s le score du match du manager (FmBindingReader.ReadLive) et écrit archivix-live.json.
+    // Lecture seule, comme le reste. Le fichier garde le dernier état (match fini compris) jusqu'au match suivant.
+    void LiveLoop()
+    {
+        bool was = false;
+        string? gameDate = null;
+        while (true)
+        {
+            try
+            {
+                var now = FmBindingReader.DuringMatch() == true;
+                if (now && !was) { gameDate = FmBindingReader.CurrentDate(); Log.LogInfo("Match en cours : direct dans archivix-live.json"); }
+                if (now || was)   // une dernière lecture après la fin du match, pour le résultat final
+                {
+                    var live = FmBindingReader.ReadLive();
+                    if (live != null)
+                    {
+                        var doc = new Dictionary<string, object?> { ["schema"] = "archivix-live/1", ["gameDate"] = gameDate, ["inMatch"] = now, ["updatedAt"] = DateTime.UtcNow.ToString("o") };
+                        foreach (var kv in live) doc[kv.Key] = kv.Value;
+                        Directory.CreateDirectory(DataDir);
+                        WriteAtomic(Path.Combine(DataDir, "archivix-live.json"), JsonSerializer.Serialize(doc, Json));
+                    }
+                }
+                was = now;
+            }
+            catch (Exception e) { Log.LogWarning($"Match en direct : {e.Message}"); }
+            Thread.Sleep(was ? 15_000 : 20_000);
         }
     }
 

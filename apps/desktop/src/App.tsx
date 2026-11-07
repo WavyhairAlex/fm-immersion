@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
 import { UpdateGate } from './components/UpdateGate';
+import { useLiveDiscord } from './lib/live-discord';
 import { Discord } from './pages/Discord';
 import { Faces } from './pages/Faces';
 import { FmSave } from './pages/FmSave';
@@ -10,6 +11,7 @@ import { Overview } from './pages/Overview';
 import { Soon } from './pages/Soon';
 
 export function App() {
+  useLiveDiscord();
   return (
     <UpdateGate>
       <div className="flex min-h-screen">
