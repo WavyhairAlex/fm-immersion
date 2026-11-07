@@ -1,4 +1,5 @@
 import { gazetteIssues, seasonReviews, seasonSoFar, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
+import { Face } from '../components/Face';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -112,7 +113,12 @@ export function Paper({ issue }: { issue: GazetteIssue }) {
         </p>
       </header>
       <section className="border-b border-canard/10 px-6 py-5">
-        <h2 className="font-display text-2xl font-semibold leading-tight">{head.title}</h2>
+        <div className="flex items-start gap-4">
+          {(issue.headline.params.bestId ?? issue.headline.params.id) != null && (
+            <Face id={(issue.headline.params.bestId ?? issue.headline.params.id) as string | number} name={String(issue.headline.params.best ?? issue.headline.params.name ?? '')} size={64} className="mt-1 ring-2 ring-orange" />
+          )}
+          <h2 className="font-display text-2xl font-semibold leading-tight">{head.title}</h2>
+        </div>
         {article && <p className="mt-2 text-brun">{article}</p>}
       </section>
       {edito && (
@@ -128,9 +134,12 @@ export function Paper({ issue }: { issue: GazetteIssue }) {
         {issue.stories.map((s, i) => {
           const x = storyText(t, issue.club, s);
           return (
-            <section key={i}>
+            <section key={i} className="flex gap-3">
+              {(s.params.id ?? s.params.bestId) != null && <Face id={(s.params.id ?? s.params.bestId) as string | number} name={String(s.params.name ?? s.params.best ?? '')} size={36} className="mt-0.5" />}
+              <div>
               <h3 className="font-sans text-sm font-extrabold">{x.title}</h3>
               {x.body && <p className="mt-1 text-sm text-brun">{x.body}</p>}
+              </div>
             </section>
           );
         })}
