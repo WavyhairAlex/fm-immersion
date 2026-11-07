@@ -314,7 +314,7 @@
     "sections": {
       "home": "Home",
       "squad": "Squad",
-      "tactic": "Next match",
+      "tactic": "Tactics & training",
       "project": "My project",
       "club": "Club",
       "results": "Performance",
@@ -1727,7 +1727,7 @@
       "opponent": "Next match",
       "mercato": "Transfers & club",
       "finances": "Finances and contracts",
-      "tactic": "Next match",
+      "tactic": "Tactics & training",
       "squad": "Squad",
       "results": "Performance",
       "style": "Game plan"

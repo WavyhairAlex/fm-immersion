@@ -67,17 +67,16 @@ const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
 const LIVE_POLL_MS = 10_000;
 
 /**
- * Six onglets, dans l'ordre où on s'en sert : l'accueil, le prochain match (compo, consignes, adversaire,
- * rotation), l'effectif, les performances (résultats, stats, analyse), le projet de jeu (style, feuille de
- * route, entraînement) et le mercato avec le club (départs, cibles, finances, contrats). Chaque onglet montre
- * ses parties en sous-onglets, une à la fois.
+ * Cinq onglets, dans l'ordre où on s'en sert : l'accueil, tactique et entraînement (compo, consignes, adversaire,
+ * rotation, style, efficacité, feuille de route, entraînement, staff), l'effectif, les performances (résultats,
+ * stats, analyse) et le mercato avec le club (départs, cibles, finances, contrats). Chaque onglet montre ses
+ * parties en sous-onglets, une à la fois. L'ancien onglet « Projet de jeu » (`go('style')`) ouvre le premier.
  */
 const SECTIONS = [
   { id: 'home', views: ['home'] },
   { id: 'tactic', views: ['tactic'] },
   { id: 'squad', views: ['squad'] },
   { id: 'results', views: ['results'] },
-  { id: 'style', views: ['style'] },
   { id: 'mercato', views: ['mercato'] },
 ] as const;
 /**
@@ -85,10 +84,9 @@ const SECTIONS = [
  * ouvre Mercato et club sur Contrats.
  */
 const PARTS: Record<string, readonly string[]> = {
-  tactic: ['tactic', 'instructions', 'opponent', 'calendar', 'depth', 'effectiveness'],
+  tactic: ['tactic', 'instructions', 'opponent', 'depth', 'calendar', 'style', 'effectiveness', 'project', 'training', 'staff'],
   squad: ['squad', 'playtime', 'dressing', 'progression', 'roles', 'compare', 'numbers', 'loans'],
   results: ['results', 'diagnosis', 'stats', 'analysis'],
-  style: ['style', 'project', 'training', 'staff'],
   mercato: ['mercato', 'targets', 'finances', 'wages', 'contracts'],
 };
 /** Sections dont les écrans s'enchaînent comme des étapes (numérotées, avec « étape suivante »). */
