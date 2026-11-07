@@ -4,6 +4,7 @@ export const MODES = [
   { id: 'coach', path: '/coach', status: 'available' },
   { id: 'gazette', path: '/gazette', status: 'available' },
   { id: 'discord', path: '/discord', status: 'available' },
+  { id: 'challenges', path: '/defis', status: 'available' },
   { id: 'world', path: '/monde', status: 'soon' },
 ] as const;
 

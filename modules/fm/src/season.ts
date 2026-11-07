@@ -305,14 +305,14 @@ function teamOfSeason(
  */
 export function seasonReviews(history: Entry[]): SeasonReview[] {
   const sorted = [...history].sort((a, b) => a.gameDate.localeCompare(b.gameDate));
-  return segments(sorted)
+  return seasonSegments(sorted)
     .filter((x) => x.ended)
     .map((x) => review(x.entries))
     .reverse();
 }
 
 /** Découpe l'historique (trié) en saisons : changement de club, ou fin du championnat (incluse dans sa saison). */
-function segments(sorted: Entry[]): { entries: Entry[]; ended: boolean }[] {
+export function seasonSegments(sorted: Entry[]): { entries: Entry[]; ended: boolean }[] {
   const out: { entries: Entry[]; ended: boolean }[] = [];
   let start = 0;
   for (let i = 1; i <= sorted.length; i++) {
@@ -335,7 +335,7 @@ function segments(sorted: Entry[]): { entries: Entry[]; ended: boolean }[] {
  * c'est le bilan de la saison finie. Null sans instantané.
  */
 export function seasonSoFar(history: Entry[], date: string): SeasonReview | null {
-  const segs = segments([...history].filter((e) => e.gameDate <= date).sort((a, b) => a.gameDate.localeCompare(b.gameDate)));
+  const segs = seasonSegments([...history].filter((e) => e.gameDate <= date).sort((a, b) => a.gameDate.localeCompare(b.gameDate)));
   const last = segs.at(-1);
   if (!last) return null;
   const r = review(last.entries, !last.ended);

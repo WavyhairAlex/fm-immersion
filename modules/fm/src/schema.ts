@@ -1,5 +1,6 @@
 import { saves } from '@fm-immersion/db';
 import { index, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import type { ChallengeCertificate, Rewind } from './challenges';
 import type { FmSnapshot } from './snapshot';
 
 /**
@@ -58,3 +59,52 @@ export const fmTargets = sqliteTable(
 );
 
 export type FmTargetRow = typeof fmTargets.$inferSelect;
+
+/**
+ * Défis communautaires suivis par une partie (`challenges.ts`). Une ligne par inscription ; `rewinds` garde les retours
+ * en arrière de la date de jeu vus à l'import, avec les résultats connus à ce moment-là (contrôle des matchs rejoués).
+ */
+export const fmChallenges = sqliteTable(
+  'fm_challenges',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    saveId: text('save_id')
+      .notNull()
+      .references(() => saves.id, { onDelete: 'cascade' }),
+    challengeId: text('challenge_id').notNull(),
+    params: text('params', { mode: 'json' }).$type<{ nationality?: string }>().notNull(),
+    /** Date de jeu de l'inscription : seuls les instantanés de cette date et après comptent. */
+    startDate: text('start_date').notNull(),
+    /** Manager sans club au moment de l'inscription (lu dans l'état du plugin). */
+    unemployedStart: integer('unemployed_start', { mode: 'boolean' }).notNull().default(false),
+    rewinds: text('rewinds', { mode: 'json' }).$type<Rewind[]>().notNull(),
+    /** Abandonné par le joueur : gardé pour l'historique, plus suivi. */
+    abandoned: integer('abandoned', { mode: 'boolean' }).notNull().default(false),
+    enrolledAt: text('enrolled_at')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+  },
+  (t) => [index('fm_challenges_save_idx').on(t.saveId)],
+);
+
+export type FmChallengeRow = typeof fmChallenges.$inferSelect;
+
+/**
+ * Certificats de défi reçus d'autres joueurs (ou les siens), pour le classement dans l'appli. Pas liés à une partie :
+ * `digest` (SHA-256 du certificat) les identifie, `verified` = résultat de la vérification faite ici.
+ */
+export const fmChallengeCerts = sqliteTable('fm_challenge_certs', {
+  digest: text('digest').primaryKey(),
+  challengeId: text('challenge_id').notNull(),
+  coach: text('coach').notNull(),
+  status: text('status').notNull(),
+  verified: integer('verified', { mode: 'boolean' }).notNull(),
+  data: text('data', { mode: 'json' }).$type<ChallengeCertificate>().notNull(),
+  importedAt: text('imported_at')
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+});
+
+export type FmChallengeCertRow = typeof fmChallengeCerts.$inferSelect;

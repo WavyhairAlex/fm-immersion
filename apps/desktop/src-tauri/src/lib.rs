@@ -54,6 +54,7 @@ pub fn run() {
             faces::faces_ageswap_set,
             discord::discord_send,
             discord::discord_send_image,
+            discord::discord_send_certificate,
             discord::discord_post,
             discord::discord_edit,
             discord::discord_live_image,

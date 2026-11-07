@@ -2558,6 +2558,10 @@
       "title": "Shared world",
       "summary": "Asynchronous multiplayer: everyone plays their own save at their own pace, in the same world.",
       "details": "Each manager plays their own save. Other humans' results, transfers and job changes reach your save on the right date, with a common checkpoint every six months."
+    },
+    "challenges": {
+      "title": "Challenges",
+      "summary": "Famous FM challenges (Zero to Hero, Invincibles…) proven by your save, with a certificate to share."
     }
   },
   "faces": {
@@ -3158,5 +3162,120 @@
     "send": "Send the card to Discord",
     "sent": "Card sent to Discord.",
     "faces": "Photos come from your facepack or the photorealistic portraits; without a photo, initials are shown."
+  },
+  "challenges": {
+    "save": "Save",
+    "intro": "Sign up for a challenge before you play: FM Immersion checks it on its own from the plugin snapshots. No word of honour, a certificate others can verify again.",
+    "noSave": "No FM save yet. Create it in FM Coach, then come back to sign up.",
+    "coach": "Your nickname on certificates",
+    "coachPlaceholder": "Discord nickname, for example",
+    "anonymous": "Anonymous",
+    "mine": "My running challenges",
+    "none": "No running challenge for this save. Pick one below.",
+    "catalog": "Pick a challenge",
+    "checked": "Checked:",
+    "enroll": "Sign up",
+    "nationality": "Nationality (e.g. France)",
+    "since": "Tracked since {{date}} (game date)",
+    "shareDiscord": "Share on Discord",
+    "export": "Export certificate",
+    "abandon": "Give up",
+    "abandonConfirm": "Give up this challenge? It will no longer be tracked (a sign-up cannot be resumed).",
+    "noWebhook": "To share on Discord, first paste your channel's webhook link in",
+    "shared": "Certificate sent to Discord (fingerprint {{digest}}).",
+    "blocked": {
+      "soon": "Not playable yet: the trophy cabinet must be read from the game first.",
+      "taken": "Already running in this save.",
+      "needUnemployed": "Needs a new career without a club: start it in FM27 and open it in FM Coach while your manager is unemployed.",
+      "needSnapshot": "Needs at least one snapshot of the save (open it in FM Coach)."
+    },
+    "status": {
+      "running": "Running",
+      "success": "Completed",
+      "failed": "Failed",
+      "unproven": "Not proven",
+      "unavailable": "Soon"
+    },
+    "step": {
+      "unemployed": "Career started without a club",
+      "firstClub": "First club: {{value}}",
+      "titles": "League titles: {{value}} {{detail}}",
+      "topTitle": "Top-flight champion {{detail}}",
+      "seasonUnbeaten": "League season without a defeat {{detail}}",
+      "currentSeason": "Current season: {{value}} defeat(s) in {{detail}} matches",
+      "u19Matches": "Matches with at least 3 under-19 starters: {{value}} / {{target}}",
+      "localsSeason": "A full season with only “{{value}}” players ({{detail}})",
+      "localsUsed": "Players fielded: {{value}}, no foreigner",
+      "pentagonSoon": "The 5 continental Champions Leagues: trophy reading to come",
+      "localsForeign": "Foreigners fielded: {{detail}}"
+    },
+    "issue": {
+      "editor": "In-game editor used (reported by FM27 on {{date}}): challenge disqualified.",
+      "editorUnknown": "The plugin does not read the in-game editor flag yet: update it.",
+      "replayed": "Match of {{date}} replayed after a reload: {{before}} became {{after}}. Challenge disqualified.",
+      "rewind": "Save reloaded: back to {{to}} although {{from}} had already been played (no result changed).",
+      "notUnemployed": "The career did not start without a club.",
+      "untracked": "Season {{season}} not tracked from start to finish ({{tracked}} of {{expected}} matches tracked): it does not count.",
+      "unknownLoss": "Defeat in {{matches}} grouped matches before {{date}}: competition unknown, season not proven. Keep FM Immersion open or re-read after each match.",
+      "nationalityUnknown": "Nationality unknown for {{count}} player(s): the plugin must read “nationalites”."
+    },
+    "def": {
+      "zero-to-hero": {
+        "name": "Zero to Hero",
+        "rules": "Start without a club or reputation, find a first job and climb all the way to a top-flight league title.",
+        "checked": "plugin “unemployed” state at the start, final position each season, league name."
+      },
+      "invincibles": {
+        "name": "The Invincibles",
+        "rules": "Finish a league season without a single defeat.",
+        "checked": "every league match, from the first to the last matchday."
+      },
+      "u19": {
+        "name": "Generation U19",
+        "rules": "Play 10 competitive matches with at least 3 under-19 starters.",
+        "checked": "starting eleven and player ages for each match."
+      },
+      "locals": {
+        "name": "Locals only",
+        "rules": "A whole season where every player fielded in a competitive match has the chosen nationality, Athletic Bilbao style.",
+        "checked": "nationalities read from the game for every player who played."
+      },
+      "pentagon": {
+        "name": "Pentagon",
+        "rules": "Unemployed at the start, win all five continental Champions Leagues (Europe, South America, Asia, Africa, North America) in the same career.",
+        "checked": "unemployed start; the final win needs the trophy cabinet read from the game (to come)."
+      }
+    },
+    "discord": {
+      "title": "🏆 {{coach}} · {{challenge}}",
+      "footer": "Fingerprint {{digest}} · FM Immersion {{version}} · certificate attached, verifiable in the app"
+    },
+    "board": "Leaderboard",
+    "boardIntro": "Import other players' certificates (file attached on Discord): FM Immersion redoes every calculation and says whether they are verified or altered.",
+    "boardEmpty": "No certificate yet.",
+    "import": "Import a certificate",
+    "importOk": "Certificate verified and added to the leaderboard.",
+    "importBad": "Certificate refused or altered: {{problems}}.",
+    "verified": "Verified",
+    "altered": "Altered",
+    "remove": "Remove",
+    "col": {
+      "coach": "Coach",
+      "challenge": "Challenge",
+      "status": "Status",
+      "check": "Check",
+      "clubs": "Clubs",
+      "digest": "Fingerprint"
+    },
+    "problem": {
+      "format": "not an FM Immersion certificate",
+      "digest": "the file was changed after it was created",
+      "status": "the status does not match the rules",
+      "dates": "inconsistent dates",
+      "scores": "score and result do not match",
+      "counts": "impossible match or starter counts",
+      "ages": "players getting younger"
+    },
+    "limit": "Everything happens on your PC and the code is open: a certificate proves the save is consistent and tracked from start to finish, not that a whole fake season cannot be made up. Independent project, not affiliated with Sports Interactive or SEGA."
   }
 }
