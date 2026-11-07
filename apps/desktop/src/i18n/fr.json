@@ -191,6 +191,7 @@
       "otherPhase": "{{phase}} : {{role}}",
       "subs": "Remplaçants : {{names}}",
       "offPos": "hors poste naturel (accompli)",
+      "fromTeam": "de {{team}}",
       "nobody": "Personne",
       "pitchHelp": "Onze choisi par adéquation aux rôles du style, blessés exclus. Les pointillés montrent le déplacement depuis l'autre phase ; survole un joueur pour le retrouver dans la liste.",
       "balance": "Équilibre de l'équipe",
@@ -2114,6 +2115,22 @@
         "SetPieces": "CPA"
       }
     },
+    "tight": {
+      "title": "Finances serrées : on bricole",
+      "signals": "Le club ne peut pas acheter : {{list}}.",
+      "signal": {
+        "wageOver": "budget salarial dépassé de {{amount}}",
+        "noTransfer": "pas de budget de transfert",
+        "debt": "solde négatif de {{amount}}"
+      },
+      "sellFirst_one": "Vendre d'abord : {{count}} départ conseillé, {{income}} de recette possible et {{wages}} de salaires libérés.",
+      "sellFirst_other": "Vendre d'abord : {{count}} départs conseillés, {{income}} de recette possible et {{wages}} de salaires libérés.",
+      "freeOrLoan": "Recruter sans indemnité : joueurs libres, fins de contrat, prêts (les cibles au-dessus du budget sont marquées « hors budget »).",
+      "youth_one": "Piocher en interne : {{count}} jeune vaut le coup, et la compo appelle la réserve ou les U19 dès qu'un poste manque.",
+      "youth_other": "Piocher en interne : {{count}} jeunes valent le coup, et la compo appelle la réserve ou les U19 dès qu'un poste manque.",
+      "noRaise": "Pas d'augmentation : prolonge au même salaire ou pas du tout, le budget salarial est déjà dépassé.",
+      "overBudget": "hors budget"
+    },
     "leave": {
       "title_one": "Départs annoncés · {{count}}",
       "title_other": "Départs annoncés · {{count}}",
@@ -2285,6 +2302,12 @@
       "training_other": "{{count}} réglages d'entraînement individuel sont à changer cette semaine.",
       "mercato_one": "Une décision de mercato t'attend (départ ou recrue).",
       "mercato_other": "{{count}} décisions de mercato t'attendent (départs et recrues).",
+      "finances": "Finances serrées ({{detail}}) : pas d'achat, cherche libre ou en prêt, pioche dans la réserve et les jeunes, et vends avant de recruter.",
+      "finSignal": {
+        "wageOver": "budget salarial dépassé de {{amount}}",
+        "noTransfer": "pas de budget de transfert",
+        "debt": "solde négatif de {{amount}}"
+      },
       "allGood": "Rien d'urgent : l'équipe est prête. Bon moment pour regarder le projet de jeu ou les jeunes.",
       "detail": "Tout le détail",
       "detailHide": "Masquer le détail",
@@ -2313,7 +2336,8 @@
         "trialists": "Juger l'essai",
         "friendly": "Répartir le temps de jeu",
         "rotation": "Faire tourner",
-        "congested": "Préparer la rotation"
+        "congested": "Préparer la rotation",
+        "finances": "Voir les finances"
       },
       "tabBadge_one": "{{count}} chose à faire ici",
       "tabBadge_other": "{{count}} choses à faire ici",

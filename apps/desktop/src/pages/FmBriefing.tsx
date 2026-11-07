@@ -3,6 +3,8 @@ import {
   briefIsDone,
   briefKey,
   briefing,
+  clubFinances,
+  financeState,
   isBriefTask,
   nameList,
   pruneBriefDone,
@@ -73,9 +75,18 @@ export function FmBriefing({
       .map((p) => ({ id: String(p.id), name: String(p.name ?? '') }) as FmPlayer);
   }, [snap]);
   const congested = useMemo(() => isCongested(snapshotFixtures(snap), snap.gameDate), [snap]);
+  // Finances serrées : chaque signal formulé avec son montant, pour une seule phrase dans le briefing.
+  const finances = useMemo(() => {
+    const fin = clubFinances(snap, players);
+    const st = financeState(fin);
+    if (!st.tight) return null;
+    const amount = { wageOver: Math.abs(fin.wageRoom ?? 0), noTransfer: 0, debt: Math.abs(fin.balance ?? 0) };
+    return { signals: st.signals, detail: st.signals.map((sg) => t(`fm.brief.finSignal.${sg}`, { amount: f.money(amount[sg]) })).join(', ') };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snap, players, i18n.resolvedLanguage]);
   const items = useMemo(
-    () => briefing({ players, nextMatch: nm, starters, decisions, playtime, setupsToChange, offseason, trialists, backForMatch, congested }),
-    [players, nm, starters, decisions, playtime, setupsToChange, offseason, trialists, congested],
+    () => briefing({ players, nextMatch: nm, starters, decisions, playtime, setupsToChange, offseason, trialists, backForMatch, congested, finances }),
+    [players, nm, starters, decisions, playtime, setupsToChange, offseason, trialists, congested, finances],
   );
   const scope = useFmSaveScope();
   const [done, setDone] = useState<BriefDone>(() => readScoped<BriefDone>(DONE_KEY, { ...scope, inheritsLegacy: false }, {}));

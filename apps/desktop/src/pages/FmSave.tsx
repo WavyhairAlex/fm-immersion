@@ -52,7 +52,7 @@ import { FmStats } from './FmStats';
 import { FmResults } from './FmResults';
 import { FmDiagnosis } from './FmDiagnosis';
 import { FmStyle } from './FmStyle';
-import { FmTactic, useTacticEngine } from './FmTactic';
+import { FmTactic, ReserveContext, useTacticEngine } from './FmTactic';
 import { FmTargets } from './FmTargets';
 import { FmTraining } from './FmTraining';
 import { FmWages } from './FmWages';
@@ -289,6 +289,11 @@ export function FmSave() {
     // Un blessé rétabli d'ici le prochain match compte pour les compos de ce match.
     return snapshot ? forNextMatch(present, nextMatchInDays(snapshot.data)) : present;
   }, [snapshot, contracted]);
+  // Réserve et jeunes présents au club : appelés par les compos quand l'équipe première ne couvre pas un poste.
+  const reserve = useMemo(() => {
+    const out = snapshot ? loanedOutIds(snapshot.data) : new Set<string>();
+    return contracted.filter((p) => p.team && !out.has(p.id));
+  }, [snapshot, contracted]);
   const history = useMemo<SquadAt[]>(
     () =>
       (all ?? []).map((h) => ({
@@ -391,7 +396,7 @@ export function FmSave() {
       case 'staff':
         return <FmStaff />;
       case 'mercato':
-        return <FmMercato saveId={saveId} players={players} folder={folder} gameDate={snapshot.gameDate} history={history} />;
+        return <FmMercato saveId={saveId} snap={snapshot.data} players={players} folder={folder} gameDate={snapshot.gameDate} history={history} />;
       case 'targets':
         return <FmTargets saveId={saveId} snap={snapshot.data} players={players} folder={folder} go={go} />;
       case 'depth':
@@ -624,6 +629,7 @@ export function FmSave() {
 
         {snapshot && players.length > 0 && scope && (
           <FmSaveScopeContext.Provider value={scope}>
+            <ReserveContext.Provider value={reserve}>
             <PlayerSheetContext.Provider value={setSheet}>
               <div className="mt-4 lg:mt-0">
                 <div className="min-w-0">
@@ -669,6 +675,7 @@ export function FmSave() {
               </div>
               {sheet && <FmPlayerSheet id={sheet} players={players} snap={snapshot.data} history={history} folder={folder} gameDate={snapshot.gameDate} onClose={() => setSheet(null)} />}
             </PlayerSheetContext.Provider>
+            </ReserveContext.Provider>
           </FmSaveScopeContext.Provider>
         )}
       </div>

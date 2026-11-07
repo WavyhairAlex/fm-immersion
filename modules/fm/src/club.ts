@@ -208,6 +208,28 @@ export function clubFinances(snap: FmSnapshot, players: FmPlayer[]): ClubFinance
   };
 }
 
+/** Signal de finances serrées : budget salarial dépassé, pas de budget de transfert, solde négatif. */
+export type FinanceSignal = 'wageOver' | 'noTransfer' | 'debt';
+
+export interface FinanceState {
+  /** Le club doit bricoler : pas d'achat, libres et prêts, réserve et jeunes, vendre avant d'acheter. */
+  tight: boolean;
+  signals: FinanceSignal[];
+}
+
+/**
+ * Finances serrées dès qu'un signal est là : marge salariale négative (budget dépassé), budget de transfert nul
+ * ou solde du club négatif. FM Coach adapte alors ses conseils (briefing, mercato, cibles) au lieu de proposer
+ * des achats que le club ne peut pas payer.
+ */
+export function financeState(fin: Pick<ClubFinances, 'wageRoom' | 'transferBudget' | 'balance'>): FinanceState {
+  const signals: FinanceSignal[] = [];
+  if (fin.wageRoom != null && fin.wageRoom < 0) signals.push('wageOver');
+  if (fin.transferBudget != null && fin.transferBudget <= 0) signals.push('noTransfer');
+  if (fin.balance != null && fin.balance < 0) signals.push('debt');
+  return { tight: signals.length > 0, signals };
+}
+
 /** Ton d'un statut du board : atteint, en danger, ou entre les deux. */
 export const boardTone = (s: string | null): 'good' | 'bad' | 'warn' =>
   /dépass|atteint|excell|ravi|très bien|exceed|achiev|delight/i.test(s ?? '') ? 'good' : /échec|déçu|insuffis|danger|loin|fail|disappoint/i.test(s ?? '') ? 'bad' : 'warn';

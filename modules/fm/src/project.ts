@@ -323,13 +323,13 @@ export function instructionBudget(st: StyleRef, ability: number | null): 1 | 2 |
  * Les styles à égalité avec le premier (moins de TACTIC_TIE d'écart) sont départagés par l'adéquation de
  * l'effectif au style (attributs mis en avant par le style, `rankStyles`) : sans cela, le choix tient au hasard.
  */
-export function rankTactics(engine: TacticEngine, list: FmPlayer[]): { style: StyleRef; form: string; plan: FormationPlan; fit: number; complexity: number; plans: FormationPlan[] }[] {
+export function rankTactics(engine: TacticEngine, list: FmPlayer[], reserve: FmPlayer[] = []): { style: StyleRef; form: string; plan: FormationPlan; fit: number; complexity: number; plans: FormationPlan[] }[] {
   const squadFit = new Map(engine.rankStyles(list).map((x) => [x.style.id, x.fit ?? 0]));
   const ability = tactAbility(list);
   const all = engine.ref.styles
     .map((style) => {
       const plans = Object.keys(FORMATIONS)
-        .map((form) => engine.formationPlan(form, style, list))
+        .map((form) => engine.formationPlan(form, style, list, reserve))
         .sort((a, b) => b.score - a.score);
       const plan = plans[0]!;
       const complexity = complexityCost(style, ability);

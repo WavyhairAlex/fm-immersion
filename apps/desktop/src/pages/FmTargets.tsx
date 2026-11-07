@@ -1,6 +1,8 @@
 import {
   POS_LABEL,
   buildProject,
+  clubFinances,
+  financeState,
   projectCompat,
   rankTargets,
   storedTargets,
@@ -70,6 +72,11 @@ export function FmTargets({
     () => players.filter((p) => !p.injury && Object.keys(p.attributes).length),
     [players],
   );
+  // Finances serrées : une cible au-dessus du budget de transfert est marquée « hors budget » (libre ou prêt sinon).
+  const budgetCap = useMemo(() => {
+    const fin = clubFinances(snap, players);
+    return financeState(fin).tight && fin.transferBudget != null ? fin.transferBudget : null;
+  }, [snap, players]);
   const pr = useMemo(
     () => buildProject(engine, own, coach),
     [engine, own, coach],
@@ -289,6 +296,9 @@ export function FmTargets({
                         value.min !== value.max
                           ? `${f.money(value.min)} – ${f.money(value.max)}`
                           : money(value?.mid ?? p.value)}
+                        {budgetCap != null && (value?.min ?? value?.mid ?? p.value ?? 0) > budgetCap && (
+                          <Tag tone="warn">{t("fm.tight.overBudget")}</Tag>
+                        )}
                       </td>
                       <td className="whitespace-nowrap px-2 py-1.5 text-xs">
                         {p.inList ? (

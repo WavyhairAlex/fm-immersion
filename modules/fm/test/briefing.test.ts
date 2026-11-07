@@ -65,3 +65,12 @@ describe("briefing de l'adjoint", () => {
     expect(Object.keys(pruneBriefDone({ ...done, 'old::': '2026-08-01' }, '2026-09-03'))).toEqual([briefKey(tired)]);
   });
 });
+
+describe('finances serrées', () => {
+  it('ajoute un message avec la ligne de conduite, coché tant que les signaux ne changent pas', () => {
+    const b = briefing({ players: [pl('A')], nextMatch: null, finances: { signals: ['wageOver', 'noTransfer'], detail: 'budget salarial dépassé de 7 500 €, pas de budget de transfert' } });
+    expect(b.map((x) => [x.kind, x.view, x.tone])).toEqual([['finances', 'finances', 'warn']]);
+    expect(briefKey(b[0]!)).toBe('finances::wageOver,noTransfer');
+    expect(briefing({ players: [pl('A')], nextMatch: null, finances: null }).map((x) => x.kind)).toEqual(['allGood']);
+  });
+});

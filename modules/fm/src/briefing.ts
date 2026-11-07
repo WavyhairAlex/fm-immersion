@@ -25,6 +25,7 @@ export type BriefKind =
   | 'playtimeOver'
   | 'training'
   | 'mercato'
+  | 'finances'
   | 'allGood';
 export type BriefTone = 'bad' | 'warn' | 'info' | 'good';
 
@@ -54,6 +55,8 @@ export interface BriefingInput {
   backForMatch?: (p: FmPlayer) => boolean;
   /** Un autre match à 3 jours ou moins du prochain (voir `isCongested`). */
   congested?: boolean;
+  /** Finances serrées (voir `financeState`) : `detail` est déjà formulé (« budget salarial dépassé de 7,5 K€ »). */
+  finances?: { signals: string[]; detail: string } | null;
 }
 
 /** Nombre de messages au plus : un briefing se lit en quelques secondes. */
@@ -111,6 +114,9 @@ export function briefing(input: BriefingInput): BriefItem[] {
 
   if (input.trialists?.length) item('trialists', 'warn', 'targets', input.trialists);
 
+  // Finances serrées : la ligne de conduite du mercato change (pas d'achat, libres et prêts, jeunes, vendre d'abord).
+  if (input.finances?.signals.length) out.push({ kind: 'finances', tone: 'warn', view: 'finances', players: [], values: { count: 0, detail: input.finances.detail, signals: input.finances.signals.join(',') } });
+
   const contracts = decisions.filter((d) => d.kind === 'contract');
   if (contracts.length) {
     const first = contracts[0]!;
@@ -150,7 +156,8 @@ export const BRIEF_DONE_DAYS = 7;
 /** Clé stable d'un message : son sujet, ses joueurs, et l'adversaire pour le prochain match. */
 export function briefKey(x: BriefItem): string {
   const ids = x.players.map((p) => p.id).sort().join(',');
-  const extra = x.kind === 'nextMatch' || x.kind === 'friendly' ? String(x.values.opponent ?? '') : x.kind === 'training' || x.kind === 'mercato' ? String(x.values.count ?? '') : '';
+  const extra =
+    x.kind === 'nextMatch' || x.kind === 'friendly' ? String(x.values.opponent ?? '') : x.kind === 'training' || x.kind === 'mercato' ? String(x.values.count ?? '') : x.kind === 'finances' ? String(x.values.signals ?? '') : '';
   return `${x.kind}:${ids}:${extra}`;
 }
 
