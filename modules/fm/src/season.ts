@@ -1,7 +1,9 @@
 import { leaguePosition } from './gazette';
 import { normalizePlayer } from './player';
+import { lineOf, type PosCode } from './positions';
 import { officialResults, type MatchResult } from './results';
 import type { FmSnapshot } from './snapshot';
+import { assignMax, FORMATIONS } from './tactic';
 
 /**
  * Bilan de la saison : numéro spécial de la gazette, écrit quand le dernier match de championnat est joué.
@@ -23,6 +25,23 @@ export interface SeasonMatch {
   goalsFor: number;
   goalsAgainst: number;
 }
+
+/** Joueur de l'équipe type, à son poste sur le terrain (coordonnées en % : x de gauche à droite, y du but adverse). */
+export interface TeamSlot {
+  pos: PosCode;
+  x: number;
+  y: number;
+  player: { id: string; name: string; rating: number; apps: number; goals: number } | null;
+}
+
+/**
+ * Moment fort de la saison, du plus marquant au plus banal : un triplé (ou plus), une large victoire (3 buts d'écart
+ * ou plus), une longue série sans défaite (8 matchs ou plus), sinon la plus large victoire.
+ */
+export type SeasonMoment =
+  | { kind: 'hatTrick'; id: string; name: string; goals: number; match: SeasonMatch }
+  | { kind: 'bigWin'; match: SeasonMatch }
+  | { kind: 'unbeaten'; count: number };
 
 export interface SeasonReview {
   club: string;
@@ -66,6 +85,13 @@ export interface SeasonReview {
   /** Arrivées et départs de la saison, les plus forts d'abord (5 au plus). */
   arrivals: string[];
   departures: string[];
+  /** Trois meilleurs buteurs (buts des matchs suivis). */
+  topScorers: SeasonPlayer[];
+  /** Équipe type : schéma le plus joué, meilleures notes moyennes à chaque poste (au moins 3 matchs notés). */
+  team: { formation: string; slots: TeamSlot[] } | null;
+  moment: SeasonMoment | null;
+  /** Saison pas encore finie (aperçu de la carte en cours de route). */
+  ongoing: boolean;
 }
 
 const equipe = (s: FmSnapshot): Record<string, unknown> => (s as { custom?: { equipe?: Record<string, unknown> } }).custom?.equipe ?? {};
@@ -94,7 +120,7 @@ function exact(r: MatchResult): SeasonMatch | null {
     : null;
 }
 
-function review(season: Entry[]): SeasonReview {
+function review(season: Entry[], ongoing = false): SeasonReview {
   const first = season[0]!;
   const last = season[season.length - 1]!;
   const all = officialResults(season);
@@ -124,13 +150,17 @@ function review(season: Entry[]): SeasonReview {
 
   // Buts et notes des matchs suivis seulement (les cumuls du jeu comptent aussi ceux d'avant l'arrivée du coach).
   const squad = last.data.players.map(normalizePlayer);
-  const perPlayer = new Map<string, { id: string; name: string; goals: number; minutes: number; ratings: number[] }>();
+  const perPlayer = new Map<string, { id: string; name: string; goals: number; minutes: number; ratings: number[]; lines: Map<string, number> }>();
+  let hatTrick: Extract<SeasonMoment, { kind: 'hatTrick' }> | null = null;
   let yellow = 0;
   let red = 0;
   for (const r of results)
     for (const p of r.players) {
-      const x = perPlayer.get(p.id) ?? { id: p.id, name: p.name, goals: 0, minutes: 0, ratings: [] };
+      const x = perPlayer.get(p.id) ?? { id: p.id, name: p.name, goals: 0, minutes: 0, ratings: [], lines: new Map<string, number>() };
       x.goals += p.goals ?? 0;
+      if (p.line && p.minutes > 0) x.lines.set(p.line, (x.lines.get(p.line) ?? 0) + p.minutes);
+      const m = exact(r);
+      if (m && (p.goals ?? 0) >= 3 && (p.goals ?? 0) > (hatTrick?.goals ?? 0)) hatTrick = { kind: 'hatTrick', id: p.id, name: p.name, goals: p.goals!, match: m };
       x.minutes += p.minutes;
       yellow += Math.max(0, p.stats.yellow ?? 0);
       red += Math.max(0, p.stats.red ?? 0);
@@ -155,6 +185,29 @@ function review(season: Entry[]): SeasonReview {
   const potmCount = new Map<string, SeasonPlayer>();
   for (const r of results) for (const p of r.players) if (p.potm) potmCount.set(p.id, { id: p.id, name: p.name, value: (potmCount.get(p.id)?.value ?? 0) + 1 });
   const potm = [...potmCount.values()].sort((a, b) => b.value - a.value)[0] ?? null;
+
+  const topScorers = stats
+    .filter((p) => p.goals > 0)
+    .sort((a, b) => b.goals - a.goals || a.minutes - b.minutes)
+    .slice(0, 3)
+    .map((p) => ({ id: p.id, name: p.name, value: p.goals }));
+
+  // Postes connus de chaque joueur : dernier instantané de la saison où il apparaît (les partis aussi).
+  const posOf = new Map<string, PosCode[]>();
+  for (const e of season) for (const raw of e.data.players) posOf.set(String(raw.id), normalizePlayer(raw).positions);
+  const team = teamOfSeason(results, stats, posOf, avg);
+
+  const big = wins[0] && margin(wins[0]) >= 3 ? wins[0] : null;
+  const ht = hatTrick as Extract<SeasonMoment, { kind: 'hatTrick' }> | null;
+  const moment: SeasonMoment | null = ht
+    ? ht
+    : big
+      ? { kind: 'bigWin', match: big }
+      : unbeaten >= 8
+        ? { kind: 'unbeaten', count: unbeaten }
+        : wins[0]
+          ? { kind: 'bigWin', match: wins[0] }
+          : null;
 
   const before = new Map(first.data.players.map((p) => [String(p.id), normalizePlayer(p)]));
   const after = new Map(squad.map((p) => [p.id, p]));
@@ -194,6 +247,54 @@ function review(season: Entry[]): SeasonReview {
     mostUsed: used && used.minutes > 0 ? { id: used.id, name: used.name, value: used.minutes } : null,
     arrivals: strongest(squad.filter((p) => !before.has(p.id))),
     departures: strongest([...before.values()].filter((p) => !after.has(p.id))),
+    topScorers,
+    team,
+    moment,
+    ongoing,
+  };
+}
+
+/**
+ * Équipe type de la saison : sur le schéma le plus joué (4-3-3 s'il est inconnu), chaque poste reçoit le joueur à la
+ * meilleure note moyenne, de préférence à son poste naturel, sinon sur sa ligne (attribution d'ensemble, pas poste
+ * par poste). Seuls comptent les joueurs notés sur au moins 3 matchs (ou un quart des matchs du plus utilisé).
+ */
+function teamOfSeason(
+  results: MatchResult[],
+  stats: { id: string; name: string; goals: number; minutes: number; ratings: number[]; lines: Map<string, number> }[],
+  posOf: Map<string, PosCode[]>,
+  avg: (xs: number[]) => number,
+): SeasonReview['team'] {
+  const maxApps = Math.max(0, ...stats.map((p) => p.ratings.length));
+  const pool = stats.filter((p) => p.ratings.length >= Math.max(3, Math.ceil(maxApps / 4)));
+  if (pool.length < 5) return null;
+  const counts = new Map<string, number>();
+  for (const r of results) if (r.formation && FORMATIONS[r.formation]) counts.set(r.formation, (counts.get(r.formation) ?? 0) + r.matches);
+  const formation = [...counts].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '4-3-3';
+  const slots = FORMATIONS[formation]!;
+  const mainLine = (p: (typeof pool)[number]) => [...p.lines].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  const value = slots.map(([pos]) =>
+    pool.map((p) => {
+      const natural = posOf.get(p.id)?.includes(pos);
+      const line = natural || mainLine(p) === lineOf(pos) || (posOf.get(p.id) ?? []).some((q) => lineOf(q) === lineOf(pos));
+      if (!line) return null;
+      // Le gardien ne joue que dans le but, et personne d'autre n'y va.
+      if ((pos === 'GB') !== (mainLine(p) === 'GB' || !!posOf.get(p.id)?.includes('GB'))) return null;
+      return avg(p.ratings) + (natural ? 0.6 : 0) + Math.min(p.ratings.length, 38) / 100;
+    }),
+  );
+  const pick = assignMax(value);
+  return {
+    formation,
+    slots: slots.map(([pos, x, y], i) => {
+      const p = pool[pick[i]!];
+      return {
+        pos,
+        x,
+        y,
+        player: p ? { id: p.id, name: p.name, rating: Math.round(avg(p.ratings) * 100) / 100, apps: p.ratings.length, goals: p.goals } : null,
+      };
+    }),
   };
 }
 
@@ -237,7 +338,7 @@ export function seasonSoFar(history: Entry[], date: string): SeasonReview | null
   const segs = segments([...history].filter((e) => e.gameDate <= date).sort((a, b) => a.gameDate.localeCompare(b.gameDate)));
   const last = segs.at(-1);
   if (!last) return null;
-  const r = review(last.entries);
+  const r = review(last.entries, !last.ended);
   const prev = segs.at(-2);
   if (!r.played && prev?.ended && prev.entries[0]!.data.club === r.club) return review(prev.entries);
   return r;
