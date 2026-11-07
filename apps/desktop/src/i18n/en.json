@@ -1281,13 +1281,11 @@
         "heavy": "Heavy"
       },
       "workloadHint": "Week workload in the game: {{level}}.",
-      "upcoming": "Coming weeks",
       "weekOf": "Week of",
       "planCol": "Plan",
       "matchesCol": "Matches",
       "scheduleFocus": "Schedule Focus",
       "workloadCol": "Workload",
-      "upcomingHelp": "Set ahead in the game's Training Schedule screen: one Schedule Focus and one workload per week. Light in two-match weeks, medium with one match, heavy with no match and early in pre-season. Beyond the next known fixtures, FM Immersion assumes a Saturday match.",
       "reasonHint": "Hover a player's intensity to see why it is advised.",
       "metaAdaptHelp": "AlexJeuVideal's Meta base: 2 pressing-trap sessions a week, the day before the match Ball Progression, Defensive Block, Conditioning, rest otherwise. The other 4 tactical sessions follow your priority areas (the weakest from the game and your matches) among those the benchmark finds useful: Line of Engagement, Build-Up, Chance Creation, In and Out of Possession Shape. They change when your weaknesses change.",
       "metaSwaps": "After loading it, replace: {{list}}.",
@@ -1336,7 +1334,32 @@
       },
       "settings": "Schedule settings",
       "settingsSummary": "{{phase}}, {{status}} club, season starts in {{month}}{{winter}}",
-      "settingsWinter": ", winter break"
+      "settingsWinter": ", winter break",
+      "weekOfDate": "Week of {{date}}",
+      "season": {
+        "title_one": "Whole season ({{count}} week)",
+        "title_other": "Whole season ({{count}} weeks)",
+        "lead": "Every week until next pre-season, with its type and what to set in the game. {{known}} weeks use your real fixture list; after that, FM Immersion assumes a Saturday match. Click a week to see its day-by-day plan.",
+        "kindCol": "Type",
+        "matchesCol": "Matches",
+        "kind": {
+          "preseason": "Pre-season",
+          "tactical": "Tactical block",
+          "break": "Break",
+          "free": "No match",
+          "single": "One match",
+          "double": "Two matches",
+          "congested": "Run of games",
+          "offseason": "Off-season"
+        },
+        "assumed_one": "{{count}} assumed match",
+        "assumed_other": "{{count}} assumed matches",
+        "open": "See this week's plan",
+        "more": "Show the whole season ({{count}} weeks)",
+        "less": "Show less",
+        "help": "Set in advance in the game's Training Schedule screen: one \"Schedule priority\" and one workload per week. Light workload in two-match weeks, medium with one match, heavy with no match and early in pre-season; three matches or more is a run of games: full rest between matches. The fixture list comes from the plugin (up to 40 upcoming matches, all competitions); cup rounds not yet drawn are missing, and the view updates with each snapshot.",
+        "leadFull": "Every week until next pre-season, from your real fixture list (all competitions), with its type and what to set in the game. Click a week to see its day-by-day plan."
+      }
     },
     "intro": {
       "home": "What needs your attention today, the styles that suit the squad, your best players and your youngsters.",

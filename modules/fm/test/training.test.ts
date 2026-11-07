@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { coachFocus, HARVEST_FOCUS, SESSION_YIELD, TEAM_INTENSITY, isMeta, teamIntensityFor, metaBlocks, autoPhase, breakPhase, upcomingWeeks, weekWorkload, buildTrainingWeek, currentTrainingWeek, trainingAlerts, defaultMatchDays, individualAdvice, individualFocus, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, setupStatus, weekMatches } from '../src';
+import { coachFocus, HARVEST_FOCUS, SESSION_YIELD, TEAM_INTENSITY, isMeta, teamIntensityFor, metaBlocks, autoPhase, breakPhase, upcomingWeeks, seasonWeeks, nextPreseason, seasonWeekKind, weekWorkload, buildTrainingWeek, currentTrainingWeek, trainingAlerts, defaultMatchDays, individualAdvice, individualFocus, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, setupStatus, weekMatches } from '../src';
 
 const MONDAY = '2026-08-31';
 
@@ -273,6 +273,38 @@ describe('semaines à venir', () => {
     expect(weeks[2]).toMatchObject({ preset: 'fullRest', workload: null });
     // Au-delà du dernier match connu : match supposé le samedi.
     expect(weekWorkload(weeks[1]!.plan)).toBe('medium');
+  });
+});
+
+describe('toute la saison', () => {
+  const fixtures = [
+    { date: '2027-08-22', opponent: 'Nitra', competition: 'Liga' },
+    { date: '2027-08-25', opponent: 'Žilina', competition: 'Coupe' },
+    { date: '2027-08-29', opponent: 'Púchov', competition: 'Liga' },
+    { date: '2027-09-05', opponent: 'Bytča', competition: 'Liga' },
+  ];
+  it('va jusqu’à la veille de la prochaine présaison', () => {
+    expect(nextPreseason('2027-08-22', 7)).toBe('2028-05-29');
+    const weeks = seasonWeeks({ gameDate: '2027-08-22', fixtures, seasonStart: 7 });
+    expect(weeks[0]!.monday).toBe('2027-08-16');
+    expect(weeks.at(-1)!.monday).toBe('2028-05-22');
+    expect(weeks.every((w) => w.kind !== 'preseason')).toBe(true);
+  });
+  it('type, adversaires, compétitions et matchs supposés au-delà du calendrier', () => {
+    const weeks = seasonWeeks({ gameDate: '2027-08-22', fixtures, seasonStart: 7, winterBreak: { from: '12-20', to: '02-10' } });
+    expect(weeks[0]).toMatchObject({ kind: 'single', estimated: false, opponents: [{ weekday: 6, name: 'Nitra' }] });
+    expect(weeks[1]).toMatchObject({ kind: 'double', competitions: ['Coupe', 'Liga'], estimated: false });
+    expect(weeks[3]!.estimated).toBe(true);
+    expect(weeks.some((w) => w.kind === 'break')).toBe(true);
+  });
+  it('calendrier complet : rien de supposé, intersaison après le dernier match', () => {
+    const weeks = seasonWeeks({ gameDate: '2027-08-22', fixtures, seasonStart: 7, calendarComplete: true });
+    expect(weeks[2]).toMatchObject({ kind: 'single', estimated: false });
+    expect(weeks[3]).toMatchObject({ kind: 'offseason', estimated: false, matches: 0 });
+  });
+  it('trois matchs et plus : enchaînement', () => {
+    const plan = buildTrainingWeek({ monday: '2027-08-23', phase: 'A', week: 1, matchDays: [0, 3, 6] });
+    expect(seasonWeekKind(plan, 3)).toBe('congested');
   });
 });
 

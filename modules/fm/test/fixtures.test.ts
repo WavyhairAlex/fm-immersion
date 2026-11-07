@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { currentTrainingWeek, daysUntil, snapshotFixtures, upcomingFixtures, weekMatches } from '../src';
+import { calendarFixtures, currentTrainingWeek, daysUntil, decodeGameDate, snapshotFixtures, upcomingFixtures, weekMatches } from '../src';
 import type { FmSnapshot } from '../src/snapshot';
 
 // Forme réelle du bloc nextMatch (instantané Malženice du 25/11/2026, plugin 0.4.3).
@@ -65,5 +65,43 @@ describe('calendrier reconstitué depuis les 5 prochains matchs', () => {
     const fixtures = [{ date: '2026-12-01', opponent: 'A', competition: null, home: true }];
     expect(snapshotFixtures({ ...snap, fixtures } as FmSnapshot)).toBe(fixtures);
     expect(snapshotFixtures({ gameDate: '2026-11-25' } as FmSnapshot)).toEqual([]);
+  });
+});
+
+describe('calendrier complet lu match par match (chemins.json, 07/11/2026)', () => {
+  // GameDate du jeu : Data1 = année << 17 | jour de l'année << 8.
+  const gd = (year: number, doy: number) => `GameDate { Data1 = ${year * 2 ** 17 + doy * 256 + 5}, Type = FmdateSiDate }`;
+  const full = {
+    gameDate: '2027-08-22',
+    club: 'Malženice',
+    nextMatch: { inDays: "Aujourd'hui", competition: '2. liga', location: 'Domicile' },
+    custom: {
+      equipe: {
+        cal00Date: gd(2027, 234), cal00Dom: 'Malženice', cal00Ext: 'Nitra', cal00Comp: 'FM.UI.CompetitionReference',
+        cal01Date: gd(2027, 241), cal01Dom: 'Považská Bystrica', cal01Ext: 'Malženice', cal01Comp: '2. liga',
+        cal02Date: gd(2027, 244), cal02Dom: 'Malženice', cal02Ext: 'Púchov',
+        cal03Date: null,
+      },
+    },
+  } as unknown as FmSnapshot;
+
+  it('décode la date du jeu comme le plugin', () => {
+    expect(decodeGameDate('GameDate { Data1 = 265740837, Type = FmdateSiDate }')).toBe('2027-08-14');
+    expect(decodeGameDate('2027-08-14')).toBe('2027-08-14');
+    expect(decodeGameDate('FM.UI.FixtureReference')).toBeNull();
+  });
+
+  it('date chaque match, trouve l’adversaire et le lieu, prend le pas sur les 5 prochains matchs', () => {
+    expect(calendarFixtures(full)).toHaveLength(3);
+    expect(snapshotFixtures(full)).toEqual([
+      { date: '2027-08-22', opponent: 'Nitra', competition: '2. liga', home: true },
+      { date: '2027-08-29', opponent: 'Považská Bystrica', competition: '2. liga', home: false },
+      { date: '2027-09-01', opponent: 'Púchov', competition: null, home: true },
+    ]);
+  });
+
+  it('reste vide sans les clés du calendrier', () => {
+    expect(calendarFixtures({ custom: { equipe: {} } })).toEqual([]);
+    expect(calendarFixtures({})).toEqual([]);
   });
 });

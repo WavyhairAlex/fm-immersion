@@ -12,7 +12,8 @@ import {
   matchStats,
   statsBoard,
   mentoringGroups,
-  upcomingWeeks,
+  seasonWeeks,
+  calendarFixtures,
   weekWorkload,
   nearestPreset,
   defaultMatchDays,
@@ -47,6 +48,7 @@ import {
   type SquadAt,
 } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
+import type { SeasonWeekKind } from '@fm-immersion/module-fm';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticEngine } from './FmTactic';
@@ -61,6 +63,18 @@ const CAT_CLS: Record<SessionCategory, string> = {
   individual: 'bg-white text-canard ring-1 ring-canard/20',
   extra: 'bg-creme text-brun ring-1 ring-brun/30',
   match: 'bg-eau-fonce text-white',
+};
+/** Semaines montrées avant « Voir toute la saison ». */
+const SEASON_PREVIEW = 8;
+const KIND_TONE: Record<SeasonWeekKind, 'good' | 'info' | 'warn' | 'bad'> = {
+  preseason: 'info',
+  tactical: 'info',
+  break: 'good',
+  free: 'good',
+  single: 'info',
+  double: 'warn',
+  congested: 'bad',
+  offseason: 'good',
 };
 const CATS: SessionCategory[] = ['tactical', 'ballWork', 'matchPrep', 'physical', 'individual', 'extra'];
 
@@ -156,20 +170,24 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
   const teamIntensity = teamIntensityFor(method);
   const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 1, minimumFractionDigits: 1 });
   const trainingDays = clubStatus === 'pro' ? undefined : coach.trainingDays ?? PART_TIME_DAYS;
-  const [offset, setOffset] = useState<'0' | '1'>('0');
+  // Semaine affichée, en semaines après la semaine en cours (0 = cette semaine) ; la vue saison permet d'en choisir une.
+  const [offset, setOffset] = useState('0');
+  const [allSeason, setAllSeason] = useState(false);
   const [phaseOverride, setPhase] = useState<TrainingPhase | null>(null);
   const [weekOverride, setWeek] = useState<CycleWeek | null>(null);
   const [manualDays, setManualDays] = useState<number[] | null>(null);
   const [eve, setEve] = useState<boolean | null>(null);
 
-  const monday = addDays(mondayOf(snap.gameDate), offset === '1' ? 7 : 0);
+  const monday = addDays(mondayOf(snap.gameDate), Number(offset) * 7);
   const winterBreak = coach.winterBreak ?? null;
   const auto = autoPhase(monday, seasonStart, winterBreak);
   const phase = phaseOverride ?? auto.phase;
   const week = weekOverride ?? (phaseOverride && phaseOverride !== auto.phase ? 1 : auto.week);
   const fixtures = useMemo(() => snapshotFixtures(snap), [snap]);
-  // Le calendrier ne couvre que les 5 prochains matchs : au-delà du dernier connu, on revient aux jours cochés.
-  const hasCalendar = fixtures.some((f) => f.date >= monday);
+  // Calendrier complet lu par le plugin (toute la saison) : une semaine sans match connu n'a pas de match.
+  const calendarComplete = useMemo(() => calendarFixtures(snap).length > 0, [snap]);
+  // Au-delà du dernier match connu du calendrier, on revient aux jours cochés.
+  const hasCalendar = calendarComplete || fixtures.some((f) => f.date >= monday);
   const cal = useMemo(() => weekMatches(fixtures, monday), [fixtures, monday]);
   const matchDays = manualDays ?? (hasCalendar ? cal.days : defaultMatchDays(phase, week, phase === 'A' || phase === 'B' || phase === 'C' ? 1 : 0));
   const before = eve ?? (hasCalendar ? cal.before : false);
@@ -186,9 +204,9 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
   const names = useNames();
   const mentoring = useMemo(() => mentoringGroups(players), [players]);
   const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
-  const upcoming = useMemo(
-    () => upcomingWeeks({ gameDate: snap.gameDate, fixtures, seasonStart, winterBreak, trainingDays, priorities, style: style?.id, method, weakAreas: weakest, gaugesKnown }),
-    [snap.gameDate, fixtures, seasonStart, winterBreak?.from, winterBreak?.to, trainingDays?.join(), priorities.join(), style?.id, method, weakest.join(), gaugesKnown],
+  const season = useMemo(
+    () => seasonWeeks({ gameDate: snap.gameDate, fixtures, seasonStart, winterBreak, trainingDays, priorities, style: style?.id, method, weakAreas: weakest, gaugesKnown, calendarComplete }),
+    [snap.gameDate, fixtures, calendarComplete, seasonStart, winterBreak?.from, winterBreak?.to, trainingDays?.join(), priorities.join(), style?.id, method, weakest.join(), gaugesKnown],
   );
   const plan = useMemo(
     () => buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: before, priorities, style: style?.id, trainingDays, method, weakAreas: weakest, gaugesKnown }),
@@ -296,6 +314,7 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
                 options={[
                   ['0', t('fm.train.thisWeek')],
                   ['1', t('fm.train.nextWeek')],
+                  ...(Number(offset) > 1 ? ([[offset, t('fm.train.weekOfDate', { date: dayMonth.format(new Date(`${monday}T00:00:00Z`)) })]] as [string, string][]) : []),
                 ]}
                 onChange={(v) => {
                   setOffset(v);
@@ -481,34 +500,72 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
         <More>{plan.theme == null && seasonal ? t('fm.train.coachHelp') : t(`fm.train.phaseHelp.${plan.phase}`)}</More>
       </Panel>
 
-      <Panel title={t('fm.train.upcoming')}>
+      <Panel title={t('fm.train.season.title', { count: season.length })}>
+        <p className="mb-2 text-sm text-brun">{calendarComplete ? t('fm.train.season.leadFull') : t('fm.train.season.lead', { known: season.filter((w) => !w.estimated).length })}</p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="text-left text-canard/70">
               <tr>
                 <th className="px-2 py-1">{t('fm.train.weekOf')}</th>
+                <th className="px-2 py-1">{t('fm.train.season.kindCol')}</th>
                 <th className="px-2 py-1">{t('fm.train.planCol')}</th>
-                <th className="px-2 py-1 text-right">{t('fm.train.matchesCol')}</th>
+                <th className="px-2 py-1">{t('fm.train.season.matchesCol')}</th>
                 <th className="px-2 py-1">{t('fm.train.scheduleFocus')}</th>
                 <th className="px-2 py-1">{t('fm.train.workloadCol')}</th>
               </tr>
             </thead>
             <tbody>
-              {upcoming.map((w) => (
-                <tr key={w.monday} className={`border-t border-canard/5 ${w.monday === monday ? 'bg-eau/10' : ''}`}>
-                  <td className="px-2 py-1.5">{dayMonth.format(new Date(`${w.monday}T00:00:00Z`))}</td>
-                  <td className="px-2 py-1.5">
-                    <b>{w.plan.code}</b> <span className="text-xs text-brun">{t(`fm.train.phase.${w.plan.phase}`)}</span>
-                  </td>
-                  <td className="px-2 py-1.5 text-right tabular-nums">{w.matches}</td>
-                  <td className="px-2 py-1.5 font-bold">{t(`fm.train.preset.${w.preset}`)}</td>
-                  <td className="px-2 py-1.5">{w.workload ? <Tag tone={w.workload === 'heavy' ? 'good' : w.workload === 'medium' ? 'info' : 'warn'}>{t(`fm.train.workload.${w.workload}`)}</Tag> : '–'}</td>
-                </tr>
-              ))}
+              {(allSeason ? season : season.slice(0, SEASON_PREVIEW)).map((w, i, list) => {
+                const month = w.monday.slice(0, 7);
+                const newMonth = i > 0 && list[i - 1]!.monday.slice(0, 7) !== month;
+                return (
+                  <tr
+                    key={w.monday}
+                    onClick={() => {
+                      setOffset(String(i));
+                      resetWeek();
+                      setPhase(null);
+                      setWeek(null);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    title={t('fm.train.season.open')}
+                    className={`cursor-pointer border-t hover:bg-orange-clair/40 ${newMonth ? 'border-canard/25' : 'border-canard/5'} ${w.monday === monday ? 'bg-orange-clair/60' : ''}`}
+                  >
+                    <td className="whitespace-nowrap px-2 py-1.5">
+                      {dayMonth.format(new Date(`${w.monday}T00:00:00Z`))}
+                    </td>
+                    <td className="px-2 py-1.5">
+                      <Tag tone={KIND_TONE[w.kind]}>{t(`fm.train.season.kind.${w.kind}`)}</Tag>
+                    </td>
+                    <td className="px-2 py-1.5">
+                      <b>{w.plan.code}</b> <span className="text-xs text-brun">{t(`fm.train.phase.${w.plan.phase}`)}</span>
+                    </td>
+                    <td className="px-2 py-1.5">
+                      {w.estimated ? (
+                        <span className="text-xs italic text-brun">{w.matches ? t('fm.train.season.assumed', { count: w.matches }) : '–'}</span>
+                      ) : w.opponents.length ? (
+                        <span className="text-xs">
+                          {w.opponents.map((o) => `${t(`fm.train.days.${o.weekday}`)} ${o.name ?? '?'}`).join(' · ')}
+                          {w.competitions.length ? <span className="text-brun"> ({w.competitions.join(', ')})</span> : null}
+                        </span>
+                      ) : (
+                        '–'
+                      )}
+                    </td>
+                    <td className="px-2 py-1.5 font-bold">{w.kind === 'offseason' ? '–' : t(`fm.train.preset.${w.preset}`)}</td>
+                    <td className="px-2 py-1.5">{w.workload && w.kind !== 'offseason' ? <Tag tone={w.workload === 'heavy' ? 'good' : w.workload === 'medium' ? 'info' : 'warn'}>{t(`fm.train.workload.${w.workload}`)}</Tag> : '–'}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-        <More>{t('fm.train.upcomingHelp')}</More>
+        {season.length > SEASON_PREVIEW ? (
+          <button type="button" className="btn-secondary mt-2 text-sm" onClick={() => setAllSeason(!allSeason)}>
+            {allSeason ? t('fm.train.season.less') : t('fm.train.season.more', { count: season.length })}
+          </button>
+        ) : null}
+        <More>{t('fm.train.season.help')}</More>
       </Panel>
 
       <Panel title={t('fm.train.teamIntensity')}>
