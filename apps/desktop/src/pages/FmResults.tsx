@@ -1,4 +1,4 @@
-import { analyzeResults, competitionKind, figuresForResult, type CompetitionKind, type FmPlayer, type FmSnapshot, type Insight, type MatchResult, type Outcome } from '@fm-immersion/module-fm';
+import { analyzeResults, competitionKind, figuresForResultIn, type CompetitionKind, type FmPlayer, type FmSnapshot, type Insight, type MatchResult, type Outcome } from '@fm-immersion/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Empty, Kpi, More, Panel, PlayerLink, Tag, type Tone } from './FmUi';
@@ -27,9 +27,12 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
     return { record: `${w}-${d}-${l}`, goals: `${listed.reduce((n, r) => n + (r.goalsFor ?? 0), 0)} - ${listed.reduce((n, r) => n + (r.goalsAgainst ?? 0), 0)}` };
   }, [listed, kind]);
   const byId = useMemo(() => new Map(players.map((p) => [p.id, p])), [players]);
-  // Chiffres du jeu (possession, tirs, xG, homme du match) : seulement pour le dernier match, le seul que le jeu garde.
-  const latest = useMemo(() => [...(history ?? [])].sort((a, b) => a.gameDate.localeCompare(b.gameDate)).at(-1) ?? null, [history]);
-  const gameFigures = useMemo(() => (latest ? figuresForResult(latest.data, an.results[0]) : null), [latest, an]);
+  // Chiffres du jeu (possession, tirs, xG, homme du match) de chaque match : le jeu ne garde que le dernier, mais
+  // l'instantané du jour qui suit chaque match les a conservés.
+  const gameFigures = useMemo(() => {
+    const snaps = history ?? [];
+    return new Map(an.results.map((r, i) => [`${r.since}|${r.date}`, figuresForResultIn(snaps, r, an.results[i - 1]?.date ?? null)]));
+  }, [history, an]);
   const num = (x: number | null | undefined, d = 1) => (x == null ? '–' : new Intl.NumberFormat(lang, { maximumFractionDigits: d, minimumFractionDigits: d }).format(x));
   const date = (d: string) => new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(d));
   const letter = (o: Outcome) => t(`fm.results.outcome.${o}`);
@@ -176,19 +179,21 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
                     {[r.tactic ?? r.formation, r.xg != null ? t('fm.results.xg', { xg: num(r.xg, 2) }) : null].filter(Boolean).join(' · ')}
                   </span>
                 </button>
-                {r === an.results[0] && gameFigures && (
+                {(() => {
+                  const g = gameFigures.get(key);
+                  return g ? (
                   <p className="mt-1 pl-28 text-xs text-brun">
                     {[
-                      gameFigures.possession && t('fm.results.game.possession', { us: Math.round(gameFigures.possession[0]), them: Math.round(gameFigures.possession[1]) }),
-                      gameFigures.shots &&
-                        t('fm.results.game.shots', { us: gameFigures.shots[0], them: gameFigures.shots[1], usOn: gameFigures.onTarget?.[0] ?? '?', themOn: gameFigures.onTarget?.[1] ?? '?' }),
-                      gameFigures.xg && t('fm.results.game.xg', { us: num(gameFigures.xg[0], 2), them: num(gameFigures.xg[1], 2) }),
-                      gameFigures.motm && t('fm.results.game.motm', { name: gameFigures.motm.name, rating: gameFigures.motm.rating != null ? num(gameFigures.motm.rating, 1) : '–' }),
+                      g.possession && t('fm.results.game.possession', { us: Math.round(g.possession[0]), them: Math.round(g.possession[1]) }),
+                      g.shots && t('fm.results.game.shots', { us: g.shots[0], them: g.shots[1], usOn: g.onTarget?.[0] ?? '?', themOn: g.onTarget?.[1] ?? '?' }),
+                      g.xg && t('fm.results.game.xg', { us: num(g.xg[0], 2), them: num(g.xg[1], 2) }),
+                      g.motm && t('fm.results.game.motm', { name: g.motm.name, rating: g.motm.rating != null ? num(g.motm.rating, 1) : '–' }),
                     ]
                       .filter(Boolean)
                       .join(' · ')}
                   </p>
-                )}
+                  ) : null;
+                })()}
                 {shown && (
                   <table className="mt-2 w-full text-xs">
                     <thead className="text-left uppercase text-canard/60">

@@ -74,3 +74,27 @@ export function figuresForResult(snap: unknown, r: MatchResult | null | undefine
   const flip = <T,>(p: [T, T] | null): [T, T] | null => (p ? (us ? p : [p[1], p[0]]) : null);
   return { possession: flip(g.possession), shots: flip(g.shots), onTarget: flip(g.onTarget), xg: flip(g.xg), motm: g.motm };
 }
+
+/**
+ * Même recherche sur plusieurs instantanés (un par jour de jeu) : on peut jouer plusieurs matchs dans la semaine, le
+ * jeu ne garde que le dernier, mais l'instantané écrit juste après chaque match a gardé ses chiffres. On prend le
+ * premier instantané à partir de la date du match (celui qui l'a révélé), avant la date du match suivant (`until`).
+ */
+export function figuresForResultIn(snaps: { gameDate: string; data: unknown }[], r: MatchResult | null | undefined, until?: string | null): MatchFigures | null {
+  if (!r) return null;
+  const from = r.date.slice(0, 10);
+  const candidates = snaps.filter((s) => s.gameDate.slice(0, 10) >= from && (!until || s.gameDate.slice(0, 10) < until.slice(0, 10))).sort((a, b) => a.gameDate.localeCompare(b.gameDate));
+  for (const s of candidates) {
+    const f = figuresForResult(s.data, r);
+    if (f) return f;
+  }
+  // Le match suivant a lieu le même jour de jeu que la relecture : on garde quand même l'instantané du jour.
+  if (!candidates.length && until) {
+    const sameDay = snaps.filter((s) => s.gameDate.slice(0, 10) === from);
+    for (const s of sameDay) {
+      const f = figuresForResult(s.data, r);
+      if (f) return f;
+    }
+  }
+  return null;
+}

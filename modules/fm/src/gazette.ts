@@ -1,4 +1,4 @@
-import { figuresForResult } from './lastmatch';
+import { figuresForResultIn } from './lastmatch';
 import { normalizePlayer, toNumber, type FmPlayer } from './player';
 import { matchResults, type MatchResult, type Outcome } from './results';
 import type { FmSnapshot } from './snapshot';
@@ -81,9 +81,10 @@ export function leaguePosition(s: FmSnapshot): number | null {
 
 const players = (s: FmSnapshot) => new Map<string, FmPlayer>(s.players.map((p) => [String(p.id), normalizePlayer(p)]));
 
-function resultStory(r: MatchResult, snap: FmSnapshot): GazetteStory {
+function resultStory(r: MatchResult, week: FmSnapshot[], until: string | null): GazetteStory {
   if (r.matches === 1 && r.outcome) {
-    const fig = figuresForResult(snap, r);
+    // Plusieurs matchs dans la semaine : chacun retrouve ses chiffres dans l'instantané du jour qui l'a révélé.
+    const fig = figuresForResultIn(week.map((s) => ({ gameDate: s.gameDate, data: s })), r, until);
     const margin = r.goalsFor != null && r.goalsAgainst != null ? r.goalsFor - r.goalsAgainst : 0;
     const scorers = r.players
       .filter((p) => (p.goals ?? 0) > 0)
@@ -163,7 +164,7 @@ export function streakStory(earlier: MatchResult[], week: MatchResult[]): Gazett
  */
 export function weekStories(prev: FmSnapshot | null, week: FmSnapshot[], results: MatchResult[], earlier: MatchResult[] = []): GazetteStory[] {
   const cur = week[week.length - 1]!;
-  const out: GazetteStory[] = results.map((r) => resultStory(r, cur));
+  const out: GazetteStory[] = results.map((r, i) => resultStory(r, week, results[i + 1]?.date ?? null));
   const streak = streakStory(earlier, results);
   if (streak) out.push(streak);
 

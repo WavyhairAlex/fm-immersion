@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { figuresForResult, gameLastMatch, type MatchResult } from '../src';
+import { figuresForResult, figuresForResultIn, gameLastMatch, type MatchResult } from '../src';
 
 const equipe = {
   dernierMatchScoreDomicile: '1',
@@ -37,5 +37,20 @@ describe('chiffres du dernier match écrits par le jeu', () => {
     expect(figuresForResult(snap, result({ home: false }))).toBeNull();
     expect(figuresForResult({ ...snap, gameDate: '2027-08-30' }, result({ home: true }))).toBeNull();
     expect(figuresForResult(snap, result({ matches: 2 }))).toBeNull();
+  });
+
+  it('plusieurs matchs dans la semaine : chacun retrouve ses chiffres dans l’instantané qui l’a révélé', () => {
+    const second = { ...equipe, dernierMatchScoreDomicile: '2', dernierMatchScoreExterieur: '2', dernierMatchPossDom: 60, dernierMatchPossExt: 40 };
+    const snaps = [
+      { gameDate: '2027-08-11', data: { gameDate: '2027-08-11', custom: { equipe: { ...equipe, dernierMatchPossDom: 30, dernierMatchPossExt: 70 } } } },
+      { gameDate: '2027-08-14', data: snap },
+      { gameDate: '2027-08-18', data: { gameDate: '2027-08-18', custom: { equipe: second } } },
+    ];
+    const first = result({ date: '2027-08-14', home: true });
+    const draw = result({ date: '2027-08-18', since: '2027-08-14', home: true, goalsFor: 2, goalsAgainst: 2, outcome: 'D' });
+    expect(figuresForResultIn(snaps, first, draw.date)?.possession).toEqual([47, 53]);
+    expect(figuresForResultIn(snaps, draw, null)?.possession).toEqual([60, 40]);
+    // Même score une semaine plus tôt : l'instantané d'avant le match n'est jamais pris.
+    expect(figuresForResultIn(snaps, result({ date: '2027-08-14', home: true, goalsFor: 1, goalsAgainst: 0 }), null)?.possession).toEqual([47, 53]);
   });
 });
