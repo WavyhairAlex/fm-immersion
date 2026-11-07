@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { gazetteIssues, weekStartOf, type FmSnapshot } from '../src';
 
-type P = { id: string; name?: string; min: number; starts: number; tg: number; tc: number; goals?: number; injury?: string; contractEnd?: string };
+type P = { id: string; name?: string; min: number; starts: number; tg: number; tc: number; goals?: number; injury?: string; contractEnd?: string; motm?: number };
 
 /** Instantané minimal (même forme que dans results.test.ts) avec classement et ambiance dans custom.equipe. */
 function snap(date: string, given: P[], equipe: Record<string, unknown> = {}, extra: Record<string, unknown> = {}): FmSnapshot {
@@ -25,7 +25,7 @@ function snap(date: string, given: P[], equipe: Record<string, unknown> = {}, ex
     custom: {
       equipe,
       joueurs: Object.fromEntries(
-        ps.map((p) => [p.id, { id: p.id, stat_Minutes: p.min, stat_StartingAppearances: p.starts, stat_SubAppearances: 0, stat_TeamGoals: p.tg, stat_TeamConceded: p.tc }]),
+        ps.map((p) => [p.id, { id: p.id, stat_Minutes: p.min, stat_StartingAppearances: p.starts, stat_SubAppearances: 0, stat_TeamGoals: p.tg, stat_TeamConceded: p.tc, stat_ManOfMatch: p.motm ?? 0 }]),
       ),
     },
     ...extra,
@@ -52,7 +52,7 @@ describe('gazette de la semaine', () => {
     '2026-10-21',
     [
       { id: 'gk', min: 180, starts: 2, tg: 4, tc: 1 },
-      { id: 'st', name: 'Diallo', min: 180, starts: 2, tg: 4, tc: 1, goals: 3, contractEnd: '2029-06-30' },
+      { id: 'st', name: 'Diallo', min: 180, starts: 2, tg: 4, tc: 1, goals: 3, contractEnd: '2029-06-30', motm: 1 },
       { id: 'nw', name: 'Mertens', min: 0, starts: 0, tg: 0, tc: 0, injury: 'Entorse de la cheville' },
     ],
     { classementPosition: 5, confianceSupporters: 'Ravis' },
@@ -74,7 +74,7 @@ describe('gazette de la semaine', () => {
   it('met la victoire à la une, avec le score et le buteur', () => {
     const h = issues[0]!.headline;
     expect(h.kind).toBe('result');
-    expect(h.params).toMatchObject({ outcome: 'W', opponent: 'Anderlecht', goalsFor: 3, goalsAgainst: 0, scorers: 'Diallo (2)' });
+    expect(h.params).toMatchObject({ outcome: 'W', opponent: 'Anderlecht', goalsFor: 3, goalsAgainst: 0, scorers: 'Diallo (2)', best: 'Diallo' });
   });
 
   it('repère classement, doublé, arrivée, départ, blessure, prolongation, supporters et prochain match', () => {
