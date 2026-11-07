@@ -94,13 +94,25 @@ export interface LiveContext {
   /** Buts de la saison avant le match, par nom de famille (en minuscules). */
   goals: Record<string, number>;
   topScorer: { name: string; goals: number } | null;
+  /** Rapport sur l'adversaire (`adv*` de chemins.json), quand le plugin le lit. */
+  opponent: { position: string | null; manager: string | null; formation: string | null; scorer: string | null; scorerGoals: number | null } | null;
+  /** Compo lue par le plugin (réglage LireCompo), dans l'ordre des postes, ou null. */
+  lineup: string[] | null;
 }
 
 const lastName = (name: string) => (name.trim().split(/\s+/).at(-1) ?? '').toLowerCase();
 
 export function liveContext(snap: unknown): LiveContext {
-  const s = (snap ?? {}) as { nextMatch?: Record<string, unknown> | null; players?: unknown[]; custom?: { equipe?: Record<string, unknown> } };
+  const s = (snap ?? {}) as { nextMatch?: Record<string, unknown> | null; players?: unknown[]; custom?: { equipe?: Record<string, unknown> }; lineup?: unknown };
   const next = s.nextMatch ?? null;
+  const e = s.custom?.equipe ?? {};
+  const txt = (v: unknown) => (typeof v === 'string' && v.trim() && !/^(SI|FM)\./.test(v) ? v.replace(/<[^>]*>/g, '').trim() : null);
+  const advGoals = Number(e.advButs);
+  const opponent =
+    txt(e.advClassement) || txt(e.advEntraineur) || txt(e.advButeur)
+      ? { position: txt(e.advClassement), manager: txt(e.advEntraineur), formation: txt(e.advFormationPref), scorer: txt(e.advButeur), scorerGoals: Number.isFinite(advGoals) && advGoals > 0 ? Math.round(advGoals) : null }
+      : null;
+  const lineup = Array.isArray(s.lineup) ? (s.lineup as { playerName?: unknown }[]).map((x) => txt(x.playerName)).filter((x): x is string => !!x) : [];
   const competition = typeof next?.competition === 'string' && next.competition.trim() ? next.competition.trim() : null;
   const pos = Number(s.custom?.equipe?.classementPosition);
   const goals: Record<string, number> = {};
@@ -119,6 +131,44 @@ export function liveContext(snap: unknown): LiveContext {
     threat: typeof next?.threatLevel === 'string' && next.threatLevel.trim() ? next.threatLevel.trim() : null,
     goals,
     topScorer: top,
+    opponent,
+    lineup: lineup.length >= 11 ? lineup.slice(0, 11) : null,
+  };
+}
+
+/**
+ * Message d'avant-match, posté une fois quand le direct découvre un nouveau match : affiche, compétition, classement
+ * des deux équipes, hommes en forme, l'entraîneur adverse et son schéma, l'avis du jeu, et la compo si le plugin la lit.
+ */
+export function prematchPayload(t: TFunction, l: FmLive, club: string | null, ctx: LiveContext | null) {
+  const side = mySide(l, club);
+  const opponentName = side === 'home' ? l.away : side === 'away' ? l.home : null;
+  const lines: string[] = [];
+  if (ctx && !ctx.friendly && club && (ctx.position || ctx.opponent?.position)) {
+    const ours = ctx.position ? t('live.prematch.ourPosition', { club, position: ctx.position }) : '';
+    const theirs = ctx.opponent?.position && opponentName ? t('live.prematch.theirPosition', { club: opponentName, position: ctx.opponent.position }) : '';
+    lines.push(`📊 ${[ours, theirs].filter(Boolean).join(' · ')}`);
+  }
+  const form: string[] = [];
+  if (ctx?.topScorer && !ctx.friendly) form.push(t('live.prematch.top', { name: ctx.topScorer.name, count: ctx.topScorer.goals }));
+  if (ctx?.opponent?.scorer && opponentName) {
+    form.push(ctx.opponent.scorerGoals ? t('live.prematch.theirTop', { club: opponentName, name: ctx.opponent.scorer, count: ctx.opponent.scorerGoals }) : t('live.prematch.theirTopNoGoals', { club: opponentName, name: ctx.opponent.scorer }));
+  }
+  if (form.length) lines.push(`🔥 ${form.join(' · ')}`);
+  if (ctx?.opponent?.manager && opponentName) {
+    lines.push(`🧠 ${t(ctx.opponent.formation ? 'live.prematch.managerFormation' : 'live.prematch.manager', { club: opponentName, manager: ctx.opponent.manager, formation: ctx.opponent.formation })}`);
+  }
+  if (ctx?.threat) lines.push(`💬 ${ctx.threat}`);
+  return {
+    username: 'FM Immersion',
+    embeds: [
+      {
+        title: `🎙️  ${t('live.prematch.kickoff')}  ·  ${l.home} – ${l.away}`,
+        description: [ctx?.competition ? `🏆 ${ctx.competition}` : '', ...lines].filter(Boolean).join('\n') || t('live.prematch.soon'),
+        color: ORANGE,
+        ...(ctx?.lineup ? { fields: [{ name: t('live.prematch.lineup'), value: ctx.lineup.join(' · ').slice(0, 1024) }] } : {}),
+      },
+    ],
   };
 }
 
@@ -504,6 +554,8 @@ export async function liveStep(
   if (!state || state.key !== key) {
     if (l.final) return { key, messageId: null, last: l, done: true }; // match déjà fini quand l'appli l'a vu
     const messageId = await publish(t, l, club, null, render);
+    // Avant-match en message à part : l'affiche et les enjeux, une fois par match.
+    await sendDiscord(prematchPayload(t, l, club, contextOf(l))).catch(() => undefined);
     return { key, messageId, last: l, done: false };
   }
   if (state.done) return state;
