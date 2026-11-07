@@ -24,6 +24,7 @@ export * from './project';
 export * from './targets';
 export * from './teams';
 export * from './training';
+export * from './training-yield';
 export * from './fixtures';
 export * from './instructions';
 export * from './team-instructions-fm27';

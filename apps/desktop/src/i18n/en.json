@@ -1162,7 +1162,7 @@
         "normal": "nothing to force: the game sets it by condition"
       },
       "rusty": "lacking sharpness: reserve minutes or late appearances",
-      "individualHelp": "Matches the game's Individual Training screen. IP and OOP roles: those of his slot in the target XI, otherwise the project role he fits best. Focus: the one that works his weakest key attribute for that role (below, his 3 weak points). Intensity: the team's, set by the game according to condition; never double intensity, not even for youngsters (AlexJeuVideal's benchmark: freshness pays off more in matches).",
+      "individualHelp": "Matches the game's Individual Training screen. IP and OOP roles: those of his slot in the target XI, otherwise the project role he fits best. Focus: the weak point seen in matches, otherwise Quickness up to age 23, otherwise the role's weakest key attribute. Intensity: \"Team\" for everyone, i.e. the Team intensity setting above (double for players in good condition, half and rest for the others) that the game applies to each player according to his condition; no per-player manual setting.",
       "mentoring": "Mentoring groups",
       "mentor": "Mentor",
       "mentees": "Mentored youngsters",
@@ -1248,7 +1248,38 @@
         "recover": "day after a match",
         "congested": "three matches: rest",
         "restDay": "rest: freshness pays off in matches"
-      }
+      },
+      "coach": {
+        "title": "Your assistant, on training",
+        "week": "Week of {{date}}, schedule {{code}}.",
+        "season": "{{matches}} match(es): {{tactical}} tactical sessions ({{zones}}) and {{grow}} development sessions. Match eve: a single preparation session, the day after: Rest then Recovery.",
+        "noMatch": "No match: {{tactical}} tactical sessions ({{zones}}), {{grow}} development sessions and Individual Development on the last day.",
+        "congested": "{{matches}} matches in seven days: full week of rest between matches, results come first.",
+        "inGame": "In the game: load the \"{{preset}}\" schedule, workload {{workload}}, then copy the sessions below.",
+        "inGameRest": "In the game: load the \"{{preset}}\" schedule.",
+        "intensity": "Team intensity: double for players in good and excellent condition, half for tired ones, nothing for exhausted ones.",
+        "setups_one": "{{count}} individual setting to change in the game (list below).",
+        "setups_other": "{{count}} individual settings to change in the game (list below).",
+        "setupsOk": "All individual settings are up to date in the game.",
+        "yieldTitle": "What it really yields",
+        "yield": "From {{from}} to {{to}} ({{days}} days, {{players}} players compared): {{delta}} attribute point per player, i.e. {{month}} per month; the age curve suggested {{expected}}.",
+        "yieldVerdict": {
+          "good": "It is progressing: keep this schedule.",
+          "flat": "It is flat: normal with an ageing squad or a busy week, otherwise check the schedule is really applied in the game.",
+          "bad": "It is going backwards: too many matches or rest, or an ageing squad. Compare with the declining players below."
+        },
+        "yieldAttrs": "Attributes rising most: {{list}}.",
+        "yieldGroups": "Per player: technical {{technical}}, mental {{mental}}, physical {{physical}}.",
+        "yieldAges": "Youngsters (23 and under): {{young}}; 28 and over: {{senior}}.",
+        "yieldUp": "Rising: {{list}}.",
+        "yieldDown": "Falling: {{list}}.",
+        "yieldSoon_one": "Progress is measured over at least fourteen days of snapshots: {{count}} more game day.",
+        "yieldSoon_other": "Progress is measured over at least fourteen days of snapshots: {{count}} more game days.",
+        "yieldHelp": "Measured on your save, not on a test bench: sum of attribute points (out of 20) gained or lost by each player present at both dates, known attributes only. The baseline is the oldest snapshot of the last four weeks, at least fourteen days back. \"Expected\": the module's age curve (youngsters rise, over-28s decline). Good from +1.5 points per player per month, bad below −0.5."
+      },
+      "settings": "Schedule settings",
+      "settingsSummary": "{{phase}}, {{status}} club, season starts in {{month}}{{winter}}",
+      "settingsWinter": ", winter break"
     },
     "intro": {
       "home": "What needs your attention today, the styles that suit the squad, your best players and your youngsters.",
