@@ -1,7 +1,7 @@
-import type { GazetteStory } from '@fm-immersion/module-fm';
+import type { GazetteIssue, GazetteStory } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
 import { describe, expect, it } from 'vitest';
-import { figuresLine, storyText } from '../src/lib/gazette-text';
+import { articleText, figuresLine, storyText } from '../src/lib/gazette-text';
 
 const t = ((k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k)) as unknown as TFunction;
 
@@ -23,5 +23,36 @@ describe('textes de la gazette', () => {
     expect(body).toContain('previewManagerFormation');
     expect(body).toContain('previewScorer {"scorer":"M. Klec","count":3}');
     expect(body.endsWith('Serré.')).toBe(true);
+  });
+
+  it('écrit un article pour un match à la une : issue, buteurs, lecture des chiffres, homme du match, série, prochain match', () => {
+    const headline: GazetteStory = {
+      kind: 'result',
+      weight: 60,
+      params: { outcome: 'W', opponent: 'Nitra', home: 1, goalsFor: 1, goalsAgainst: 0, scorers: 'Bukata', best: 'Bukata', rating: 8.05, competition: '2. liga', friendly: 0, possession: 47, xg: 1.06, xgOpp: 0.49, shots: 5, shotsOpp: 12, date: '2027-08-14' },
+    };
+    const issue = {
+      number: 3,
+      club: 'Malženice',
+      weekStart: '2027-08-09',
+      weekEnd: '2027-08-15',
+      date: '2027-08-15',
+      headline,
+      stories: [
+        { kind: 'streak', weight: 49, params: { outcome: 'W', count: 3 } },
+        { kind: 'nextMatch', weight: 10, params: { opponent: 'Púchov', location: 'Extérieur', inDays: 'Dans 7 jours' } },
+      ],
+    } as GazetteIssue;
+    const a = articleText(t, issue, 'fr')!;
+    expect(a).toMatch(/gazette\.article\.open_W_\d .*"where":"gazette\.article\.atHome","comp":"gazette\.article\.inComp/);
+    expect(a).toContain('gazette.article.scorers_');
+    expect(a).toContain('gazette.article.stat_balanced_'); // 47 % de possession et xG favorables : match équilibré
+    expect(articleText(t, { ...issue, headline: { ...headline, params: { ...headline.params, possession: 60, outcome: 'L', goalsFor: 0, goalsAgainst: 1 } } }, 'fr')).toContain('gazette.article.stat_unlucky_');
+    expect(a).toContain('gazette.article.best_');
+    expect(a).toContain('gazette.article.streak_W {"club":"Malženice","count":3}');
+    expect(a).toContain('gazette.article.next_');
+    // Même gazette, mêmes variantes.
+    expect(articleText(t, issue, 'fr')).toBe(a);
+    expect(articleText(t, { ...issue, headline: { kind: 'quiet', weight: 5, params: {} } }, 'fr')).toBeNull();
   });
 });

@@ -1,6 +1,6 @@
 import type { GazetteIssue, GazetteStory, SeasonReview } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
-import { figuresLine, paperName, storyText, weekLabel } from './gazette-text';
+import { articleText, figuresLine, paperName, storyText, weekLabel } from './gazette-text';
 
 /**
  * Une de la gazette en image (1200 × 675), dessinée sur le PC dans un canvas, pour l'envoi sur Discord.
@@ -255,6 +255,17 @@ export async function drawUne(
       ctx.fillStyle = C.grey;
       ctx.fillText(wrap(ctx, figures, colW, 1)[0]!, M, y);
       y += 22;
+    }
+    // Début de l'article (deux lignes), quand la place le permet avant la ligne homme du match / forme.
+    const article = articleText(t, issue, lang);
+    if (article && y + 52 <= 500) {
+      ctx.font = `italic ${font(400, 17)}`;
+      ctx.fillStyle = C.ink;
+      for (const l of wrap(ctx, article, colW, 2)) {
+        y += 22;
+        ctx.fillText(l, M, y);
+      }
+      y += 4;
     }
   } else if (headText.body) {
     ctx.font = font(400, 19);
