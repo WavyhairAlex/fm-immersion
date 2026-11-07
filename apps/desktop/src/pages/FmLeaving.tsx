@@ -1,4 +1,4 @@
-import { LEAVING_REASONS, type FmPlayer, type LeavingMarks, type LeavingReason } from '@fm-immersion/module-fm';
+import { LEAVING_REASONS, loanedInFrom, type FmPlayer, type FmSnapshot, type LeavingMarks, type LeavingReason } from '@fm-immersion/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,14 +15,27 @@ export function useLeaving() {
   const qc = useQueryClient();
   const key = ['fm', saveId, 'settings'];
   const { data: settings } = useQuery({ queryKey: key, queryFn: () => fmData.settings(saveId), enabled: !!saveId });
-  const marks: LeavingMarks = useMemo(() => settings?.fmLeaving ?? {}, [settings]);
+  // Prêtés chez nous (lus par le plugin) : partants d'office à la fin du prêt, en plus des signalements du coach.
+  const { data: latest } = useQuery({ queryKey: ['fm', saveId, 'latest'], queryFn: () => fmData.latest(saveId), enabled: !!saveId });
+  const stored: LeavingMarks = useMemo(() => settings?.fmLeaving ?? {}, [settings]);
+  const loanedIn = useMemo(() => (latest ? loanedInFrom(latest.data as FmSnapshot) : new Map<string, string | null>()), [latest]);
+  const marks: LeavingMarks = useMemo(() => {
+    if (!latest || !loanedIn.size) return stored;
+    const snap = latest.data as FmSnapshot;
+    const auto: LeavingMarks = {};
+    for (const [id] of loanedIn) {
+      const p = snap.players.find((x) => String(x.id) === id);
+      if (p && !stored[id]) auto[id] = { reason: 'loanIn', since: snap.gameDate, name: p.name };
+    }
+    return { ...auto, ...stored };
+  }, [stored, loanedIn, latest]);
   const ids = useMemo(() => new Set(Object.keys(marks)), [marks]);
   const set = useMutation({
     mutationFn: ({ player, reason, gameDate }: { player: FmPlayer; reason: LeavingReason | null; gameDate: string }) =>
       fmData.setLeaving(saveId, player.id, reason ? { reason, since: gameDate, name: player.name } : null),
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
   });
-  return { marks, ids, set };
+  return { marks, ids, set, loanedIn, stored };
 }
 
 /**
@@ -31,9 +44,12 @@ export function useLeaving() {
  */
 export function LeaveButton({ player, gameDate, onMarked }: { player: FmPlayer; gameDate: string; onMarked?: (id: string) => void }) {
   const { t } = useTranslation();
-  const { marks, set } = useLeaving();
+  const { marks, set, stored, loanedIn } = useLeaving();
   const [open, setOpen] = useState(false);
   const mark = marks[player.id];
+  // Prêt lu dans le jeu : rien à annuler, il rentre dans son club à la fin du prêt.
+  if (mark && !stored[player.id])
+    return <Tag tone="warn">{loanedIn.get(player.id) ? t('fm.leave.loanFrom', { club: loanedIn.get(player.id) }) : t('fm.leave.reason.loanIn')}</Tag>;
   if (mark)
     return (
       <span className="inline-flex items-center gap-1.5">
