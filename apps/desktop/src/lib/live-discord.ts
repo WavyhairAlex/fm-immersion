@@ -66,28 +66,54 @@ export function goalSituation(forGoals: number, against: number) {
   return 'reduce';
 }
 
+/** Moment du match, pour le commentaire quand aucun but ne vient de tomber. */
+export function matchPhase(minute: number | null) {
+  if (minute == null || minute < 3) return 'kickoff';
+  if (minute < 25) return 'early';
+  if (minute < 44) return 'mid';
+  if (minute <= 46) return 'half';
+  if (minute < 75) return 'second';
+  if (minute < 90) return 'late';
+  return 'stoppage';
+}
+
+/** Un but reste « l'actualité » du commentateur pendant ces minutes de jeu, puis il reparle du match. */
+const GOAL_NEWS_MINUTES = 6;
+
 /**
- * Phrase du commentateur pour le dernier événement : coup d'envoi, but (pour ou contre le club du joueur, selon la
- * situation), ou fin du match (victoire, nul, défaite). Choisie parmi plusieurs variantes, stable pour un même événement.
+ * Phrase du commentateur : but qui vient de tomber (pour ou contre le club du joueur, selon la situation), sinon le
+ * moment du match (début, mi-temps, money time…) et le score, ou la fin du match (victoire, nul, défaite). Choisie
+ * parmi plusieurs variantes, stable pendant une dizaine de minutes pour ne pas changer à chaque relevé.
  */
 export function commentary(t: TFunction, l: FmLive, club: string | null, goal: TimelineGoal | null): string {
   const side = mySide(l, club);
-  const seed = `${liveKey(l)}|${l.homeScore}-${l.awayScore}|${l.final ? 'f' : ''}`;
-  const k = pick(seed);
+  const minute = minuteOf(l.minute);
   const vars = { home: l.home, away: l.away, score: score(l) };
   if (l.final) {
+    const k = pick(`${liveKey(l)}|${score(l)}|f`);
     if (!side) return t(`live.say.final_${k}`, vars);
     const mine = (side === 'home' ? l.homeScore : l.awayScore) ?? 0;
     const theirs = (side === 'home' ? l.awayScore : l.homeScore) ?? 0;
     const o = mine > theirs ? 'W' : mine < theirs ? 'L' : 'D';
     return t(`live.say.final${o}_${k}`, { ...vars, club, opponent: side === 'home' ? l.away : l.home });
   }
-  if (!goal) return t(`live.say.kickoff_${k}`, vars);
-  const team = goal.side === 'home' ? l.home : l.away;
-  const f = (goal.side === 'home' ? l.homeScore : l.awayScore) ?? 0;
-  const a = (goal.side === 'home' ? l.awayScore : l.homeScore) ?? 0;
-  const who = side && side !== goal.side ? 'against' : 'for';
-  return t(`live.say.${who}_${goalSituation(f, a)}_${k}`, { ...vars, team, scorer: goal.name, minute: goal.time });
+  if (goal && (minute == null || minute - goal.minute <= GOAL_NEWS_MINUTES)) {
+    const k = pick(`${liveKey(l)}|${score(l)}|${goal.time}`);
+    const team = goal.side === 'home' ? l.home : l.away;
+    const f = (goal.side === 'home' ? l.homeScore : l.awayScore) ?? 0;
+    const a = (goal.side === 'home' ? l.awayScore : l.homeScore) ?? 0;
+    const who = side && side !== goal.side ? 'against' : 'for';
+    return t(`live.say.${who}_${goalSituation(f, a)}_${k}`, { ...vars, team, scorer: goal.name, minute: goal.time });
+  }
+  const phase = matchPhase(minute);
+  const k = pick(`${liveKey(l)}|${score(l)}|${phase}|${Math.floor((minute ?? 0) / 10)}`);
+  if (phase === 'kickoff') return t(`live.say.kickoff_${k}`, vars);
+  const h = l.homeScore ?? 0;
+  const a = l.awayScore ?? 0;
+  if (h === a) return t(`live.say.${phase}_level_${k}`, { ...vars, minute });
+  const [leader, trailer] = h > a ? [l.home, l.away] : [l.away, l.home];
+  // Score dit du côté de l'équipe qui mène : « Malženice mène 2 - 1 ».
+  return t(`live.say.${phase}_lead_${k}`, { ...vars, score: `${Math.max(h, a)} - ${Math.min(h, a)}`, minute, leader, trailer });
 }
 
 /** Dernier but du déroulé (le plus tardif), ou null. */
