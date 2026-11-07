@@ -2591,6 +2591,28 @@
       "final_0": "Full time: {{home}} {{score}} {{away}}.",
       "final_1": "Final whistle, {{score}}.",
       "final_2": "It's over: {{home}} {{score}} {{away}}."
+    },
+    "fact": {
+      "hattrick": "Hat-trick for {{scorer}}!",
+      "brace": "{{scorer}} has two!",
+      "tally_one": "His first goal of the season.",
+      "tally_other": "Goal number {{count}} of his season.",
+      "position": "{{club}} start this one in position {{position}}.",
+      "leader": "{{club}} start this one top of the table.",
+      "drought_one": "No goal for {{count}} minute.",
+      "drought_other": "No goal for {{count}} minutes."
+    },
+    "figures": {
+      "title": "In numbers",
+      "halves": "1st half: {{first}} · 2nd half: {{second}}",
+      "first": "First goal: {{scorer}} ({{minute}})",
+      "penalties_one": "{{count}} penalty scored",
+      "penalties_other": "{{count}} penalties scored"
+    },
+    "prematch": {
+      "title": "Pre-match",
+      "top_one": "Top scorer: {{name}} ({{count}} goal)",
+      "top_other": "Top scorer: {{name}} ({{count}} goals)"
     }
   },
   "season": {
