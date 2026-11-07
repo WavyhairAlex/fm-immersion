@@ -42,12 +42,15 @@ import {
   DEFAULT_METHOD,
   coachFocus,
   teamIntensityFor,
+  trainingYield,
+  yieldDaysMissing,
+  type SquadAt,
 } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticEngine } from './FmTactic';
-import { Chips, Fit, Panel, Pos, Tag, useCoach, useNames, More, PlayerLink } from './FmUi';
+import { Chips, Fit, Panel, Pos, Tag, useCoach, useFormat, useNames, More, PlayerLink } from './FmUi';
 
 /** Couleur des pastilles par catégorie de séance (texte toujours canard, sauf le match en bouton principal). */
 const CAT_CLS: Record<SessionCategory, string> = {
@@ -141,8 +144,9 @@ export function useIndividualSetups(engine: TacticEngine, players: FmPlayer[], f
 /** Semaine d'entraînement type (méthode « Freedom » de FM Scout) adaptée au calendrier et au style visé. */
 const INTENSITY_TONE: Record<IndividualIntensity, 'good' | 'info' | 'warn' | 'bad'> = { team: 'info', noWork: 'bad', rest: 'warn', half: 'warn', normal: 'info', double: 'good' };
 
-export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; players: FmPlayer[]; folder: string }) {
+export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSnapshot; players: FmPlayer[]; folder: string; history?: SquadAt[] }) {
   const { t, i18n } = useTranslation();
+  const f = useFormat();
   const { engine } = useTacticEngine(folder, players);
   const [coach, setCoach] = useCoach();
   const seasonStart = coach.seasonStart ?? 8;
@@ -210,9 +214,78 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
   const setups = useIndividualSetups(engine, players, folder, plan.days.filter((d) => d.kind === 'match').length, snap);
   const todoCount = setups.rows.filter((r) => r.status !== 'ok').length;
   const changeCount = setups.rows.filter((r) => r.status === 'change').length;
+  // Phrases de l'adjoint : zones tactiques de la semaine (hors pièges), rendement mesuré sur les instantanés.
+  const zones = [...new Set(plan.days.flatMap((d) => d.sessions.filter((x, i) => x && x !== 'pressingTrap' && (d.why?.[i] === 'weak' || d.why?.[i] === 'top'))))] as SessionId[];
+  const zoneList = [t('fm.train.session.pressingTrap'), ...zones.map((z) => t(`fm.train.session.${z}`))].join(', ');
+  const measured = useMemo(() => trainingYield(history), [history]);
+  const missingDays = useMemo(() => yieldDaysMissing(history), [history]);
+  const signed = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 1, signDisplay: 'exceptZero' });
+  const seasonal = 'ABC'.includes(plan.phase);
+  const workload = weekWorkload(plan);
+  const settingsSummary = t('fm.train.settingsSummary', {
+    phase: `${t(`fm.train.phase.${plan.phase}`)} ${plan.week}`,
+    status: t(`fm.train.status.${clubStatus}`),
+    month: monthName.format(new Date(2026, seasonStart - 1, 1)),
+    winter: winterBreak ? t('fm.train.settingsWinter') : '',
+  });
 
   return (
     <div className="space-y-4">
+      <Panel title={t('fm.train.coach.title')}>
+        <p className="text-sm text-brun">{t('fm.train.coach.week', { date: dayMonth.format(new Date(`${monday}T00:00:00Z`)), code: plan.code })}</p>
+        <p className="mt-1 text-base font-bold text-canard">
+          {plan.congested
+            ? t('fm.train.coach.congested', { matches: summary.matches })
+            : seasonal
+              ? summary.matches
+                ? t('fm.train.coach.season', { matches: summary.matches, tactical: summary.tactical, grow: summary.grow, zones: zoneList })
+                : t('fm.train.coach.noMatch', { tactical: summary.tactical, grow: summary.grow, zones: zoneList })
+              : t(`fm.train.phaseHelp.${plan.phase}`)}
+        </p>
+        <ul className="mt-2 space-y-1 text-sm">
+          <li>{workload ? t('fm.train.coach.inGame', { preset: t(`fm.train.preset.${nearestPreset(plan)}`), workload: t(`fm.train.workload.${workload}`) }) : t('fm.train.coach.inGameRest', { preset: t(`fm.train.preset.${nearestPreset(plan)}`) })}</li>
+          <li>{t('fm.train.coach.intensity')}</li>
+          {setups.rows.length > 0 && (
+            <li>
+              {todoCount ? <Tag tone="warn">{t('fm.train.coach.setups', { count: todoCount })}</Tag> : <span className="text-brun">{t('fm.train.coach.setupsOk')}</span>}
+            </li>
+          )}
+        </ul>
+        <div className="mt-3 rounded-xl bg-white/60 p-3 ring-1 ring-canard/10">
+          <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.train.coach.yieldTitle')}</p>
+          {measured ? (
+            <>
+              <p className="mt-1 text-sm">
+                {t('fm.train.coach.yield', { from: f.date(measured.from), to: f.date(measured.to), days: measured.days, players: measured.players, delta: signed.format(measured.perPlayer), month: signed.format(measured.perMonth), expected: signed.format(measured.expectedPerMonth) })}
+              </p>
+              <p className="mt-1 text-sm font-bold">
+                <Tag tone={measured.verdict === 'good' ? 'good' : measured.verdict === 'bad' ? 'bad' : 'warn'}>{t(`fm.train.coach.yieldVerdict.${measured.verdict}`)}</Tag>
+              </p>
+              <p className="mt-1 text-xs text-brun">
+                {t('fm.train.coach.yieldGroups', { technical: signed.format(measured.groups.technical), mental: signed.format(measured.groups.mental), physical: signed.format(measured.groups.physical) })}
+                {measured.young != null && measured.senior != null && <> {t('fm.train.coach.yieldAges', { young: signed.format(measured.young), senior: signed.format(measured.senior) })}</>}
+              </p>
+              {measured.attrs.length > 0 && measured.attrs[0]!.delta > 0 && (
+                <p className="mt-1 text-xs text-brun">{t('fm.train.coach.yieldAttrs', { list: measured.attrs.filter((a) => a.delta > 0).slice(0, 4).map((a) => `${attr(a.key)} ${signed.format(a.delta)}`).join(', ') })}</p>
+              )}
+              {measured.up.length > 0 && (
+                <p className="mt-1 text-xs text-eau-fonce">{t('fm.train.coach.yieldUp', { list: measured.up.slice(0, 5).map((g) => `${g.player.name} ${signed.format(g.delta)}`).join(', ') })}</p>
+              )}
+              {measured.down.length > 0 && (
+                <p className="mt-1 text-xs text-corail">{t('fm.train.coach.yieldDown', { list: measured.down.slice(0, 5).map((g) => `${g.player.name} ${signed.format(g.delta)}`).join(', ') })}</p>
+              )}
+            </>
+          ) : (
+            <p className="mt-1 text-sm text-brun">{t('fm.train.coach.yieldSoon', { count: Math.max(1, missingDays) })}</p>
+          )}
+          <More>{t('fm.train.coach.yieldHelp')}</More>
+        </div>
+      </Panel>
+
+      <details className="rounded-2xl bg-white/40 ring-1 ring-canard/10">
+        <summary className="cursor-pointer select-none px-4 py-3 text-sm font-bold text-canard/70 hover:text-canard">
+          {t('fm.train.settings')} <span className="font-normal text-brun">· {settingsSummary}</span>
+        </summary>
       <Panel title={t('fm.train.title')}>
         <div className="flex flex-wrap items-end gap-4">
           <div className={label}>
@@ -355,6 +428,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
           {!hasCalendar && <p className="mt-1 text-xs text-brun">{t('fm.train.manual')}</p>}
         </div>
       </Panel>
+      </details>
 
       <Panel title={t('fm.train.code', { code: plan.code })}>
         <p className="text-sm">
@@ -362,14 +436,6 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
           {plan.theme && <> · {t(`fm.train.theme.${plan.theme}`)}</>}
           {plan.variant != null && <> · {plan.congested ? t('fm.train.congested') : t(`fm.train.variant_${plan.variant}`)}</>}
         </p>
-        <p className="mt-1 text-xs text-brun">
-          {plan.theme == null && 'ABC'.includes(plan.phase) ? t('fm.train.coachHelp') : t(`fm.train.phaseHelp.${plan.phase}`)}
-        </p>
-        {'ABC'.includes(plan.phase) && !plan.congested && (
-          <p className="mt-1 text-sm font-bold text-canard">{t('fm.train.coachSummary', { tactical: summary.tactical, grow: summary.grow, matches: summary.matches })}</p>
-        )}
-        <p className="mt-1 text-xs text-brun">{t('fm.train.presetHint', { preset: t(`fm.train.preset.${nearestPreset(plan)}`) })}</p>
-        {weekWorkload(plan) && <p className="mt-1 text-xs text-brun">{t('fm.train.workloadHint', { level: t(`fm.train.workload.${weekWorkload(plan)}`) })}</p>}
         {weakest.length > 0 && <p className="mt-1 text-xs text-brun">{t('fm.train.weakest', { list: weakest.map((a) => t(`fm.train.session.${a}`)).join(', ') })}</p>}
         {priorities.length > 0 && <p className="mt-1 text-xs text-brun">{t('fm.train.priorities', { list: priorities.map((a) => t(`fm.train.session.${a}`)).join(', ') })}</p>}
 
@@ -412,6 +478,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
             </span>
           ))}
         </div>
+        <More>{plan.theme == null && seasonal ? t('fm.train.coachHelp') : t(`fm.train.phaseHelp.${plan.phase}`)}</More>
       </Panel>
 
       <Panel title={t('fm.train.upcoming')}>
@@ -456,6 +523,8 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
         <More>{t('fm.train.teamIntensityCoach')}</More>
       </Panel>
 
+      <details className="rounded-2xl bg-white/40 ring-1 ring-canard/10">
+        <summary className="cursor-pointer select-none px-4 py-3 text-sm font-bold text-canard/70 hover:text-canard">{t('fm.train.yield.title')}</summary>
       <Panel title={t('fm.train.yield.title')}>
         <p className="text-sm">{t('fm.train.yield.intro', { best: nf1.format(HARVEST_WEEK_YIELD) })}</p>
         <div className="mt-2 grid gap-2 sm:grid-cols-3">
@@ -475,6 +544,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
         </div>
         <More>{t('fm.train.yield.help')}</More>
       </Panel>
+      </details>
 
       {setups.rows.length > 0 && (
         <Panel
@@ -606,6 +676,8 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
         <More>{t('fm.train.mentoringHelp')}</More>
       </Panel>
 
+      <details className="rounded-2xl bg-white/40 ring-1 ring-canard/10">
+        <summary className="cursor-pointer select-none px-4 py-3 text-sm font-bold text-canard/70 hover:text-canard">{t('fm.train.rules')}</summary>
       <Panel title={t('fm.train.rules')}>
         <ul className="list-disc space-y-1 pl-5 text-sm">
           {[1, 2, 3, 4, 5].map((i) => (
@@ -614,6 +686,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
         </ul>
         <More>{t('fm.train.source')}</More>
       </Panel>
+      </details>
     </div>
   );
 }

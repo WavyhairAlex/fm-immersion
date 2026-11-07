@@ -415,7 +415,7 @@ export function FmSave() {
       case 'project':
         return <FmProject snap={snapshot.data} players={players} folder={folder} history={history} />;
       case 'training':
-        return <FmTraining snap={snapshot.data} players={players} folder={folder} />;
+        return <FmTraining snap={snapshot.data} players={players} folder={folder} history={history} />;
       case 'staff':
         return <FmStaff />;
       case 'mercato':

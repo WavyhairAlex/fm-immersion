@@ -1162,7 +1162,7 @@
         "normal": "rien à forcer : le jeu règle selon la condition"
       },
       "rusty": "manque de rythme : temps de jeu en réserve ou en fin de match",
-      "individualHelp": "Comme l'écran Entraîn. individuel du jeu. Rôles ALB et SLB : ceux de son poste dans le onze cible, sinon le rôle du projet où il est le plus adapté. Priorité : celle qui travaille son attribut clé le plus faible pour ce rôle (en dessous, ses 3 points faibles). Intensité : celle de l'équipe, réglée par le jeu selon la condition ; jamais de double intensité, même pour les jeunes (banc d'essai d'AlexJeuVideal : la fraîcheur rapporte plus en match).",
+      "individualHelp": "Comme l'écran Entraîn. individuel du jeu. Rôles ALB et SLB : ceux de son poste dans le onze cible, sinon le rôle du projet où il est le plus adapté. Priorité : le point faible vu en match, sinon Vitesse jusqu'à 23 ans, sinon l'attribut clé le plus faible du rôle. Intensité : « Équipe » pour tout le monde, c'est le réglage Intensité de l'équipe ci-dessus (double pour les joueurs en forme, moitié et repos pour les autres) que le jeu applique à chacun selon sa condition ; pas de réglage à la main par joueur.",
       "mentoring": "Groupes d'encadrement",
       "mentor": "Tuteur",
       "mentees": "Jeunes encadrés",
@@ -1248,7 +1248,38 @@
         "recover": "lendemain de match",
         "congested": "trois matchs : repos",
         "restDay": "repos : la fraîcheur rapporte en match"
-      }
+      },
+      "coach": {
+        "title": "Ton adjoint, côté entraînement",
+        "week": "Semaine du {{date}}, planning {{code}}.",
+        "season": "{{matches}} match(s) : {{tactical}} séances tactiques ({{zones}}) et {{grow}} séances de progression. Veille de match : une seule séance de préparation, lendemain : Repos puis Récupération.",
+        "noMatch": "Aucun match : {{tactical}} séances tactiques ({{zones}}), {{grow}} séances de progression et Développement individuel le dernier jour.",
+        "congested": "{{matches}} matchs en sept jours : semaine entière de repos entre les matchs, les résultats priment.",
+        "inGame": "Dans le jeu : charge le programme « {{preset}} », charge de travail {{workload}}, puis recopie les séances ci-dessous.",
+        "inGameRest": "Dans le jeu : charge le programme « {{preset}} ».",
+        "intensity": "Intensité de l'équipe : double pour les joueurs en bonne et très bonne forme, moitié pour les fatigués, rien pour les épuisés.",
+        "setups_one": "{{count}} réglage individuel à changer dans le jeu (liste plus bas).",
+        "setups_other": "{{count}} réglages individuels à changer dans le jeu (liste plus bas).",
+        "setupsOk": "Les réglages individuels sont tous à jour dans le jeu.",
+        "yieldTitle": "Ce que ça donne vraiment",
+        "yield": "Du {{from}} au {{to}} ({{days}} jours, {{players}} joueurs comparés) : {{delta}} point d'attribut par joueur, soit {{month}} par mois ; la courbe d'âge en laissait attendre {{expected}}.",
+        "yieldVerdict": {
+          "good": "Ça progresse : garde ce programme.",
+          "flat": "Ça stagne : normal si l'effectif est âgé ou la semaine chargée, sinon vérifie que le programme est bien recopié en jeu.",
+          "bad": "Ça recule : trop de matchs ou de repos, ou un effectif vieillissant. Compare avec les joueurs en baisse ci-dessous."
+        },
+        "yieldAttrs": "Attributs qui montent le plus : {{list}}.",
+        "yieldGroups": "Par joueur : technique {{technical}}, mental {{mental}}, physique {{physical}}.",
+        "yieldAges": "Jeunes (23 ans et moins) : {{young}} ; 28 ans et plus : {{senior}}.",
+        "yieldUp": "En hausse : {{list}}.",
+        "yieldDown": "En baisse : {{list}}.",
+        "yieldSoon_one": "La progression se mesure sur quatorze jours d'instantanés au moins : encore {{count}} jour de jeu.",
+        "yieldSoon_other": "La progression se mesure sur quatorze jours d'instantanés au moins : encore {{count}} jours de jeu.",
+        "yieldHelp": "Mesure faite sur ta partie, pas sur un banc d'essai : somme des points d'attributs (sur 20) gagnés ou perdus par chaque joueur présent aux deux dates, attributs connus aux deux dates seulement. La référence est l'instantané le plus ancien des quatre dernières semaines, à quatorze jours au moins. « Attendu » : la courbe d'âge du module (les jeunes montent, les plus de 28 ans baissent). Bon à partir de +1,5 point par joueur et par mois, mauvais sous −0,5."
+      },
+      "settings": "Réglages du planning",
+      "settingsSummary": "{{phase}}, club {{status}}, reprise en {{month}}{{winter}}",
+      "settingsWinter": ", trêve hivernale"
     },
     "intro": {
       "home": "Ce qui demande ton attention aujourd'hui, les styles qui collent à l'effectif, tes meilleurs joueurs et tes jeunes.",
