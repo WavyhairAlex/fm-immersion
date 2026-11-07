@@ -7,6 +7,7 @@ mod facepack;
 mod fm;
 mod fm_bridge;
 mod fm_memory;
+mod images;
 
 use std::sync::Mutex;
 use tauri::Manager;
@@ -57,7 +58,8 @@ pub fn run() {
             discord::discord_edit,
             discord::discord_live_image,
             fm::fm_read_live,
-            facepack::fm_face
+            facepack::fm_face,
+            images::image_save
         ])
         .run(tauri::generate_context!())
         .expect("impossible de démarrer FM Immersion");

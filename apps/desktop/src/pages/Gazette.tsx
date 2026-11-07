@@ -1,5 +1,6 @@
 import { gazetteIssues, seasonReviews, seasonSoFar, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
+import { SeasonCard } from '../components/SeasonCard';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -40,7 +41,13 @@ export function Gazette() {
 
   const { data: history = [], isLoading } = useQuery({ queryKey: ['fm', 'all', saveId], queryFn: () => fmData.all(saveId), enabled: !!saveId });
   const issues = useMemo(() => gazetteIssues(history), [history]);
-  const season = useMemo(() => seasonReviews(history)[0] ?? null, [history]);
+  const reviews = useMemo(() => seasonReviews(history), [history]);
+  const season = reviews[0] ?? null;
+  // Carte de fin de saison : saisons finies, et la saison en cours en aperçu tant qu'elle n'est pas finie.
+  const cards = useMemo(() => {
+    const now = history.length ? seasonSoFar(history, history.reduce((a, e) => (e.gameDate > a ? e.gameDate : a), '')) : null;
+    return now?.ongoing && now.played > 0 ? [now, ...reviews] : reviews;
+  }, [history, reviews]);
   const [index, setIndex] = useState(0);
   useEffect(() => setIndex(0), [saveId]);
   const issue = issues[index];
@@ -71,6 +78,7 @@ export function Gazette() {
       )}
       {!!fmSaves.length && !isLoading && !issues.length && <p className="card mt-6 max-w-3xl text-brun">{t('gazette.empty')}</p>}
 
+      {cards.length > 0 && <SeasonCard saveId={saveId} seasons={cards} />}
       {season && <SeasonSection saveId={saveId} review={season} />}
 
       {issue && (
