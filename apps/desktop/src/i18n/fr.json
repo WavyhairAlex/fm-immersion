@@ -2218,7 +2218,7 @@
     },
     "history": {
       "title": "Historique gardé par le plugin",
-      "help": "Le plugin garde un fichier par jour de jeu. Importe celui de ton club pour reprendre ta carrière avec ses courbes et ses gazettes. Les jours déjà importés sont sautés.",
+      "help": "Le plugin garde un fichier par jour de jeu. Les jours de ton club sont importés automatiquement (même ceux passés appli fermée) ; pour reprendre la carrière d'un autre club, importe-les ici. Les jours déjà importés sont sautés.",
       "range_one": "{{count}} jour, le {{from}}",
       "range_other": "{{count}} jours, du {{from}} au {{to}}",
       "import_one": "Importer {{count}} jour",

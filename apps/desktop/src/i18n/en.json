@@ -2218,7 +2218,7 @@
     },
     "history": {
       "title": "History kept by the plugin",
-      "help": "The plugin keeps one file per game day. Import your club's to resume your career with its charts and gazettes. Days already imported are skipped.",
+      "help": "The plugin keeps one file per game day. Your club's days are imported automatically (even those played while the app was closed); to resume another club's career, import them here. Days already imported are skipped.",
       "range_one": "{{count}} day, {{from}}",
       "range_other": "{{count}} days, {{from}} to {{to}}",
       "import_one": "Import {{count}} day",

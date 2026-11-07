@@ -6,6 +6,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { fmData, savesData } from './data';
 import { getWebhook, isWebhook, sendDiscordImage } from './discord';
+import { importMissingHistory } from './fm-history';
 import { discordPayload } from './gazette-text';
 import { canvasPng, drawUne, recentForm } from './gazette-une';
 import { loadFace } from './player-face';
@@ -120,6 +121,16 @@ export function useGazetteAuto() {
           }
         } catch {
           /* fichier absent, en cours d'écriture, ou autre partie chargée */
+        }
+        // Jours de jeu passés sans l'appli (fichiers datés du plugin) : rattrapés pour que chaque match ait sa brève.
+        try {
+          const folder = (await fmData.settings(saveId)).fmFolder ?? (await invoke<string | null>('fm_default_folder'));
+          if (folder) {
+            const n = await importMissingHistory(saveId, folder, (await fmData.settings(saveId)).fmClub ?? (await fmData.latest(saveId))?.club ?? null);
+            if (n) qc.invalidateQueries({ queryKey: ['fm'] });
+          }
+        } catch {
+          /* dossier illisible */
         }
         const history = await fmData.all(saveId);
         const issues = gazetteIssues(history);
