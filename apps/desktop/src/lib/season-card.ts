@@ -126,12 +126,21 @@ const day = (iso: string, lang?: string) => new Intl.DateTimeFormat(lang, { day:
 
 /** Titre et ligne d'explication du moment fort. */
 export function momentText(t: TFunction, m: SeasonMoment, lang?: string): { title: string; body: string } {
+  if (m.kind === 'cupWin') return { title: t('card.moment.cupWin', { competition: m.competition }), body: t('card.moment.cupWinBody') };
   if (m.kind === 'unbeaten') return { title: t('card.moment.unbeaten', { count: m.count }), body: t('card.moment.unbeatenBody') };
   const score = `${m.match.goalsFor}-${m.match.goalsAgainst}`;
   const vs = m.match.opponent ? t('card.moment.vs', { score, opponent: m.match.opponent }) : t('card.moment.score', { score });
   if (m.kind === 'hatTrick')
     return { title: t(m.goals === 3 ? 'card.moment.hatTrick' : 'card.moment.haul', { name: m.name, count: m.goals }), body: `${vs} · ${day(m.match.date, lang)}` };
   return { title: vs, body: t('card.moment.bigWinBody', { date: day(m.match.date, lang) }) };
+}
+
+/** Pastilles des coupes : texte, et vrai pour une coupe gagnée. */
+export function cupLines(t: TFunction, r: SeasonReview): [string, boolean][] {
+  return (r.cups ?? []).map((c) => [
+    t(`card.cup.${c.status}`, { competition: c.competition, opponent: c.outBy?.opponent ?? '?', count: c.played }),
+    c.status === 'won',
+  ]);
 }
 
 /** Titre de la carte : verdict de la saison, ou saison en cours. */
@@ -168,8 +177,22 @@ export async function drawSeasonCard(t: TFunction, r: SeasonReview, opts: { face
   fit(ctx, head, 800, 30, 18, W - 2 * M, SERIF);
   ctx.fillText(head, M, 168);
 
+  // Parcours en coupes : une pastille par compétition.
+  const cups = cupLines(t, r);
+  let cxp = M;
+  for (const [text, won] of cups) {
+    ctx.font = font(800, 15);
+    const w = Math.min(ctx.measureText(text).width + 28, W - M - cxp);
+    if (w < 80) break;
+    roundRect(ctx, cxp, 190, w, 32, 16, won ? C.orange : C.panel);
+    ctx.fillStyle = won ? C.dark : C.ink;
+    ctx.fillText(wrap(ctx, text, w - 28, 1)[0]!, cxp + 14, 211);
+    cxp += w + 10;
+  }
+  const shift = cups.length ? 46 : 0;
+
   // Place finale (bloc orange foncé, texte blanc) et chiffres clés.
-  const y0 = 196;
+  const y0 = 196 + shift;
   const bh = 200;
   roundRect(ctx, M, y0, 330, bh, 20, C.orangeDark);
   ctx.font = font(800, 14);
@@ -210,7 +233,7 @@ export async function drawSeasonCard(t: TFunction, r: SeasonReview, opts: { face
 
   // Équipe type sur le terrain (le but adverse en haut).
   const py = y0 + bh + 28;
-  const ph = 690;
+  const ph = 690 - shift;
   roundRect(ctx, M, py, W - 2 * M, ph, 22, C.pitch);
   ctx.strokeStyle = C.line;
   ctx.lineWidth = 2;
@@ -343,6 +366,7 @@ export function cardPayload(t: TFunction, r: SeasonReview, lang?: string) {
     `🏆 ${cardHeadline(t, r)}`,
     r.topScorers.length && `⚽ ${t('card.scorers')} : ${r.topScorers.map((p) => `**${p.name}** (${p.value})`).join(', ')}`,
     r.moment && `✨ ${momentText(t, r.moment, lang).title}`,
+    (r.cups ?? []).length > 0 && `🏆 ${cupLines(t, r).map(([x]) => x).join('  ·  ')}`,
   ].filter(Boolean);
   return {
     username: paperName(t, r.club).slice(0, 80),

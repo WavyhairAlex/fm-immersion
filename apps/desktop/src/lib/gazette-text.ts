@@ -83,6 +83,13 @@ export function storyText(t: TFunction, club: string, s: GazetteStory, lang?: st
       }
       return { title: k('title'), body: [k('body'), extra.join(' · '), s.kind === 'nextMatch' ? opponentPreview(t, p) : ''].filter(Boolean).join(' ') };
     }
+    case 'cupOut':
+    case 'cupThrough': {
+      const score = `${p.goalsFor}-${p.goalsAgainst}`;
+      const opponent = str(p.opponent) ?? t('gazette.opponentUnknown');
+      const legs = Number(p.legs) === 2 ? 'Legs' : '';
+      return { title: k('title'), body: k(`body${legs}`, { opponent, score, count: Number(p.rounds) }) };
+    }
     case 'injury': {
       const days = Number(p.days);
       return { title: k('title'), body: days > 0 ? k('body', { count: days }) : k('bodyNoDate') };
@@ -222,6 +229,8 @@ const ICON: Record<GazetteStory['kind'], string> = {
   fans: '📣',
   job: '🪑',
   nextMatch: '📅',
+  cupOut: '💔',
+  cupThrough: '🏆',
   quiet: '☕',
 };
 

@@ -1,3 +1,4 @@
+import { cupPending, cupRuns, type CupRun } from './cups';
 import { leaguePosition } from './gazette';
 import { normalizePlayer } from './player';
 import { lineOf, type PosCode } from './positions';
@@ -41,7 +42,8 @@ export interface TeamSlot {
 export type SeasonMoment =
   | { kind: 'hatTrick'; id: string; name: string; goals: number; match: SeasonMatch }
   | { kind: 'bigWin'; match: SeasonMatch }
-  | { kind: 'unbeaten'; count: number };
+  | { kind: 'unbeaten'; count: number }
+  | { kind: 'cupWin'; competition: string };
 
 export interface SeasonReview {
   club: string;
@@ -92,6 +94,8 @@ export interface SeasonReview {
   moment: SeasonMoment | null;
   /** Saison pas encore finie (aperçu de la carte en cours de route). */
   ongoing: boolean;
+  /** Parcours en coupes nationales et européennes (éliminé, qualifié, vainqueur). */
+  cups: CupRun[];
 }
 
 const equipe = (s: FmSnapshot): Record<string, unknown> => (s as { custom?: { equipe?: Record<string, unknown> } }).custom?.equipe ?? {};
@@ -199,7 +203,11 @@ function review(season: Entry[], ongoing = false): SeasonReview {
 
   const big = wins[0] && margin(wins[0]) >= 3 ? wins[0] : null;
   const ht = hatTrick as Extract<SeasonMoment, { kind: 'hatTrick' }> | null;
-  const moment: SeasonMoment | null = ht
+  const cups = cupRuns(results, last.data, { seasonOver: !ongoing, seasonEnd: last.gameDate });
+  const cupWon = cups.find((c) => c.status === 'won');
+  const moment: SeasonMoment | null = cupWon
+    ? { kind: 'cupWin', competition: cupWon.competition }
+    : ht
     ? ht
     : big
       ? { kind: 'bigWin', match: big }
@@ -251,6 +259,7 @@ function review(season: Entry[], ongoing = false): SeasonReview {
     team,
     moment,
     ongoing,
+    cups,
   };
 }
 
@@ -311,20 +320,51 @@ export function seasonReviews(history: Entry[]): SeasonReview[] {
     .reverse();
 }
 
-/** Découpe l'historique (trié) en saisons : changement de club, ou fin du championnat (incluse dans sa saison). */
+/** Minutes de la saison cumulées par tout l'effectif (stats du jeu) ; elles repartent de zéro à la nouvelle saison. */
+function seasonMinutes(s: FmSnapshot): number | null {
+  const joueurs = (s as { custom?: { joueurs?: Record<string, { stat_Minutes?: unknown }> } }).custom?.joueurs;
+  if (!joueurs) return null;
+  let n = 0;
+  for (const j of Object.values(joueurs)) n += typeof j?.stat_Minutes === 'number' ? j.stat_Minutes : 0;
+  return n;
+}
+
+/** Les cumuls de saison du jeu ont été remis à zéro entre ces deux instantanés : une nouvelle saison a commencé. */
+export function statsResetBetween(prev: FmSnapshot, cur: FmSnapshot) {
+  const a = seasonMinutes(prev);
+  const b = seasonMinutes(cur);
+  return a != null && b != null && a > 0 && b < a * 0.5;
+}
+
+/**
+ * Découpe l'historique (trié) en saisons : changement de club, ou fin du championnat (incluse dans sa saison). Si une
+ * coupe reste à jouer à la fin du championnat (finale, barrage, coupe d'Europe), la saison continue jusqu'au relevé
+ * où plus aucun match de coupe n'est au calendrier (au plus tard la remise à zéro des stats de la saison suivante).
+ */
 export function seasonSegments(sorted: Entry[]): { entries: Entry[]; ended: boolean }[] {
   const out: { entries: Entry[]; ended: boolean }[] = [];
   let start = 0;
+  let leagueOver = false;
+  const close = (end: number, ended: boolean) => {
+    out.push({ entries: sorted.slice(start, end), ended });
+    start = end;
+    leagueOver = false;
+  };
   for (let i = 1; i <= sorted.length; i++) {
     const prev = sorted[i - 1]!.data;
     const cur = sorted[i]?.data;
-    if (!cur || prev.club !== cur.club) {
-      out.push({ entries: sorted.slice(start, i), ended: false });
-      start = i;
-    } else if (seasonEndedBetween(prev, cur)) {
-      out.push({ entries: sorted.slice(start, i + 1), ended: true });
-      start = i + 1;
+    if (!cur) {
+      // Fin de l'historique : championnat fini et plus de coupe en vue = saison finie.
+      out.push({ entries: sorted.slice(start), ended: leagueOver && !cupPending(prev) });
+      break;
     }
+    if (prev.club !== cur.club) close(i, leagueOver);
+    // Coupe attendue après le championnat mais nouvelle saison commencée (calendrier mal lu) : on clôt quand même.
+    else if (leagueOver && statsResetBetween(prev, cur)) close(i, true);
+    else if (seasonEndedBetween(prev, cur)) {
+      leagueOver = true;
+      if (!cupPending(cur)) close(i + 1, true);
+    } else if (leagueOver && !cupPending(cur)) close(i + 1, true);
   }
   return out.filter((x) => x.entries.length);
 }

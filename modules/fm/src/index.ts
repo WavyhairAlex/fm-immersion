@@ -57,3 +57,4 @@ export * from './playtime';
 export * from './pricing';
 export * from './briefing';
 export * from './challenges';
+export * from './cups';

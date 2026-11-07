@@ -1,7 +1,7 @@
 import type { SeasonReview } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
 import { describe, expect, it } from 'vitest';
-import { cardFileName, cardPeople, momentText, shortName } from '../src/lib/season-card';
+import { cardFileName, cardPeople, cupLines, momentText, shortName } from '../src/lib/season-card';
 
 const t = ((k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k)) as unknown as TFunction;
 const match = { date: '2027-03-22', opponent: 'Senica', goalsFor: 5, goalsAgainst: 0 };
@@ -33,5 +33,14 @@ describe('carte de fin de saison', () => {
       moment: { kind: 'hatTrick', id: 'c', name: 'C', goals: 3, match },
     } as unknown as SeasonReview;
     expect(cardPeople(r)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('coupes : pastilles et coupe gagnée comme moment fort', () => {
+    const r = { cups: [{ competition: 'Slovnaft Cup', status: 'won', played: 5, outBy: null }, { competition: 'UECL', status: 'out', played: 2, outBy: { opponent: 'Ajax' } }] } as unknown as SeasonReview;
+    expect(cupLines(t, r)).toEqual([
+      ['card.cup.won {"competition":"Slovnaft Cup","opponent":"?","count":5}', true],
+      ['card.cup.out {"competition":"UECL","opponent":"Ajax","count":2}', false],
+    ]);
+    expect(momentText(t, { kind: 'cupWin', competition: 'Slovnaft Cup' }).title).toBe('card.moment.cupWin {"competition":"Slovnaft Cup"}');
   });
 });

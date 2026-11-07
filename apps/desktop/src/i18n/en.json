@@ -2717,6 +2717,16 @@
         "body_winless": "The last competitive win was {{count}} matches ago.",
         "title_unbeaten": "{{count}} matches unbeaten for {{club}}",
         "body_unbeaten": "Unbeaten in the last {{count}} competitive matches."
+      },
+      "cupOut": {
+        "title": "{{club}} knocked out of the {{competition}}",
+        "body": "Beaten {{score}} by {{opponent}}, the club bows out after {{count}} round(s).",
+        "bodyLegs": "Beaten {{score}} on aggregate by {{opponent}}, the club bows out after {{count}} round(s)."
+      },
+      "cupThrough": {
+        "title": "{{club}} through in the {{competition}}",
+        "body": "A {{score}} win against {{opponent}}: the club awaits its next opponent.",
+        "bodyLegs": "{{score}} on aggregate against {{opponent}}: the club awaits its next opponent."
       }
     },
     "discord": {
@@ -3149,7 +3159,9 @@
       "score": "{{score}} win",
       "bigWinBody": "The biggest win of the season, on {{date}}.",
       "unbeaten": "{{count}} matches unbeaten",
-      "unbeatenBody": "The longest run of the season."
+      "unbeatenBody": "The longest run of the season.",
+      "cupWin": "{{competition}} won!",
+      "cupWinBody": "The trophy of the season."
     },
     "footer": "FM Immersion · independent project, not affiliated with Sports Interactive or SEGA",
     "season": "Season",
@@ -3161,7 +3173,15 @@
     "saved": "Image saved: {{path}}",
     "send": "Send the card to Discord",
     "sent": "Card sent to Discord.",
-    "faces": "Photos come from your facepack or the photorealistic portraits; without a photo, initials are shown."
+    "faces": "Photos come from your facepack or the photorealistic portraits; without a photo, initials are shown.",
+    "cups": "Cups",
+    "cup": {
+      "alive": "{{competition}} · still in",
+      "through": "{{competition}} · through",
+      "out": "{{competition}} · out to {{opponent}}",
+      "won": "{{competition}} · winners",
+      "unknown": "{{competition}} · {{count}} match(es)"
+    }
   },
   "challenges": {
     "save": "Save",
