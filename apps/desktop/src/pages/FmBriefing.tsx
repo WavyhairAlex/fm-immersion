@@ -8,6 +8,8 @@ import {
   pruneBriefDone,
   type BriefDone,
   trialistIds,
+  isCongested,
+  snapshotFixtures,
   type BriefItem,
   type Decision,
   type FmPlayer,
@@ -70,9 +72,10 @@ export function FmBriefing({
       .filter((p) => ids.has(String(p.id)))
       .map((p) => ({ id: String(p.id), name: String(p.name ?? '') }) as FmPlayer);
   }, [snap]);
+  const congested = useMemo(() => isCongested(snapshotFixtures(snap), snap.gameDate), [snap]);
   const items = useMemo(
-    () => briefing({ players, nextMatch: nm, starters, decisions, playtime, setupsToChange, offseason, trialists, backForMatch }),
-    [players, nm, starters, decisions, playtime, setupsToChange, offseason, trialists],
+    () => briefing({ players, nextMatch: nm, starters, decisions, playtime, setupsToChange, offseason, trialists, backForMatch, congested }),
+    [players, nm, starters, decisions, playtime, setupsToChange, offseason, trialists, congested],
   );
   const scope = useFmSaveScope();
   const [done, setDone] = useState<BriefDone>(() => readScoped<BriefDone>(DONE_KEY, { ...scope, inheritsLegacy: false }, {}));

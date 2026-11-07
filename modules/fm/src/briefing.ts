@@ -1,6 +1,6 @@
 import type { Decision } from './decisions';
 import { moraleLevel } from './club';
-import { isFriendly } from './rules';
+import { competitionWeight, isFriendly } from './rules';
 import type { FmPlayer } from './player';
 import type { PlaytimeRow } from './playtime';
 
@@ -16,6 +16,8 @@ export type BriefKind =
   | 'nextMatch'
   | 'friendly'
   | 'tiredStarters'
+  | 'rotation'
+  | 'congested'
   | 'contracts'
   | 'trialists'
   | 'playtimeShort'
@@ -50,12 +52,16 @@ export interface BriefingInput {
   trialists?: FmPlayer[];
   /** Joueur absent mais rétabli d'ici le match. */
   backForMatch?: (p: FmPlayer) => boolean;
+  /** Un autre match à 3 jours ou moins du prochain (voir `isCongested`). */
+  congested?: boolean;
 }
 
 /** Nombre de messages au plus : un briefing se lit en quelques secondes. */
 export const BRIEF_MAX = 6;
 /** Condition sous laquelle un titulaire est signalé fatigué. */
 export const TIRED_CONDITION = 85;
+/** Condition sous laquelle un titulaire est candidat à la rotation avant un match secondaire. */
+export const ROTATION_CONDITION = 92;
 
 const lastName = (p: FmPlayer) => p.name.trim().split(/\s+/).at(-1) ?? p.name;
 /** « Novák », « Novák et Kováč », « Novák, Kováč et 2 autres » : la langue joint avec `and` (« et », « and »). */
@@ -92,6 +98,16 @@ export function briefing(input: BriefingInput): BriefItem[] {
     });
   const tired = xi.filter((p) => !p.injury && p.condition != null && p.condition < TIRED_CONDITION);
   if (official && tired.length) item('tiredStarters', 'warn', 'depth', tired);
+
+  // Coupe ou calendrier chargé : faire tourner, en commençant par ceux qui manquent de temps de jeu et les
+  // titulaires entamés (sous 92 %), sans toucher à la colonne vertébrale.
+  const weight = official ? competitionWeight(official.competition, { congested: input.congested }) : null;
+  if (weight?.rotate && weight.reason) {
+    const shortIds = new Set(playtime.filter((r) => r.verdict === 'short').map((r) => r.player.id));
+    const worn = xi.filter((p) => !p.injury && !p.suspension && p.condition != null && p.condition < ROTATION_CONDITION);
+    const cand = [...players.filter((p) => shortIds.has(p.id) && !p.injury && !p.suspension), ...worn.filter((p) => !shortIds.has(p.id))];
+    if (cand.length) item(weight.reason === 'cup' ? 'rotation' : 'congested', 'info', 'depth', cand, { competition: official!.competition ?? '' });
+  }
 
   if (input.trialists?.length) item('trialists', 'warn', 'targets', input.trialists);
 

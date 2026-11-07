@@ -31,6 +31,23 @@ describe("briefing de l'adjoint", () => {
     const b = briefing({ players: ps, nextMatch: { opponent: 'Ružomberok', home: true, inDays: 0, competition: 'Match Amical' }, starters: new Set(['A', 'B']) });
     expect(b.map((x) => [x.kind, x.view])).toEqual([['friendly', 'playtime'], ['allGood', 'home']]);
   });
+  it('coupe : conseil de rotation avec ceux qui manquent de temps de jeu et les titulaires entamés', () => {
+    const ps = [pl('A', { condition: 88 }), pl('B'), pl('C', { condition: 90, injury: 'Coup' }), pl('D')];
+    const playtime = [{ player: ps[3]!, verdict: 'short' }] as never;
+    const b = briefing({ players: ps, nextMatch: { opponent: 'Senica', home: true, inDays: 3, competition: 'Slovnaft Cup' }, starters: new Set(['A', 'B', 'C']), playtime });
+    const rot = b.find((x) => x.kind === 'rotation')!;
+    expect(rot.view).toBe('depth');
+    expect(rot.players.map((p) => p.id)).toEqual(['D', 'A']);
+    expect(rot.values.competition).toBe('Slovnaft Cup');
+    expect(b.some((x) => x.kind === 'playtimeShort')).toBe(true);
+  });
+  it('championnat : pas de rotation, sauf calendrier chargé', () => {
+    const ps = [pl('A', { condition: 88 }), pl('B')];
+    const nextMatch = { opponent: 'Senica', home: true, inDays: 3, competition: '2. liga' };
+    expect(briefing({ players: ps, nextMatch, starters: new Set(['A', 'B']) }).some((x) => x.kind === 'rotation' || x.kind === 'congested')).toBe(false);
+    const c = briefing({ players: ps, nextMatch, starters: new Set(['A', 'B']), congested: true }).find((x) => x.kind === 'congested')!;
+    expect(c.players.map((p) => p.id)).toEqual(['A']);
+  });
   it('intersaison sans match : rien à signaler sinon', () => {
     expect(briefing({ players: [pl('A')], nextMatch: null, offseason: true }).map((x) => x.kind)).toEqual(['offseason']);
     expect(briefing({ players: [pl('A')], nextMatch: null }).map((x) => x.kind)).toEqual(['allGood']);

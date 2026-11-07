@@ -1,9 +1,10 @@
-import { analyzeResults, type FmPlayer, type FmSnapshot, type Insight, type MatchResult, type Outcome } from '@fm-immersion/module-fm';
+import { analyzeResults, competitionKind, type CompetitionKind, type FmPlayer, type FmSnapshot, type Insight, type MatchResult, type Outcome } from '@fm-immersion/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Empty, Kpi, More, Panel, PlayerLink, Tag, type Tone } from './FmUi';
 
 const TONE: Record<Outcome, Tone> = { W: 'good', D: 'info', L: 'bad' };
+const KINDS: CompetitionKind[] = ['league', 'cup', 'europe', 'friendly', 'other'];
 
 /**
  * Résultats : chaque match retrouvé entre deux instantanés (score, onze, note et stats de chaque joueur), puis ce
@@ -14,6 +15,17 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
   const lang = i18n.resolvedLanguage;
   const an = useMemo(() => analyzeResults(history ?? []), [history]);
   const [open, setOpen] = useState<string | null>(null);
+  // Filtre par nature de compétition : la liste des matchs et un bilan réduit (le bilan global ignore déjà les amicaux).
+  const [kind, setKind] = useState<CompetitionKind | 'all'>('all');
+  const kinds = useMemo(() => KINDS.filter((k) => an.results.some((r) => competitionKind(r.competition) === k)), [an]);
+  const listed = useMemo(() => (kind === 'all' ? an.results : an.results.filter((r) => competitionKind(r.competition) === kind)), [an, kind]);
+  const sub = useMemo(() => {
+    if (kind === 'all') return null;
+    const w = listed.reduce((n, r) => n + r.wins, 0);
+    const d = listed.reduce((n, r) => n + r.draws, 0);
+    const l = listed.reduce((n, r) => n + r.losses, 0);
+    return { record: `${w}-${d}-${l}`, goals: `${listed.reduce((n, r) => n + (r.goalsFor ?? 0), 0)} - ${listed.reduce((n, r) => n + (r.goalsAgainst ?? 0), 0)}` };
+  }, [listed, kind]);
   const byId = useMemo(() => new Map(players.map((p) => [p.id, p])), [players]);
   const num = (x: number | null | undefined, d = 1) => (x == null ? '–' : new Intl.NumberFormat(lang, { maximumFractionDigits: d, minimumFractionDigits: d }).format(x));
   const date = (d: string) => new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(d));
@@ -127,8 +139,24 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
       </div>
 
       <Panel title={t('fm.results.list')}>
+        {kinds.length > 1 && (
+          <div className="mb-2 flex flex-wrap items-center gap-2 text-sm">
+            <label htmlFor="fm-results-kind" className="text-brun">
+              {t('fm.results.filter.label')}
+            </label>
+            <select id="fm-results-kind" className="rounded border border-canard/20 bg-white px-2 py-1" value={kind} onChange={(e) => setKind(e.target.value as CompetitionKind | 'all')}>
+              <option value="all">{t('fm.results.filter.all')}</option>
+              {kinds.map((k) => (
+                <option key={k} value={k}>
+                  {t(`fm.results.filter.${k}`)}
+                </option>
+              ))}
+            </select>
+            {sub && <span className="font-bold">{t('fm.results.filtered', { label: t(`fm.results.filter.${kind}`), record: sub.record, goals: sub.goals })}</span>}
+          </div>
+        )}
         <ul className="divide-y divide-canard/10">
-          {an.results.map((r) => {
+          {listed.map((r) => {
             const key = `${r.since}|${r.date}`;
             const shown = open === key;
             return (
