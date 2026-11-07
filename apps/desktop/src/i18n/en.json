@@ -700,7 +700,27 @@
         "hard": "Too complex for the squad"
       },
       "simplify": "Simplify instructions or plan training time.",
-      "allClose": "All styles are within {{gap}} of each other: your squad doesn't favour any. Pick your project's style; FM Immersion builds the best eleven for each."
+      "allClose": "All styles are within {{gap}} of each other: your squad doesn't favour any. Pick your project's style; FM Immersion builds the best eleven for each.",
+      "pitch": {
+        "title": "Home pitch:",
+        "size": "{{length}} × {{width}} m",
+        "choice": {
+          "large": "Wide",
+          "short": "Short",
+          "long": "Long",
+          "narrow": "Narrow",
+          "min": "Minimum allowed size",
+          "normal": "Normal"
+        },
+        "why": {
+          "large": "More width to move the ball around and stretch the opponent. The game only offers this at the start of a season; the effect is a small bonus.",
+          "short": "Less ground to cover when pressing and winning the ball back. The game only offers this at the start of a season; the effect is a small bonus.",
+          "long": "Space behind the opponent for quick attacks. The game only offers this at the start of a season; the effect is a small bonus.",
+          "narrow": "A tight game for second balls and early crosses. The game only offers this at the start of a season; the effect is a small bonus.",
+          "min": "As little space as possible for the opponent against a low block. The game only offers this at the start of a season; the effect is a small bonus.",
+          "normal": "No clear preference for this style: keep normal dimensions."
+        }
+      }
     },
     "eff": {
       "none": "The game's effectiveness gauges are not in this snapshot yet. Meanwhile, FM Immersion's estimate is under \"Playing style\".",

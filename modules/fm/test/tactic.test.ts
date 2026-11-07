@@ -136,3 +136,14 @@ describe('note d’équipe', () => {
     expect(balancePenalty([{ id: 'cover', status: 'bad', params: {} }])).toBeGreaterThan(balancePenalty([{ id: 'creation', status: 'warn', params: {} }]));
   });
 });
+
+describe('taille du terrain à domicile', () => {
+  it('suit le style : possession large, pressing court, contre long, bloc bas minimal', async () => {
+    const { pitchAdvice } = await import('../src');
+    expect(pitchAdvice('possession')).toEqual({ choice: 'large', length: 105, width: 85 });
+    expect(pitchAdvice('gegenpress').choice).toBe('short');
+    expect(pitchAdvice('counter-fluid').choice).toBe('long');
+    expect(pitchAdvice('ultra-def').choice).toBe('min');
+    expect(pitchAdvice('inconnu').choice).toBe('normal');
+  });
+});

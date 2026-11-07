@@ -272,3 +272,36 @@ export function gameMentality(m: string | null | undefined): string | undefined 
   };
   return map[n] ?? m;
 }
+
+/*
+ * Taille du terrain à domicile, d'après le style de jeu. FM27 la propose en début de saison (longueur 90 à 120 m,
+ * largeur 55 à 90 m). Repères de la communauté FM : un style qui garde le ballon ou joue sur les côtés gagne à un
+ * terrain large (plus d'espace pour faire circuler), un style de pressing à un terrain court (moins de distance à
+ * couvrir), la contre-attaque à un terrain long (de l'espace dans le dos), un bloc bas au plus petit terrain permis.
+ * L'effet reste modeste dans le moteur : c'est un petit plus, pas une tactique.
+ */
+export type PitchChoice = 'large' | 'short' | 'long' | 'narrow' | 'min' | 'normal';
+export const PITCH_SIZES: Record<PitchChoice, { length: number; width: number }> = {
+  large: { length: 105, width: 85 },
+  short: { length: 90, width: 70 },
+  long: { length: 115, width: 70 },
+  narrow: { length: 105, width: 55 },
+  min: { length: 90, width: 55 },
+  normal: { length: 105, width: 68 },
+};
+const PITCH_BY_STYLE: Record<string, PitchChoice> = {
+  possession: 'large',
+  tikitaka: 'large',
+  'tikitaka-v': 'large',
+  wings: 'large',
+  gegenpress: 'short',
+  'counter-fluid': 'long',
+  'counter-direct': 'long',
+  longball: 'narrow',
+  'ultra-def': 'min',
+  catenaccio: 'min',
+};
+export function pitchAdvice(styleId: string | null | undefined): { choice: PitchChoice; length: number; width: number } {
+  const choice = PITCH_BY_STYLE[styleId ?? ''] ?? 'normal';
+  return { choice, ...PITCH_SIZES[choice] };
+}

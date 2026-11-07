@@ -700,7 +700,27 @@
         "hard": "Trop complexe pour l'effectif"
       },
       "simplify": "Simplifie les consignes ou prévois du temps d'entraînement.",
-      "allClose": "Tous les styles se valent à {{gap}} près : ton effectif n'en impose aucun. Choisis celui de ton projet, FM Immersion bâtit le meilleur onze pour chacun."
+      "allClose": "Tous les styles se valent à {{gap}} près : ton effectif n'en impose aucun. Choisis celui de ton projet, FM Immersion bâtit le meilleur onze pour chacun.",
+      "pitch": {
+        "title": "Terrain à domicile :",
+        "size": "{{length}} × {{width}} m",
+        "choice": {
+          "large": "Large",
+          "short": "Court",
+          "long": "Long",
+          "narrow": "Étroit",
+          "min": "Taille min. autorisée",
+          "normal": "Normal"
+        },
+        "why": {
+          "large": "Plus de largeur pour faire circuler le ballon et écarter le bloc adverse. Le jeu ne propose ce choix qu'en début de saison ; l'effet reste un petit plus.",
+          "short": "Moins de distance à couvrir pour presser et récupérer vite le ballon. Le jeu ne propose ce choix qu'en début de saison ; l'effet reste un petit plus.",
+          "long": "De l'espace dans le dos de l'adversaire pour les attaques rapides. Le jeu ne propose ce choix qu'en début de saison ; l'effet reste un petit plus.",
+          "narrow": "Un jeu resserré pour les seconds ballons et les centres de loin. Le jeu ne propose ce choix qu'en début de saison ; l'effet reste un petit plus.",
+          "min": "Le moins d'espace possible pour l'adversaire face à un bloc bas. Le jeu ne propose ce choix qu'en début de saison ; l'effet reste un petit plus.",
+          "normal": "Pas de préférence nette pour ce style : garde les dimensions normales."
+        }
+      }
     },
     "eff": {
       "none": "Les jauges d'efficacité du jeu ne sont pas encore dans cet instantané. En attendant, l'estimation de FM Immersion est dans « Style de jeu ».",
