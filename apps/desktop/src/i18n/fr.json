@@ -2534,7 +2534,7 @@
     "home": {
       "title": "Accueil",
       "heading": "Bienvenue dans FM Immersion",
-      "intro": "Choisis un mode. Chacun fonctionne seul : tu n'utilises que ce qui t'intéresse."
+      "intro": "Crée ta carrière FM27 : FM Immersion la suit avec le plugin, et chaque mode s'en sert. Les visages photoréalistes s'installent même sans carrière."
     },
     "faces": {
       "title": "Visages photoréalistes",
@@ -3298,5 +3298,50 @@
     },
     "limit": "Tout se passe sur ton PC et le code est ouvert : un certificat prouve que la partie est cohérente et suivie de bout en bout, pas qu'il est impossible de fabriquer une fausse saison entière. Projet indépendant, sans lien avec Sports Interactive ni SEGA.",
     "saved": "Certificat enregistré : {{path}}"
+  },
+  "layout": {
+    "readNow": "Lire la partie maintenant",
+    "openSettings": "Ouvrir Plugin et réglages",
+    "more": "Plus",
+    "bridgeAction": "Le plugin demande une action",
+    "settingsIntro": "Où FM Immersion lit ta partie : dossier du plugin, sauvegarde liée, historique et plugin FM27.",
+    "manageCareers": "Gérer mes carrières",
+    "groups": {
+      "club": "Mon club",
+      "story": "Ma carrière racontée",
+      "game": "Le jeu"
+    },
+    "nav": {
+      "today": "Aujourd'hui",
+      "tactic": "Tactique et entraînement",
+      "squad": "Effectif",
+      "results": "Résultats",
+      "mercato": "Mercato et finances",
+      "faces": "Visages",
+      "settings": "Plugin et réglages"
+    },
+    "today": {
+      "title": "Aujourd'hui",
+      "intro": "Ce que ton adjoint a vu dans ta partie, et le reste de ta carrière d'un coup d'œil.",
+      "read": "Lire",
+      "see": "Voir",
+      "noGazette": "Le premier numéro sortira après ta première semaine de jeu suivie.",
+      "challenge": "Défi en cours",
+      "pickChallenge": "Choisir un défi",
+      "noChallenge": "Aucun défi en cours.",
+      "steps": "{{done}} étape(s) sur {{total}}",
+      "facesProgress": "Génération des portraits : {{pct}} %"
+    },
+    "career": {
+      "create": "Créer ma carrière",
+      "photo": "Changer la photo du coach",
+      "change": "Changer",
+      "free": "Sans club",
+      "noData": "Partie pas encore lue",
+      "photoError": "Image illisible : choisis un PNG, un JPEG ou un WebP.",
+      "switch": "Changer de carrière",
+      "manage": "Gérer",
+      "removePhoto": "Retirer la photo"
+    }
   }
 }

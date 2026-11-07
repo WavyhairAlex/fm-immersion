@@ -25,9 +25,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useParams } from 'react-router-dom';
-import { fmData, savesData } from '../lib/data';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { TodayCards } from '../components/TodayCards';
+import { useCareer, useCareerStore } from '../lib/career';
+import { clubPath, pageOf, PARTS, VISIBLE_PARTS, type ClubPage } from '../lib/club-nav';
+import { fmData } from '../lib/data';
 import { importMissingHistory, type FmHistoryFile } from '../lib/fm-history';
+import { useFmFolder } from '../lib/fm-sync';
 import { FmOtherSaveError, type FmSaveFile } from '../lib/fm';
 import { FmSaveScopeContext, type FmSaveScope } from '../lib/save-store';
 import { FmAnalysis } from './FmAnalysis';
@@ -63,238 +67,59 @@ import { CompatTag, PlayerLink, PlayerSheetContext, useCoach } from './FmUi';
 import { FmPlayerSheet } from './FmPlayerSheet';
 
 const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
-/** Relecture des fichiers du plugin (instantané, état du manager). */
-const LIVE_POLL_MS = 10_000;
 
-/**
- * Cinq onglets, dans l'ordre où on s'en sert : l'accueil, tactique et entraînement (compo, consignes, adversaire,
- * rotation, style, efficacité, feuille de route, entraînement, staff), l'effectif, les performances (résultats,
- * stats, analyse) et le mercato avec le club (départs, cibles, finances, contrats). Chaque onglet montre ses
- * parties en sous-onglets, une à la fois. L'ancien onglet « Projet de jeu » (`go('style')`) ouvre le premier.
- */
-const SECTIONS = [
-  { id: 'home', views: ['home'] },
-  { id: 'tactic', views: ['tactic'] },
-  { id: 'squad', views: ['squad'] },
-  { id: 'results', views: ['results'] },
-  { id: 'mercato', views: ['mercato'] },
-] as const;
-/**
- * Parties de chaque onglet (sous-onglets). Les anciens noms d'écran restent valides : `go('contracts')`
- * ouvre Mercato et club sur Contrats.
- */
-const PARTS: Record<string, readonly string[]> = {
-  tactic: ['tactic', 'instructions', 'opponent', 'depth', 'calendar', 'style', 'effectiveness', 'project', 'training', 'staff'],
-  squad: ['squad', 'playtime', 'dressing', 'progression', 'roles', 'compare', 'numbers', 'loans'],
-  results: ['results', 'diagnosis', 'stats', 'analysis'],
-  mercato: ['mercato', 'targets', 'finances', 'wages', 'contracts'],
-};
-/** Sections dont les écrans s'enchaînent comme des étapes (numérotées, avec « étape suivante »). */
-const STEPPED = new Set<string>([]);
-type View = (typeof SECTIONS)[number]['views'][number];
-const isView = (v: string): v is View => SECTIONS.some((s) => (s.views as readonly string[]).includes(v));
-/** Onglet qui contient un écran (lui-même, ou l'onglet où il a été regroupé). */
-const pageOf = (v: string): View => (isView(v) ? v : ((Object.keys(PARTS).find((k) => PARTS[k]!.includes(v)) as View | undefined) ?? 'home'));
-const VIEW_KEY = 'fmi.view';
-/** Nom d'un onglet : son nom propre s'il regroupe plusieurs écrans, sinon celui de l'écran. */
+/** Nom d'un écran : son nom propre s'il regroupe plusieurs parties, sinon celui de la partie. */
 const pageLabel = (t: (k: string, o?: Record<string, unknown>) => string, v: string) => t(`fm.pages.${v}`, { defaultValue: t(`fm.views.${v}`) });
-/** Dernier écran ouvert : un onglet, ou une partie d'onglet regroupé (rouverte telle quelle). */
-const readView = (): string => {
-  try {
-    return localStorage.getItem(VIEW_KEY) ?? 'home';
-  } catch {
-    return 'home';
-  }
-};
 
-/** Partie Football Manager : import depuis le plugin, alertes, effectif. */
-export function FmSave() {
-  const { saveId = '' } = useParams();
+/**
+ * Carrière suivie, vue par écran : « Aujourd'hui » (`page="home"`), un écran du club (`/club/:view`, la partie
+ * demandée d'un écran regroupé) ou « Plugin et réglages » (`page="settings"`). La lecture du plugin tourne pour
+ * toute l'appli (`useFmSync`) ; ici, on affiche.
+ */
+export function FmSave({ page }: { page?: 'home' | 'settings' }) {
+  const params = useParams();
+  const navigate = useNavigate();
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
+  const { saveId, save, fmSaves } = useCareer();
   const key = ['fm', saveId] as const;
 
-  const { data: allSaves } = useQuery({
-    queryKey: ['saves'],
-    queryFn: savesData.list,
-  });
-  const save = allSaves?.find((s) => s.id === saveId);
   // Les réglages d'écran d'avant le lien partie ↔ sauvegarde reviennent à la plus ancienne partie FM.
   const scope = useMemo<FmSaveScope | null>(() => {
-    if (!allSaves) return null;
-    const oldest = allSaves.filter((s) => s.gameId === 'fm').sort((a, b) => a.createdAt.localeCompare(b.createdAt))[0];
+    if (!saveId) return null;
+    const oldest = [...fmSaves].sort((a, b) => a.createdAt.localeCompare(b.createdAt))[0];
     return { saveId, inheritsLegacy: oldest?.id === saveId };
-  }, [allSaves, saveId]);
+  }, [fmSaves, saveId]);
   const { data: snapshot, isLoading } = useQuery({
     queryKey: [...key, 'latest'],
     queryFn: () => fmData.latest(saveId),
+    enabled: !!saveId,
   });
   const { data: all } = useQuery({
     queryKey: [...key, 'all'],
     queryFn: () => fmData.all(saveId),
+    enabled: !!saveId,
   });
   const { data: settings } = useQuery({
     queryKey: [...key, 'settings'],
     queryFn: () => fmData.settings(saveId),
-  });
-  const { data: defaultFolder } = useQuery({
-    queryKey: ['fm', 'default-folder'],
-    queryFn: () => invoke<string | null>('fm_default_folder'),
+    enabled: !!saveId,
   });
 
-  // Onglet affiché et, pour un onglet regroupé, la partie choisie (sous-onglet) ; sinon sa première partie.
-  const [current, setCurrent] = useState<string>(readView);
-  const view = pageOf(current);
+  // Écran affiché et, pour un écran regroupé, la partie demandée (sous-onglet) ; sinon sa première partie.
+  const current = page ?? params.view ?? 'home';
+  const view = page === 'settings' ? 'settings' : pageOf(current);
   const go = (v: string) => {
-    setCurrent(v);
-    try {
-      localStorage.setItem(VIEW_KEY, v);
-    } catch {
-      /* stockage indisponible : l'écran n'est pas retenu */
-    }
+    navigate(clubPath(v));
     window.scrollTo({ top: 0 });
   };
   // Fiche joueur ouverte depuis n'importe quel nom cliquable.
   const [sheet, setSheet] = useState<string | null>(null);
-  const section = SECTIONS.find((s) => (s.views as readonly string[]).includes(view)) ?? SECTIONS[0];
-  const [folder, setFolder] = useState('');
-  // Ce que le briefing laisse à faire, par écran : une pastille sur l'onglet concerné (remise à zéro à chaque nouvelle date).
-  const [todo, setTodo] = useState<{ at: string; views: string[] }>({ at: '', views: [] });
+  const folder = useFmFolder(saveId);
+  // Ce que le briefing laisse à faire, par écran : une pastille dans la barre latérale (remise à zéro à chaque nouvelle date).
+  const setTodo = useCareerStore((s) => s.setTodo);
   const todoAt = `${saveId}|${snapshot?.gameDate ?? ''}`;
-  const reportTodo = useCallback((views: string[]) => setTodo({ at: todoAt, views }), [todoAt]);
-  const todoOn = (v: string) => (todo.at === todoAt ? todo.views.filter((x) => pageOf(x) === v).length : 0);
-  const badge = (v: string, dark: boolean) => {
-    const n = todoOn(v);
-    if (!n || v === 'home') return null;
-    return (
-      <span
-        className={`${dark ? 'ml-auto' : 'ml-1.5'} inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-xs font-extrabold tabular-nums ${dark ? 'bg-orange-fonce text-white' : 'bg-orange-clair text-canard'}`}
-        aria-label={t('fm.brief.tabBadge', { count: n })}
-        title={t('fm.brief.tabBadge', { count: n })}
-      >
-        {n}
-      </span>
-    );
-  };
-  // Réglages repliés quand tout va bien ; ouverts d'office sans instantané ou quand le plugin demande une action.
-  const [settingsToggle, setSettingsToggle] = useState<boolean | null>(null);
-  const [bridgeOk, setBridgeOk] = useState<boolean | null>(null);
-  useEffect(() => {
-    setFolder(settings?.fmFolder ?? defaultFolder ?? '');
-  }, [settings?.fmFolder, defaultFolder]);
-
-  // Sauvegardes .fm du joueur (dossier games, à côté de celui du plugin), pour lier la partie à l'une d'elles.
-  const { data: saveFiles } = useQuery({
-    queryKey: ['fm', 'save-files', folder],
-    queryFn: () => invoke<FmSaveFile[]>('fm_list_saves', { folder }),
-    enabled: !!folder,
-    refetchInterval: 60_000,
-  });
-  const linked = settings?.fmSaveFile ?? '';
-  const linkedFile = saveFiles?.find((f) => f.name === linked);
-  const link = useMutation({
-    mutationFn: (name: string) => fmData.linkSave(saveId, name || null),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [...key, 'settings'] }),
-  });
-
-  // Instantané d'une autre sauvegarde chargée dans FM27 : rien n'est importé tant que le joueur ne le confirme pas.
-  const [other, setOther] = useState<FmOtherSaveError | null>(null);
-  // Sans club dans FM27 (date de jeu), d'après l'état écrit par le plugin.
-  const [free, setFree] = useState<string | null>(null);
-  const freeSince = free ? (settings?.fmFreeSince ?? free) : null;
-  const importSnap = useMutation({
-    mutationFn: async (opts: { force?: boolean } = {}) => {
-      const text = await invoke<string>('fm_read_snapshot', { folder });
-      if (folder !== settings?.fmFolder) await fmData.setFolder(saveId, folder);
-      return fmData.importSnapshot(saveId, JSON.parse(text), opts);
-    },
-    onSuccess: () => {
-      setOther(null);
-      qc.invalidateQueries({ queryKey: key });
-      qc.invalidateQueries({ queryKey: ['saves'] });
-    },
-    onError: (e) => setOther(e instanceof FmOtherSaveError ? e : null),
-  });
-
-  // Import automatique : le plugin réécrit son instantané à chaque nouveau jour de jeu (et toutes les 5 minutes) ;
-  // on relit le fichier toutes les 10 secondes (lecture locale, rien dans le jeu) et on l'enregistre dès qu'il a
-  // changé, pour que tout l'écran suive la partie presque en direct, sans bouton à presser.
-  const lastText = useRef<string | null>(null);
-  const abilitiesDate = useRef<string | null>(null);
-  const abilitiesTry = useRef(0);
-  const historyTry = useRef(0);
-  useEffect(() => {
-    if (!folder) return;
-    let stop = false;
-    const tick = async () => {
-      // État du manager (club entraîné ou sans club), écrit par le plugin depuis la version qui le gère.
-      try {
-        const st = await invoke<string | null>('fm_read_status', { folder });
-        if (!stop && st) {
-          const status = await fmData.noteStatus(saveId, JSON.parse(st));
-          setFree(status.club ? null : status.gameDate);
-          qc.invalidateQueries({ queryKey: [...key, 'settings'] });
-        }
-      } catch {
-        /* fichier absent ou en cours d'écriture */
-      }
-      try {
-        const text = await invoke<string>('fm_read_snapshot', { folder });
-        if (!stop && text !== lastText.current) {
-          lastText.current = text;
-          await fmData.importSnapshot(saveId, JSON.parse(text));
-          setOther(null);
-          qc.invalidateQueries({ queryKey: key });
-          qc.invalidateQueries({ queryKey: ['saves'] });
-        }
-      } catch (e) {
-        // Autre sauvegarde chargée : on le signale ; sinon fichier absent ou en cours d'écriture, nouvel essai au prochain passage.
-        if (e instanceof FmOtherSaveError) setOther(e);
-      }
-      // Historique : les jours de jeu passés pendant que l'appli était fermée (plusieurs matchs dans la semaine…)
-      // sont rattrapés depuis les fichiers datés du plugin, une fois par minute, par lots.
-      try {
-        if (!stop && Date.now() - historyTry.current >= 60_000) {
-          historyTry.current = Date.now();
-          const latest = await fmData.latest(saveId);
-          const n = await importMissingHistory(saveId, folder, (await fmData.settings(saveId)).fmClub ?? latest?.club ?? null);
-          if (n && !stop) {
-            qc.invalidateQueries({ queryKey: key });
-            qc.invalidateQueries({ queryKey: ['saves'] });
-          }
-        }
-      } catch {
-        /* dossier illisible : nouvel essai au prochain passage */
-      }
-      // CA/PA réels (option du joueur) : lus une fois par date de jeu dans la mémoire de FM27, en lecture seule.
-      try {
-        // La lecture mémoire garde son rythme d'une tentative par minute, même si les fichiers sont relus plus souvent.
-        if (Date.now() - abilitiesTry.current < 60_000) return;
-        if (stop || !(await fmData.settings(saveId)).fmReadAbilities) return;
-        abilitiesTry.current = Date.now();
-        const latest = await fmData.latest(saveId);
-        if (!latest || latest.data.abilities || latest.gameDate === abilitiesDate.current) return;
-        const r = await invoke<{
-          gameDate: string | null;
-          players: { id: number; ca: number; pa: number }[];
-        }>('fm_memory_abilities');
-        // La mémoire peut être en avance sur l'instantané (écrit toutes les 5 minutes) : on attend la même date.
-        if (stop || r.gameDate?.slice(0, 10) !== latest.gameDate.slice(0, 10) || !r.players.length) return;
-        if (await fmData.attachAbilities(saveId, latest.gameDate, r.players)) {
-          abilitiesDate.current = latest.gameDate;
-          qc.invalidateQueries({ queryKey: key });
-        }
-      } catch {
-        /* FM27 fermé ou version inconnue : nouvel essai dans une minute */
-      }
-    };
-    void tick();
-    const id = setInterval(() => void tick(), LIVE_POLL_MS);
-    return () => {
-      stop = true;
-      clearInterval(id);
-    };
-  }, [folder, saveId]);
+  const reportTodo = useCallback((views: string[]) => setTodo({ at: todoAt, views }), [todoAt, setTodo]);
 
   // Effectif sous contrat (hors essais) : salaires, contrats, finances. Les joueurs prêtés ailleurs et ceux de la
   // réserve ou des jeunes (`team`) n'entrent pas dans les compos ni l'analyse : `players` est l'équipe première
@@ -444,287 +269,293 @@ export function FmSave() {
         return null;
     }
   };
-  const settingsOpen = settingsToggle ?? ((!isLoading && !snapshot) || bridgeOk === false);
-  const dateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, {
-    dateStyle: 'long',
-  });
-  const stampFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, {
-    dateStyle: 'short',
-    timeStyle: 'short',
-  });
+  const sync = useCareerStore((s) => s.sync);
+  const dateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' });
+  const stampFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'short', timeStyle: 'short' });
+  const freeSince = sync.free ? (settings?.fmFreeSince ?? sync.free) : null;
 
+  // Lecture à la demande (bouton « Lire la partie maintenant », ou import confirmé d'un autre club).
+  const importSnap = useMutation({
+    mutationFn: async (opts: { force?: boolean; folder?: string } = {}) => {
+      const from = opts.folder ?? folder;
+      const text = await invoke<string>('fm_read_snapshot', { folder: from });
+      if (from !== settings?.fmFolder) await fmData.setFolder(saveId, from);
+      return fmData.importSnapshot(saveId, JSON.parse(text), opts);
+    },
+    onSuccess: () => {
+      useCareerStore.getState().setSync({ other: null });
+      qc.invalidateQueries({ queryKey: key });
+      qc.invalidateQueries({ queryKey: ['saves'] });
+    },
+    onError: (e) => useCareerStore.getState().setSync({ other: e instanceof FmOtherSaveError ? e : null }),
+  });
+  const other = sync.other;
+  const position = (snapshot?.data as { custom?: { equipe?: { classementTexte?: unknown } } } | undefined)?.custom?.equipe?.classementTexte;
+
+  if (!saveId) return null;
   return (
-    <div className="fm lg:flex">
-      {/* Barre latérale sombre (grand écran) : la partie, sa date de jeu, l'état de l'import et le menu. */}
-      <aside className="hidden w-60 shrink-0 flex-col bg-canard text-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:overflow-y-auto">
-        <div className="border-b border-white/10 px-4 pb-4 pt-5">
-          <Link to="/coach" className="text-xs font-bold text-white/60 hover:text-white">
-            ← {t('fm.back')}
-          </Link>
-          <p className="mt-2 font-display text-xl font-semibold leading-tight">{save?.name ?? '…'}</p>
-          {snapshot && (
-            <p className="mt-1 text-xs text-white/70">
-              {snapshot.club} · {dateFmt.format(new Date(snapshot.gameDate))}
-            </p>
-          )}
-          {freeSince && (
-            <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-white">
-              <span className="inline-block h-2 w-2 rounded-full bg-ambre" aria-hidden />
-              {t('fm.saveFile.free', { date: dateFmt.format(new Date(freeSince)) })}
-            </p>
-          )}
-        </div>
-        {snapshot && players.length > 0 && (
-          <nav className="flex-1 space-y-0.5 py-3" aria-label={t('fm.nav')}>
-            {SECTIONS.map((s) => (
-              <div key={s.id}>
-                {s.views.length > 1 && <p className="px-3 pb-1 text-[0.65rem] font-extrabold uppercase tracking-widest text-white/45">{t(`fm.sections.${s.id}`)}</p>}
-                {s.views.map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    aria-current={v === view ? 'page' : undefined}
-                    onClick={() => go(v)}
-                    className={`flex w-full items-center border-l-[3px] px-4 py-2.5 text-left font-bold ${v === view ? 'border-eau bg-white/10 text-white' : 'border-transparent text-white/75 hover:bg-white/5 hover:text-white'}`}
-                  >
-                    {STEPPED.has(s.id) && <span className="mr-1.5 tabular-nums text-eau">{s.views.indexOf(v as never) + 1}.</span>}
-                    {pageLabel(t, v)}
-                    {badge(v, true)}
-                  </button>
-                ))}
-              </div>
-            ))}
-          </nav>
+    <div className="fm min-h-screen">
+      {/* En-tête de la carrière : club, date de jeu, état de la lecture du plugin, lecture à la demande. */}
+      <header className="sticky top-0 z-40 flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-canard/10 bg-white px-6 py-3 xl:px-10">
+        {snapshot ? (
+          <>
+            <span className="font-extrabold">{snapshot.club}</span>
+            <span className="text-sm text-brun">
+              {typeof position === 'string' && position ? `${position} · ` : ''}
+              {dateFmt.format(new Date(snapshot.gameDate))}
+            </span>
+          </>
+        ) : (
+          <span className="font-extrabold">{save?.name}</span>
         )}
-        <div className="mt-auto space-y-2 border-t border-white/10 p-4">
+        {freeSince && (
+          <span className="inline-flex items-center gap-1.5 rounded-md bg-creme px-2 py-0.5 text-sm font-bold">
+            <span className="inline-block h-2 w-2 rounded-full bg-ambre" aria-hidden />
+            {t('fm.saveFile.free', { date: dateFmt.format(new Date(freeSince)) })}
+          </span>
+        )}
+        <div className="ml-auto flex items-center gap-3">
           {snapshot && (
-            <p className="flex items-center gap-1.5 text-xs text-white/60" title={t('fm.autoImport')}>
-              <span className={`h-2 w-2 rounded-full ${importSnap.isError ? 'bg-corail' : 'bg-eau'}`} aria-hidden />
+            <span className="flex items-center gap-1.5 text-xs text-brun" title={t('fm.autoImport')}>
+              <span className={`h-2 w-2 rounded-full ${importSnap.isError && !other ? 'bg-corail' : 'bg-eau'}`} aria-hidden />
               {t('fm.sync', { time: stampFmt.format(new Date(snapshot.importedAt)) })}
-            </p>
+            </span>
           )}
-          <button
-            type="button"
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-sm font-bold text-white hover:bg-white/20"
-            aria-expanded={settingsOpen}
-            onClick={() => setSettingsToggle(!settingsOpen)}
-          >
-            {bridgeOk === false && <span className="h-2 w-2 rounded-full bg-ambre" aria-hidden />}
-            {t('fm.settings')}
+          <button type="button" className="btn-secondary px-3 py-1 text-sm" disabled={importSnap.isPending || !folder} onClick={() => importSnap.mutate({})}>
+            {t('layout.readNow')}
           </button>
         </div>
-      </aside>
-      <div className="min-w-0 flex-1 px-6 py-5 xl:px-10">
-        {/* En-tête sur une ligne (petit écran) : partie, club et date de jeu à gauche ; état de l'import et réglages à droite. */}
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 lg:hidden">
-          <div className="flex min-w-0 flex-wrap items-baseline gap-x-3">
-            <Link to="/coach" className="text-sm font-bold text-canard/70 hover:text-canard" title={t('fm.back')}>
-              ←
-            </Link>
-            <h1 className="text-2xl font-semibold">{save?.name ?? '…'}</h1>
-            {snapshot && (
-              <span className="text-sm text-brun">
-                {t('fm.context', {
-                  club: snapshot.club,
-                  date: dateFmt.format(new Date(snapshot.gameDate)),
-                  count: snapshot.playerCount,
-                })}
-              </span>
-            )}
-            {freeSince && (
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-white px-1.5 py-0.5 text-sm font-bold text-canard ring-1 ring-canard/15">
-                <span className="inline-block h-2 w-2 rounded-full bg-ambre" aria-hidden />
-                {t('fm.saveFile.free', {
-                  date: dateFmt.format(new Date(freeSince)),
-                })}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-            {snapshot && (
-              <span className="flex items-center gap-1.5 text-xs text-brun" title={t('fm.autoImport')}>
-                <span className={`h-2 w-2 rounded-full ${importSnap.isError ? 'bg-corail' : 'bg-eau'}`} aria-hidden />
-                {t('fm.sync', {
-                  time: stampFmt.format(new Date(snapshot.importedAt)),
-                })}
-              </span>
-            )}
-            <button type="button" className="btn-secondary flex items-center gap-1.5 px-3 py-1 text-sm" aria-expanded={settingsOpen} onClick={() => setSettingsToggle(!settingsOpen)}>
-              {bridgeOk === false && <span className="h-2 w-2 rounded-full bg-ambre" aria-hidden />}
-              {t('fm.settings')}
-            </button>
-          </div>
-        </div>
-        {/* Réglages de la partie : ouverts d'office tant que rien n'est importé ou que le plugin demande une action. */}
-        <div className={settingsOpen ? 'card mt-3 space-y-3 p-4' : 'hidden'}>
-          <form
-            className="flex flex-wrap items-end gap-x-5 gap-y-3"
-            onSubmit={(e) => {
-              e.preventDefault();
-              importSnap.mutate({});
-            }}
-          >
-            <label className="block min-w-[18rem] flex-1 text-sm font-bold text-canard">
-              {t('fm.folder')}
-              <input className="input mt-1 w-full font-normal" required value={folder} onChange={(e) => setFolder(e.target.value)} />
-              <span className="mt-1 block text-xs font-normal text-brun">{t('fm.folderHelp')}</span>
-            </label>
-            <label className="block text-sm font-bold text-canard">
-              {t('fm.saveFile.label')}
-              <select
-                className="input mt-1 block max-w-[16rem] py-1.5 font-normal"
-                value={linked}
-                disabled={link.isPending}
-                onChange={(e) => link.mutate(e.target.value)}
-                title={t('fm.saveFile.help')}
-              >
-                <option value="">{t('fm.saveFile.none')}</option>
-                {linked && !linkedFile && <option value={linked}>{t('fm.saveFile.missing', { name: linked })}</option>}
-                {saveFiles?.map((f) => (
-                  <option key={f.name} value={f.name}>
-                    {f.name.replace(/\.fm$/i, '')}
-                  </option>
-                ))}
-              </select>
-              {linkedFile?.modifiedMs != null && (
-                <span className="mt-1 block text-xs font-normal text-brun">
-                  {t('fm.saveFile.saved', {
-                    date: stampFmt.format(new Date(linkedFile.modifiedMs)),
-                  })}
-                </span>
-              )}
-            </label>
-            <div className="space-y-1.5">
-              <label className="flex items-center gap-1.5 text-sm text-canard" title={t('fm.abilities.help')}>
-                <input
-                  type="checkbox"
-                  checked={!!settings?.fmReadAbilities}
-                  onChange={async (e) => {
-                    await fmData.updateSettings(saveId, {
-                      fmReadAbilities: e.target.checked,
-                    });
-                    qc.invalidateQueries({ queryKey: [...key, 'settings'] });
-                  }}
-                />
-                {t('fm.abilities.toggle')}
-              </label>
-              <div className="flex items-center gap-3">
-                <button className="btn-primary px-4 py-1.5 text-sm" disabled={importSnap.isPending || !folder}>
-                  {t('fm.import')}
-                </button>
-                <span className="text-xs text-brun">{t('fm.autoImport')}</span>
-              </div>
-            </div>
-          </form>
-          <FmHistoryImport saveId={saveId} folder={folder} club={settings?.fmClub ?? snapshot?.club ?? null} />
-          <FmBridge dataFolder={folder} onHealth={setBridgeOk} />
-          <FmMemory />
-        </div>
+      </header>
+
+      <div className="px-6 py-5 xl:px-10">
         {other && (
-          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-white px-4 py-3 text-sm ring-1 ring-corail/40" role="alert">
+          <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl bg-white px-4 py-3 text-sm ring-1 ring-corail/40" role="alert">
             <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-full bg-ambre" aria-hidden />
-            <span className="text-canard">
-              {t('fm.saveFile.other', {
-                club: other.club,
-                expected: other.expected,
-              })}
-            </span>
+            <span className="text-canard">{t('fm.saveFile.other', { club: other.club, expected: other.expected })}</span>
             <button type="button" className="btn-secondary px-3 py-1 text-xs" disabled={importSnap.isPending} onClick={() => importSnap.mutate({ force: true })}>
               {t('fm.saveFile.importAnyway', { club: other.club })}
             </button>
           </div>
         )}
         {importSnap.isError && !other && (
-          <p className="mt-2 text-sm text-corail">
-            {t('fm.importError', {
-              reason: String(importSnap.error?.message ?? importSnap.error),
-            })}
-          </p>
+          <p className="mb-4 text-sm text-corail">{t('fm.importError', { reason: String(importSnap.error?.message ?? importSnap.error) })}</p>
         )}
 
-        {!isLoading && !snapshot && (
-          <div className="card mt-6 flex flex-col items-center gap-3 py-10 text-center">
-            <p className="max-w-md text-brun">{t('fm.empty')}</p>
-          </div>
-        )}
-
-        {snapshot && players.length > 0 && scope && (
-          <FmSaveScopeContext.Provider value={scope}>
-            <ReserveContext.Provider value={reserve}>
-            <PlayerSheetContext.Provider value={setSheet}>
-              <div className="mt-4 lg:mt-0">
-                <div className="min-w-0">
-                  <div className="lg:hidden">
-                    <nav className="flex flex-wrap gap-2" role="tablist" aria-label={t('fm.nav')}>
-                      {SECTIONS.map((s) => (
-                        <button
-                          key={s.id}
-                          type="button"
-                          role="tab"
-                          aria-selected={s === section}
-                          onClick={() => go(s.views[0])}
-                          className={`chip ${s === section ? 'chip-on' : ''}`}
-                        >
-                          {t(`fm.sections.${s.id}`)}
-                          {badge(s.views[0], false)}
-                        </button>
-                      ))}
-                    </nav>
-                    {section.views.length > 1 && (
-                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-b border-canard/10 pb-2 text-sm">
-                        {section.views.map((v) => (
-                          <button
-                            key={v}
-                            type="button"
-                            aria-current={v === view ? 'page' : undefined}
-                            onClick={() => go(v)}
-                            className={`font-bold ${v === view ? 'text-canard underline decoration-eau-soutenu decoration-2 underline-offset-8' : 'text-canard/60 hover:text-canard'}`}
-                          >
-                            {STEPPED.has(section.id) && <span className="mr-1 tabular-nums opacity-60">{section.views.indexOf(v as never) + 1}.</span>}
-                            {pageLabel(t, v)}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-4 lg:mt-0">
-                    <ViewHeader section={section.id} view={view} part={(PARTS[view] ?? [view]).includes(current) ? current : view} />
-                    <PageParts page={view} current={current} go={go} render={part} />
-                    {STEPPED.has(section.id) && <NextStep views={section.views} view={view} go={go} />}
-                  </div>
-                </div>
+        {view === 'settings' ? (
+          <SettingsPage
+            saveId={saveId}
+            folder={folder}
+            settings={settings}
+            club={settings?.fmClub ?? snapshot?.club ?? null}
+            importing={importSnap.isPending}
+            onImport={(f) => importSnap.mutate({ folder: f })}
+          />
+        ) : (
+          <>
+            {!isLoading && !snapshot && (
+              <div className="card flex flex-col items-center gap-3 py-10 text-center">
+                <p className="max-w-md text-brun">{t('fm.empty')}</p>
+                <Link to="/reglages" className="btn-primary">
+                  {t('layout.openSettings')}
+                </Link>
               </div>
-              {sheet && <FmPlayerSheet id={sheet} players={players} snap={snapshot.data} history={history} folder={folder} gameDate={snapshot.gameDate} onClose={() => setSheet(null)} />}
-            </PlayerSheetContext.Provider>
-            </ReserveContext.Provider>
-          </FmSaveScopeContext.Provider>
+            )}
+            {snapshot && players.length > 0 && scope && (
+              <FmSaveScopeContext.Provider value={scope}>
+                <ReserveContext.Provider value={reserve}>
+                  <PlayerSheetContext.Provider value={setSheet}>
+                    {view === 'home' ? (
+                      <>
+                        <header className="mb-4">
+                          <h1 className="text-3xl font-semibold">{t('layout.today.title')}</h1>
+                          <p className="mt-1 text-brun">{t('layout.today.intro')}</p>
+                        </header>
+                        {part('home')}
+                        <TodayCards saveId={saveId} />
+                      </>
+                    ) : (
+                      <>
+                        <ViewHeader view={view} part={PARTS[view].includes(current) ? current : view} />
+                        <PageParts page={view} current={current} go={go} render={part} />
+                      </>
+                    )}
+                    {sheet && <FmPlayerSheet id={sheet} players={players} snap={snapshot.data} history={history} folder={folder} gameDate={snapshot.gameDate} onClose={() => setSheet(null)} />}
+                  </PlayerSheetContext.Provider>
+                </ReserveContext.Provider>
+              </FmSaveScopeContext.Provider>
+            )}
+          </>
         )}
       </div>
     </div>
   );
 }
 
-/** Parties d'un onglet regroupé : une à la fois, choisie par des sous-onglets (la première par défaut). */
-function PageParts({ page, current, go, render }: { page: string; current: string; go: (v: string) => void; render: (v: string) => ReactNode }) {
+/** « Plugin et réglages » : dossier du plugin, sauvegarde liée, lecture du CA/PA, historique, plugin et mémoire. */
+function SettingsPage({
+  saveId,
+  folder,
+  settings,
+  club,
+  importing,
+  onImport,
+}: {
+  saveId: string;
+  folder: string;
+  settings: Awaited<ReturnType<typeof fmData.settings>> | undefined;
+  club: string | null;
+  importing: boolean;
+  onImport: (folder: string) => void;
+}) {
+  const { t, i18n } = useTranslation();
+  const qc = useQueryClient();
+  const key = ['fm', saveId] as const;
+  const [input, setInput] = useState(folder);
+  useEffect(() => setInput(folder), [folder]);
+  const stampFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'short', timeStyle: 'short' });
+  const setSync = useCareerStore((s) => s.setSync);
+  // Rappel stable : le plugin signale son état à chaque changement, pas à chaque rendu.
+  const onHealth = useCallback((ok: boolean) => {
+    if (useCareerStore.getState().sync.bridgeOk !== ok) setSync({ bridgeOk: ok });
+  }, [setSync]);
+
+  // Sauvegardes .fm du joueur (dossier games, à côté de celui du plugin), pour lier la partie à l'une d'elles.
+  const { data: saveFiles } = useQuery({
+    queryKey: ['fm', 'save-files', folder],
+    queryFn: () => invoke<FmSaveFile[]>('fm_list_saves', { folder }),
+    enabled: !!folder,
+    refetchInterval: 60_000,
+  });
+  const linked = settings?.fmSaveFile ?? '';
+  const linkedFile = saveFiles?.find((f) => f.name === linked);
+  const link = useMutation({
+    mutationFn: (name: string) => fmData.linkSave(saveId, name || null),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...key, 'settings'] }),
+  });
+
+  return (
+    <div className="space-y-4">
+      <header>
+        <h1 className="text-3xl font-semibold">{t('layout.nav.settings')}</h1>
+        <p className="mt-1 max-w-3xl text-brun">
+          {t('layout.settingsIntro')}{' '}
+          <Link to="/parties" className="font-bold text-orange-fonce hover:underline">
+            {t('layout.manageCareers')}
+          </Link>
+        </p>
+      </header>
+      <div className="card space-y-3 p-4">
+        <form
+          className="flex flex-wrap items-end gap-x-5 gap-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            onImport(input);
+          }}
+        >
+          <label className="block min-w-[18rem] flex-1 text-sm font-bold text-canard">
+            {t('fm.folder')}
+            <input className="input mt-1 w-full font-normal" required value={input} onChange={(e) => setInput(e.target.value)} />
+            <span className="mt-1 block text-xs font-normal text-brun">{t('fm.folderHelp')}</span>
+          </label>
+          <label className="block text-sm font-bold text-canard">
+            {t('fm.saveFile.label')}
+            <select
+              className="input mt-1 block max-w-[16rem] py-1.5 font-normal"
+              value={linked}
+              disabled={link.isPending}
+              onChange={(e) => link.mutate(e.target.value)}
+              title={t('fm.saveFile.help')}
+            >
+              <option value="">{t('fm.saveFile.none')}</option>
+              {linked && !linkedFile && <option value={linked}>{t('fm.saveFile.missing', { name: linked })}</option>}
+              {saveFiles?.map((f) => (
+                <option key={f.name} value={f.name}>
+                  {f.name.replace(/\.fm$/i, '')}
+                </option>
+              ))}
+            </select>
+            {linkedFile?.modifiedMs != null && (
+              <span className="mt-1 block text-xs font-normal text-brun">{t('fm.saveFile.saved', { date: stampFmt.format(new Date(linkedFile.modifiedMs)) })}</span>
+            )}
+          </label>
+          <div className="space-y-1.5">
+            <label className="flex items-center gap-1.5 text-sm text-canard" title={t('fm.abilities.help')}>
+              <input
+                type="checkbox"
+                checked={!!settings?.fmReadAbilities}
+                onChange={async (e) => {
+                  await fmData.updateSettings(saveId, { fmReadAbilities: e.target.checked });
+                  qc.invalidateQueries({ queryKey: [...key, 'settings'] });
+                }}
+              />
+              {t('fm.abilities.toggle')}
+            </label>
+            <div className="flex items-center gap-3">
+              <button className="btn-primary px-4 py-1.5 text-sm" disabled={importing || !input}>
+                {t('fm.import')}
+              </button>
+              <span className="text-xs text-brun">{t('fm.autoImport')}</span>
+            </div>
+          </div>
+        </form>
+        <FmHistoryImport saveId={saveId} folder={folder} club={club} />
+        <FmBridge dataFolder={folder} onHealth={onHealth} />
+        <FmMemory />
+      </div>
+    </div>
+  );
+}
+
+/** Parties d'un écran regroupé : une à la fois, choisie par des sous-onglets ; au-delà de cinq, dans « Plus ». */
+function PageParts({ page, current, go, render }: { page: ClubPage; current: string; go: (v: string) => void; render: (v: string) => ReactNode }) {
   const { t } = useTranslation();
-  const parts = PARTS[page] ?? [page];
+  const parts = PARTS[page];
   const active = parts.includes(current) ? current : parts[0]!;
+  const shown = parts.slice(0, VISIBLE_PARTS);
+  const more = parts.slice(VISIBLE_PARTS);
+  const [open, setOpen] = useState(false);
+  const label = (v: string) => t(`fm.subtabs.${v}`, { defaultValue: t(`fm.views.${v}`) });
+  const tab = (v: string) =>
+    `-mb-px rounded-t-lg border-b-2 px-3 py-1.5 text-sm font-bold ${v === active ? 'border-orange text-canard' : 'border-transparent text-canard/60 hover:text-canard'}`;
   return (
     <>
       {parts.length > 1 && (
-        <div className="sticky top-0 z-30 -mx-1 mb-5 flex flex-wrap gap-1 border-b border-canard/10 bg-creme px-1 pt-2" role="tablist" aria-label={t('fm.onThisPage')}>
-          {parts.map((v) => (
-            <button
-              key={v}
-              type="button"
-              role="tab"
-              aria-selected={v === active}
-              onClick={() => go(v)}
-              className={`-mb-px rounded-t-lg border-b-2 px-3 py-1.5 text-sm font-bold ${v === active ? 'border-eau-fonce text-canard' : 'border-transparent text-canard/60 hover:text-canard'}`}
-            >
-              {t(`fm.subtabs.${v}`, { defaultValue: t(`fm.views.${v}`) })}
+        <div className="sticky top-[3.25rem] z-30 -mx-1 mb-5 flex flex-wrap gap-1 border-b border-canard/10 bg-creme px-1 pt-2" role="tablist" aria-label={t('fm.onThisPage')}>
+          {shown.map((v) => (
+            <button key={v} type="button" role="tab" aria-selected={v === active} onClick={() => go(v)} className={tab(v)}>
+              {label(v)}
             </button>
           ))}
+          {more.length > 0 && (
+            <div className="relative">
+              <button
+                type="button"
+                aria-expanded={open}
+                onClick={() => setOpen(!open)}
+                className={tab(more.includes(active) ? active : '')}
+              >
+                {more.includes(active) ? label(active) : t('layout.more')} ▾
+              </button>
+              {open && (
+                <div className="absolute left-0 top-full z-40 mt-1 min-w-[12rem] rounded-lg bg-white py-1 shadow-lg ring-1 ring-canard/10" role="menu">
+                  {more.map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setOpen(false);
+                        go(v);
+                      }}
+                      className={`block w-full px-3 py-1.5 text-left text-sm font-bold hover:bg-creme ${v === active ? 'text-orange-fonce' : 'text-canard'}`}
+                    >
+                      {label(v)}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
       <section key={active} role={parts.length > 1 ? 'tabpanel' : undefined}>
@@ -734,29 +565,15 @@ function PageParts({ page, current, go, render }: { page: string; current: strin
   );
 }
 
-/** En-tête commun à tous les écrans : section, nom de l'écran et la question à laquelle il répond. */
-function ViewHeader({ section, view, part }: { section: string; view: string; part: string }) {
+/** En-tête commun aux écrans du club : groupe, nom de l'écran et la question à laquelle il répond. */
+function ViewHeader({ view, part }: { view: string; part: string }) {
   const { t } = useTranslation();
   return (
-    <header className="mb-4">
-      {section !== view && <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t(`fm.sections.${section}`)}</p>}
-      <h2 className="text-2xl font-semibold">{pageLabel(t, view)}</h2>
-      <p className="mt-0.5 max-w-3xl text-sm text-brun">{t(`fm.intro.${part}`)}</p>
+    <header className="mb-2">
+      <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('layout.groups.club')}</p>
+      <h1 className="text-3xl font-semibold">{pageLabel(t, view)}</h1>
+      <p className="mt-1 max-w-3xl text-sm text-brun">{t(`fm.intro.${part}`)}</p>
     </header>
-  );
-}
-
-/** Lien vers l'étape suivante d'une section en étapes. */
-function NextStep({ views, view, go }: { views: readonly string[]; view: string; go: (v: string) => void }) {
-  const { t } = useTranslation();
-  const next = views[views.indexOf(view) + 1];
-  if (!next) return null;
-  return (
-    <div className="mt-6 flex justify-end">
-      <button type="button" className="btn-secondary text-sm" onClick={() => go(next)}>
-        {t('fm.nextStep', { view: pageLabel(t, next) })} →
-      </button>
-    </div>
   );
 }
 

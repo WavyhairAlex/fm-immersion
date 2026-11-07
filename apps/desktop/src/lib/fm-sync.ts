@@ -1,0 +1,105 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { invoke } from '@tauri-apps/api/core';
+import { useEffect, useRef } from 'react';
+import { useCareer, useCareerStore } from './career';
+import { fmData } from './data';
+import { importMissingHistory } from './fm-history';
+import { FmOtherSaveError } from './fm';
+
+/** Relecture des fichiers du plugin (instantané, état du manager). */
+const LIVE_POLL_MS = 10_000;
+
+/** Dossier du plugin de la carrière suivie : celui enregistré, sinon celui trouvé sur le PC. */
+export function useFmFolder(saveId: string) {
+  const { data: settings } = useQuery({ queryKey: ['fm', saveId, 'settings'], queryFn: () => fmData.settings(saveId), enabled: !!saveId });
+  const { data: defaultFolder } = useQuery({ queryKey: ['fm', 'default-folder'], queryFn: () => invoke<string | null>('fm_default_folder') });
+  return settings?.fmFolder ?? defaultFolder ?? '';
+}
+
+/**
+ * Monté une fois pour toute l'appli : suit la carrière choisie presque en direct, quel que soit l'écran ouvert.
+ * Le plugin réécrit son instantané à chaque nouveau jour de jeu (et toutes les 5 minutes) ; on relit le fichier
+ * toutes les 10 secondes (lecture locale, rien dans le jeu) et on l'enregistre dès qu'il a changé.
+ */
+export function useFmSync() {
+  const qc = useQueryClient();
+  const { saveId } = useCareer();
+  const folder = useFmFolder(saveId);
+  const setSync = useCareerStore((s) => s.setSync);
+  const lastText = useRef<string | null>(null);
+  const abilitiesDate = useRef<string | null>(null);
+  const abilitiesTry = useRef(0);
+  const historyTry = useRef(0);
+
+  useEffect(() => {
+    if (!folder || !saveId) return;
+    const key = ['fm', saveId] as const;
+    lastText.current = null;
+    let stop = false;
+    const tick = async () => {
+      // État du manager (club entraîné ou sans club), écrit par le plugin depuis la version qui le gère.
+      try {
+        const st = await invoke<string | null>('fm_read_status', { folder });
+        if (!stop && st) {
+          const status = await fmData.noteStatus(saveId, JSON.parse(st));
+          setSync({ free: status.club ? null : status.gameDate });
+          qc.invalidateQueries({ queryKey: [...key, 'settings'] });
+        }
+      } catch {
+        /* fichier absent ou en cours d'écriture */
+      }
+      try {
+        const text = await invoke<string>('fm_read_snapshot', { folder });
+        if (!stop && text !== lastText.current) {
+          lastText.current = text;
+          await fmData.importSnapshot(saveId, JSON.parse(text));
+          setSync({ other: null });
+          qc.invalidateQueries({ queryKey: key });
+          qc.invalidateQueries({ queryKey: ['saves'] });
+        }
+      } catch (e) {
+        // Autre sauvegarde chargée : on le signale ; sinon fichier absent ou en cours d'écriture, nouvel essai au prochain passage.
+        if (e instanceof FmOtherSaveError && !stop) setSync({ other: e });
+      }
+      // Historique : les jours de jeu passés pendant que l'appli était fermée sont rattrapés depuis les fichiers
+      // datés du plugin, une fois par minute, par lots.
+      try {
+        if (!stop && Date.now() - historyTry.current >= 60_000) {
+          historyTry.current = Date.now();
+          const latest = await fmData.latest(saveId);
+          const n = await importMissingHistory(saveId, folder, (await fmData.settings(saveId)).fmClub ?? latest?.club ?? null);
+          if (n && !stop) {
+            qc.invalidateQueries({ queryKey: key });
+            qc.invalidateQueries({ queryKey: ['saves'] });
+          }
+        }
+      } catch {
+        /* dossier illisible : nouvel essai au prochain passage */
+      }
+      // CA/PA réels (option du joueur) : lus une fois par date de jeu dans la mémoire de FM27, en lecture seule,
+      // au plus une tentative par minute.
+      try {
+        if (Date.now() - abilitiesTry.current < 60_000) return;
+        if (stop || !(await fmData.settings(saveId)).fmReadAbilities) return;
+        abilitiesTry.current = Date.now();
+        const latest = await fmData.latest(saveId);
+        if (!latest || latest.data.abilities || latest.gameDate === abilitiesDate.current) return;
+        const r = await invoke<{ gameDate: string | null; players: { id: number; ca: number; pa: number }[] }>('fm_memory_abilities');
+        // La mémoire peut être en avance sur l'instantané (écrit toutes les 5 minutes) : on attend la même date.
+        if (stop || r.gameDate?.slice(0, 10) !== latest.gameDate.slice(0, 10) || !r.players.length) return;
+        if (await fmData.attachAbilities(saveId, latest.gameDate, r.players)) {
+          abilitiesDate.current = latest.gameDate;
+          qc.invalidateQueries({ queryKey: key });
+        }
+      } catch {
+        /* FM27 fermé ou version inconnue : nouvel essai dans une minute */
+      }
+    };
+    void tick();
+    const id = setInterval(() => void tick(), LIVE_POLL_MS);
+    return () => {
+      stop = true;
+      clearInterval(id);
+    };
+  }, [folder, saveId]);
+}

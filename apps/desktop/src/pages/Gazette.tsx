@@ -5,39 +5,20 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { fmData, savesData } from '../lib/data';
+import { useCareer } from '../lib/career';
+import { fmData } from '../lib/data';
 import { getWebhook, isWebhook } from '../lib/discord';
-import { GAZETTE_SAVE_KEY, markGazetteSent, markSeasonSent, sendGazette, sendSeason } from '../lib/gazette-auto';
+import { markGazetteSent, markSeasonSent, sendGazette, sendSeason } from '../lib/gazette-auto';
 import { articleText, editorialText, paperName, storyText, weekLabel } from '../lib/gazette-text';
 import { drawUne, recentForm } from '../lib/gazette-une';
 import { loadFace } from '../lib/player-face';
 import { drawSeason } from '../lib/season-une';
 
-const SAVE_KEY = GAZETTE_SAVE_KEY;
-const readSave = () => {
-  try {
-    return localStorage.getItem(SAVE_KEY) ?? '';
-  } catch {
-    return '';
-  }
-};
-
 /** Mode Gazette : un journal par semaine de jeu, rédigé à partir des instantanés de la partie. */
 export function Gazette() {
   const { t } = useTranslation();
-  const { data: saves = [] } = useQuery({ queryKey: ['saves'], queryFn: savesData.list });
-  const fmSaves = saves.filter((s) => s.gameId === 'fm');
-  const [saveId, setSaveId] = useState(readSave());
-  useEffect(() => {
-    if ((!saveId || !fmSaves.some((s) => s.id === saveId)) && fmSaves[0]) setSaveId(fmSaves[0].id);
-  }, [fmSaves, saveId]);
-  useEffect(() => {
-    try {
-      if (saveId) localStorage.setItem(SAVE_KEY, saveId);
-    } catch {
-      /* rien */
-    }
-  }, [saveId]);
+  // Carrière suivie, choisie dans la barre latérale.
+  const { saveId, fmSaves } = useCareer();
 
   const { data: history = [], isLoading } = useQuery({ queryKey: ['fm', 'all', saveId], queryFn: () => fmData.all(saveId), enabled: !!saveId });
   const issues = useMemo(() => gazetteIssues(history), [history]);
@@ -57,22 +38,13 @@ export function Gazette() {
     <div className="w-full px-6 py-6 xl:px-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-semibold">{t('modes.gazette.title')}</h1>
-        {fmSaves.length > 1 && (
-          <select className="input w-auto" value={saveId} onChange={(e) => setSaveId(e.target.value)} aria-label={t('gazette.save')}>
-            {fmSaves.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        )}
       </div>
 
       {!fmSaves.length && (
         <div className="card mt-6 max-w-3xl">
           <p className="text-brun">{t('gazette.noSave')}</p>
-          <Link to="/coach" className="btn-primary mt-4">
-            {t('modes.coach.title')}
+          <Link to="/parties" className="btn-primary mt-4">
+            {t('layout.career.create')}
           </Link>
         </div>
       )}
