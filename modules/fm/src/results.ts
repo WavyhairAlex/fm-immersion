@@ -28,6 +28,8 @@ export interface MatchPlayer {
   /** Note du match (moyenne de la période si plusieurs matchs), d'après la note moyenne et le nombre de matchs. */
   rating: number | null;
   goals: number | null;
+  /** Élu homme du match par le jeu (compteur ManOfMatch qui augmente). */
+  potm?: boolean;
   stats: PlayerStats;
 }
 
@@ -142,6 +144,7 @@ export function resultBetween(prev: FmSnapshot, cur: FmSnapshot): MatchResult | 
       started: (d.StartingAppearances ?? 0) > 0,
       rating: rating != null && rating > 0 && rating <= 10 ? Math.round(rating * 100) / 100 : null,
       goals: g1 != null ? g1 - (old?.goals ?? 0) : null,
+      potm: (d.ManOfMatch ?? 0) > 0,
       stats: deriveStats(d),
     };
   });

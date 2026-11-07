@@ -84,7 +84,9 @@ function resultStory(r: MatchResult): GazetteStory {
       .sort((a, b) => (b.goals ?? 0) - (a.goals ?? 0))
       .map((p) => (p.goals! > 1 ? `${p.name} (${p.goals})` : p.name))
       .join(', ');
-    const best = [...r.players].filter((p) => p.rating != null).sort((a, b) => b.rating! - a.rating!)[0];
+    // Homme du match élu par le jeu quand il est chez nous ; sinon la meilleure note recalculée (moins sûre :
+    // elle vient de l'écart des notes moyennes, arrondies par le jeu).
+    const best = r.players.find((p) => p.potm) ?? [...r.players].filter((p) => p.rating != null).sort((a, b) => b.rating! - a.rating!)[0];
     return {
       kind: 'result',
       // Une défaite pèse un peu plus qu'une victoire (la presse aime les crises), un gros écart encore plus.
