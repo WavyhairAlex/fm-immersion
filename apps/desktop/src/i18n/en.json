@@ -2016,7 +2016,13 @@
         "friendly": "Friendlies",
         "other": "Other"
       },
-      "filtered": "{{label}}: {{record}}, goals {{goals}}"
+      "filtered": "{{label}}: {{record}}, goals {{goals}}",
+      "game": {
+        "possession": "Possession {{us}}% – {{them}}%",
+        "shots": "Shots {{us}} ({{usOn}} on target) – {{them}} ({{themOn}} on target)",
+        "xg": "Game xG {{us}} – {{them}}",
+        "motm": "Player of the match: {{name}} ({{rating}})"
+      }
     },
     "repl": {
       "open": "Replacement",
@@ -2501,11 +2507,28 @@
       },
       "nextMatch": {
         "title": "Next up: {{opponent}}",
-        "body": ""
+        "body": "",
+        "previewLead": "The opposition:",
+        "previewPosition": "{{position}} in the table",
+        "previewManager": "managed by {{manager}}",
+        "previewManagerFormation": "managed by {{manager}} ({{formation}})",
+        "previewScorer_one": "one to watch: {{scorer}} ({{count}} goal)",
+        "previewScorer_other": "one to watch: {{scorer}} ({{count}} goals)",
+        "previewScorerNoGoals": "one to watch: {{scorer}}"
       },
       "quiet": {
         "title": "Quiet week at {{club}}",
         "body": "No match or notable move this week."
+      },
+      "streak": {
+        "title_W": "{{count}} wins in a row for {{club}}",
+        "body_W": "The run goes on: {{count}} straight competitive wins.",
+        "title_L": "{{count}} defeats in a row: {{club}} sinking",
+        "body_L": "Three or more straight competitive defeats: the pressure is building in the dressing room.",
+        "title_winless": "{{count}} matches without a win for {{club}}",
+        "body_winless": "The last competitive win was {{count}} matches ago.",
+        "title_unbeaten": "{{count}} matches unbeaten for {{club}}",
+        "body_unbeaten": "Unbeaten in the last {{count}} competitive matches."
       }
     },
     "discord": {
@@ -2539,7 +2562,8 @@
         "fans": "The stands",
         "job": "Boardroom",
         "nextMatch": "Coming up",
-        "quiet": "Club life"
+        "quiet": "Club life",
+        "streak": "Run"
       },
       "scorers": "Scorers",
       "motm": "Player of the match",
@@ -2558,7 +2582,15 @@
       "figScorer_one": "goal, {{name}}",
       "figScorer_other": "goals, {{name}}"
     },
-    "preview": "Preview of the front page sent to Discord"
+    "preview": "Preview of the front page sent to Discord",
+    "inCompetition": "in the {{competition}}",
+    "friendlyMatch": "friendly",
+    "figures": {
+      "possession": "Possession {{us}}%",
+      "shots": "Shots {{us}} – {{them}}",
+      "onTarget": " ({{count}} on target)",
+      "xg": "xG {{us}} – {{them}}"
+    }
   },
   "discord": {
     "autoTitle": "Automatic gazette",
@@ -2600,7 +2632,12 @@
       "finalW": "WIN",
       "finalD": "DRAW",
       "finalL": "DEFEAT",
-      "commentator": "Commentator"
+      "commentator": "Commentator",
+      "possession": "Possession {{home}}% – {{away}}%",
+      "shots": "Shots {{home}} ({{homeOn}}) – {{away}} ({{awayOn}})",
+      "xg": "xG {{home}} – {{away}}",
+      "motm": "Player of the match: {{name}} ({{rating}})",
+      "motmNoRating": "Player of the match: {{name}}"
     },
     "say": {
       "early_level_0": "Early exchanges, {{home}} and {{away}} still sizing each other up ({{score}}).",

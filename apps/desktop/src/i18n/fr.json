@@ -2016,7 +2016,13 @@
         "friendly": "Amicaux",
         "other": "Autres"
       },
-      "filtered": "{{label}} : {{record}}, buts {{goals}}"
+      "filtered": "{{label}} : {{record}}, buts {{goals}}",
+      "game": {
+        "possession": "Possession {{us}} % – {{them}} %",
+        "shots": "Tirs {{us}} ({{usOn}} cadrés) – {{them}} ({{themOn}} cadrés)",
+        "xg": "xG du jeu {{us}} – {{them}}",
+        "motm": "Homme du match : {{name}} ({{rating}})"
+      }
     },
     "repl": {
       "open": "Remplaçant",
@@ -2501,11 +2507,28 @@
       },
       "nextMatch": {
         "title": "Prochain rendez-vous : {{opponent}}",
-        "body": ""
+        "body": "",
+        "previewLead": "L'adversaire :",
+        "previewPosition": "{{position}} au classement",
+        "previewManager": "entraîné par {{manager}}",
+        "previewManagerFormation": "entraîné par {{manager}} ({{formation}})",
+        "previewScorer_one": "homme à surveiller : {{scorer}} ({{count}} but)",
+        "previewScorer_other": "homme à surveiller : {{scorer}} ({{count}} buts)",
+        "previewScorerNoGoals": "homme à surveiller : {{scorer}}"
       },
       "quiet": {
         "title": "Semaine calme à {{club}}",
         "body": "Pas de match ni de mouvement notable cette semaine."
+      },
+      "streak": {
+        "title_W": "{{count}} victoires de suite pour {{club}}",
+        "body_W": "La série continue : {{count}} succès d'affilée en match officiel.",
+        "title_L": "{{count}} défaites de suite : {{club}} s'enfonce",
+        "body_L": "Troisième revers ou plus d'affilée en match officiel : la pression monte sur le vestiaire.",
+        "title_winless": "{{count}} matchs sans victoire pour {{club}}",
+        "body_winless": "Le dernier succès en match officiel remonte à {{count}} matchs.",
+        "title_unbeaten": "{{count}} matchs sans défaite pour {{club}}",
+        "body_unbeaten": "Invaincu depuis {{count}} matchs officiels."
       }
     },
     "discord": {
@@ -2539,7 +2562,8 @@
         "fans": "Tribunes",
         "job": "Direction",
         "nextMatch": "À l'affiche",
-        "quiet": "Vie du club"
+        "quiet": "Vie du club",
+        "streak": "Série"
       },
       "scorers": "Buteurs",
       "motm": "Homme du match",
@@ -2558,7 +2582,15 @@
       "figScorer_one": "but, {{name}}",
       "figScorer_other": "buts, {{name}}"
     },
-    "preview": "Aperçu de la une envoyée sur Discord"
+    "preview": "Aperçu de la une envoyée sur Discord",
+    "inCompetition": "en {{competition}}",
+    "friendlyMatch": "match amical",
+    "figures": {
+      "possession": "Possession {{us}} %",
+      "shots": "Tirs {{us}} – {{them}}",
+      "onTarget": " ({{count}} cadrés)",
+      "xg": "xG {{us}} – {{them}}"
+    }
   },
   "discord": {
     "autoTitle": "Gazette automatique",
@@ -2600,7 +2632,12 @@
       "finalW": "VICTOIRE",
       "finalD": "MATCH NUL",
       "finalL": "DÉFAITE",
-      "commentator": "Le commentateur"
+      "commentator": "Le commentateur",
+      "possession": "Possession {{home}} % – {{away}} %",
+      "shots": "Tirs {{home}} ({{homeOn}}) – {{away}} ({{awayOn}})",
+      "xg": "xG {{home}} – {{away}}",
+      "motm": "Homme du match : {{name}} ({{rating}})",
+      "motmNoRating": "Homme du match : {{name}}"
     },
     "say": {
       "early_level_0": "Les débats commencent, {{home}} et {{away}} s'observent encore ({{score}}).",

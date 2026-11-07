@@ -1,5 +1,6 @@
+import { figuresForResult } from './lastmatch';
 import { normalizePlayer, toNumber, type FmPlayer } from './player';
-import { matchResults, type MatchResult } from './results';
+import { matchResults, type MatchResult, type Outcome } from './results';
 import type { FmSnapshot } from './snapshot';
 
 /**
@@ -8,14 +9,18 @@ import type { FmSnapshot } from './snapshot';
  * Les textes ne sont pas écrits ici : chaque brève a un type et des paramètres, l'interface les met en mots (FR/EN).
  *
  * Sources, de la plus sûre à la plus fragile :
- * - matchs : différence des cumuls de saison entre deux instantanés (`matchResults`) ;
+ * - matchs : différence des cumuls de saison entre deux instantanés (`matchResults`), complétée par les chiffres du
+ *   dernier match écrits par le jeu (possession, tirs, xG, homme du match : `custom.equipe.dernierMatch*`) ;
+ * - séries : trois victoires ou défaites de suite, longue période sans victoire ou sans défaite (matchs officiels) ;
  * - effectif : arrivées, départs, blessures, retours, prolongations, buts (comparaison des joueurs) ;
- * - classement, confiance, sécurité de l'emploi : `custom.equipe` (chemins.json), seulement si le plugin les lit.
+ * - classement, confiance, sécurité de l'emploi, présentation du prochain adversaire (`adv*`) : `custom.equipe`
+ *   (chemins.json), seulement si le plugin les lit.
  */
 
 export type StoryKind =
   | 'result'
   | 'results'
+  | 'streak'
   | 'position'
   | 'scorer'
   | 'injury'
@@ -76,8 +81,9 @@ export function leaguePosition(s: FmSnapshot): number | null {
 
 const players = (s: FmSnapshot) => new Map<string, FmPlayer>(s.players.map((p) => [String(p.id), normalizePlayer(p)]));
 
-function resultStory(r: MatchResult): GazetteStory {
+function resultStory(r: MatchResult, snap: FmSnapshot): GazetteStory {
   if (r.matches === 1 && r.outcome) {
+    const fig = figuresForResult(snap, r);
     const margin = r.goalsFor != null && r.goalsAgainst != null ? r.goalsFor - r.goalsAgainst : 0;
     const scorers = r.players
       .filter((p) => (p.goals ?? 0) > 0)
@@ -86,22 +92,37 @@ function resultStory(r: MatchResult): GazetteStory {
       .join(', ');
     // Homme du match élu par le jeu quand il est chez nous ; sinon la meilleure note recalculée (moins sûre :
     // elle vient de l'écart des notes moyennes, arrondies par le jeu).
-    const best = r.players.find((p) => p.potm) ?? [...r.players].filter((p) => p.rating != null).sort((a, b) => b.rating! - a.rating!)[0];
+    // L'homme du match du jeu, quand c'est l'un des nôtres, vaut mieux que tout : sa note est celle du jeu.
+    const byGame = fig?.motm ? r.players.find((p) => p.name === fig.motm!.name) : undefined;
+    const best = byGame ?? r.players.find((p) => p.potm) ?? [...r.players].filter((p) => p.rating != null).sort((a, b) => b.rating! - a.rating!)[0];
     return {
       kind: 'result',
       // Une défaite pèse un peu plus qu'une victoire (la presse aime les crises), un gros écart encore plus.
-      weight: (r.outcome === 'L' ? 62 : r.outcome === 'W' ? 58 : 50) + Math.min(10, Math.abs(margin) * 3),
+      // Un amical reste une brève : il ne fait la une que d'une semaine sans autre nouvelle.
+      weight: r.friendly ? 18 : (r.outcome === 'L' ? 62 : r.outcome === 'W' ? 58 : 50) + Math.min(10, Math.abs(margin) * 3),
       params: {
         outcome: r.outcome,
         opponent: r.opponent,
+        competition: r.competition,
+        friendly: r.friendly ? 1 : 0,
         home: r.home == null ? null : r.home ? 1 : 0,
         goalsFor: r.goalsFor,
         goalsAgainst: r.goalsAgainst,
         scorers: scorers || null,
         best: best?.name ?? null,
         bestId: best?.id ?? null,
-        rating: best?.rating ?? null,
+        rating: byGame ? (fig!.motm!.rating ?? byGame.rating) : (best?.rating ?? null),
         date: r.date,
+        // Chiffres du jeu (nous, puis l'adversaire), quand l'instantané de la semaine parle bien de ce match.
+        possession: fig?.possession?.[0] ?? null,
+        possessionOpp: fig?.possession?.[1] ?? null,
+        shots: fig?.shots?.[0] ?? null,
+        shotsOpp: fig?.shots?.[1] ?? null,
+        onTarget: fig?.onTarget?.[0] ?? null,
+        onTargetOpp: fig?.onTarget?.[1] ?? null,
+        xg: fig?.xg?.[0] ?? null,
+        xgOpp: fig?.xg?.[1] ?? null,
+        gameMotm: fig?.motm?.name ?? null,
       },
     };
   }
@@ -112,10 +133,39 @@ function resultStory(r: MatchResult): GazetteStory {
   };
 }
 
-/** Brèves d'une semaine : `prev` = dernier instantané avant la semaine (ou null), `week` = instantanés de la semaine. */
-export function weekStories(prev: FmSnapshot | null, week: FmSnapshot[], results: MatchResult[]): GazetteStory[] {
+/**
+ * Série en cours après le dernier match officiel de la semaine : trois victoires ou défaites de suite, quatre matchs
+ * sans victoire, cinq sans défaite. Null si la semaine n'a pas de match officiel décidé (la série n'a pas bougé).
+ */
+export function streakStory(earlier: MatchResult[], week: MatchResult[]): GazetteStory | null {
+  const decided = (rs: MatchResult[]) => rs.filter((r) => !r.friendly && r.matches === 1 && r.outcome);
+  if (!decided(week).length) return null;
+  const seq = [...decided(earlier), ...decided(week)].map((r) => r.outcome!);
+  const run = (ok: (o: Outcome) => boolean) => {
+    let n = 0;
+    for (let i = seq.length - 1; i >= 0 && ok(seq[i]!); i--) n++;
+    return n;
+  };
+  const last = seq[seq.length - 1]!;
+  const same = run((o) => o === last);
+  if (last === 'W' && same >= 3) return { kind: 'streak', weight: Math.min(60, 40 + same * 3), params: { outcome: 'W', count: same } };
+  if (last === 'L' && same >= 3) return { kind: 'streak', weight: Math.min(68, 48 + same * 3), params: { outcome: 'L', count: same } };
+  const winless = run((o) => o !== 'W');
+  if (winless >= 4) return { kind: 'streak', weight: Math.min(60, 42 + winless * 2), params: { outcome: 'winless', count: winless } };
+  const unbeaten = run((o) => o !== 'L');
+  if (unbeaten >= 5) return { kind: 'streak', weight: Math.min(56, 36 + unbeaten * 2), params: { outcome: 'unbeaten', count: unbeaten } };
+  return null;
+}
+
+/**
+ * Brèves d'une semaine : `prev` = dernier instantané avant la semaine (ou null), `week` = instantanés de la semaine,
+ * `results` = matchs de la semaine, `earlier` = matchs d'avant (pour les séries).
+ */
+export function weekStories(prev: FmSnapshot | null, week: FmSnapshot[], results: MatchResult[], earlier: MatchResult[] = []): GazetteStory[] {
   const cur = week[week.length - 1]!;
-  const out: GazetteStory[] = results.map(resultStory);
+  const out: GazetteStory[] = results.map((r) => resultStory(r, cur));
+  const streak = streakStory(earlier, results);
+  if (streak) out.push(streak);
 
   if (prev && prev.club === cur.club) {
     const before = players(prev);
@@ -168,10 +218,24 @@ export function weekStories(prev: FmSnapshot | null, week: FmSnapshot[], results
   const next = (cur as { nextMatch?: Record<string, unknown> }).nextMatch;
   const opponent = text(next?.opponent);
   if (opponent) {
+    // Présentation de l'adversaire d'après le rapport du jeu (`adv*` de chemins.json), quand le plugin le lit.
+    const e = equipe(cur);
+    const goals = toNumber(e.advButs as never);
     out.push({
       kind: 'nextMatch',
       weight: 10,
-      params: { opponent, competition: text(next?.competition), inDays: text(next?.inDays), location: text(next?.location) },
+      params: {
+        opponent,
+        competition: text(next?.competition),
+        inDays: text(next?.inDays),
+        location: text(next?.location),
+        threat: text(next?.threatLevel),
+        position: text(e.advClassement),
+        manager: text(e.advEntraineur),
+        formation: text(e.advFormationPref),
+        scorer: text(e.advButeur),
+        scorerGoals: goals != null && goals > 0 ? Math.round(goals) : null,
+      },
     });
   }
 
@@ -196,7 +260,7 @@ export function gazetteIssues(history: Entry[]): GazetteIssue[] {
     const end = addDays(w, 6);
     const last = entries[entries.length - 1]!;
     const inWeek = results.filter((r) => r.date >= w && r.date <= end);
-    const stories = weekStories(prev?.data ?? null, entries.map((e) => e.data), inWeek);
+    const stories = weekStories(prev?.data ?? null, entries.map((e) => e.data), inWeek, results.filter((r) => r.date < w));
     issues.push({ number: ++n, club: last.data.club, weekStart: w, weekEnd: end, date: last.gameDate, headline: stories[0]!, stories: stories.slice(1) });
     prev = last;
   }

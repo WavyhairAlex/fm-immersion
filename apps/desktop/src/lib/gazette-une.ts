@@ -1,6 +1,6 @@
 import type { GazetteIssue, GazetteStory, SeasonReview } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
-import { paperName, storyText, weekLabel } from './gazette-text';
+import { figuresLine, paperName, storyText, weekLabel } from './gazette-text';
 
 /**
  * Une de la gazette en image (1200 × 675), dessinée sur le PC dans un canvas, pour l'envoi sur Discord.
@@ -144,7 +144,8 @@ export async function drawUne(
   const headText = storyText(t, issue.club, head, lang);
   const all = [head, ...issue.stories];
   const next = all.find((s) => s.kind === 'nextMatch');
-  const competition = next?.params.competition ? String(next.params.competition) : '';
+  // Bandeau : compétition du match à la une, sinon celle du prochain match.
+  const competition = String((head.kind === 'result' && !head.params.friendly ? head.params.competition : null) ?? next?.params.competition ?? '');
 
   // Bandeau du haut : numéro, semaine, compétition.
   ctx.font = font(800, 15);
@@ -246,6 +247,14 @@ export async function drawUne(
       ctx.font = font(400, 19);
       ctx.fillText(wrap(ctx, String(p.scorers), colW - lw2, 1)[0]!, M + lw2, y);
       y += 24;
+    }
+    // Chiffres du jeu (possession, tirs, xG) quand l'instantané les donne.
+    const figures = figuresLine(t, p, lang);
+    if (figures) {
+      ctx.font = font(700, 16);
+      ctx.fillStyle = C.grey;
+      ctx.fillText(wrap(ctx, figures, colW, 1)[0]!, M, y);
+      y += 22;
     }
   } else if (headText.body) {
     ctx.font = font(400, 19);
