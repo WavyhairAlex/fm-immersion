@@ -2219,7 +2219,7 @@
       "watch": "À surveiller"
     },
     "brief": {
-      "title": "Le briefing de ton adjoint",
+      "title": "Ta semaine, par ton adjoint",
       "go": "Y aller",
       "and": "et",
       "others_one": "{{count}} autre",
@@ -2250,7 +2250,32 @@
       "mercato_other": "{{count}} décisions de mercato t'attendent (départs et recrues).",
       "allGood": "Rien d'urgent : l'équipe est prête. Bon moment pour regarder le projet de jeu ou les jeunes.",
       "detail": "Tout le détail",
-      "detailHide": "Masquer le détail"
+      "detailHide": "Masquer le détail",
+      "progress": "{{done}} sur {{count}} réglés cette semaine",
+      "allDone": "Tout est réglé : tu peux continuer la partie dans FM.",
+      "markDone": "Marquer comme réglé",
+      "undo": "Remettre à faire",
+      "urgent": "Urgent",
+      "tone": {
+        "bad": "Urgent",
+        "warn": "À surveiller",
+        "info": "Pour info",
+        "good": "Tout va bien"
+      },
+      "act": {
+        "offseason": "Voir le plan",
+        "absentStarters": "Revoir la compo",
+        "nextMatch": "Voir l'adversaire",
+        "tiredStarters": "Faire tourner",
+        "contracts": "Trancher",
+        "playtimeShort": "Voir le temps de jeu",
+        "unhappy": "Voir le vestiaire",
+        "playtimeOver": "Voir le temps de jeu",
+        "training": "Changer l'entraînement",
+        "mercato": "Ouvrir le mercato"
+      },
+      "tabBadge_one": "{{count}} chose à faire ici",
+      "tabBadge_other": "{{count}} choses à faire ici"
     }
   },
   "modes": {

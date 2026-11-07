@@ -20,7 +20,7 @@ import {
 } from '@fm-immersion/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { fmData, savesData } from '../lib/data';
@@ -156,6 +156,24 @@ export function FmSave() {
   const [sheet, setSheet] = useState<string | null>(null);
   const section = SECTIONS.find((s) => (s.views as readonly string[]).includes(view)) ?? SECTIONS[0];
   const [folder, setFolder] = useState('');
+  // Ce que le briefing laisse à faire, par écran : une pastille sur l'onglet concerné (remise à zéro à chaque nouvelle date).
+  const [todo, setTodo] = useState<{ at: string; views: string[] }>({ at: '', views: [] });
+  const todoAt = `${saveId}|${snapshot?.gameDate ?? ''}`;
+  const reportTodo = useCallback((views: string[]) => setTodo({ at: todoAt, views }), [todoAt]);
+  const todoOn = (v: string) => (todo.at === todoAt ? todo.views.filter((x) => pageOf(x) === v).length : 0);
+  const badge = (v: string, dark: boolean) => {
+    const n = todoOn(v);
+    if (!n || v === 'home') return null;
+    return (
+      <span
+        className={`${dark ? 'ml-auto' : 'ml-1.5'} inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-xs font-extrabold tabular-nums ${dark ? 'bg-orange-fonce text-white' : 'bg-orange-clair text-canard'}`}
+        aria-label={t('fm.brief.tabBadge', { count: n })}
+        title={t('fm.brief.tabBadge', { count: n })}
+      >
+        {n}
+      </span>
+    );
+  };
   // Réglages repliés quand tout va bien ; ouverts d'office sans instantané ou quand le plugin demande une action.
   const [settingsToggle, setSettingsToggle] = useState<boolean | null>(null);
   const [bridgeOk, setBridgeOk] = useState<boolean | null>(null);
@@ -295,6 +313,7 @@ export function FmSave() {
             gameFormation={gameFormation}
             lineup={lineup}
             gameTactic={typeof snapshot.data.tactic?.name === 'string' ? snapshot.data.tactic.name : null}
+            onTodo={reportTodo}
           />
         );
       case 'squad':
@@ -442,6 +461,7 @@ export function FmSave() {
                   >
                     {STEPPED.has(s.id) && <span className="mr-1.5 tabular-nums text-eau">{s.views.indexOf(v as never) + 1}.</span>}
                     {pageLabel(t, v)}
+                    {badge(v, true)}
                   </button>
                 ))}
               </div>
@@ -617,6 +637,7 @@ export function FmSave() {
                           className={`chip ${s === section ? 'chip-on' : ''}`}
                         >
                           {t(`fm.sections.${s.id}`)}
+                          {badge(s.views[0], false)}
                         </button>
                       ))}
                     </nav>
