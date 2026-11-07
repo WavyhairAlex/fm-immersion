@@ -27,6 +27,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router-dom';
 import { fmData, savesData } from '../lib/data';
+import { importMissingHistory, type FmHistoryFile } from '../lib/fm-history';
 import { FmOtherSaveError, type FmSaveFile } from '../lib/fm';
 import { FmSaveScopeContext, type FmSaveScope } from '../lib/save-store';
 import { FmAnalysis } from './FmAnalysis';
@@ -223,6 +224,7 @@ export function FmSave() {
   const lastText = useRef<string | null>(null);
   const abilitiesDate = useRef<string | null>(null);
   const abilitiesTry = useRef(0);
+  const historyTry = useRef(0);
   useEffect(() => {
     if (!folder) return;
     let stop = false;
@@ -250,6 +252,21 @@ export function FmSave() {
       } catch (e) {
         // Autre sauvegarde chargée : on le signale ; sinon fichier absent ou en cours d'écriture, nouvel essai au prochain passage.
         if (e instanceof FmOtherSaveError) setOther(e);
+      }
+      // Historique : les jours de jeu passés pendant que l'appli était fermée (plusieurs matchs dans la semaine…)
+      // sont rattrapés depuis les fichiers datés du plugin, une fois par minute, par lots.
+      try {
+        if (!stop && Date.now() - historyTry.current >= 60_000) {
+          historyTry.current = Date.now();
+          const latest = await fmData.latest(saveId);
+          const n = await importMissingHistory(saveId, folder, (await fmData.settings(saveId)).fmClub ?? latest?.club ?? null);
+          if (n && !stop) {
+            qc.invalidateQueries({ queryKey: key });
+            qc.invalidateQueries({ queryKey: ['saves'] });
+          }
+        }
+      } catch {
+        /* dossier illisible : nouvel essai au prochain passage */
       }
       // CA/PA réels (option du joueur) : lus une fois par date de jeu dans la mémoire de FM27, en lecture seule.
       try {
@@ -939,7 +956,6 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
   );
 }
 
-type FmHistoryFile = { gameDate: string; club: string | null; bytes: number };
 
 /**
  * Reprise d'une carrière déjà suivie : le plugin garde un instantané par jour de jeu (`archivix-AAAA-MM-JJ.json`).
