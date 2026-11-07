@@ -10,7 +10,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   }),
 }));
 
-const { goalSituation, liveStep, minuteOf, progressBar, timeline } = await import('../src/lib/live-discord');
+const { commentary, goalSituation, liveStep, matchPhase, minuteOf, progressBar, timeline } = await import('../src/lib/live-discord');
 const t = ((k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k)) as unknown as TFunction;
 
 const at = '2026-11-07T07:20:00.000Z';
@@ -80,5 +80,14 @@ describe('direct Discord', () => {
       [36, 'home', 'L. Carrero'],
       [61, 'home', 'M. Kušnír'],
     ]);
+  });
+
+  it('le commentateur suit le match quand aucun but ne tombe', () => {
+    expect([1, 10, 30, 45, 60, 80, 92].map(matchPhase)).toEqual(['kickoff', 'early', 'mid', 'half', 'second', 'late', 'stoppage']);
+    expect(commentary(t, { ...base, minute: '45 min.' }, 'Malženice', null)).toMatch(/^live\.say\.half_level_/);
+    const l = { ...base, awayScore: 1, minute: '70 min.', scorers: "M. Fábry 11'" };
+    const goal = timeline(l)!.at(-1)!;
+    expect(commentary(t, l, 'Malženice', goal)).toMatch(/^live\.say\.second_lead_.*"leader":"Malženice"/);
+    expect(commentary(t, { ...l, minute: '14 min.' }, 'Malženice', goal)).toMatch(/^live\.say\.for_opener_/);
   });
 });

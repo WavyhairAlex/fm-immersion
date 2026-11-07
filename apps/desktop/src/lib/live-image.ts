@@ -4,11 +4,11 @@ import { wrap } from './gazette-une';
 import { minuteOf, timeline } from './live-discord';
 
 /**
- * Image du tableau de score du direct (1000 × 420), redessinée à chaque relevé : bandeau (en direct / score final,
+ * Image du tableau de score du direct (1000 × 450), redessinée à chaque relevé : bandeau (en direct / score final,
  * minute), équipes et grand score, frise du match avec les buts à leur minute, buteurs, et phrase du commentateur.
  */
 const W = 1000;
-const H = 420;
+const H = 450;
 const M = 40;
 const C = {
   bg: '#25282D',
@@ -39,11 +39,17 @@ function pill(ctx: CanvasRenderingContext2D, x: number, y: number, text: string,
   return w;
 }
 
-/** Plus grande taille (≤ max) pour que le texte tienne sur `width`. */
-function fitFont(ctx: CanvasRenderingContext2D, text: string, weight: number, max: number, width: number, family: string) {
-  let size = max;
-  ctx.font = font(weight, size, family);
-  while (size > 16 && ctx.measureText(text).width > width) ctx.font = font(weight, --size, family);
+/**
+ * Nom d'équipe sur une à trois lignes, dans la plus grande taille (≤ max) où il tient en entier sur `width` et
+ * `height` : les longs noms de club (« Futbalový Klub Pohronie Žiar nad Hronom Dolná Ždaňa ») passent à la ligne.
+ */
+function fitName(ctx: CanvasRenderingContext2D, text: string, max: number, width: number, height: number) {
+  for (let size = max; ; size -= 2) {
+    ctx.font = font(800, size, SERIF);
+    const lines = wrap(ctx, text, width, 3);
+    const lh = Math.round(size * 1.12);
+    if (size <= 18 || (!lines.at(-1)!.endsWith('…') && lines.length * lh <= height)) return { lines, lh };
+  }
 }
 
 export async function drawLiveBoard(t: TFunction, l: FmLive, club: string | null, comment: string): Promise<HTMLCanvasElement> {
@@ -90,10 +96,12 @@ export async function drawLiveBoard(t: TFunction, l: FmLive, club: string | null
     [l.home, M, 'left', side === 'home'],
     [l.away, W - M, 'right', side === 'away'],
   ] as const) {
-    fitFont(ctx, name, 800, 34, nameW, SERIF);
+    const { lines, lh } = fitName(ctx, name, 36, nameW, 120);
     ctx.textAlign = align;
     ctx.fillStyle = me ? C.ink : C.soft;
-    ctx.fillText(name, x, 150);
+    // Bloc centré sur la hauteur du score.
+    const y0 = 128 - ((lines.length - 1) * lh) / 2 + lh * 0.35;
+    lines.forEach((line, i) => ctx.fillText(line, x, y0 + i * lh));
   }
   ctx.textAlign = 'left';
 
@@ -146,16 +154,18 @@ export async function drawLiveBoard(t: TFunction, l: FmLive, club: string | null
   }
   ctx.textAlign = 'left';
 
-  // Phrase du commentateur.
+  // Phrase du commentateur, sur deux lignes au plus.
+  const band = 120;
   ctx.fillStyle = C.cream;
-  ctx.fillRect(0, H - 92, W, 92);
+  ctx.fillRect(0, H - band, W, band);
   ctx.fillStyle = C.orange;
-  ctx.fillRect(0, H - 92, 8, 92);
+  ctx.fillRect(0, H - band, 8, band);
   ctx.font = font(800, 13);
   ctx.fillStyle = C.orangeDark;
-  ctx.fillText(t('live.image.commentator').toUpperCase(), M, H - 62);
+  ctx.fillText(t('live.image.commentator').toUpperCase(), M, H - band + 30);
   ctx.font = `italic ${font(600, 22, SERIF)}`;
   ctx.fillStyle = C.dark;
-  ctx.fillText(wrap(ctx, `« ${comment} »`, W - 2 * M, 1)[0]!, M, H - 30);
+  const said = wrap(ctx, `« ${comment} »`, W - 2 * M, 2);
+  said.forEach((line, i) => ctx.fillText(line, M, H - band + (said.length === 1 ? 74 : 62) + i * 30));
   return canvas;
 }
