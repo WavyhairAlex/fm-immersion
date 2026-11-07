@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 /**
  * Match en cours écrit par le plugin toutes les 15 s pendant un match (`archivix-live.json`, plugin 0.5.0).
@@ -7,7 +7,7 @@ import { z } from "zod";
  */
 export const fmLiveSchema = z
   .object({
-    schema: z.literal("archivix-live/1"),
+    schema: z.literal('archivix-live/1'),
     gameDate: z.string().nullish(),
     updatedAt: z.string(),
     inMatch: z.boolean().nullish(),
@@ -37,18 +37,15 @@ const MINUTE = /^((?:pen\.?\s+|c\.s\.c\.?\s+|og\s+)?\d+(?:\+\d+)?')$/i;
  */
 export function parseScorers(text: string | null | undefined): LiveGoal[] {
   const goals: LiveGoal[] = [];
-  let name = "";
-  for (const raw of (text ?? "").split(",")) {
+  let name = '';
+  for (const raw of (text ?? '').split(',')) {
     const part = raw.trim();
     if (!part) continue;
     if (MINUTE.test(part)) {
       if (name) goals.push({ name, time: part });
       continue;
     }
-    const m =
-      /^(.*?)\s+((?:pen\.?\s+|c\.s\.c\.?\s+|og\s+)?\d+(?:\+\d+)?')$/i.exec(
-        part,
-      );
+    const m = /^(.*?)\s+((?:pen\.?\s+|c\.s\.c\.?\s+|og\s+)?\d+(?:\+\d+)?')$/i.exec(part);
     if (!m) continue;
     name = m[1]!.trim();
     goals.push({ name, time: m[2]! });
@@ -57,12 +54,10 @@ export function parseScorers(text: string | null | undefined): LiveGoal[] {
 }
 
 /** Même match d'un relevé à l'autre : date de jeu et équipes. */
-export const liveKey = (l: FmLive) => `${l.gameDate ?? ""}|${l.home}|${l.away}`;
+export const liveKey = (l: FmLive) => `${l.gameDate ?? ''}|${l.home}|${l.away}`;
 
 /** Ce qu'il faut annoncer entre deux relevés du même match (le premier relevé connu : rien que le tableau). */
-export type LiveNews =
-  | { kind: "goal"; side: "home" | "away"; scorer: LiveGoal | null }
-  | { kind: "final" };
+export type LiveNews = { kind: 'goal'; side: 'home' | 'away'; scorer: LiveGoal | null } | { kind: 'final' };
 
 const goalId = (g: LiveGoal) => `${g.name}|${g.time}`;
 
@@ -75,18 +70,15 @@ export function liveNews(prev: FmLive | null, cur: FmLive): LiveNews[] {
   const news: LiveNews[] = [];
   const known = new Set(parseScorers(prev.scorers).map(goalId));
   const fresh = parseScorers(cur.scorers).filter((g) => !known.has(goalId(g)));
-  for (const side of ["home", "away"] as const) {
-    const before = (side === "home" ? prev.homeScore : prev.awayScore) ?? 0;
-    const after = (side === "home" ? cur.homeScore : cur.awayScore) ?? 0;
-    for (let i = before; i < after; i++)
-      news.push({ kind: "goal", side, scorer: null });
+  for (const side of ['home', 'away'] as const) {
+    const before = (side === 'home' ? prev.homeScore : prev.awayScore) ?? 0;
+    const after = (side === 'home' ? cur.homeScore : cur.awayScore) ?? 0;
+    for (let i = before; i < after; i++) news.push({ kind: 'goal', side, scorer: null });
   }
-  const goals = news.filter(
-    (n): n is Extract<LiveNews, { kind: "goal" }> => n.kind === "goal",
-  );
+  const goals = news.filter((n): n is Extract<LiveNews, { kind: 'goal' }> => n.kind === 'goal');
   // Un seul but : le nouveau nom est forcément le sien. Plusieurs buts d'un coup : on ne devine pas.
   if (goals.length === 1 && fresh.length === 1) goals[0]!.scorer = fresh[0]!;
-  if (cur.final && !prev.final) news.push({ kind: "final" });
+  if (cur.final && !prev.final) news.push({ kind: 'final' });
   return news;
 }
 

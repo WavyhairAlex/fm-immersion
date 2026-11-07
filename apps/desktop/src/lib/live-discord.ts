@@ -1,24 +1,9 @@
-import {
-  fmLiveSchema,
-  liveIsFresh,
-  liveKey,
-  liveNews,
-  parseScorers,
-  type FmLive,
-  type LiveNews,
-} from "@fm-immersion/module-fm";
-import { invoke } from "@tauri-apps/api/core";
-import type { TFunction } from "i18next";
-import { useEffect, useRef } from "react";
-import { useTranslation } from "react-i18next";
-import {
-  editDiscord,
-  getLiveEnabled,
-  getWebhook,
-  isWebhook,
-  postDiscord,
-  sendDiscord,
-} from "./discord";
+import { fmLiveSchema, liveIsFresh, liveKey, liveNews, parseScorers, type FmLive, type LiveNews } from '@fm-immersion/module-fm';
+import { invoke } from '@tauri-apps/api/core';
+import type { TFunction } from 'i18next';
+import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
+import { editDiscord, getLiveEnabled, getWebhook, isWebhook, postDiscord, sendDiscord } from './discord';
 
 const LIVE_RED = 0xd93c3c;
 const GOOD = 0x2e9e5b;
@@ -33,21 +18,13 @@ function sideScorers(l: FmLive) {
   const fmt = (gs: typeof goals) => {
     const by = new Map<string, string[]>();
     for (const g of gs) by.set(g.name, [...(by.get(g.name) ?? []), g.time]);
-    return [...by]
-      .map(([name, times]) => `${name} ${times.join(", ")}`)
-      .join("\n");
+    return [...by].map(([name, times]) => `${name} ${times.join(', ')}`).join('\n');
   };
-  return goals.length === n + (l.awayScore ?? 0)
-    ? { home: fmt(goals.slice(0, n)), away: fmt(goals.slice(n)) }
-    : null;
+  return goals.length === n + (l.awayScore ?? 0) ? { home: fmt(goals.slice(0, n)), away: fmt(goals.slice(n)) } : null;
 }
 
 /** Tableau de score du match, modifié à chaque relevé. `club` = club du joueur (couleur du résultat final). */
-export function scoreboardPayload(
-  t: TFunction,
-  l: FmLive,
-  club: string | null,
-) {
+export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null) {
   const s = sideScorers(l);
   let color = LIVE_RED;
   if (l.final && club && (club === l.home || club === l.away)) {
@@ -56,33 +33,23 @@ export function scoreboardPayload(
     color = mine > theirs ? GOOD : mine < theirs ? LIVE_RED : ORANGE;
   }
   return {
-    username: "FM Immersion",
+    username: 'FM Immersion',
     embeds: [
       {
-        author: { name: l.final ? t("live.finalTag") : t("live.liveTag") },
+        author: { name: l.final ? t('live.finalTag') : t('live.liveTag') },
         title: `${l.home}  ${score(l)}  ${l.away}`,
-        description: l.final
-          ? t("live.ended")
-          : l.minute
-            ? `⏱️ ${l.minute}`
-            : t("live.kickoff"),
+        description: l.final ? t('live.ended') : l.minute ? `⏱️ ${l.minute}` : t('live.kickoff'),
         color,
         fields: s
           ? [
-              { name: l.home, value: s.home || "—", inline: true },
-              { name: l.away, value: s.away || "—", inline: true },
+              { name: l.home, value: s.home || '—', inline: true },
+              { name: l.away, value: s.away || '—', inline: true },
             ]
           : l.scorers
-            ? [{ name: t("live.scorers"), value: l.scorers.slice(0, 1000) }]
+            ? [{ name: t('live.scorers'), value: l.scorers.slice(0, 1000) }]
             : [],
         footer: {
-          text: [
-            l.gameDate &&
-              new Date(`${l.gameDate}T12:00:00`).toLocaleDateString(),
-            "FM Immersion",
-          ]
-            .filter(Boolean)
-            .join("  ·  "),
+          text: [l.gameDate && new Date(`${l.gameDate}T12:00:00`).toLocaleDateString(), 'FM Immersion'].filter(Boolean).join('  ·  '),
         },
       },
     ],
@@ -90,29 +57,21 @@ export function scoreboardPayload(
 }
 
 /** Petit message qui fait sonner le salon : un but, ou le coup de sifflet final. */
-export function newsPayload(
-  t: TFunction,
-  l: FmLive,
-  n: LiveNews,
-  club: string | null,
-) {
-  if (n.kind === "final")
+export function newsPayload(t: TFunction, l: FmLive, n: LiveNews, club: string | null) {
+  if (n.kind === 'final')
     return {
-      username: "FM Immersion",
-      content: t("live.finalMessage", {
+      username: 'FM Immersion',
+      content: t('live.finalMessage', {
         home: l.home,
         away: l.away,
         score: score(l),
       }),
     };
-  const team = n.side === "home" ? l.home : l.away;
-  const scorer = n.scorer ? ` ${n.scorer.name} ${n.scorer.time}` : "";
-  const key =
-    club && club !== team && (club === l.home || club === l.away)
-      ? "live.goalAgainst"
-      : "live.goal";
+  const team = n.side === 'home' ? l.home : l.away;
+  const scorer = n.scorer ? ` ${n.scorer.name} ${n.scorer.time}` : '';
+  const key = club && club !== team && (club === l.home || club === l.away) ? 'live.goalAgainst' : 'live.goal';
   return {
-    username: "FM Immersion",
+    username: 'FM Immersion',
     content: t(key, {
       team,
       scorer,
@@ -131,7 +90,7 @@ interface LiveState {
   done: boolean;
 }
 
-const STATE_KEY = "fmi.discord.liveState";
+const STATE_KEY = 'fmi.discord.liveState';
 
 function loadState(): LiveState | null {
   try {
@@ -151,13 +110,7 @@ function saveState(s: LiveState) {
 }
 
 /** Un relevé du direct : nouveau match → tableau de score ; ensuite buts, tableau modifié, fin du match. */
-export async function liveStep(
-  t: TFunction,
-  l: FmLive,
-  club: string | null,
-  state: LiveState | null,
-  now = Date.now(),
-): Promise<LiveState | null> {
+export async function liveStep(t: TFunction, l: FmLive, club: string | null, state: LiveState | null, now = Date.now()): Promise<LiveState | null> {
   if (!liveIsFresh(l, now)) return state;
   const key = liveKey(l);
   if (!state || state.key !== key) {
@@ -168,20 +121,14 @@ export async function liveStep(
   if (state.done) return state;
   const news = liveNews(state.last, l);
   const changed =
-    JSON.stringify([
-      state.last.minute,
-      state.last.homeScore,
-      state.last.awayScore,
-      state.last.scorers,
-      state.last.final,
-    ]) !==
+    JSON.stringify([state.last.minute, state.last.homeScore, state.last.awayScore, state.last.scorers, state.last.final]) !==
     JSON.stringify([l.minute, l.homeScore, l.awayScore, l.scorers, l.final]);
   let messageId = state.messageId;
   if (changed) {
     // Tableau effacé du salon (ou jamais envoyé) : on en poste un nouveau plutôt que de rester bloqué.
     const board = scoreboardPayload(t, l, club);
     try {
-      if (!messageId) throw new Error("aucun tableau");
+      if (!messageId) throw new Error('aucun tableau');
       await editDiscord(messageId, board);
     } catch {
       messageId = await postDiscord(board).catch(() => null);
@@ -204,25 +151,23 @@ export function useLiveDiscord() {
       if (busy.current || !getLiveEnabled() || !isWebhook(getWebhook())) return;
       busy.current = true;
       try {
-        const folder = await invoke<string | null>("fm_default_folder");
+        const folder = await invoke<string | null>('fm_default_folder');
         if (!folder) return;
-        const raw = await invoke<string | null>("fm_read_live", { folder });
+        const raw = await invoke<string | null>('fm_read_live', { folder });
         if (!raw) return;
         const live = fmLiveSchema.safeParse(JSON.parse(raw));
         if (!live.success) return;
-        const statusRaw = await invoke<string | null>("fm_read_status", {
+        const statusRaw = await invoke<string | null>('fm_read_status', {
           folder,
         }).catch(() => null);
-        const club = statusRaw
-          ? ((JSON.parse(statusRaw) as { club?: string | null }).club ?? null)
-          : null;
+        const club = statusRaw ? ((JSON.parse(statusRaw) as { club?: string | null }).club ?? null) : null;
         const next = await liveStep(t, live.data, club, state);
         if (next && next !== state) {
           state = next;
           saveState(next);
         }
       } catch (e) {
-        console.warn("Direct Discord :", e);
+        console.warn('Direct Discord :', e);
       } finally {
         busy.current = false;
       }
