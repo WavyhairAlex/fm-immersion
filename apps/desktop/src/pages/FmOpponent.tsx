@@ -74,6 +74,7 @@ export function FmOpponent({ snap }: { snap: FmSnapshot }) {
             <Empty>{t('fm.opp.noAdvice')}</Empty>
           )}
           <p className="mt-3 text-xs text-brun">{t('fm.opp.adviceHelp')}</p>
+          <p className="mt-1 text-xs font-bold text-canard/70">{t('fm.opp.adjustInXi')}</p>
         </Panel>
 
         <Panel title={t('fm.opp.keyTitle')}>

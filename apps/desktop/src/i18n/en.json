@@ -308,6 +308,35 @@
         "A": "Team A",
         "B": "Team B",
         "help": "Team B: the best XI without Team A's starters, same formation and style, for rotation (cups, congested fixtures, fatigue). Team rating: A {{a}}, B {{b}}."
+      },
+      "adjust": {
+        "title": "Match settings against {{name}}",
+        "intro": "Same style, same shape: only what changes for this match, to be reverted after the final whistle.",
+        "mentality": "Mentality: \"{{to}}\" instead of \"{{from}}\".",
+        "teamTitle": "Team instructions to change",
+        "replaces": "instead of \"{{label}}\"",
+        "markingTitle": "Marking",
+        "marking": {
+          "creator": "{{target}} ({{positions}}) makes the team play: tighter marking and harder tackles for {{player}}.",
+          "creatorNoSlot": "{{target}} makes the team play: tighter marking for the player facing him.",
+          "scorer": "{{target}} is their scorer: {{player}} stays on him in the box (tighter marking).",
+          "scorerNoSlot": "{{target}} is their scorer: tighter marking for the defender facing him."
+        },
+        "none": "Nothing to change: your base tactic fits this opponent as it is.",
+        "help": "Football rules applied to the game's team report (pressing, marking, shape out of possession, mentality, chances conceded, match threat), never more than four instructions changed: each change costs some tactical familiarity. An instruction your style already sets the same way is not repeated. Marking goes into the named player's individual instructions.",
+        "reason": {
+          "highPress": "they press a lot: we bypass their press",
+          "lowPress": "they rarely press: we build short, safely",
+          "manMarking": "man marking: freedom and rotations to drag them out",
+          "zonalMarking": "zonal marking: overload inside",
+          "screened": "two defensive midfielders screen the centre: we go wide",
+          "betweenLines": "two banks of four: we play between their lines",
+          "lowBlock": "cautious mentality: a low block to move around",
+          "attacking": "attacking mentality: space in behind",
+          "twoStrikers": "two strikers and no cover in our shape",
+          "leaky": "their defence concedes often",
+          "threat": "stronger opponent: one notch more cautious"
+        }
       }
     },
     "nav": "Save sections",
@@ -1364,7 +1393,8 @@
       "everyMin_other": "every {{count}} min",
       "formsHelp": "Read from the formation analysis of the game's team report. Out of possession, chances are those they concede.",
       "withBall": "{{value}} in possession",
-      "withoutBall": "{{value}} out of possession"
+      "withoutBall": "{{value}} out of possession",
+      "adjustInXi": "The concrete settings for this match (team instructions, mentality, marking) are in The XI, under the match tactic."
     },
     "memory": {
       "open": "Trial: read the FM27 database directly",

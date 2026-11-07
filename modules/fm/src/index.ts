@@ -33,6 +33,7 @@ export * from './game-stars';
 export * from './lineup';
 export * from './opponent';
 export * from './matchup';
+export * from './match-plan';
 export * from './mercato';
 export * from './evolution';
 export * from './decisions';

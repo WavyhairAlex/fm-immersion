@@ -9,6 +9,7 @@ import {
   mergeReference,
   opponentReport,
   rankForMatch,
+  matchPlan,
   styleOfGameTactic,
   SWITCH_POINTS,
   phaseXY,
@@ -136,6 +137,9 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   // Une base, des ajustements : on part de la tactique de base, un changement doit rapporter plus qu'il ne coûte.
   const forMatch = useMemo(() => (opp ? rankForMatch(ranked, opp, pick ? { style: pick.style.id, form: pick.form } : null) : []), [ranked, opp, pick]);
   const best = forMatch[0];
+  // Réglages du match : consignes d'équipe, mentalité et marquage à changer contre cet adversaire, dans le style retenu.
+  const threat = typeof (snap?.nextMatch as { threatLevel?: unknown } | null | undefined)?.threatLevel === 'string' ? ((snap!.nextMatch as { threatLevel: string }).threatLevel) : null;
+  const adjust = useMemo(() => (opp && style && planA ? matchPlan(style, opp, planA, threat) : null), [opp, style, planA, threat]);
   const baseKey = pick ? `${pick.style.id}|${pick.form}` : null;
   // Poste survolé : mis en évidence à la fois sur le terrain et dans la liste.
   const [hover, setHover] = useState<number | null>(null);
@@ -252,6 +256,55 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
             )}
           </div>
           <More>{t(opp.formations.faced?.length ? 'fm.tac.matchHelpMeasured' : 'fm.tac.matchHelp')}</More>
+        </section>
+      )}
+
+      {opp && adjust && !fromGame && (
+        <section className="card">
+          <h2 className="text-xl font-semibold">{t('fm.tac.adjust.title', { name: opp.name ?? t('fm.opp.club') })}</h2>
+          <p className="mt-1 text-sm text-brun">{t('fm.tac.adjust.intro')}</p>
+          {!adjust.mentality && !adjust.team.length && !adjust.marking.length ? (
+            <p className="mt-2 text-sm">{t('fm.tac.adjust.none')}</p>
+          ) : (
+            <div className="mt-3 grid gap-4 lg:grid-cols-2">
+              <div>
+                {adjust.mentality && (
+                  <p className="mb-2 text-sm">
+                    <b>{t('fm.tac.adjust.mentality', { to: adjust.mentality.to, from: adjust.mentality.from })}</b>
+                    <span className="ml-1 text-xs text-brun">{t(`fm.tac.adjust.reason.${adjust.mentality.reason}`)}</span>
+                  </p>
+                )}
+                {adjust.team.length > 0 && (
+                  <>
+                    <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.tac.adjust.teamTitle')}</p>
+                    <ul className="mt-1 space-y-1.5 text-sm">
+                      {adjust.team.map((a) => (
+                        <li key={a.title} className="rounded-xl bg-creme/50 px-3 py-2">
+                          <span className="mr-2 rounded-md bg-eau/20 px-1.5 py-0.5 text-xs font-bold text-canard">{t(`fm.style.${a.phase}`)}</span>
+                          <span className="text-brun">{a.title} :</span> <b>{a.label}</b>
+                          {a.replaces && <span className="ml-1 text-xs text-brun">{t('fm.tac.adjust.replaces', { label: a.replaces })}</span>}
+                          <span className="block text-xs text-brun">{t(`fm.tac.adjust.reason.${a.reason}`)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </div>
+              {adjust.marking.length > 0 && (
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.tac.adjust.markingTitle')}</p>
+                  <ul className="mt-1 space-y-1.5 text-sm">
+                    {adjust.marking.map((mk) => (
+                      <li key={mk.target} className="rounded-xl bg-creme/50 px-3 py-2">
+                        {t(`fm.tac.adjust.marking.${mk.reason}${mk.player ? '' : 'NoSlot'}`, { target: mk.target, positions: mk.positions ?? '', player: mk.player ?? '' })}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+          <More>{t('fm.tac.adjust.help')}</More>
         </section>
       )}
 

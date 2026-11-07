@@ -308,6 +308,35 @@
         "A": "Équipe A",
         "B": "Équipe B",
         "help": "Équipe B : le meilleur onze sans les titulaires de l'équipe A, même schéma et même style, pour faire tourner (coupes, matchs rapprochés, fatigue). Note d'équipe : A {{a}}, B {{b}}."
+      },
+      "adjust": {
+        "title": "Réglages du match contre {{name}}",
+        "intro": "Même style, même schéma : seulement ce qui change pour ce match, à remettre comme avant après le coup de sifflet final.",
+        "mentality": "Mentalité : « {{to}} » au lieu de « {{from}} ».",
+        "teamTitle": "Consignes d'équipe à changer",
+        "replaces": "à la place de « {{label}} »",
+        "markingTitle": "Marquage",
+        "marking": {
+          "creator": "{{target}} ({{positions}}) fait jouer l'équipe : marquage plus serré et tacles engagés pour {{player}}.",
+          "creatorNoSlot": "{{target}} fait jouer l'équipe : marquage plus serré pour le joueur en face de lui.",
+          "scorer": "{{target}} est leur buteur : {{player}} ne le lâche pas dans la surface (marquage plus serré).",
+          "scorerNoSlot": "{{target}} est leur buteur : marquage plus serré pour le défenseur en face de lui."
+        },
+        "none": "Rien à changer : ta tactique de base convient telle quelle contre cet adversaire.",
+        "help": "Règles de football appliquées au rapport d'équipe du jeu (pressing, marquage, formation sans ballon, mentalité, occasions concédées, menace du match), jamais plus de quatre consignes changées : chaque changement coûte un peu de compréhension tactique. Une consigne que ton style règle déjà pareil n'est pas répétée. Le marquage se règle dans les consignes individuelles du joueur nommé.",
+        "reason": {
+          "highPress": "ils pressent beaucoup : on saute leur pressing",
+          "lowPress": "ils pressent peu : on construit court, sans risque",
+          "manMarking": "marquage individuel : liberté et permutations pour les décrocher",
+          "zonalMarking": "marquage en zone : surnombre à l'intérieur",
+          "screened": "deux milieux défensifs ferment l'axe : on passe par les côtés",
+          "betweenLines": "deux lignes de quatre : on joue entre leurs lignes",
+          "lowBlock": "mentalité prudente : bloc bas à faire bouger",
+          "attacking": "mentalité offensive : de l'espace dans leur dos",
+          "twoStrikers": "deux attaquants et pas de couverture dans notre schéma",
+          "leaky": "leur défense concède souvent",
+          "threat": "adversaire plus fort : un cran de prudence"
+        }
       }
     },
     "nav": "Sections de la partie",
@@ -1364,7 +1393,8 @@
       "everyMin_other": "toutes les {{count}} min",
       "formsHelp": "Lu dans l'analyse de formation du rapport d'équipe du jeu. Sans ballon, les occasions sont celles qu'ils concèdent.",
       "withBall": "{{value}} avec ballon",
-      "withoutBall": "{{value}} sans ballon"
+      "withoutBall": "{{value}} sans ballon",
+      "adjustInXi": "Les réglages concrets pour ce match (consignes d'équipe, mentalité, marquage) sont dans Le onze, sous la tactique du match."
     },
     "memory": {
       "open": "Essai : lire la base de FM27 directement",
