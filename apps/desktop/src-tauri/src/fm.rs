@@ -13,6 +13,7 @@ use tauri::Manager;
 pub const SNAPSHOT_FILE: &str = "archivix-snapshot.json";
 /// État du manager écrit par le plugin à chaque relecture : club entraîné, ou aucun quand il est sans club.
 pub const STATUS_FILE: &str = "archivix-status.json";
+pub const LIVE_FILE: &str = "archivix-live.json";
 /// Repères de rôles et de styles fournis par le joueur (facultatif) : ils remplacent les repères maison.
 pub const REFERENCE_FILE: &str = "simloom-roles.json";
 /// Un effectif complet pèse quelques centaines de Ko ; au-delà, ce n'est pas notre fichier.
@@ -72,6 +73,16 @@ pub fn fm_read_reference(folder: String) -> Result<Option<String>, FmError> {
 #[tauri::command]
 pub fn fm_read_status(folder: String) -> Result<Option<String>, FmError> {
     match read_fixed(Path::new(&folder), STATUS_FILE) {
+        Ok(s) => Ok(Some(s)),
+        Err(FmError::NotFound) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+/// Match en cours écrit par le plugin toutes les 15 s (`archivix-live.json`, plugin 0.5.0), ou rien.
+#[tauri::command]
+pub fn fm_read_live(folder: String) -> Result<Option<String>, FmError> {
+    match read_fixed(Path::new(&folder), LIVE_FILE) {
         Ok(s) => Ok(Some(s)),
         Err(FmError::NotFound) => Ok(None),
         Err(e) => Err(e),

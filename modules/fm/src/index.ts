@@ -45,3 +45,4 @@ export * from './diagnose';
 export * from './staff';
 export * from './shirts';
 export * from './gazette';
+export * from './live';

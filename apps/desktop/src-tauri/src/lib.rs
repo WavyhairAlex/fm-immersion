@@ -43,7 +43,10 @@ pub fn run() {
             fm_memory::fm_memory_staff,
             faces::faces_status,
             discord::discord_send,
-            discord::discord_send_image
+            discord::discord_send_image,
+            discord::discord_post,
+            discord::discord_edit,
+            fm::fm_read_live
         ])
         .run(tauri::generate_context!())
         .expect("impossible de démarrer FM Immersion");

@@ -28,6 +28,17 @@ Autres clés : `LireTactique` (non par défaut), `LireEfficacite` (non par défa
 en-tête CORS, inutile pour FM Immersion ; un port déjà pris n'empêche plus le plugin de démarrer), `RelectureSecondes` (300 par défaut, 60 au minimum : relecture complète même sans
 changement de date).
 
+## Match en direct (0.5.0)
+
+Clé `LireMatchDirect` (oui par défaut). Toutes les 20 s, le plugin demande au jeu si un match est en cours
+(`IsDuringMatch`) ; pendant le match, il relit toutes les 15 s le match du manager
+(`GameCurrentManager/LatestScoresHumanFixtures/#0`) et écrit `archivix-live.json` (format `archivix-live/1`) :
+`home`, `away`, `homeScore`, `awayScore`, `result`, `minute` (« 19 min. », « FDM » à la fin), `final`, `scorers`
+(texte du jeu), `homeEvents`/`awayEvents` (`type` 0 but, 2 penalty ; `time`), `gameDate`, `inMatch`, `updatedAt`.
+Le fichier garde le dernier état jusqu'au match suivant. FM Immersion s'en sert pour le direct Discord.
+Chemins validés en jeu le 07/11/2026 (sonde Carnet, 66 relevés sans gêne) ; cartons, remplacements et
+statistiques ne sont pas exposés par cette liste.
+
 ## Garde-fou « écran Tactique » (0.3.0)
 
 Toute lecture liée à la tactique (`LireTactique`, `LireEfficacite`, `LireCompo`, section `tactique` de `chemins.json`,

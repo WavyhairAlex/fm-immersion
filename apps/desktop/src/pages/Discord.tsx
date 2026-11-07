@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { getWebhook, isWebhook, sendDiscord, setWebhook } from '../lib/discord';
+import { getLiveEnabled, getWebhook, isWebhook, sendDiscord, setLiveEnabled, setWebhook } from '../lib/discord';
 
 /** Mode Live Discord (solo) : le joueur colle le lien webhook de son salon, puis envoie ses gazettes. */
 export function Discord() {
@@ -10,8 +10,11 @@ export function Discord() {
   const [url, setUrl] = useState(getWebhook());
   const [saved, setSaved] = useState(isWebhook(getWebhook()));
   const valid = isWebhook(url);
+  const [live, setLive] = useState(getLiveEnabled());
 
-  const test = useMutation({ mutationFn: () => sendDiscord({ username: 'FM Immersion', content: t('discord.testMessage') }, url) });
+  const test = useMutation({
+    mutationFn: () => sendDiscord({ username: 'FM Immersion', content: t('discord.testMessage') }, url),
+  });
 
   return (
     <div className="w-full px-6 py-6 xl:px-10">
@@ -58,6 +61,26 @@ export function Discord() {
         </div>
         {test.isSuccess && <p className="mt-2 text-sm font-bold text-eau-fonce">{t('discord.testOk')}</p>}
         {test.isError && <p className="mt-2 text-sm font-bold text-corail">{String(test.error)}</p>}
+      </section>
+
+      <section className="card mt-6 max-w-3xl">
+        <h2 className="text-xl font-semibold">{t('live.title')}</h2>
+        <p className="mt-2 text-sm text-brun">{t('live.intro')}</p>
+        <label className="mt-4 flex items-center gap-3 text-sm font-bold">
+          <input
+            type="checkbox"
+            className="h-5 w-5 accent-orange-fonce"
+            checked={live}
+            disabled={!saved}
+            onChange={(e) => {
+              setLiveEnabled(e.target.checked);
+              setLive(e.target.checked);
+            }}
+          />
+          {t('live.enable')}
+        </label>
+        {!saved && <p className="mt-2 text-xs text-brun">{t('live.needWebhook')}</p>}
+        <p className="mt-3 text-xs text-brun">{t('live.plugin')}</p>
       </section>
 
       <section className="card mt-6 max-w-3xl">
