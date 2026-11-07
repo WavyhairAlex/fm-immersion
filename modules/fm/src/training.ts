@@ -1018,6 +1018,8 @@ export function currentTrainingWeek(o: {
   method?: TrainingMethod;
   weakAreas?: EffArea[];
   gaugesKnown?: boolean;
+  /** Le calendrier couvre toute la saison (lu match par match) : une semaine sans match connu n'a pas de match. */
+  calendarComplete?: boolean;
 }): TrainingWeek {
   return trainingWeekAt(mondayOf(o.gameDate), o);
 }
@@ -1029,7 +1031,7 @@ export function trainingWeekAt(monday: string, o: WeekOptions): TrainingWeek {
   const { phase, week } = autoPhase(monday, o.seasonStart ?? 8, o.winterBreak);
   // Le calendrier ne couvre que les prochains matchs : au-delà du dernier connu, jours de match par défaut.
   const list = Array.isArray(o.fixtures) ? (o.fixtures as { date?: unknown }[]) : [];
-  const hasCalendar = list.some((f) => typeof f.date === 'string' && f.date.slice(0, 10) >= monday);
+  const hasCalendar = !!o.calendarComplete || list.some((f) => typeof f.date === 'string' && f.date.slice(0, 10) >= monday);
   const cal = weekMatches(o.fixtures, monday);
   const seasonal = phase === 'A' || phase === 'B' || phase === 'C';
   const matchDays = hasCalendar ? cal.days : defaultMatchDays(phase, week, seasonal ? 1 : 0);
@@ -1074,5 +1076,66 @@ export function upcomingWeeks(o: WeekOptions & { gameDate: string }, count = 6) 
     if (days.length) prevLast = days.at(-1)!;
     else prevLast = null;
     return { monday: plan.days[0]!.date, plan, preset: nearestPreset(plan), file, workload: weekWorkload(plan), matches: days.length };
+  });
+}
+
+/* ---------- Toute la saison ---------- */
+
+/**
+ * Type de semaine affiché dans la vue saison : présaison, bloc tactique, trêve, puis en saison selon le nombre de
+ * matchs (aucun, un, deux, trois ou plus : enchaînement).
+ */
+export type SeasonWeekKind = 'preseason' | 'tactical' | 'break' | 'free' | 'single' | 'double' | 'congested' | 'offseason';
+
+export function seasonWeekKind(plan: TrainingWeek, matches: number): SeasonWeekKind {
+  if (plan.phase === 'P') return 'preseason';
+  if (plan.phase === 'T') return 'tactical';
+  if (plan.phase === 'R') return 'break';
+  if (plan.congested || matches >= CONGESTED_MATCHES) return 'congested';
+  return matches >= 2 ? 'double' : matches === 1 ? 'single' : 'free';
+}
+
+/** Lundi où commence la prochaine présaison (4 semaines avant le 1er du mois de reprise), après la date donnée. */
+export function nextPreseason(isoDate: string, seasonStart: number): string {
+  const monday = mondayOf(isoDate);
+  const y = utc(monday).getUTCFullYear();
+  for (const year of [y, y + 1, y + 2]) {
+    const pre = mondayOf(addDays(`${year}-${String(seasonStart).padStart(2, '0')}-01`, -28));
+    if (pre > monday) return pre;
+  }
+  return addDays(monday, 52 * 7);
+}
+
+/**
+ * Toutes les semaines de la date du jeu jusqu'à la veille de la prochaine présaison (52 au plus), comme les
+ * « Semaines à venir » : plan de la semaine, priorité du calendrier et charge, plus son type, ses adversaires et si
+ * ses matchs sont lus dans le calendrier du jeu ou supposés (au-delà du dernier match connu : un match le samedi).
+ * Avec le calendrier complet (`calendarComplete`), rien n'est supposé : après le dernier match, c'est l'intersaison.
+ */
+export function seasonWeeks(o: WeekOptions & { gameDate: string }) {
+  const first = mondayOf(o.gameDate);
+  const end = nextPreseason(o.gameDate, o.seasonStart ?? 8);
+  const count = Math.min(52, Math.max(1, Math.round((utc(end).getTime() - utc(first).getTime()) / (7 * DAY))));
+  const list = Array.isArray(o.fixtures) ? (o.fixtures as { date?: unknown; competition?: unknown }[]) : [];
+  const lastKnown = list.reduce<string | null>((m, f) => (typeof f.date === 'string' && (!m || f.date.slice(0, 10) > m) ? f.date.slice(0, 10) : m), null);
+  return upcomingWeeks(o, count).map((w) => {
+    const cal = weekMatches(o.fixtures, w.monday);
+    const sunday = addDays(w.monday, 6);
+    const competitions = [
+      ...new Set(
+        list
+          .filter((f) => typeof f.date === 'string' && f.date.slice(0, 10) >= w.monday && f.date.slice(0, 10) <= sunday && typeof f.competition === 'string')
+          .map((f) => f.competition as string),
+      ),
+    ];
+    const after = !lastKnown || w.monday > lastKnown;
+    return {
+      ...w,
+      kind: o.calendarComplete && after && lastKnown && 'ABC'.includes(w.plan.phase) ? ('offseason' as const) : seasonWeekKind(w.plan, w.matches),
+      opponents: cal.days.map((d) => ({ weekday: d, name: cal.opponents[d] ?? null })),
+      competitions,
+      /** Matchs supposés : la semaine est au-delà du dernier match connu du calendrier. */
+      estimated: after && !o.calendarComplete,
+    };
   });
 }
