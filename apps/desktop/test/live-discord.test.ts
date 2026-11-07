@@ -10,7 +10,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   }),
 }));
 
-const { commentary, goalSituation, lastMatchStats, liveContext, liveStep, matchEnded, matchFigures, matchPhase, minuteOf, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
+const { commentary, goalSituation, lastMatchStats, liveContext, liveStep, matchEnded, matchFigures, matchPhase, minuteOf, momentsBetween, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
 const t = ((k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k)) as unknown as TFunction;
 
 const at = '2026-11-07T07:20:00.000Z';
@@ -65,7 +65,11 @@ describe('direct Discord', () => {
     expect(s?.messageId).toBe('42');
     calls.length = 0;
     s = await liveStep(t, { ...base, awayScore: 1, minute: '11 min.', scorers: "M. Fábry 11'" }, 'Malženice', s, now);
-    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit']);
+    // L'encart est modifié, et le but part en message à part (temps fort).
+    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit', 'discord_send']);
+    const moment = (calls[1]!.args.payload as { embeds: { title: string; description: string }[] }).embeds[0]!;
+    expect(moment.title).toContain('live.moment.goalFor');
+    expect(moment.description).toContain('live.say.for_opener_');
     const embed = (calls[0]!.args.payload as { embeds: { description: string; fields: { value: string }[] }[] }).embeds[0]!;
     expect(embed.description).toContain('live.say.for_opener_');
     expect(embed.description).toContain('M. Fábry');
@@ -73,7 +77,8 @@ describe('direct Discord', () => {
     expect(embed.fields[0]!.value).toContain('**M. Fábry**');
     calls.length = 0;
     s = await liveStep(t, { ...s!.last, minute: 'FDM', final: true }, 'Malženice', s, now);
-    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit']);
+    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit', 'discord_send']);
+    expect((calls[1]!.args.payload as { embeds: { title: string }[] }).embeds[0]!.title).toContain('live.moment.final');
     expect(s?.done).toBe(true);
     calls.length = 0;
     await liveStep(t, { ...s!.last }, 'Malženice', s, now);
@@ -93,7 +98,7 @@ describe('direct Discord', () => {
     const ended = matchEnded(stuck, { gameDate: '2027-08-14' }, later);
     expect(ended).toEqual({ score: null });
     s = await liveStep(t, stuck, 'Malženice', s, later, undefined, ended);
-    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit']);
+    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit', 'discord_send']);
     expect(s?.done).toBe(true);
     expect(s?.last.final).toBe(true);
     const embed = (calls[0]!.args.payload as { embeds: { author: { name: string }; description: string }[] }).embeds[0]!;
@@ -181,5 +186,16 @@ describe('chiffres du jeu après le match', () => {
     calls.length = 0;
     await liveStep(t, withStats, 'Malženice', s, late);
     expect(calls).toEqual([]);
+  });
+
+  it('temps forts entre deux relevés : buts, mi-temps (minute ou texte sans minute), fin', () => {
+    const at44 = { ...base, minute: '44 min.' };
+    expect(momentsBetween(base, { ...base, homeScore: 1, minute: '20 min.', scorers: "T. Astorga 20'" })).toEqual([{ kind: 'goal', side: 'home', scorer: { name: 'T. Astorga', time: "20'" } }]);
+    expect(momentsBetween(at44, { ...base, minute: '45 min.' })).toEqual([{ kind: 'half' }]);
+    expect(momentsBetween(at44, { ...base, minute: 'MT' })).toEqual([{ kind: 'half' }]);
+    expect(momentsBetween({ ...base, minute: '30 min.' }, { ...base, minute: '36 min.' })).toEqual([]);
+    // Un but à la 45e : le but seulement, pas de doublon « mi-temps ».
+    expect(momentsBetween(at44, { ...base, awayScore: 1, minute: '45 min.', scorers: "M. Fábry 45'" }).map((m) => m.kind)).toEqual(['goal']);
+    expect(momentsBetween({ ...base, minute: '90 min.' }, { ...base, minute: 'FDM', final: true })).toEqual([{ kind: 'final' }]);
   });
 });

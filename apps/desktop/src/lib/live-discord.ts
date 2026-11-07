@@ -1,9 +1,9 @@
-import { type FmLive, fmLiveSchema, gameLastMatch, isFriendly, liveIsFresh, liveKey, liveNews, parseScorers } from '@fm-immersion/module-fm';
+import { type FmLive, fmLiveSchema, gameLastMatch, isFriendly, type LiveGoal, liveIsFresh, liveKey, liveNews, type LiveNews, parseScorers } from '@fm-immersion/module-fm';
 import { invoke } from '@tauri-apps/api/core';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { editDiscord, getLiveEnabled, getWebhook, isWebhook, postDiscord } from './discord';
+import { editDiscord, getLiveEnabled, getWebhook, isWebhook, postDiscord, sendDiscord } from './discord';
 
 const LIVE_RED = 0xd93c3c;
 const GOOD = 0x2e9e5b;
@@ -322,6 +322,66 @@ export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, 
   };
 }
 
+/**
+ * Temps fort du match : un message à part dans le salon (donc une notification), en plus de l'encart modifié en
+ * silence. But (pour ou contre), mi-temps, coup de sifflet final : c'est ce qui fait vivre le match dans le fil.
+ */
+export type Moment = { kind: 'goal'; side: 'home' | 'away'; scorer: LiveGoal | null } | { kind: 'half' } | { kind: 'final' };
+
+export function momentPayload(t: TFunction, l: FmLive, club: string | null, m: Moment) {
+  const side = mySide(l, club);
+  const tl = timeline(l) ?? [];
+  const title = `${l.home}  ${score(l)}  ${l.away}`;
+  if (m.kind === 'goal') {
+    const team = m.side === 'home' ? l.home : l.away;
+    const goal = (m.scorer && tl.find((g) => g.name === m.scorer!.name && g.time === m.scorer!.time)) ?? null;
+    const mine = side ? m.side === side : true;
+    const said = goal ? commentary(t, l, club, goal) : t(mine ? 'live.moment.goalUnknownFor' : 'live.moment.goalUnknownAgainst', { team, score: score(l) });
+    return {
+      username: 'FM Immersion',
+      embeds: [
+        {
+          title: `${mine ? '⚽' : '😬'}  ${t(mine ? 'live.moment.goalFor' : 'live.moment.goalAgainst', { team, minute: goal?.time ?? l.minute ?? '' })}`,
+          description: `**${title}**\n🎙️ *${said}*`,
+          color: side ? (mine ? GOOD : LIVE_RED) : ORANGE,
+        },
+      ],
+    };
+  }
+  if (m.kind === 'half') {
+    // Phrase de la mi-temps : le commentateur parle du score à la pause (minute forcée à 45 pour la phase).
+    const said = commentary(t, { ...l, minute: '45 min.' }, club, lastOf(tl));
+    return { username: 'FM Immersion', embeds: [{ title: `⏸️  ${t('live.moment.half')}`, description: `**${title}**\n🎙️ *${said}*`, color: ORANGE }] };
+  }
+  const mine = side ? ((side === 'home' ? l.homeScore : l.awayScore) ?? 0) : null;
+  const theirs = side ? ((side === 'home' ? l.awayScore : l.homeScore) ?? 0) : null;
+  const color = mine == null ? ORANGE : mine > theirs! ? GOOD : mine < theirs! ? LIVE_RED : ORANGE;
+  const said = commentary(t, { ...l, final: true }, club, lastOf(tl));
+  const figures = matchFigures(t, { ...l, final: true });
+  return {
+    username: 'FM Immersion',
+    embeds: [{ title: `🏁  ${t('live.moment.final')}`, description: [`**${title}**`, `🎙️ *${said}*`, figures ?? ''].filter(Boolean).join('\n'), color }],
+  };
+}
+
+/** Temps forts entre deux relevés du même match : buts, passage à la mi-temps, fin. */
+export function momentsBetween(prev: FmLive, cur: FmLive): Moment[] {
+  const news = liveNews(prev, cur);
+  const out: Moment[] = news.filter((n): n is Extract<LiveNews, { kind: 'goal' }> => n.kind === 'goal').map((n) => ({ kind: 'goal', side: n.side, scorer: n.scorer }));
+  const pm = minuteOf(prev.minute);
+  const cm = minuteOf(cur.minute);
+  // Mi-temps : la minute passe 45 (ou le jeu affiche un texte sans minute, « MT ») sans but ni fin.
+  const half = pm != null && pm < 45 && !cur.final && (cm == null ? pm >= 40 : cm >= 45 && cm <= 50);
+  if (half && !out.length) out.push({ kind: 'half' });
+  if (news.some((n) => n.kind === 'final')) out.push({ kind: 'final' });
+  return out;
+}
+
+/** Poste les temps forts, sans jamais bloquer l'encart (un envoi raté est perdu, le tableau reste juste). */
+async function postMoments(t: TFunction, l: FmLive, club: string | null, moments: Moment[]) {
+  for (const m of moments) await sendDiscord(momentPayload(t, l, club, m)).catch(() => undefined);
+}
+
 /** Image du tableau de score (PNG), dessinée par l'interface ; absente dans les tests. */
 export type LiveRender = (l: FmLive, club: string | null, comment: string) => Promise<Uint8Array | null>;
 
@@ -433,6 +493,7 @@ export async function liveStep(
       const closed: FmLive = { ...state.last, ...l, final: true, inMatch: false, minute: 'FDM', ...(ended.score ? { homeScore: ended.score[0], awayScore: ended.score[1] } : {}) };
       try {
         await publish(t, closed, club, state.messageId, render);
+        await postMoments(t, closed, club, [...momentsBetween(state.last, closed).filter((m) => m.kind === 'goal'), { kind: 'final' }]);
         return { key, messageId: state.messageId, last: closed, done: true };
       } catch {
         return state;
@@ -459,6 +520,7 @@ export async function liveStep(
       // Encart effacé du salon (ou jamais envoyé) : on en poste un nouveau plutôt que de rester bloqué.
       messageId = await publish(t, l, club, null, render).catch(() => null);
     }
+    await postMoments(t, l, club, momentsBetween(state.last, l));
   }
   return { key, messageId, last: l, done: !!l.final };
 }

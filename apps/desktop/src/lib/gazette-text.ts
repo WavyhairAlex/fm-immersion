@@ -101,6 +101,68 @@ export function weekLabel(t: TFunction, lang: string | undefined, from: string, 
   return t('gazette.week', { from: d(from, from.slice(0, 4) !== to.slice(0, 4)), to: d(to, true) });
 }
 
+/** Petit hachage stable : la même variante de phrase pour une même gazette, d'un rendu à l'autre. */
+function hash(seed: string) {
+  let h = 2166136261;
+  for (const c of seed) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  return Math.abs(h);
+}
+
+/** Nombre de variantes de chaque phrase d'article dans les fichiers de langue. */
+const ARTICLE_VARIANTS = 3;
+
+/**
+ * L'article de la une quand c'est un match : un vrai récit en quelques phrases (issue du match et lieu, buteurs,
+ * lecture des chiffres du jeu, homme du match, série ou classement, prochain rendez-vous), avec des tournures qui
+ * varient d'une semaine à l'autre. Null quand la une n'est pas un match (le corps de la brève suffit).
+ */
+export function articleText(t: TFunction, issue: GazetteIssue, lang?: string): string | null {
+  const head = issue.headline;
+  if (head.kind !== 'result' || !head.params.outcome) return null;
+  const p = head.params;
+  const club = issue.club;
+  const seed = `${club}|${issue.weekStart}|${p.date ?? ''}`;
+  const v = (key: string, vars: Record<string, unknown> = {}) => t(`gazette.article.${key}_${hash(seed + key) % ARTICLE_VARIANTS}`, { club, ...vars });
+  const opponent = str(p.opponent) ?? t('gazette.opponentUnknown');
+  const score = p.goalsFor != null && p.goalsAgainst != null ? `${p.goalsFor}-${p.goalsAgainst}` : '';
+  const margin = p.goalsFor != null && p.goalsAgainst != null ? Math.abs(Number(p.goalsFor) - Number(p.goalsAgainst)) : 0;
+  const where = p.home == null ? '' : t(p.home ? 'gazette.article.atHome' : 'gazette.article.away');
+  const comp = p.friendly ? t('gazette.article.friendly') : p.competition ? t('gazette.article.inComp', { competition: p.competition }) : '';
+  const out: string[] = [v(`open_${p.outcome}${margin >= 3 && p.outcome !== 'D' ? 'Big' : ''}`, { opponent, score, where, comp })];
+  if (p.scorers) out.push(v('scorers', { scorers: p.scorers }));
+
+  // Lecture des chiffres : la possession et les xG racontent si le score est logique, cruel ou volé.
+  const poss = p.possession != null ? Number(p.possession) : null;
+  const xgDiff = p.xg != null && p.xgOpp != null ? Number(p.xg) - Number(p.xgOpp) : null;
+  const nums = { opponent, possession: poss != null ? Math.round(poss) : '', xg: p.xg != null ? dec(p.xg, lang) : '', xgOpp: p.xgOpp != null ? dec(p.xgOpp, lang) : '', shots: p.shots ?? '', shotsOpp: p.shotsOpp ?? '' };
+  let stat: string | null = null;
+  if (xgDiff != null && xgDiff >= 0.5 && p.outcome === 'L') stat = 'unlucky';
+  else if (xgDiff != null && xgDiff <= -0.5 && p.outcome === 'W') stat = 'lucky';
+  else if (poss != null && poss >= 55 && p.outcome === 'W') stat = 'dominantWin';
+  else if (poss != null && poss >= 55 && p.outcome !== 'W') stat = 'sterile';
+  else if (poss != null && poss <= 45 && p.outcome === 'W') stat = 'clinical';
+  else if (poss != null && poss <= 45 && p.outcome === 'L') stat = 'overrun';
+  else if (poss != null && xgDiff != null) stat = 'balanced';
+  if (stat) out.push(v(`stat_${stat}`, nums));
+  if (p.best) out.push(v('best', { best: p.best, rating: rating(p.rating, lang) }));
+
+  // Ce que ce match change : série en cours, sinon mouvement au classement, sinon siège du coach.
+  const stories = issue.stories;
+  const streak = stories.find((s) => s.kind === 'streak');
+  const position = stories.find((s) => s.kind === 'position');
+  const job = stories.find((s) => s.kind === 'job' && s.weight >= 70);
+  if (streak) out.push(t(`gazette.article.streak_${streak.params.outcome}`, { club, count: Number(streak.params.count) }));
+  else if (position) out.push(t(Number(position.params.to) < Number(position.params.from) ? 'gazette.article.climb' : 'gazette.article.drop', { club, from: position.params.from, to: position.params.to }));
+  else if (job) out.push(t('gazette.article.job', { club, status: job.params.status }));
+
+  const next = stories.find((s) => s.kind === 'nextMatch');
+  if (next?.params.opponent) {
+    const loc = next.params.location ? String(next.params.location).toLocaleLowerCase(lang) : '';
+    out.push(v('next', { opponent: next.params.opponent, where: loc ? ` (${loc})` : '', inDays: next.params.inDays ? String(next.params.inDays).toLocaleLowerCase(lang) : '' }));
+  }
+  return out.join(' ');
+}
+
 /** Nom du journal pour un club. */
 export const paperName = (t: TFunction, club: string) => t('gazette.paper', { club });
 
@@ -144,7 +206,8 @@ export function discordPayload(t: TFunction, issue: GazetteIssue, lang?: string,
   const lead = (() => {
     if (issue.headline.kind !== 'result') return head.body ? `> ${head.body}` : '';
     const r = resultParts(t, issue.headline, lang);
-    return [r.venue && `📍 ${r.venue}`, r.scorers && `🥅 ${r.scorers}`, r.best && `⭐ ${r.best}`, r.figures && `📊 ${r.figures}`].filter(Boolean).join('\n');
+    const article = articleText(t, issue, lang);
+    return [article && `> ${article}`, r.scorers && `🥅 ${r.scorers}`, r.best && `⭐ ${r.best}`, r.figures && `📊 ${r.figures}`].filter(Boolean).join('\n');
   })();
   const next = all.filter((s) => s.kind === 'nextMatch');
   const briefs = all.filter((s) => s.kind !== 'nextMatch' && s.kind !== 'quiet').slice(0, 9);
