@@ -25,6 +25,20 @@ describe('bilan de la saison', () => {
     expect(seasonReviews(h.slice(0, 3).map((data) => ({ gameDate: data.gameDate, data })))).toEqual([]);
   });
 
+  it('une finale de coupe après le dernier match de championnat reste dans la saison', () => {
+    const cup = (d: string) => ({ cal00Date: d, cal00Dom: 'Malženice', cal00Ext: 'Slovan', cal00Comp: 'Slovnaft Cup' });
+    const withCal = (s: FmSnapshot, cal: Record<string, unknown>) => {
+      const c = s as unknown as { custom: { equipe: Record<string, unknown> } };
+      Object.assign(c.custom.equipe, cal);
+      return s;
+    };
+    const h = [snap('2027-05-08', 1, 4), withCal(snap('2027-05-14', 0, 4), cup('2027-05-25')), snap('2027-05-26', 0, 4), snap('2027-06-10', 0, 4)];
+    const e = (xs: FmSnapshot[]) => xs.map((data) => ({ gameDate: data.gameDate, data }));
+    expect(seasonReviews(e(h.slice(0, 2)))).toEqual([]);
+    expect(seasonSoFar(e(h.slice(0, 2)), '2027-05-14')).toMatchObject({ ongoing: true });
+    expect(seasonReviews(e(h))[0]).toMatchObject({ end: '2027-05-26', ongoing: false });
+  });
+
   it("saison en cours, et bilan de la saison finie pendant l'intersaison", () => {
     const h = [snap('2027-04-01', 3, 6), snap('2027-05-08', 1, 4), snap('2027-05-14', 0, 4), snap('2027-05-20', 0, 4)].map((data) => ({
       gameDate: data.gameDate,

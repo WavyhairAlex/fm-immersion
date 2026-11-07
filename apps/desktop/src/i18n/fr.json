@@ -2717,6 +2717,16 @@
         "body_winless": "Le dernier succès en match officiel remonte à {{count}} matchs.",
         "title_unbeaten": "{{count}} matchs sans défaite pour {{club}}",
         "body_unbeaten": "Invaincu depuis {{count}} matchs officiels."
+      },
+      "cupOut": {
+        "title": "{{club}} éliminé de la {{competition}}",
+        "body": "Battu {{score}} par {{opponent}}, le club quitte la compétition après {{count}} tour(s).",
+        "bodyLegs": "Battu {{score}} sur les deux matchs par {{opponent}}, le club quitte la compétition après {{count}} tour(s)."
+      },
+      "cupThrough": {
+        "title": "{{club}} passe un tour en {{competition}}",
+        "body": "Victoire {{score}} contre {{opponent}} : le club attend son prochain adversaire.",
+        "bodyLegs": "{{score}} sur les deux matchs contre {{opponent}} : le club attend son prochain adversaire."
       }
     },
     "discord": {
@@ -3149,7 +3159,9 @@
       "score": "Victoire {{score}}",
       "bigWinBody": "La plus large victoire de la saison, le {{date}}.",
       "unbeaten": "{{count}} matchs sans défaite",
-      "unbeatenBody": "La plus longue série de la saison."
+      "unbeatenBody": "La plus longue série de la saison.",
+      "cupWin": "{{competition}} remportée !",
+      "cupWinBody": "Le trophée de la saison."
     },
     "footer": "FM Immersion · projet indépendant, sans lien avec Sports Interactive ni SEGA",
     "season": "Saison",
@@ -3161,7 +3173,15 @@
     "saved": "Image enregistrée : {{path}}",
     "send": "Envoyer la carte sur Discord",
     "sent": "Carte envoyée sur Discord.",
-    "faces": "Les photos viennent de ton facepack ou des portraits photoréalistes ; sans photo, les initiales sont affichées."
+    "faces": "Les photos viennent de ton facepack ou des portraits photoréalistes ; sans photo, les initiales sont affichées.",
+    "cups": "Coupes",
+    "cup": {
+      "alive": "{{competition}} · en course",
+      "through": "{{competition}} · qualifié",
+      "out": "{{competition}} · éliminé par {{opponent}}",
+      "won": "{{competition}} · vainqueur",
+      "unknown": "{{competition}} · {{count}} match(s)"
+    }
   },
   "challenges": {
     "save": "Partie",
