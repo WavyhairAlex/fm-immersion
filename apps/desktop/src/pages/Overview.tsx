@@ -2,13 +2,16 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { MODES } from '../lib/modes';
 
-/** Accueil : un cadre par mode, pour aller directement à ce qu'on veut faire. */
+/** Présentation de l'appli, montrée à l'accueil tant qu'aucune carrière n'existe : créer la sienne, puis un cadre par mode. */
 export function Overview() {
   const { t } = useTranslation();
   return (
     <div className="w-full px-6 py-6 xl:px-10">
       <h1 className="text-3xl font-semibold">{t('modes.home.heading')}</h1>
       <p className="mt-2 max-w-2xl text-brun">{t('modes.home.intro')}</p>
+      <Link to="/parties" className="btn-primary mt-5">
+        {t('layout.career.create')}
+      </Link>
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
         {MODES.map((m) => (

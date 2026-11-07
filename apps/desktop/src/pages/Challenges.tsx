@@ -17,10 +17,10 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { factsFor } from '../lib/challenges';
 import { issueText, saveCertificate, sendCertificate, stepText } from '../lib/challenge-share';
-import { challengesData, fmData, savesData } from '../lib/data';
+import { useCareer } from '../lib/career';
+import { challengesData, fmData } from '../lib/data';
 import { getWebhook, isWebhook } from '../lib/discord';
 
-const SAVE_KEY = 'fmi.challenges.save';
 const COACH_KEY = 'fmi.challenges.coach';
 const read = (k: string) => {
   try {
@@ -53,15 +53,8 @@ function StatusPill({ status }: { status: ChallengeStatus }) {
 /** Mode Défis : défis célèbres de FM vérifiés à partir des instantanés, certificats partagés et classement. */
 export function Challenges() {
   const { t } = useTranslation();
-  const { data: saves = [] } = useQuery({ queryKey: ['saves'], queryFn: savesData.list });
-  const fmSaves = saves.filter((s) => s.gameId === 'fm');
-  const [saveId, setSaveId] = useState(read(SAVE_KEY));
-  useEffect(() => {
-    if ((!saveId || !fmSaves.some((s) => s.id === saveId)) && fmSaves[0]) setSaveId(fmSaves[0].id);
-  }, [fmSaves, saveId]);
-  useEffect(() => {
-    if (saveId) write(SAVE_KEY, saveId);
-  }, [saveId]);
+  // Carrière suivie, choisie dans la barre latérale.
+  const { saveId, fmSaves } = useCareer();
   const [coach, setCoach] = useState(read(COACH_KEY));
 
   const { data: history = [] } = useQuery({ queryKey: ['fm', 'all', saveId], queryFn: () => fmData.all(saveId), enabled: !!saveId });
@@ -73,23 +66,14 @@ export function Challenges() {
     <div className="w-full px-6 py-6 xl:px-10">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-3xl font-semibold">{t('modes.challenges.title')}</h1>
-        {fmSaves.length > 1 && (
-          <select className="input w-auto" value={saveId} onChange={(e) => setSaveId(e.target.value)} aria-label={t('challenges.save')}>
-            {fmSaves.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        )}
       </div>
       <p className="mt-2 max-w-3xl text-brun">{t('challenges.intro')}</p>
 
       {!fmSaves.length && (
         <div className="card mt-6 max-w-3xl">
           <p className="text-brun">{t('challenges.noSave')}</p>
-          <Link to="/coach" className="btn-primary mt-4">
-            {t('modes.coach.title')}
+          <Link to="/parties" className="btn-primary mt-4">
+            {t('layout.career.create')}
           </Link>
         </div>
       )}

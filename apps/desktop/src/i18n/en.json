@@ -2534,7 +2534,7 @@
     "home": {
       "title": "Home",
       "heading": "Welcome to FM Immersion",
-      "intro": "Pick a mode. Each one works on its own: use only what you like."
+      "intro": "Create your FM27 career: FM Immersion follows it through the plugin, and every mode uses it. Photorealistic faces install even without a career."
     },
     "faces": {
       "title": "Photorealistic faces",
@@ -3298,5 +3298,51 @@
     },
     "limit": "Everything happens on your PC and the code is open: a certificate proves the save is consistent and tracked from start to finish, not that a whole fake season cannot be made up. Independent project, not affiliated with Sports Interactive or SEGA.",
     "saved": "Certificate saved: {{path}}"
+  },
+  "layout": {
+    "readNow": "Read the game now",
+    "openSettings": "Open Plugin & settings",
+    "more": "More",
+    "bridgeAction": "The plugin needs an action",
+    "settingsIntro": "Where FM Immersion reads your game: plugin folder, linked save, history and the FM27 plugin.",
+    "manageCareers": "Manage my careers",
+    "groups": {
+      "club": "My club",
+      "story": "My career, told",
+      "game": "The game"
+    },
+    "nav": {
+      "today": "Today",
+      "tactic": "Tactics & training",
+      "squad": "Squad",
+      "results": "Results",
+      "mercato": "Transfers & finances",
+      "faces": "Faces",
+      "settings": "Plugin & settings",
+      "story": "Gazette & Discord"
+    },
+    "today": {
+      "title": "Today",
+      "intro": "What your assistant spotted in your game, and the rest of your career at a glance.",
+      "read": "Read",
+      "see": "See",
+      "noGazette": "The first issue comes out after your first tracked game week.",
+      "challenge": "Current challenge",
+      "pickChallenge": "Pick a challenge",
+      "noChallenge": "No challenge running.",
+      "steps": "{{done}} of {{total}} step(s)",
+      "facesProgress": "Portrait generation: {{pct}}%"
+    },
+    "career": {
+      "create": "Create my career",
+      "photo": "Change the coach's photo",
+      "change": "Change",
+      "free": "Unemployed",
+      "noData": "Game not read yet",
+      "photoError": "Unreadable image: pick a PNG, JPEG or WebP.",
+      "switch": "Switch career",
+      "manage": "Manage",
+      "removePhoto": "Remove photo"
+    }
   }
 }

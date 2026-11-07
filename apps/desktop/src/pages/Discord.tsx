@@ -19,9 +19,8 @@ export function Discord() {
   });
 
   return (
-    <div className="w-full px-6 py-6 xl:px-10">
-      <h1 className="text-3xl font-semibold">{t('modes.discord.title')}</h1>
-      <p className="mt-2 max-w-3xl text-brun">{t('discord.intro')}</p>
+    <div className="w-full">
+      <p className="max-w-3xl text-brun">{t('discord.intro')}</p>
 
       <section className="card mt-6 max-w-3xl">
         <h2 className="text-xl font-semibold">{t('discord.webhookTitle')}</h2>

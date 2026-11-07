@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { CAREER_KEY } from './career';
 import { fmData, savesData } from './data';
 import { getWebhook, isWebhook, sendDiscordImage } from './discord';
 import { importMissingHistory } from './fm-history';
@@ -52,8 +53,8 @@ export function seasonToSend(reviews: SeasonReview[], lastDate: string | undefin
 const AUTO_KEY = 'fmi.discord.gazetteAuto';
 /** Dernière gazette envoyée automatiquement : partie et lundi de la semaine. */
 const SENT_KEY = 'fmi.discord.gazetteSent';
-/** Partie choisie dans le mode Gazette. */
-export const GAZETTE_SAVE_KEY = 'fmi.gazette.save';
+/** Carrière suivie par toute l'appli (choisie dans la barre latérale). */
+const GAZETTE_SAVE_KEY = CAREER_KEY;
 
 const read = (k: string) => {
   try {
