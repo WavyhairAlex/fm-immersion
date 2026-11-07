@@ -192,22 +192,22 @@ export function weekStories(prev: FmSnapshot | null, week: FmSnapshot[], results
     }
     for (const p of arrivals) {
       if (intake && youngsters.includes(p)) continue;
-      out.push({ kind: 'arrival', weight: 35 + Math.min(10, (p.level ?? 0) - 10), params: { name: p.name, age: p.age, position: p.positionsLabel || null } });
+      out.push({ kind: 'arrival', weight: 35 + Math.min(10, (p.level ?? 0) - 10), params: { id: p.id, name: p.name, age: p.age, position: p.positionsLabel || null } });
     }
 
     for (const [id, p] of after) {
       const old = before.get(id);
       if (!old) continue;
       const g = (p.goals ?? 0) - (old.goals ?? 0);
-      if (g >= 2) out.push({ kind: 'scorer', weight: 30 + g * 5, params: { name: p.name, goals: g } });
-      if (p.injury && !old.injury) out.push({ kind: 'injury', weight: 30 + Math.min(15, Math.round((p.injuryDays ?? 0) / 7)), params: { name: p.name, injury: p.injury, days: p.injuryDays } });
-      if (!p.injury && old.injury) out.push({ kind: 'return', weight: 20, params: { name: p.name } });
+      if (g >= 2) out.push({ kind: 'scorer', weight: 30 + g * 5, params: { id, name: p.name, goals: g } });
+      if (p.injury && !old.injury) out.push({ kind: 'injury', weight: 30 + Math.min(15, Math.round((p.injuryDays ?? 0) / 7)), params: { id, name: p.name, injury: p.injury, days: p.injuryDays } });
+      if (!p.injury && old.injury) out.push({ kind: 'return', weight: 20, params: { id, name: p.name } });
       if (p.contractEnd && old.contractEnd && p.contractEnd > old.contractEnd) {
-        out.push({ kind: 'extension', weight: 25, params: { name: p.name, until: p.contractEnd.slice(0, 4) } });
+        out.push({ kind: 'extension', weight: 25, params: { id, name: p.name, until: p.contractEnd.slice(0, 4) } });
       }
     }
     for (const [id, p] of before) {
-      if (!after.has(id)) out.push({ kind: 'departure', weight: 35 + Math.min(10, (p.level ?? 0) - 10), params: { name: p.name, age: p.age } });
+      if (!after.has(id)) out.push({ kind: 'departure', weight: 35 + Math.min(10, (p.level ?? 0) - 10), params: { id, name: p.name, age: p.age } });
     }
 
     // Ambiance : supporters et sécurité de l'emploi (textes du jeu), seulement quand ils changent.

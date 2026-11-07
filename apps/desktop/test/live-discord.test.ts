@@ -10,7 +10,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   }),
 }));
 
-const { commentary, goalSituation, lastMatchStats, liveContext, liveStep, matchEnded, matchFigures, matchPhase, minuteOf, momentsBetween, prematchPayload, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
+const { commentary, goalSituation, lastMatchStats, liveContext, liveStep, matchEnded, matchFigures, matchPhase, minuteOf, momentsBetween, personIdFor, prematchPayload, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
 const t = ((k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k)) as unknown as TFunction;
 
 const at = '2026-11-07T07:20:00.000Z';
@@ -220,5 +220,15 @@ describe('chiffres du jeu après le match', () => {
     expect(e.description).toContain('💬 Match disputé.');
     expect(e.fields?.[0]?.value).toContain('J0 · J1');
     expect(prematchPayload(t, base, null, null).embeds[0]!.description).toBe('live.prematch.soon');
+  });
+
+  it('retrouve le joueur derrière le nom abrégé du jeu', () => {
+    const ctx = liveContext({ players: [{ id: 1, name: 'Marek Fábry', goals: 0 }, { id: 2, name: 'Michal Fábry', goals: 0 }, { id: 3, name: 'Tomáš Astorga', goals: 0 }] });
+    expect(ctx.people).toHaveLength(3);
+    expect(personIdFor(ctx, 'T. Astorga')).toBe('3');
+    expect(personIdFor(ctx, 'Astorga')).toBe('3');
+    expect(personIdFor(ctx, 'M. Fábry')).toBeNull(); // deux candidats
+    expect(personIdFor(ctx, 'X. Inconnu')).toBeNull();
+    expect(personIdFor(null, 'Astorga')).toBeNull();
   });
 });

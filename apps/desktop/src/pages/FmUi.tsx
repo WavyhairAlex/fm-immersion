@@ -1,4 +1,5 @@
 import { POS_LABEL, teamInstructionCards, teamInstructionOf, type CoachPrefs, type FmPlayer, type ProjectCompat } from '@fm-immersion/module-fm';
+import { Face } from '../components/Face';
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
@@ -80,13 +81,20 @@ export function Level({ value }: { value: number | null | undefined }) {
 export const PlayerSheetContext = createContext<((id: string) => void) | null>(null);
 
 /** Nom de joueur cliquable : ouvre sa fiche. */
-export function PlayerLink({ player, className = 'font-bold' }: { player: FmPlayer; className?: string }) {
+/** Nom d'un joueur avec son médaillon (photo du facepack ou initiales), cliquable vers sa fiche quand c'est possible. */
+export function PlayerLink({ player, className = 'font-bold', face = true }: { player: FmPlayer; className?: string; face?: boolean }) {
   const { t } = useTranslation();
   const open = useContext(PlayerSheetContext);
-  if (!open) return <span className={className}>{player.name}</span>;
-  return (
-    <button type="button" className={`${className} text-left hover:text-orange-fonce hover:underline`} title={t('fm.sheet.open', { name: player.name })} onClick={() => open(player.id)}>
+  const inner = (
+    <>
+      {face && <Face id={player.id} name={player.name} size={22} className="mr-1.5 align-middle" />}
       {player.name}
+    </>
+  );
+  if (!open) return <span className={`${className} inline-flex items-center`}>{inner}</span>;
+  return (
+    <button type="button" className={`${className} inline-flex items-center text-left hover:text-orange-fonce hover:underline`} title={t('fm.sheet.open', { name: player.name })} onClick={() => open(player.id)}>
+      {inner}
     </button>
   );
 }

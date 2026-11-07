@@ -1,5 +1,6 @@
 //! Visages des joueurs pour la gazette : photos d'un facepack que le joueur a installé lui-même dans le dossier
-//! `graphics` de FM27 (ex. « Cut Out Faces » de Sortitoutsi, une image `<identifiant FM>.png` par joueur).
+//! `graphics` de FM27 (ex. « Cut Out Faces » de Sortitoutsi, une image `<identifiant FM>.png` par joueur, ou
+//! « FM Blog Faces », `fmb_face_person_<identifiant>_portrait.png`).
 //! À défaut, portrait photoréaliste noté par le plugin des visages (`portraits-personnes.json` dans le dossier du
 //! plugin, identifiant → image PNG) pour les joueurs générés et le staff.
 //! Lecture locale seulement ; rien n'est embarqué dans l'appli ni téléchargé.
@@ -10,6 +11,22 @@ use std::sync::Mutex;
 
 /// Dossiers de `graphics` qui contiennent des logos (mêmes noms de fichiers numériques que les visages).
 const SKIP: [&str; 6] = ["clubs", "competitions", "confederations", "nations", "logos", "kits"];
+
+/// Identifiant FM porté par un nom de fichier de facepack : `63036055`, ou `fmb_face_person_63036055_portrait`
+/// (un seul groupe de chiffres, dans un nom qui parle de personne ou de visage, pour ne pas prendre un maillot).
+fn face_id(stem: &str) -> Option<String> {
+    if !stem.is_empty() && stem.len() <= 12 && stem.chars().all(|c| c.is_ascii_digit()) {
+        return Some(stem.to_string());
+    }
+    if !(stem.contains("person") || stem.contains("face")) {
+        return None;
+    }
+    let runs: Vec<&str> = stem.split(|c: char| !c.is_ascii_digit()).filter(|r| !r.is_empty()).collect();
+    match runs.as_slice() {
+        [id] if id.len() <= 12 => Some((*id).to_string()),
+        _ => None,
+    }
+}
 const MAX_DEPTH: usize = 6;
 const MAX_BYTES: u64 = 4 * 1024 * 1024;
 
@@ -26,12 +43,12 @@ pub fn index_faces(graphics: &Path) -> HashMap<String, PathBuf> {
             let Ok(kind) = e.file_type() else { continue };
             let name = e.file_name().to_string_lossy().to_lowercase();
             if kind.is_dir() {
-                if depth < MAX_DEPTH && !SKIP.contains(&name.as_str()) {
+                if depth < MAX_DEPTH && !SKIP.contains(&name.as_str()) && !name.contains("kit") {
                     stack.push((path, depth + 1));
                 }
             } else if let Some(stem) = name.strip_suffix(".png").or_else(|| name.strip_suffix(".jpg")) {
-                if !stem.is_empty() && stem.len() <= 12 && stem.chars().all(|c| c.is_ascii_digit()) {
-                    map.entry(stem.to_string()).or_insert(path);
+                if let Some(id) = face_id(stem) {
+                    map.entry(id).or_insert(path);
                 }
             }
         }
@@ -96,9 +113,22 @@ mod tests {
         std::fs::create_dir_all(&clubs).unwrap();
         std::fs::write(faces.join("63036055.png"), b"face").unwrap();
         std::fs::write(clubs.join("123.png"), b"logo").unwrap();
+        // Facepack « FM Blog Faces » : un dossier graphics/graphics/FM Blog Faces, fichiers fmb_face_person_<id>_portrait.png.
+        let blog = root.join("graphics").join("graphics").join("FM Blog Faces");
+        std::fs::create_dir_all(&blog).unwrap();
+        std::fs::write(blog.join("fmb_face_person_14007373_portrait.png"), b"blog").unwrap();
+        let kits = root.join("graphics").join("FM Blog Kits");
+        std::fs::create_dir_all(&kits).unwrap();
+        std::fs::write(kits.join("face_14007374_home.png"), b"kit").unwrap();
         std::fs::write(faces.join("config.xml"), b"<record/>").unwrap();
         assert_eq!(face_bytes(&plugin, "63036055", true).as_deref(), Some(&b"face"[..]));
         assert_eq!(face_bytes(&plugin, "123", false), None);
+        assert_eq!(face_bytes(&plugin, "14007373", false).as_deref(), Some(&b"blog"[..]));
+        assert_eq!(face_bytes(&plugin, "14007374", false), None);
+        assert_eq!(face_id("fmb_face_person_1000050_portrait").as_deref(), Some("1000050"));
+        assert_eq!(face_id("1000050"), Some("1000050".into()));
+        assert_eq!(face_id("1000050_home"), None);
+        assert_eq!(face_id("person_1_2"), None);
         assert_eq!(face_bytes(&plugin, "../x", false), None);
         // Portrait généré noté par le plugin des visages (pas de facepack pour cette personne).
         let gen = root.join("portrait_male-1-2-3-4-5.png");

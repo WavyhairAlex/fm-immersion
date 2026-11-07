@@ -3,7 +3,8 @@ import { invoke } from '@tauri-apps/api/core';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { editDiscord, getLiveEnabled, getWebhook, isWebhook, postDiscord, sendDiscord } from './discord';
+import { editDiscord, getLiveEnabled, getWebhook, isWebhook, postDiscord, sendDiscord, sendDiscordImage } from './discord';
+import { facePng } from './player-face';
 
 const LIVE_RED = 0xd93c3c;
 const GOOD = 0x2e9e5b;
@@ -98,6 +99,18 @@ export interface LiveContext {
   opponent: { position: string | null; manager: string | null; formation: string | null; scorer: string | null; scorerGoals: number | null } | null;
   /** Compo lue par le plugin (réglage LireCompo), dans l'ordre des postes, ou null. */
   lineup: string[] | null;
+  /** Nos joueurs : identifiant FM par nom (pour retrouver la photo d'un buteur noté « M. Fábry »). */
+  people: { id: string; name: string }[];
+}
+
+/** Identifiant du joueur désigné par le texte du jeu (« M. Fábry », « Fábry ») : même nom de famille, même initiale. */
+export function personIdFor(ctx: LiveContext | null, text: string): string | null {
+  if (!ctx) return null;
+  const parts = text.trim().split(/\s+/);
+  const last = (parts.at(-1) ?? '').toLowerCase();
+  const initial = parts.length > 1 ? parts[0]![0]!.toLowerCase() : null;
+  const hits = ctx.people.filter((p) => lastName(p.name) === last && (!initial || p.name[0]!.toLowerCase() === initial));
+  return hits.length === 1 ? hits[0]!.id : null;
 }
 
 const lastName = (name: string) => (name.trim().split(/\s+/).at(-1) ?? '').toLowerCase();
@@ -116,9 +129,11 @@ export function liveContext(snap: unknown): LiveContext {
   const competition = typeof next?.competition === 'string' && next.competition.trim() ? next.competition.trim() : null;
   const pos = Number(s.custom?.equipe?.classementPosition);
   const goals: Record<string, number> = {};
+  const people: LiveContext['people'] = [];
   let top: LiveContext['topScorer'] = null;
   for (const raw of Array.isArray(s.players) ? s.players : []) {
-    const p = raw as { name?: unknown; goals?: unknown };
+    const p = raw as { id?: unknown; name?: unknown; goals?: unknown };
+    if (typeof p.name === 'string' && p.id != null && p.id !== '') people.push({ id: String(p.id), name: p.name });
     const g = Number(p.goals);
     if (typeof p.name !== 'string' || !Number.isFinite(g)) continue;
     goals[lastName(p.name)] = g;
@@ -133,6 +148,7 @@ export function liveContext(snap: unknown): LiveContext {
     topScorer: top,
     opponent,
     lineup: lineup.length >= 11 ? lineup.slice(0, 11) : null,
+    people,
   };
 }
 
@@ -427,9 +443,23 @@ export function momentsBetween(prev: FmLive, cur: FmLive): Moment[] {
   return out;
 }
 
-/** Poste les temps forts, sans jamais bloquer l'encart (un envoi raté est perdu, le tableau reste juste). */
+/**
+ * Poste les temps forts, sans jamais bloquer l'encart (un envoi raté est perdu, le tableau reste juste).
+ * Un but de chez nous part avec la photo du buteur en vignette quand elle existe sur ce PC (facepack ou portrait).
+ */
 async function postMoments(t: TFunction, l: FmLive, club: string | null, moments: Moment[]) {
-  for (const m of moments) await sendDiscord(momentPayload(t, l, club, m)).catch(() => undefined);
+  const side = mySide(l, club);
+  for (const m of moments) {
+    const payload = momentPayload(t, l, club, m);
+    const id = m.kind === 'goal' && m.scorer && side === m.side ? personIdFor(contextOf(l), m.scorer.name) : null;
+    const png = id ? await facePng(id).catch(() => null) : null;
+    if (png) {
+      const embed = { ...payload.embeds[0]!, thumbnail: { url: 'attachment://une.png' } };
+      await sendDiscordImage({ ...payload, embeds: [embed] }, png).catch(() => sendDiscord(payload).catch(() => undefined));
+    } else {
+      await sendDiscord(payload).catch(() => undefined);
+    }
+  }
 }
 
 /** Image du tableau de score (PNG), dessinée par l'interface ; absente dans les tests. */

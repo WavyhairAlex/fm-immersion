@@ -12,6 +12,7 @@ import {
   type SquadAt,
   type StatKey,
 } from '@fm-immersion/module-fm';
+import { Face } from '../components/Face';
 import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AttrValue, Avatar, Gauge, LINE_COLOR, PosBadge, PositionMap, ProfileRadar, profileAxes, RankBar } from './FmFoot';
@@ -112,7 +113,10 @@ export function FmPlayerSheet({
           <div className="flex items-center gap-4">
             <Avatar player={p} size="lg" />
             <div className="min-w-0">
-              <h2 className="truncate text-3xl font-semibold text-white">{p.name}</h2>
+              <h2 className="flex items-center gap-3 truncate text-3xl font-semibold text-white">
+                <Face id={p.id} name={p.name} size={56} className="ring-2 ring-orange" />
+                <span className="truncate">{p.name}</span>
+              </h2>
               <p className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-white/80">
                 {p.positions.map((pos) => (
                   <PosBadge key={pos} pos={pos} />
