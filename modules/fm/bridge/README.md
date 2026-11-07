@@ -36,8 +36,15 @@ Clé `LireMatchDirect` (oui par défaut). Toutes les 20 s, le plugin demande au 
 `home`, `away`, `homeScore`, `awayScore`, `result`, `minute` (« 19 min. », « FDM » à la fin), `final`, `scorers`
 (texte du jeu), `homeEvents`/`awayEvents` (`type` 0 but, 2 penalty ; `time`), `gameDate`, `inMatch`, `updatedAt`.
 Le fichier garde le dernier état jusqu'au match suivant. FM Immersion s'en sert pour le direct Discord.
-Chemins validés en jeu le 07/11/2026 (sonde Carnet, 66 relevés sans gêne) ; cartons, remplacements et
-statistiques ne sont pas exposés par cette liste.
+Chemins validés en jeu le 07/11/2026 (sonde Carnet, 66 relevés sans gêne) ; remplacements et statistiques ne sont pas
+exposés par cette liste.
+
+**Feuille de match (0.5.2)** : `homeLineup`/`awayLineup`, un objet par joueur des deux équipes
+(`HomeLineup/#i`, `AwayLineup/#i`, 20 places) : `name`, `goals`, `assists`, `yellow`, `red` (compteurs et cartons de ce
+match, propriétés `Goals`, `Assists`, `YellowCardedInMatch`, `RedCardedInMatch` de `MatchPlayerReference`). Relue un
+relevé sur deux (toutes les 30 s) et reportée entre deux lectures. FM Immersion en tire le passeur décisif d'un but et
+les cartons du direct Discord ; une liste vide (chemin refusé par le jeu) ne change rien au reste du direct.
+Penalty : le jeu préfixe la minute du buteur (« pen 36' », événement de type 2) ; un penalty manqué n'apparaît pas.
 
 ## Garde-fou « écran Tactique » (0.3.0)
 
