@@ -7,6 +7,7 @@ import { fmData, savesData } from '../lib/data';
 import { getWebhook, isWebhook, sendDiscordImage } from '../lib/discord';
 import { discordPayload, paperName, storyText, weekLabel } from '../lib/gazette-text';
 import { canvasPng, drawUne, recentForm } from '../lib/gazette-une';
+import { loadFace } from '../lib/player-face';
 
 const SAVE_KEY = 'fmi.gazette.save';
 const readSave = () => {
@@ -128,7 +129,7 @@ function UnePreview({ issues, index }: { issues: GazetteIssue[]; index: number }
   const issue = issues[index]!;
   const { data: url } = useQuery({
     queryKey: ['gazette', 'une', issue.club, issue.weekStart, issue.date, lang, index, issues.length],
-    queryFn: async () => (await drawUne(t, issue, { form: recentForm(issues, index), lang })).toDataURL('image/png'),
+    queryFn: async () => (await drawUne(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId) })).toDataURL('image/png'),
   });
   if (!url) return <div className="aspect-video w-full animate-pulse rounded-xl bg-canard/5" />;
   return <img src={url} alt={t('gazette.preview')} className="w-full rounded-xl shadow-sm ring-1 ring-canard/10" />;
@@ -141,7 +142,7 @@ function SendButton({ issues, index }: { issues: GazetteIssue[]; index: number }
   const send = useMutation({
     mutationFn: async () => {
       const lang = i18n.resolvedLanguage;
-      const png = await canvasPng(await drawUne(t, issue, { form: recentForm(issues, index), lang }));
+      const png = await canvasPng(await drawUne(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId) }));
       const payload = discordPayload(t, issue, lang);
       const embed = { ...payload.embeds[0]!, image: { url: 'attachment://une.png' } };
       return sendDiscordImage({ ...payload, embeds: [embed], attachments: [{ id: 0, filename: 'une.png' }] }, png);

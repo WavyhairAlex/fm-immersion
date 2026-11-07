@@ -99,6 +99,7 @@ function resultStory(r: MatchResult): GazetteStory {
         goalsAgainst: r.goalsAgainst,
         scorers: scorers || null,
         best: best?.name ?? null,
+        bestId: best?.id ?? null,
         rating: best?.rating ?? null,
         date: r.date,
       },
