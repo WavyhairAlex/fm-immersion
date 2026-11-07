@@ -39,7 +39,7 @@ describe('rapport adverse', () => {
     expect(r.manager).toMatchObject({ formation: '4-4-2', pressing: 'Moins souvent', marking: 'Individuel' });
     expect(r.scorer).toEqual({ name: 'Anton Engelbrektsson', value: 11 });
     expect(r.rated?.value).toBeCloseTo(7.11, 2);
-    expect(r.squad).toEqual([{ name: 'Rickard Johansson', positions: 'D (C), MD, M (C)', stars: null }]);
+    expect(r.squad).toEqual([{ name: 'Rickard Johansson', positions: 'D (C), MD, M (C)', stars: null, foot: null }]);
   });
 
   it('donne des conseils qui répondent aux données lues', () => {

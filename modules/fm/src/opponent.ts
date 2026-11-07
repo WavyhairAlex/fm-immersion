@@ -4,7 +4,7 @@ import type { FmSnapshot } from './snapshot';
  * Rapport sur le prochain adversaire, lu par chemins.json (étape adverse 1, 01/11/2026) dans `custom.equipe` :
  * advClassement, advEntraineur, advFormationPref, advMentalite, advPressing, advMarquage (Manager/Preferred*),
  * advButeur/advButs, advPasseur/advPasses, advMeilleureNoteJoueur/advMeilleureNote, et l'effectif
- * advEff<i>Nom / advEff<i>Postes / advEff<i>Etoiles (Club/Squad/#i). Ce sont les données de l'écran
+ * advEff<i>Nom / advEff<i>Postes / advEff<i>Etoiles / advEff<i>Pied (Club/Squad/#i ; le pied depuis le 07/11/2026). Ce sont les données de l'écran
  * « Rapport d'équipe » du jeu, disponibles même avec une analyse du staff « Basique ».
  * Les étoiles adverses valent -1 quand le staff ne les connaît pas : elles sont alors ignorées.
  * `advRapportDispo` (HasTeamReport) n'est pas utilisé : il vaut False alors que l'écran affiche un rapport.
@@ -13,6 +13,8 @@ export interface OpponentPlayer {
   name: string;
   positions: string | null;
   stars: number | null;
+  /** Pied fort tel que le jeu l'écrit (« Gauche », « Droit uniquement », « Les deux »…), si `advEff<i>Pied` est lu. */
+  foot: string | null;
 }
 
 export type OpponentAdviceId =
@@ -101,7 +103,7 @@ export function opponentReport(snap: FmSnapshot): OpponentReport | null {
     const name = str(team[`advEff${i}Nom`]);
     if (!name) continue;
     const stars = num(team[`advEff${i}Etoiles`]);
-    squad.push({ name, positions: str(team[`advEff${i}Postes`]), stars: stars != null && stars >= 0 ? stars : null });
+    squad.push({ name, positions: str(team[`advEff${i}Postes`]), stars: stars != null && stars >= 0 ? stars : null, foot: str(team[`advEff${i}Pied`]) });
   }
   const r: OpponentReport = {
     name: next ? str(next.opponent) : null,

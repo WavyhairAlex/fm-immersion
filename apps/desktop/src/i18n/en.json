@@ -337,6 +337,34 @@
           "leaky": "their defence concedes often",
           "threat": "stronger opponent: one notch more cautious"
         }
+      },
+      "oppScreen": {
+        "title": "Game's Opposition screen against {{name}}",
+        "intro": "Tactics › Opposition in FM27: one row per opposing player to set, leave the others empty.",
+        "player": "Player",
+        "positions": "Positions",
+        "marking": "Tight marking",
+        "pressing": "Trigger press",
+        "tackling": "Tackling",
+        "foot": "Show onto foot",
+        "always": "Always",
+        "never": "Never",
+        "harder": "Harder",
+        "softer": "Softer",
+        "left": "Left foot",
+        "right": "Right foot",
+        "footHint": "Their players' foot is not read yet: it will appear at the plugin's next snapshot (paths added on 2026-11-07).",
+        "none": "Nothing to set: the report names no key player.",
+        "help": "Rules: tight marking \"Always\" on the creator, the scorer and the best-rated player; press \"Always\" on their keeper and centre-backs when your style presses high, otherwise only the lowest-rated of them (force the error in build-up); \"Softer\" tackling on the creator when he plays up front, so as not to give free kicks away; show onto the weaker foot read in the game, never for a two-footed player. The screen's dribbles and cards are not read by the plugin.",
+        "reason": {
+          "creator": "top assister",
+          "scorer": "top scorer",
+          "rated": "best average rating",
+          "pressBuildUp": "we press high: their build-up",
+          "pressWeak": "lowest-rated ball-player",
+          "softTackle": "plays up front: no free kick given",
+          "weakFoot": "one good foot only"
+        }
       }
     },
     "nav": "Save sections",

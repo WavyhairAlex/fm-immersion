@@ -187,3 +187,98 @@ export function matchPlan(style: StyleRef, opp: OpponentReport, plan?: Formation
 
   return { mentality, team: team.slice(0, MAX_TEAM_ADJUSTMENTS), marking };
 }
+
+/* ---------- Écran « Adversaire » du jeu : consignes sur leurs joueurs ---------- */
+
+export type OppInstructionReason = 'creator' | 'scorer' | 'rated' | 'pressBuildUp' | 'pressWeak' | 'softTackle' | 'weakFoot';
+
+export interface OppositionInstruction {
+  name: string;
+  positions: string | null;
+  stars: number | null;
+  /** Marquage strict : « Toujours ». */
+  marking: 'always' | null;
+  /** Déclenchement du pressing : « Toujours » ou « Jamais ». */
+  pressing: 'always' | 'never' | null;
+  /** Tacles : « Plus engagés » ou « Plus doux ». */
+  tackling: 'harder' | 'softer' | null;
+  /** Forcer mauvais pied : le pied vers lequel l'orienter (son pied faible). */
+  weakFoot: 'left' | 'right' | null;
+  reasons: OppInstructionReason[];
+}
+
+/** Joueurs adverses à presser « Toujours » au plus (gardien et défenseurs centraux). */
+export const MAX_PRESS_TARGETS = 3;
+
+const roleOf = (positions: string | null) => {
+  const p = (positions ?? '').toUpperCase();
+  return {
+    gk: /\bGB\b|\bGK\b/.test(p),
+    cb: /\bD\b[^,]*\([^)]*C/.test(p) || /\bDC\b/.test(p),
+    attack: /\bBT\b|\bST\b|\bMO\b|\bAM\b|\bAL\b|\bMG\b|\bMD\b(?!\s*\(C)/.test(p),
+  };
+};
+
+/** Pied faible d'après le texte du jeu : null si des deux pieds ou inconnu. */
+export function weakFootOf(foot: string | null): 'left' | 'right' | null {
+  const f = (foot ?? '').toLowerCase();
+  if (!f || /deux|ambi|both|either/.test(f)) return null;
+  if (/gauch|left/.test(f)) return 'right';
+  if (/droit|right/.test(f)) return 'left';
+  return null;
+}
+
+/**
+ * Ce qu'on règle dans l'écran Adversaire du jeu (joueur par joueur) à partir du rapport d'équipe : marquage strict sur
+ * les joueurs clés (créateur, buteur, meilleure moyenne), pressing « Toujours » sur leur gardien et leurs centraux quand
+ * on presse haut, ou sur les moins bien notés d'entre eux sinon (forcer la faute à la relance), tacles plus doux sur
+ * le créateur s'il joue devant (ne pas offrir de coups francs), et le pied faible des joueurs clés s'il est lu.
+ * Seuls les joueurs qui reçoivent au moins une consigne sont renvoyés.
+ */
+export function oppositionInstructions(opp: OpponentReport, style?: StyleRef | null): OppositionInstruction[] {
+  const rows = new Map<string, OppositionInstruction>();
+  const row = (name: string) => {
+    let r = rows.get(name);
+    if (!r) {
+      const sq = opp.squad.find((p) => p.name === name);
+      r = { name, positions: sq?.positions ?? null, stars: sq?.stars ?? null, marking: null, pressing: null, tackling: null, weakFoot: null, reasons: [] };
+      rows.set(name, r);
+    }
+    return r;
+  };
+  const key: [string | null | undefined, OppInstructionReason][] = [
+    [opp.assister?.name, 'creator'],
+    [opp.scorer?.name, 'scorer'],
+    [opp.rated?.name, 'rated'],
+  ];
+  for (const [name, reason] of key) {
+    if (!name) continue;
+    const r = row(name);
+    r.marking = 'always';
+    if (!r.reasons.includes(reason)) r.reasons.push(reason);
+    const wf = weakFootOf(opp.squad.find((p) => p.name === name)?.foot ?? null);
+    if (wf && !r.weakFoot) {
+      r.weakFoot = wf;
+      r.reasons.push('weakFoot');
+    }
+    if (reason === 'creator' && roleOf(r.positions).attack && !r.tackling) {
+      r.tackling = 'softer';
+      r.reasons.push('softTackle');
+    }
+  }
+  // Pressing : la relance adverse. Pressing haut → gardien et centraux ; sinon seulement les moins bien notés d'entre eux.
+  const high = !!style && /pressing haut|high press/i.test(style.outOfPossession.join(' '));
+  const backs = opp.squad.filter((p) => {
+    const r = roleOf(p.positions);
+    return r.gk || r.cb;
+  });
+  const known = backs.filter((p) => p.stars != null);
+  const median = known.length ? [...known].sort((a, b) => a.stars! - b.stars!)[Math.floor(known.length / 2)]!.stars! : null;
+  const targets = (high ? backs : known.filter((p) => median != null && p.stars! < median)).sort((a, b) => (a.stars ?? 99) - (b.stars ?? 99)).slice(0, MAX_PRESS_TARGETS);
+  for (const p of targets) {
+    const r = row(p.name);
+    r.pressing = 'always';
+    r.reasons.push(high ? 'pressBuildUp' : 'pressWeak');
+  }
+  return [...rows.values()];
+}

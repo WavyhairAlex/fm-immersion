@@ -10,6 +10,7 @@ import {
   opponentReport,
   rankForMatch,
   matchPlan,
+  oppositionInstructions,
   styleOfGameTactic,
   SWITCH_POINTS,
   phaseXY,
@@ -140,6 +141,9 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   // Réglages du match : consignes d'équipe, mentalité et marquage à changer contre cet adversaire, dans le style retenu.
   const threat = typeof (snap?.nextMatch as { threatLevel?: unknown } | null | undefined)?.threatLevel === 'string' ? ((snap!.nextMatch as { threatLevel: string }).threatLevel) : null;
   const adjust = useMemo(() => (opp && style && planA ? matchPlan(style, opp, planA, threat) : null), [opp, style, planA, threat]);
+  // Écran Adversaire du jeu : consignes joueur par joueur sur leurs joueurs clés et leur relance.
+  const oppRows = useMemo(() => (opp ? oppositionInstructions(opp, style) : []), [opp, style]);
+  const footRead = !!opp && opp.squad.some((p) => p.foot);
   const baseKey = pick ? `${pick.style.id}|${pick.form}` : null;
   // Poste survolé : mis en évidence à la fois sur le terrain et dans la liste.
   const [hover, setHover] = useState<number | null>(null);
@@ -305,6 +309,48 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
             </div>
           )}
           <More>{t('fm.tac.adjust.help')}</More>
+        </section>
+      )}
+
+      {opp && !fromGame && (
+        <section className="card">
+          <h2 className="text-xl font-semibold">{t('fm.tac.oppScreen.title', { name: opp.name ?? t('fm.opp.club') })}</h2>
+          <p className="mt-1 text-sm text-brun">{t('fm.tac.oppScreen.intro')}</p>
+          {oppRows.length ? (
+            <div className="mt-3 table-scroll">
+              <table className="data-table">
+                <thead className="text-left text-canard/70">
+                  <tr>
+                    <th className="px-2 py-1">{t('fm.tac.oppScreen.player')}</th>
+                    <th className="px-2 py-1">{t('fm.tac.oppScreen.positions')}</th>
+                    <th className="px-2 py-1">{t('fm.tac.oppScreen.marking')}</th>
+                    <th className="px-2 py-1">{t('fm.tac.oppScreen.pressing')}</th>
+                    <th className="px-2 py-1">{t('fm.tac.oppScreen.tackling')}</th>
+                    <th className="px-2 py-1">{t('fm.tac.oppScreen.foot')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {oppRows.map((r) => (
+                    <tr key={r.name} className="border-t border-canard/5">
+                      <td className="px-2 py-1.5">
+                        <b>{r.name}</b>
+                        <span className="block text-xs text-brun">{r.reasons.map((x) => t(`fm.tac.oppScreen.reason.${x}`)).join(' · ')}</span>
+                      </td>
+                      <td className="px-2 py-1.5 text-brun">{r.positions ?? '–'}</td>
+                      <td className="px-2 py-1.5">{r.marking ? <b>{t('fm.tac.oppScreen.always')}</b> : '–'}</td>
+                      <td className="px-2 py-1.5">{r.pressing ? <b>{t(`fm.tac.oppScreen.${r.pressing}`)}</b> : '–'}</td>
+                      <td className="px-2 py-1.5">{r.tackling ? <b>{t(`fm.tac.oppScreen.${r.tackling}`)}</b> : '–'}</td>
+                      <td className="px-2 py-1.5">{r.weakFoot ? <b>{t(`fm.tac.oppScreen.${r.weakFoot}`)}</b> : '–'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="mt-2 text-sm">{t('fm.tac.oppScreen.none')}</p>
+          )}
+          {!footRead && <p className="mt-2 text-xs text-brun">{t('fm.tac.oppScreen.footHint')}</p>}
+          <More>{t('fm.tac.oppScreen.help')}</More>
         </section>
       )}
 
