@@ -33,12 +33,6 @@ export function certificatePayload(t: TFunction, c: ChallengeCertificate, r: Cha
 export const sendCertificate = (t: TFunction, c: ChallengeCertificate, r: ChallengeResult, webhook = getWebhook()) =>
   invoke<void>('discord_send_certificate', { webhook, payload: certificatePayload(t, c, r), name: certificateFileName(c), certificate: JSON.stringify(c) });
 
-/** Téléchargement du certificat (fichier JSON) par la webview. */
-export function downloadCertificate(c: ChallengeCertificate) {
-  const url = URL.createObjectURL(new Blob([JSON.stringify(c, null, 1)], { type: 'application/json' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = certificateFileName(c);
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 5_000);
-}
+/** Enregistre le certificat dans Documents\\FM Immersion\\Défis et renvoie le chemin du fichier. */
+export const saveCertificate = (c: ChallengeCertificate) =>
+  invoke<string>('certificate_save', { name: certificateFileName(c).replace(/\.json$/, ''), certificate: JSON.stringify(c, null, 1) });

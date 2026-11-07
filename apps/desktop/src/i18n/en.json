@@ -3276,6 +3276,7 @@
       "counts": "impossible match or starter counts",
       "ages": "players getting younger"
     },
-    "limit": "Everything happens on your PC and the code is open: a certificate proves the save is consistent and tracked from start to finish, not that a whole fake season cannot be made up. Independent project, not affiliated with Sports Interactive or SEGA."
+    "limit": "Everything happens on your PC and the code is open: a certificate proves the save is consistent and tracked from start to finish, not that a whole fake season cannot be made up. Independent project, not affiliated with Sports Interactive or SEGA.",
+    "saved": "Certificate saved: {{path}}"
   }
 }

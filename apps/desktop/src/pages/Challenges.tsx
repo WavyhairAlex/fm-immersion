@@ -16,7 +16,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { factsFor } from '../lib/challenges';
-import { downloadCertificate, issueText, sendCertificate, stepText } from '../lib/challenge-share';
+import { issueText, saveCertificate, sendCertificate, stepText } from '../lib/challenge-share';
 import { challengesData, fmData, savesData } from '../lib/data';
 import { getWebhook, isWebhook } from '../lib/discord';
 
@@ -166,8 +166,7 @@ function Enrolled({ row, history, coach }: { row: FmChallengeRow; history: { gam
   const exportFile = useMutation({
     mutationFn: async () => {
       const c = await certificate();
-      downloadCertificate(c);
-      return c;
+      return saveCertificate(c);
     },
   });
   const abandon = useMutation({
@@ -211,6 +210,8 @@ function Enrolled({ row, history, coach }: { row: FmChallengeRow; history: { gam
           </Link>
         </p>
       )}
+      {exportFile.isSuccess && <p className="mt-2 break-all text-sm text-eau-fonce">{t('challenges.saved', { path: exportFile.data })}</p>}
+      {exportFile.isError && <p className="mt-2 text-sm text-corail">{String(exportFile.error)}</p>}
       {share.isSuccess && <p className="mt-2 text-sm text-eau-fonce">{t('challenges.shared', { digest: shortDigest(share.data.digest) })}</p>}
       {share.isError && <p className="mt-2 text-sm text-corail">{String(share.error)}</p>}
     </article>

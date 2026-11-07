@@ -22,11 +22,16 @@ pub fn safe_name(name: &str) -> String {
 
 /// Chemin libre dans `dir` : `nom.png`, sinon `nom-2.png`, `nom-3.png`…
 pub fn free_path(dir: &Path, name: &str) -> PathBuf {
-    let first = dir.join(format!("{name}.png"));
+    free_path_ext(dir, name, "png")
+}
+
+/// Même chose pour une autre extension (certificat de défi en `.json`).
+pub fn free_path_ext(dir: &Path, name: &str, ext: &str) -> PathBuf {
+    let first = dir.join(format!("{name}.{ext}"));
     if !first.exists() {
         return first;
     }
-    (2..1000).map(|i| dir.join(format!("{name}-{i}.png"))).find(|p| !p.exists()).unwrap_or(first)
+    (2..1000).map(|i| dir.join(format!("{name}-{i}.{ext}"))).find(|p| !p.exists()).unwrap_or(first)
 }
 
 /// Enregistre une image PNG dessinée par l'appli et renvoie son chemin complet.
@@ -44,6 +49,30 @@ pub fn image_save(app: tauri::AppHandle, name: String, png: Vec<u8>) -> Result<S
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let path = free_path(&dir, &safe_name(&name));
     std::fs::write(&path, &png).map_err(|e| e.to_string())?;
+    Ok(path.to_string_lossy().into_owned())
+}
+
+/// Enregistre un certificat de défi (JSON au format `fm-immersion-defi/1`) dans Documents\\FM Immersion\\Défis et
+/// renvoie son chemin. Rien n'est envoyé : le joueur le partage où il veut.
+#[tauri::command]
+pub fn certificate_save(app: tauri::AppHandle, name: String, certificate: String) -> Result<String, String> {
+    let ok = certificate.len() <= 8 * 1024 * 1024
+        && serde_json::from_str::<serde_json::Value>(&certificate)
+            .ok()
+            .and_then(|v| v.get("format").and_then(|f| f.as_str()).map(|f| f == "fm-immersion-defi/1"))
+            .unwrap_or(false);
+    if !ok {
+        return Err("certificat invalide".into());
+    }
+    let base = app
+        .path()
+        .document_dir()
+        .or_else(|_| app.path().home_dir().map(|h| h.join("Documents")))
+        .map_err(|e| e.to_string())?;
+    let dir = base.join("FM Immersion").join("Défis");
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    let path = free_path_ext(&dir, &safe_name(&name), "json");
+    std::fs::write(&path, certificate).map_err(|e| e.to_string())?;
     Ok(path.to_string_lossy().into_owned())
 }
 

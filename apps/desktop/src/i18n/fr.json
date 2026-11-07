@@ -3276,6 +3276,7 @@
       "counts": "nombres de matchs ou de titulaires impossibles",
       "ages": "des joueurs rajeunissent"
     },
-    "limit": "Tout se passe sur ton PC et le code est ouvert : un certificat prouve que la partie est cohérente et suivie de bout en bout, pas qu'il est impossible de fabriquer une fausse saison entière. Projet indépendant, sans lien avec Sports Interactive ni SEGA."
+    "limit": "Tout se passe sur ton PC et le code est ouvert : un certificat prouve que la partie est cohérente et suivie de bout en bout, pas qu'il est impossible de fabriquer une fausse saison entière. Projet indépendant, sans lien avec Sports Interactive ni SEGA.",
+    "saved": "Certificat enregistré : {{path}}"
   }
 }
