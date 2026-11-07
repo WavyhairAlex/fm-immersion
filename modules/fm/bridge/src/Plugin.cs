@@ -18,7 +18,7 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.5.0";
+    public const string Version = "0.5.1";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que FM Immersion renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
@@ -145,21 +145,28 @@ public class Plugin : BasePlugin
     {
         bool was = false;
         string? gameDate = null;
+        Dictionary<string, object?>? last = null;
         while (true)
         {
             try
             {
                 var now = FmBindingReader.DuringMatch() == true;
-                if (now && !was) { gameDate = FmBindingReader.CurrentDate(); Log.LogInfo("Match en cours : direct dans archivix-live.json"); }
+                if (now && !was) { gameDate = FmBindingReader.CurrentDate(); last = null; Log.LogInfo("Match en cours : direct dans archivix-live.json"); }
                 if (now || was)   // une dernière lecture après la fin du match, pour le résultat final
                 {
                     var live = FmBindingReader.ReadLive();
+                    // Match fini : le jeu ne répond plus toujours sur le match (0.5.0 laissait alors le relevé « en cours »
+                    // à la dernière minute lue, et le direct Discord ne se terminait jamais). On ferme avec le dernier
+                    // score connu, marqué final.
+                    if (live == null && !now && last != null) { live = new Dictionary<string, object?>(last); live["final"] = true; live["minute"] = "FDM"; }
                     if (live != null)
                     {
+                        if (!now) live["final"] = true;
                         var doc = new Dictionary<string, object?> { ["schema"] = "archivix-live/1", ["gameDate"] = gameDate, ["inMatch"] = now, ["updatedAt"] = DateTime.UtcNow.ToString("o") };
                         foreach (var kv in live) doc[kv.Key] = kv.Value;
                         Directory.CreateDirectory(DataDir);
                         WriteAtomic(Path.Combine(DataDir, "archivix-live.json"), JsonSerializer.Serialize(doc, Json));
+                        last = now ? live : null;
                     }
                 }
                 was = now;

@@ -1112,8 +1112,8 @@
       "priorities": "Areas of your target style worked first: {{list}}.",
       "load": "This week",
       "rules": "The rules",
-      "rule1": "Day before a match: match preparation. Day after: Rest, Recovery, then Team Bonding as the extra.",
-      "rule2": "Rest pays off in matches: never drop it for an extra session. Three-match week: full rest. Pressing trap: 2 sessions a week, no more.",
+      "rule1": "Match eve: one preparation session. Day after: Rest then Recovery. Each working day: one tactical and one development session, nothing more.",
+      "rule2": "Rest pays off in matches: never removed for an extra session. Three-match weeks: full rest. Pressing trap: 2 sessions a week, no more. No conditioning two days before a match.",
       "rule3": "If a match moves, put preparation back the day before and recovery the day after.",
       "rule4": "Players back from international duty are handled separately.",
       "rule5": "Judge the plan over several weeks, not one result, and lighten it if the workload doesn't suit.",
@@ -1233,7 +1233,22 @@
       "upcomingHelp": "Set ahead in the game's Training Schedule screen: one Schedule Focus and one workload per week. Light in two-match weeks, medium with one match, heavy with no match and early in pre-season. Beyond the next known fixtures, FM Immersion assumes a Saturday match.",
       "reasonHint": "Hover a player's intensity to see why it is advised.",
       "metaAdaptHelp": "AlexJeuVideal's Meta base: 2 pressing-trap sessions a week, the day before the match Ball Progression, Defensive Block, Conditioning, rest otherwise. The other 4 tactical sessions follow your priority areas (the weakest from the game and your matches) among those the benchmark finds useful: Line of Engagement, Build-Up, Chance Creation, In and Out of Possession Shape. They change when your weaknesses change.",
-      "metaSwaps": "After loading it, replace: {{list}}."
+      "metaSwaps": "After loading it, replace: {{list}}.",
+      "coachHelp": "FM Immersion programme, one proposal only: each working day, one tactical session (two Pressing Traps a week, then the areas the game rates least understood, otherwise your style's areas) and one development session (Conditioning, Attacking ball work, Defensive ball work, Light conditioning: the four sessions that raise attributes the most in harvestgreen22's measurements). Day before a match: a single match-prep session. Day after: Rest then Recovery. Never conditioning two days before a match. When the game says everything is understood, tactical sessions shrink to the two traps.",
+      "coachSummary": "This week: {{tactical}} tactical sessions, {{grow}} development sessions, {{matches}} match(es).",
+      "teamIntensityCoach": "Recommended in Training > Team intensity: double for players in good and excellent condition (that is what makes them progress, measured by harvestgreen22), half and rest for the others so they reach the match fresh (AlexJeuVideal's test bench). The game then applies it to each player. Individual focus: the weak point seen in matches, otherwise Quickness up to age 23, otherwise the role's weakest key attribute.",
+      "why": {
+        "press": "efficiency: 2 pressing traps a week",
+        "weak": "area the game rates least understood",
+        "top": "your style's number-one area",
+        "grow": "development: raises attributes",
+        "noCondition": "development (no conditioning 2 days before a match)",
+        "indiv": "no match this week: individual development",
+        "prep": "match eve: one preparation session only",
+        "recover": "day after a match",
+        "congested": "three matches: rest",
+        "restDay": "rest: freshness pays off in matches"
+      }
     },
     "intro": {
       "home": "What needs your attention today, the styles that suit the squad, your best players and your youngsters.",
