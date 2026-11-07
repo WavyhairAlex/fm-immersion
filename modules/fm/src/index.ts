@@ -22,6 +22,7 @@ export * from './club';
 export * from './progress';
 export * from './project';
 export * from './targets';
+export * from './teams';
 export * from './training';
 export * from './fixtures';
 export * from './instructions';

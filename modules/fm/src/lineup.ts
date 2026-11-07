@@ -2,6 +2,7 @@ import { unavailable, type FmPlayer } from './player';
 import { parsePositions, type PosCode } from './positions';
 import type { FmSnapshot } from './snapshot';
 import { snapshotRoleStars, type RoleStars } from './game-stars';
+import { otherTeamOf } from './teams';
 import { FORMATIONS, balancePenalty, readiness, slotContexts, type FormationPlan, type RoleRef, type Slot, type SlotCtx, type TacticEngine } from './tactic';
 
 /*
@@ -309,12 +310,16 @@ export function withExtended(snap: FmSnapshot): FmSnapshot {
   const byId = (ext && typeof ext === 'object' ? ext : {}) as Record<string, Raw | undefined>;
   const bans = suspensionsOf(snap);
   const stars = snapshotRoleStars(snap);
-  if (!Object.keys(byId).length && !bans.size && !Object.keys(stars).length) return snap;
+  // Équipe du club (réserve, jeunes) : posée sur le joueur brut, `normalizePlayer` la garde dans `team`.
+  const teams = otherTeamOf(snap);
+  if (!Object.keys(byId).length && !bans.size && !Object.keys(stars).length && !teams.size) return snap;
   return {
     ...snap,
     players: snap.players.map((p) => {
       const ban = bans.get(String(p.id));
       let q: typeof p = ban && !(p as Raw).suspension ? { ...p, suspension: ban } : p;
+      const team = teams.get(String(p.id));
+      if (team && !(p as Raw).team) q = { ...q, team };
       const st = stars[String(p.id)];
       if (st) q = { ...q, gameStars: simpleStars(st) };
       const x = byId[String(p.id)];
