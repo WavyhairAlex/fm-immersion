@@ -2301,6 +2301,9 @@
     "preview": "Preview of the front page sent to Discord"
   },
   "discord": {
+    "autoTitle": "Automatic gazette",
+    "autoIntro": "As soon as a game week is over, its gazette (front page image and news) is posted to your channel on its own, once a week. FM Immersion must be open while you play.",
+    "autoEnable": "Send my gazette automatically every week",
     "intro": "Tell your career in a Discord channel: each gazette can be sent there in one click, so your friends can follow your save.",
     "webhookTitle": "Connect your channel",
     "step1": "In Discord, open the channel settings, then Integrations › Webhooks › New Webhook.",

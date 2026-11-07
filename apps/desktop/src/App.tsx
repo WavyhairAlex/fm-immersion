@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
 import { UpdateGate } from './components/UpdateGate';
+import { useGazetteAuto } from './lib/gazette-auto';
 import { useLiveDiscord } from './lib/live-discord';
 import { Discord } from './pages/Discord';
 import { Faces } from './pages/Faces';
@@ -12,6 +13,7 @@ import { Soon } from './pages/Soon';
 
 export function App() {
   useLiveDiscord();
+  useGazetteAuto();
   return (
     <UpdateGate>
       <div className="flex min-h-screen">
