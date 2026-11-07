@@ -49,7 +49,7 @@ export interface SeasonReview {
   topScorer: SeasonPlayer | null;
   /** Le plus souvent élu homme du match par le jeu. */
   potm: SeasonPlayer | null;
-  /** Meilleure note moyenne (au moins un tiers des matchs joués). */
+  /** Meilleure note moyenne sur les matchs suivis (au moins un tiers des matchs du plus utilisé). */
   bestRated: SeasonPlayer | null;
   /** Arrivées et départs de la saison, les plus forts d'abord (5 au plus). */
   arrivals: string[];
@@ -88,6 +88,8 @@ function review(season: Entry[]): SeasonReview {
   const all = matchResults(season);
   // Plusieurs matchs entre deux instantanés sans victoires ni défaites connues : on ne sait pas les compter.
   const results = all.filter((r) => r.outcome || r.wins || r.losses);
+  // Avant le premier match suivi en détail : cumuls d'avant l'arrivée du coach (ou du suivi), pas sa saison.
+  const firstKnown = all.findIndex((r) => results.includes(r));
   const sum = (f: (r: MatchResult) => number) => results.reduce((a, r) => a + f(r), 0);
 
   const positions: { date: string; position: number }[] = [];
@@ -108,11 +110,21 @@ function review(season: Entry[]): SeasonReview {
     unbeaten = Math.max(unbeaten, run);
   }
 
-  // Cumuls de la saison chez les joueurs du dernier instantané (ceux qui sont partis ne comptent plus).
+  // Buts et notes des matchs suivis seulement (les cumuls du jeu comptent aussi ceux d'avant l'arrivée du coach).
   const squad = last.data.players.map(normalizePlayer);
-  const scorer = [...squad].filter((p) => (p.goals ?? 0) > 0).sort((a, b) => b.goals! - a.goals!)[0];
-  const maxApps = Math.max(0, ...squad.map((p) => p.apps ?? 0));
-  const rated = squad.filter((p) => p.avgRating != null && (p.apps ?? 0) >= Math.max(3, maxApps / 3)).sort((a, b) => b.avgRating! - a.avgRating!)[0];
+  const perPlayer = new Map<string, { id: string; name: string; goals: number; ratings: number[] }>();
+  for (const r of results)
+    for (const p of r.players) {
+      const x = perPlayer.get(p.id) ?? { id: p.id, name: p.name, goals: 0, ratings: [] };
+      x.goals += p.goals ?? 0;
+      if (p.rating != null && r.matches === 1) x.ratings.push(p.rating);
+      perPlayer.set(p.id, x);
+    }
+  const stats = [...perPlayer.values()];
+  const scorer = stats.filter((p) => p.goals > 0).sort((a, b) => b.goals - a.goals)[0];
+  const maxApps = Math.max(0, ...stats.map((p) => p.ratings.length));
+  const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+  const rated = stats.filter((p) => p.ratings.length >= Math.max(3, maxApps / 3)).sort((a, b) => avg(b.ratings) - avg(a.ratings))[0];
   const potmCount = new Map<string, SeasonPlayer>();
   for (const r of results) for (const p of r.players) if (p.potm) potmCount.set(p.id, { id: p.id, name: p.name, value: (potmCount.get(p.id)?.value ?? 0) + 1 });
   const potm = [...potmCount.values()].sort((a, b) => b.value - a.value)[0] ?? null;
@@ -133,7 +145,7 @@ function review(season: Entry[]): SeasonReview {
     position: leaguePosition(last.data) ?? positions.at(-1)?.position ?? null,
     positions,
     played: sum((r) => r.matches),
-    untracked: all.filter((r) => !results.includes(r)).reduce((a, r) => a + r.matches, 0),
+    untracked: firstKnown < 0 ? 0 : all.filter((r, i) => i > firstKnown && !results.includes(r)).reduce((a, r) => a + r.matches, 0),
     wins: sum((r) => r.wins),
     draws: sum((r) => r.draws),
     losses: sum((r) => r.losses),
@@ -142,9 +154,9 @@ function review(season: Entry[]): SeasonReview {
     biggestWin: wins[0] ?? null,
     worstLoss: losses[0] ?? null,
     unbeaten,
-    topScorer: scorer ? { id: scorer.id, name: scorer.name, value: scorer.goals! } : null,
+    topScorer: scorer ? { id: scorer.id, name: scorer.name, value: scorer.goals } : null,
     potm,
-    bestRated: rated ? { id: rated.id, name: rated.name, value: Math.round(rated.avgRating! * 100) / 100 } : null,
+    bestRated: rated ? { id: rated.id, name: rated.name, value: Math.round(avg(rated.ratings) * 100) / 100 } : null,
     arrivals: strongest(squad.filter((p) => !before.has(p.id))),
     departures: strongest([...before.values()].filter((p) => !after.has(p.id))),
   };
