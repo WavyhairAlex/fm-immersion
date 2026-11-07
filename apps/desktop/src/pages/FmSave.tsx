@@ -39,6 +39,7 @@ import { FmHome } from './FmHome';
 import { FmLoans } from './FmLoans';
 import { FmShirts } from './FmShirts';
 import { FmOpponent } from './FmOpponent';
+import { FmPlaytime } from './FmPlaytime';
 import { FmProgression } from './FmProgression';
 import { FmProject } from './FmProject';
 import { FmRoles } from './FmRoles';
@@ -78,7 +79,7 @@ const SECTIONS = [
  */
 const PARTS: Record<string, readonly string[]> = {
   tactic: ['tactic', 'instructions', 'opponent', 'calendar', 'depth', 'effectiveness'],
-  squad: ['squad', 'dressing', 'progression', 'roles', 'compare', 'numbers', 'loans'],
+  squad: ['squad', 'playtime', 'dressing', 'progression', 'roles', 'compare', 'numbers', 'loans'],
   results: ['results', 'diagnosis', 'stats', 'analysis'],
   style: ['style', 'project', 'training', 'staff'],
   mercato: ['mercato', 'targets', 'finances', 'wages', 'contracts'],
@@ -301,6 +302,8 @@ export function FmSave() {
         return <FmStats snap={snapshot.data} players={players} history={all as { gameDate: string; data: FmSnapshot }[] | undefined} />;
       case 'compare':
         return <FmCompare saveId={saveId} snap={snapshot.data} players={players} folder={folder} history={history} />;
+      case 'playtime':
+        return <FmPlaytime players={players} history={all as { gameDate: string; data: FmSnapshot }[] | undefined} />;
       case 'dressing':
         return <FmDressing players={players} />;
       case 'loans':

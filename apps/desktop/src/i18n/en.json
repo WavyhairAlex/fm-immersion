@@ -344,7 +344,8 @@
       "results": "Results",
       "diagnosis": "Why they underperform",
       "staff": "Staff",
-      "numbers": "Shirt numbers"
+      "numbers": "Shirt numbers",
+      "playtime": "Playing time"
     },
     "home": {
       "todo": "To deal with",
@@ -2156,6 +2157,40 @@
         "departures": "Transfers",
         "recruits": "Targets",
         "preseason": "Training"
+      }
+    },
+    "play": {
+      "kpi": {
+        "short": "Promise not kept",
+        "shortSub": "players getting less than their status",
+        "over": "Playing above their status",
+        "overSub": "they will ask for a better status or contract",
+        "matches": "Matches tracked",
+        "matchesSub": "this season, since 1 July"
+      },
+      "help": "In FM27, a player's squad status is a playing-time promise. Here his share of minutes in the matches he was available for (not injured or suspended the day before) is compared with an FM Immersion benchmark per status (star / important / regular starter / rotation / backup: {{shares}}). Alert below 80% of the benchmark. The mark on the bar shows the benchmark.",
+      "noMatches": "No match tracked this season: snapshots are needed before and after matches.",
+      "group": {
+        "short_one": "Promise not kept ({{count}})",
+        "short_other": "Promises not kept ({{count}})",
+        "over_one": "Playing above status ({{count}})",
+        "over_other": "Playing above status ({{count}})",
+        "ok_one": "On track ({{count}})",
+        "ok_other": "On track ({{count}})",
+        "early_one": "Too early to tell ({{count}})",
+        "early_other": "Too early to tell ({{count}})"
+      },
+      "detail": "{{starts}} starts in {{available}} available matches",
+      "adviceShort": "Play him more, or lower his status in his next contract before he complains.",
+      "adviceOver": "He plays like a {{status}}: plan a better status at his next renewal.",
+      "rank": {
+        "0": "star player",
+        "1": "important player",
+        "2": "regular starter",
+        "3": "squad player",
+        "4": "backup",
+        "5": "hot prospect",
+        "6": "youngster"
       }
     }
   },
