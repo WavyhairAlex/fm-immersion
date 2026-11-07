@@ -15,7 +15,7 @@ import { FORMATIONS, STYLE_FORMS, attrKey, attrOf, avg, type FormationPlan, type
 /** Attributs mentaux de lecture du jeu, utilisés pour estimer la capacité tactique de l'effectif. */
 export const TACT_ABILITY = ['Decisions', 'Anticipation', 'Teamwork', 'Concentration', 'Positioning', 'Vision', 'Composure'];
 /** Complexité estimée de chaque style (1 à 5) : pressing intense et jeu de passes fluide sont les plus durs à assimiler. */
-const STYLE_COMPLEXITY: Record<string, number> = { tikitaka: 5, 'tikitaka-v': 5, possession: 4, 'possession-433': 4, gegenpress: 4, 'counter-fluid': 3, wings: 3, 'counter-direct': 2, catenaccio: 2, 'ultra-def': 2, longball: 1 };
+const STYLE_COMPLEXITY: Record<string, number> = { tikitaka: 5, 'tikitaka-v': 5, possession: 4, gegenpress: 4, 'counter-fluid': 3, wings: 3, 'counter-direct': 2, catenaccio: 2, 'ultra-def': 2, longball: 1 };
 export const styleComplexity = (st: StyleRef) => STYLE_COMPLEXITY[st.id] ?? 3;
 /** Capacité tactique souhaitable pour une complexité donnée (1 → 7 ; 5 → 13). */
 export const abilityNeeded = (st: StyleRef) => 5.5 + styleComplexity(st) * 1.5;
@@ -125,7 +125,6 @@ export function effectiveness(snap: FmSnapshot): Effectiveness | null {
 /** Zones de compréhension à prioriser à l'entraînement collectif selon le style visé. */
 export const STYLE_TRAINING: Record<string, EffArea[]> = {
   possession: ['buildUpStrategy', 'passingStyle', 'inPossessionShape', 'pressingIntensity'],
-  'possession-433': ['buildUpStrategy', 'passingStyle', 'pressingIntensity', 'lineOfEngagement'],
   tikitaka: ['passingStyle', 'buildUpStrategy', 'inPossessionShape', 'lineOfEngagement'],
   'tikitaka-v': ['passingStyle', 'chanceCreation', 'inPossessionShape', 'buildUpStrategy'],
   gegenpress: ['pressingIntensity', 'pressingTrap', 'lineOfEngagement', 'outOfPossessionShape'],

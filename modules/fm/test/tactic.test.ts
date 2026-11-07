@@ -149,17 +149,18 @@ describe('taille du terrain à domicile', () => {
   });
 });
 
-describe('style « Possession 4-3-3 (PSG de Luis Enrique) »', () => {
-  it('reprend les consignes relevées dans le jeu, avec des libellés connus de l’écran Consignes', () => {
-    const s = DEFAULT_TACTIC_REFERENCE.styles.find((x) => x.id === 'possession-433')!;
-    expect(s).toBeDefined();
-    expect(s.mentality).toBe('Positive');
-    expect(s.inPossession).toContain('Jouer malgré le pressing');
-    expect(s.outOfPossession).toEqual(expect.arrayContaining(['Pressing haut', 'Rester plus haut', 'Effectuer un contre-pressing']));
+describe('calibrage du style possession (tactique 4-3-3 relevée dans le jeu, 07/11/2026)', () => {
+  it('garde des libellés connus de l’écran Consignes et des rôles connus, dont ceux vus à l’écran', () => {
+    expect(DEFAULT_TACTIC_REFERENCE.styles.map((s) => s.id)).not.toContain('possession-433');
+    const s = DEFAULT_TACTIC_REFERENCE.styles.find((x) => x.id === 'possession')!;
+    expect(s.inPossession).toEqual(expect.arrayContaining(['Faites plus de passes courtes', 'Soyez plus expressifs', 'Jouer malgré le pressing', 'Dégagements au pied courts', 'Relancez vers défenseurs centraux']));
+    expect(s.outOfPossession).toEqual(expect.arrayContaining(['Pressing haut', 'Rester plus haut', 'Déclenchez le pressing plus souvent', 'Effectuer un contre-pressing', 'Empêchez les relances courtes du GB']));
     const known = new Set(TEAM_INSTRUCTIONS_FM27.flatMap((m) => m.options));
     for (const l of [...s.inPossession, ...s.outOfPossession]) expect(known.has(l), l).toBe(true);
     const codes = new Set(DEFAULT_TACTIC_REFERENCE.roles.map((r) => r.code));
+    for (const c of ['BPGK', 'BPCB', 'FB', 'WB', 'DLP', 'CHM', 'CM', 'IF', 'IW', 'F9']) expect(s.signatureRoles.ip, c).toContain(c);
+    for (const c of ['SK', 'FB', 'DM', 'WM', 'PRSCM', 'CF']) expect(s.signatureRoles.oop, c).toContain(c);
     for (const c of [...s.signatureRoles.ip, ...s.signatureRoles.oop]) expect(codes.has(c), c).toBe(true);
-    expect(pitchAdvice('possession-433').choice).toBe('large');
+    expect(pitchAdvice('possession').choice).toBe('large');
   });
 });
