@@ -2112,6 +2112,18 @@
         "pos": "Poste"
       },
       "how": "Titulaires : le meilleur onze dans la tactique de base (même style et même schéma que Prochain match > Composition), sans tenir compte de la forme du jour, des blessures ni des suspensions, puisqu'un numéro vaut pour la saison. Chaque poste prend son numéro classique : 1 gardien, 2 latéral droit, 3 latéral gauche, 4 et 5 défenseurs centraux, 6 milieu défensif, 8 milieu axial, 7 et 11 côtés, 10 meneur, 9 avant-centre. Doublures : le meilleur onze sans les titulaires (l'équipe B), le numéro du titulaire + 10, et 30 pour le gardien. Les autres suivent à partir de 22, ligne par ligne (défense, milieu, attaque), le mieux noté d'abord ; les autres gardiens prennent 40, 50… Les joueurs prêtés ne sont pas numérotés."
+    },
+    "history": {
+      "title": "Historique gardé par le plugin",
+      "help": "Le plugin garde un fichier par jour de jeu. Importe celui de ton club pour reprendre ta carrière avec ses courbes et ses gazettes. Les jours déjà importés sont sautés.",
+      "range_one": "{{count}} jour, le {{from}}",
+      "range_other": "{{count}} jours, du {{from}} au {{to}}",
+      "import_one": "Importer {{count}} jour",
+      "import_other": "Importer {{count}} jours",
+      "done": "déjà importé",
+      "progress": "Import : {{done}} / {{total}}…",
+      "result_one": "{{count}} jour importé.",
+      "result_other": "{{count}} jours importés."
     }
   },
   "modes": {

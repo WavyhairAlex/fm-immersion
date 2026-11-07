@@ -78,6 +78,83 @@ pub fn fm_read_status(folder: String) -> Result<Option<String>, FmError> {
     }
 }
 
+/// Instantané daté gardé par le plugin (`archivix-AAAA-MM-JJ.json`, un par jour de jeu) : date, club, taille.
+#[derive(Debug, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct FmHistoryFile {
+    pub game_date: String,
+    pub club: Option<String>,
+    pub bytes: u64,
+}
+
+/// Date d'un nom `archivix-AAAA-MM-JJ.json`, ou rien pour tout autre fichier.
+fn history_date(name: &str) -> Option<&str> {
+    let date = name.strip_prefix("archivix-")?.strip_suffix(".json")?;
+    let b = date.as_bytes();
+    let ok = b.len() == 10
+        && b.iter().enumerate().all(|(i, c)| if i == 4 || i == 7 { *c == b'-' } else { c.is_ascii_digit() });
+    ok.then_some(date)
+}
+
+/// Club écrit en tête de l'instantané (`"club": "…"`), lu dans les premiers octets sans tout analyser.
+fn header_club(head: &str) -> Option<String> {
+    let at = head.find("\"club\"")? + 6;
+    let rest = head[at..].trim_start().strip_prefix(':')?.trim_start();
+    if !rest.starts_with('"') {
+        return None;
+    }
+    let mut escaped = false;
+    for (i, c) in rest.char_indices().skip(1) {
+        match c {
+            '\\' if !escaped => escaped = true,
+            '"' if !escaped => return serde_json::from_str(&rest[..=i]).ok(),
+            _ => escaped = false,
+        }
+    }
+    None
+}
+
+/// Instantanés datés du dossier du plugin, du plus ancien au plus récent.
+pub fn list_history(folder: &Path) -> Result<Vec<FmHistoryFile>, FmError> {
+    use std::io::Read;
+    if !folder.is_absolute() {
+        return Err(FmError::InvalidFolder);
+    }
+    let mut out: Vec<FmHistoryFile> = std::fs::read_dir(folder)?
+        .flatten()
+        .filter_map(|e| {
+            let name = e.file_name().to_string_lossy().into_owned();
+            let game_date = history_date(&name)?.to_string();
+            let meta = e.metadata().ok()?;
+            if !meta.is_file() || meta.len() > MAX_BYTES {
+                return None;
+            }
+            let mut head = vec![0u8; 4096];
+            let n = std::fs::File::open(e.path()).and_then(|mut f| f.read(&mut head)).ok()?;
+            let club = header_club(&String::from_utf8_lossy(&head[..n]));
+            Some(FmHistoryFile { game_date, club, bytes: meta.len() })
+        })
+        .collect();
+    out.sort_by(|a, b| a.game_date.cmp(&b.game_date));
+    Ok(out)
+}
+
+/// Historique gardé par le plugin : la liste des jours, pour reprendre une carrière déjà suivie.
+#[tauri::command]
+pub fn fm_history_list(folder: String) -> Result<Vec<FmHistoryFile>, FmError> {
+    list_history(Path::new(&folder))
+}
+
+/// Contenu brut de l'instantané d'un jour (`archivix-AAAA-MM-JJ.json`) ; aucun autre fichier n'est lisible.
+#[tauri::command]
+pub fn fm_history_read(folder: String, game_date: String) -> Result<String, FmError> {
+    let name = format!("archivix-{game_date}.json");
+    if history_date(&name).is_none() {
+        return Err(FmError::NotFound);
+    }
+    read_fixed(Path::new(&folder), &name)
+}
+
 /// Dossier par défaut : celui réglé dans le plugin s'il est installé, sinon
 /// Documents\Sports Interactive\Football Manager 27\archivix.
 /// Le joueur peut le changer s'il a déplacé ses données de jeu (autre disque…).
@@ -191,5 +268,28 @@ mod tests {
         assert_eq!(names, vec!["Autre.FM".to_string(), "Vänersborgs.fm".to_string()]);
         assert!(fm_list_saves("archivix".into()).is_empty());
         std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
+    fn historique_date_et_club() {
+        assert_eq!(history_date("archivix-2027-04-18.json"), Some("2027-04-18"));
+        assert_eq!(history_date("archivix-snapshot.json"), None);
+        assert_eq!(history_date("archivix-2027-4-18.json"), None);
+        assert_eq!(history_date("archivix-../../x.json"), None);
+        assert_eq!(header_club("{\n  \"schema\": \"archivix/1\",\n  \"club\": \"Mal\\u017eenice\",").as_deref(), Some("Malženice"));
+        assert_eq!(header_club(r#"{"club":"Club \"A\""}"#).as_deref(), Some("Club \"A\""));
+        assert_eq!(header_club(r#"{"club":null}"#), None);
+
+        let dir = std::env::temp_dir().join(format!("fmi-hist-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("archivix-2027-04-02.json"), r#"{"club":"B","gameDate":"2027-04-02"}"#).unwrap();
+        std::fs::write(dir.join("archivix-2027-04-01.json"), r#"{"club":"A"}"#).unwrap();
+        std::fs::write(dir.join(SNAPSHOT_FILE), "{}").unwrap();
+        let list = list_history(&dir).unwrap();
+        assert_eq!(list.iter().map(|f| (f.game_date.as_str(), f.club.as_deref())).collect::<Vec<_>>(), vec![("2027-04-01", Some("A")), ("2027-04-02", Some("B"))]);
+        let d = dir.to_string_lossy().into_owned();
+        assert!(fm_history_read(d.clone(), "2027-04-02".into()).unwrap().contains("\"B\""));
+        assert!(matches!(fm_history_read(d, "../x".into()), Err(FmError::NotFound)));
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

@@ -2112,6 +2112,18 @@
         "pos": "Position"
       },
       "how": "Starters: the best eleven in the base tactic (same style and formation as Next match > Line-up), ignoring today's form, injuries and suspensions, since a number lasts the season. Each position takes its classic number: 1 goalkeeper, 2 right back, 3 left back, 4 and 5 centre backs, 6 defensive midfielder, 8 central midfielder, 7 and 11 wide, 10 playmaker, 9 striker. Backups: the best eleven without the starters (team B), the starter's number + 10, and 30 for the goalkeeper. The others follow from 22, line by line (defence, midfield, attack), best rated first; other goalkeepers take 40, 50… Players out on loan get no number."
+    },
+    "history": {
+      "title": "History kept by the plugin",
+      "help": "The plugin keeps one file per game day. Import your club's to resume your career with its charts and gazettes. Days already imported are skipped.",
+      "range_one": "{{count}} day, {{from}}",
+      "range_other": "{{count}} days, {{from}} to {{to}}",
+      "import_one": "Import {{count}} day",
+      "import_other": "Import {{count}} days",
+      "done": "already imported",
+      "progress": "Importing: {{done}} / {{total}}…",
+      "result_one": "{{count}} day imported.",
+      "result_other": "{{count}} days imported."
     }
   },
   "modes": {
