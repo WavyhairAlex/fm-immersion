@@ -2213,7 +2213,9 @@
       },
       "injury": {
         "title": "Coup dur : {{name}} blessé",
-        "body": "{{injury}}. Retour estimé dans {{days}} jour(s)."
+        "body_one": "{{injury}}. Retour estimé dans {{count}} jour.",
+        "body_other": "{{injury}}. Retour estimé dans {{count}} jours.",
+        "bodyNoDate": "{{injury}}."
       },
       "return": {
         "title": "{{name}} de retour",
@@ -2251,6 +2253,9 @@
         "title": "Semaine calme à {{club}}",
         "body": "Pas de match ni de mouvement notable cette semaine."
       }
+    },
+    "discord": {
+      "briefs": "EN BREF"
     }
   },
   "discord": {

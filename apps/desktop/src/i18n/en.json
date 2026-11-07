@@ -2213,7 +2213,9 @@
       },
       "injury": {
         "title": "Blow: {{name}} injured",
-        "body": "{{injury}}. Expected back in {{days}} day(s)."
+        "body_one": "{{injury}}. Expected back in {{count}} day.",
+        "body_other": "{{injury}}. Expected back in {{count}} days.",
+        "bodyNoDate": "{{injury}}."
       },
       "return": {
         "title": "{{name}} is back",
@@ -2251,6 +2253,9 @@
         "title": "Quiet week at {{club}}",
         "body": "No match or notable move this week."
       }
+    },
+    "discord": {
+      "briefs": "IN BRIEF"
     }
   },
   "discord": {
