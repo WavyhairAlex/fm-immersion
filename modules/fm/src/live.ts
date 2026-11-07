@@ -87,3 +87,52 @@ export function liveIsFresh(l: FmLive, now: number, maxAgeMs = 120_000) {
   const t = Date.parse(l.updatedAt);
   return Number.isFinite(t) && now - t <= maxAgeMs;
 }
+
+/**
+ * Minute de jeu du relevé : « 62 min. » → 62, « 90+3' » → 93, mi-temps (« MT », « HT ») → 45, sinon null
+ * (« FDM », vide).
+ */
+export function liveMinute(text: string | null | undefined): number | null {
+  const m = /(\d+)(?:\s*\+\s*(\d+))?/.exec(text ?? '');
+  if (m) return Number(m[1]) + Number(m[2] ?? 0);
+  return /^\s*(mt|ht|mi-temps|half)/i.test(text ?? '') ? 45 : null;
+}
+
+/** Match en cours vu du club du joueur, pour la feuille de match de FM Coach. */
+export interface LiveCoach {
+  side: 'home' | 'away';
+  opponent: string;
+  goalsFor: number;
+  goalsAgainst: number;
+  /** Écart de buts pour le club (+1 = en tête d'un but). */
+  diff: number;
+  /** Minute de jeu (90 une fois le match fini, 0 avant le coup d'envoi). */
+  minute: number;
+  final: boolean;
+}
+
+/**
+ * État du match en direct pour le club du joueur : le relevé doit être frais et concerner son club, reconnu par
+ * son nom (`club`) ou, à défaut, par l'adversaire du prochain match (`opponent`). Sinon null : la feuille de match
+ * reste en saisie manuelle.
+ */
+export function liveCoachState(l: FmLive, club: string | null | undefined, opponent: string | null | undefined, now: number): LiveCoach | null {
+  if (!liveIsFresh(l, now) || l.inMatch === false) return null;
+  const side: 'home' | 'away' | null =
+    club && club === l.home ? 'home' : club && club === l.away ? 'away' : opponent && opponent === l.away ? 'home' : opponent && opponent === l.home ? 'away' : null;
+  if (!side) return null;
+  const home = l.homeScore ?? 0;
+  const away = l.awayScore ?? 0;
+  const goalsFor = side === 'home' ? home : away;
+  const goalsAgainst = side === 'home' ? away : home;
+  const final = !!l.final;
+  return {
+    side,
+    opponent: side === 'home' ? l.away : l.home,
+    goalsFor,
+    goalsAgainst,
+    diff: goalsFor - goalsAgainst,
+    minute: final ? Math.max(90, liveMinute(l.minute) ?? 90) : (liveMinute(l.minute) ?? 0),
+    final,
+  };
+}

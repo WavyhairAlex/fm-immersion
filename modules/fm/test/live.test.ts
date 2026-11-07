@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fmLiveSchema, liveIsFresh, liveNews, parseScorers, type FmLive } from '../src/live';
+import { fmLiveSchema, liveCoachState, liveIsFresh, liveMinute, liveNews, parseScorers, type FmLive } from '../src/live';
 
 const base: FmLive = {
   schema: 'archivix-live/1',
@@ -75,5 +75,29 @@ describe('match en direct', () => {
     expect(fmLiveSchema.parse(raw).home).toBe('Inter Bratislava');
     expect(liveIsFresh(base, Date.parse('2026-11-07T07:21:00Z'))).toBe(true);
     expect(liveIsFresh(base, Date.parse('2026-11-07T07:30:00Z'))).toBe(false);
+  });
+});
+
+describe('liveCoachState', () => {
+  const now = Date.parse(base.updatedAt) + 10_000;
+  it('lit la minute du jeu', () => {
+    expect(liveMinute('62 min.')).toBe(62);
+    expect(liveMinute("90+3'")).toBe(93);
+    expect(liveMinute('MT')).toBe(45);
+    expect(liveMinute('FDM')).toBeNull();
+  });
+  it('voit le match du côté du club du joueur', () => {
+    expect(liveCoachState(base, 'Malženice', null, now)).toMatchObject({ side: 'away', opponent: 'Inter Bratislava', goalsFor: 2, goalsAgainst: 1, diff: 1, minute: 42, final: false });
+  });
+  it("reconnaît le club par l'adversaire du prochain match", () => {
+    expect(liveCoachState(base, null, 'Inter Bratislava', now)?.side).toBe('away');
+  });
+  it('ignore un autre match, un relevé ancien ou hors match', () => {
+    expect(liveCoachState(base, 'Spartak Trnava', 'Žilina', now)).toBeNull();
+    expect(liveCoachState(base, 'Malženice', null, now + 10 * 60_000)).toBeNull();
+    expect(liveCoachState({ ...base, inMatch: false }, 'Malženice', null, now)).toBeNull();
+  });
+  it('fin du match : minute 90 au moins', () => {
+    expect(liveCoachState({ ...base, minute: 'FDM', final: true }, 'Malženice', null, now)).toMatchObject({ minute: 90, final: true });
   });
 });
