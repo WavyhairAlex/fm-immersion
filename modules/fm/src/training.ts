@@ -148,8 +148,8 @@ export interface TrainingInput {
 }
 
 /** Méthodes de planning de saison. La présaison, le bloc tactique et la trêve restent ceux de la méthode Freedom. */
-export const TRAINING_METHODS = ['metaAdapt', 'meta', 'freedom'] as const;
-export const isMeta = (m: TrainingMethod | undefined) => (m ?? 'metaAdapt') !== 'freedom';
+export const TRAINING_METHODS = ['metaAdapt', 'meta', 'freedom', 'harvestgreen'] as const;
+export const isMeta = (m: TrainingMethod | undefined) => (m ?? 'metaAdapt') === 'metaAdapt' || m === 'meta';
 export type TrainingMethod = (typeof TRAINING_METHODS)[number];
 
 /* ---------- Dates ---------- */
@@ -334,6 +334,7 @@ function cycler<T>(list: T[]) {
 export function buildTrainingWeek(input: TrainingInput): TrainingWeek {
   const { phase, week, monday } = input;
   if (isMeta(input.method) && (phase === 'A' || phase === 'B' || phase === 'C')) return buildMetaWeek(input);
+  if (input.method === 'harvestgreen' && (phase === 'A' || phase === 'B' || phase === 'C')) return buildHarvestWeek(input);
   const priorities = input.priorities ?? [];
   const matchDays = new Set(input.matchDays.filter((d) => d >= 0 && d <= 6));
   const seasonal = phase === 'A' || phase === 'B' || phase === 'C';
@@ -446,6 +447,101 @@ export function buildTrainingWeek(input: TrainingInput): TrainingWeek {
     }
   }
   return { code, phase, week, variant, theme, congested, days };
+}
+
+/* ---------- Méthode « Harvestgreen » (FM Arena, progression mesurée) ---------- */
+
+/**
+ * Progression mesurée par séance (harvestgreen22, FM Arena, tableur repris par jamiebolden/fm-scoring, 06/11/2026) :
+ * CA gagnée sur une saison de 100 matchs par un joueur de 18 ans (PA 150, tous attributs à 8, entraîneurs à 16,
+ * installations 20), avec la seule séance en question chaque semaine, intensité « double » en bonne et très bonne
+ * forme, aucun travail sinon, priorité individuelle Vitesse. Repères : sans entraînement 10,7 ; une séance tactique
+ * ne fait pas mieux que le repos (10,5 à 12) ; le physique et le travail avec ballon font le double (22 à 27).
+ * Meilleure semaine : Condition physique légère + Condition physique + Ballon offensif + Ballon défensif = 33,3 ;
+ * trois fois la même séance rapporte moins (fatigue). Les séances tactiques servent l'efficacité tactique
+ * (victoires 42,7 % contre 39,2 % avec 8 séances par semaine, au prix de blessures), pas les attributs.
+ */
+export const SESSION_YIELD: Partial<Record<SessionId, number>> = {
+  rest: 10.7,
+  recovery: 11.0,
+  lightConditioning: 11.2,
+  conditioning: 24.8,
+  heavyConditioning: 24.6,
+  individualDevelopment: 22.3,
+  attackingBalanced: 25.1,
+  defendingBalanced: 24.8,
+  possessionBallWork: 26.7,
+  pressAvoidance: 11.7,
+  ballProgression: 11.9,
+  finalThird: 10.6,
+  defensiveBlock: 11.8,
+  defensivePositioning: 11.6,
+  defensiveEngagement: 11.3,
+  corners: 12.1,
+  freeKicks: 10.6,
+  setPiecesPenalties: 11.3,
+  passingStyle: 11.4,
+  buildUpStrategy: 11.7,
+  chanceCreation: 11.3,
+  inPossessionShape: 10.7,
+  lineOfEngagement: 11.7,
+  pressingIntensity: 11.1,
+  pressingTrap: 12.1,
+  outOfPossessionShape: 11.9,
+  teamBonding: 10.8,
+  communityOutreach: 11.1,
+};
+/** Meilleure semaine mesurée : quatre séances, une par jour, rien d'autre. */
+export const HARVEST_WEEK_YIELD = 33.3;
+/** Priorité individuelle de la méthode : Vitesse pour tous les joueurs de champ (l'attribut qui pèse le plus en match). */
+export const HARVEST_FOCUS = 'quickness';
+
+/** Intensité de l'équipe conseillée par méthode : Harvestgreen ne fait travailler que les joueurs en forme, en double. */
+export function teamIntensityFor(method: TrainingMethod | undefined): Record<(typeof CONDITION_LEVELS)[number], IndividualIntensity> {
+  return method === 'harvestgreen' ? { veryPoor: 'noWork', poor: 'noWork', fair: 'noWork', good: 'double', excellent: 'double' } : TEAM_INTENSITY;
+}
+
+/**
+ * Semaine de saison « Harvestgreen » : une séance par jour de travail, dans l'ordre Condition physique, Ballon
+ * offensif (variante du style), Ballon défensif, Condition physique légère, le reste au repos ; la veille d'un match,
+ * une seule séance tactique sur la zone n° 1 (l'efficacité tactique ne se travaille que là). Lendemain de match :
+ * Repos puis Récupération. Semaine à 3 matchs ou plus : repos complet.
+ */
+function buildHarvestWeek(input: TrainingInput): TrainingWeek {
+  const { phase, week, monday } = input;
+  const matchDays = new Set(input.matchDays.filter((d) => d >= 0 && d <= 6));
+  const variant = Math.min(2, matchDays.size) as 0 | 1 | 2;
+  const congested = matchDays.size >= CONGESTED_MATCHES;
+  const training = input.trainingDays ? new Set(input.trainingDays) : null;
+  const kindOf = (d: number): DayKind => {
+    if (matchDays.has(d)) return 'match';
+    if (training && !training.has(d)) return 'off';
+    if (congested) return 'recovery';
+    if (d === 0 ? input.matchBeforeMonday : matchDays.has(d - 1)) return 'recovery';
+    if (matchDays.has(d + 1)) return 'prep';
+    return 'dev';
+  };
+  const kinds = Array.from({ length: 7 }, (_, d) => kindOf(d));
+  const att = ATTACK_BY_STYLE[input.style ?? ''] ?? 'attackingBalanced';
+  const def = DEFENCE_BY_STYLE[input.style ?? ''] ?? 'defendingBalanced';
+  const order: SessionId[] = ['conditioning', att, def, 'lightConditioning'];
+  const top = input.priorities?.[0] ?? 'inPossessionShape';
+  let n = 0;
+  const days: TrainingDay[] = kinds.map((kind, d) => {
+    let sessions: TrainingDay['sessions'] = [null, null, null];
+    if (kind === 'match') sessions = ['match', null, null];
+    else if (kind === 'recovery') sessions = congested ? ['rest', 'rest', null] : ['rest', 'recovery', null];
+    else if (kind === 'prep') sessions = [top, 'rest', null];
+    else if (kind === 'dev') {
+      // Pas de condition physique l'avant-veille d'un match : on passe au ballon.
+      let pick = order[n % order.length]!;
+      if (matchDays.has(d + 2) && (pick === 'conditioning' || pick === 'heavyConditioning')) pick = order[(n + 1) % order.length]!;
+      sessions = n < order.length ? [pick, 'rest', null] : ['rest', 'rest', null];
+      n++;
+    }
+    return { date: addDays(monday, d), weekday: d, kind, sessions };
+  });
+  return { code: `${phase}${week}-${variant}`, phase, week, variant, theme: null, congested, days };
 }
 
 /* ---------- Méthode « Méta efficacité 1.1 » (AlexJeuVideal) ---------- */

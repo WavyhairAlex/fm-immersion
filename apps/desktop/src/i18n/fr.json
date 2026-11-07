@@ -1092,9 +1092,20 @@
       "methods": {
         "metaAdapt": "Méta adaptée à tes faiblesses",
         "meta": "Méta efficacité 1.1 (AlexJeuVideal)",
-        "freedom": "Freedom (FM Scout)"
+        "freedom": "Freedom (FM Scout)",
+        "harvestgreen": "Harvestgreen (progression mesurée, FM Arena)"
       },
       "metaFile": "Programme à charger dans le jeu :",
+      "harvestHelp": "Méthode d'harvestgreen22 (FM Arena, tableur repris par fm-scoring) : quatre séances par semaine, une par jour, Condition physique, Ballon offensif, Ballon défensif, Condition physique légère, tout le reste au repos ; la veille du match, une seule séance tactique sur ta zone n° 1. C'est la semaine qui fait le plus progresser les attributs (33,3 de CA sur une saison contre 10,7 sans entraînement) ; les séances tactiques ne font pas mieux que le repos pour les attributs, elles ne servent qu'à l'efficacité tactique.",
+      "teamIntensityHarvest": "Réglage mesuré par harvestgreen22 : aucun travail pour les joueurs qui ne sont pas en forme, double intensité pour ceux en bonne et très bonne forme. Le jeu applique ensuite seul le réglage à chacun ; la priorité individuelle est Vitesse pour tous les joueurs de champ.",
+      "yield": {
+        "title": "Ce que rapporte chaque séance",
+        "intro": "CA gagnée sur une saison de 100 matchs par un joueur de 18 ans, avec cette seule séance chaque semaine (mesure d'harvestgreen22). Sans entraînement : 10,7. Meilleure semaine mesurée, quatre séances différentes : {{best}}.",
+        "physical": "Physique",
+        "ball": "Avec ballon",
+        "tactical": "Tactique",
+        "help": "Une séance tactique ne fait pas progresser les attributs plus que le repos : elle sert l'efficacité tactique (victoires 42,7 % contre 39,2 % avec huit séances par semaine, au prix de blessures). Trois fois la même séance rapporte moins que quatre séances différentes. Les variantes offensives et défensives valent celles mesurées (équilibrées)."
+      },
       "metaHelp": "Méthode d'AlexJeuVideal (pack « ENTRAÎNEMENT FM 27 META EFFICACITÉ 1.1 ») : un bloc Piège du pressing, Hauteur du pressing, Construction ; un bloc Piège du pressing, Création d'occasions, Organisation avec le ballon ; la veille du match Progression du ballon, Bloc défensif, Condition physique. Tout le reste au repos. Charge le fichier .fmf indiqué dans l'écran Entraînement.",
       "congested": "trois matchs ou plus : semaine entière de repos entre les matchs (les résultats priment sur la progression)",
       "priorities": "Zones du style visé travaillées en priorité : {{list}}.",

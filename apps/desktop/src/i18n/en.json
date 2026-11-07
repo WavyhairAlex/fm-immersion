@@ -1092,9 +1092,20 @@
       "methods": {
         "metaAdapt": "Meta adapted to your weaknesses",
         "meta": "Meta effectiveness 1.1 (AlexJeuVideal)",
-        "freedom": "Freedom (FM Scout)"
+        "freedom": "Freedom (FM Scout)",
+        "harvestgreen": "Harvestgreen (measured growth, FM Arena)"
       },
       "metaFile": "Schedule to load in the game:",
+      "harvestHelp": "harvestgreen22's method (FM Arena, spreadsheet kept by fm-scoring): four sessions a week, one a day, Conditioning, Attacking ball work, Defensive ball work, Light conditioning, rest otherwise; the day before the match a single tactical session on your top area. It is the week that grows attributes most (33.3 CA over a season against 10.7 with no training); tactical sessions do no better than rest for attributes, they only feed tactical effectiveness.",
+      "teamIntensityHarvest": "Setting measured by harvestgreen22: no work for players who are not in shape, double intensity for those in good and excellent shape. The game then applies it to each player; the individual focus is Quickness for every outfield player.",
+      "yield": {
+        "title": "What each session yields",
+        "intro": "CA gained over a 100-match season by an 18-year-old with only this session each week (harvestgreen22's measurement). No training: 10.7. Best measured week, four different sessions: {{best}}.",
+        "physical": "Physical",
+        "ball": "Ball work",
+        "tactical": "Tactical",
+        "help": "A tactical session grows attributes no more than rest: it feeds tactical effectiveness (42.7% wins against 39.2% with eight sessions a week, at the cost of injuries). The same session three times yields less than four different sessions. The attacking and defensive variants count as the measured (balanced) ones."
+      },
       "metaHelp": "AlexJeuVideal's method (\"ENTRAINEMENT FM 27 META EFFICACITÉ 1.1\" pack): one block Pressing Trap, Line of Engagement, Build-Up; one block Pressing Trap, Chance Creation, In-Possession Shape; the day before the match Ball Progression, Defensive Block, Conditioning. Everything else is rest. Load the .fmf file shown in the Training screen.",
       "congested": "three or more matches: full rest between matches (results come before development)",
       "priorities": "Areas of your target style worked first: {{list}}.",
