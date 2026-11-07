@@ -44,6 +44,7 @@ export function FmHome({
   gameFormation = null,
   lineup = null,
   gameTactic = null,
+  onTodo,
 }: {
   snap: FmSnapshot;
   players: FmPlayer[];
@@ -55,6 +56,8 @@ export function FmHome({
   gameFormation?: string | null;
   lineup?: GameSlot[] | null;
   gameTactic?: string | null;
+  /** Écrans où le briefing laisse quelque chose à faire. */
+  onTodo?: (views: string[]) => void;
 }) {
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
@@ -126,6 +129,7 @@ export function FmHome({
   return (
     <div className="space-y-4">
       <FmBriefing
+        key={snap.gameDate}
         snap={snap}
         players={players}
         starters={starters}
@@ -134,13 +138,14 @@ export function FmHome({
         setupsToChange={toChange.length}
         offseason={offseasonDue(snap, coach.seasonStart ?? 8)}
         go={go}
+        onTodo={onTodo}
       />
       <FmOffseason snap={snap} players={players} list={decisionList} go={go} />
       <FmMatchCenter snap={snap} players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameTactic={gameTactic} go={go} />
-      <FmDecisions list={decisionList} go={go} />
       <button type="button" className="chip" aria-expanded={detail} onClick={toggleDetail}>
         {t(detail ? 'fm.brief.detailHide' : 'fm.brief.detail')}
       </button>
+      {detail && <FmDecisions list={decisionList} go={go} />}
       {detail && <FmSummary snap={snap} players={players} />}
       {detail && (<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6 xl:[&>*]:col-span-2 xl:[&>*:nth-last-child(-n+2)]:col-span-3">
         <Panel title={t('fm.home.todo')} action={link('squad', t('fm.views.squad'))}>

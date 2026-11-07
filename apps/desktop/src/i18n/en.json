@@ -2219,7 +2219,7 @@
       "watch": "To watch"
     },
     "brief": {
-      "title": "Your assistant's briefing",
+      "title": "Your week, from your assistant",
       "go": "Go",
       "and": "and",
       "others_one": "{{count}} other",
@@ -2250,7 +2250,32 @@
       "mercato_other": "{{count}} transfer decisions are waiting (departures and signings).",
       "allGood": "Nothing urgent: the team is ready. A good time to look at the game plan or the youngsters.",
       "detail": "Full detail",
-      "detailHide": "Hide detail"
+      "detailHide": "Hide detail",
+      "progress": "{{done}} of {{count}} sorted this week",
+      "allDone": "All sorted: you can carry on playing in FM.",
+      "markDone": "Mark as sorted",
+      "undo": "Back to to-do",
+      "urgent": "Urgent",
+      "tone": {
+        "bad": "Urgent",
+        "warn": "Watch",
+        "info": "For info",
+        "good": "All good"
+      },
+      "act": {
+        "offseason": "See the plan",
+        "absentStarters": "Fix the line-up",
+        "nextMatch": "Scout the opponent",
+        "tiredStarters": "Rotate",
+        "contracts": "Decide",
+        "playtimeShort": "See playing time",
+        "unhappy": "See the dressing room",
+        "playtimeOver": "See playing time",
+        "training": "Change training",
+        "mercato": "Open transfers"
+      },
+      "tabBadge_one": "{{count}} thing to do here",
+      "tabBadge_other": "{{count}} things to do here"
     }
   },
   "modes": {

@@ -106,3 +106,45 @@ export function briefing(input: BriefingInput): BriefItem[] {
   if (!out.length || out.every((x) => x.kind === 'nextMatch')) item('allGood', 'good', 'home');
   return out.slice(0, BRIEF_MAX);
 }
+
+/*
+ * « À faire » : chaque message du briefing se coche une fois traité. La coche tient tant que le message reste le
+ * même (même sujet, mêmes joueurs, même adversaire) et au plus une semaine de jeu : un problème qui revient la
+ * semaine suivante réapparaît.
+ */
+
+/** Messages qui ne se cochent pas (simple information). */
+const NOT_A_TASK: ReadonlySet<BriefKind> = new Set(['allGood']);
+export const isBriefTask = (x: BriefItem) => !NOT_A_TASK.has(x.kind);
+
+/** Durée de validité d'une coche, en jours de jeu. */
+export const BRIEF_DONE_DAYS = 7;
+
+/** Clé stable d'un message : son sujet, ses joueurs, et l'adversaire pour le prochain match. */
+export function briefKey(x: BriefItem): string {
+  const ids = x.players.map((p) => p.id).sort().join(',');
+  const extra = x.kind === 'nextMatch' ? String(x.values.opponent ?? '') : x.kind === 'training' || x.kind === 'mercato' ? String(x.values.count ?? '') : '';
+  return `${x.kind}:${ids}:${extra}`;
+}
+
+/** Coches enregistrées : clé du message → date de jeu où il a été coché. */
+export type BriefDone = Record<string, string>;
+
+const dayOf = (iso: string) => Math.floor(Date.parse(`${iso.slice(0, 10)}T00:00:00Z`) / 86_400_000);
+
+export function briefIsDone(done: BriefDone, x: BriefItem, gameDate: string): boolean {
+  const at = done[briefKey(x)];
+  if (!at) return false;
+  const gap = dayOf(gameDate) - dayOf(at);
+  return Number.isFinite(gap) && gap >= 0 && gap <= BRIEF_DONE_DAYS;
+}
+
+/** Garde seulement les coches encore valides (le stockage ne grossit pas indéfiniment). */
+export function pruneBriefDone(done: BriefDone, gameDate: string): BriefDone {
+  const out: BriefDone = {};
+  for (const [k, at] of Object.entries(done)) {
+    const gap = dayOf(gameDate) - dayOf(at);
+    if (Number.isFinite(gap) && gap >= 0 && gap <= BRIEF_DONE_DAYS) out[k] = at;
+  }
+  return out;
+}
