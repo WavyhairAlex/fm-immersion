@@ -1,9 +1,9 @@
-import { fmLiveSchema, liveIsFresh, liveKey, liveNews, parseScorers, type FmLive, type LiveNews } from '@fm-immersion/module-fm';
+import { fmLiveSchema, liveIsFresh, liveKey, liveNews, parseScorers, type FmLive } from '@fm-immersion/module-fm';
 import { invoke } from '@tauri-apps/api/core';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { editDiscord, getLiveEnabled, getWebhook, isWebhook, postDiscord, sendDiscord } from './discord';
+import { editDiscord, getLiveEnabled, getWebhook, isWebhook, postDiscord } from './discord';
 
 const LIVE_RED = 0xd93c3c;
 const GOOD = 0x2e9e5b;
@@ -24,7 +24,7 @@ function sideScorers(l: FmLive) {
 }
 
 /** Tableau de score du match, modifié à chaque relevé. `club` = club du joueur (couleur du résultat final). */
-export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null) {
+export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, lastGoal: LastGoal | null = null) {
   const s = sideScorers(l);
   let color = LIVE_RED;
   if (l.final && club && (club === l.home || club === l.away)) {
@@ -38,7 +38,12 @@ export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null) 
       {
         author: { name: l.final ? t('live.finalTag') : t('live.liveTag') },
         title: `${l.home}  ${score(l)}  ${l.away}`,
-        description: l.final ? t('live.ended') : l.minute ? `⏱️ ${l.minute}` : t('live.kickoff'),
+        description: [
+          l.final ? t('live.ended') : l.minute ? `⏱️ ${l.minute}` : t('live.kickoff'),
+          lastGoal && t(club && club !== lastGoal.team && (club === l.home || club === l.away) ? 'live.lastGoalAgainst' : 'live.lastGoal', { ...lastGoal }),
+        ]
+          .filter(Boolean)
+          .join('\n'),
         color,
         fields: s
           ? [
@@ -56,30 +61,10 @@ export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null) 
   };
 }
 
-/** Petit message qui fait sonner le salon : un but, ou le coup de sifflet final. */
-export function newsPayload(t: TFunction, l: FmLive, n: LiveNews, club: string | null) {
-  if (n.kind === 'final')
-    return {
-      username: 'FM Immersion',
-      content: t('live.finalMessage', {
-        home: l.home,
-        away: l.away,
-        score: score(l),
-      }),
-    };
-  const team = n.side === 'home' ? l.home : l.away;
-  const scorer = n.scorer ? ` ${n.scorer.name} ${n.scorer.time}` : '';
-  const key = club && club !== team && (club === l.home || club === l.away) ? 'live.goalAgainst' : 'live.goal';
-  return {
-    username: 'FM Immersion',
-    content: t(key, {
-      team,
-      scorer,
-      home: l.home,
-      away: l.away,
-      score: score(l),
-    }),
-  };
+/** Dernier but marqué, affiché sous la minute dans le tableau. */
+export interface LastGoal {
+  team: string;
+  scorer: string;
 }
 
 /** Où en est le direct : match suivi, message du tableau de score, dernier relevé envoyé. Gardé pour un redémarrage. */
@@ -88,6 +73,7 @@ interface LiveState {
   messageId: string | null;
   last: FmLive;
   done: boolean;
+  lastGoal?: LastGoal | null;
 }
 
 const STATE_KEY = 'fmi.discord.liveState';
@@ -109,7 +95,7 @@ function saveState(s: LiveState) {
   }
 }
 
-/** Un relevé du direct : nouveau match → tableau de score ; ensuite buts, tableau modifié, fin du match. */
+/** Un relevé du direct : nouveau match → tableau de score ; ensuite le même message est modifié (score, minute, dernier but, fin). */
 export async function liveStep(t: TFunction, l: FmLive, club: string | null, state: LiveState | null, now = Date.now()): Promise<LiveState | null> {
   if (!liveIsFresh(l, now)) return state;
   const key = liveKey(l);
@@ -119,14 +105,17 @@ export async function liveStep(t: TFunction, l: FmLive, club: string | null, sta
     return { key, messageId, last: l, done: false };
   }
   if (state.done) return state;
-  const news = liveNews(state.last, l);
+  // Un seul encart, modifié : le dernier but y est écrit plutôt qu'envoyé dans un message à part.
+  let lastGoal = state.lastGoal ?? null;
+  for (const n of liveNews(state.last, l))
+    if (n.kind === 'goal') lastGoal = { team: n.side === 'home' ? l.home : l.away, scorer: n.scorer ? `${n.scorer.name} ${n.scorer.time}` : '' };
   const changed =
-    JSON.stringify([state.last.minute, state.last.homeScore, state.last.awayScore, state.last.scorers, state.last.final]) !==
-    JSON.stringify([l.minute, l.homeScore, l.awayScore, l.scorers, l.final]);
+    JSON.stringify([state.last.minute, state.last.homeScore, state.last.awayScore, state.last.scorers, state.last.final, state.lastGoal]) !==
+    JSON.stringify([l.minute, l.homeScore, l.awayScore, l.scorers, l.final, lastGoal]);
   let messageId = state.messageId;
   if (changed) {
     // Tableau effacé du salon (ou jamais envoyé) : on en poste un nouveau plutôt que de rester bloqué.
-    const board = scoreboardPayload(t, l, club);
+    const board = scoreboardPayload(t, l, club, lastGoal);
     try {
       if (!messageId) throw new Error('aucun tableau');
       await editDiscord(messageId, board);
@@ -134,8 +123,7 @@ export async function liveStep(t: TFunction, l: FmLive, club: string | null, sta
       messageId = await postDiscord(board).catch(() => null);
     }
   }
-  for (const n of news) await sendDiscord(newsPayload(t, l, n, club));
-  return { key, messageId, last: l, done: !!l.final };
+  return { key, messageId, last: l, done: !!l.final, lastGoal };
 }
 
 /**
