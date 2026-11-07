@@ -10,7 +10,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   }),
 }));
 
-const { commentary, goalSituation, liveContext, liveStep, matchFigures, matchPhase, minuteOf, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
+const { commentary, goalSituation, lastMatchStats, liveContext, liveStep, matchFigures, matchPhase, minuteOf, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
 const t = ((k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k)) as unknown as TFunction;
 
 const at = '2026-11-07T07:20:00.000Z';
@@ -115,5 +115,43 @@ describe('direct Discord', () => {
     const goal = timeline(l)!.at(-1)!;
     expect(commentary(t, l, 'Malženice', goal)).toMatch(/^live\.say\.second_lead_.*"leader":"Malženice"/);
     expect(commentary(t, { ...l, minute: '14 min.' }, 'Malženice', goal)).toMatch(/^live\.say\.for_opener_/);
+  });
+});
+
+describe('chiffres du jeu après le match', () => {
+  const fin: FmLive = { ...base, homeScore: 1, awayScore: 2, minute: 'FDM', final: true, scorers: "M. Fábry 11', 38', Novák 70'" };
+  const snap = {
+    gameDate: '2027-04-22',
+    custom: { equipe: { dernierMatchScoreDomicile: '1', dernierMatchScoreExterieur: '2', dernierMatchPossDom: 33, dernierMatchPossExt: 67, dernierMatchTirsDom: 5, dernierMatchTirsExt: 12, dernierMatchTirsCadresDom: 1, dernierMatchTirsCadresExt: 6, dernierMatchXgDom: 0.4, dernierMatchXgExt: 2.1, dernierMatchHommeDuMatch: 'Marek Fábry', dernierMatchNoteHommeDuMatch: 8.4 } },
+  };
+
+  it('reconnaît le match par son score, dans la semaine, et refuse des chiffres vides', () => {
+    expect(lastMatchStats(snap, fin)).toMatchObject({ possession: [33, 67], shots: [5, 12], onTarget: [1, 6], xg: [0.4, 2.1], motm: { name: 'Marek Fábry', rating: 8.4 } });
+    expect(lastMatchStats(snap, { ...fin, final: false })).toBeNull();
+    expect(lastMatchStats({ ...snap, gameDate: '2027-05-10' }, fin)).toBeNull();
+    expect(lastMatchStats({ ...snap, custom: { equipe: { ...snap.custom.equipe, dernierMatchScoreDomicile: '2' } } }, fin)).toBeNull();
+    expect(lastMatchStats({ ...snap, custom: { equipe: { ...snap.custom.equipe, dernierMatchPossDom: 50, dernierMatchPossExt: 50, dernierMatchTirsDom: 0, dernierMatchTirsExt: 0 } } }, fin)).toBeNull();
+  });
+
+  it('complète l’encart une seule fois quand les chiffres arrivent, même avec un relevé ancien', async () => {
+    let s = await liveStep(t, base, 'Malženice', null, now);
+    s = await liveStep(t, fin, 'Malženice', s, now);
+    expect(s?.done).toBe(true);
+    calls.length = 0;
+    const late = now + 4 * 60_000;
+    s = await liveStep(t, fin, 'Malženice', s, late);
+    expect(calls).toEqual([]);
+    const withStats = { ...fin, stats: lastMatchStats(snap, fin) } as FmLive;
+    s = await liveStep(t, withStats, 'Malženice', s, late);
+    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit']);
+    const figures = (calls[0]!.args.payload as { embeds: { fields: { name: string; value: string }[] }[] }).embeds[0]!.fields.find((f) => f.name === 'live.figures.title')!.value;
+    expect(figures).toContain('live.figures.possession {"home":"33 %","away":"67 %"}');
+    expect(figures).toContain('live.figures.shots {"home":5,"away":12,"homeOn":1,"awayOn":6}');
+    expect(figures).toContain('live.figures.motm {"name":"Marek Fábry","rating":"8,4"}');
+    expect(figures).toContain('live.figures.halves');
+    expect(s?.stats).toBe(true);
+    calls.length = 0;
+    await liveStep(t, withStats, 'Malženice', s, late);
+    expect(calls).toEqual([]);
   });
 });

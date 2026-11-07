@@ -2627,7 +2627,12 @@
       "halves": "1re mi-temps : {{first}} · 2e mi-temps : {{second}}",
       "first": "Premier but : {{scorer}} ({{minute}})",
       "penalties_one": "{{count}} penalty transformé",
-      "penalties_other": "{{count}} penalties transformés"
+      "penalties_other": "{{count}} penalties transformés",
+      "possession": "Possession : {{home}} · {{away}}",
+      "shots": "Tirs : {{home}} ({{homeOn}} cadrés) · {{away}} ({{awayOn}} cadrés)",
+      "xg": "xG : {{home}} · {{away}}",
+      "motm": "Homme du match : {{name}} ({{rating}})",
+      "motmNoRating": "Homme du match : {{name}}"
     },
     "prematch": {
       "title": "Avant-match",
