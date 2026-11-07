@@ -37,11 +37,18 @@ export function storyText(t: TFunction, club: string, s: GazetteStory): StoryTex
   }
 }
 
+/** Semaine de jeu en toutes lettres (« Semaine du 19 oct. au 25 oct. 2026 »), dans la langue de l'interface. */
+export function weekLabel(t: TFunction, lang: string | undefined, from: string, to: string) {
+  const d = (iso: string, year: boolean) =>
+    new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short', ...(year ? { year: 'numeric' } : {}), timeZone: 'UTC' }).format(new Date(`${iso}T00:00:00Z`));
+  return t('gazette.week', { from: d(from, from.slice(0, 4) !== to.slice(0, 4)), to: d(to, true) });
+}
+
 /** Nom du journal pour un club. */
 export const paperName = (t: TFunction, club: string) => t('gazette.paper', { club });
 
 /** Message Discord (webhook) pour une gazette : une carte à liseré orange, la une puis les brèves. */
-export function discordPayload(t: TFunction, issue: GazetteIssue) {
+export function discordPayload(t: TFunction, issue: GazetteIssue, lang?: string) {
   const head = storyText(t, issue.club, issue.headline);
   const fields = issue.stories.slice(0, 10).map((s) => {
     const x = storyText(t, issue.club, s);
@@ -56,7 +63,7 @@ export function discordPayload(t: TFunction, issue: GazetteIssue) {
         description: head.body.slice(0, 4000) || undefined,
         color: 0xf26b1d,
         fields,
-        footer: { text: t('gazette.week', { from: issue.weekStart, to: issue.weekEnd }) },
+        footer: { text: weekLabel(t, lang, issue.weekStart, issue.weekEnd) },
       },
     ],
   };

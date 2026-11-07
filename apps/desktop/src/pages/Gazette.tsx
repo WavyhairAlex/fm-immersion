@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { fmData, savesData } from '../lib/data';
 import { getWebhook, isWebhook, sendDiscord } from '../lib/discord';
-import { discordPayload, paperName, storyText } from '../lib/gazette-text';
+import { discordPayload, paperName, storyText, weekLabel } from '../lib/gazette-text';
 
 const SAVE_KEY = 'fmi.gazette.save';
 const readSave = () => {
@@ -88,14 +88,14 @@ export function Gazette() {
 }
 
 export function Paper({ issue }: { issue: GazetteIssue }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const head = storyText(t, issue.club, issue.headline);
   return (
     <article className="card rounded-xl p-0">
       <header className="border-b-4 border-orange px-6 py-4">
         <p className="font-display text-3xl font-semibold">{paperName(t, issue.club)}</p>
         <p className="mt-1 text-xs font-bold uppercase tracking-wide text-brun">
-          {t('gazette.issue', { number: issue.number })} · {t('gazette.week', { from: issue.weekStart, to: issue.weekEnd })}
+          {t('gazette.issue', { number: issue.number })} · {weekLabel(t, i18n.resolvedLanguage, issue.weekStart, issue.weekEnd)}
         </p>
       </header>
       <section className="border-b border-canard/10 px-6 py-5">
@@ -118,9 +118,9 @@ export function Paper({ issue }: { issue: GazetteIssue }) {
 }
 
 function SendButton({ issue }: { issue: GazetteIssue }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const webhook = getWebhook();
-  const send = useMutation({ mutationFn: () => sendDiscord(discordPayload(t, issue)) });
+  const send = useMutation({ mutationFn: () => sendDiscord(discordPayload(t, issue, i18n.resolvedLanguage)) });
   if (!isWebhook(webhook)) {
     return (
       <Link to="/discord" className="btn-secondary text-sm">
