@@ -111,87 +111,93 @@ export async function drawSeason(t: TFunction, r: SeasonReview, opts: { face?: C
 
   // Colonne centrale : chiffres.
   const cx = M + 330;
-  const cw = 380;
+  const cw = 400;
+  const fmt1 = (v: number) => new Intl.NumberFormat(opts.lang, { maximumFractionDigits: 1 }).format(v);
   const tile = (x: number, y: number, w: number, value: string, label: string, color = C.ink) => {
-    roundRect(ctx, x, y, w, 110, 14, '#FFFFFF');
-    ctx.font = font(900, 46, SERIF);
+    roundRect(ctx, x, y, w, 92, 12, '#FFFFFF');
     ctx.fillStyle = color;
-    fit(ctx, value, 900, 46, 24, w - 32, SERIF);
-    ctx.fillText(value, x + 16, y + 62);
-    ctx.font = font(700, 14);
+    fit(ctx, value, 900, 40, 20, w - 24, SERIF);
+    ctx.fillText(value, x + 12, y + 46);
+    ctx.font = font(700, 13);
     ctx.fillStyle = C.grey;
-    ctx.fillText(label, x + 16, y + 92);
+    wrap(ctx, label, w - 24, 2).forEach((l, i) => ctx.fillText(l, x + 12, y + 68 + i * 16));
   };
-  const half = (cw - 14) / 2;
-  tile(cx, colY, half, String(r.played), t('season.played'));
-  tile(cx + half + 14, colY, half, `${r.wins}-${r.draws}-${r.losses}`, t('season.record'), C.orangeDark);
-  tile(cx, colY + 124, half, `${r.goalsFor} – ${r.goalsAgainst}`, t('season.goals'));
-  tile(cx + half + 14, colY + 124, half, String(r.unbeaten), t('season.unbeaten'), C.green);
-  // Matchs marquants.
-  ctx.font = font(800, 14);
-  let my = colY + 268;
-  for (const [key, m, color] of [
-    ['season.biggestWin', r.biggestWin, C.green],
-    ['season.worstLoss', r.worstLoss, C.red],
-  ] as const) {
-    if (!m) continue;
+  const tw = (cw - 20) / 3;
+  const tiles: [string, string, string?][] = [
+    [String(r.played), t('season.played')],
+    [`${r.wins}-${r.draws}-${r.losses}`, t('season.record'), C.orangeDark],
+    [String(r.points), t('season.points', { ppm: r.played ? fmt1(r.points / r.played) : '–' })],
+    [`${r.goalsFor}-${r.goalsAgainst}`, t('season.goals')],
+    [String(r.cleanSheets), t('season.cleanSheets')],
+    [String(r.unbeaten), t('season.unbeaten'), C.green],
+  ];
+  tiles.forEach(([value, label, color], i) => tile(cx + (i % 3) * (tw + 10), colY + Math.floor(i / 3) * 102, tw, value, label, color));
+  // Lignes de détail : domicile / extérieur, xG, cartons, matchs marquants.
+  let my = colY + 232;
+  const line = (label: string, value: string, color = C.grey) => {
     ctx.font = font(800, 13);
     ctx.fillStyle = color;
-    ctx.fillText(t(key).toUpperCase(), cx, my);
-    ctx.font = font(700, 18);
+    const lab = `${label.toUpperCase()}  `;
+    ctx.fillText(lab, cx, my);
+    const lw = ctx.measureText(lab).width;
+    ctx.font = font(700, 16);
     ctx.fillStyle = C.ink;
-    ctx.fillText(wrap(ctx, `${m.goalsFor}-${m.goalsAgainst} · ${m.opponent ?? ''}`, cw, 1)[0]!, cx, my + 26);
-    my += 58;
-  }
+    ctx.fillText(wrap(ctx, value, cw - lw, 1)[0]!, cx + lw, my);
+    my += 30;
+  };
+  const rec = (x: { wins: number; draws: number; losses: number }) => `${x.wins}-${x.draws}-${x.losses}`;
+  line(t('season.homeAway'), `${t('season.home')} ${rec(r.home)}  ·  ${t('season.away')} ${rec(r.away)}`);
+  const extra = [r.xg != null && `xG ${fmt1(r.xg)}`, t('season.cards', { yellow: r.yellow, red: r.red })].filter(Boolean).join('  ·  ');
+  line(t('season.more'), extra);
+  if (r.biggestWin) line(t('season.biggestWin'), `${r.biggestWin.goalsFor}-${r.biggestWin.goalsAgainst} · ${r.biggestWin.opponent ?? ''}`, C.green);
+  if (r.worstLoss) line(t('season.worstLoss'), `${r.worstLoss.goalsFor}-${r.worstLoss.goalsAgainst} · ${r.worstLoss.opponent ?? ''}`, C.red);
   if (r.untracked) {
     ctx.font = font(400, 13);
     ctx.fillStyle = C.grey;
-    ctx.fillText(wrap(ctx, t('season.untracked', { count: r.untracked }), cw, 1)[0]!, cx, colY + 378);
+    ctx.fillText(wrap(ctx, t('season.untracked', { count: r.untracked }), cw, 1)[0]!, cx, colY + 372);
   }
 
   // Colonne droite : distinctions et mercato.
-  const rx = cx + cw + 30;
+  const rx = cx + cw + 28;
   const rw = W - M - rx;
   ctx.font = font(900, 15);
   ctx.fillStyle = C.orangeDark;
   ctx.fillText(t('season.awards').toUpperCase(), rx, colY + 14);
-  let ry = colY + 44;
-  if (opts.face && r.topScorer) {
-    drawFace(ctx, opts.face, rx + 40, ry + 34, 38);
-  }
+  let ry = colY + 30;
+  if (opts.face && r.topScorer) drawFace(ctx, opts.face, rx + 34, ry + 32, 32);
   const awards = [
     r.topScorer && [t('season.topScorer'), t('season.goalsCount', { count: r.topScorer.value, name: r.topScorer.name })],
     r.potm && [t('season.potm'), t('season.potmCount', { count: r.potm.value, name: r.potm.name })],
     r.bestRated && [t('season.bestRated'), `${r.bestRated.name} (${rating(r.bestRated.value, opts.lang)})`],
+    r.mostUsed && [t('season.mostUsed'), t('season.minutes', { name: r.mostUsed.name, minutes: r.mostUsed.value })],
   ].filter((x): x is [string, string] => !!x);
   awards.forEach(([label, value], i) => {
-    const x = i === 0 && opts.face ? rx + 92 : rx;
+    const x = i === 0 && opts.face ? rx + 78 : rx;
     const w = rw - (x - rx);
-    ctx.font = font(800, 13);
+    ctx.font = font(800, 12);
     ctx.fillStyle = C.grey;
     ctx.fillText(label.toUpperCase(), x, ry + 20);
-    ctx.font = font(800, 19, SERIF);
+    ctx.font = font(800, 18, SERIF);
     ctx.fillStyle = C.ink;
-    ctx.fillText(wrap(ctx, value, w, 1)[0]!, x, ry + 46);
-    ry += i === 0 && opts.face ? 84 : 64;
+    ctx.fillText(wrap(ctx, value, w, 1)[0]!, x, ry + 44);
+    ry += i === 0 && opts.face ? 70 : 58;
   });
   if (r.arrivals.length || r.departures.length) {
     ctx.fillStyle = C.dash;
-    ctx.fillRect(rx, ry, rw, 1);
+    ctx.fillRect(rx, ry + 4, rw, 1);
     ry += 30;
     ctx.font = font(900, 15);
     ctx.fillStyle = C.orangeDark;
     ctx.fillText(t('season.mercato').toUpperCase(), rx, ry);
-    ctx.font = font(400, 16);
+    ctx.font = font(400, 15);
     ctx.fillStyle = C.ink;
-    for (const [key, names] of [
-      ['season.arrivals', r.arrivals],
-      ['season.departures', r.departures],
-    ] as const) {
-      if (!names.length) continue;
-      const lines = wrap(ctx, `${t(key)} ${names.slice(0, 4).join(', ')}`, rw, 2);
-      lines.forEach((l) => ctx.fillText(l, rx, (ry += 26)));
-    }
+    const text = [
+      r.arrivals.length && `${t('season.arrivals')} ${r.arrivals.slice(0, 4).join(', ')}`,
+      r.departures.length && `${t('season.departures')} ${r.departures.slice(0, 4).join(', ')}`,
+    ]
+      .filter(Boolean)
+      .join(' · ');
+    wrap(ctx, text, rw, 2).forEach((l) => ctx.fillText(l, rx, (ry += 22)));
   }
 
   // Pied.
@@ -215,6 +221,9 @@ export function seasonPayload(t: TFunction, r: SeasonReview, lang?: string) {
     r.topScorer && `⚽ ${t('season.topScorer')} : **${r.topScorer.name}** (${r.topScorer.value})`,
     r.potm && `⭐ ${t('season.potm')} : **${r.potm.name}** (${r.potm.value})`,
     r.bestRated && `📈 ${t('season.bestRated')} : **${r.bestRated.name}** (${rating(r.bestRated.value, lang)})`,
+    `🏠 ${t('season.home')} ${r.home.wins}-${r.home.draws}-${r.home.losses}  ·  ✈️ ${t('season.away')} ${r.away.wins}-${r.away.draws}-${r.away.losses}  ·  🧤 ${t('season.cleanSheets')} : ${r.cleanSheets}`,
+    `🟨 ${r.yellow}  🟥 ${r.red}${r.xg != null ? `  ·  xG ${r.xg}` : ''}  ·  ${r.points} pts`,
+    r.mostUsed && `⏱️ ${t('season.mostUsed')} : **${r.mostUsed.name}** (${r.mostUsed.value} min)`,
     r.biggestWin && `✅ ${t('season.biggestWin')} : ${r.biggestWin.goalsFor}-${r.biggestWin.goalsAgainst} · ${r.biggestWin.opponent ?? ''}`,
   ].filter(Boolean);
   return {

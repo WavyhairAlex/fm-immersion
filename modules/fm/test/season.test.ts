@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { seasonEndedBetween, seasonReviews, type FmSnapshot } from '../src';
+import { seasonEndedBetween, seasonReviews, seasonSoFar, type FmSnapshot } from '../src';
 
 const snap = (gameDate: string, left: number | null, position: number, players: FmSnapshot['players'] = []) =>
   ({
@@ -23,5 +23,15 @@ describe('bilan de la saison', () => {
     expect(r).toMatchObject({ club: 'Malženice', start: '2027-04-01', end: '2027-05-14', label: '2027', position: 4 });
     expect(r!.positions.map((p) => p.position)).toEqual([6, 5, 4]);
     expect(seasonReviews(h.slice(0, 3).map((data) => ({ gameDate: data.gameDate, data })))).toEqual([]);
+  });
+
+  it("saison en cours, et bilan de la saison finie pendant l'intersaison", () => {
+    const h = [snap('2027-04-01', 3, 6), snap('2027-05-08', 1, 4), snap('2027-05-14', 0, 4), snap('2027-05-20', 0, 4)].map((data) => ({
+      gameDate: data.gameDate,
+      data,
+    }));
+    expect(seasonSoFar(h, '2027-05-08')).toMatchObject({ start: '2027-04-01', end: '2027-05-08', position: 4 });
+    expect(seasonSoFar(h, '2027-05-20')).toMatchObject({ start: '2027-04-01', end: '2027-05-14' });
+    expect(seasonSoFar(h, '2027-03-01')).toBeNull();
   });
 });

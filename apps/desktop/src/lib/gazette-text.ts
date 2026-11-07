@@ -1,4 +1,4 @@
-import type { GazetteIssue, GazetteStory } from '@fm-immersion/module-fm';
+import type { GazetteIssue, SeasonReview, GazetteStory } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
 
 /** Une brève mise en mots : titre court et texte. */
@@ -11,7 +11,9 @@ const str = (v: unknown) => (v == null || v === '' ? null : String(v));
 
 /** Note sur 10 avec une décimale, à la française ou à l'anglaise. */
 const rating = (v: unknown, lang?: string) =>
-  v == null || v === '' || Number.isNaN(Number(v)) ? '-' : new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Number(v));
+  v == null || v === '' || Number.isNaN(Number(v))
+    ? '-'
+    : new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Number(v));
 
 /** Morceaux du compte rendu d'un match : lieu, buteurs, meilleur joueur (vides s'ils sont inconnus). */
 function resultParts(t: TFunction, s: GazetteStory, lang?: string) {
@@ -33,7 +35,10 @@ export function storyText(t: TFunction, club: string, s: GazetteStory, lang?: st
       const score = p.goalsFor != null && p.goalsAgainst != null ? `${p.goalsFor}-${p.goalsAgainst}` : '';
       const venue = p.home == null ? '' : t(p.home ? 'gazette.home' : 'gazette.away');
       const parts = resultParts(t, s, lang);
-      return { title: k(`title_${p.outcome}`, { opponent, score }), body: [parts.venue && `${parts.venue}.`, parts.scorers, parts.best].filter(Boolean).join(' ') };
+      return {
+        title: k(`title_${p.outcome}`, { opponent, score }),
+        body: [parts.venue && `${parts.venue}.`, parts.scorers, parts.best].filter(Boolean).join(' '),
+      };
     }
     case 'job':
     case 'fans':
@@ -58,7 +63,9 @@ export function storyText(t: TFunction, club: string, s: GazetteStory, lang?: st
 /** Semaine de jeu en toutes lettres (« Semaine du 19 oct. au 25 oct. 2026 »), dans la langue de l'interface. */
 export function weekLabel(t: TFunction, lang: string | undefined, from: string, to: string) {
   const d = (iso: string, year: boolean) =>
-    new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short', ...(year ? { year: 'numeric' } : {}), timeZone: 'UTC' }).format(new Date(`${iso}T00:00:00Z`));
+    new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short', ...(year ? { year: 'numeric' } : {}), timeZone: 'UTC' }).format(
+      new Date(`${iso}T00:00:00Z`),
+    );
   return t('gazette.week', { from: d(from, from.slice(0, 4) !== to.slice(0, 4)), to: d(to, true) });
 }
 
@@ -97,7 +104,7 @@ const cut = (text: string, max: number) => (text.length > max ? `${text.slice(0,
  * Message Discord (webhook) pour une gazette, façon journal : bandeau du titre et du numéro, la une en grand
  * (pictogramme, titre, chapeau en citation), puis les brèves une par une et le prochain match en dernier.
  */
-export function discordPayload(t: TFunction, issue: GazetteIssue, lang?: string) {
+export function discordPayload(t: TFunction, issue: GazetteIssue, lang?: string, figures?: SeasonReview | null) {
   const head = storyText(t, issue.club, issue.headline, lang);
   const all = issue.stories.slice(0, 12);
   const lead = (() => {
@@ -111,9 +118,21 @@ export function discordPayload(t: TFunction, issue: GazetteIssue, lang?: string)
     const x = storyText(t, issue.club, s, lang);
     return { name: cut(`${ICON[s.kind]}  ${x.title}`, 256), value: cut(x.body || '​', 1024), inline };
   };
+  const fig = figures && (figures.played || figures.position != null) ? figures : null;
+  const figLine = fig
+    ? [
+        fig.position != null && `🏆 ${t(`season.ordinal${fig.position <= 3 ? fig.position : ''}`, { n: fig.position })}`,
+        fig.played && `📋 ${fig.wins}-${fig.draws}-${fig.losses} · ${fig.points} pts`,
+        fig.played && `⚽ ${fig.goalsFor}-${fig.goalsAgainst}`,
+        fig.topScorer && `🔥 ${fig.topScorer.name} (${fig.topScorer.value})`,
+      ]
+        .filter(Boolean)
+        .join('  ·  ')
+    : '';
   const fields = [
     ...(briefs.length ? [{ name: '​', value: `**${t('gazette.discord.briefs')}**` }] : []),
     ...briefs.map((s) => field(s)),
+    ...(figLine ? [{ name: `📊  ${t('gazette.une.figures', { season: fig!.label })}`, value: cut(figLine, 1024) }] : []),
     ...next.map((s) => field(s)),
   ];
   return {
