@@ -2,6 +2,7 @@ import {
   activeSituations,
   backForMatch,
   competitionRules,
+  isFriendly,
   fmLiveSchema,
   liveCoachState,
   liveSubs,
@@ -296,22 +297,26 @@ export function FmMatchCenter({
               </div>
             </div>
           )}
-          <div className="mb-3 rounded-lg bg-canard/5 p-2.5 text-sm">
-            <p>
-              <b className="text-canard">{t('fm.matchSheet.rules', { competition: s.nextMatch?.competition ?? t('fm.matchSheet.competition') })}</b>{' '}
-              {t('fm.matchSheet.subsRule', { count: rules.subs, windows: rules.windows ?? '–' })}
-            </p>
-            {checks.length > 0 && (
-              <ul className="mt-1 space-y-0.5">
-                {checks.map((c) => (
-                  <li key={c.id} className={c.status === 'bad' ? 'font-bold text-corail' : c.status === 'ok' ? 'text-eau-fonce' : 'text-brun'}>
-                    {t(`fm.matchSheet.check.${c.id}`, { need: c.need, have: c.have ?? '?' })} · {t(`fm.matchSheet.status.${c.status}`)}
-                  </li>
-                ))}
-              </ul>
-            )}
-            {rules.unverified && <p className="mt-1 text-xs text-brun">{t('fm.matchSheet.unverified')}</p>}
-          </div>
+          {isFriendly(s.nextMatch?.competition) ? (
+            <p className="mb-3 rounded-lg bg-orange-clair p-2.5 text-sm text-canard">{t('fm.matchSheet.friendly')}</p>
+          ) : (
+            <div className="mb-3 rounded-lg bg-canard/5 p-2.5 text-sm">
+              <p>
+                <b className="text-canard">{t('fm.matchSheet.rules', { competition: s.nextMatch?.competition ?? t('fm.matchSheet.competition') })}</b>{' '}
+                {t('fm.matchSheet.subsRule', { count: rules.subs, windows: rules.windows ?? '–' })}
+              </p>
+              {checks.length > 0 && (
+                <ul className="mt-1 space-y-0.5">
+                  {checks.map((c) => (
+                    <li key={c.id} className={c.status === 'bad' ? 'font-bold text-corail' : c.status === 'ok' ? 'text-eau-fonce' : 'text-brun'}>
+                      {t(`fm.matchSheet.check.${c.id}`, { need: c.need, have: c.have ?? '?' })} · {t(`fm.matchSheet.status.${c.status}`)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {rules.unverified && <p className="mt-1 text-xs text-brun">{t('fm.matchSheet.unverified')}</p>}
+            </div>
+          )}
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <p className="mb-2 text-sm font-bold text-canard">{t('fm.matchSheet.subs')}</p>

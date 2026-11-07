@@ -1888,7 +1888,8 @@
         "bad": "à corriger",
         "unknown": "à vérifier (nationalités pas encore lues)"
       },
-      "unverified": "Règles reprises d'un récapitulatif FM, pas encore lues dans le jeu : vérifie l'écran Règles de la compétition."
+      "unverified": "Règles reprises d'un récapitulatif FM, pas encore lues dans le jeu : vérifie l'écran Règles de la compétition.",
+      "friendly": "Match amical : rien en jeu et changements libres. Fais tourner, donne du temps aux jeunes et à ceux qui manquent de rythme, ménage les cadres. Il ne compte ni dans le bilan ni dans le temps de jeu promis."
     },
     "squadPitch": {
       "label": "Affichage de l'effectif",
@@ -1950,7 +1951,8 @@
         "leaky": "On encaisse {{ga}} buts par match : la défense est la priorité.",
         "merged_one": "{{count}} période regroupe plusieurs matchs joués entre deux relectures : chaque match n'y a pas son détail.",
         "merged_other": "{{count}} périodes regroupent plusieurs matchs joués entre deux relectures : chaque match n'y a pas son détail."
-      }
+      },
+      "friendly": "Amical"
     },
     "repl": {
       "open": "Remplaçant",
@@ -2273,12 +2275,16 @@
         "playtimeOver": "Voir le temps de jeu",
         "training": "Changer l'entraînement",
         "mercato": "Ouvrir le mercato",
-        "trialists": "Juger l'essai"
+        "trialists": "Juger l'essai",
+        "friendly": "Répartir le temps de jeu"
       },
       "tabBadge_one": "{{count}} chose à faire ici",
       "tabBadge_other": "{{count}} choses à faire ici",
       "trialists_one": "{{names}} est à l'essai au club : regarde s'il vaut mieux que ton effectif avant de lui proposer un contrat.",
-      "trialists_other": "{{names}} sont à l'essai au club : regarde s'ils valent mieux que ton effectif avant de leur proposer un contrat."
+      "trialists_other": "{{names}} sont à l'essai au club : regarde s'ils valent mieux que ton effectif avant de leur proposer un contrat.",
+      "friendly_one": "Match amical demain contre {{opponent}}{{where}} : rien en jeu, fais jouer ceux qui manquent de temps de jeu et ménage les cadres.",
+      "friendly_other": "Match amical dans {{count}} jours contre {{opponent}}{{where}} : rien en jeu, fais jouer ceux qui manquent de temps de jeu et ménage les cadres.",
+      "friendlyToday": "Match amical aujourd'hui contre {{opponent}}{{where}} : rien en jeu, fais tourner et donne du temps de jeu."
     }
   },
   "modes": {

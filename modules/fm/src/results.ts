@@ -3,6 +3,7 @@ import type { Line } from './positions';
 import type { FmSnapshot } from './snapshot';
 import { snapshotFixtures } from './fixtures';
 import { deriveStats, matchStatsFull, type PlayerStats, type RawStats } from './stats';
+import { isFriendly } from './rules';
 import { gameFormationOf } from './tactic';
 
 /**
@@ -42,6 +43,8 @@ export interface MatchResult {
   matches: number;
   opponent: string | null;
   competition: string | null;
+  /** Match amical : montré dans les résultats, mais hors bilan, forme, analyses et temps de jeu. */
+  friendly: boolean;
   home: boolean | null;
   outcome: Outcome | null;
   wins: number;
@@ -158,6 +161,7 @@ export function resultBetween(prev: FmSnapshot, cur: FmSnapshot): MatchResult | 
     since: prev.gameDate,
     matches,
     ...opp,
+    friendly: isFriendly(opp.competition),
     outcome,
     wins: known ? wins : 0,
     draws,
@@ -180,6 +184,9 @@ export function matchResults(history: { gameDate: string; data: FmSnapshot }[]):
   }
   return out;
 }
+
+/** Matchs officiels seulement (sans les amicaux) : bilans, forme, analyses, temps de jeu. */
+export const officialResults = (history: { gameDate: string; data: FmSnapshot }[]): MatchResult[] => matchResults(history).filter((r) => !r.friendly);
 
 /* ---------- Ce qui marche ou pas ---------- */
 
@@ -258,7 +265,9 @@ function record(rs: MatchResult[]): Record3 {
 }
 
 export function analyzeResults(history: { gameDate: string; data: FmSnapshot }[]): ResultsAnalysis {
-  const all = matchResults(history);
+  // Les amicaux restent dans la liste des résultats, mais ne comptent ni dans le bilan ni dans les analyses.
+  const listed = matchResults(history);
+  const all = listed.filter((r) => !r.friendly);
   const singles = all.filter((r) => r.outcome);
   const rec = record(all);
 
@@ -319,7 +328,7 @@ export function analyzeResults(history: { gameDate: string; data: FmSnapshot }[]
   if (merged) insights.push({ kind: 'merged', params: { count: merged } });
 
   return {
-    results: [...all].reverse(),
+    results: [...listed].reverse(),
     form: singles.slice(-5).map((r) => r.outcome!),
     record: rec,
     byTactic,

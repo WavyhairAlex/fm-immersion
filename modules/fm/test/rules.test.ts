@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { competitionRules, DEFAULT_RULES, plannedSubs, ruleChecks, type FmPlayer, type FormationPlan } from '../src';
+import { competitionRules, DEFAULT_RULES, isFriendly, plannedSubs, ruleChecks, type FmPlayer, type FormationPlan } from '../src';
 
 const pl = (id: string, age: number) => ({ id, name: id, age, attributes: {} }) as unknown as FmPlayer;
 const plan = (ages: number[]) => ({ slots: ages.map((a, i) => ({ pos: 'MC', player: pl(`p${i}`, a) })), subs: [] }) as unknown as FormationPlan;
@@ -29,5 +29,14 @@ describe('règles de compétition', () => {
 describe('nom de la 2. liga dans FM27', () => {
   it('reconnaît « 2. slovenská futbalová liga »', () => {
     expect(competitionRules('2. slovenská futbalová liga').u21Xi).toBe(1);
+  });
+});
+
+describe('matchs amicaux', () => {
+  it('reconnaît « Match Amical » et ses variantes, pas le championnat', () => {
+    expect(isFriendly('Match Amical')).toBe(true);
+    expect(isFriendly('Friendly')).toBe(true);
+    expect(isFriendly('2. liga')).toBe(false);
+    expect(isFriendly(null)).toBe(false);
   });
 });

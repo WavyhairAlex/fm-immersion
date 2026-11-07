@@ -140,7 +140,7 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
                   <span className="font-bold">
                     {r.opponent ? (r.home == null ? r.opponent : t(r.home ? 'fm.results.home' : 'fm.results.away', { team: r.opponent })) : r.matches > 1 ? `${r.wins}-${r.draws}-${r.losses}` : t('fm.results.unknownOpponent')}
                   </span>
-                  {r.competition && <span className="text-xs text-brun">{r.competition}</span>}
+                  {r.friendly ? <Tag>{t('fm.results.friendly')}</Tag> : r.competition && <span className="text-xs text-brun">{r.competition}</span>}
                   <span className="ml-auto text-xs text-brun">
                     {[r.tactic ?? r.formation, r.xg != null ? t('fm.results.xg', { xg: num(r.xg, 2) }) : null].filter(Boolean).join(' · ')}
                   </span>

@@ -1,6 +1,6 @@
 import {
   diagnoseLineup,
-  matchResults,
+  officialResults,
   matchStats,
   POS_LABEL,
   ratingsByPlayer,
@@ -40,7 +40,7 @@ export function FmDiagnosis({
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
   const { engine, plan } = useTacticChoice(players, folder, gameFormation, lineup, gameTactic);
-  const ratings = useMemo(() => ratingsByPlayer(matchResults(history ?? [])), [history]);
+  const ratings = useMemo(() => ratingsByPlayer(officialResults(history ?? [])), [history]);
   const weaknesses = useMemo(() => {
     const board = statsBoard(players, matchStats(snap));
     return new Map(board.players.filter((r) => r.enough).map((r) => [r.player.id, r.weaknesses]));

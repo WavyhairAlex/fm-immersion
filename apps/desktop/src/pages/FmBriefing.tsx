@@ -96,9 +96,9 @@ export function FmBriefing({
   const names = (ps: FmPlayer[]) => nameList(ps, t('fm.brief.and'), (n) => t('fm.brief.others', { count: n }));
   const text = (x: BriefItem) => {
     const v = { ...x.values, names: names(x.players), first: x.players[0]?.name ?? '', date: f.date(String(x.values.date ?? '')) };
-    if (x.kind === 'nextMatch') {
+    if (x.kind === 'nextMatch' || x.kind === 'friendly') {
       const where = x.values.where ? t(`fm.brief.where.${x.values.where}`) : '';
-      return x.values.days === 0 ? t('fm.brief.nextMatchToday', { ...v, where }) : t('fm.brief.nextMatch', { ...v, where });
+      return x.values.days === 0 ? t(`fm.brief.${x.kind}Today`, { ...v, where }) : t(`fm.brief.${x.kind}`, { ...v, where });
     }
     return t(`fm.brief.${x.kind}`, v);
   };

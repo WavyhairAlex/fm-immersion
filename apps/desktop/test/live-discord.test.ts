@@ -10,7 +10,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   }),
 }));
 
-const { commentary, goalSituation, liveStep, matchPhase, minuteOf, progressBar, timeline } = await import('../src/lib/live-discord');
+const { commentary, goalSituation, liveStep, matchPhase, minuteOf, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
 const t = ((k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k)) as unknown as TFunction;
 
 const at = '2026-11-07T07:20:00.000Z';
@@ -31,6 +31,12 @@ const base: FmLive = {
 describe('direct Discord', () => {
   beforeEach(() => {
     calls.length = 0;
+  });
+
+  it("annonce la compétition dans l'encart (match amical)", () => {
+    const p = scoreboardPayload(t, { ...base, competition: 'Match Amical' } as FmLive, 'Malženice');
+    expect(p.embeds[0]!.author.name).toBe('live.liveTag  ·  MATCH AMICAL');
+    expect(scoreboardPayload(t, base, 'Malženice').embeds[0]!.author.name).toBe('live.liveTag');
   });
 
   it('poste un seul encart puis le modifie : but, puis fin du match', async () => {

@@ -1,6 +1,6 @@
 import { statusRank } from './club';
 import type { FmPlayer } from './player';
-import { matchResults } from './results';
+import { officialResults } from './results';
 import type { FmSnapshot } from './snapshot';
 
 /*
@@ -65,7 +65,7 @@ export function playtimeMatches(history: Entry[]): PlaytimeMatch[] {
   const sorted = [...history].sort((a, b) => a.gameDate.localeCompare(b.gameDate));
   const from = seasonFrom(sorted.at(-1)?.gameDate ?? '');
   const byDate = new Map(sorted.map((e) => [e.data.gameDate, e.data]));
-  return matchResults(sorted)
+  return officialResults(sorted)
     .filter((r) => r.since >= from)
     .map((r) => {
       const before = byDate.get(r.since)?.players ?? [];
