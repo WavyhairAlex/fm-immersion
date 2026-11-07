@@ -2130,6 +2130,33 @@
       "progress": "Import : {{done}} / {{total}}…",
       "result_one": "{{count}} jour importé.",
       "result_other": "{{count}} jours importés."
+    },
+    "off": {
+      "title": "Plan d'intersaison",
+      "help": "La reprise approche : l'été dans l'ordre, à partir des décisions ci-dessous. Les montants viennent des salaires et valeurs lus dans le jeu.",
+      "helpOver": "Le championnat est fini : voici l'été dans l'ordre, à partir des décisions ci-dessous. Les montants viennent des salaires et valeurs lus dans le jeu.",
+      "nothing": "Rien à faire ici.",
+      "before": "avant le {{date}}",
+      "now": "maintenant",
+      "range": "du {{from}} au {{to}}",
+      "wagesFreed_one": "salaire libéré ({{count}} départ)",
+      "wagesFreed_other": "salaires libérés ({{count}} départs)",
+      "wageRoomAfter": "marge salariale après",
+      "saleValue": "valeur des ventes",
+      "budget": "Budget transferts : {{transfer}} · marge salariale après départs : {{wages}}",
+      "preseasonText": "Planning de présaison P1 à P4 (Entraînement), matchs amicaux à caler, nouveaux venus à intégrer avant la reprise.",
+      "step": {
+        "contracts": "Trancher les contrats",
+        "departures": "Faire les départs",
+        "recruits": "Recruter",
+        "preseason": "Présaison"
+      },
+      "go": {
+        "contracts": "Contrats",
+        "departures": "Mercato",
+        "recruits": "Cibles",
+        "preseason": "Entraînement"
+      }
     }
   },
   "modes": {
