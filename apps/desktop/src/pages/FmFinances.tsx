@@ -68,6 +68,11 @@ export function FmFinances({ snap, players }: { snap: FmSnapshot; players: FmPla
               {t('fm.fin.confidence')} <Tag tone={boardTone(fin.boardConfidence)}>{fin.boardConfidence}</Tag>
             </p>
           )}
+          {fin.boardCulture && (
+            <p className="mb-2 text-sm">
+              {t('fm.fin.culture')} <span className="text-brun">{fin.boardCulture}</span>
+            </p>
+          )}
           {fin.expectations.length ? (
             fin.expectations.map((e) => (
               <Row key={e.label}>

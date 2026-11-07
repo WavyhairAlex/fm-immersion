@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clubFinances, financeState, wageFigures, contractsByYear, dressingRoom, homeOverview, loans, moraleLevel, statusRank, upcomingContracts, wageReport } from '../src';
+import { boardObjectives, clubFinances, financeState, wageFigures, contractsByYear, dressingRoom, homeOverview, loans, moraleLevel, statusRank, upcomingContracts, wageReport } from '../src';
 import { normalizePlayer } from '../src/player';
 import type { FmSnapshot } from '../src/snapshot';
 
@@ -82,5 +82,27 @@ describe('finances serrées', () => {
     expect(financeState({ wageRoom: -7500, transferBudget: 0, balance: 12_000 })).toEqual({ tight: true, signals: ['wageOver', 'noTransfer'] });
     expect(financeState({ wageRoom: null, transferBudget: null, balance: -3000 })).toEqual({ tight: true, signals: ['debt'] });
     expect(financeState({ wageRoom: null, transferBudget: null, balance: null }).tight).toBe(false);
+  });
+});
+
+describe('objectifs du board lus dans le jeu', () => {
+  it('lit les fiches en profond quelle que soit leur forme', () => {
+    const club = {
+      visionObjectifsAnnee: [{ ObjectiveTitle: 'Terminer dans la première moitié', ObjectiveStatusText: 'En bonne voie' }, 'Jouer les jeunes'],
+      attentesSaison: JSON.stringify({ Items: [{ Description: 'Éviter la relégation', Progress: 'Atteint' }] }),
+      visionObjectifFinal: 'Monter en 1. liga',
+      cultureBoard: 'Prudent',
+    };
+    expect(boardObjectives(club)).toEqual([
+      { label: 'Terminer dans la première moitié', status: 'En bonne voie' },
+      { label: 'Jouer les jeunes', status: null },
+      { label: 'Éviter la relégation', status: 'Atteint' },
+      { label: 'Monter en 1. liga', status: null },
+    ]);
+    const snap = { clubInfo: {}, custom: { club } } as unknown as FmSnapshot;
+    const f = clubFinances(snap, []);
+    expect(f.boardCulture).toBe('Prudent');
+    expect(f.expectations).toHaveLength(4);
+    expect(boardObjectives(null)).toEqual([]);
   });
 });

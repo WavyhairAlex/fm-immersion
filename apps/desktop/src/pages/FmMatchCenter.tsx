@@ -2,6 +2,7 @@ import {
   activeSituations,
   backForMatch,
   competitionRules,
+  eligibilityOf,
   competitionWeight,
   isCongested,
   isFriendly,
@@ -62,7 +63,8 @@ export function FmMatchCenter({
   const weight = competitionWeight(s.nextMatch?.competition, { congested: isCongested(fixtures, snap.gameDate) });
   const subs = useMemo(() => (plan ? substitutionPlan(plan, plannedSubs(rules)) : []), [plan, rules]);
   const benchPlayers = plan ? [...new Map(plan.subs.flatMap((l) => l.slice(0, 1)).map((p) => [p.id, p])).values()].slice(0, rules.bench ?? 9) : [];
-  const checks = plan ? ruleChecks(plan, rules, benchPlayers) : [];
+  const eligibility = useMemo(() => eligibilityOf(snap), [snap]);
+  const checks = plan ? ruleChecks(plan, rules, benchPlayers, eligibility) : [];
   // Mode « en direct » : la minute et le score viennent du relevé du plugin (archivix-live.json, réécrit toutes
   // les 15 s pendant le match, lu ici toutes les 10 s, lecture locale seulement) ; sans relevé du match du club,
   // ou si le coach reprend la main, il les saisit lui-même.
@@ -318,7 +320,7 @@ export function FmMatchCenter({
                 <ul className="mt-1 space-y-0.5">
                   {checks.map((c) => (
                     <li key={c.id} className={c.status === 'bad' ? 'font-bold text-corail' : c.status === 'ok' ? 'text-eau-fonce' : 'text-brun'}>
-                      {t(`fm.matchSheet.check.${c.id}`, { need: c.need, have: c.have ?? '?' })} · {t(`fm.matchSheet.status.${c.status}`)}
+                      {t(`fm.matchSheet.check.${c.id}`, { need: c.need, have: c.have ?? '?' })} · {t(c.status === 'ok' && c.verified ? 'fm.matchSheet.status.okVerified' : `fm.matchSheet.status.${c.status}`)}
                     </li>
                   ))}
                 </ul>

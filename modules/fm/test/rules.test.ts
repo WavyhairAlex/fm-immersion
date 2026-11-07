@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { competitionKind, competitionRules, competitionWeight, DEFAULT_RULES, isCongested, isFriendly, plannedSubs, ruleChecks, type FmPlayer, type FormationPlan } from '../src';
+import { competitionKind, competitionRules, competitionWeight, DEFAULT_RULES, isCongested, isFriendly, plannedSubs, ruleChecks, eligibilityOf, homeGrownOf, type FmSnapshot, type FmPlayer, type FormationPlan } from '../src';
 
 const pl = (id: string, age: number) => ({ id, name: id, age, attributes: {} }) as unknown as FmPlayer;
 const plan = (ages: number[]) => ({ slots: ages.map((a, i) => ({ pos: 'MC', player: pl(`p${i}`, a) })), subs: [] }) as unknown as FormationPlan;
@@ -64,5 +64,40 @@ describe('importance des compétitions', () => {
     expect(isCongested(fx, '2027-07-30')).toBe(false);
     expect(isCongested(fx, '2027-08-05')).toBe(true);
     expect(isCongested(fx, '2027-08-09')).toBe(false);
+  });
+});
+
+describe('admissibilité lue dans le jeu', () => {
+  const pl = (id: string, age: number) => ({ id, name: id, age, positions: ['MC'], attributes: {} }) as unknown as FmPlayer;
+  const plan = (ps: FmPlayer[]) => ({ slots: ps.map((player) => ({ pos: 'MC', player })), subs: [] }) as unknown as FormationPlan;
+  const snap = (rows: Record<string, Record<string, unknown>>) => ({ players: [], custom: { joueurs: rows } }) as unknown as FmSnapshot;
+
+  it('lit estUE et formeAuPays par joueur', () => {
+    const e = eligibilityOf(snap({ a: { id: 'a', estUE: 'True', formeAuPays: 'Formé au club' }, b: { id: 'b', estUE: 'False', formeAuPays: 'Non formé au pays' }, c: { id: 'c', risqueBlessureGlobal: 3 } }));
+    expect(e.get('a')).toEqual({ eu: true, homeGrown: true });
+    expect(e.get('b')).toEqual({ eu: false, homeGrown: false });
+    expect(e.has('c')).toBe(false);
+    expect(homeGrownOf('Formé au pays')).toBe(true);
+    expect(homeGrownOf('Pas formé au pays')).toBe(false);
+    expect(homeGrownOf(null)).toBeNull();
+  });
+
+  it('compte les hors UE et les jeunes formés au pays quand tout est lu', () => {
+    const r = competitionRules('2. liga');
+    const xi = [pl('y', 19), ...Array.from({ length: 10 }, (_, i) => pl(`p${i}`, 25))];
+    const rows: Record<string, Record<string, unknown>> = {};
+    for (const p of xi) rows[p.id as string] = { id: p.id, estUE: p.id === 'p0' || p.id === 'p1' ? 'False' : 'True', formeAuPays: p.id === 'y' ? 'Formé au pays' : 'Formé à l’étranger' };
+    const checks = ruleChecks(plan(xi), r, [], eligibilityOf(snap(rows)));
+    expect(checks.find((c) => c.id === 'nonEu')).toMatchObject({ status: 'ok', have: 2, verified: true });
+    expect(checks.find((c) => c.id === 'u21Xi')).toMatchObject({ status: 'ok', have: 1, verified: true });
+    // Le jeune n'est pas formé au pays : la règle n'est plus respectée.
+    rows.y!.formeAuPays = 'Formé à l’étranger';
+    const bad = ruleChecks(plan(xi), r, [], eligibilityOf(snap(rows)));
+    expect(bad.find((c) => c.id === 'u21Xi')).toMatchObject({ status: 'bad', have: 0, verified: true });
+    // Un joueur sans lecture : retour à l'âge seul, hors UE inconnu.
+    delete rows.p3;
+    const partial = ruleChecks(plan(xi), r, [], eligibilityOf(snap(rows)));
+    expect(partial.find((c) => c.id === 'nonEu')).toMatchObject({ status: 'unknown', verified: false });
+    expect(partial.find((c) => c.id === 'u21Xi')).toMatchObject({ status: 'ok', verified: false });
   });
 });
