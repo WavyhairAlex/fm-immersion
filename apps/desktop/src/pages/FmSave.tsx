@@ -562,6 +562,7 @@ export function FmSave() {
               </div>
             </div>
           </form>
+          <FmHistoryImport saveId={saveId} folder={folder} club={settings?.fmClub ?? snapshot?.club ?? null} />
           <FmBridge dataFolder={folder} onHealth={setBridgeOk} />
           <FmMemory />
         </div>
@@ -878,5 +879,84 @@ function SquadTable({ players, folder }: { players: FmPlayer[]; folder: string }
         </table>
       </div>
     </section>
+  );
+}
+
+type FmHistoryFile = { gameDate: string; club: string | null; bytes: number };
+
+/**
+ * Reprise d'une carrière déjà suivie : le plugin garde un instantané par jour de jeu (`archivix-AAAA-MM-JJ.json`).
+ * On les regroupe par club et le joueur choisit lequel importer dans cette partie (du plus ancien au plus récent).
+ * Les jours déjà présents ne sont pas réimportés ; un fichier sans aucun nom de joueur (lecture ratée) est ignoré.
+ */
+function FmHistoryImport({ saveId, folder, club }: { saveId: string; folder: string; club: string | null }) {
+  const { t, i18n } = useTranslation();
+  const qc = useQueryClient();
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+  const { data: files } = useQuery({
+    queryKey: ['fm', 'history-files', folder],
+    queryFn: () => invoke<FmHistoryFile[]>('fm_history_list', { folder }),
+    enabled: !!folder,
+  });
+  const { data: known } = useQuery({
+    queryKey: ['fm', saveId, 'history'],
+    queryFn: () => fmData.history(saveId),
+  });
+  const groups = useMemo(() => {
+    const have = new Set((known ?? []).map((h) => h.gameDate.slice(0, 10)));
+    const by = new Map<string, FmHistoryFile[]>();
+    for (const f of files ?? []) if (f.club) by.set(f.club, [...(by.get(f.club) ?? []), f]);
+    return [...by.entries()]
+      .map(([name, list]) => ({ name, list, missing: list.filter((f) => !have.has(f.gameDate)) }))
+      .sort((a, b) => (a.name === club ? -1 : b.name === club ? 1 : b.list.at(-1)!.gameDate.localeCompare(a.list.at(-1)!.gameDate)));
+  }, [files, known, club]);
+  const run = useMutation({
+    mutationFn: async (list: FmHistoryFile[]) => {
+      let imported = 0;
+      setProgress({ done: 0, total: list.length });
+      for (const [i, f] of list.entries()) {
+        const raw = JSON.parse(await invoke<string>('fm_history_read', { folder, gameDate: f.gameDate })) as { players?: { name?: string }[] };
+        if (raw.players?.some((p) => p.name)) {
+          await fmData.importSnapshot(saveId, raw, { force: true });
+          imported++;
+        }
+        setProgress({ done: i + 1, total: list.length });
+      }
+      return imported;
+    },
+    onSettled: () => {
+      setProgress(null);
+      qc.invalidateQueries({ queryKey: ['fm', saveId] });
+      qc.invalidateQueries({ queryKey: ['saves'] });
+    },
+  });
+  if (!groups.length) return null;
+  const fmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  const day = (d: string) => fmt.format(new Date(`${d}T00:00:00Z`));
+  return (
+    <div className="border-t border-canard/10 pt-3">
+      <h3 className="text-sm font-bold text-canard">{t('fm.history.title')}</h3>
+      <p className="mt-0.5 text-xs text-brun">{t('fm.history.help')}</p>
+      <ul className="mt-2 space-y-1.5">
+        {groups.map((g) => (
+          <li key={g.name} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-canard">
+            <span className="font-bold">{g.name}</span>
+            <span className="text-brun">
+              {t('fm.history.range', { count: g.list.length, from: day(g.list[0]!.gameDate), to: day(g.list.at(-1)!.gameDate) })}
+            </span>
+            {g.missing.length ? (
+              <button type="button" className="btn-secondary px-3 py-1 text-xs" disabled={run.isPending} onClick={() => run.mutate(g.missing)}>
+                {t('fm.history.import', { count: g.missing.length })}
+              </button>
+            ) : (
+              <span className="text-xs text-eau-fonce">{t('fm.history.done')}</span>
+            )}
+          </li>
+        ))}
+      </ul>
+      {progress && <p className="mt-2 text-xs text-brun">{t('fm.history.progress', progress)}</p>}
+      {run.isSuccess && !progress && <p className="mt-2 text-xs text-eau-fonce">{t('fm.history.result', { count: run.data })}</p>}
+      {run.isError && <p className="mt-2 text-xs text-corail">{t('fm.importError', { reason: String(run.error?.message ?? run.error) })}</p>}
+    </div>
   );
 }
