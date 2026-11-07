@@ -13,6 +13,10 @@ import {
   statsBoard,
   mentoringGroups,
   seasonWeeks,
+  firstTeamBar,
+  youthTeams,
+  youthWeek,
+  type YouthStatus,
   calendarFixtures,
   weekWorkload,
   nearestPreset,
@@ -47,11 +51,11 @@ import {
   yieldDaysMissing,
   type SquadAt,
 } from '@fm-immersion/module-fm';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useContext, useMemo, useState, type ReactNode } from 'react';
 import type { SeasonWeekKind } from '@fm-immersion/module-fm';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
-import { useTacticEngine } from './FmTactic';
+import { ReserveContext, useTacticEngine } from './FmTactic';
 import { Chips, Fit, Panel, Pos, Tag, useCoach, useFormat, useNames, More, PlayerLink } from './FmUi';
 
 /** Couleur des pastilles par catégorie de séance (texte toujours canard, sauf le match en bouton principal). */
@@ -702,6 +706,12 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
         </Panel>
       )}
 
+      <YouthPanel
+        engine={engine}
+        players={players}
+        week={youthWeek({ gameDate: snap.gameDate, seasonStart, winterBreak, trainingDays, priorities, style: style?.id, method })}
+      />
+
       <Panel title={t('fm.train.mentoring')}>
         {mentoring.groups.length ? (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -745,5 +755,85 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
       </Panel>
       </details>
     </div>
+  );
+}
+
+const YOUTH_TONE: Record<YouthStatus, 'good' | 'info' | 'warn' | 'bad'> = { promote: 'good', loan: 'warn', develop: 'info', low: 'bad' };
+
+/**
+ * Jeunes et équipe B : semaine type orientée progression, puis pour chaque joueur le rôle du projet à apprendre, la
+ * priorité individuelle et ce qu'il faut en faire (monter, prêter, garder, libérer). Calendrier des jeunes non lu.
+ */
+function YouthPanel({ engine, week, players }: { engine: TacticEngine; week: ReturnType<typeof youthWeek>; players: FmPlayer[] }) {
+  const { t } = useTranslation();
+  const names = useNames();
+  const [coach] = useCoach();
+  const reserve = useContext(ReserveContext);
+  const list = useMemo(() => reserve.filter((p) => Object.keys(p.attributes).length > 0), [reserve]);
+  const project = useMemo(() => (list.length ? buildProject(engine, list, coach) : null), [engine, list, coach]);
+  // Repère : niveau des titulaires de l'équipe première dans le même projet de jeu.
+  const bar = useMemo(() => {
+    const first = buildProject(engine, players.filter((p) => !p.team && Object.keys(p.attributes).length > 0), coach);
+    return first ? firstTeamBar(first.slots) : null;
+  }, [engine, players, coach]);
+  const teams = useMemo(() => (project ? youthTeams(project.plans, bar ?? project.threshold) : []), [project, bar]);
+  const [picked, setPicked] = useState<string | null>(null);
+  const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
+  if (!teams.length) return null;
+  const team = teams.find((x) => x.team === picked) ?? teams[0]!;
+  const summary = (['promote', 'loan', 'low'] as const).filter((k) => team.counts[k] > 0).map((k) => t(`fm.train.youth.count.${k}`, { count: team.counts[k] }));
+  return (
+    <Panel title={t('fm.train.youth.title')}>
+      {teams.length > 1 && (
+        <div className="mb-3">
+          <Chips value={team.team} options={teams.map((x) => [x.team, `${x.team} (${x.rows.length})`] as [string, string])} onChange={setPicked} />
+        </div>
+      )}
+      <p className="text-sm">
+        {t('fm.train.youth.week', {
+          code: week.plan.code,
+          preset: t(`fm.train.preset.${week.preset}`),
+          workload: week.workload ? t(`fm.train.workload.${week.workload}`) : t('fm.train.youth.noWorkload'),
+        })}
+      </p>
+      {summary.length > 0 && <p className="mt-1 text-sm font-bold">{summary.join(' · ')}</p>}
+      <div className="table-scroll mt-3">
+        <table className="data-table wide">
+          <thead className="text-left text-canard/70">
+            <tr>
+              <th className="px-2 py-1">{t('fm.prog.player')}</th>
+              <th className="px-2 py-1">{t('fm.train.youth.statusCol')}</th>
+              <th className="px-2 py-1">{t('fm.train.youth.roleCol')}</th>
+              <th className="px-2 py-1">{t('fm.train.focusCol')}</th>
+              <th className="px-2 py-1 text-right">{t('fm.train.youth.potentialCol')}</th>
+              <th className="px-2 py-1 text-right">{t('fm.proj.fit')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {team.rows.map(({ plan: x, status, focus }) => (
+              <tr key={x.player.id} className="border-t border-canard/5">
+                <td className="px-2 py-1.5 font-bold">
+                  <PlayerLink player={x.player} /> <Pos player={x.player} />{' '}
+                  {x.player.age != null && <span className="text-xs font-normal text-brun">{t('fm.train.age', { count: x.player.age })}</span>}
+                </td>
+                <td className="px-2 py-1.5" title={t(`fm.train.youth.statusHint.${status}`)}>
+                  <Tag tone={YOUTH_TONE[status]}>{t(`fm.train.youth.status.${status}`)}</Tag>
+                </td>
+                <td className="px-2 py-1.5">{x.role ? names.role(x.role) : '–'}</td>
+                <td className="px-2 py-1.5">
+                  {focus ? <b>{t(`fm.train.focus.${focus}`)}</b> : '–'}
+                  <span className="ml-1.5 text-xs text-brun">{x.weak.map((w) => `${attr(w.key)} ${Math.round(w.value)}`).join(', ')}</span>
+                </td>
+                <td className="px-2 py-1.5 text-right tabular-nums">{x.player.stars?.potential != null ? `★ ${x.player.stars.potential}` : '–'}</td>
+                <td className="px-2 py-1.5 text-right">
+                  <Fit value={x.fit} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <More>{t('fm.train.youth.help')}</More>
+    </Panel>
   );
 }
