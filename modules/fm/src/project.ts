@@ -150,7 +150,7 @@ export interface CoachPrefs {
   clubStatus?: 'pro' | 'semi' | 'amateur';
   trainingDays?: number[];
   /** Méthode des semaines de saison (« meta » par défaut, ou « freedom »). */
-  trainingMethod?: 'metaAdapt' | 'meta' | 'freedom';
+  trainingMethod?: 'metaAdapt' | 'meta' | 'freedom' | 'harvestgreen';
 }
 export const TARGETS = [45, 50, 55, 60, 65, 70];
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { metaBlocks, autoPhase, breakPhase, upcomingWeeks, weekWorkload, buildTrainingWeek, currentTrainingWeek, trainingAlerts, defaultMatchDays, individualAdvice, individualFocus, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, setupStatus, weekMatches } from '../src';
+import { HARVEST_FOCUS, SESSION_YIELD, TEAM_INTENSITY, isMeta, teamIntensityFor, metaBlocks, autoPhase, breakPhase, upcomingWeeks, weekWorkload, buildTrainingWeek, currentTrainingWeek, trainingAlerts, defaultMatchDays, individualAdvice, individualFocus, mentoringGroups, mondayOf, nearestPreset, personalityTone, sessionCategory, setupStatus, weekMatches } from '../src';
 
 const MONDAY = '2026-08-31';
 
@@ -351,5 +351,45 @@ describe('méthode Méta adaptée', () => {
     const all = (w: ReturnType<typeof buildTrainingWeek>) => w.days.flatMap((d) => d.sessions);
     expect(all(buildTrainingWeek(base))).toContain('outOfPossessionShape');
     expect(all(buildTrainingWeek({ ...base, method: 'meta' }))).not.toContain('outOfPossessionShape');
+  });
+});
+
+describe('méthode Harvestgreen (banc d’essai FM-Arena)', () => {
+  it('semaine à un match : condition physique, ballon offensif, ballon défensif, condition légère, une par jour, puis une tactique la veille', () => {
+    const w = buildTrainingWeek({ method: 'harvestgreen', monday: MONDAY, phase: 'A', week: 1, matchDays: [5], style: 'possession', priorities: ['pressingTrap'] });
+    expect(w.code).toBe('A1-1');
+    expect(w.theme).toBeNull();
+    expect(w.days.map((d) => d.kind)).toEqual(['dev', 'dev', 'dev', 'dev', 'prep', 'match', 'recovery']);
+    expect(w.days.slice(0, 4).map((d) => d.sessions[0])).toEqual(['conditioning', 'attackingPatient', 'defendingEngaged', 'lightConditioning']);
+    for (const d of w.days.slice(0, 4)) expect(d.sessions.slice(1)).toEqual(['rest', null]);
+    expect(w.days[4]!.sessions).toEqual(['pressingTrap', 'rest', null]);
+    expect(w.days[6]!.sessions).toEqual(['rest', 'recovery', null]);
+  });
+
+  it('jamais de condition physique l’avant-veille d’un match', () => {
+    const w = buildTrainingWeek({ method: 'harvestgreen', monday: MONDAY, phase: 'B', week: 2, matchDays: [2, 5] });
+    expect(w.days[0]!.sessions[0]).not.toBe('conditioning');
+    expect(w.days.map((d) => d.kind)).toEqual(['dev', 'prep', 'match', 'recovery', 'prep', 'match', 'recovery']);
+  });
+
+  it('semaine surchargée : repos complet hors matchs', () => {
+    const w = buildTrainingWeek({ method: 'harvestgreen', monday: MONDAY, phase: 'C', week: 3, matchDays: [1, 3, 5] });
+    expect(w.congested).toBe(true);
+    for (const d of w.days) if (d.kind !== 'match') expect(d.sessions).toEqual(['rest', 'rest', null]);
+  });
+
+  it('présaison et trêve restent celles de Freedom', () => {
+    const h = buildTrainingWeek({ method: 'harvestgreen', monday: MONDAY, phase: 'P', week: 1, matchDays: [5] });
+    const f = buildTrainingWeek({ method: 'freedom', monday: MONDAY, phase: 'P', week: 1, matchDays: [5] });
+    expect(h.days.map((d) => d.sessions)).toEqual(f.days.map((d) => d.sessions));
+  });
+
+  it('intensité de l’équipe : rien en dessous de « bonne », double au-dessus ; rendement et priorité mesurés', () => {
+    expect(teamIntensityFor('harvestgreen')).toEqual({ veryPoor: 'noWork', poor: 'noWork', fair: 'noWork', good: 'double', excellent: 'double' });
+    expect(teamIntensityFor('freedom')).toBe(TEAM_INTENSITY);
+    expect(SESSION_YIELD.possessionBallWork!).toBeGreaterThan(SESSION_YIELD.rest!);
+    expect(HARVEST_FOCUS).toBe('quickness');
+    expect(isMeta('harvestgreen')).toBe(false);
+    expect(isMeta(undefined)).toBe(true);
   });
 });

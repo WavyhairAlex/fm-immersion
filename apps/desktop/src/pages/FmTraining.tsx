@@ -41,6 +41,11 @@ import {
   type SessionCategory,
   type SessionId,
   type TrainingPhase,
+  HARVEST_FOCUS,
+  HARVEST_WEEK_YIELD,
+  SESSION_YIELD,
+  isMeta,
+  teamIntensityFor,
 } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -92,6 +97,13 @@ export interface SetupRow {
 const STATUS_ORDER: Record<SetupStatus, number> = { change: 0, todo: 1, ok: 2 };
 
 /** Conseil individuel du jour pour chaque joueur, comparé à ce qui est réglé en jeu. */
+/** Séances de la table de rendement, par famille (voir `SESSION_YIELD`). */
+const YIELD_GROUPS = {
+  physical: ['conditioning', 'heavyConditioning', 'lightConditioning', 'recovery', 'rest'],
+  ball: ['possessionBallWork', 'attackingBalanced', 'defendingBalanced', 'individualDevelopment'],
+  tactical: ['pressingTrap', 'buildUpStrategy', 'chanceCreation', 'inPossessionShape', 'teamBonding'],
+} as const;
+
 export function useIndividualSetups(engine: TacticEngine, players: FmPlayer[], folder: string, matches: number, snap?: FmSnapshot) {
   const [coach] = useCoach();
   // Point le plus faible en match (bas de sa ligne, assez de minutes) : il passe avant l'attribut le plus faible du rôle.
@@ -115,13 +127,13 @@ export function useIndividualSetups(engine: TacticEngine, players: FmPlayer[], f
         const rec: IndividualSetup = {
           ip: ip?.code ?? null,
           oop: oop?.code ?? null,
-          focus: fromStats ?? individualFocus(x.weak, x.player.positions[0] === 'GB'),
+          focus: coach.trainingMethod === 'harvestgreen' && x.player.positions[0] !== 'GB' ? HARVEST_FOCUS : (fromStats ?? individualFocus(x.weak, x.player.positions[0] === 'GB')),
           intensity: advice.intensity,
         };
         return { plan: x, rec, advice, focusFromStats: !!fromStats, ...setupStatus(rec, applied[x.player.id]) };
       })
       .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
-  }, [project, engine, matches, applied, statFocus]);
+  }, [project, engine, matches, applied, statFocus, coach.trainingMethod]);
   const mark = (ids: string[], on: boolean) => {
     const next = { ...applied };
     for (const r of rows) if (ids.includes(r.plan.player.id)) on ? (next[r.plan.player.id] = r.rec) : delete next[r.plan.player.id];
@@ -140,6 +152,8 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
   const seasonStart = coach.seasonStart ?? 8;
   const clubStatus: ClubStatus = coach.clubStatus ?? 'pro';
   const method = coach.trainingMethod ?? 'metaAdapt';
+  const teamIntensity = teamIntensityFor(method);
+  const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 1, minimumFractionDigits: 1 });
   const trainingDays = clubStatus === 'pro' ? undefined : coach.trainingDays ?? PART_TIME_DAYS;
   const [offset, setOffset] = useState<'0' | '1'>('0');
   const [phaseOverride, setPhase] = useState<TrainingPhase | null>(null);
@@ -179,7 +193,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
   );
   // Programme .fmf d'AlexJeuVideal à charger : dernier match de la semaine précédente (dimanche si on le sait), puis ceux de la semaine.
   const prevLast = before ? 6 : (weekMatches(fixtures, addDays(monday, -7)).days.at(-1) ?? null);
-  const metaFile = method !== 'freedom' && (phase === 'A' || phase === 'B' || phase === 'C') && !plan.congested ? metaProgramme(matchDays, prevLast) : null;
+  const metaFile = isMeta(method) && (phase === 'A' || phase === 'B' || phase === 'C') && !plan.congested ? metaProgramme(matchDays, prevLast) : null;
   const load = weekLoad(plan);
   const resetWeek = () => {
     setManualDays(null);
@@ -247,7 +261,7 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
           </label>
           <label className={label}>
             {t('fm.train.method')}
-            <select className="input mt-1" value={method} onChange={(e) => setCoach({ trainingMethod: e.target.value as 'metaAdapt' | 'meta' | 'freedom' })}>
+            <select className="input mt-1" value={method} onChange={(e) => setCoach({ trainingMethod: e.target.value as 'metaAdapt' | 'meta' | 'freedom' | 'harvestgreen' })}>
               {TRAINING_METHODS.map((m) => (
                 <option key={m} value={m}>
                   {t(`fm.train.methods.${m}`)}
@@ -355,7 +369,9 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
           {plan.theme && <> · {t(`fm.train.theme.${plan.theme}`)}</>}
           {plan.variant != null && <> · {plan.congested ? t('fm.train.congested') : t(`fm.train.variant_${plan.variant}`)}</>}
         </p>
-        <p className="mt-1 text-xs text-brun">{method !== 'freedom' && plan.theme == null && 'ABC'.includes(plan.phase) ? t(method === 'meta' ? 'fm.train.metaHelp' : 'fm.train.metaAdaptHelp') : t(`fm.train.phaseHelp.${plan.phase}`)}</p>
+        <p className="mt-1 text-xs text-brun">
+          {plan.theme == null && 'ABC'.includes(plan.phase) && method !== 'freedom' ? t(method === 'meta' ? 'fm.train.metaHelp' : method === 'harvestgreen' ? 'fm.train.harvestHelp' : 'fm.train.metaAdaptHelp') : t(`fm.train.phaseHelp.${plan.phase}`)}
+        </p>
         {metaFile ? (
           <p className="mt-1 text-sm">
             {t('fm.train.metaFile')} <b className="text-canard">{metaFile.trim()}.fmf</b>
@@ -450,11 +466,31 @@ export function FmTraining({ snap, players, folder }: { snap: FmSnapshot; player
           {CONDITION_LEVELS.map((c) => (
             <div key={c} className="rounded-xl bg-white/60 p-2 ring-1 ring-canard/10">
               <p className="text-xs text-brun">{t(`fm.train.condition.${c}`)}</p>
-              <Tag tone={INTENSITY_TONE[TEAM_INTENSITY[c]]}>{t(`fm.train.intensityLevel.${TEAM_INTENSITY[c]}`)}</Tag>
+              <Tag tone={INTENSITY_TONE[teamIntensity[c]]}>{t(`fm.train.intensityLevel.${teamIntensity[c]}`)}</Tag>
             </div>
           ))}
         </div>
-        <More>{t('fm.train.teamIntensityHelp')}</More>
+        <More>{t(method === 'harvestgreen' ? 'fm.train.teamIntensityHarvest' : 'fm.train.teamIntensityHelp')}</More>
+      </Panel>
+
+      <Panel title={t('fm.train.yield.title')}>
+        <p className="text-sm">{t('fm.train.yield.intro', { best: nf1.format(HARVEST_WEEK_YIELD) })}</p>
+        <div className="mt-2 grid gap-2 sm:grid-cols-3">
+          {(['physical', 'ball', 'tactical'] as const).map((g) => (
+            <div key={g} className="rounded-xl bg-white/60 p-2 ring-1 ring-canard/10">
+              <p className="text-xs font-bold text-canard/70">{t(`fm.train.yield.${g}`)}</p>
+              <ul className="mt-1 space-y-0.5 text-sm">
+                {YIELD_GROUPS[g].map((id) => (
+                  <li key={id} className="flex justify-between gap-2">
+                    <span>{t(`fm.train.session.${id}`)}</span>
+                    <b className="tabular-nums text-canard">{nf1.format(SESSION_YIELD[id] ?? 0)}</b>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <More>{t('fm.train.yield.help')}</More>
       </Panel>
 
       {setups.rows.length > 0 && (
