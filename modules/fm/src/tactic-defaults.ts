@@ -155,6 +155,21 @@ const STYLES: StyleRef[] = [
     mentality: 'Positive',
     signatureRoles: { ip: ['BPGK', 'BPCB', 'CB', 'IFB', 'IWB', 'PMWB', 'B2BPM', 'DLP', 'HB', 'MFPM', 'AP', 'IW', 'WP', 'F9', 'DLF'], oop: ['SK', 'STCB', 'CB', 'PFB', 'PWB', 'SCRDM', 'PRSDM', 'PRSCM', 'SCRCM', 'TWM', 'TW', 'TAM', 'CF'] },
   }),
+  // Tactique « FM27 PSG Luis Enrique - FM Blog » relevée à l'écran du jeu le 07/11/2026 (positionnement et consignes) :
+  // 4-3-3 avec le ballon (gardien et central relanceurs, latéral offensif à droite, meneur en retrait, milieu de
+  // couloir, attaquant intérieur à gauche, ailier intérieur à droite, faux neuf), 4-1-4-1 sans le ballon.
+  // Seules les cases réglées hors standard sont listées ; « Garder le ballon en jeu » est la valeur par défaut.
+  style({
+    id: 'possession-433',
+    name: 'Possession 4-3-3 (PSG de Luis Enrique)',
+    nameEn: 'Possession 4-3-3 (Luis Enrique’s PSG)',
+    summary: 'Construire court et avec liberté depuis le gardien, attirer le pressing pour le dépasser, puis presser haut avec une ligne haute et un contre-pressing immédiat.',
+    inPossession: ['Faites plus de passes courtes', 'Soyez plus expressifs', 'Jouer malgré le pressing', 'Dégagements au pied courts', 'Relancez vers défenseurs centraux'],
+    outOfPossession: ['Pressing haut', 'Rester plus haut', 'Déclenchez le pressing plus souvent', 'Effectuer un contre-pressing', 'Empêchez les relances courtes du GB'],
+    weights: { technical: 3, creators: 2, press: 2, pace: 1 },
+    mentality: 'Positive',
+    signatureRoles: { ip: ['BPGK', 'BPCB', 'CB', 'FB', 'WB', 'DLP', 'CHM', 'CM', 'IF', 'IW', 'F9'], oop: ['SK', 'CB', 'FB', 'DM', 'WM', 'CM', 'PRSCM', 'CF'] },
+  }),
   style({
     id: 'gegenpress',
     name: 'Pressing à la perte',
@@ -291,6 +306,7 @@ export const PITCH_SIZES: Record<PitchChoice, { length: number; width: number }>
 };
 const PITCH_BY_STYLE: Record<string, PitchChoice> = {
   possession: 'large',
+  'possession-433': 'large',
   tikitaka: 'large',
   'tikitaka-v': 'large',
   wings: 'large',

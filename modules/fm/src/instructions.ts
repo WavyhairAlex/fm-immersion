@@ -188,7 +188,7 @@ export const roleAllows = (r: RoleRef | undefined, id: InstructionId, pos?: PosC
 
 /* ---------- Choix des consignes ---------- */
 
-const POSSESSION = new Set(['possession', 'tikitaka', 'tikitaka-v']);
+const POSSESSION = new Set(['possession', 'possession-433', 'tikitaka', 'tikitaka-v']);
 const DIRECT = new Set(['counter-direct', 'counter-fluid', 'longball']);
 const CREATOR = new Set(['DLP', 'B2BPM', 'MFPM', 'AP', 'WP', 'PMWB', 'F9', 'FREE', 'BPCB', 'BPGK']);
 const FULL_BACK = new Set(['FB', 'WB', 'IFB', 'IWB']);
