@@ -1,4 +1,4 @@
-import { abilityNeeded, keyAttrs, styleComplexity, tactAbility, type FmPlayer, type Phase } from '@fm-immersion/module-fm';
+import { abilityNeeded, keyAttrs, pitchAdvice, styleComplexity, tactAbility, type FmPlayer, type Phase } from '@fm-immersion/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, scopedKey, useFmSaveScope, writeScoped } from '../lib/save-store';
@@ -123,6 +123,15 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
 
       <Panel title={names.style(cur)}>
         {cur.summary && <p className="-mt-2 mb-3">{cur.summary}</p>}
+        {(() => {
+          const pitch = pitchAdvice(cur.id);
+          return (
+            <p className="-mt-1 mb-3 rounded-lg bg-orange-clair px-3 py-2 text-sm text-canard">
+              <b>{t('fm.style.pitch.title')}</b> {t(`fm.style.pitch.choice.${pitch.choice}`)} ({t('fm.style.pitch.size', { length: pitch.length, width: pitch.width })}).{' '}
+              {t(`fm.style.pitch.why.${pitch.choice}`)}
+            </p>
+          );
+        })()}
         <div className="grid gap-4 md:grid-cols-3">
           <div className="text-sm">
             {pros.length > 0 && (
