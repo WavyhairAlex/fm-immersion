@@ -1,7 +1,7 @@
 import type { GazetteIssue, GazetteStory } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
 import { describe, expect, it } from 'vitest';
-import { articleText, figuresLine, storyText } from '../src/lib/gazette-text';
+import { articleText, climateOf, editorialText, figuresLine, storyText } from '../src/lib/gazette-text';
 
 const t = ((k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k)) as unknown as TFunction;
 
@@ -42,6 +42,7 @@ describe('textes de la gazette', () => {
         { kind: 'streak', weight: 49, params: { outcome: 'W', count: 3 } },
         { kind: 'nextMatch', weight: 10, params: { opponent: 'Púchov', location: 'Extérieur', inDays: 'Dans 7 jours' } },
       ],
+      board: null,
     } as GazetteIssue;
     const a = articleText(t, issue, 'fr')!;
     expect(a).toMatch(/gazette\.article\.open_W_\d .*"where":"gazette\.article\.atHome","comp":"gazette\.article\.inComp/);
@@ -54,5 +55,29 @@ describe('textes de la gazette', () => {
     // Même gazette, mêmes variantes.
     expect(articleText(t, issue, 'fr')).toBe(a);
     expect(articleText(t, { ...issue, headline: { kind: 'quiet', weight: 5, params: {} } }, 'fr')).toBeNull();
+  });
+
+  it('le billet suit le climat : série de défaites = crise, objectif de la direction repris quand il est lu', () => {
+    const lose = (date: string): GazetteStory => ({ kind: 'result', weight: 60, params: { outcome: 'L', opponent: 'X', goalsFor: 0, goalsAgainst: 1, date, friendly: 0 } });
+    const issue = {
+      number: 4,
+      club: 'Malženice',
+      weekStart: '2027-08-16',
+      weekEnd: '2027-08-22',
+      date: '2027-08-22',
+      headline: { kind: 'streak', weight: 60, params: { outcome: 'L', count: 4 } },
+      stories: [lose('2027-08-21')],
+      board: 'Terminer en première partie de tableau',
+    } as GazetteIssue;
+    expect(climateOf(issue)).toBe('crisis');
+    const e = editorialText(t, issue, 'fr')!;
+    expect(e.title).toBe('gazette.editorial.title');
+    expect(e.body).toMatch(/^gazette\.editorial\.tone_crisis_\d /);
+    expect(e.fans).toMatch(/^gazette\.editorial\.fans_crisis_\d /);
+    expect(e.board).toBe('gazette.editorial.boardObjective_worried {"objective":"terminer en première partie de tableau"}');
+    const win = { ...issue, headline: { ...lose('2027-08-21'), params: { ...lose('2027-08-21').params, outcome: 'W', goalsFor: 2 } }, stories: [{ kind: 'fans', weight: 28, params: { mood: 'Ravis' } }], board: null } as GazetteIssue;
+    expect(climateOf(win)).toBe('win');
+    expect(editorialText(t, win, 'fr')!.fans).toBe('gazette.editorial.fansGame {"mood":"Ravis"}');
+    expect(editorialText(t, { ...issue, headline: { kind: 'quiet', weight: 5, params: {} }, stories: [] } as GazetteIssue, 'fr')).toBeNull();
   });
 });

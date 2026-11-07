@@ -163,6 +163,46 @@ export function articleText(t: TFunction, issue: GazetteIssue, lang?: string): s
   return out.join(' ');
 }
 
+/** Climat de la semaine, pour le ton du billet et des réactions. */
+export function climateOf(issue: GazetteIssue): 'crisis' | 'hot' | 'win' | 'draw' | 'loss' | 'quiet' {
+  const all = [issue.headline, ...issue.stories];
+  const streak = all.find((s) => s.kind === 'streak');
+  if (streak && (streak.params.outcome === 'L' || streak.params.outcome === 'winless')) return 'crisis';
+  if (streak && (streak.params.outcome === 'W' || streak.params.outcome === 'unbeaten')) return 'hot';
+  const results = all.filter((s) => s.kind === 'result' && !s.params.friendly && s.params.outcome).sort((a, b) => String(b.params.date ?? '').localeCompare(String(a.params.date ?? '')));
+  const last = results[0];
+  if (!last) return 'quiet';
+  return last.params.outcome === 'W' ? 'win' : last.params.outcome === 'D' ? 'draw' : 'loss';
+}
+
+const lower = (s: string, lang?: string) => (s.length ? s[0]!.toLocaleLowerCase(lang) + s.slice(1) : s);
+
+/**
+ * Le billet : l'avis de la rédaction en quelques phrases, puis ce qu'on entend dans les tribunes et du côté de la
+ * direction. Les textes du jeu (confiance des supporters, sécurité de l'emploi, objectif de la saison) sont repris
+ * quand le plugin les lit ; sinon le ton suit la semaine (série, dernier résultat).
+ */
+export function editorialText(t: TFunction, issue: GazetteIssue, lang?: string): { title: string; body: string; fans: string; board: string } | null {
+  const climate = climateOf(issue);
+  if (climate === 'quiet' && issue.headline.kind === 'quiet') return null;
+  const all = [issue.headline, ...issue.stories];
+  const seed = `${issue.club}|${issue.weekStart}|billet`;
+  const v = (key: string, vars: Record<string, unknown> = {}) => t(`gazette.editorial.${key}_${hash(seed + key) % ARTICLE_VARIANTS}`, { club: issue.club, ...vars });
+  const streak = all.find((s) => s.kind === 'streak');
+  const last = all.find((s) => s.kind === 'result' && !s.params.friendly && s.params.outcome);
+  const vars = { opponent: str(last?.params.opponent) ?? t('gazette.opponentUnknown'), count: Number(streak?.params.count ?? 0) };
+  const body = v(`tone_${climate}`, vars);
+  const fansStory = all.find((s) => s.kind === 'fans');
+  const fans = fansStory ? t('gazette.editorial.fansGame', { mood: fansStory.params.mood }) : v(`fans_${climate}`, vars);
+  const jobStory = all.find((s) => s.kind === 'job');
+  const board = jobStory
+    ? t('gazette.editorial.boardGame', { status: jobStory.params.status })
+    : issue.board
+      ? t(`gazette.editorial.boardObjective_${climate === 'crisis' ? 'worried' : climate === 'hot' ? 'pleased' : 'neutral'}`, { objective: lower(issue.board, lang) })
+      : v(`board_${climate}`, vars);
+  return { title: t('gazette.editorial.title'), body, fans, board };
+}
+
 /** Nom du journal pour un club. */
 export const paperName = (t: TFunction, club: string) => t('gazette.paper', { club });
 
@@ -226,7 +266,9 @@ export function discordPayload(t: TFunction, issue: GazetteIssue, lang?: string,
         .filter(Boolean)
         .join('  ·  ')
     : '';
+  const edito = editorialText(t, issue, lang);
   const fields = [
+    ...(edito ? [{ name: `✍️  ${edito.title}`, value: cut([edito.body, `📣 ${edito.fans}`, `🏛️ ${edito.board}`].join('\n'), 1024) }] : []),
     ...(briefs.length ? [{ name: '​', value: `**${t('gazette.discord.briefs')}**` }] : []),
     ...briefs.map((s) => field(s)),
     ...(figLine ? [{ name: `📊  ${t('gazette.une.figures', { season: fig!.label })}`, value: cut(figLine, 1024) }] : []),

@@ -1,3 +1,4 @@
+import { boardObjectives } from './club';
 import { figuresForResultIn } from './lastmatch';
 import { normalizePlayer, toNumber, type FmPlayer } from './player';
 import { matchResults, type MatchResult, type Outcome } from './results';
@@ -52,6 +53,8 @@ export interface GazetteIssue {
   date: string;
   headline: GazetteStory;
   stories: GazetteStory[];
+  /** Objectif de la saison fixé par la direction (vision du club lue par le plugin), pour le billet. */
+  board: string | null;
 }
 
 type Entry = { gameDate: string; data: FmSnapshot };
@@ -262,7 +265,8 @@ export function gazetteIssues(history: Entry[]): GazetteIssue[] {
     const last = entries[entries.length - 1]!;
     const inWeek = results.filter((r) => r.date >= w && r.date <= end);
     const stories = weekStories(prev?.data ?? null, entries.map((e) => e.data), inWeek, results.filter((r) => r.date < w));
-    issues.push({ number: ++n, club: last.data.club, weekStart: w, weekEnd: end, date: last.gameDate, headline: stories[0]!, stories: stories.slice(1) });
+    const board = boardObjectives((last.data as { custom?: { club?: Record<string, unknown> } }).custom?.club)[0]?.label ?? null;
+    issues.push({ number: ++n, club: last.data.club, weekStart: w, weekEnd: end, date: last.gameDate, headline: stories[0]!, stories: stories.slice(1), board });
     prev = last;
   }
   return issues.reverse();

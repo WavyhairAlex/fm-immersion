@@ -10,7 +10,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   }),
 }));
 
-const { commentary, goalSituation, lastMatchStats, liveContext, liveStep, matchEnded, matchFigures, matchPhase, minuteOf, momentsBetween, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
+const { commentary, goalSituation, lastMatchStats, liveContext, liveStep, matchEnded, matchFigures, matchPhase, minuteOf, momentsBetween, prematchPayload, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
 const t = ((k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k)) as unknown as TFunction;
 
 const at = '2026-11-07T07:20:00.000Z';
@@ -61,7 +61,9 @@ describe('direct Discord', () => {
 
   it('poste un seul encart puis le modifie : but, puis fin du match', async () => {
     let s = await liveStep(t, base, 'Malženice', null, now);
-    expect(calls.map((c) => c.cmd)).toEqual(['discord_post']);
+    // L'encart, puis l'avant-match en message à part.
+    expect(calls.map((c) => c.cmd)).toEqual(['discord_post', 'discord_send']);
+    expect((calls[1]!.args.payload as { embeds: { title: string }[] }).embeds[0]!.title).toContain('live.prematch.kickoff');
     expect(s?.messageId).toBe('42');
     calls.length = 0;
     s = await liveStep(t, { ...base, awayScore: 1, minute: '11 min.', scorers: "M. Fábry 11'" }, 'Malženice', s, now);
@@ -197,5 +199,26 @@ describe('chiffres du jeu après le match', () => {
     // Un but à la 45e : le but seulement, pas de doublon « mi-temps ».
     expect(momentsBetween(at44, { ...base, awayScore: 1, minute: '45 min.', scorers: "M. Fábry 45'" }).map((m) => m.kind)).toEqual(['goal']);
     expect(momentsBetween({ ...base, minute: '90 min.' }, { ...base, minute: 'FDM', final: true })).toEqual([{ kind: 'final' }]);
+  });
+
+  it('avant-match : classement des deux équipes, hommes en forme, entraîneur adverse, avis du jeu, compo si lue', () => {
+    const ctx = liveContext({
+      nextMatch: { competition: '2. liga', threatLevel: 'Match disputé.' },
+      players: [{ name: 'Marek Fábry', goals: 5 }],
+      custom: { equipe: { classementPosition: 10, advClassement: '12e', advEntraineur: 'V. Kúkoľ', advFormationPref: '4-2-4', advButeur: 'M. Klec', advButs: 3 } },
+      lineup: Array.from({ length: 11 }, (_, i) => ({ index: i, playerName: `J${i}` })),
+    });
+    expect(ctx.opponent).toEqual({ position: '12e', manager: 'V. Kúkoľ', formation: '4-2-4', scorer: 'M. Klec', scorerGoals: 3 });
+    expect(ctx.lineup).toHaveLength(11);
+    const e = prematchPayload(t, base, 'Malženice', ctx).embeds[0]!;
+    expect(e.title).toContain('Inter Bratislava – Malženice');
+    expect(e.description).toContain('🏆 2. liga');
+    expect(e.description).toContain('live.prematch.ourPosition {"club":"Malženice","position":10}');
+    expect(e.description).toContain('live.prematch.theirPosition {"club":"Inter Bratislava","position":"12e"}');
+    expect(e.description).toContain('live.prematch.theirTop {"club":"Inter Bratislava","name":"M. Klec","count":3}');
+    expect(e.description).toContain('live.prematch.managerFormation');
+    expect(e.description).toContain('💬 Match disputé.');
+    expect(e.fields?.[0]?.value).toContain('J0 · J1');
+    expect(prematchPayload(t, base, null, null).embeds[0]!.description).toBe('live.prematch.soon');
   });
 });

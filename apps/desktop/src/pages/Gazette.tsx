@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { fmData, savesData } from '../lib/data';
 import { getWebhook, isWebhook } from '../lib/discord';
 import { GAZETTE_SAVE_KEY, markGazetteSent, markSeasonSent, sendGazette, sendSeason } from '../lib/gazette-auto';
-import { articleText, paperName, storyText, weekLabel } from '../lib/gazette-text';
+import { articleText, editorialText, paperName, storyText, weekLabel } from '../lib/gazette-text';
 import { drawUne, recentForm } from '../lib/gazette-une';
 import { loadFace } from '../lib/player-face';
 import { drawSeason } from '../lib/season-une';
@@ -102,6 +102,7 @@ export function Paper({ issue }: { issue: GazetteIssue }) {
   const { t, i18n } = useTranslation();
   const head = storyText(t, issue.club, issue.headline);
   const article = articleText(t, issue, i18n.resolvedLanguage) ?? head.body;
+  const edito = editorialText(t, issue, i18n.resolvedLanguage);
   return (
     <article className="card rounded-xl p-0">
       <header className="border-b-4 border-orange px-6 py-4">
@@ -114,6 +115,15 @@ export function Paper({ issue }: { issue: GazetteIssue }) {
         <h2 className="font-display text-2xl font-semibold leading-tight">{head.title}</h2>
         {article && <p className="mt-2 text-brun">{article}</p>}
       </section>
+      {edito && (
+        <section className="border-b border-canard/10 bg-orange-clair/40 px-6 py-4">
+          <h3 className="font-display text-lg font-semibold">{edito.title}</h3>
+          <p className="mt-1 text-sm italic text-canard">{edito.body}</p>
+          <p className="mt-2 text-xs text-brun">
+            📣 {edito.fans} · 🏛️ {edito.board}
+          </p>
+        </section>
+      )}
       <div className="grid gap-x-8 gap-y-5 px-6 py-5 md:grid-cols-2">
         {issue.stories.map((s, i) => {
           const x = storyText(t, issue.club, s);
