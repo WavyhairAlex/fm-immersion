@@ -344,7 +344,8 @@
       "results": "Résultats",
       "diagnosis": "Pourquoi ils ne performent pas",
       "staff": "Staff",
-      "numbers": "Numéros"
+      "numbers": "Numéros",
+      "playtime": "Temps de jeu"
     },
     "home": {
       "todo": "À traiter",
@@ -2156,6 +2157,40 @@
         "departures": "Mercato",
         "recruits": "Cibles",
         "preseason": "Entraînement"
+      }
+    },
+    "play": {
+      "kpi": {
+        "short": "Promesse non tenue",
+        "shortSub": "joueurs qui jouent moins que leur statut",
+        "over": "Jouent au-dessus de leur statut",
+        "overSub": "ils réclameront un meilleur statut ou contrat",
+        "matches": "Matchs suivis",
+        "matchesSub": "cette saison, depuis le 1er juillet"
+      },
+      "help": "Dans FM27, le statut d'un joueur vaut une promesse de temps de jeu. Ici, sa part des minutes sur les matchs où il était disponible (ni blessé ni suspendu la veille) est comparée à un repère de FM Immersion par statut (vedette / important / titulaire / rotation / remplaçant : {{shares}}). Alerte sous 80 % du repère. Le trait sur la barre marque le repère.",
+      "noMatches": "Aucun match suivi cette saison : il faut des instantanés avant et après les matchs.",
+      "group": {
+        "short_one": "Promesse non tenue ({{count}})",
+        "short_other": "Promesses non tenues ({{count}})",
+        "over_one": "Joue au-dessus de son statut ({{count}})",
+        "over_other": "Jouent au-dessus de leur statut ({{count}})",
+        "ok_one": "Conforme ({{count}})",
+        "ok_other": "Conformes ({{count}})",
+        "early_one": "Trop tôt pour juger ({{count}})",
+        "early_other": "Trop tôt pour juger ({{count}})"
+      },
+      "detail": "{{starts}} tit. sur {{available}} matchs dispo.",
+      "adviceShort": "Le faire jouer davantage, ou baisser son statut au prochain contrat avant qu'il ne se plaigne.",
+      "adviceOver": "Il joue comme un {{status}} : prévoir un meilleur statut à la prochaine prolongation.",
+      "rank": {
+        "0": "joueur vedette",
+        "1": "joueur important",
+        "2": "titulaire",
+        "3": "joueur de rotation",
+        "4": "remplaçant",
+        "5": "espoir",
+        "6": "jeune"
       }
     }
   },
