@@ -1,4 +1,5 @@
 import { monthsBetween } from './alerts';
+import { wageFigures } from './club';
 import type { FmPlayer } from './player';
 import { toNumber } from './player';
 import type { FmSnapshot } from './snapshot';
@@ -53,8 +54,7 @@ export function summarize(snap: FmSnapshot, players: FmPlayer[]): FmSummary {
   const ages = players.map((p) => p.age).filter((a): a is number => a != null);
   const wageList = players.map((p) => p.wage).filter((w): w is number => w != null);
   const wages = wageList.length ? wageList.reduce((a, b) => a + b, 0) : null;
-  const wageBudget = toNumber(club.wageBudget);
-  const remaining = toNumber(club.remainingWageBudget);
+  const w = wageFigures(club, players);
   const opponent = next ? text(next.opponent) : null;
   const outfield = players.filter((p) => p.positions[0] !== 'GB');
   const family = (f: AttrFamily) => mean(outfield.map((p) => mean(ATTR_FAMILIES[f].map((k) => p.attributes[k]))));
@@ -77,8 +77,8 @@ export function summarize(snap: FmSnapshot, players: FmPlayer[]): FmSummary {
     avgWage: wages != null && wageList.length ? wages / wageList.length : null,
     topEarner: earner ? { name: earner.name, wage: earner.wage! } : null,
     profile: { technical: family('technical'), mental: family('mental'), physical: family('physical') },
-    wages,
-    wageRoom: remaining ?? (wageBudget != null && wages != null ? wageBudget - wages : null),
+    wages: w.fromGame ? w.bill : wages,
+    wageRoom: w.room,
     transferBudget: toNumber(club.transferBudget),
     nextMatch: opponent
       ? {

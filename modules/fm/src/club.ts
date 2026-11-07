@@ -146,6 +146,8 @@ export function upcomingContracts(players: FmPlayer[], gameDate: string, within:
 
 export interface ClubFinances {
   wageBill: number;
+  squadWages: number;
+  billFromGame: boolean;
   wageBudget: number | null;
   /** Marge mensuelle restante (négative = budget dépassé). */
   wageRoom: number | null;
@@ -157,16 +159,46 @@ export interface ClubFinances {
 
 const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null);
 
+/** Salaires du club, cohérents avec l'écran Finances du jeu. */
+export interface WageFigures {
+  /** Dépense salariale mensuelle selon le jeu (« Dépense : 43,95K € p/m ») ; à défaut, somme des salaires de l'effectif. */
+  bill: number;
+  /** Somme des salaires des joueurs de l'effectif (prêtés et jeunes compris), pour information. */
+  squadSum: number;
+  /** Budget salarial mensuel : dépense + marge du jeu quand les deux sont lus, sinon le budget brut. */
+  budget: number | null;
+  /** Marge mensuelle restante (négative = budget dépassé). */
+  room: number | null;
+  /** La dépense vient du jeu (true) ou de la somme des salaires (false). */
+  fromGame: boolean;
+}
+
+/**
+ * Le jeu donne la dépense salariale et la marge restante (« -7,5K € p/m ») : le budget en découle (dépense + marge).
+ * Le champ brut `wageBudget` du plugin n'est pas toujours dans la même unité (7 223 pour un budget de 36 450 € par
+ * mois chez Malženice, 05/2027) : il ne sert qu'à défaut. La somme des salaires de l'effectif compte aussi les prêtés
+ * (payés en partie par leur club d'accueil) et diffère donc de la dépense du jeu.
+ */
+export function wageFigures(clubInfo: Record<string, unknown>, players: { wage: number | null }[]): WageFigures {
+  const squadSum = players.reduce((a, p) => a + (p.wage ?? 0), 0);
+  const spending = toNumber(clubInfo.currentWageSpending);
+  const remaining = toNumber(clubInfo.remainingWageBudget);
+  const raw = toNumber(clubInfo.wageBudget);
+  const bill = spending ?? squadSum;
+  const budget = spending != null && remaining != null ? spending + remaining : raw;
+  return { bill, squadSum, budget, room: remaining ?? (budget != null ? budget - bill : null), fromGame: spending != null };
+}
+
 export function clubFinances(snap: FmSnapshot, players: FmPlayer[]): ClubFinances {
   const club = { ...((snap.finances ?? {}) as Record<string, unknown>), ...((snap.clubInfo ?? {}) as Record<string, unknown>) };
-  const wageBill = players.reduce((a, p) => a + (p.wage ?? 0), 0);
-  const wageBudget = toNumber(club.wageBudget);
-  const remaining = toNumber(club.remainingWageBudget);
+  const w = wageFigures(club, players);
   const raw = Array.isArray(club.expectations) ? (club.expectations as unknown[]) : [];
   return {
-    wageBill,
-    wageBudget,
-    wageRoom: remaining ?? (wageBudget != null ? wageBudget - wageBill : null),
+    wageBill: w.bill,
+    squadWages: w.squadSum,
+    billFromGame: w.fromGame,
+    wageBudget: w.budget,
+    wageRoom: w.room,
     transferBudget: toNumber(club.transferBudget),
     balance: toNumber(club.balance),
     boardConfidence: str(club.boardConfidence),
