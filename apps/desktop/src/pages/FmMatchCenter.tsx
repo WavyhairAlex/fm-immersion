@@ -2,6 +2,8 @@ import {
   activeSituations,
   backForMatch,
   competitionRules,
+  fmLiveSchema,
+  liveCoachState,
   liveSubs,
   matchTweaks,
   plannedSubs,
@@ -14,7 +16,9 @@ import {
   type FmSnapshot,
   type GameSlot,
 } from '@fm-immersion/module-fm';
-import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { invoke } from '@tauri-apps/api/core';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, Gauge, LINE_COLOR, Pitch } from './FmFoot';
 import { useTacticChoice } from './FmTactic';
@@ -54,14 +58,40 @@ export function FmMatchCenter({
   const subs = useMemo(() => (plan ? substitutionPlan(plan, plannedSubs(rules)) : []), [plan, rules]);
   const benchPlayers = plan ? [...new Map(plan.subs.flatMap((l) => l.slice(0, 1)).map((p) => [p.id, p])).values()].slice(0, rules.bench ?? 9) : [];
   const checks = plan ? ruleChecks(plan, rules, benchPlayers) : [];
-  // Mode « en direct » : le coach saisit la minute et le score, rien n'est lu dans le jeu pendant le match.
+  // Mode « en direct » : la minute et le score viennent du relevé du plugin (archivix-live.json, réécrit toutes
+  // les 15 s pendant le match, lu ici toutes les 10 s, lecture locale seulement) ; sans relevé du match du club,
+  // ou si le coach reprend la main, il les saisit lui-même.
+  const { data: liveRaw } = useQuery({
+    queryKey: ['fm', 'live', folder],
+    queryFn: () => invoke<string | null>('fm_read_live', { folder }),
+    enabled: !!folder,
+    refetchInterval: 10_000,
+  });
+  const game = useMemo(() => {
+    if (!liveRaw) return null;
+    try {
+      const l = fmLiveSchema.safeParse(JSON.parse(liveRaw));
+      return l.success ? liveCoachState(l.data, snap.club, s.nextMatch?.opponent, Date.now()) : null;
+    } catch {
+      return null;
+    }
+  }, [liveRaw, snap.club, s.nextMatch?.opponent]);
+  const [manual, setManual] = useState(false);
   const [live, setLive] = useState(false);
   const [minute, setMinute] = useState(0);
   const [diff, setDiff] = useState(0);
   const [tired, setTired] = useState(false);
   const [opponentChanged, setOpponentChanged] = useState(false);
   const [done, setDone] = useState<Set<number>>(new Set());
-  const liveState = { minute, diff, tired, opponentChanged };
+  const fromGame = !!game && !manual;
+  // Un match du club commence dans le jeu : la feuille passe d'elle-même en direct.
+  const gameKey = game ? `${game.side}|${game.opponent}` : null;
+  useEffect(() => {
+    if (!gameKey) return;
+    setLive(true);
+    setDone(new Set());
+  }, [gameKey]);
+  const liveState = fromGame ? { minute: game.minute, diff: game.diff, tired, opponentChanged } : { minute, diff, tired, opponentChanged };
   const active = live ? activeSituations(liveState) : [];
   const subState = live ? liveSubs(subs, liveState, done) : subs.map(() => 'later' as const);
   const toggleDone = (slot: number) =>
@@ -217,9 +247,25 @@ export function FmMatchCenter({
               {t(live ? 'fm.matchSheet.live.on' : 'fm.matchSheet.live.start')}
             </button>
           </div>
-          <p className="mb-3 text-xs text-brun">{t(live ? 'fm.matchSheet.live.help' : 'fm.matchSheet.help')}</p>
+          <p className="mb-3 text-xs text-brun">{t(live ? (fromGame ? 'fm.matchSheet.live.helpGame' : 'fm.matchSheet.live.help') : 'fm.matchSheet.help')}</p>
           {live && (
             <div className="mb-3 space-y-2 rounded-lg bg-eau/10 p-3 text-sm">
+              {game && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="rounded-full bg-corail px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-white">{t(game.final ? 'fm.matchSheet.live.gameFinal' : 'fm.matchSheet.live.gameLive')}</span>
+                  <span className="font-bold text-canard">
+                    {t(game.side === 'home' ? 'fm.matchSheet.live.vsHome' : 'fm.matchSheet.live.vsAway', { opponent: game.opponent })}
+                  </span>
+                  <span className="font-display text-xl font-semibold tabular-nums text-canard">
+                    {game.goalsFor} - {game.goalsAgainst}
+                  </span>
+                  {!game.final && <span className="tabular-nums text-brun">{game.minute}'</span>}
+                  <button type="button" className={chip(manual)} aria-pressed={manual} onClick={() => setManual((v) => !v)}>
+                    {t('fm.matchSheet.live.manual')}
+                  </button>
+                </div>
+              )}
+              {!fromGame && (
               <div className="flex flex-wrap items-center gap-3">
                 <label className="flex items-center gap-2 font-bold text-canard">
                   {t('fm.matchSheet.live.minute')}
@@ -239,6 +285,7 @@ export function FmMatchCenter({
                   </button>
                 </div>
               </div>
+              )}
               <div className="flex flex-wrap gap-2">
                 <button type="button" className={chip(tired)} aria-pressed={tired} onClick={() => setTired((v) => !v)}>
                   {t('fm.matchSheet.when.tired')}

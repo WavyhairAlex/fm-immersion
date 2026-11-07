@@ -1851,7 +1851,7 @@
       "live": {
         "start": "Suivre le match",
         "on": "En direct",
-        "help": "Pendant le match : règle la minute et le score au fil du jeu. FM Immersion surligne les changements à faire et les ajustements à activer maintenant. Rien n'est lu dans le jeu.",
+        "help": "Pendant le match : règle la minute et le score au fil du jeu. FM Immersion surligne les changements à faire et les ajustements à activer maintenant. Avec le plugin 0.5.0, le score et la minute se mettent à jour tout seuls.",
         "minute": "Minute",
         "score": "Score",
         "scored": "But marqué",
@@ -1860,7 +1860,13 @@
         "behind": "−{{n}}",
         "level": "égalité",
         "now": "maintenant",
-        "done": "Changement fait"
+        "done": "Changement fait",
+        "helpGame": "Le score et la minute viennent du jeu (relevé du plugin toutes les 15 s, lecture seule). FM Immersion surligne les changements à faire et les ajustements à activer maintenant ; coche les changements faits.",
+        "gameLive": "Direct du jeu",
+        "gameFinal": "Match terminé",
+        "vsHome": "contre {{opponent}} (domicile)",
+        "vsAway": "à {{opponent}} (extérieur)",
+        "manual": "Saisir moi-même"
       },
       "rules": "Règles {{competition}} :",
       "competition": "de la compétition",
