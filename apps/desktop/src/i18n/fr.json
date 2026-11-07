@@ -2301,6 +2301,9 @@
     "preview": "Aperçu de la une envoyée sur Discord"
   },
   "discord": {
+    "autoTitle": "Gazette automatique",
+    "autoIntro": "Dès qu'une semaine de jeu est terminée, sa gazette (une en image et brèves) part toute seule dans ton salon, une fois par semaine. FM Immersion doit être ouvert pendant que tu joues.",
+    "autoEnable": "Envoyer ma gazette automatiquement chaque semaine",
     "intro": "Raconte ta carrière dans un salon Discord : chaque gazette peut y être envoyée en un clic, pour que tes amis suivent ta partie.",
     "webhookTitle": "Relier ton salon",
     "step1": "Dans Discord, ouvre les paramètres du salon, puis Intégrations › Webhooks › Nouveau webhook.",

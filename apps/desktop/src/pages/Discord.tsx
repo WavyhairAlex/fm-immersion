@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { getGazetteAuto, setGazetteAuto } from '../lib/gazette-auto';
 import { getLiveEnabled, getWebhook, isWebhook, sendDiscord, setLiveEnabled, setWebhook } from '../lib/discord';
 
 /** Mode Live Discord (solo) : le joueur colle le lien webhook de son salon, puis envoie ses gazettes. */
@@ -11,6 +12,7 @@ export function Discord() {
   const [saved, setSaved] = useState(isWebhook(getWebhook()));
   const valid = isWebhook(url);
   const [live, setLive] = useState(getLiveEnabled());
+  const [auto, setAuto] = useState(getGazetteAuto());
 
   const test = useMutation({
     mutationFn: () => sendDiscord({ username: 'FM Immersion', content: t('discord.testMessage') }, url),
@@ -81,6 +83,25 @@ export function Discord() {
         </label>
         {!saved && <p className="mt-2 text-xs text-brun">{t('live.needWebhook')}</p>}
         <p className="mt-3 text-xs text-brun">{t('live.plugin')}</p>
+      </section>
+
+      <section className="card mt-6 max-w-3xl">
+        <h2 className="text-xl font-semibold">{t('discord.autoTitle')}</h2>
+        <p className="mt-2 text-sm text-brun">{t('discord.autoIntro')}</p>
+        <label className="mt-4 flex items-center gap-3 text-sm font-bold">
+          <input
+            type="checkbox"
+            className="h-5 w-5 accent-orange-fonce"
+            checked={auto}
+            disabled={!saved}
+            onChange={(e) => {
+              setGazetteAuto(e.target.checked);
+              setAuto(e.target.checked);
+            }}
+          />
+          {t('discord.autoEnable')}
+        </label>
+        {!saved && <p className="mt-2 text-xs text-brun">{t('live.needWebhook')}</p>}
       </section>
 
       <section className="card mt-6 max-w-3xl">
