@@ -4,6 +4,8 @@ import {
   snapshotFixtures,
   homeOverview,
   nearestPreset,
+  offseasonDue,
+  playingTime,
   trainingAlerts,
   trainingFor,
   type FmPlayer,
@@ -11,8 +13,9 @@ import {
   type GameSlot,
   type SquadAt,
 } from '@fm-immersion/module-fm';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { FmBriefing } from './FmBriefing';
 import { FmDecisions, useDecisions } from './FmDecisions';
 import { Avatar } from './FmFoot';
 import { FmMatchCenter } from './FmMatchCenter';
@@ -36,6 +39,7 @@ export function FmHome({
   players,
   folder,
   history,
+  entries,
   go,
   gameFormation = null,
   lineup = null,
@@ -45,6 +49,8 @@ export function FmHome({
   players: FmPlayer[];
   folder: string;
   history?: SquadAt[];
+  /** Instantanés de la partie (temps de jeu de la saison pour le briefing). */
+  entries?: { gameDate: string; data: FmSnapshot }[];
   go: (view: string) => void;
   gameFormation?: string | null;
   lineup?: GameSlot[] | null;
@@ -55,6 +61,27 @@ export function FmHome({
   const h = useMemo(() => homeOverview(players, snap.gameDate), [players, snap.gameDate]);
   // Même classement que l'onglet Composition : note d'équipe du meilleur onze de chaque style.
   const { engine, ranked } = useTacticChoice(players, folder, null);
+  // Onze prévu du prochain match (même calcul que la feuille de match) : le briefing parle des titulaires.
+  const { plan } = useTacticChoice(players, folder, gameFormation, lineup, gameTactic);
+  const starters = useMemo(() => new Set(plan?.slots.flatMap((sl) => (sl.player ? [sl.player.id] : [])) ?? []), [plan]);
+  const playtime = useMemo(() => playingTime(players, entries ?? []).rows, [players, entries]);
+  // Le détail (chiffres, tableaux) est replié : le briefing et la feuille de match suffisent au quotidien.
+  const [detail, setDetail] = useState(() => {
+    try {
+      return localStorage.getItem('fmi.homeDetail') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const toggleDetail = () =>
+    setDetail((d) => {
+      try {
+        localStorage.setItem('fmi.homeDetail', d ? '0' : '1');
+      } catch {
+        /* stockage indisponible */
+      }
+      return !d;
+    });
   const [coach] = useCoach();
   const style = engine.ref.styles.find((s) => s.id === coach.style) ?? engine.ref.styles[0];
   const week = useMemo(
@@ -98,11 +125,24 @@ export function FmHome({
 
   return (
     <div className="space-y-4">
-      <FmMatchCenter snap={snap} players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameTactic={gameTactic} go={go} />
-      <FmSummary snap={snap} players={players} />
+      <FmBriefing
+        snap={snap}
+        players={players}
+        starters={starters}
+        decisions={decisionList}
+        playtime={playtime}
+        setupsToChange={toChange.length}
+        offseason={offseasonDue(snap, coach.seasonStart ?? 8)}
+        go={go}
+      />
       <FmOffseason snap={snap} players={players} list={decisionList} go={go} />
+      <FmMatchCenter snap={snap} players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameTactic={gameTactic} go={go} />
       <FmDecisions list={decisionList} go={go} />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6 xl:[&>*]:col-span-2 xl:[&>*:nth-last-child(-n+2)]:col-span-3">
+      <button type="button" className="chip" aria-expanded={detail} onClick={toggleDetail}>
+        {t(detail ? 'fm.brief.detailHide' : 'fm.brief.detail')}
+      </button>
+      {detail && <FmSummary snap={snap} players={players} />}
+      {detail && (<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6 xl:[&>*]:col-span-2 xl:[&>*:nth-last-child(-n+2)]:col-span-3">
         <Panel title={t('fm.home.todo')} action={link('squad', t('fm.views.squad'))}>
           {h.contracts && (
             <button type="button" className="mb-1 w-full text-left" onClick={() => go('contracts')}>
@@ -217,7 +257,7 @@ export function FmHome({
             <Empty>{t('fm.home.noYoung')}</Empty>
           )}
         </Panel>
-      </div>
+      </div>)}
     </div>
   );
 }

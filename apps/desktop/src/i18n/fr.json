@@ -2214,6 +2214,40 @@
     },
     "squadTable": {
       "watch": "À surveiller"
+    },
+    "brief": {
+      "title": "Le briefing de ton adjoint",
+      "go": "Y aller",
+      "and": "et",
+      "others_one": "{{count}} autre",
+      "others_other": "{{count}} autres",
+      "where": {
+        "home": " à domicile",
+        "away": " à l'extérieur"
+      },
+      "offseason": "La saison est finie. Le plan d'intersaison juste en dessous te donne l'été dans l'ordre : contrats, départs, recrues, présaison.",
+      "absentStarters_one": "{{names}} manquera le prochain match alors qu'il est prévu titulaire : la compo est à revoir.",
+      "absentStarters_other": "{{names}} manqueront le prochain match alors qu'ils sont prévus titulaires : la compo est à revoir.",
+      "nextMatchToday": "Match aujourd'hui contre {{opponent}}{{where}}. Un dernier coup d'œil à l'adversaire avant le coup d'envoi ?",
+      "nextMatch_one": "Prochain match demain contre {{opponent}}{{where}}.",
+      "nextMatch_other": "Prochain match dans {{count}} jours contre {{opponent}}{{where}}.",
+      "tiredStarters_one": "{{names}} est sous 85 % de condition alors qu'il est prévu titulaire : à ménager ou à remplacer.",
+      "tiredStarters_other": "{{names}} sont sous 85 % de condition alors qu'ils sont prévus titulaires : pense à la rotation.",
+      "contracts_one": "Un contrat à trancher : {{first}}, avant le {{date}}.",
+      "contracts_other": "{{count}} contrats à trancher, à commencer par {{first}} avant le {{date}}.",
+      "playtimeShort_one": "{{names}} joue moins que son statut ne le promet : il risque de venir se plaindre.",
+      "playtimeShort_other": "{{names}} jouent moins que leur statut ne le promet : ils risquent de venir se plaindre.",
+      "unhappy_one": "{{names}} a le moral au plus bas : une discussion s'impose.",
+      "unhappy_other": "{{names}} ont le moral au plus bas : il faut leur parler.",
+      "playtimeOver_one": "{{names}} joue au-dessus de son statut : il réclamera mieux à sa prochaine prolongation.",
+      "playtimeOver_other": "{{names}} jouent au-dessus de leur statut : ils réclameront mieux à leur prochaine prolongation.",
+      "training_one": "Un réglage d'entraînement individuel est à changer cette semaine.",
+      "training_other": "{{count}} réglages d'entraînement individuel sont à changer cette semaine.",
+      "mercato_one": "Une décision de mercato t'attend (départ ou recrue).",
+      "mercato_other": "{{count}} décisions de mercato t'attendent (départs et recrues).",
+      "allGood": "Rien d'urgent : l'équipe est prête. Bon moment pour regarder le projet de jeu ou les jeunes.",
+      "detail": "Tout le détail",
+      "detailHide": "Masquer le détail"
     }
   },
   "modes": {

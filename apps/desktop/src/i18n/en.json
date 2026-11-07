@@ -2214,6 +2214,40 @@
     },
     "squadTable": {
       "watch": "To watch"
+    },
+    "brief": {
+      "title": "Your assistant's briefing",
+      "go": "Go",
+      "and": "and",
+      "others_one": "{{count}} other",
+      "others_other": "{{count}} others",
+      "where": {
+        "home": " at home",
+        "away": " away"
+      },
+      "offseason": "The season is over. The off-season plan just below gives you the summer in order: contracts, departures, signings, pre-season.",
+      "absentStarters_one": "{{names}} will miss the next match despite being a planned starter: the line-up needs another look.",
+      "absentStarters_other": "{{names}} will miss the next match although they are planned starters: the line-up needs another look.",
+      "nextMatchToday": "Match today against {{opponent}}{{where}}. One last look at the opposition before kick-off?",
+      "nextMatch_one": "Next match tomorrow against {{opponent}}{{where}}.",
+      "nextMatch_other": "Next match in {{count}} days against {{opponent}}{{where}}.",
+      "tiredStarters_one": "{{names}} is below 85% condition but planned to start: rest or replace.",
+      "tiredStarters_other": "{{names}} are below 85% condition but planned to start: think about rotation.",
+      "contracts_one": "One contract to settle: {{first}}, before {{date}}.",
+      "contracts_other": "{{count}} contracts to settle, starting with {{first}} before {{date}}.",
+      "playtimeShort_one": "{{names}} is playing less than the squad status promises: expect a complaint.",
+      "playtimeShort_other": "{{names}} are playing less than their squad status promises: expect complaints.",
+      "unhappy_one": "{{names}} has rock-bottom morale: time for a talk.",
+      "unhappy_other": "{{names}} have rock-bottom morale: time to talk to them.",
+      "playtimeOver_one": "{{names}} is playing above the squad status: expect a request for more at the next renewal.",
+      "playtimeOver_other": "{{names}} are playing above their squad status: expect requests for more at the next renewal.",
+      "training_one": "One individual training setting needs changing this week.",
+      "training_other": "{{count}} individual training settings need changing this week.",
+      "mercato_one": "One transfer decision is waiting (departure or signing).",
+      "mercato_other": "{{count}} transfer decisions are waiting (departures and signings).",
+      "allGood": "Nothing urgent: the team is ready. A good time to look at the game plan or the youngsters.",
+      "detail": "Full detail",
+      "detailHide": "Hide detail"
     }
   },
   "modes": {

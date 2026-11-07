@@ -290,6 +290,7 @@ export function FmSave() {
             players={players}
             folder={folder}
             history={history}
+            entries={all as { gameDate: string; data: FmSnapshot }[] | undefined}
             go={go}
             gameFormation={gameFormation}
             lineup={lineup}
