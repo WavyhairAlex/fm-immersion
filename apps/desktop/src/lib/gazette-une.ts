@@ -1,4 +1,4 @@
-import type { GazetteIssue, GazetteStory } from '@fm-immersion/module-fm';
+import type { GazetteIssue, GazetteStory, SeasonReview } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
 import { paperName, storyText, weekLabel } from './gazette-text';
 
@@ -83,6 +83,18 @@ export function fit(ctx: CanvasRenderingContext2D, text: string, weight: number,
   return size;
 }
 
+/** Cases de l'encadré « Les chiffres » : place, bilan, buts, meilleur buteur (valeur, légende). */
+export function figureTiles(t: TFunction, f: SeasonReview): [string, string][] {
+  const out: [string, string][] = [];
+  if (f.position != null) out.push([t(`season.ordinal${f.position <= 3 ? f.position : ''}`, { n: f.position }), t('gazette.une.figPosition')]);
+  if (f.played) {
+    out.push([`${f.wins}-${f.draws}-${f.losses}`, t('gazette.une.figRecord', { count: f.played })]);
+    out.push([`${f.goalsFor}-${f.goalsAgainst}`, t('season.goals')]);
+  }
+  if (f.topScorer) out.push([String(f.topScorer.value), t('gazette.une.figScorer', { count: f.topScorer.value, name: f.topScorer.name })]);
+  return out;
+}
+
 /** Série en cours (« 4 victoires de suite ») d'après les résultats, du plus récent au plus ancien. */
 export function streak(form: Outcome[]): { outcome: Outcome; count: number } | null {
   if (!form.length) return null;
@@ -109,12 +121,17 @@ const ICON: Partial<Record<GazetteStory['kind'], string>> = {
 export async function drawUne(
   t: TFunction,
   issue: GazetteIssue,
-  opts: { form: Outcome[]; lang?: string; /** Photo de l'homme du match (facepack du joueur), si elle existe. */ face?: CanvasImageSource | null },
+  opts: {
+    form: Outcome[];
+    lang?: string;
+    /** Photo de l'homme du match (facepack du joueur), si elle existe. */
+    face?: CanvasImageSource | null;
+    /** Saison en cours du club (encadré « Les chiffres »). */
+    figures?: SeasonReview | null;
+  },
 ): Promise<HTMLCanvasElement> {
   const { lang } = opts;
-  await Promise.all(
-    [font(900, 76, SERIF), font(800, 50, SERIF), font(400, 19), font(800, 19)].map((f) => document.fonts.load(f).catch(() => undefined)),
-  );
+  await Promise.all([font(900, 76, SERIF), font(800, 50, SERIF), font(400, 19), font(800, 19)].map((f) => document.fonts.load(f).catch(() => undefined)));
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
@@ -238,6 +255,29 @@ export async function drawUne(
       ctx.fillText(l, M, y);
     }
     y += 10;
+  }
+
+  // Les chiffres de la saison, sous un gros titre qui n'est pas un match (semaine calme, intersaison).
+  const fig = opts.figures;
+  if (!isResult && fig && (fig.played || fig.position != null)) {
+    y += 34;
+    ctx.font = font(800, 13);
+    ctx.fillStyle = C.orangeDark;
+    ctx.fillText(caps(t('gazette.une.figures', { season: fig.label })), M, y);
+    y += 12;
+    const tiles = figureTiles(t, fig);
+    const tw = (colW - 12 * (tiles.length - 1)) / tiles.length;
+    tiles.forEach(([value, label], i) => {
+      const tx = M + i * (tw + 12);
+      roundRect(ctx, tx, y, tw, 84, 10, '#FFFFFF');
+      ctx.fillStyle = i === 0 ? C.orangeDark : C.ink;
+      fit(ctx, value, 900, 34, 16, tw - 24, SERIF);
+      ctx.fillText(value, tx + 12, y + 44);
+      ctx.font = font(700, 13);
+      ctx.fillStyle = C.grey;
+      ctx.fillText(wrap(ctx, label, tw - 24, 1)[0]!, tx + 12, y + 68);
+    });
+    y += 84;
   }
 
   // Homme du match et forme.

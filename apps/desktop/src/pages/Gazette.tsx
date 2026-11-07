@@ -1,4 +1,4 @@
-import { gazetteIssues, seasonReviews, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
+import { gazetteIssues, seasonReviews, seasonSoFar, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -43,6 +43,7 @@ export function Gazette() {
   const [index, setIndex] = useState(0);
   useEffect(() => setIndex(0), [saveId]);
   const issue = issues[index];
+  const figures = useMemo(() => (issue ? seasonSoFar(history, issue.date) : null), [history, issue]);
 
   return (
     <div className="w-full px-6 py-6 xl:px-10">
@@ -74,11 +75,11 @@ export function Gazette() {
       {issue && (
         <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
           <div className="min-w-0 space-y-6">
-            <UnePreview issues={issues} index={index} />
+            <UnePreview issues={issues} index={index} figures={figures} />
             <Paper issue={issue} />
           </div>
           <aside className="flex flex-col gap-2">
-            <SendButton saveId={saveId} issues={issues} index={index} />
+            <SendButton saveId={saveId} issues={issues} index={index} figures={figures} />
             <h2 className="mt-4 text-xs font-bold uppercase tracking-wide text-brun">{t('gazette.archives')}</h2>
             <ul className="flex max-h-[60vh] flex-col gap-1 overflow-auto">
               {issues.map((x, i) => (
@@ -128,25 +129,25 @@ export function Paper({ issue }: { issue: GazetteIssue }) {
 }
 
 /** Une en image, telle qu'elle part sur Discord. */
-function UnePreview({ issues, index }: { issues: GazetteIssue[]; index: number }) {
+function UnePreview({ issues, index, figures }: { issues: GazetteIssue[]; index: number; figures: SeasonReview | null }) {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage;
   const issue = issues[index]!;
   const { data: url } = useQuery({
-    queryKey: ['gazette', 'une', issue.club, issue.weekStart, issue.date, lang, index, issues.length],
+    queryKey: ['gazette', 'une', issue.club, issue.weekStart, issue.date, lang, index, issues.length, figures?.end, figures?.played],
     queryFn: async () =>
-      (await drawUne(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId) })).toDataURL('image/png'),
+      (await drawUne(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures })).toDataURL('image/png'),
   });
   if (!url) return <div className="aspect-video w-full animate-pulse rounded-xl bg-canard/5" />;
   return <img src={url} alt={t('gazette.preview')} className="w-full rounded-xl shadow-sm ring-1 ring-canard/10" />;
 }
 
-function SendButton({ saveId, issues, index }: { saveId: string; issues: GazetteIssue[]; index: number }) {
+function SendButton({ saveId, issues, index, figures }: { saveId: string; issues: GazetteIssue[]; index: number; figures: SeasonReview | null }) {
   const { t, i18n } = useTranslation();
   const webhook = getWebhook();
   const send = useMutation({
     mutationFn: async () => {
-      await sendGazette(t, i18n.resolvedLanguage, issues, index);
+      await sendGazette(t, i18n.resolvedLanguage, issues, index, figures);
       // La semaine en cours (n° le plus récent) n'est pas terminée : l'envoi automatique la publiera à la fin de la semaine.
       if (index > 0) markGazetteSent(saveId, issues[index]!.weekStart);
     },

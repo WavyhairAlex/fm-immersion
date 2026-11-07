@@ -2296,7 +2296,13 @@
       "letter_L": "D",
       "briefs": "En bref",
       "noBriefs": "Pas d'autre nouvelle cette semaine.",
-      "next": "Prochain match"
+      "next": "Prochain match",
+      "figures": "Les chiffres de la saison {{season}}",
+      "figPosition": "Classement",
+      "figRecord_one": "V-N-D ({{count}} match)",
+      "figRecord_other": "V-N-D ({{count}} matchs)",
+      "figScorer_one": "but, {{name}}",
+      "figScorer_other": "buts, {{name}}"
     },
     "preview": "Aperçu de la une envoyée sur Discord"
   },
@@ -2463,6 +2469,15 @@
     "departures": "Départs :",
     "footer": "Rendez-vous la saison prochaine, {{club}} !",
     "send": "Envoyer le bilan sur Discord",
-    "sent": "Bilan envoyé sur Discord."
+    "sent": "Bilan envoyé sur Discord.",
+    "points": "Points ({{ppm}} par match)",
+    "cleanSheets": "Clean sheets",
+    "homeAway": "Dom. / ext.",
+    "home": "Domicile",
+    "away": "Extérieur",
+    "more": "Et aussi",
+    "cards": "{{yellow}} cartons jaunes, {{red}} rouges",
+    "mostUsed": "Le plus utilisé",
+    "minutes": "{{name}}, {{minutes}} min"
   }
 }

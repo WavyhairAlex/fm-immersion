@@ -2296,7 +2296,13 @@
       "letter_L": "L",
       "briefs": "In brief",
       "noBriefs": "No other news this week.",
-      "next": "Next match"
+      "next": "Next match",
+      "figures": "Season {{season}} in numbers",
+      "figPosition": "League position",
+      "figRecord_one": "W-D-L ({{count}} match)",
+      "figRecord_other": "W-D-L ({{count}} matches)",
+      "figScorer_one": "goal, {{name}}",
+      "figScorer_other": "goals, {{name}}"
     },
     "preview": "Preview of the front page sent to Discord"
   },
@@ -2463,6 +2469,15 @@
     "departures": "Out:",
     "footer": "See you next season, {{club}}!",
     "send": "Send the review to Discord",
-    "sent": "Review sent to Discord."
+    "sent": "Review sent to Discord.",
+    "points": "Points ({{ppm}} per match)",
+    "cleanSheets": "Clean sheets",
+    "homeAway": "Home / away",
+    "home": "Home",
+    "away": "Away",
+    "more": "Also",
+    "cards": "{{yellow}} yellow, {{red}} red cards",
+    "mostUsed": "Most used",
+    "minutes": "{{name}}, {{minutes}} min"
   }
 }

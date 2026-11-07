@@ -1,4 +1,4 @@
-import { gazetteIssues, seasonReviews, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
+import { gazetteIssues, seasonReviews, seasonSoFar, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import type { TFunction } from 'i18next';
@@ -12,10 +12,17 @@ import { loadFace } from './player-face';
 import { drawSeason, seasonPayload } from './season-une';
 
 /** Envoie la gazette n° `index` (une en image + encart), comme le bouton « Envoyer sur Discord ». */
-export async function sendGazette(t: TFunction, lang: string | undefined, issues: GazetteIssue[], index: number, webhook = getWebhook()) {
+export async function sendGazette(
+  t: TFunction,
+  lang: string | undefined,
+  issues: GazetteIssue[],
+  index: number,
+  figures: SeasonReview | null = null,
+  webhook = getWebhook(),
+) {
   const issue = issues[index]!;
-  const png = await canvasPng(await drawUne(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId) }));
-  const payload = discordPayload(t, issue, lang);
+  const png = await canvasPng(await drawUne(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures }));
+  const payload = discordPayload(t, issue, lang, figures);
   const embed = { ...payload.embeds[0]!, image: { url: 'attachment://une.png' } };
   return sendDiscordImage({ ...payload, embeds: [embed], attachments: [{ id: 0, filename: 'une.png' }] }, png, webhook);
 }
@@ -118,7 +125,7 @@ export function useGazetteAuto() {
         const issues = gazetteIssues(history);
         const index = gazetteToSend(issues, saveId, read(SENT_KEY));
         if (index != null) {
-          await sendGazette(t, i18n.resolvedLanguage, issues, index);
+          await sendGazette(t, i18n.resolvedLanguage, issues, index, seasonSoFar(history, issues[index]!.date));
           markGazetteSent(saveId, issues[index]!.weekStart);
         }
         // Fin du championnat : numéro spécial, après la gazette de la semaine.
