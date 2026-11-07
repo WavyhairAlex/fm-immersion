@@ -1359,6 +1359,35 @@
         "less": "Show less",
         "help": "Set in advance in the game's Training Schedule screen: one \"Schedule priority\" and one workload per week. Light workload in two-match weeks, medium with one match, heavy with no match and early in pre-season; three matches or more is a run of games: full rest between matches. The fixture list comes from the plugin (up to 40 upcoming matches, all competitions); cup rounds not yet drawn are missing, and the view updates with each snapshot.",
         "leadFull": "Every week until next pre-season, from your real fixture list (all competitions), with its type and what to set in the game. Click a week to see its day-by-day plan."
+      },
+      "youth": {
+        "title": "Youth and B team",
+        "week": "Typical week: schedule {{code}}, to load in the game as the \"{{preset}}\" schedule, workload {{workload}}. It aims at development: fewer tactical sessions, more development sessions.",
+        "noWorkload": "none (rest)",
+        "statusCol": "To do",
+        "roleCol": "Role to learn",
+        "potentialCol": "Potential",
+        "status": {
+          "promote": "With the first team",
+          "loan": "Loan out",
+          "develop": "Develop",
+          "low": "Low potential"
+        },
+        "statusHint": {
+          "promote": "Already at first-team level for this role: have him train with the first team, he will develop faster.",
+          "loan": "19 or older, with potential, but not at the level yet: he needs senior football. Loan him to a club where he will play.",
+          "develop": "He is developing with the youth team: keep this plan and his individual focus.",
+          "low": "20 or older with 2 potential stars or fewer: he takes a place a more promising youngster could have."
+        },
+        "count": {
+          "promote_one": "{{count}} ready for the first team",
+          "promote_other": "{{count}} ready for the first team",
+          "loan_one": "{{count}} to loan out",
+          "loan_other": "{{count}} to loan out",
+          "low_one": "{{count}} with low potential",
+          "low_other": "{{count}} with low potential"
+        },
+        "help": "Reserve and youth players read by the plugin. The role to learn is the role in your game plan he fits best; the individual focus follows the same rule as the first team (quickness up to 23, measured as the most effective, otherwise his weakest key attributes, shown next to it). Status from his role fit compared with your first-team starters (median). The youth fixture list is not read: the typical week assumes a Saturday match. In the game, youth training is set in their Training screen, if you took charge of it in the staff responsibilities."
       }
     },
     "intro": {

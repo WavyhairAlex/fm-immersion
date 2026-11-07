@@ -1359,6 +1359,35 @@
         "less": "Réduire",
         "help": "À régler d'avance dans l'écran Programme d'entraînement du jeu : une « Priorité du calendrier » et une charge par semaine. Charge légère les semaines à deux matchs, moyenne avec un match, intensive sans match et en début de présaison ; trois matchs ou plus, c'est un enchaînement : repos complet entre les matchs. Le calendrier vient du plugin (jusqu'à 40 matchs à venir, toutes compétitions) ; les tours de coupe pas encore tirés n'y sont pas, la vue se met à jour à chaque instantané.",
         "leadFull": "Chaque semaine jusqu'à la prochaine présaison, d'après ton vrai calendrier (toutes compétitions), avec son type et ce qu'il faut régler dans le jeu. Clique sur une semaine pour voir son plan jour par jour."
+      },
+      "youth": {
+        "title": "Jeunes et équipe B",
+        "week": "Semaine type : planning {{code}}, à charger dans le jeu comme programme « {{preset}} », charge {{workload}}. Elle vise la progression : moins de séances tactiques, plus de séances de développement.",
+        "noWorkload": "aucune (repos)",
+        "statusCol": "À faire",
+        "roleCol": "Rôle à apprendre",
+        "potentialCol": "Potentiel",
+        "status": {
+          "promote": "Avec l’équipe première",
+          "loan": "À prêter",
+          "develop": "À développer",
+          "low": "Peu de potentiel"
+        },
+        "statusHint": {
+          "promote": "Déjà au niveau de l'équipe première pour ce rôle : fais-le s'entraîner avec elle, il progressera plus vite.",
+          "loan": "19 ans ou plus, du potentiel, mais pas encore au niveau : il lui faut des matchs d'adultes. Un prêt dans un club où il jouera.",
+          "develop": "Il progresse chez les jeunes : garde ce plan et sa priorité individuelle.",
+          "low": "20 ans ou plus et 2 étoiles de potentiel ou moins : il prend une place qu'un jeune plus prometteur pourrait avoir."
+        },
+        "count": {
+          "promote_one": "{{count}} prêt pour l’équipe première",
+          "promote_other": "{{count}} prêts pour l’équipe première",
+          "loan_one": "{{count}} à prêter",
+          "loan_other": "{{count}} à prêter",
+          "low_one": "{{count}} avec peu de potentiel",
+          "low_other": "{{count}} avec peu de potentiel"
+        },
+        "help": "Joueurs de la réserve et des équipes de jeunes lus par le plugin. Le rôle à apprendre est celui de ton projet de jeu où le joueur est le plus adapté ; la priorité individuelle suit la même règle que l'équipe première (vitesse jusqu'à 23 ans, mesurée comme la plus rentable, sinon ses attributs clés les plus faibles, affichés à côté). Statut d'après son adéquation au rôle comparée à celle des titulaires de ton équipe première (médiane). Le calendrier des jeunes n'est pas lu : la semaine type suppose un match le samedi. Dans le jeu, le programme des jeunes se règle dans leur écran Entraînement, si tu en as pris la responsabilité dans les responsabilités du personnel."
       }
     },
     "intro": {
