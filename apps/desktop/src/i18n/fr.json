@@ -1112,8 +1112,8 @@
       "priorities": "Zones du style visé travaillées en priorité : {{list}}.",
       "load": "Dans la semaine",
       "rules": "Les règles",
-      "rule1": "Veille de match : préparation de match. Lendemain : Repos, Récupération, puis Esprit d'équipe en extra.",
-      "rule2": "Le Repos rapporte en match : jamais retiré pour une séance de plus. Semaine à 3 matchs : repos complet. Piège de pressing : 2 séances par semaine, pas plus.",
+      "rule1": "Veille de match : une seule séance de préparation. Lendemain : Repos puis Récupération. Chaque jour de travail : une séance tactique et une séance de progression, rien de plus.",
+      "rule2": "Le Repos rapporte en match : jamais retiré pour une séance de plus. Semaine à 3 matchs : repos complet. Piège de pressing : 2 séances par semaine, pas plus. Pas de condition physique à deux jours d'un match.",
       "rule3": "Si un match est déplacé, remets la préparation la veille et la récupération le lendemain.",
       "rule4": "Les joueurs qui reviennent de sélection se gèrent à part.",
       "rule5": "Juge le plan sur plusieurs semaines, pas sur un résultat, et allège si la charge ne convient pas.",
@@ -1233,7 +1233,22 @@
       "upcomingHelp": "À régler d'avance dans l'écran Programme d'entraînement du jeu : une « Priorité du calendrier » et une charge par semaine. Charge légère les semaines à deux matchs, moyenne avec un match, intensive sans match et en début de présaison. Au-delà des prochains matchs connus, FM Immersion suppose un match le samedi.",
       "reasonHint": "Survole l'intensité d'un joueur pour voir pourquoi elle est conseillée.",
       "metaAdaptHelp": "Base Méta d'AlexJeuVideal : 2 pièges du pressing par semaine, la veille du match Progression du ballon, Bloc défensif, Condition physique, le reste au repos. Les 4 autres séances tactiques suivent tes zones prioritaires (les plus faibles d'après le jeu et tes matchs) parmi celles que le banc d'essai juge utiles : Hauteur du pressing, Construction, Création d'occasions, Organisation avec et sans le ballon. Elles changent quand tes faiblesses changent.",
-      "metaSwaps": "Après chargement, remplace : {{list}}."
+      "metaSwaps": "Après chargement, remplace : {{list}}.",
+      "coachHelp": "Programme FM Immersion, une seule proposition : chaque jour de travail, une séance tactique (deux Pièges du pressing par semaine, puis les zones que le jeu dit les moins comprises, sinon celles de ton style) et une séance de progression (Condition physique, Ballon offensif, Ballon défensif, Condition physique légère : les quatre séances qui font le plus progresser les attributs d'après les mesures d'harvestgreen22). Veille de match : une seule séance de préparation. Lendemain : Repos puis Récupération. Jamais de condition physique l'avant-veille d'un match. Quand le jeu dit que tout est compris, les séances tactiques se réduisent aux deux pièges.",
+      "coachSummary": "Cette semaine : {{tactical}} séances tactiques, {{grow}} séances de progression, {{matches}} match(s).",
+      "teamIntensityCoach": "Réglage conseillé dans Entraînement > Intensité de l'équipe : double pour les joueurs en bonne et très bonne forme (c'est ce qui fait progresser, mesuré par harvestgreen22), moitié et repos pour les autres afin d'arriver frais au match (banc d'essai d'AlexJeuVideal). Le jeu applique ensuite le réglage à chacun. Priorité individuelle : le point faible vu en match, sinon Vitesse jusqu'à 23 ans, sinon l'attribut clé le plus faible du rôle.",
+      "why": {
+        "press": "efficacité : 2 pièges du pressing par semaine",
+        "weak": "zone la moins comprise d'après le jeu",
+        "top": "zone n° 1 de ton style",
+        "grow": "progression : séance qui fait monter les attributs",
+        "noCondition": "progression (pas de condition physique à 2 jours du match)",
+        "indiv": "semaine sans match : développement individuel",
+        "prep": "veille de match : une seule séance de préparation",
+        "recover": "lendemain de match",
+        "congested": "trois matchs : repos",
+        "restDay": "repos : la fraîcheur rapporte en match"
+      }
     },
     "intro": {
       "home": "Ce qui demande ton attention aujourd'hui, les styles qui collent à l'effectif, tes meilleurs joueurs et tes jeunes.",

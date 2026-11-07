@@ -386,6 +386,36 @@ async function publish(t: TFunction, l: FmLive, club: string | null, messageId: 
   return messageId;
 }
 
+/** Match terminé sans relevé final : score du jeu (domicile, extérieur) s'il est lu dans l'instantané. */
+export interface MatchEnded {
+  score: [number, number] | null;
+}
+
+/** Relevé sans nouvelle écriture depuis ce délai : le plugin n'écrit plus, le match est fini (ou le jeu est fermé). */
+const ENDED_AFTER_MS = 3 * 60_000;
+
+/**
+ * Le match du relevé est-il fini ? Le plugin n'écrit plus pendant un match fini : un relevé « en cours » qui n'a pas
+ * bougé depuis trois minutes à la 85e ou après, ou dont la date de jeu est dépassée dans l'instantané, ou dont le
+ * score est celui du dernier match joué de l'instantané (même jour de jeu, prochain match plus tard), est terminé.
+ * Null tant qu'on ne peut pas conclure.
+ */
+export function matchEnded(l: FmLive, snap: unknown, now: number): MatchEnded | null {
+  if (liveIsFresh(l, now) || l.final) return null;
+  const age = now - Date.parse(l.updatedAt);
+  const s = (snap ?? {}) as { gameDate?: unknown; nextMatch?: { inDays?: unknown } | null; custom?: { equipe?: Record<string, unknown> } };
+  const e = s.custom?.equipe ?? {};
+  const last = pair(e.dernierMatchScoreDomicile, e.dernierMatchScoreExterieur);
+  const later = typeof s.gameDate === 'string' && !!l.gameDate && s.gameDate > l.gameDate;
+  const sameDay = typeof s.gameDate === 'string' && !!l.gameDate && s.gameDate === l.gameDate;
+  const nextIsToday = typeof s.nextMatch?.inDays === 'string' && /aujourd|today/i.test(s.nextMatch.inDays);
+  const scoreSeen = !!last && last[0] === (l.homeScore ?? 0) && last[1] === (l.awayScore ?? 0);
+  if (later) return { score: scoreSeen ? last : null };
+  if (sameDay && scoreSeen && !nextIsToday) return { score: last };
+  if (Number.isFinite(age) && age >= ENDED_AFTER_MS && (minuteOf(l.minute) ?? 0) >= 85) return { score: scoreSeen ? last : null };
+  return null;
+}
+
 /** Un relevé du direct : nouveau match → encart ; ensuite le même message est modifié (score, minute, commentaire, fin). */
 export async function liveStep(
   t: TFunction,
@@ -394,6 +424,7 @@ export async function liveStep(
   state: LiveState | null,
   now = Date.now(),
   render?: LiveRender,
+  ended: MatchEnded | null = null,
 ): Promise<LiveState | null> {
   const key = liveKey(l);
   // Après le match : les chiffres du jeu arrivent avec l'instantané suivant (jusqu'à quelques minutes plus tard,
@@ -406,7 +437,20 @@ export async function liveStep(
       return state;
     }
   }
-  if (!liveIsFresh(l, now)) return state;
+  if (!liveIsFresh(l, now)) {
+    // Le plugin a cessé d'écrire (le jeu ne répond plus sur le match une fois fini) sans jamais marquer « final » :
+    // on clôt nous-mêmes l'encart avec le dernier score connu, corrigé par l'instantané s'il donne le résultat.
+    if (ended && state && state.key === key && !state.done && state.messageId) {
+      const closed: FmLive = { ...state.last, ...l, final: true, inMatch: false, minute: 'FDM', ...(ended.score ? { homeScore: ended.score[0], awayScore: ended.score[1] } : {}) };
+      try {
+        await publish(t, closed, club, state.messageId, render);
+        return { key, messageId: state.messageId, last: closed, done: true };
+      } catch {
+        return state;
+      }
+    }
+    return state;
+  }
   if (!state || state.key !== key) {
     if (l.final) return { key, messageId: null, last: l, done: true }; // match déjà fini quand l'appli l'a vu
     const messageId = await publish(t, l, club, null, render);
@@ -466,13 +510,18 @@ export function useLiveDiscord() {
           const context = snapRaw ? liveContext(JSON.parse(snapRaw)) : null;
           comp = { key, context };
         }
+        let ended: MatchEnded | null = null;
+        if (state && state.key === key && !state.done && !liveIsFresh(live.data, Date.now())) {
+          const snapRaw = await invoke<string | null>('fm_read_snapshot', { folder }).catch(() => null);
+          ended = matchEnded(live.data, snapRaw ? JSON.parse(snapRaw) : null, Date.now());
+        }
         let stats: MatchStats | null = null;
         if (live.data.final && state?.done && !state.stats && state.key === key && Date.now() - statsAt >= 60_000) {
           statsAt = Date.now();
           const snapRaw = await invoke<string | null>('fm_read_snapshot', { folder }).catch(() => null);
           stats = snapRaw ? lastMatchStats(JSON.parse(snapRaw), live.data) : null;
         }
-        const next = await liveStep(t, { ...live.data, competition: comp.context?.competition ?? null, context: comp.context, stats } as FmLive, club, state, Date.now(), render);
+        const next = await liveStep(t, { ...live.data, competition: comp.context?.competition ?? null, context: comp.context, stats } as FmLive, club, state, Date.now(), render, ended);
         if (next && next !== state) {
           state = next;
           saveState(next);

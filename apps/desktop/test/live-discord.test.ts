@@ -10,7 +10,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   }),
 }));
 
-const { commentary, goalSituation, lastMatchStats, liveContext, liveStep, matchFigures, matchPhase, minuteOf, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
+const { commentary, goalSituation, lastMatchStats, liveContext, liveStep, matchEnded, matchFigures, matchPhase, minuteOf, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
 const t = ((k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k)) as unknown as TFunction;
 
 const at = '2026-11-07T07:20:00.000Z';
@@ -78,6 +78,34 @@ describe('direct Discord', () => {
     calls.length = 0;
     await liveStep(t, { ...s!.last }, 'Malženice', s, now);
     expect(calls).toEqual([]);
+  });
+
+  it("clôt l'encart quand le plugin cesse d'écrire après la 85e (match fini sans relevé final)", async () => {
+    let s = await liveStep(t, base, 'Malženice', null, now);
+    calls.length = 0;
+    const stuck = { ...base, homeScore: 1, minute: '93 min.', scorers: "T. Astorga 23'" } as FmLive;
+    s = await liveStep(t, stuck, 'Malženice', s, now);
+    calls.length = 0;
+    const later = now + 4 * 60_000;
+    // Relevé périmé, rien ne dit que le match est fini : on attend.
+    expect(matchEnded(stuck, { gameDate: '2027-08-14', nextMatch: { inDays: "Aujourd'hui" } }, now + 60_000)).toBeNull();
+    // Trois minutes sans écriture à la 93e : fini.
+    const ended = matchEnded(stuck, { gameDate: '2027-08-14' }, later);
+    expect(ended).toEqual({ score: null });
+    s = await liveStep(t, stuck, 'Malženice', s, later, undefined, ended);
+    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit']);
+    expect(s?.done).toBe(true);
+    expect(s?.last.final).toBe(true);
+    const embed = (calls[0]!.args.payload as { embeds: { author: { name: string }; description: string }[] }).embeds[0]!;
+    expect(embed.author.name).toContain('live.finalTag');
+    expect(embed.description).toContain('live.ended');
+    calls.length = 0;
+    await liveStep(t, stuck, 'Malženice', s, later, undefined, ended);
+    expect(calls).toEqual([]);
+    // Score du dernier match dans l'instantané, le lendemain : repris tel quel.
+    const snap = { gameDate: '2027-08-15', custom: { equipe: { dernierMatchScoreDomicile: '1', dernierMatchScoreExterieur: '0' } } };
+    expect(matchEnded(stuck, snap, now + 150_000)).toEqual({ score: [1, 0] });
+    expect(matchEnded({ ...stuck, final: true }, snap, later)).toBeNull();
   });
 
   it('ignore un relevé ancien ou un match déjà fini', async () => {
