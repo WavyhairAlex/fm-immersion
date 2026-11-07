@@ -57,6 +57,24 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.fill();
 }
 
+/** Image recadrée dans un cercle (cadrage carré centré en largeur, calé en haut : le visage). */
+function drawFace(ctx: CanvasRenderingContext2D, img: CanvasImageSource, cx: number, cy: number, r: number) {
+  const w = Number((img as { width?: number }).width) || 1;
+  const h = Number((img as { height?: number }).height) || 1;
+  const side = Math.min(w, h);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.drawImage(img, (w - side) / 2, 0, side, side, cx - r, cy - r, r * 2, r * 2);
+  ctx.restore();
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = C.orange;
+  ctx.stroke();
+}
+
 /** Plus grande taille de police (≤ max) pour que le texte tienne sur `width`. */
 function fit(ctx: CanvasRenderingContext2D, text: string, weight: number, max: number, min: number, width: number, family: string) {
   let size = max;
@@ -88,7 +106,11 @@ const ICON: Partial<Record<GazetteStory['kind'], string>> = {
   job: '🪑',
 };
 
-export async function drawUne(t: TFunction, issue: GazetteIssue, opts: { form: Outcome[]; lang?: string }): Promise<HTMLCanvasElement> {
+export async function drawUne(
+  t: TFunction,
+  issue: GazetteIssue,
+  opts: { form: Outcome[]; lang?: string; /** Photo de l'homme du match (facepack du joueur), si elle existe. */ face?: CanvasImageSource | null },
+): Promise<HTMLCanvasElement> {
   const { lang } = opts;
   await Promise.all(
     [font(900, 76, SERIF), font(800, 50, SERIF), font(400, 19), font(800, 19)].map((f) => document.fonts.load(f).catch(() => undefined)),
@@ -227,11 +249,25 @@ export async function drawUne(t: TFunction, issue: GazetteIssue, opts: { form: O
     ctx.fillStyle = C.orangeLight;
     ctx.fill();
     const r = p.rating == null ? '–' : new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Number(p.rating));
-    ctx.font = font(900, r.length > 3 ? 20 : 24, SERIF);
-    ctx.fillStyle = C.orangeDark;
-    ctx.textAlign = 'center';
-    ctx.fillText(r, x + 31, rowY + 39);
-    ctx.textAlign = 'left';
+    if (opts.face) {
+      // Photo dans le cercle (recadrée au centre, haut du visage), note en pastille dessous.
+      drawFace(ctx, opts.face, x + 31, rowY + 31, 31);
+      if (p.rating != null) {
+        ctx.font = font(900, 14, SERIF);
+        const bw = ctx.measureText(r).width + 14;
+        roundRect(ctx, x + 31 - bw / 2, rowY + 52, bw, 20, 10, C.orangeDark);
+        ctx.fillStyle = '#FFFFFF';
+        ctx.textAlign = 'center';
+        ctx.fillText(r, x + 31, rowY + 67);
+        ctx.textAlign = 'left';
+      }
+    } else {
+      ctx.font = font(900, r.length > 3 ? 20 : 24, SERIF);
+      ctx.fillStyle = C.orangeDark;
+      ctx.textAlign = 'center';
+      ctx.fillText(r, x + 31, rowY + 39);
+      ctx.textAlign = 'left';
+    }
     ctx.font = font(800, 13);
     ctx.fillStyle = C.grey;
     ctx.fillText(caps(t('gazette.une.motm')), x + 76, rowY + 24);
