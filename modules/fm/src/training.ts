@@ -293,6 +293,7 @@ export const CONGESTED_MATCHES = 3;
 /** Variante offensive et défensive des séances avec ballon selon le style visé. */
 const ATTACK_BY_STYLE: Record<string, SessionId> = {
   possession: 'attackingPatient',
+  'possession-433': 'attackingPatient',
   tikitaka: 'attackingPatient',
   'tikitaka-v': 'attackingPatient',
   catenaccio: 'attackingPatient',
@@ -307,6 +308,7 @@ const DEFENCE_BY_STYLE: Record<string, SessionId> = {
   tikitaka: 'defendingEngaged',
   'tikitaka-v': 'defendingEngaged',
   possession: 'defendingEngaged',
+  'possession-433': 'defendingEngaged',
   catenaccio: 'defendingDisengaged',
   'ultra-def': 'defendingDisengaged',
   'counter-direct': 'defendingDisengaged',
