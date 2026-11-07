@@ -1,14 +1,17 @@
 import type { FmLive } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
 import { wrap } from './gazette-une';
-import { minuteOf, timeline } from './live-discord';
+import { minuteOf, timeline, type MatchStats } from './live-discord';
 
 /**
- * Image du tableau de score du direct (1000 × 450), redessinée à chaque relevé : bandeau (en direct / score final,
- * minute), équipes et grand score, frise du match avec les buts à leur minute, buteurs, et phrase du commentateur.
+ * Image du tableau de score du direct (1000 × 450, 510 avec les chiffres), redessinée à chaque relevé : bandeau (en
+ * direct / score final, minute, compétition), équipes et grand score, frise du match avec les buts à leur minute,
+ * buteurs, chiffres du jeu après le match (possession, tirs, xG, homme du match), et phrase du commentateur.
  */
 const W = 1000;
-const H = 450;
+const H0 = 450;
+/** Hauteur ajoutée pour les deux lignes de chiffres, une fois le match fini et les stats lues. */
+const STATS_H = 60;
 const M = 40;
 const C = {
   bg: '#25282D',
@@ -52,8 +55,24 @@ function fitName(ctx: CanvasRenderingContext2D, text: string, max: number, width
   }
 }
 
-export async function drawLiveBoard(t: TFunction, l: FmLive, club: string | null, comment: string): Promise<HTMLCanvasElement> {
+/** Lignes de chiffres du tableau final : possession, tirs, xG, puis l'homme du match. */
+export function statsRows(t: TFunction, st: MatchStats, lang?: string): string[] {
+  const xg = (n: number) => new Intl.NumberFormat(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+  const first = [
+    st.possession && t('live.image.possession', { home: Math.round(st.possession[0]), away: Math.round(st.possession[1]) }),
+    st.shots && t('live.image.shots', { home: st.shots[0], away: st.shots[1], homeOn: st.onTarget?.[0] ?? '?', awayOn: st.onTarget?.[1] ?? '?' }),
+    st.xg && t('live.image.xg', { home: xg(st.xg[0]), away: xg(st.xg[1]) }),
+  ].filter((x): x is string => Boolean(x));
+  const rows = first.length ? [first.join('   ·   ')] : [];
+  if (st.motm) rows.push(st.motm.rating != null ? t('live.image.motm', { name: st.motm.name, rating: st.motm.rating.toFixed(1).replace('.', ',') }) : t('live.image.motmNoRating', { name: st.motm.name }));
+  return rows;
+}
+
+export async function drawLiveBoard(t: TFunction, l: FmLive, club: string | null, comment: string, lang?: string): Promise<HTMLCanvasElement> {
   await Promise.all([font(900, 96, SERIF), font(800, 34, SERIF), font(800, 18), font(400, 18)].map((f) => document.fonts.load(f).catch(() => undefined)));
+  const extra = l as { competition?: unknown; stats?: MatchStats | null };
+  const stats = l.final && extra.stats ? statsRows(t, extra.stats, lang) : [];
+  const H = H0 + (stats.length ? STATS_H : 0);
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
@@ -82,6 +101,14 @@ export async function drawLiveBoard(t: TFunction, l: FmLive, club: string | null
   ctx.fillStyle = C.orange;
   ctx.textAlign = 'right';
   ctx.fillText(l.final ? t('live.ended') : minute != null ? `${minute}'` : t('live.kickoff'), W - M, 48);
+  // Compétition au centre du bandeau (nom du jeu, tel quel).
+  const competition = typeof extra.competition === 'string' ? extra.competition.replace(/<[^>]*>/g, '').trim() : '';
+  if (competition) {
+    ctx.font = font(700, 15);
+    ctx.fillStyle = C.soft;
+    ctx.textAlign = 'center';
+    ctx.fillText(wrap(ctx, competition.toLocaleUpperCase(lang), 480, 1)[0]!, W / 2, 46);
+  }
   ctx.textAlign = 'left';
 
   // Équipes et score.
@@ -153,6 +180,17 @@ export async function drawLiveBoard(t: TFunction, l: FmLive, club: string | null
     wrap(ctx, text, W / 2 - M - 20, 2).forEach((line, i) => ctx.fillText(line, s === 'home' ? M : W - M, by + i * 22));
   }
   ctx.textAlign = 'left';
+
+  // Chiffres du jeu, une fois le match fini : une ligne possession / tirs / xG, une ligne homme du match.
+  if (stats.length) {
+    ctx.textAlign = 'center';
+    stats.forEach((row, i) => {
+      ctx.font = font(i === 0 ? 700 : 600, 16);
+      ctx.fillStyle = i === 0 ? C.ink : C.soft;
+      ctx.fillText(wrap(ctx, row, W - 2 * M, 1)[0]!, W / 2, 338 + i * 24);
+    });
+    ctx.textAlign = 'left';
+  }
 
   // Phrase du commentateur, sur deux lignes au plus.
   const band = 120;

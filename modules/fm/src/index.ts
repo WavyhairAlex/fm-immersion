@@ -45,6 +45,7 @@ export * from './needs';
 export * from './diagnose';
 export * from './staff';
 export * from './shirts';
+export * from './lastmatch';
 export * from './gazette';
 export * from './live';
 export * from './season';

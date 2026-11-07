@@ -1,4 +1,4 @@
-import { fmLiveSchema, isFriendly, liveIsFresh, liveKey, liveNews, parseScorers, type FmLive } from '@fm-immersion/module-fm';
+import { type FmLive, fmLiveSchema, gameLastMatch, isFriendly, liveIsFresh, liveKey, liveNews, parseScorers } from '@fm-immersion/module-fm';
 import { invoke } from '@tauri-apps/api/core';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
@@ -136,34 +136,19 @@ export interface MatchStats {
   motm: { name: string; rating: number | null } | null;
 }
 
-const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : typeof v === 'string' && v.trim() !== '' && Number.isFinite(+v.replace(',', '.')) ? +v.replace(',', '.') : null);
-const pair = (a: unknown, b: unknown): [number, number] | null => {
-  const x = num(a);
-  const y = num(b);
-  return x != null && y != null ? [x, y] : null;
-};
-
 /**
- * Chiffres du match qui vient de finir, lus dans `custom.equipe` (chemins.json : `dernierMatch*` = LastFixture/…,
- * 07/11/2026). Le jeu ne remplit possession, tirs et xG qu'une fois le match terminé, et sa date est un objet opaque :
- * on reconnaît le match par son score, pour un instantané écrit au plus tard une semaine de jeu après le direct.
- * Un match sans aucun tir ni possession lue (50/50, 0 tir) est tenu pour non renseigné.
+ * Chiffres du match qui vient de finir, lus dans l'instantané (`gameLastMatch`, module fm). Le jeu ne les remplit
+ * qu'une fois le match terminé, et sa date est un objet opaque : on reconnaît le match par son score, pour un
+ * instantané écrit au plus tard une semaine de jeu après le direct.
  */
 export function lastMatchStats(snap: unknown, l: FmLive): MatchStats | null {
-  const s = (snap ?? {}) as { gameDate?: unknown; custom?: { equipe?: Record<string, unknown> } };
-  const e = s.custom?.equipe;
-  if (!e || !l.final || typeof s.gameDate !== 'string' || !l.gameDate) return null;
+  const s = (snap ?? {}) as { gameDate?: unknown };
+  if (!l.final || typeof s.gameDate !== 'string' || !l.gameDate) return null;
   const days = (Date.parse(s.gameDate) - Date.parse(l.gameDate)) / 86_400_000;
   if (!Number.isFinite(days) || days < 0 || days > 7) return null;
-  if (num(e.dernierMatchScoreDomicile) !== (l.homeScore ?? 0) || num(e.dernierMatchScoreExterieur) !== (l.awayScore ?? 0)) return null;
-  const possession = pair(e.dernierMatchPossDom, e.dernierMatchPossExt);
-  const shots = pair(e.dernierMatchTirsDom, e.dernierMatchTirsExt);
-  const onTarget = pair(e.dernierMatchTirsCadresDom, e.dernierMatchTirsCadresExt);
-  const xg = pair(e.dernierMatchXgDom, e.dernierMatchXgExt);
-  const name = typeof e.dernierMatchHommeDuMatch === 'string' && e.dernierMatchHommeDuMatch.trim() && !e.dernierMatchHommeDuMatch.startsWith('SI.') ? e.dernierMatchHommeDuMatch.replace(/<[^>]*>/g, '').trim() : null;
-  const empty = (!shots || (shots[0] === 0 && shots[1] === 0)) && (!possession || (possession[0] === 50 && possession[1] === 50));
-  if (empty) return null;
-  return { possession, shots, onTarget, xg, motm: name ? { name, rating: num(e.dernierMatchNoteHommeDuMatch) } : null };
+  const g = gameLastMatch(snap);
+  if (!g || g.homeScore !== (l.homeScore ?? 0) || g.awayScore !== (l.awayScore ?? 0)) return null;
+  return { possession: g.possession, shots: g.shots, onTarget: g.onTarget, xg: g.xg, motm: g.motm };
 }
 
 /** Lignes « En chiffres » tirées des stats du jeu : possession, tirs (cadrés), xG, homme du match. */
@@ -403,9 +388,13 @@ const ENDED_AFTER_MS = 3 * 60_000;
 export function matchEnded(l: FmLive, snap: unknown, now: number): MatchEnded | null {
   if (liveIsFresh(l, now) || l.final) return null;
   const age = now - Date.parse(l.updatedAt);
-  const s = (snap ?? {}) as { gameDate?: unknown; nextMatch?: { inDays?: unknown } | null; custom?: { equipe?: Record<string, unknown> } };
-  const e = s.custom?.equipe ?? {};
-  const last = pair(e.dernierMatchScoreDomicile, e.dernierMatchScoreExterieur);
+  const s = (snap ?? {}) as { gameDate?: unknown; nextMatch?: { inDays?: unknown } | null };
+  // Score du dernier match de l'instantané, même sans ses chiffres (gameLastMatch les exige) : lu tel quel.
+  const e = ((snap ?? {}) as { custom?: { equipe?: Record<string, unknown> } }).custom?.equipe ?? {};
+  const n = (v: unknown) => (typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' && Number.isFinite(+v) ? +v : null);
+  const hs = n(e.dernierMatchScoreDomicile);
+  const as = n(e.dernierMatchScoreExterieur);
+  const last: [number, number] | null = hs != null && as != null ? [hs, as] : null;
   const later = typeof s.gameDate === 'string' && !!l.gameDate && s.gameDate > l.gameDate;
   const sameDay = typeof s.gameDate === 'string' && !!l.gameDate && s.gameDate === l.gameDate;
   const nextIsToday = typeof s.nextMatch?.inDays === 'string' && /aujourd|today/i.test(s.nextMatch.inDays);
@@ -479,7 +468,7 @@ export async function liveStep(
  * (archivix-live.json) si le joueur a activé le direct et relié un salon. Rien n'est lu ni envoyé sinon.
  */
 export function useLiveDiscord() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const busy = useRef(false);
   useEffect(() => {
     let state = loadState();
@@ -490,7 +479,7 @@ export function useLiveDiscord() {
     const render: LiveRender = async (l, club, comment) => {
       const { drawLiveBoard } = await import('./live-image');
       const { canvasPng } = await import('./gazette-une');
-      return canvasPng(await drawLiveBoard(t, l, club, comment));
+      return canvasPng(await drawLiveBoard(t, l, club, comment, i18n.resolvedLanguage));
     };
     const tick = async () => {
       if (busy.current || !getLiveEnabled() || !isWebhook(getWebhook())) return;
@@ -535,5 +524,5 @@ export function useLiveDiscord() {
     const id = window.setInterval(tick, 10_000);
     void tick();
     return () => window.clearInterval(id);
-  }, [t]);
+  }, [t, i18n]);
 }
