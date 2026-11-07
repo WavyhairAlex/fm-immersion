@@ -116,7 +116,8 @@ export function targetOf(x: unknown): Target | null {
 
 /* ---------- Joueurs à l'essai ---------- */
 
-const empty = (v: unknown) => v == null || (typeof v === 'string' && (v.trim() === '' || v.trim() === '-' || v.trim() === '–'));
+// FM27 écrit « N/A » à la place du salaire d'un joueur à l'essai (wageText), et « - » comme statut.
+const empty = (v: unknown) => v == null || (typeof v === 'string' && /^(|-|–|n\/a|n\.a\.)$/i.test(v.trim()));
 const hasContract = (x: unknown) => {
   const o = x as Raw;
   return !empty(o.contractEnd) || !empty(o.wage) || !empty(o.wageText);

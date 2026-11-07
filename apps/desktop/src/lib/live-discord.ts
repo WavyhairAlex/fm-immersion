@@ -119,6 +119,12 @@ export function commentary(t: TFunction, l: FmLive, club: string | null, goal: T
 /** Dernier but du déroulé (le plus tardif), ou null. */
 const lastOf = (tl: TimelineGoal[] | null) => (tl && tl.length ? tl[tl.length - 1]! : null);
 
+/** Compétition du match (lue dans l'instantané du plugin par l'appli, pas dans le relevé du direct). */
+const competitionOf = (l: FmLive) => {
+  const c = (l as FmLive & { competition?: unknown }).competition;
+  return typeof c === 'string' && c.trim() ? c.trim() : null;
+};
+
 /** Encart du direct, modifié à chaque relevé. `club` = club du joueur (couleur et ton du commentaire). */
 export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, opts: { image?: boolean } = {}) {
   const tl = timeline(l);
@@ -139,7 +145,7 @@ export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, 
     username: 'FM Immersion',
     embeds: [
       {
-        author: { name: l.final ? t('live.finalTag') : t('live.liveTag') },
+        author: { name: [l.final ? t('live.finalTag') : t('live.liveTag'), competitionOf(l)?.toUpperCase()].filter(Boolean).join('  ·  ') },
         title: `${l.home}  ${score(l)}  ${l.away}`,
         description: [clock, `🎙️ *${commentary(t, l, club, lastOf(tl))}*`].join('\n\n'),
         color,
@@ -248,6 +254,8 @@ export function useLiveDiscord() {
   const busy = useRef(false);
   useEffect(() => {
     let state = loadState();
+    // Compétition du match en cours (« Match Amical »…), lue une fois par match dans l'instantané du plugin.
+    let comp: { key: string; name: string | null } | null = null;
     const render: LiveRender = async (l, club, comment) => {
       const { drawLiveBoard } = await import('./live-image');
       const { canvasPng } = await import('./gazette-une');
@@ -265,7 +273,13 @@ export function useLiveDiscord() {
         if (!live.success) return;
         const statusRaw = await invoke<string | null>('fm_read_status', { folder }).catch(() => null);
         const club = statusRaw ? ((JSON.parse(statusRaw) as { club?: string | null }).club ?? null) : null;
-        const next = await liveStep(t, live.data, club, state, Date.now(), render);
+        const key = liveKey(live.data);
+        if (comp?.key !== key) {
+          const snapRaw = await invoke<string | null>('fm_read_snapshot', { folder }).catch(() => null);
+          const next = snapRaw ? ((JSON.parse(snapRaw) as { nextMatch?: { competition?: unknown } | null }).nextMatch ?? null) : null;
+          comp = { key, name: typeof next?.competition === 'string' ? next.competition : null };
+        }
+        const next = await liveStep(t, { ...live.data, competition: comp.name } as FmLive, club, state, Date.now(), render);
         if (next && next !== state) {
           state = next;
           saveState(next);

@@ -63,6 +63,10 @@ describe("joueurs à l'essai", () => {
     expect(t).toMatchObject({ id: 't2', name: 'À Essai', club: null, sources: ['essai'] });
   });
 
+  it('reconnaît un essai dont le jeu écrit le salaire « N/A » (Veretynskiy, 27/06/2027)', () => {
+    const vrai = { id: 3, name: 'Konstantin Veretynskiy', positionsText: 'GB', contractEnd: null, wage: null, wageText: 'N/A', squadStatus: '-', squadNumber: -1 };
+    expect([...trialistIds(base([sous, vrai]))]).toEqual(['3']);
+  });
   it('ne prend pas tout un vieil instantané sans contrats pour des essais', () => {
     const s = base([{ id: 3, name: 'A', attributes: {} }, { id: 4, name: 'B', attributes: {} }]);
     expect(trialistIds(s).size).toBe(0);

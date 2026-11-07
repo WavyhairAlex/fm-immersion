@@ -1,6 +1,6 @@
 import { leaguePosition } from './gazette';
 import { normalizePlayer } from './player';
-import { matchResults, type MatchResult } from './results';
+import { officialResults, type MatchResult } from './results';
 import type { FmSnapshot } from './snapshot';
 
 /**
@@ -97,7 +97,7 @@ function exact(r: MatchResult): SeasonMatch | null {
 function review(season: Entry[]): SeasonReview {
   const first = season[0]!;
   const last = season[season.length - 1]!;
-  const all = matchResults(season);
+  const all = officialResults(season);
   // Plusieurs matchs entre deux instantanés sans victoires ni défaites connues : on ne sait pas les compter.
   const results = all.filter((r) => r.outcome || r.wins || r.losses);
   // Avant le premier match suivi en détail : cumuls d'avant l'arrivée du coach (ou du suivi), pas sa saison.

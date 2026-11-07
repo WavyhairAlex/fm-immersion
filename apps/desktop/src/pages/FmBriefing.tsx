@@ -7,7 +7,13 @@ import {
   nameList,
   pruneBriefDone,
   type BriefDone,
-  type BriefItem, type Decision, type FmPlayer, type FmSnapshot, type PlaytimeRow } from '@fm-immersion/module-fm';
+  trialistIds,
+  type BriefItem,
+  type Decision,
+  type FmPlayer,
+  type FmSnapshot,
+  type PlaytimeRow,
+} from '@fm-immersion/module-fm';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
@@ -57,9 +63,16 @@ export function FmBriefing({
       competition: typeof next?.competition === 'string' ? next.competition : null,
     };
   }, [next]);
+  // Joueurs à l'essai : hors de l'effectif (`players`), lus directement dans l'instantané.
+  const trialists = useMemo(() => {
+    const ids = trialistIds(snap);
+    return (snap.players as unknown as { id: unknown; name?: unknown }[])
+      .filter((p) => ids.has(String(p.id)))
+      .map((p) => ({ id: String(p.id), name: String(p.name ?? '') }) as FmPlayer);
+  }, [snap]);
   const items = useMemo(
-    () => briefing({ players, nextMatch: nm, starters, decisions, playtime, setupsToChange, offseason, backForMatch }),
-    [players, nm, starters, decisions, playtime, setupsToChange, offseason],
+    () => briefing({ players, nextMatch: nm, starters, decisions, playtime, setupsToChange, offseason, trialists, backForMatch }),
+    [players, nm, starters, decisions, playtime, setupsToChange, offseason, trialists],
   );
   const scope = useFmSaveScope();
   const [done, setDone] = useState<BriefDone>(() => readScoped<BriefDone>(DONE_KEY, { ...scope, inheritsLegacy: false }, {}));
@@ -83,9 +96,9 @@ export function FmBriefing({
   const names = (ps: FmPlayer[]) => nameList(ps, t('fm.brief.and'), (n) => t('fm.brief.others', { count: n }));
   const text = (x: BriefItem) => {
     const v = { ...x.values, names: names(x.players), first: x.players[0]?.name ?? '', date: f.date(String(x.values.date ?? '')) };
-    if (x.kind === 'nextMatch') {
+    if (x.kind === 'nextMatch' || x.kind === 'friendly') {
       const where = x.values.where ? t(`fm.brief.where.${x.values.where}`) : '';
-      return x.values.days === 0 ? t('fm.brief.nextMatchToday', { ...v, where }) : t('fm.brief.nextMatch', { ...v, where });
+      return x.values.days === 0 ? t(`fm.brief.${x.kind}Today`, { ...v, where }) : t(`fm.brief.${x.kind}`, { ...v, where });
     }
     return t(`fm.brief.${x.kind}`, v);
   };

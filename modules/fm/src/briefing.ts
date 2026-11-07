@@ -1,5 +1,6 @@
 import type { Decision } from './decisions';
 import { moraleLevel } from './club';
+import { isFriendly } from './rules';
 import type { FmPlayer } from './player';
 import type { PlaytimeRow } from './playtime';
 
@@ -13,8 +14,10 @@ export type BriefKind =
   | 'offseason'
   | 'absentStarters'
   | 'nextMatch'
+  | 'friendly'
   | 'tiredStarters'
   | 'contracts'
+  | 'trialists'
   | 'playtimeShort'
   | 'unhappy'
   | 'playtimeOver'
@@ -43,6 +46,8 @@ export interface BriefingInput {
   /** Joueurs dont l'entraînement individuel est à changer. */
   setupsToChange?: number;
   offseason?: boolean;
+  /** Joueurs à l'essai au club : à juger avant la fin de l'essai (cibles du mercato). */
+  trialists?: FmPlayer[];
   /** Joueur absent mais rétabli d'ici le match. */
   backForMatch?: (p: FmPlayer) => boolean;
 }
@@ -70,19 +75,25 @@ export function briefing(input: BriefingInput): BriefItem[] {
 
   if (input.offseason) item('offseason', 'info', 'home');
 
+  // Match amical : rien en jeu. Pas d'alerte sur les titulaires absents ou fatigués ; l'adjoint conseille plutôt
+  // de donner du temps de jeu à ceux qui en manquent.
+  const friendly = !!nextMatch && isFriendly(nextMatch.competition);
+  const official = friendly ? null : nextMatch;
   const xi = players.filter((p) => starters.has(p.id));
   const absent = xi.filter((p) => (p.injury || p.suspension) && !back(p));
-  if (nextMatch && absent.length) item('absentStarters', 'bad', 'tactic', absent);
+  if (official && absent.length) item('absentStarters', 'bad', 'tactic', absent);
   if (nextMatch)
     out.push({
-      kind: 'nextMatch',
+      kind: friendly ? 'friendly' : 'nextMatch',
       tone: 'info',
-      view: 'opponent',
+      view: friendly ? 'playtime' : 'opponent',
       players: [],
       values: { opponent: nextMatch.opponent, days: nextMatch.inDays ?? -1, where: nextMatch.home == null ? '' : nextMatch.home ? 'home' : 'away', competition: nextMatch.competition ?? '', count: nextMatch.inDays ?? 0 },
     });
   const tired = xi.filter((p) => !p.injury && p.condition != null && p.condition < TIRED_CONDITION);
-  if (nextMatch && tired.length) item('tiredStarters', 'warn', 'depth', tired);
+  if (official && tired.length) item('tiredStarters', 'warn', 'depth', tired);
+
+  if (input.trialists?.length) item('trialists', 'warn', 'targets', input.trialists);
 
   const contracts = decisions.filter((d) => d.kind === 'contract');
   if (contracts.length) {
@@ -103,7 +114,7 @@ export function briefing(input: BriefingInput): BriefItem[] {
   const moves = decisions.filter((d) => d.kind === 'recruit' || d.kind === 'departure');
   if (moves.length && !input.offseason) out.push({ kind: 'mercato', tone: 'info', view: 'mercato', players: [], values: { count: moves.length } });
 
-  if (!out.length || out.every((x) => x.kind === 'nextMatch')) item('allGood', 'good', 'home');
+  if (!out.length || out.every((x) => x.kind === 'nextMatch' || x.kind === 'friendly')) item('allGood', 'good', 'home');
   return out.slice(0, BRIEF_MAX);
 }
 
@@ -123,7 +134,7 @@ export const BRIEF_DONE_DAYS = 7;
 /** Clé stable d'un message : son sujet, ses joueurs, et l'adversaire pour le prochain match. */
 export function briefKey(x: BriefItem): string {
   const ids = x.players.map((p) => p.id).sort().join(',');
-  const extra = x.kind === 'nextMatch' ? String(x.values.opponent ?? '') : x.kind === 'training' || x.kind === 'mercato' ? String(x.values.count ?? '') : '';
+  const extra = x.kind === 'nextMatch' || x.kind === 'friendly' ? String(x.values.opponent ?? '') : x.kind === 'training' || x.kind === 'mercato' ? String(x.values.count ?? '') : '';
   return `${x.kind}:${ids}:${extra}`;
 }
 

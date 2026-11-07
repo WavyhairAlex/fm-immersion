@@ -33,6 +33,11 @@ const KNOWN: { match: RegExp; rules: CompetitionRules }[] = [
 
 const fold = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
 
+/** Match amical (« Match Amical » dans l'instantané FR) : rien en jeu, ni classement, ni temps de jeu promis. */
+export function isFriendly(name: string | null | undefined): boolean {
+  return /amical|friendl|testspiel/i.test(fold(name ?? ''));
+}
+
 export function competitionRules(name: string | null | undefined): CompetitionRules {
   const n = fold(name ?? '');
   return KNOWN.find((k) => k.match.test(n))?.rules ?? DEFAULT_RULES;

@@ -1888,7 +1888,8 @@
         "bad": "to fix",
         "unknown": "to check (nationalities not read yet)"
       },
-      "unverified": "Rules taken from an FM league summary, not read from the game yet: check the competition's Rules screen."
+      "unverified": "Rules taken from an FM league summary, not read from the game yet: check the competition's Rules screen.",
+      "friendly": "Friendly: nothing at stake and free substitutions. Rotate, give minutes to youngsters and players lacking sharpness, rest key men. It counts neither in the record nor in promised playing time."
     },
     "squadPitch": {
       "label": "Squad display",
@@ -1950,7 +1951,8 @@
         "leaky": "We concede {{ga}} goals per match: defence is the priority.",
         "merged_one": "{{count}} period groups several matches played between two reads: those matches have no detail.",
         "merged_other": "{{count}} periods group several matches played between two reads: those matches have no detail."
-      }
+      },
+      "friendly": "Friendly"
     },
     "repl": {
       "open": "Replacement",
@@ -2272,10 +2274,17 @@
         "unhappy": "See the dressing room",
         "playtimeOver": "See playing time",
         "training": "Change training",
-        "mercato": "Open transfers"
+        "mercato": "Open transfers",
+        "trialists": "Judge the trial",
+        "friendly": "Share out minutes"
       },
       "tabBadge_one": "{{count}} thing to do here",
-      "tabBadge_other": "{{count}} things to do here"
+      "tabBadge_other": "{{count}} things to do here",
+      "trialists_one": "{{names}} is on trial at the club: check whether he beats your squad before offering a contract.",
+      "trialists_other": "{{names}} are on trial at the club: check whether they beat your squad before offering contracts.",
+      "friendly_one": "Friendly tomorrow against {{opponent}}{{where}}: nothing at stake, play those short of minutes and rest your key men.",
+      "friendly_other": "Friendly in {{count}} days against {{opponent}}{{where}}: nothing at stake, play those short of minutes and rest your key men.",
+      "friendlyToday": "Friendly today against {{opponent}}{{where}}: nothing at stake, rotate and hand out minutes."
     }
   },
   "modes": {
