@@ -447,7 +447,9 @@
       "afterUnknown": "la marge s'affichera avec le budget du board",
       "board": "Objectifs du board",
       "confidence": "Confiance :",
-      "noBoard": "Les attentes du board (classement, jeu, jeunes, finances) ne sont pas encore lues par le plugin."
+      "noBoard": "Les attentes du board (classement, jeu, jeunes, finances) ne sont pas encore lues par le plugin.",
+      "billGame": "par mois, selon le jeu (effectif complet : {{squad}}, prêtés compris)",
+      "budgetGame": "par mois : dépense + marge du jeu"
     },
     "loans": {
       "title_one": "Joueurs prêtés ({{count}})",
@@ -853,14 +855,15 @@
       "verdict": {
         "starter": "Titulaire",
         "backup": "Doublure",
-        "none": "N'apporte rien"
+        "none": "Pas mieux que l'effectif"
       },
       "over": {
         "starter": "à la place de {{name}}",
         "backup": "devant {{name}}",
         "none": "{{name}} est meilleur"
       },
-      "gainHelp": "{{gain}} pts d'adéquation face au titulaire du poste"
+      "gainHelp": "{{gain}} pts d'adéquation face au titulaire du poste",
+      "shortTerm": "Court terme (33 ans et +)"
     },
     "pi": {
       "title": "Consignes individuelles",

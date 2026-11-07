@@ -447,7 +447,9 @@
       "afterUnknown": "the room will show once the board budget is known",
       "board": "Board expectations",
       "confidence": "Confidence:",
-      "noBoard": "Board expectations (league position, style, youth, finances) are not read by the plugin yet."
+      "noBoard": "Board expectations (league position, style, youth, finances) are not read by the plugin yet.",
+      "billGame": "per month, from the game (whole squad: {{squad}}, loanees included)",
+      "budgetGame": "per month: game spending + room"
     },
     "loans": {
       "title_one": "Players on loan ({{count}})",
@@ -853,14 +855,15 @@
       "verdict": {
         "starter": "Starter",
         "backup": "Backup",
-        "none": "Adds nothing"
+        "none": "No better than the squad"
       },
       "over": {
         "starter": "instead of {{name}}",
         "backup": "ahead of {{name}}",
         "none": "{{name}} is better"
       },
-      "gainHelp": "{{gain}} fit points against the current starter"
+      "gainHelp": "{{gain}} fit points against the current starter",
+      "shortTerm": "Short term (33+)"
     },
     "pi": {
       "title": "Player instructions",

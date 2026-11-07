@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clubFinances, contractsByYear, dressingRoom, homeOverview, loans, moraleLevel, statusRank, upcomingContracts, wageReport } from '../src';
+import { clubFinances, wageFigures, contractsByYear, dressingRoom, homeOverview, loans, moraleLevel, statusRank, upcomingContracts, wageReport } from '../src';
 import { normalizePlayer } from '../src/player';
 import type { FmSnapshot } from '../src/snapshot';
 
@@ -63,5 +63,15 @@ describe('vues club et vestiaire', () => {
     expect(h.contracts?.length).toBe(3);
     expect(h.alerts.map((a) => a.kind)).toEqual(['injured', 'condition', 'status']);
     expect(h.young.map((x) => x.id)).toEqual(['6']);
+  });
+});
+
+describe('salaires cohérents avec le jeu', () => {
+  it('budget = dépense + marge du jeu, pas le champ brut', () => {
+    const w = wageFigures({ wageBudget: 7223, remainingWageBudget: '-7,5K € p/m', currentWageSpending: 'Dépense : 43,95K € p/m' }, [{ wage: 49170 }]);
+    expect(w).toMatchObject({ bill: 43950, squadSum: 49170, budget: 36450, room: -7500, fromGame: true });
+  });
+  it('sans la dépense du jeu : somme des salaires et budget brut', () => {
+    expect(wageFigures({ wageBudget: 5000 }, [{ wage: 3000 }, { wage: null }])).toMatchObject({ bill: 3000, budget: 5000, room: 2000, fromGame: false });
   });
 });

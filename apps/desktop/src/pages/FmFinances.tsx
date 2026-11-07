@@ -17,8 +17,8 @@ export function FmFinances({ snap, players }: { snap: FmSnapshot; players: FmPla
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi label={t('fm.fin.bill')} value={f.money(fin.wageBill)} sub={t('fm.fin.perMonth')} />
-        <Kpi label={t('fm.fin.budget')} value={f.money(fin.wageBudget)} sub={fin.wageBudget != null ? t('fm.fin.perMonth') : t('fm.fin.unknown')} />
+        <Kpi label={t('fm.fin.bill')} value={f.money(fin.wageBill)} sub={fin.billFromGame ? t('fm.fin.billGame', { squad: f.money(fin.squadWages) }) : t('fm.fin.perMonth')} />
+        <Kpi label={t('fm.fin.budget')} value={f.money(fin.wageBudget)} sub={fin.wageBudget == null ? t('fm.fin.unknown') : fin.billFromGame ? t('fm.fin.budgetGame') : t('fm.fin.perMonth')} />
         <Kpi
           label={t('fm.fin.room')}
           value={f.signed(fin.wageRoom)}

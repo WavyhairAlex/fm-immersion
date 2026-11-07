@@ -33,6 +33,8 @@ import {
 
 type Filter = "list" | "all" | "dismissed";
 
+/** Âge à partir duquel une recrue ne vaut qu'à court terme. */
+const OLD_TARGET = 33;
 const VERDICT_TONE: Record<TargetVerdict, Tone> = {
   starter: "good",
   backup: "info",
@@ -192,7 +194,7 @@ export function FmTargets({
                   return (
                     <tr
                       key={p.id}
-                      className={`border-t border-canard/5 hover:bg-creme/60 ${p.inList ? "" : "text-canard/60"}`}
+                      className={`border-t border-canard/5 hover:bg-creme/60 ${p.inList && best?.verdict !== "none" ? "" : "text-canard/60"}`}
                     >
                       <td
                         className="cursor-pointer px-2 py-1.5 font-bold"
@@ -248,7 +250,11 @@ export function FmTargets({
                             <Tag tone={VERDICT_TONE[best.verdict]}>
                               {t(`fm.targets.verdict.${best.verdict}`)}
                             </Tag>{" "}
-                            {pr && <CompatTag c={projectCompat(engine, pr, p)} />}
+                            {/* Profil du projet : utile seulement pour une cible qui apporte quelque chose. */}
+                            {pr && best.verdict !== "none" && <CompatTag c={projectCompat(engine, pr, p)} />}
+                            {best.verdict !== "none" && p.age != null && p.age >= OLD_TARGET && (
+                              <Tag tone="warn">{t("fm.targets.shortTerm")}</Tag>
+                            )}
                             {best.over && (
                               <div className="mt-0.5 text-xs text-brun">
                                 {t(`fm.targets.over.${best.verdict}`, {
