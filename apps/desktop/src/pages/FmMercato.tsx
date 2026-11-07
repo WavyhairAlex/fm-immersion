@@ -1,4 +1,4 @@
-import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, buildProject, contractDecisions, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type SquadAt } from '@fm-immersion/module-fm';
+import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, askingPrice, buildProject, contractDecisions, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type SquadAt } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
@@ -22,6 +22,20 @@ function Stars({ p }: { p: FmPlayer }) {
   return (
     <span className="whitespace-nowrap tabular-nums">
       {n(s.current)} ★ <span className="text-brun">→</span> <b>{n(s.potential)} ★</b>
+    </span>
+  );
+}
+
+/** Prix conseillé pour la liste des transferts : prix demandé et plancher, raisons en infobulle. */
+function PriceTag({ a }: { a: MercatoAdvice }) {
+  const { t } = useTranslation();
+  const f = useFormat();
+  const price = askingPrice(a.player, a.months);
+  if (!price) return null;
+  const why = [t('fm.price.value', { value: f.money(price.value) }), ...price.factors.map((x) => t(`fm.price.factor.${x}`))].join(' · ');
+  return (
+    <span className="rounded-md bg-orange-clair px-1.5 py-0.5 text-canard" title={why}>
+      {t('fm.price.ask', { ask: f.money(price.ask), floor: f.money(price.floor) })}
     </span>
   );
 }
@@ -136,6 +150,7 @@ export function ContractsToDecide({ r, go, gameDate, onMarked }: { r: MercatoRep
           extra={
             <>
               <LeaveButton player={a.player} gameDate={gameDate} onMarked={onMarked} />
+              {call === 'sellNow' && <PriceTag a={a} />}
               <span className="tabular-nums">{t('fm.decide.wage', { wage: f.money(a.player.wage) })}</span>
             </>
           }
@@ -234,7 +249,12 @@ export function FmMercato({ saveId, players, folder, gameDate, history }: { save
                       </button>
                     )
                   }
-                  extra={<LeaveButton player={a.player} gameDate={gameDate} onMarked={setJustMarked} />}
+                  extra={
+                    <>
+                      {v === 'sell' && <PriceTag a={a} />}
+                      <LeaveButton player={a.player} gameDate={gameDate} onMarked={setJustMarked} />
+                    </>
+                  }
                   after={
                     replacing === a.player.id && (
                       <ReplacementFinder saveId={saveId} gameDate={gameDate} engine={engine} project={pr} leaving={a.player} squad={own} onClose={() => setReplacing(null)} />

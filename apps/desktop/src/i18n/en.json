@@ -78,7 +78,10 @@
       "wage": "Wage",
       "status": "Status",
       "starsHelp": "Current / potential ability stars according to your staff",
-      "compat": "Project"
+      "compat": "Project",
+      "apps": "Apps",
+      "goals": "Goals",
+      "avgRating": "Avg rating"
     },
     "an": {
       "xi": "First XI level",
@@ -1356,7 +1359,7 @@
         "replace_other": "To replace for the project · {{count}}"
       },
       "groupHelp": {
-        "sell": "No place in either eleven, not even as a backup: transfer-list them.",
+        "sell": "No place in either eleven, not even as a backup: transfer-list them. The suggested price (game value adjusted for contract left and age) is a starting point; turn down offers below the floor.",
         "release": "No place in either eleven and no market value: don't renew, or terminate to free the wage.",
         "loan": "Promising youngsters stuck behind starters and backups: a loan gets them minutes.",
         "extend": "Contract ending within a year: renew before they leave on a free.",
@@ -2192,6 +2195,23 @@
         "5": "hot prospect",
         "6": "youngster"
       }
+    },
+    "price": {
+      "ask": "Ask {{ask}} · floor {{floor}}",
+      "value": "value {{value}}",
+      "factor": {
+        "longContract": "over 2 years left: ×1.5",
+        "midContract": "1 to 2 years left: ×1.2",
+        "shortContract": "6 to 12 months left: ×0.9",
+        "expiring": "under 6 months left: ×0.6",
+        "young": "23 or younger: ×1.25",
+        "prospect": "high potential: ×1.2",
+        "thirty": "aged 30-31: ×0.85",
+        "veteran": "32 or older: ×0.7"
+      }
+    },
+    "squadTable": {
+      "watch": "To watch"
     }
   },
   "modes": {
