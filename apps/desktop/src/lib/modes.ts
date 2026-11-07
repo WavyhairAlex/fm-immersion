@@ -2,8 +2,8 @@
 export const MODES = [
   { id: 'faces', path: '/visages', status: 'available' },
   { id: 'coach', path: '/coach', status: 'available' },
-  { id: 'gazette', path: '/gazette', status: 'soon' },
-  { id: 'discord', path: '/discord', status: 'soon' },
+  { id: 'gazette', path: '/gazette', status: 'available' },
+  { id: 'discord', path: '/discord', status: 'available' },
   { id: 'world', path: '/monde', status: 'soon' },
 ] as const;
 

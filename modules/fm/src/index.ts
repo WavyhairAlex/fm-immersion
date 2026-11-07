@@ -44,3 +44,4 @@ export * from './needs';
 export * from './diagnose';
 export * from './staff';
 export * from './shirts';
+export * from './gazette';

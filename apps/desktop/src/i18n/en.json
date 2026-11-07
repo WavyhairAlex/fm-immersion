@@ -28,7 +28,7 @@
   },
   "footer": {
     "disclaimer": "FM Immersion is an independent project, not affiliated with Sports Interactive or SEGA. Football Manager and FM are trademarks of their respective owners.",
-    "privacy": "Your data stays on your PC. FM Immersion does not collect or send any personal data; it only contacts GitHub to check for updates at startup and, when you ask, to download the FM27 plugin."
+    "privacy": "Your data stays on your PC. FM Immersion collects no personal data; it contacts GitHub to check for updates and, when you ask, to download the FM27 plugin, and Discord only when you send a gazette to your channel."
   },
   "fm": {
     "back": "My saves",
@@ -2164,5 +2164,99 @@
     "step1": "Close FM27, then download the latest zip from the address below.",
     "step2": "Unzip it and run INSTALL.bat (UNINSTALL.bat to go back to the original faces).",
     "step3": "Restart FM27 and tick the pre-generated images option in the preferences."
+  },
+  "gazette": {
+    "paper": "The {{club}} Gazette",
+    "issue": "No. {{number}}",
+    "week": "Week of {{from}} to {{to}}",
+    "save": "Save",
+    "noSave": "The gazette is written from a save tracked in FM Coach. Add your save first, then import your snapshots.",
+    "empty": "Not enough snapshots to write a gazette yet. It fills up as in-game days are imported.",
+    "archives": "Past issues",
+    "sendDiscord": "Send to Discord",
+    "setupDiscord": "Connect Discord to share",
+    "sent": "Gazette sent to Discord.",
+    "opponentUnknown": "their opponent",
+    "home": "At home",
+    "away": "Away",
+    "scorers": "Scorers: {{names}}.",
+    "best": "Best player: {{name}} ({{rating}}).",
+    "story": {
+      "result": {
+        "title_W": "{{club}} beat {{opponent}} {{score}}",
+        "title_D": "{{club}} and {{opponent}} draw {{score}}",
+        "title_L": "{{club}} lose {{score}} to {{opponent}}"
+      },
+      "results": {
+        "title": "{{matches}} matches this week",
+        "body": "Record: {{wins}} win(s), {{draws}} draw(s), {{losses}} loss(es)."
+      },
+      "position": {
+        "title": "League table: from {{from}} to {{to}}",
+        "body": "The club moves in the table after this week's matches."
+      },
+      "scorer": {
+        "title": "{{name}} on fire",
+        "body": "{{goals}} goals this week for {{name}}."
+      },
+      "injury": {
+        "title": "Blow: {{name}} injured",
+        "body": "{{injury}}. Expected back in {{days}} day(s)."
+      },
+      "return": {
+        "title": "{{name}} is back",
+        "body": "Recovered from injury, {{name}} is available again."
+      },
+      "arrival": {
+        "title": "{{name}} arrives",
+        "body": "{{name}} ({{age}}) joins the squad."
+      },
+      "youthIntake": {
+        "title": "{{count}} youngsters join from the academy",
+        "body": "Ones to watch: {{names}}."
+      },
+      "departure": {
+        "title": "{{name}} leaves the club",
+        "body": "{{name}} is no longer in the squad."
+      },
+      "extension": {
+        "title": "{{name}} extends until {{until}}",
+        "body": "The club secures {{name}}'s future."
+      },
+      "fans": {
+        "title": "Fans: {{mood}}",
+        "body": "The mood in the stands changed this week."
+      },
+      "job": {
+        "title": "Manager's hot seat: {{status}}",
+        "body": "The board has reviewed its confidence in the manager."
+      },
+      "nextMatch": {
+        "title": "Next up: {{opponent}}",
+        "body": ""
+      },
+      "quiet": {
+        "title": "Quiet week at {{club}}",
+        "body": "No match or notable move this week."
+      }
+    }
+  },
+  "discord": {
+    "intro": "Tell your career in a Discord channel: each gazette can be sent there in one click, so your friends can follow your save.",
+    "webhookTitle": "Connect your channel",
+    "step1": "In Discord, open the channel settings, then Integrations › Webhooks › New Webhook.",
+    "step2": "Copy the webhook URL.",
+    "step3": "Paste it below, save, then send a test message.",
+    "webhook": "Webhook link",
+    "invalid": "This is not a Discord webhook link (https://discord.com/api/webhooks/…).",
+    "save": "Save",
+    "remove": "Remove the link",
+    "test": "Send a test",
+    "saved": "Link saved on this PC.",
+    "testMessage": "FM Immersion is connected to this channel. My career gazettes will arrive here.",
+    "testOk": "Test message sent.",
+    "whatTitle": "What gets sent",
+    "what": "For now, the weekly gazette, when you click \"Send to Discord\" in the Gazette. Automatic posting of key moments (goals, results, transfers) comes next.",
+    "privacy": "The link stays on your PC. FM Immersion sends nothing to Discord without your click, and only to Discord's webhook address."
   }
 }

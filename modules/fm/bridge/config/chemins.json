@@ -7,7 +7,21 @@
     "suspensionsEnCours": "AllCompsActiveBans",
     "nbSuspensionsEnCours": "AllCompsActiveBansCount",
     "calendrierListe": "FixtureList{PreviousAmount=0,FutureAmount=60,FixturePadding=0,YearIndex=0}",
-    "calendrierChampionnatRestant": "RemainingLeagueFixtures"
+    "calendrierChampionnatRestant": "RemainingLeagueFixtures",
+    "classementPosition": "LeaguePosition",
+    "classementTexte": "LeaguePositionString",
+    "classementNom": "LeagueTableName",
+    "confianceEquipe": "TeamConfidence",
+    "confianceSupporters": "FanConfidenceString",
+    "securiteEmploi": "JobSecurityStatus",
+    "dernierMatchNom": "LastFixture/FixtureName",
+    "dernierMatchDate": "LastFixture/FixtureDate",
+    "dernierMatchJoue": "LastFixture/FixtureHasResult",
+    "dernierMatchButsDomicile": "LastFixture/HomeGoals",
+    "dernierMatchButsExterieur": "LastFixture/AwayGoals",
+    "dernierMatchScoreDomicile": "LastFixture/HomeScore",
+    "dernierMatchScoreExterieur": "LastFixture/AwayScore",
+    "dernierAdversaire": "PreviousMatchOpponent"
   },
   "club": {
     "reputationDivision": "DivisionReputation"

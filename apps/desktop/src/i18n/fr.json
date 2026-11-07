@@ -28,7 +28,7 @@
   },
   "footer": {
     "disclaimer": "FM Immersion est un projet indépendant, sans lien avec Sports Interactive ni SEGA. Football Manager et FM sont des marques de leurs propriétaires.",
-    "privacy": "Tes données restent sur ton PC. FM Immersion ne collecte ni n'envoie aucune donnée personnelle ; il contacte GitHub seulement pour chercher ses mises à jour au démarrage et, si tu le demandes, pour télécharger le plugin FM27."
+    "privacy": "Tes données restent sur ton PC. FM Immersion ne collecte aucune donnée personnelle ; il contacte GitHub pour chercher ses mises à jour et, si tu le demandes, pour télécharger le plugin FM27, et Discord seulement quand tu envoies une gazette sur ton salon."
   },
   "fm": {
     "back": "Mes parties",
@@ -2164,5 +2164,99 @@
     "step1": "Ferme FM27, puis télécharge le dernier zip à l'adresse ci-dessous.",
     "step2": "Décompresse-le et lance INSTALLER.bat (DESINSTALLER.bat pour revenir aux visages d'origine).",
     "step3": "Relance FM27 et coche l'option des images pré-générées dans les préférences."
+  },
+  "gazette": {
+    "paper": "La Gazette de {{club}}",
+    "issue": "N° {{number}}",
+    "week": "Semaine du {{from}} au {{to}}",
+    "save": "Partie",
+    "noSave": "La gazette se rédige à partir d'une partie suivie dans FM Coach. Ajoute d'abord ta partie, puis importe tes instantanés.",
+    "empty": "Pas encore assez d'instantanés pour écrire une gazette. Elle se remplit au fil des jours de jeu importés.",
+    "archives": "Anciens numéros",
+    "sendDiscord": "Envoyer sur Discord",
+    "setupDiscord": "Relier Discord pour partager",
+    "sent": "Gazette envoyée sur Discord.",
+    "opponentUnknown": "son adversaire",
+    "home": "À domicile",
+    "away": "À l'extérieur",
+    "scorers": "Buteurs : {{names}}.",
+    "best": "Meilleur joueur : {{name}} ({{rating}}).",
+    "story": {
+      "result": {
+        "title_W": "{{club}} s'impose {{score}} face à {{opponent}}",
+        "title_D": "{{club}} et {{opponent}} se quittent sur un nul {{score}}",
+        "title_L": "{{club}} chute {{score}} face à {{opponent}}"
+      },
+      "results": {
+        "title": "{{matches}} matchs cette semaine",
+        "body": "Bilan : {{wins}} victoire(s), {{draws}} nul(s), {{losses}} défaite(s)."
+      },
+      "position": {
+        "title": "Classement : de la {{from}}e à la {{to}}e place",
+        "body": "Le club bouge au classement après les matchs de la semaine."
+      },
+      "scorer": {
+        "title": "{{name}} en feu",
+        "body": "{{goals}} buts cette semaine pour {{name}}."
+      },
+      "injury": {
+        "title": "Coup dur : {{name}} blessé",
+        "body": "{{injury}}. Retour estimé dans {{days}} jour(s)."
+      },
+      "return": {
+        "title": "{{name}} de retour",
+        "body": "Remis de sa blessure, {{name}} est de nouveau disponible."
+      },
+      "arrival": {
+        "title": "Arrivée de {{name}}",
+        "body": "{{name}} ({{age}} ans) rejoint l'effectif."
+      },
+      "youthIntake": {
+        "title": "{{count}} jeunes arrivent du centre de formation",
+        "body": "À suivre en priorité : {{names}}."
+      },
+      "departure": {
+        "title": "{{name}} quitte le club",
+        "body": "{{name}} ne fait plus partie de l'effectif."
+      },
+      "extension": {
+        "title": "{{name}} prolonge jusqu'en {{until}}",
+        "body": "Le club s'assure l'avenir de {{name}}."
+      },
+      "fans": {
+        "title": "Supporters : {{mood}}",
+        "body": "L'humeur des tribunes a changé cette semaine."
+      },
+      "job": {
+        "title": "La chaise du coach : {{status}}",
+        "body": "La direction a revu sa confiance envers l'entraîneur."
+      },
+      "nextMatch": {
+        "title": "Prochain rendez-vous : {{opponent}}",
+        "body": ""
+      },
+      "quiet": {
+        "title": "Semaine calme à {{club}}",
+        "body": "Pas de match ni de mouvement notable cette semaine."
+      }
+    }
+  },
+  "discord": {
+    "intro": "Raconte ta carrière dans un salon Discord : chaque gazette peut y être envoyée en un clic, pour que tes amis suivent ta partie.",
+    "webhookTitle": "Relier ton salon",
+    "step1": "Dans Discord, ouvre les paramètres du salon, puis Intégrations › Webhooks › Nouveau webhook.",
+    "step2": "Copie l'URL du webhook.",
+    "step3": "Colle-la ci-dessous, enregistre, puis envoie un message de test.",
+    "webhook": "Lien webhook",
+    "invalid": "Ce n'est pas un lien de webhook Discord (https://discord.com/api/webhooks/…).",
+    "save": "Enregistrer",
+    "remove": "Retirer le lien",
+    "test": "Envoyer un test",
+    "saved": "Lien enregistré sur ce PC.",
+    "testMessage": "FM Immersion est relié à ce salon. Les gazettes de ma carrière arriveront ici.",
+    "testOk": "Message de test envoyé.",
+    "whatTitle": "Ce qui est envoyé",
+    "what": "Pour l'instant, la gazette de la semaine, quand tu cliques sur « Envoyer sur Discord » dans la Gazette. L'envoi automatique des moments forts (buts, résultats, transferts) arrivera ensuite.",
+    "privacy": "Le lien reste sur ton PC. FM Immersion n'envoie rien à Discord sans ton clic, et seulement vers l'adresse des webhooks de Discord."
   }
 }

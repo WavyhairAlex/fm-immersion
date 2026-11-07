@@ -13,8 +13,8 @@ et outils pour rendre ta carrière plus vivante. Application Windows gratuite et
 | **FM Coach** : effectif, tactique, entraînement, mercato, adversaire, finances (lecture de ta partie) | repris de Simloom, disponible |
 | **Plugin en jeu** (Archivix Bridge, BepInEx) : installation et mise à jour | repris de Simloom, disponible |
 | **Visages photoréalistes** : installation en un clic, réinstallation après une mise à jour Steam | à venir |
-| **Gazette** de la semaine | à venir |
-| **Live Discord** (partie solo ou monde partagé) | à venir |
+| **Gazette** de la semaine : résultats, classement, blessures, transferts, centre de formation | disponible |
+| **Live Discord** : envoi de la gazette dans ton salon (webhook) | disponible (solo) |
 | **Monde partagé** (multijoueur asynchrone) | à venir |
 
 ## Installer
@@ -31,6 +31,7 @@ Tes données sont dans `%APPDATA%\app.fmimmersion.desktop\fm-immersion.db` : sup
 FM Immersion ne collecte, ne stocke à distance ni n'envoie aucune donnée personnelle. Tes parties restent dans
 une base SQLite sur ton PC. FM Immersion ne se connecte qu'à GitHub (`github.com/amnesix-nt/fm-immersion/releases`) :
 pour chercher ses mises à jour au démarrage et, seulement si tu le demandes, pour télécharger le plugin FM27.
+Si tu relies un salon Discord, la gazette n'y part que quand tu cliques sur « Envoyer sur Discord ».
 GitHub voit alors ton adresse IP, comme pour toute visite de son site.
 
 ## Politique de signature du code

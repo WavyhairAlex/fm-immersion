@@ -13,6 +13,8 @@ extraite avec son historique ; Simloom garde Planet Zoo 2 et Transport Fever 3.
   SQLite sur le PC (`%APPDATA%\app.fmimmersion.desktop\fm-immersion.db`). Les seules requêtes réseau vont vers GitHub
   Releases : la recherche de mise à jour au démarrage, et, à la demande du joueur, le téléchargement du plugin FM27
   (`modules/fm/bridge`, vérifié par SHA-256, voir son README).
+  Exception choisie par le joueur : le **Live Discord** envoie une gazette à son salon par le lien webhook qu'il a
+  collé (`src-tauri/src/discord.rs`, seulement vers `discord.com/api/webhooks/`, seulement sur son clic).
 - **Mises à jour automatiques** au lancement (`UpdateGate`) via `tauri-plugin-updater`. Les fichiers de mise à
   jour sont signés avec une clé minisign (secret GitHub `TAURI_SIGNING_PRIVATE_KEY`, clé publique dans
   `tauri.conf.json`). **Perdre cette clé = plus aucune mise à jour possible pour les installations existantes.**
@@ -34,7 +36,8 @@ extraite avec son historique ; Simloom garde Planet Zoo 2 et Transport Fever 3.
 2. Module **Visages photoréalistes** : installation en un clic du pack (bundle + correction du CRC dans le catalogue
    Addressables), désinstallation, détection d'une mise à jour Steam (remplace les .bat du dépôt
    FM27-Photorealistic-Faces).
-3. **Gazette** de la semaine, puis **Live Discord** (solo : webhook ; monde partagé : bot sur le serveur).
+3. **Gazette** de la semaine (`modules/fm/src/gazette.ts`, brèves calculées à partir des instantanés) et **Live Discord**
+   solo (webhook) : première version faite ; ensuite envoi automatique des moments forts, puis bot sur le serveur.
 4. **Monde partagé** (multijoueur asynchrone, journal sur le serveur).
 
 ## Architecture
