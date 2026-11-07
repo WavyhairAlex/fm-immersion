@@ -1,4 +1,4 @@
-import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, askingPrice, buildProject, contractDecisions, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type SquadAt } from '@fm-immersion/module-fm';
+import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, askingPrice, buildProject, clubFinances, contractDecisions, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type SquadAt } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
@@ -165,7 +165,7 @@ export function ContractsToDecide({ r, go, gameDate, onMarked }: { r: MercatoRep
  * Départs et jeunes : qui faire partir (vente, fin de contrat, prêt), qui prolonger, et quels jeunes valent le coup.
  * Calculé sur l'effectif importé ; aucune lecture supplémentaire dans le jeu.
  */
-export function FmMercato({ saveId, players, folder, gameDate, history }: { saveId: string; players: FmPlayer[]; folder: string; gameDate: string; history: SquadAt[] }) {
+export function FmMercato({ saveId, snap, players, folder, gameDate, history }: { saveId: string; snap?: FmSnapshot; players: FmPlayer[]; folder: string; gameDate: string; history: SquadAt[] }) {
   const { t } = useTranslation();
   const f = useFormat();
   const names = useNames();
@@ -181,6 +181,13 @@ export function FmMercato({ saveId, players, folder, gameDate, history }: { save
   // Liste de courses : partants sans remplaçant, trous du projet, titulaires à remplacer, successions, banc.
   const needs = useMemo(() => recruitmentNeeds(engine, players, gameDate, coach, history, leavingIds), [engine, players, gameDate, coach, history, leavingIds]);
   const [replacing, setReplacing] = useState<string | null>(null);
+  // Finances serrées : le mercato commence par les départs ; les recrues se cherchent libres ou en prêt.
+  const tight = useMemo(() => {
+    if (!snap) return null;
+    const fin = clubFinances(snap, players);
+    const st = financeState(fin);
+    return st.tight ? { fin, signals: st.signals } : null;
+  }, [snap, players]);
   if (!r) return <Empty>{t('fm.tac.noAttributes')}</Empty>;
   const style = engine.ref.styles.find((s) => s.id === r.projectStyle);
 
@@ -192,6 +199,21 @@ export function FmMercato({ saveId, players, folder, gameDate, history }: { save
 
   return (
     <div className="space-y-4">
+      {tight && (
+        <Panel title={t('fm.tight.title')}>
+          <p className="text-sm">
+            {t('fm.tight.signals', {
+              list: tight.signals.map((sg) => t(`fm.tight.signal.${sg}`, { amount: f.money(Math.abs((sg === 'wageOver' ? tight.fin.wageRoom : sg === 'debt' ? tight.fin.balance : 0) ?? 0)) })).join(', '),
+            })}
+          </p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+            <li>{t('fm.tight.sellFirst', { count: n('sell') + n('release') + n('loan'), income: f.money(r.income), wages: f.money(r.wagesFreed) })}</li>
+            <li>{t('fm.tight.freeOrLoan')}</li>
+            <li>{t('fm.tight.youth', { count: prospects.length })}</li>
+            {tight.signals.includes('wageOver') && <li>{t('fm.tight.noRaise')}</li>}
+          </ul>
+        </Panel>
+      )}
       {pr && r.leaving.length > 0 && (
         <Panel title={t('fm.leave.title', { count: r.leaving.length })}>
           <More>{t('fm.leave.help')}</More>

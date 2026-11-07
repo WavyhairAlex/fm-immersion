@@ -473,8 +473,11 @@ export class TacticEngine {
    *    plus poste par poste : un joueur bon à deux postes va là où l'équipe y gagne le plus ;
    * 3. les rôles sont ensuite ajustés tant que la note d'équipe monte. Un rôle hors du style n'est pris que
    *    s'il corrige un déséquilibre (couverture, largeur, création, présence dans la surface).
+   * `reserve` : réserve et jeunes du club, appelés seulement pour un créneau que l'équipe première ne peut pas
+   * tenir (ou pour une doublure quand elle n'en a aucune) ; un onze ne laisse jamais un poste vide tant que
+   * quelqu'un au club peut y jouer.
    */
-  formationPlan(form: string, style: StyleRef, list: FmPlayer[]): FormationPlan {
+  formationPlan(form: string, style: StyleRef, list: FmPlayer[], reserve: FmPlayer[] = []): FormationPlan {
     const used: Record<Phase, Record<string, number>> = { ip: {}, oop: {} };
     // Rôles du style proposés à ce créneau ; un créneau excentré prend d'abord les rôles qui lui sont réservés.
     const pickRole = (pos: PosCode, ph: Phase, ctx: SlotCtx) => {
@@ -537,6 +540,22 @@ export class TacticEngine {
       taken.add(p.id);
     });
 
+    // 2b. Créneau vide : le meilleur de la réserve ou des jeunes qui peut y jouer (chacun au plus une fois).
+    const readyOf = (p: FmPlayer) => ready.get(p.id) ?? (ready.set(p.id, readiness(p)), ready.get(p.id)!);
+    const spare = reserve.filter((p) => !taken.has(p.id) && !list.some((q) => q.id === p.id));
+    slots.forEach((sl, i) => {
+      if (sl.player) return;
+      const best = spare
+        .filter((p) => !taken.has(p.id) && this.canPlay(p, sl.pos))
+        .map((p) => ({ p, f: (styleRole(p, i, 'ip')[1] + styleRole(p, i, 'oop')[1]) / 2 + readyOf(p) }))
+        .sort((a, b) => b.f - a.f)[0];
+      if (!best) return;
+      const [ip, a] = styleRole(best.p, i, 'ip');
+      const [oop, b] = styleRole(best.p, i, 'oop');
+      Object.assign(sl, { player: best.p, ip, oop, fit: (a + b) / 2 });
+      taken.add(best.p.id);
+    });
+
     // 3. Rôles : on garde chaque changement qui fait monter la note d'équipe.
     const meanFit = () => slots.reduce((a, s) => a + (s.fit ?? 0), 0) / slots.length;
     const rolePen = () => balancePenalty(this.roleChecks(slots));
@@ -588,6 +607,15 @@ export class TacticEngine {
       });
     slots.forEach((_, i) => {
       const c = cands[i]!.find((x) => !subs[i]!.includes(x.p));
+      if (c) subs[i]!.push(c.p);
+    });
+    // Sans doublure dans l'équipe première : la meilleure de la réserve ou des jeunes.
+    slots.forEach((sl, i) => {
+      if (subs[i]!.length) return;
+      const c = spare
+        .filter((p) => !taken.has(p.id) && this.canPlay(p, sl.pos))
+        .map((p) => ({ p, f: (fitOf(p, sl.ip, 'ip', sl.pos) + fitOf(p, sl.oop, 'oop', sl.pos)) / 2 + readyOf(p) }))
+        .sort((a, b) => b.f - a.f)[0];
       if (c) subs[i]!.push(c.p);
     });
 

@@ -30,7 +30,7 @@ import {
 } from '@fm-immersion/module-fm';
 import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
-import { useMemo, useState } from 'react';
+import { createContext, useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
@@ -74,8 +74,13 @@ export function useTacticEngine(folder: string, players: FmPlayer[] = []) {
  * Style, schéma et onze choisis en Tactique > Composition (retenus d'une vue à l'autre) :
  * les autres vues de l'effectif s'appuient dessus pour rester cohérentes.
  */
+/** Réserve et jeunes du club (joueurs avec `team`), fournis par l'écran de la partie : appelés quand un poste reste vide. */
+export const ReserveContext = createContext<FmPlayer[]>([]);
+
 export function useTacticChoice(players: FmPlayer[], folder: string, gameFormation: string | null, lineup: GameSlot[] | null = null, gameTactic: string | null = null) {
   const { engine, local } = useTacticEngine(folder, players);
+  const reserveAll = useContext(ReserveContext);
+  const reserve = useMemo(() => reserveAll.filter((p) => !unavailable(p) && Object.keys(p.attributes).length > 0), [reserveAll]);
   // Choix retenus par partie : chaque carrière a son style et son schéma.
   const scope = useFmSaveScope();
   const [prefs, setPrefs] = useState<Prefs>(() => readScoped<Prefs>(PREFS_KEY, scope, {}));
@@ -86,7 +91,7 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
   };
   const avail = useMemo(() => players.filter((p) => !unavailable(p) && Object.keys(p.attributes).length > 0), [players]);
   // Classement commun à tous les onglets : chaque style avec la note d'équipe de son meilleur onze.
-  const ranked = useMemo(() => rankTactics(engine, avail), [engine, avail]);
+  const ranked = useMemo(() => rankTactics(engine, avail, reserve), [engine, avail, reserve]);
   const [coach] = useCoach();
   // Sans choix du joueur : la meilleure tactique applicable, ou le projet dès qu'il devient le meilleur.
   // Tactique de base : celle jouée dans FM27 (d'après son nom), gardée tant qu'une autre ne gagne pas nettement.
@@ -101,7 +106,7 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
   const gamePlan = useMemo(() => (lineup ? planFromLineup(engine, lineup, players, gameForm ?? gameFormation) : null), [engine, lineup, players, gameForm, gameFormation]);
   const fromGame = !!gamePlan && prefs.source !== 'simloom';
   const plan = fromGame ? gamePlan : plans.find((p) => p.form === form);
-  return { engine, local, prefs, update, avail, ranked, style, natural, form: fromGame ? gamePlan.form || form : form, plans, plan, gamePlan, fromGame, auto, pick };
+  return { engine, local, prefs, update, avail, reserve, ranked, style, natural, form: fromGame ? gamePlan.form || form : form, plans, plan, gamePlan, fromGame, auto, pick };
 }
 
 const DOT: Record<BalanceCheck['status'], string> = { good: 'bg-eau', warn: 'bg-ambre', bad: 'bg-corail' };
@@ -114,7 +119,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   const gameTactic = typeof snap?.tactic?.name === 'string' ? snap.tactic.name : null;
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
-  const { engine, local, prefs, update, avail, ranked, style, natural, form, plans, plan: planA, gamePlan, fromGame, auto, pick } = useTacticChoice(players, folder, gameFormation, lineup, gameTactic);
+  const { engine, local, prefs, update, avail, reserve, ranked, style, natural, form, plans, plan: planA, gamePlan, fromGame, auto, pick } = useTacticChoice(players, folder, gameFormation, lineup, gameTactic);
   const phase: Phase = prefs.phase ?? 'ip';
   // Équipe B : le meilleur onze possible sans les titulaires de l'équipe A, même schéma et même style
   // (rotation, coupes, matchs rapprochés). Au poste, toujours le meilleur joueur restant.
@@ -123,8 +128,8 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
     if (!planA || !style) return null;
     const starters = new Set(planA.slots.flatMap((sl) => (sl.player ? [sl.player.id] : [])));
     const bForm = FORMATIONS[form] ? form : (pick?.form ?? '4-3-3');
-    return engine.formationPlan(bForm, style, avail.filter((p) => !starters.has(p.id)));
-  }, [engine, planA, style, form, pick, avail]);
+    return engine.formationPlan(bForm, style, avail.filter((p) => !starters.has(p.id)), reserve.filter((p) => !starters.has(p.id)));
+  }, [engine, planA, style, form, pick, avail, reserve]);
   const plan = team === 'B' && planB ? planB : planA;
   const opp = useMemo(() => (snap ? opponentReport(snap) : null), [snap]);
   // Tactique du match : la meilleure combinaison style × schéma contre le prochain adversaire.
@@ -368,6 +373,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                         </td>
                         <td className="font-bold text-canard">
                           {p ? <PlayerLink player={p} /> : <span className="text-corail">{t('fm.tac.nobody')}</span>}
+                          {p?.team && <span className="ml-2 text-xs font-normal text-orange-fonce">{t('fm.tac.fromTeam', { team: p.team })}</span>}
                           {p && !p.positions.includes(sl.pos) && <span className="ml-2 text-xs font-normal text-brun">{t('fm.tac.offPos')}</span>}
                         </td>
                         {(['ip', 'oop'] as const).map((ph) => (
@@ -376,7 +382,10 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                             {p && <span className="ml-2 text-xs font-bold text-brun">{note(fitOf(ph))}</span>}
                           </td>
                         ))}
-                        <td className="text-brun">{(plan.subs[i] ?? [])[0]?.name ?? '–'}</td>
+                        <td className="text-brun">
+                          {(plan.subs[i] ?? [])[0]?.name ?? '–'}
+                          {(plan.subs[i] ?? [])[0]?.team && <span className="ml-1 text-xs text-orange-fonce">{t('fm.tac.fromTeam', { team: (plan.subs[i] ?? [])[0]!.team })}</span>}
+                        </td>
                       </tr>
                     );
                   })}

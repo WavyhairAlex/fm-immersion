@@ -225,3 +225,21 @@ describe('plan d’évolution', () => {
     for (const s of plan.stages) expect([1, 2, 3]).toContain(s.perPlayer);
   });
 });
+
+describe('réserve et jeunes', () => {
+  it('comble un poste que l’équipe première ne couvre pas, et une doublure manquante, sans remplacer un titulaire', () => {
+    const style = engine.ref.styles.find((s) => s.id === 'possession')!;
+    const noDm = squad.filter((x) => x.id !== '6');
+    const reserve = [p(20, 'MD (C)', 10, { team: 'Malženice U19' }), p(21, 'BT', 15, { team: 'Malženice II' })];
+    const empty = engine.formationPlan('4-3-3', style, noDm);
+    expect(empty.holes).toBe(1);
+    const plan = engine.formationPlan('4-3-3', style, noDm, reserve);
+    expect(plan.holes).toBe(0);
+    const dm = plan.slots.find((s) => s.pos === 'MDF')!;
+    expect(dm.player?.id).toBe('20');
+    // Le buteur de la réserve, pourtant meilleur, ne prend pas la place du titulaire : il est doublure.
+    const st = plan.slots.find((s) => s.pos === 'BT')!;
+    expect(st.player?.id).toBe('11');
+    expect(plan.subs[plan.slots.indexOf(st)]![0]?.id).toBe('21');
+  });
+});

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clubFinances, wageFigures, contractsByYear, dressingRoom, homeOverview, loans, moraleLevel, statusRank, upcomingContracts, wageReport } from '../src';
+import { clubFinances, financeState, wageFigures, contractsByYear, dressingRoom, homeOverview, loans, moraleLevel, statusRank, upcomingContracts, wageReport } from '../src';
 import { normalizePlayer } from '../src/player';
 import type { FmSnapshot } from '../src/snapshot';
 
@@ -73,5 +73,14 @@ describe('salaires cohérents avec le jeu', () => {
   });
   it('sans la dépense du jeu : somme des salaires et budget brut', () => {
     expect(wageFigures({ wageBudget: 5000 }, [{ wage: 3000 }, { wage: null }])).toMatchObject({ bill: 3000, budget: 5000, room: 2000, fromGame: false });
+  });
+});
+
+describe('finances serrées', () => {
+  it('un seul signal suffit : marge salariale négative, budget de transfert nul ou solde négatif', () => {
+    expect(financeState({ wageRoom: 2000, transferBudget: 50_000, balance: 100_000 })).toEqual({ tight: false, signals: [] });
+    expect(financeState({ wageRoom: -7500, transferBudget: 0, balance: 12_000 })).toEqual({ tight: true, signals: ['wageOver', 'noTransfer'] });
+    expect(financeState({ wageRoom: null, transferBudget: null, balance: -3000 })).toEqual({ tight: true, signals: ['debt'] });
+    expect(financeState({ wageRoom: null, transferBudget: null, balance: null }).tight).toBe(false);
   });
 });

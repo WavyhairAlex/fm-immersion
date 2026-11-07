@@ -191,6 +191,7 @@
       "otherPhase": "{{phase}}: {{role}}",
       "subs": "Backups: {{names}}",
       "offPos": "outside natural position (accomplished)",
+      "fromTeam": "from {{team}}",
       "nobody": "Nobody",
       "pitchHelp": "Eleven picked by fit to the style's roles, injured players left out. Dotted lines show the move from the other phase; hover a player to find them in the list.",
       "balance": "Team balance",
@@ -2114,6 +2115,22 @@
         "SetPieces": "SP"
       }
     },
+    "tight": {
+      "title": "Money is tight: making do",
+      "signals": "The club cannot buy: {{list}}.",
+      "signal": {
+        "wageOver": "wage budget exceeded by {{amount}}",
+        "noTransfer": "no transfer budget",
+        "debt": "balance {{amount}} in the red"
+      },
+      "sellFirst_one": "Sell first: {{count}} departure advised, {{income}} possible income and {{wages}} in wages freed.",
+      "sellFirst_other": "Sell first: {{count}} departures advised, {{income}} possible income and {{wages}} in wages freed.",
+      "freeOrLoan": "Sign without a fee: free agents, expiring contracts, loans (targets above the budget are tagged \"over budget\").",
+      "youth_one": "Look inside first: {{count}} youngster is worth it, and the line-up calls on the reserves or U19s whenever a position is short.",
+      "youth_other": "Look inside first: {{count}} youngsters are worth it, and the line-up calls on the reserves or U19s whenever a position is short.",
+      "noRaise": "No pay rises: extend on the same wage or not at all, the wage budget is already exceeded.",
+      "overBudget": "over budget"
+    },
     "leave": {
       "title_one": "Announced departures · {{count}}",
       "title_other": "Announced departures · {{count}}",
@@ -2285,6 +2302,12 @@
       "training_other": "{{count}} individual training settings need changing this week.",
       "mercato_one": "One transfer decision is waiting (departure or signing).",
       "mercato_other": "{{count}} transfer decisions are waiting (departures and signings).",
+      "finances": "Money is tight ({{detail}}): no purchases, look for free agents or loans, draw on the reserves and youth, and sell before you sign.",
+      "finSignal": {
+        "wageOver": "wage budget exceeded by {{amount}}",
+        "noTransfer": "no transfer budget",
+        "debt": "balance {{amount}} in the red"
+      },
       "allGood": "Nothing urgent: the team is ready. A good time to look at the game plan or the youngsters.",
       "detail": "Full detail",
       "detailHide": "Hide detail",
@@ -2313,7 +2336,8 @@
         "trialists": "Judge the trial",
         "friendly": "Share out minutes",
         "rotation": "Rotate",
-        "congested": "Plan the rotation"
+        "congested": "Plan the rotation",
+        "finances": "See finances"
       },
       "tabBadge_one": "{{count}} thing to do here",
       "tabBadge_other": "{{count}} things to do here",
