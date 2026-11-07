@@ -71,8 +71,9 @@ export interface MercatoAdvice {
  * Joueur signalé partant par le coach (il refuse de prolonger, on le laisse libre, il est vendu, il veut partir).
  * Gardé dans la partie (saves.extra) ; le mercato le retire de l'effectif à planifier et cherche son remplaçant.
  */
-export type LeavingReason = 'refused' | 'released' | 'sold' | 'wantsOut';
-export const LEAVING_REASONS: LeavingReason[] = ['refused', 'released', 'sold', 'wantsOut'];
+/** `loanIn` : prêté chez nous, il rentre dans son club à la fin du prêt (signalé à la main ou lu par le plugin). */
+export type LeavingReason = 'refused' | 'released' | 'sold' | 'wantsOut' | 'loanIn';
+export const LEAVING_REASONS: LeavingReason[] = ['refused', 'released', 'sold', 'wantsOut', 'loanIn'];
 export interface LeavingMark {
   reason: LeavingReason;
   /** Date de jeu (ISO) du signalement. */

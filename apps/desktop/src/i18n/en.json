@@ -2077,7 +2077,7 @@
     "leave": {
       "title_one": "Announced departures · {{count}}",
       "title_other": "Announced departures · {{count}}",
-      "help": "Players you flagged as leaving. FM Immersion plans the squad without them (starters, backups, contracts, youngsters) and looks for their replacement at the same position of the project eleven: first among your followed targets and the squad, then in the game database (run straight away when you flag them). Cancel the flag if they end up staying.",
+      "help": "Players you flagged as leaving. FM Immersion plans the squad without them (starters, backups, contracts, youngsters) and looks for their replacement at the same position of the project eleven: first among your followed targets and the squad, then in the game database (run straight away when you flag them). Cancel the flag if they end up staying. Players loaned to your club are listed automatically (read from the game): they go back at the end of the loan, so the transfer screen never suggests selling or extending them.",
       "mark": "Leaving…",
       "cancel": "Cancel",
       "close": "Close",
@@ -2087,8 +2087,10 @@
         "refused": "Refuses to renew",
         "released": "Let go",
         "sold": "Sold",
-        "wantsOut": "Wants out"
-      }
+        "wantsOut": "Wants out",
+        "loanIn": "On loan with us"
+      },
+      "loanFrom": "On loan from {{club}}"
     },
     "needs": {
       "title": "Positions to sign ({{count}})",

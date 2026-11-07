@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loanedOutIds, addBaseTarget, baseTarget, mergeTargets, squadSnapshot, targetOf, trialistIds, shortlist, storedTargets, type TargetRecord } from '../src/targets';
+import { loanedInFrom, loanedOutIds, addBaseTarget, baseTarget, mergeTargets, squadSnapshot, targetOf, trialistIds, shortlist, storedTargets, type TargetRecord } from '../src/targets';
 import type { FmSnapshot } from '../src/snapshot';
 
 const snap = (gameDate: string, shortlist?: unknown[]): FmSnapshot => ({ schema: 'archivix/1', game: 'FM27', club: 'V', gameDate, players: [], ...(shortlist ? { shortlist } : {}) });
@@ -172,5 +172,19 @@ describe('joueurs prêtés ailleurs', () => {
       loans: [{ id: 3, name: 'Autre prêté', loanClub: 'X' }],
     } as unknown as FmSnapshot;
     expect([...loanedOutIds(s)].sort()).toEqual(['1', '3']);
+  });
+});
+
+describe('prêtés chez nous', () => {
+  it('lit le club prêteur dans custom.joueurs (pretDe)', () => {
+    const snap = {
+      schema: 'archivix/1',
+      game: 'FM27',
+      club: 'Malženice',
+      gameDate: '2027-03-01',
+      players: [],
+      custom: { joueurs: { a: { id: 11, pretDe: 'Slovan Bratislava' }, b: { id: 12, pretDe: 'SI.Bindable.DynamicReference' }, c: { id: 13 }, d: { id: 14, pretDe: 'Malženice' } } },
+    } as unknown as FmSnapshot;
+    expect([...loanedInFrom(snap)]).toEqual([['11', 'Slovan Bratislava']]);
   });
 });

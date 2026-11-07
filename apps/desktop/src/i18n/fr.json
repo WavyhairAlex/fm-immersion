@@ -2077,7 +2077,7 @@
     "leave": {
       "title_one": "Départs annoncés · {{count}}",
       "title_other": "Départs annoncés · {{count}}",
-      "help": "Les joueurs que tu as signalés partants. FM Immersion planifie l'effectif sans eux (titulaires, doublures, contrats, jeunes) et cherche leur remplaçant au même poste du onze cible : d'abord parmi tes cibles suivies et dans l'effectif, puis dans la base du jeu (lancée d'office au moment du signalement). Annule le signalement s'il reste finalement.",
+      "help": "Les joueurs que tu as signalés partants. FM Immersion planifie l'effectif sans eux (titulaires, doublures, contrats, jeunes) et cherche leur remplaçant au même poste du onze cible : d'abord parmi tes cibles suivies et dans l'effectif, puis dans la base du jeu (lancée d'office au moment du signalement). Annule le signalement s'il reste finalement. Les joueurs prêtés à ton club y figurent d'office (lus dans le jeu) : ils rentrent chez eux à la fin du prêt, le mercato ne propose ni de les vendre ni de les prolonger.",
       "mark": "Il part…",
       "cancel": "Annuler",
       "close": "Fermer",
@@ -2087,8 +2087,10 @@
         "refused": "Refuse de prolonger",
         "released": "Laissé libre",
         "sold": "Vendu",
-        "wantsOut": "Veut partir"
-      }
+        "wantsOut": "Veut partir",
+        "loanIn": "Prêté chez nous"
+      },
+      "loanFrom": "Prêté par {{club}}"
     },
     "needs": {
       "title": "Postes à recruter ({{count}})",

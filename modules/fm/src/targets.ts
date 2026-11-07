@@ -152,6 +152,22 @@ export function loanedOutIds(snap: FmSnapshot): Set<string> {
 }
 
 /** Instantané sans les joueurs à l'essai : l'effectif sous contrat. */
+/**
+ * Joueurs prêtés à notre club par un autre (chemins.json, joueur : `pretDe` = OnLoanFrom/Name, `pretStatut` =
+ * LoanStatusDetails, 07/11/2026). Ils jouent pour nous jusqu'à la fin du prêt puis rentrent chez eux : le mercato
+ * ne peut ni les vendre ni les prolonger, et planifie la saison suivante sans eux. Valeur : club prêteur (ou null).
+ */
+export function loanedInFrom(snap: FmSnapshot): Map<string, string | null> {
+  const out = new Map<string, string | null>();
+  const custom = (snap as { custom?: { joueurs?: Record<string, Record<string, unknown>> } }).custom;
+  const text = (v: unknown) => (typeof v === 'string' && v.trim() && !v.startsWith('SI.') ? v.trim() : null);
+  for (const [id, row] of Object.entries(custom?.joueurs ?? {})) {
+    const from = text(row?.pretDe);
+    if (from && from !== snap.club) out.set(String(row?.id ?? id), from);
+  }
+  return out;
+}
+
 export function squadSnapshot(snap: FmSnapshot): FmSnapshot {
   const trial = trialistIds(snap);
   return trial.size ? { ...snap, players: snap.players.filter((p) => !trial.has(String(p.id))) } : snap;
