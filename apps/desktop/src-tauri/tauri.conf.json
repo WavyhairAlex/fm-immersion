@@ -50,7 +50,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDlEMkQ4N0Q1MjVERkNBQ0QKUldUTnl0OGwxWWN0blVDWkUxbmh2VTArS1NZaGxwbUhrTTJIOTlXazJnTW9halFNazBFQU5aeDYK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ2ODI3OUI2NDA5MUYyQUMKUldTczhwRkF0bm1DMXR2R3lubE5USFJaK2loQjh1S3hlTVp4UGZmVGdWNzN3TEU2UmxFRXhBaE0K",
       "endpoints": ["https://github.com/amnesix-nt/fm-immersion/releases/latest/download/latest.json"],
       "windows": { "installMode": "passive" }
     }
