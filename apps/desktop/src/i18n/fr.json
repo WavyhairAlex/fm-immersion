@@ -2425,5 +2425,44 @@
       "final_1": "Coup de sifflet final, {{score}}.",
       "final_2": "C'est terminé : {{home}} {{score}} {{away}}."
     }
+  },
+  "season": {
+    "title": "Bilan de la saison {{season}}",
+    "special": "Numéro spécial · Bilan de la saison",
+    "label": "Saison {{season}}",
+    "headline": {
+      "champion": "{{club}} champion !",
+      "podium": "{{club}} sur le podium, {{position}}",
+      "finish": "{{club}} termine {{position}}",
+      "done": "La saison de {{club}} est terminée"
+    },
+    "ordinal1": "{{n}}er",
+    "ordinal2": "{{n}}e",
+    "ordinal3": "{{n}}e",
+    "ordinal": "{{n}}e",
+    "finalPosition": "Classement final",
+    "curve": "Fin de saison",
+    "played": "Matchs",
+    "record": "V-N-D",
+    "goals": "Buts pour – contre",
+    "unbeaten": "Série sans défaite",
+    "biggestWin": "Plus large victoire",
+    "worstLoss": "Plus lourde défaite",
+    "untracked_one": "{{count}} autre match joué sans détail (hors bilan).",
+    "untracked_other": "{{count}} autres matchs joués sans détail (hors bilan).",
+    "awards": "Les distinctions",
+    "topScorer": "Meilleur buteur",
+    "goalsCount_one": "{{name}}, {{count}} but",
+    "goalsCount_other": "{{name}}, {{count}} buts",
+    "potm": "Homme du match",
+    "potmCount_one": "{{name}}, {{count}} fois",
+    "potmCount_other": "{{name}}, {{count}} fois",
+    "bestRated": "Meilleure note moyenne",
+    "mercato": "Le mercato",
+    "arrivals": "Arrivées :",
+    "departures": "Départs :",
+    "footer": "Rendez-vous la saison prochaine, {{club}} !",
+    "send": "Envoyer le bilan sur Discord",
+    "sent": "Bilan envoyé sur Discord."
   }
 }

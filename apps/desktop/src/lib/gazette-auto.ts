@@ -1,4 +1,4 @@
-import { gazetteIssues, type GazetteIssue } from '@fm-immersion/module-fm';
+import { gazetteIssues, seasonReviews, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import type { TFunction } from 'i18next';
@@ -9,6 +9,7 @@ import { getWebhook, isWebhook, sendDiscordImage } from './discord';
 import { discordPayload } from './gazette-text';
 import { canvasPng, drawUne, recentForm } from './gazette-une';
 import { loadFace } from './player-face';
+import { drawSeason, seasonPayload } from './season-une';
 
 /** Envoie la gazette n° `index` (une en image + encart), comme le bouton « Envoyer sur Discord ». */
 export async function sendGazette(t: TFunction, lang: string | undefined, issues: GazetteIssue[], index: number, webhook = getWebhook()) {
@@ -17,6 +18,26 @@ export async function sendGazette(t: TFunction, lang: string | undefined, issues
   const payload = discordPayload(t, issue, lang);
   const embed = { ...payload.embeds[0]!, image: { url: 'attachment://une.png' } };
   return sendDiscordImage({ ...payload, embeds: [embed], attachments: [{ id: 0, filename: 'une.png' }] }, png, webhook);
+}
+
+/** Envoie le numéro spécial « Bilan de la saison » (une en image + encart). */
+export async function sendSeason(t: TFunction, r: SeasonReview, lang?: string, webhook = getWebhook()) {
+  const png = await canvasPng(await drawSeason(t, r, { face: await loadFace(r.topScorer?.id), lang }));
+  return sendDiscordImage(seasonPayload(t, r, lang), png, webhook);
+}
+
+/** Dernier bilan de saison envoyé : partie et date de fin de saison. */
+const SEASON_SENT_KEY = 'fmi.discord.seasonSent';
+export const seasonSentKey = (saveId: string, r: SeasonReview) => `${saveId}|${r.end}`;
+export const isSeasonSent = (saveId: string, r: SeasonReview) => read(SEASON_SENT_KEY) === seasonSentKey(saveId, r);
+export const markSeasonSent = (saveId: string, r: SeasonReview) => write(SEASON_SENT_KEY, seasonSentKey(saveId, r));
+
+/** Le bilan part une fois, peu après la fin de saison (pas celui d'une saison finie depuis des mois). */
+export function seasonToSend(reviews: SeasonReview[], lastDate: string | undefined, sent: (r: SeasonReview) => boolean): SeasonReview | null {
+  const r = reviews[0];
+  if (!r || !lastDate || sent(r)) return null;
+  const days = (Date.parse(lastDate.slice(0, 10)) - Date.parse(r.end.slice(0, 10))) / 86_400_000;
+  return days <= 60 ? r : null;
 }
 
 /** Envoi automatique de la gazette chaque semaine de jeu, activé par le joueur (gardé sur ce PC). */
@@ -65,7 +86,8 @@ export function gazetteToSend(issues: GazetteIssue[], saveId: string, sent: stri
 
 /**
  * Monté une fois pour toute l'appli : chaque minute, si le joueur l'a activé et relié un salon, relit l'instantané
- * du plugin (comme FM Coach) puis envoie la gazette dès qu'une semaine de jeu est terminée.
+ * du plugin (comme FM Coach) puis envoie la gazette dès qu'une semaine de jeu est terminée, et le bilan de la saison
+ * dès que le dernier match de championnat est joué.
  */
 export function useGazetteAuto() {
   const { t, i18n } = useTranslation();
@@ -92,11 +114,23 @@ export function useGazetteAuto() {
         } catch {
           /* fichier absent, en cours d'écriture, ou autre partie chargée */
         }
-        const issues = gazetteIssues(await fmData.all(saveId));
+        const history = await fmData.all(saveId);
+        const issues = gazetteIssues(history);
         const index = gazetteToSend(issues, saveId, read(SENT_KEY));
-        if (index == null) return;
-        await sendGazette(t, i18n.resolvedLanguage, issues, index);
-        markGazetteSent(saveId, issues[index]!.weekStart);
+        if (index != null) {
+          await sendGazette(t, i18n.resolvedLanguage, issues, index);
+          markGazetteSent(saveId, issues[index]!.weekStart);
+        }
+        // Fin du championnat : numéro spécial, après la gazette de la semaine.
+        const lastDate = history
+          .map((h) => h.gameDate)
+          .sort()
+          .at(-1);
+        const season = seasonToSend(seasonReviews(history), lastDate, (r) => isSeasonSent(saveId, r));
+        if (season) {
+          await sendSeason(t, season, i18n.resolvedLanguage);
+          markSeasonSent(saveId, season);
+        }
       } catch (e) {
         console.warn('Gazette automatique :', e);
       } finally {

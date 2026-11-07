@@ -50,7 +50,7 @@ export function wrap(ctx: CanvasRenderingContext2D, text: string, width: number,
   return kept;
 }
 
-function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, fill: string) {
+export function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, fill: string) {
   ctx.fillStyle = fill;
   ctx.beginPath();
   ctx.roundRect(x, y, w, h, r);
@@ -58,7 +58,7 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 }
 
 /** Image recadrée dans un cercle (cadrage carré centré en largeur, calé en haut : le visage). */
-function drawFace(ctx: CanvasRenderingContext2D, img: CanvasImageSource, cx: number, cy: number, r: number) {
+export function drawFace(ctx: CanvasRenderingContext2D, img: CanvasImageSource, cx: number, cy: number, r: number) {
   const w = Number((img as { width?: number }).width) || 1;
   const h = Number((img as { height?: number }).height) || 1;
   const side = Math.min(w, h);
@@ -76,7 +76,7 @@ function drawFace(ctx: CanvasRenderingContext2D, img: CanvasImageSource, cx: num
 }
 
 /** Plus grande taille de police (≤ max) pour que le texte tienne sur `width`. */
-function fit(ctx: CanvasRenderingContext2D, text: string, weight: number, max: number, min: number, width: number, family: string) {
+export function fit(ctx: CanvasRenderingContext2D, text: string, weight: number, max: number, min: number, width: number, family: string) {
   let size = max;
   ctx.font = font(weight, size, family);
   while (size > min && ctx.measureText(text).width > width) ctx.font = font(weight, --size, family);
