@@ -18,6 +18,8 @@ import {
   type FmSnapshot,
   type Line,
   type SquadAt,
+  formationOfPositions,
+  knownFormation,
 } from '@fm-immersion/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
@@ -302,8 +304,12 @@ export function FmSave() {
       })),
     [all],
   );
-  const gameFormation = gameFormationOf(snapshot?.data.tactic);
   const lineup = useMemo(() => gameLineup(snapshot?.data), [snapshot?.data]);
+  // Schéma joué : le nom de la tactique s'il désigne un schéma connu, sinon les onze postes lus dans le onze du jeu.
+  const gameFormation = useMemo(() => {
+    const named = gameFormationOf(snapshot?.data.tactic);
+    return (named && knownFormation(named)) || (lineup ? formationOfPositions(lineup.map((s) => s.pos)) : null) || named;
+  }, [snapshot?.data.tactic, lineup]);
   // Contenu de chaque écran ; un onglet en affiche une ou plusieurs parties (voir PARTS).
   const part = (v: string) => {
     if (!snapshot) return null;

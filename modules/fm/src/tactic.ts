@@ -85,17 +85,40 @@ export const FORMATIONS: Record<string, [PosCode, number, number][]> = {
   '5-3-2': [['GB', 50, 92], ['DLG', 10, 66], ['DC', 30, 77], ['DC', 50, 79], ['DC', 70, 77], ['DLD', 90, 66], ['MC', 28, 48], ['MDF', 50, 56], ['MC', 72, 48], ['BT', 38, 15], ['BT', 62, 15]],
   '5-4-1': [['GB', 50, 92], ['DLG', 10, 66], ['DC', 30, 77], ['DC', 50, 79], ['DC', 70, 77], ['DLD', 90, 66], ['MG', 15, 45], ['MC', 38, 50], ['MC', 62, 50], ['MD', 85, 45], ['BT', 50, 14]],
   '5-2-3': [['GB', 50, 92], ['DLG', 10, 66], ['DC', 30, 77], ['DC', 50, 79], ['DC', 70, 77], ['DLD', 90, 66], ['MC', 35, 50], ['MC', 65, 50], ['MOG', 18, 24], ['BT', 50, 13], ['MOD', 82, 24]],
+  // Schémas réels des entraîneurs d'aujourd'hui (relevés dans le mod « AI Manager Mode », 07/11/2026) : deux
+  // centraux et des latéraux hauts (Arteta, Slot, Emery…), 3-2-4-1 de Gasperini et Alonso, 3-4-3 décalé de
+  // De Zerbi, et les schémas sans avant-centre (Fàbregas). Le jeu ne les nomme pas ainsi : les clés sont les lignes.
+  '2-3-2-3': [['GB', 50, 92], ['DC', 36, 76], ['DC', 64, 76], ['DLG', 10, 52], ['MDF', 50, 58], ['DLD', 90, 52], ['MC', 32, 42], ['MC', 68, 42], ['MOG', 15, 22], ['BT', 50, 12], ['MOD', 85, 22]],
+  '2-4-3-1': [['GB', 50, 92], ['DC', 36, 76], ['DC', 64, 76], ['DLG', 10, 54], ['MDF', 36, 58], ['MDF', 64, 58], ['DLD', 90, 54], ['MOG', 15, 32], ['MOC', 50, 32], ['MOD', 85, 32], ['BT', 50, 12]],
+  '2-3-4-1': [['GB', 50, 92], ['DC', 36, 76], ['DC', 64, 76], ['DLG', 10, 52], ['MDF', 50, 58], ['DLD', 90, 52], ['MOG', 15, 30], ['MOC', 36, 32], ['MOC', 64, 32], ['MOD', 85, 30], ['BT', 50, 12]],
+  '2-4-2-2': [['GB', 50, 92], ['DC', 36, 76], ['DC', 64, 76], ['DLG', 10, 50], ['MC', 36, 48], ['MC', 64, 48], ['DLD', 90, 50], ['MOG', 15, 26], ['MOD', 85, 26], ['BT', 38, 13], ['BT', 62, 13]],
+  '3-2-4-1': [['GB', 50, 92], ['DC', 25, 76], ['DC', 50, 78], ['DC', 75, 76], ['MDF', 36, 58], ['MDF', 64, 58], ['MG', 12, 44], ['MD', 88, 44], ['MOC', 36, 30], ['MOC', 64, 30], ['BT', 50, 12]],
+  '3-3-1-3': [['GB', 50, 92], ['DC', 25, 76], ['DC', 50, 78], ['DC', 75, 76], ['DLG', 10, 52], ['MDF', 50, 58], ['DLD', 90, 52], ['MC', 50, 42], ['MOG', 18, 22], ['BT', 50, 12], ['MOD', 82, 22]],
+  '3-4-3-0': [['GB', 50, 92], ['DC', 25, 76], ['DC', 50, 78], ['DC', 75, 76], ['DLG', 10, 50], ['DLD', 90, 50], ['MC', 36, 46], ['MC', 64, 46], ['MOG', 18, 22], ['MOC', 50, 26], ['MOD', 82, 22]],
+  '5-2-3-0': [['GB', 50, 92], ['DG', 12, 70], ['DC', 30, 77], ['DC', 50, 79], ['DC', 70, 77], ['DD', 88, 70], ['MDF', 36, 56], ['MDF', 64, 56], ['MOG', 18, 22], ['MOC', 50, 26], ['MOD', 82, 22]],
+  '4-1-2-3-0': [['GB', 50, 92], ['DG', 15, 72], ['DC', 38, 76], ['DC', 62, 76], ['DD', 85, 72], ['MDF', 50, 58], ['MC', 32, 44], ['MC', 68, 44], ['MOG', 18, 22], ['MOC', 50, 26], ['MOD', 82, 22]],
+  '4-2-1-3-0': [['GB', 50, 92], ['DG', 15, 72], ['DC', 38, 76], ['DC', 62, 76], ['DD', 85, 72], ['MDF', 36, 58], ['MDF', 64, 58], ['MC', 50, 44], ['MOG', 18, 22], ['MOC', 50, 26], ['MOD', 82, 22]],
 };
+
+/** Clés de schéma, la plus longue d'abord : « 3-4-3-0 … » ne doit pas être pris pour un 3-4-3. */
+export const formationKeys = (): string[] => Object.keys(FORMATIONS).sort((a, b) => b.length - a.length);
+
+/** Schéma connu dont les onze postes sont exactement ceux donnés (onze du jeu, formation adverse), sinon null. */
+export function formationOfPositions(positions: (PosCode | null | undefined)[]): string | null {
+  if (positions.length !== 11 || positions.some((p) => !p)) return null;
+  const key = [...(positions as PosCode[])].sort().join(',');
+  return formationKeys().find((k) => FORMATIONS[k]!.map(([p]) => p).sort().join(',') === key) ?? null;
+}
 
 /** Schémas naturels de chaque style (avec ballon, du plus naturel au plus alternatif). */
 export const STYLE_FORMS: Record<string, string[]> = {
-  possession: ['4-3-3', '4-2-3-1', '4-1-4-1'],
-  tikitaka: ['4-3-3', '4-1-4-1', '3-4-3'],
-  'tikitaka-v': ['4-3-1-2', '4-2-3-1'],
-  gegenpress: ['4-2-3-1', '4-3-3', '4-4-2'],
-  wings: ['4-4-2', '4-2-3-1', '3-4-3', '5-2-3'],
+  possession: ['4-3-3', '2-3-2-3', '4-2-3-1', '2-4-3-1', '4-1-4-1', '3-2-4-1'],
+  tikitaka: ['4-3-3', '2-3-2-3', '4-1-4-1', '3-4-3', '4-1-2-3-0', '3-4-3-0'],
+  'tikitaka-v': ['4-3-1-2', '4-2-3-1', '2-3-4-1'],
+  gegenpress: ['4-2-3-1', '2-4-3-1', '4-3-3', '2-3-2-3', '4-4-2', '4-2-1-3-0'],
+  wings: ['4-4-2', '2-4-2-2', '4-2-3-1', '3-4-3', '3-3-1-3', '5-2-3'],
   longball: ['4-4-2', '4-4-1-1', '3-5-2'],
-  'counter-fluid': ['4-2-3-1', '4-3-3', '4-4-2'],
+  'counter-fluid': ['4-2-3-1', '2-4-3-1', '4-3-3', '4-4-2', '5-2-3-0'],
   'counter-direct': ['4-4-2', '4-4-1-1', '3-5-2'],
   catenaccio: ['5-3-2', '3-5-2'],
   'ultra-def': ['5-4-1', '5-3-2', '4-1-4-1'],
@@ -913,7 +936,7 @@ export function styleBlock(style: StyleRef): Block {
 /** Schéma de la tactique du jeu (« 4-2-3-1 DM Wide » → « 4-2-3-1 ») s'il est connu. */
 export function knownFormation(name: string | null | undefined): string | null {
   if (!name) return null;
-  return Object.keys(FORMATIONS).find((k) => name.startsWith(k)) ?? null;
+  return formationKeys().find((k) => name.startsWith(k)) ?? null;
 }
 
 /** Schéma de la tactique active lue par le plugin. « formation » peut n'être que la formation la plus

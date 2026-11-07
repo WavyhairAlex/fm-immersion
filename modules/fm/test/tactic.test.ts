@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_TACTIC_REFERENCE, FORMATIONS, TacticEngine, assignMax, balancePenalty, readiness, gameFormationOf, knownFormation, mergeReference, phaseXY, pitchAdvice, shapeOf, tacticReferenceSchema, zonePos } from '../src';
+import { DEFAULT_TACTIC_REFERENCE, FORMATIONS, TacticEngine, assignMax, balancePenalty, readiness, formationOfPositions, gameFormationOf, knownFormation, mergeReference, phaseXY, pitchAdvice, shapeOf, tacticReferenceSchema, zonePos } from '../src';
 import { TEAM_INSTRUCTIONS_FM27 } from '../src/team-instructions-fm27';
 import { normalizePlayer } from '../src/player';
 
@@ -162,5 +162,23 @@ describe('calibrage du style possession (tactique 4-3-3 relevée dans le jeu, 07
     for (const c of ['SK', 'FB', 'DM', 'WM', 'PRSCM', 'CF']) expect(s.signatureRoles.oop, c).toContain(c);
     for (const c of [...s.signatureRoles.ip, ...s.signatureRoles.oop]) expect(codes.has(c), c).toBe(true);
     expect(pitchAdvice('possession').choice).toBe('large');
+  });
+});
+
+describe('schémas réels des entraîneurs (latéraux hauts, sans avant-centre)', () => {
+  it('onze postes par schéma, un gardien, et « 3-4-3-0 » n’est pas pris pour un 3-4-3', () => {
+    for (const [k, slots] of Object.entries(FORMATIONS)) {
+      expect(slots.length, k).toBe(11);
+      expect(slots.filter(([p]) => p === 'GB').length, k).toBe(1);
+    }
+    expect(knownFormation('3-4-3-0 Autumn')).toBe('3-4-3-0');
+    expect(knownFormation('3-4-3 DL')).toBe('3-4-3');
+    expect(knownFormation('4-1-2-3-0')).toBe('4-1-2-3-0');
+  });
+  it('retrouve le schéma d’après les onze postes du onze du jeu', () => {
+    expect(formationOfPositions(['GB', 'DC', 'DC', 'DLG', 'DLD', 'MDF', 'MC', 'MC', 'MOG', 'MOD', 'BT'])).toBe('2-3-2-3');
+    expect(formationOfPositions(['GB', 'DG', 'DC', 'DC', 'DD', 'MDF', 'MC', 'MC', 'MOG', 'MOD', 'BT'])).toBe('4-3-3');
+    expect(formationOfPositions(['GB', 'DG', 'DC', 'DC', 'DD', 'MDF', 'MC', 'MC', 'MOG', 'MOC', 'MOD'])).toBe('4-1-2-3-0');
+    expect(formationOfPositions(['GB', 'DC', 'DC', null, 'DLD', 'MDF', 'MC', 'MC', 'MOG', 'MOD', 'BT'])).toBeNull();
   });
 });
