@@ -448,7 +448,8 @@
       "afterUnknown": "la marge s'affichera avec le budget du board",
       "board": "Objectifs du board",
       "confidence": "Confiance :",
-      "noBoard": "Les attentes du board (classement, jeu, jeunes, finances) ne sont pas encore lues par le plugin.",
+      "culture": "Culture du board :",
+      "noBoard": "Pas encore d'objectifs du board dans cet instantané. Le plugin les lit à chaque relevé (section club de chemins.json) : avance d'un jour dans FM27.",
       "billGame": "par mois, selon le jeu (effectif complet : {{squad}}, prêtés compris)",
       "budgetGame": "par mois : dépense + marge du jeu"
     },
@@ -1265,7 +1266,7 @@
     },
     "nextStep": "Étape suivante : {{view}}",
     "opp": {
-      "none": "Pas encore de rapport sur le prochain adversaire. Le plugin le lit tout seul quand chemins.json contient les lectures « adv… » (étape adverse 1).",
+      "none": "Pas encore de rapport sur le prochain adversaire dans cet instantané. Le plugin le lit à chaque relevé (lectures « adv… » de chemins.json) : avance d'un jour dans FM27, ou attends la relecture automatique.",
       "club": "Prochain adversaire",
       "position": "{{value}} du championnat",
       "formation": "Formation préférée",
@@ -1917,8 +1918,9 @@
       },
       "status": {
         "ok": "respecté si ce jeune est formé au pays",
+        "okVerified": "respecté",
         "bad": "à corriger",
-        "unknown": "à vérifier (nationalités pas encore lues)"
+        "unknown": "à vérifier (nationalité ou formation d'un joueur pas encore lue)"
       },
       "unverified": "Règles reprises d'un récapitulatif FM, pas encore lues dans le jeu : vérifie l'écran Règles de la compétition.",
       "friendly": "Match amical : rien en jeu et changements libres. Fais tourner, donne du temps aux jeunes et à ceux qui manquent de rythme, ménage les cadres. Il ne compte ni dans le bilan ni dans le temps de jeu promis.",

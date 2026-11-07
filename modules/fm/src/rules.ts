@@ -1,4 +1,5 @@
 import type { FmPlayer } from './player';
+import type { FmSnapshot } from './snapshot';
 import type { FormationPlan } from './tactic';
 
 /**
@@ -96,26 +97,72 @@ export interface RuleCheck {
   status: 'ok' | 'bad' | 'unknown';
   need: number;
   have: number | null;
+  /** Vérifié avec la nationalité et la formation lues dans le jeu (sinon : d'après l'âge seul). */
+  verified: boolean;
+}
+
+/** Admissibilité d'un joueur lue dans le jeu : citoyen de l'UE, formé au pays ou au club (null : pas lu). */
+export interface Eligibility {
+  eu: boolean | null;
+  homeGrown: boolean | null;
+}
+
+const boolOf = (v: unknown): boolean | null =>
+  typeof v === 'boolean' ? v : typeof v === 'string' ? (/^(true|oui|yes|1)$/i.test(v.trim()) ? true : /^(false|non|no|0)$/i.test(v.trim()) ? false : null) : typeof v === 'number' ? v !== 0 : null;
+
+/** Texte « formé au pays / au club » du jeu (HomeGrownStatusText) : vrai s'il nomme le club ou le pays sans négation. */
+export function homeGrownOf(text: unknown): boolean | null {
+  if (typeof text !== 'string' || !text.trim()) return null;
+  const t = text.toLowerCase();
+  if (/^(non|not|pas|aucun|none|no\b)/.test(t) || /non form|not (home|club|nation)|pas form|ni au club ni|[ée]tranger|abroad|foreign|overseas/.test(t)) return false;
+  return /club|pays|nation|home|local|form/.test(t);
 }
 
 /**
- * Contrôle du onze et du banc. Moins de 21 ans : d'après l'âge (la nationalité n'est pas encore lue, donc « formé
- * au pays » n'est pas vérifiable : le contrôle dit « inconnu » s'il manque l'âge). Hors UE : inconnu tant que la
- * nationalité n'est pas lue.
+ * Admissibilité par id de joueur, d'après chemins.json (section joueur : `estUE` = IsEuNational,
+ * `formeAuPays` = HomeGrownStatusText). Vide tant que le plugin ne les lit pas.
  */
-export function ruleChecks(plan: FormationPlan, r: CompetitionRules, bench: FmPlayer[]): RuleCheck[] {
+export function eligibilityOf(snap: Pick<FmSnapshot, 'players'> & { custom?: unknown }): Map<string, Eligibility> {
+  const out = new Map<string, Eligibility>();
+  const custom = snap.custom as { joueurs?: Record<string, Record<string, unknown>> } | null | undefined;
+  for (const [key, row] of Object.entries(custom?.joueurs ?? {})) {
+    if (!row || typeof row !== 'object') continue;
+    const e: Eligibility = { eu: boolOf(row.estUE), homeGrown: homeGrownOf(row.formeAuPays) };
+    if (e.eu == null && e.homeGrown == null) continue;
+    out.set(String(row.id ?? key), e);
+  }
+  return out;
+}
+
+/**
+ * Contrôle du onze et du banc. Avec l'admissibilité lue dans le jeu (`eligibilityOf`) : jeunes formés au pays et
+ * joueurs hors UE comptés pour de bon ; sans elle, moins de 21 ans d'après l'âge seul et hors UE « inconnu ».
+ */
+export function ruleChecks(plan: FormationPlan, r: CompetitionRules, bench: FmPlayer[], elig: Map<string, Eligibility> = new Map()): RuleCheck[] {
   const xi = plan.slots.flatMap((s) => (s.player ? [s.player] : []));
-  const young = (ps: FmPlayer[]) => (ps.some((p) => p.age == null) ? null : ps.filter((p) => (p.age ?? 99) < 21).length);
+  const of = (p: FmPlayer) => elig.get(String(p.id));
+  const allKnown = (ps: FmPlayer[], k: keyof Eligibility) => ps.length > 0 && ps.every((p) => of(p)?.[k] != null);
+  const young = (ps: FmPlayer[]) => {
+    if (ps.some((p) => p.age == null)) return null;
+    const u21 = ps.filter((p) => (p.age ?? 99) < 21);
+    return allKnown(ps, 'homeGrown') ? u21.filter((p) => of(p)!.homeGrown).length : u21.length;
+  };
   const out: RuleCheck[] = [];
   const status = (have: number | null, need: number) => (have == null ? 'unknown' : have >= need ? 'ok' : 'bad');
   if (r.u21Xi) {
     const have = young(xi);
-    out.push({ id: 'u21Xi', status: status(have, r.u21Xi), need: r.u21Xi, have });
+    out.push({ id: 'u21Xi', status: status(have, r.u21Xi), need: r.u21Xi, have, verified: allKnown(xi, 'homeGrown') });
   }
   if (r.u21Squad) {
-    const have = young([...xi, ...bench]);
-    out.push({ id: 'u21Squad', status: status(have, r.u21Squad), need: r.u21Squad, have });
+    const all = [...xi, ...bench];
+    const have = young(all);
+    out.push({ id: 'u21Squad', status: status(have, r.u21Squad), need: r.u21Squad, have, verified: allKnown(all, 'homeGrown') });
   }
-  if (r.nonEuMax != null) out.push({ id: 'nonEu', status: 'unknown', need: r.nonEuMax, have: null });
+  if (r.nonEuMax != null) {
+    const all = [...xi, ...bench];
+    const known = allKnown(all, 'eu');
+    const have = known ? all.filter((p) => of(p)!.eu === false).length : null;
+    out.push({ id: 'nonEu', status: have == null ? 'unknown' : have <= r.nonEuMax ? 'ok' : 'bad', need: r.nonEuMax, have, verified: known });
+  }
   return out;
 }

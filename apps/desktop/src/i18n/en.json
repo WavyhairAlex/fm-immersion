@@ -448,7 +448,8 @@
       "afterUnknown": "the room will show once the board budget is known",
       "board": "Board expectations",
       "confidence": "Confidence:",
-      "noBoard": "Board expectations (league position, style, youth, finances) are not read by the plugin yet.",
+      "culture": "Board culture:",
+      "noBoard": "No board objectives in this snapshot yet. The plugin reads them at every capture (club section of chemins.json): advance a day in FM27.",
       "billGame": "per month, from the game (whole squad: {{squad}}, loanees included)",
       "budgetGame": "per month: game spending + room"
     },
@@ -1265,7 +1266,7 @@
     },
     "nextStep": "Next step: {{view}}",
     "opp": {
-      "none": "No report on the next opponent yet. The plugin reads it on its own once chemins.json holds the « adv… » reads (opponent step 1).",
+      "none": "No report on the next opponent in this snapshot yet. The plugin reads it at every capture (« adv… » reads in chemins.json): advance a day in FM27, or wait for the automatic re-read.",
       "club": "Next opponent",
       "position": "{{value}} in the league",
       "formation": "Preferred formation",
@@ -1917,8 +1918,9 @@
       },
       "status": {
         "ok": "met if that youngster is homegrown",
+        "okVerified": "met",
         "bad": "to fix",
-        "unknown": "to check (nationalities not read yet)"
+        "unknown": "to check (a player's nationality or homegrown status not read yet)"
       },
       "unverified": "Rules taken from an FM league summary, not read from the game yet: check the competition's Rules screen.",
       "friendly": "Friendly: nothing at stake and free substitutions. Rotate, give minutes to youngsters and players lacking sharpness, rest key men. It counts neither in the record nor in promised playing time.",

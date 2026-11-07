@@ -154,7 +154,54 @@ export interface ClubFinances {
   transferBudget: number | null;
   balance: number | null;
   boardConfidence: string | null;
+  /** Culture du board (BoardCulture, chemins.json section club), si lue. */
+  boardCulture: string | null;
   expectations: { label: string; status: string | null }[];
+}
+
+const LABEL_KEYS = /title|name|description|text|objective|label|displayvalue|expectation/i;
+const STATUS_KEYS = /status|progress|state|result|confidence|achiev/i;
+
+/**
+ * Objectifs du board lus en profond par chemins.json (section club : visionObjectifsAnnee, attentesSaison,
+ * visionObjectifFinal, objectifsRecrutementBoard). La forme exacte des fiches du jeu n'étant pas figée, chaque
+ * ligne prend pour libellé son premier champ texte « titre / description » et pour statut son premier champ
+ * « statut / progression » ; une liste de textes donne un libellé par texte.
+ */
+export function boardObjectives(club: Record<string, unknown> | null | undefined): { label: string; status: string | null }[] {
+  if (!club) return [];
+  const out: { label: string; status: string | null }[] = [];
+  const seen = new Set<string>();
+  const push = (label: string | null, status: string | null) => {
+    if (!label || seen.has(label)) return;
+    seen.add(label);
+    out.push({ label, status });
+  };
+  const row = (r: unknown) => {
+    if (typeof r === 'string') return push(str(r), null);
+    if (!r || typeof r !== 'object') return;
+    const o = r as Record<string, unknown>;
+    const pick = (re: RegExp) => Object.entries(o).find(([k, v]) => re.test(k) && typeof v === 'string' && v.trim())?.[1] as string | undefined;
+    push(str(pick(LABEL_KEYS)) ?? null, str(pick(STATUS_KEYS)) ?? null);
+  };
+  for (const key of ['visionObjectifsAnnee', 'attentesSaison', 'visionObjectifFinal', 'objectifsRecrutementBoard']) {
+    let v = club[key];
+    if (typeof v === 'string' && /^[[{]/.test(v.trim())) {
+      try {
+        v = JSON.parse(v);
+      } catch {
+        /* texte simple */
+      }
+    }
+    if (Array.isArray(v)) v.forEach(row);
+    else if (v && typeof v === 'object') {
+      const o = v as Record<string, unknown>;
+      const list = Object.values(o).find(Array.isArray);
+      if (list) list.forEach(row);
+      else row(o);
+    } else if (typeof v === 'string') row(v);
+  }
+  return out;
 }
 
 const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null);
@@ -193,6 +240,8 @@ export function clubFinances(snap: FmSnapshot, players: FmPlayer[]): ClubFinance
   const club = { ...((snap.finances ?? {}) as Record<string, unknown>), ...((snap.clubInfo ?? {}) as Record<string, unknown>) };
   const w = wageFigures(club, players);
   const raw = Array.isArray(club.expectations) ? (club.expectations as unknown[]) : [];
+  const customClub = ((snap as Record<string, unknown>).custom as { club?: Record<string, unknown> } | null | undefined)?.club;
+  const fromGame = boardObjectives(customClub);
   return {
     wageBill: w.bill,
     squadWages: w.squadSum,
@@ -202,9 +251,13 @@ export function clubFinances(snap: FmSnapshot, players: FmPlayer[]): ClubFinance
     transferBudget: toNumber(club.transferBudget),
     balance: toNumber(club.balance),
     boardConfidence: str(club.boardConfidence),
-    expectations: raw
-      .map((e) => (typeof e === 'string' ? { label: e, status: null } : { label: str((e as Record<string, unknown>)?.label) ?? '', status: str((e as Record<string, unknown>)?.status) }))
-      .filter((e) => e.label),
+    boardCulture: str(customClub?.cultureBoard),
+    expectations: [
+      ...raw
+        .map((e) => (typeof e === 'string' ? { label: e, status: null } : { label: str((e as Record<string, unknown>)?.label) ?? '', status: str((e as Record<string, unknown>)?.status) }))
+        .filter((e) => e.label),
+      ...fromGame,
+    ],
   };
 }
 
