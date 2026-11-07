@@ -1,6 +1,8 @@
 mod db;
 mod discord;
 mod faces;
+mod faces_pack;
+mod faces_progress;
 mod facepack;
 mod fm;
 mod fm_bridge;
@@ -43,6 +45,12 @@ pub fn run() {
             fm_memory::fm_memory_division,
             fm_memory::fm_memory_staff,
             faces::faces_status,
+            faces::faces_install,
+            faces::faces_uninstall,
+            faces::faces_progress,
+            faces::faces_default_workshop,
+            faces::faces_ageswap_status,
+            faces::faces_ageswap_set,
             discord::discord_send,
             discord::discord_send_image,
             discord::discord_post,
