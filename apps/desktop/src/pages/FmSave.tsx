@@ -13,6 +13,7 @@ import {
   squadSnapshot,
   withAbilities,
   withExtended,
+  firstTeamSnapshot,
   type FmPlayer,
   type FmSnapshot,
   type Line,
@@ -278,12 +279,13 @@ export function FmSave() {
     };
   }, [folder, saveId]);
 
-  // Effectif sous contrat (hors essais) : salaires, contrats, finances. Les joueurs prêtés ailleurs n'entrent
-  // pas dans les compos ni l'analyse : `players` est l'effectif présent au club.
+  // Effectif sous contrat (hors essais) : salaires, contrats, finances. Les joueurs prêtés ailleurs et ceux de la
+  // réserve ou des jeunes (`team`) n'entrent pas dans les compos ni l'analyse : `players` est l'équipe première
+  // présente au club.
   const contracted = useMemo(() => (snapshot ? withAbilities(withExtended(squadSnapshot(snapshot.data))).players.map(normalizePlayer) : []), [snapshot]);
   const players = useMemo(() => {
     const out = snapshot ? loanedOutIds(snapshot.data) : new Set<string>();
-    const present = out.size ? contracted.filter((p) => !out.has(p.id)) : contracted;
+    const present = contracted.filter((p) => !p.team && !out.has(p.id));
     // Un blessé rétabli d'ici le prochain match compte pour les compos de ce match.
     return snapshot ? forNextMatch(present, nextMatchInDays(snapshot.data)) : present;
   }, [snapshot, contracted]);
@@ -291,7 +293,7 @@ export function FmSave() {
     () =>
       (all ?? []).map((h) => ({
         gameDate: h.gameDate,
-        players: withAbilities(squadSnapshot(h.data as FmSnapshot)).players.map(normalizePlayer),
+        players: withAbilities(firstTeamSnapshot(squadSnapshot(h.data as FmSnapshot))).players.map(normalizePlayer),
       })),
     [all],
   );
