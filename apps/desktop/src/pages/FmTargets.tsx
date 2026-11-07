@@ -8,7 +8,7 @@ import {
   type FmSnapshot,
   type StoredTarget,
   type TargetVerdict,
-} from "@simloom/module-fm";
+} from "@fm-immersion/module-fm";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -41,7 +41,7 @@ const VERDICT_TONE: Record<TargetVerdict, Tone> = {
 
 /**
  * Cibles du mercato : joueurs suivis dans le jeu (liste de suivi, cibles du recrutement), gardés dans la base
- * de Simloom et classés selon ce que chacun apporte au onze cible du projet.
+ * de FM Immersion et classés selon ce que chacun apporte au onze cible du projet.
  */
 export function FmTargets({
   saveId,
@@ -119,7 +119,7 @@ export function FmTargets({
     v != null && v > 0 ? f.money(v) : "–";
 
   const compare = (id: string) => {
-    writeScoped("simloom.fm.compare", scope, [id]);
+    writeScoped("fmi.compare", scope, [id]);
     go("compare");
   };
 
@@ -294,7 +294,7 @@ export function FmTargets({
                       <td className="px-2 py-1.5 text-right">
                         <button
                           type="button"
-                          className="text-xs font-bold text-eau-fonce hover:underline"
+                          className="text-xs font-bold text-orange-fonce hover:underline"
                           onClick={() =>
                             dismiss.mutate({ id: pid, on: !p.dismissed })
                           }
@@ -321,7 +321,7 @@ export function FmTargets({
             </Empty>
             <button
               type="button"
-              className="mt-3 text-sm font-bold text-eau-fonce hover:underline"
+              className="mt-3 text-sm font-bold text-orange-fonce hover:underline"
               onClick={() => go("project")}
             >
               {t("fm.targets.toProject")} →

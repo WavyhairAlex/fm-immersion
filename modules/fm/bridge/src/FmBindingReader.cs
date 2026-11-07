@@ -136,7 +136,7 @@ public class FmBindingReader : IGameReader
         int count = head[3] is double c ? (int)c : 0;
         // Entre deux blocs de lecture : la partie est-elle toujours chargée, avec le même club ? Sinon on arrête tout.
         // 0.4.6 : un jour qui passe pendant la lecture (le joueur avance dans le calendrier) ne l'arrête plus. Avant,
-        // chaque lecture lancée pendant que le jeu avançait était abandonnée, et Simloom n'avait rien de neuf tant que
+        // chaque lecture lancée pendant que le jeu avançait était abandonnée, et FM Immersion n'avait rien de neuf tant que
         // le joueur ne s'arrêtait pas assez longtemps sur un écran (04/11/2026 : aucun instantané de 20h10 à 21h36).
         // L'instantané garde la date de son début ; le suivant relit le nouveau jour.
         void Guard()

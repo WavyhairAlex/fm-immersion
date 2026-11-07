@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
-import { schema } from '@simloom/db';
+import { schema } from '@fm-immersion/db';
 import { drizzle } from 'drizzle-orm/sqlite-proxy';
 
 // Chargé à l'exécution : Vite ne reconnaît pas encore le module natif node:sqlite.

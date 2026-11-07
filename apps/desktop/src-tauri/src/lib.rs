@@ -1,9 +1,9 @@
 mod db;
+mod discord;
+mod faces;
 mod fm;
 mod fm_bridge;
 mod fm_memory;
-mod pz2;
-mod tf3;
 
 use std::sync::Mutex;
 use tauri::Manager;
@@ -14,10 +14,10 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
             // Toutes les données du joueur sont dans ce fichier, sur son PC.
-            // Windows : %APPDATA%\app.simloom.desktop\simloom.db
+            // Windows : %APPDATA%\app.fmimmersion.desktop\fm-immersion.db
             let dir = app.path().app_data_dir()?;
             std::fs::create_dir_all(&dir)?;
-            let conn = db::open(&dir.join("simloom.db"))?;
+            let conn = db::open(&dir.join("fm-immersion.db"))?;
             app.manage(db::Db(Mutex::new(conn)));
             Ok(())
         })
@@ -39,10 +39,9 @@ pub fn run() {
             fm_memory::fm_memory_abilities,
             fm_memory::fm_memory_division,
             fm_memory::fm_memory_staff,
-            pz2::pz2_save_download,
-            tf3::tf3_entry_status,
-            tf3::tf3_entry_read
+            faces::faces_status,
+            discord::discord_send
         ])
         .run(tauri::generate_context!())
-        .expect("impossible de démarrer Simloom");
+        .expect("impossible de démarrer FM Immersion");
 }

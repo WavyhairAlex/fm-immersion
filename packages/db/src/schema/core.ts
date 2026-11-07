@@ -5,7 +5,7 @@ const now = () => new Date().toISOString();
 
 /**
  * Une partie : un réseau de transport, un zoo, une carrière…
- * Les tables des modules sont préfixées par l'id du jeu (tf3_, pz2_…)
+ * Les tables des modules sont préfixées par l'id du jeu (fm_…)
  * et référencent saves.id.
  */
 export const saves = sqliteTable(

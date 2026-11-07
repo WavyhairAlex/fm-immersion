@@ -2,7 +2,7 @@
  * Staff : notes de nos entraîneurs (et du staff libre) par domaine, et affectations proposées.
  *
  * Les notes 1-20 viennent de la base du jeu (lecture seule, `fm_memory_staff`). La note d'un domaine est une
- * formule Simloom, pas celle du jeu (ses étoiles d'entraîneur ne sont pas encore retrouvées) : la note du domaine
+ * formule FM Immersion, pas celle du jeu (ses étoiles d'entraîneur ne sont pas encore retrouvées) : la note du domaine
  * compte triple, plus la détermination, l'autorité (discipline) et la motivation, le tout sur 20.
  */
 
@@ -40,7 +40,7 @@ export type StaffJob = keyof typeof STAFF_JOBS;
 const note = (s: DbStaff, k: string) => s.attributes[k] ?? 0;
 const round1 = (x: number) => Math.round(x * 10) / 10;
 
-/** Note sur 20 d'un entraîneur dans un domaine (formule Simloom). */
+/** Note sur 20 d'un entraîneur dans un domaine (formule FM Immersion). */
 export function domainScore(s: DbStaff, d: CoachDomain): number {
   return round1((3 * note(s, d) + note(s, 'Determination') + note(s, 'Authority') + note(s, 'Motivating')) / 6);
 }

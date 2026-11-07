@@ -8,15 +8,15 @@ import type { SquadAt } from './progress';
 import type { StyleRef, TacticEngine } from './tactic';
 
 /*
- * Aide à la décision : ce que Simloom propose de faire, une carte par décision, triée par échéance.
+ * Aide à la décision : ce que FM Immersion propose de faire, une carte par décision, triée par échéance.
  * Chaque carte dit quoi faire, pourquoi (raison et chiffres), avant quand, et sur quoi repose le conseil
- * (donnée lue dans le jeu, calcul de Simloom, ou CA/PA réels). « Ne rien changer » est une décision à part
- * entière : quand l'écart ne vaut pas un changement, Simloom le dit au lieu d'en proposer un.
- * Le joueur décide ; Simloom ne touche jamais au jeu.
+ * (donnée lue dans le jeu, calcul de FM Immersion, ou CA/PA réels). « Ne rien changer » est une décision à part
+ * entière : quand l'écart ne vaut pas un changement, FM Immersion le dit au lieu d'en proposer un.
+ * Le joueur décide ; FM Immersion ne touche jamais au jeu.
  */
 
 export type DecisionKind = 'contract' | 'tactic' | 'recruit' | 'departure';
-/** Sur quoi repose le conseil : lu dans le jeu, CA/PA réels (échelle fixe), ou calcul de Simloom (estimation). */
+/** Sur quoi repose le conseil : lu dans le jeu, CA/PA réels (échelle fixe), ou calcul de FM Immersion (estimation). */
 export type Basis = 'read' | 'real' | 'computed';
 
 export interface Decision {

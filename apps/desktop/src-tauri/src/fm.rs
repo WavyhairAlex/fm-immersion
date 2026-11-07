@@ -139,7 +139,7 @@ pub fn list_saves(games: &Path) -> Vec<FmSaveFile> {
     out
 }
 
-/// Sauvegardes FM27 du joueur, pour lier une partie Simloom à l'une d'elles.
+/// Sauvegardes FM27 du joueur, pour lier une partie FM Immersion à l'une d'elles.
 #[tauri::command]
 pub fn fm_list_saves(folder: String) -> Vec<FmSaveFile> {
     games_dir(Path::new(&folder)).map(|g| list_saves(&g)).unwrap_or_default()
@@ -151,7 +151,7 @@ mod tests {
 
     #[test]
     fn lit_le_fichier_du_plugin() {
-        let dir = std::env::temp_dir().join(format!("simloom-fm-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("fmi-fm-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::write(dir.join(SNAPSHOT_FILE), r#"{"schema":"archivix/1"}"#).unwrap();
         assert_eq!(read_snapshot(&dir).unwrap(), r#"{"schema":"archivix/1"}"#);
@@ -161,13 +161,13 @@ mod tests {
     #[test]
     fn refuse_un_dossier_relatif_ou_vide() {
         assert!(matches!(read_snapshot(Path::new("archivix")), Err(FmError::InvalidFolder)));
-        let dir = std::env::temp_dir().join("simloom-fm-vide");
+        let dir = std::env::temp_dir().join("fmi-fm-vide");
         assert!(matches!(read_snapshot(&dir), Err(FmError::NotFound)));
     }
 
     #[test]
     fn reperes_locaux_facultatifs() {
-        let dir = std::env::temp_dir().join(format!("simloom-fm-ref-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("fmi-fm-ref-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let folder = dir.to_string_lossy().into_owned();
         assert_eq!(fm_read_reference(folder.clone()).unwrap(), None);
@@ -178,7 +178,7 @@ mod tests {
 
     #[test]
     fn liste_les_sauvegardes_a_cote_du_dossier_du_plugin() {
-        let root = std::env::temp_dir().join(format!("simloom-fm-saves-{}", std::process::id()));
+        let root = std::env::temp_dir().join(format!("fmi-fm-saves-{}", std::process::id()));
         let games = root.join("games");
         std::fs::create_dir_all(&games).unwrap();
         std::fs::write(games.join("Vänersborgs.fm"), b"x").unwrap();

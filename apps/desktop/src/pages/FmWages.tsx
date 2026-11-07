@@ -1,4 +1,4 @@
-import { wageReport, type FmPlayer } from '@simloom/module-fm';
+import { wageReport, type FmPlayer } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Empty, Kpi, Level, Panel, Pos, PlayerName, Row, Tag, useFormat, type Tone } from './FmUi';

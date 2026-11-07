@@ -4,7 +4,7 @@ import { z } from 'zod';
  * Instantané écrit par le plugin BepInEx (format « archivix/1 ») dans
  * `<dossier FM>\archivix\archivix-snapshot.json`. Le plugin ne fait que lire le jeu ;
  * toute l'analyse se fait ici, pour que les évolutions passent par les mises à jour
- * de Simloom sans toucher au plugin.
+ * de FM Immersion sans toucher au plugin.
  *
  * Schéma volontairement tolérant : les champs inconnus sont conservés et les
  * valeurs du jeu peuvent arriver en nombre ou en texte (« 1,2 M€ », « 85 % »).
@@ -49,7 +49,7 @@ export const fmSnapshotSchema = z
     /** Tactique active lue dans le jeu (provisoire : le plugin ne donne pas encore le joueur par poste). */
     tactic: z.object({ name: z.string().nullish(), formation: z.string().nullish() }).passthrough().nullish(),
     /**
-     * CA et PA réels (0-200) lus par Simloom dans la mémoire du jeu (lecture seule, si le joueur l'a activé), par id
+     * CA et PA réels (0-200) lus par FM Immersion dans la mémoire du jeu (lecture seule, si le joueur l'a activé), par id
      * de joueur, à la date de l'instantané. Échelle fixe, contrairement aux étoiles relatives à l'effectif.
      */
     abilities: z.record(z.object({ ca: z.number(), pa: z.number() })).nullish(),

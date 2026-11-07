@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    simloom_lib::run()
+    fm_immersion_lib::run()
 }

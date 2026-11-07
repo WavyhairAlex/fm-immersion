@@ -1,4 +1,4 @@
-import { FORMATIONS, POS_LABEL, lineOf, shirtNumbers, type FmPlayer, type ShirtNumber } from '@simloom/module-fm';
+import { FORMATIONS, POS_LABEL, lineOf, shirtNumbers, type FmPlayer, type ShirtNumber } from '@fm-immersion/module-fm';
 import { useContext, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LINE_COLOR, Pitch, PosBadge } from './FmFoot';
@@ -17,7 +17,7 @@ const lastName = (name: string) => name.split(/\s+/).at(-1) ?? name;
 export function FmShirts({ players, folder, gameFormation, gameTactic }: { players: FmPlayer[]; folder: string; gameFormation: string | null; gameTactic: string | null }) {
   const { t } = useTranslation();
   const open = useContext(PlayerSheetContext);
-  // Même style et même schéma que Prochain match > Composition (la tactique de base), onze calculé par Simloom.
+  // Même style et même schéma que Prochain match > Composition (la tactique de base), onze calculé par FM Immersion.
   const { engine, style, form, pick } = useTacticChoice(players, folder, gameFormation, null, gameTactic);
   const list = useMemo(() => {
     if (!style) return null;

@@ -1,4 +1,4 @@
-import { boardTone, clubFinances, upcomingContracts, type FmPlayer, type FmSnapshot } from '@simloom/module-fm';
+import { boardTone, clubFinances, upcomingContracts, type FmPlayer, type FmSnapshot } from '@fm-immersion/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Empty, Kpi, Level, Panel, Row, Tag, useFormat, PlayerLink } from './FmUi';

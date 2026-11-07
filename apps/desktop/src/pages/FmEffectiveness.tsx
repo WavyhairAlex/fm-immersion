@@ -1,4 +1,4 @@
-import { EFF_COMPONENTS, EFF_SUBSCORES, effectiveness, type FmSnapshot, type Range, type SquadAt } from '@simloom/module-fm';
+import { EFF_COMPONENTS, EFF_SUBSCORES, effectiveness, type FmSnapshot, type Range, type SquadAt } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Empty, Kpi, Panel, Tag } from './FmUi';
@@ -37,7 +37,7 @@ export function FmEffectiveness({ snap, history, go }: { snap: FmSnapshot; histo
     return (
       <Panel title={t('fm.eff.gauges')}>
         <Empty>{t('fm.eff.none')}</Empty>
-        <button type="button" className="mt-3 text-sm font-bold text-eau-fonce hover:underline" onClick={() => go('style')}>
+        <button type="button" className="mt-3 text-sm font-bold text-orange-fonce hover:underline" onClick={() => go('style')}>
           {t('fm.eff.toStyle')} →
         </button>
       </Panel>

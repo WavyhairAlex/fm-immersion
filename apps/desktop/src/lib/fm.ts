@@ -1,6 +1,6 @@
-import { saves } from '@simloom/db';
-import { addBaseTarget, carryRoleStars, fmSnapshotSchema, fmStatusSchema, type DbPlayer, type FmStatus, type LeavingMark, type LeavingMarks, mergeTargets, type FmSnapshot, type TargetRecord } from '@simloom/module-fm';
-import { fmSnapshots, fmTargets } from '@simloom/module-fm/schema';
+import { saves } from '@fm-immersion/db';
+import { addBaseTarget, carryRoleStars, fmSnapshotSchema, fmStatusSchema, type DbPlayer, type FmStatus, type LeavingMark, type LeavingMarks, mergeTargets, type FmSnapshot, type TargetRecord } from '@fm-immersion/module-fm';
+import { fmSnapshots, fmTargets } from '@fm-immersion/module-fm/schema';
 import { and, asc, desc, eq } from 'drizzle-orm';
 import type { Db } from './db';
 
@@ -156,7 +156,7 @@ export function fmRepo(db: Db) {
         });
     },
 
-    /** Écarte une cible (ou la remet) dans Simloom, sans rien changer dans le jeu. */
+    /** Écarte une cible (ou la remet) dans FM Immersion, sans rien changer dans le jeu. */
     async dismissTarget(saveId: string, playerId: string, dismissed: boolean) {
       await db
         .update(fmTargets)

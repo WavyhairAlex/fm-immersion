@@ -1,11 +1,11 @@
-import { POS_LABEL, POS_ORDER, roleMatrix, type FmPlayer, type Line, type Phase } from '@simloom/module-fm';
+import { POS_LABEL, POS_ORDER, roleMatrix, type FmPlayer, type Line, type Phase } from '@fm-immersion/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
 import { useTacticEngine } from './FmTactic';
 import { Chips, Empty, Fit, fitPct, More, Panel, PlayerLink, Tag, useNames } from './FmUi';
 
-const OPTS_KEY = 'simloom.fm.matrix';
+const OPTS_KEY = 'fmi.matrix';
 interface Opts {
   phase: Phase;
   line: Line | 'all';

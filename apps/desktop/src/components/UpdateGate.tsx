@@ -56,14 +56,13 @@ export function UpdateGate({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
-      <img src="/brand/mascotte-sm.webp" alt="" className="h-32 w-auto" />
       <p className="font-display text-2xl font-semibold">
         {state.step === 'checking' ? t('update.checking') : t('update.installing', { version: state.version })}
       </p>
       {state.step === 'installing' && (
         <div className="h-2 w-64 overflow-hidden rounded-full bg-canard/10">
           <div
-            className="h-full rounded-full bg-eau-soutenu transition-[width]"
+            className="h-full rounded-full bg-orange transition-[width]"
             style={{ width: `${Math.round((state.progress ?? 0.05) * 100)}%` }}
           />
         </div>

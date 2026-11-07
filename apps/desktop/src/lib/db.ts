@@ -1,4 +1,4 @@
-import { schema } from '@simloom/db';
+import { schema } from '@fm-immersion/db';
 import { invoke } from '@tauri-apps/api/core';
 import { drizzle } from 'drizzle-orm/sqlite-proxy';
 

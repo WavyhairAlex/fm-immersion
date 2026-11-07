@@ -27,7 +27,7 @@ import {
   type GameSlot,
   type Phase,
   type TacticReference,
-} from '@simloom/module-fm';
+} from '@fm-immersion/module-fm';
 import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useMemo, useState } from 'react';
@@ -37,12 +37,12 @@ import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach } from './FmUi';
 
 // v2 : le choix automatique (meilleure tactique applicable) devient la valeur par défaut.
-const PREFS_KEY = 'simloom.fm.tactic.v2';
+const PREFS_KEY = 'fmi.tactic.v2';
 interface Prefs {
   style?: string;
   form?: string;
   phase?: Phase;
-  /** Onze affiché : celui lu dans le jeu (par défaut quand il existe) ou celui calculé par Simloom. */
+  /** Onze affiché : celui lu dans le jeu (par défaut quand il existe) ou celui calculé par FM Immersion. */
   source?: 'game' | 'simloom';
 }
 

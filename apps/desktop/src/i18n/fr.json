@@ -1,14 +1,15 @@
 {
   "nav": {
     "language": "English",
-    "version": "version {{version}}"
+    "version": "version {{version}}",
+    "modes": "Modes"
   },
   "update": {
     "checking": "Recherche de mises à jour…",
     "installing": "Installation de la version {{version}}…"
   },
   "home": {
-    "title": "Tes parties",
+    "title": "FM Coach : tes parties",
     "empty": "Aucune partie pour l'instant. Ajoute ta première partie pour commencer à la suivre.",
     "add": "Nouvelle partie",
     "name": "Nom de la partie",
@@ -26,14 +27,14 @@
     "open": "Ouvrir"
   },
   "footer": {
-    "disclaimer": "Simloom est un projet indépendant, sans lien avec les éditeurs des jeux cités. Les noms des jeux appartiennent à leurs propriétaires.",
-    "privacy": "Tes données restent sur ton PC. Simloom ne collecte ni n'envoie aucune donnée personnelle ; il contacte GitHub seulement pour chercher ses mises à jour au démarrage et, si tu le demandes, pour télécharger le plugin FM27."
+    "disclaimer": "FM Immersion est un projet indépendant, sans lien avec Sports Interactive ni SEGA. Football Manager et FM sont des marques de leurs propriétaires.",
+    "privacy": "Tes données restent sur ton PC. FM Immersion ne collecte aucune donnée personnelle ; il contacte GitHub pour chercher ses mises à jour et, si tu le demandes, pour télécharger le plugin FM27, et Discord seulement quand tu envoies une gazette sur ton salon."
   },
   "fm": {
     "back": "Mes parties",
     "context": "{{club}} · {{date}} · {{count}} joueurs",
     "folder": "Dossier du plugin Archivix",
-    "folderHelp": "Le plugin écrit archivix-snapshot.json dans ce dossier (par exemple D:\\Sports Interactive\\Football Manager 27\\archivix). Simloom le lit seulement, sans toucher à ta sauvegarde.",
+    "folderHelp": "Le plugin écrit archivix-snapshot.json dans ce dossier (par exemple D:\\Sports Interactive\\Football Manager 27\\archivix). FM Immersion le lit seulement, sans toucher à ta sauvegarde.",
     "import": "Importer depuis FM27",
     "autoImport": "mise à jour automatique chaque minute",
     "sync": "Importé le {{time}}",
@@ -42,11 +43,11 @@
     "importError": "Import impossible : {{reason}}",
     "saveFile": {
       "label": "Sauvegarde FM27",
-      "help": "Sauvegarde du jeu suivie par cette partie (dossier games, à côté du dossier du plugin). Simloom ne lit que son nom et sa date.",
+      "help": "Sauvegarde du jeu suivie par cette partie (dossier games, à côté du dossier du plugin). FM Immersion ne lit que son nom et sa date.",
       "none": "non liée",
       "missing": "{{name}} (introuvable)",
       "saved": "enregistrée le {{date}}",
-      "other": "FM27 a chargé une sauvegarde de {{club}}, alors que cette partie suit {{expected}} : rien n'est importé ici. Ouvre la partie Simloom de cette sauvegarde, ou importe quand même si tu as changé de club.",
+      "other": "FM27 a chargé une sauvegarde de {{club}}, alors que cette partie suit {{expected}} : rien n'est importé ici. Ouvre la partie FM Immersion de cette sauvegarde, ou importe quand même si tu as changé de club.",
       "importAnyway": "Importer quand même ({{club}})",
       "free": "Sans club depuis le {{date}} : ton prochain club sera repris tout seul"
     },
@@ -150,7 +151,7 @@
     },
     "bridge": {
       "title": "Plugin FM27",
-      "intro": "Le plugin lit ton effectif dans FM27 (lecture seule) et le dépose pour Simloom. Simloom l'installe et le met à jour pour toi.",
+      "intro": "Le plugin lit ton effectif dans FM27 (lecture seule) et le dépose pour FM Immersion. FM Immersion l'installe et le met à jour pour toi.",
       "gameDir": "Dossier de FM27 (celui qui contient fm.exe)",
       "gameFound": "FM27 trouvé",
       "gameMissing": "fm.exe introuvable dans ce dossier",
@@ -179,7 +180,7 @@
       "localRefError": "Fichier de repères local illisible : repères maison utilisés",
       "fit": "note d'équipe {{value}}",
       "suggested": "Compo suggérée",
-      "suggestedHelp": "Placement calculé par Simloom. Le plugin ne lit pas encore quel joueur occupe chaque poste dans ta tactique FM27.",
+      "suggestedHelp": "Placement calculé par FM Immersion. Le plugin ne lit pas encore quel joueur occupe chaque poste dans ta tactique FM27.",
       "phase": {
         "ip": "Avec ballon",
         "oop": "Sans ballon"
@@ -250,12 +251,12 @@
       },
       "source": {
         "game": "Onze du jeu",
-        "simloom": "Onze Simloom"
+        "simloom": "Onze FM Immersion"
       },
       "fromGame": "Compo du jeu",
       "fromGameHelp": "Joueurs et postes lus dans ta tactique FM27. Rôles et consignes : ceux du jeu quand le plugin les lit, sinon le meilleur rôle de chaque joueur à son poste.",
-      "suggestedHelpGame": "Placement calculé par Simloom selon le style choisi. « Onze du jeu » affiche ta vraie compo FM27.",
-      "pitchHelpGame": "Ta compo FM27. Les pointillés montrent le déplacement depuis l'autre phase ; survole un joueur pour le retrouver dans la liste. Clique un schéma plus bas pour comparer avec un onze calculé par Simloom.",
+      "suggestedHelpGame": "Placement calculé par FM Immersion selon le style choisi. « Onze du jeu » affiche ta vraie compo FM27.",
+      "pitchHelpGame": "Ta compo FM27. Les pointillés montrent le déplacement depuis l'autre phase ; survole un joueur pour le retrouver dans la liste. Clique un schéma plus bas pour comparer avec un onze calculé par FM Immersion.",
       "lineupStatus": "Lecture de la compo par le plugin : {{status}}.",
       "duty": {
         "d": "Défense",
@@ -594,7 +595,7 @@
       "nobody": "Personne",
       "level": "Au niveau",
       "fromTactic": "Mêmes style, schéma et onze que Tactique > Composition : change-les là-bas, cette vue suit.",
-      "fromGame": "Onze lu dans ta tactique FM27 (ou celui de Simloom si tu le choisis dans Tactique > Composition)."
+      "fromGame": "Onze lu dans ta tactique FM27 (ou celui de FM Immersion si tu le choisis dans Tactique > Composition)."
     },
     "cal": {
       "next": "Prochains matchs",
@@ -675,7 +676,7 @@
       "rolesHelp": "Adéquation = moyenne pondérée des attributs clés du rôle. Blessés exclus.",
       "nobody": "Personne à ce poste",
       "effTitle": "Efficacité tactique (estimation)",
-      "effHelp": "Nouveauté FM27 : une jauge dit si l'équipe exécutera bien tes consignes. Simloom l'estime ici ; les vraies jauges du jeu sont dans « Efficacité » quand le plugin les lit.",
+      "effHelp": "Nouveauté FM27 : une jauge dit si l'équipe exécutera bien tes consignes. FM Immersion l'estime ici ; les vraies jauges du jeu sont dans « Efficacité » quand le plugin les lit.",
       "complexity": "Complexité du style",
       "cx": {
         "1": "très simple",
@@ -693,10 +694,10 @@
         "hard": "Trop complexe pour l'effectif"
       },
       "simplify": "Simplifie les consignes ou prévois du temps d'entraînement.",
-      "allClose": "Tous les styles se valent à {{gap}} près : ton effectif n'en impose aucun. Choisis celui de ton projet, Simloom bâtit le meilleur onze pour chacun."
+      "allClose": "Tous les styles se valent à {{gap}} près : ton effectif n'en impose aucun. Choisis celui de ton projet, FM Immersion bâtit le meilleur onze pour chacun."
     },
     "eff": {
-      "none": "Les jauges d'efficacité du jeu ne sont pas encore dans cet instantané. En attendant, l'estimation de Simloom est dans « Style de jeu ».",
+      "none": "Les jauges d'efficacité du jeu ne sont pas encore dans cet instantané. En attendant, l'estimation de FM Immersion est dans « Style de jeu ».",
       "toStyle": "Voir le style de jeu",
       "overall": "Efficacité globale",
       "complexity": "Complexité",
@@ -746,7 +747,7 @@
       "style": "Style que j'aime",
       "target": "Niveau visé",
       "targetOpt": "{{value}} % d'adéquation",
-      "help": "Simloom mesure l'écart entre ton effectif et ce style, puis en tire les postes à recruter et le travail de chaque joueur. Schémas naturels du style : {{forms}}.",
+      "help": "FM Immersion mesure l'écart entre ton effectif et ce style, puis en tire les postes à recruter et le travail de chaque joueur. Schémas naturels du style : {{forms}}.",
       "ready": "Postes prêts",
       "readySub": "adéquation ≥ {{value}} %",
       "develop": "À faire progresser",
@@ -812,7 +813,7 @@
     },
     "targets": {
       "title": "Cibles du mercato · {{style}} {{form}}",
-      "help": "Les joueurs de ta liste de suivi, des cibles du recrutement et ceux à l'essai, lus dans le jeu et gardés dans Simloom. Pour chacun, Simloom dit ce qu'il apporterait à ton onze cible (« Recrutement et entraînement ») : titulaire s'il fait mieux que le titulaire actuel, doublure s'il fait mieux que ton remplaçant au poste, sinon rien. Clique un nom pour le comparer.",
+      "help": "Les joueurs de ta liste de suivi, des cibles du recrutement et ceux à l'essai, lus dans le jeu et gardés dans FM Immersion. Pour chacun, FM Immersion dit ce qu'il apporterait à ton onze cible (« Recrutement et entraînement ») : titulaire s'il fait mieux que le titulaire actuel, doublure s'il fait mieux que ton remplaçant au poste, sinon rien. Clique un nom pour le comparer.",
       "col": {
         "player": "Joueur",
         "age": "Âge",
@@ -1076,7 +1077,7 @@
       "rule3": "Si un match est déplacé, remets la préparation la veille et la récupération le lendemain.",
       "rule4": "Les joueurs qui reviennent de sélection se gèrent à part.",
       "rule5": "Juge le plan sur plusieurs semaines, pas sur un résultat, et allège si la charge ne convient pas.",
-      "source": "Méthode « Freedom » (FM Scout, FM27 training schedules) : 44 plannings, cycles de 4 semaines à thème. L'article ne fournit pas les fichiers .fmf : Archivix reconstruit chaque journée avec les séances de FM27, orientées par ton style visé. À recopier dans l'écran Entraînement du jeu. Corrigé d'après le banc d'essai d'AlexJeuVideal (« La vérité sur l'efficacité tactique ») : Repos chaque lendemain de match, 2 pièges de pressing par semaine, priorité à la construction, la création, la ligne d'engagement et l'organisation sans ballon, semaine entière de repos à 3 matchs.",
+      "source": "Méthode « Freedom » (FM Scout, FM27 training schedules) : 44 plannings, cycles de 4 semaines à thème. L'article ne fournit pas les fichiers .fmf : FM Immersion reconstruit chaque journée avec les séances de FM27, orientées par ton style visé. À recopier dans l'écran Entraînement du jeu. Corrigé d'après le banc d'essai d'AlexJeuVideal (« La vérité sur l'efficacité tactique ») : Repos chaque lendemain de match, 2 pièges de pressing par semaine, priorité à la construction, la création, la ligne d'engagement et l'organisation sans ballon, semaine entière de repos à 3 matchs.",
       "clubStatus": "Statut du club",
       "status": {
         "pro": "Professionnel",
@@ -1189,7 +1190,7 @@
       "matchesCol": "Matchs",
       "scheduleFocus": "Priorité du calendrier",
       "workloadCol": "Charge",
-      "upcomingHelp": "À régler d'avance dans l'écran Programme d'entraînement du jeu : une « Priorité du calendrier » et une charge par semaine. Charge légère les semaines à deux matchs, moyenne avec un match, intensive sans match et en début de présaison. Au-delà des prochains matchs connus, Archivix suppose un match le samedi.",
+      "upcomingHelp": "À régler d'avance dans l'écran Programme d'entraînement du jeu : une « Priorité du calendrier » et une charge par semaine. Charge légère les semaines à deux matchs, moyenne avec un match, intensive sans match et en début de présaison. Au-delà des prochains matchs connus, FM Immersion suppose un match le samedi.",
       "reasonHint": "Survole l'intensité d'un joueur pour voir pourquoi elle est conseillée.",
       "metaAdaptHelp": "Base Méta d'AlexJeuVideal : 2 pièges du pressing par semaine, la veille du match Progression du ballon, Bloc défensif, Condition physique, le reste au repos. Les 4 autres séances tactiques suivent tes zones prioritaires (les plus faibles d'après le jeu et tes matchs) parmi celles que le banc d'essai juge utiles : Hauteur du pressing, Construction, Création d'occasions, Organisation avec et sans le ballon. Elles changent quand tes faiblesses changent.",
       "metaSwaps": "Après chargement, remplace : {{list}}."
@@ -1218,7 +1219,7 @@
       "opponent": "Le prochain adversaire tel que le décrit le rapport d'équipe du jeu, et comment le jouer.",
       "mercato": "Qui faire partir (vente, prêt, fin de contrat), qui prolonger, et quels jeunes valent le coup pour le projet.",
       "instructions": "Au plus 3 consignes par joueur du onze, pour coller au style sans trop charger la compréhension tactique.",
-      "results": "Les matchs joués depuis que Simloom suit la partie : score, onze, note de chaque joueur, et ce qui rapporte des points.",
+      "results": "Les matchs joués depuis que FM Immersion suit la partie : score, onze, note de chaque joueur, et ce qui rapporte des points.",
       "diagnosis": "Les titulaires sous la moyenne du onze, et ce qui l'explique.",
       "numbers": "Une proposition de numéros pour la saison : 1 à 11 pour les titulaires selon leur poste, la doublure de chaque poste juste derrière.",
       "staff": "Les notes de tes entraîneurs par domaine : qui doit s'occuper de quoi, et quel entraîneur libre comblerait un manque."
@@ -1282,7 +1283,7 @@
     "memory": {
       "open": "Essai : lire la base de FM27 directement",
       "title": "Lecture directe de la base de FM27 (essai)",
-      "intro": "Simloom lit la base du jeu en mémoire, de l'extérieur et en lecture seule : rien n'est écrit dans FM27. Lance FM27, charge ta partie, puis compare les valeurs ci-dessous avec les fiches du jeu.",
+      "intro": "FM Immersion lit la base du jeu en mémoire, de l'extérieur et en lecture seule : rien n'est écrit dans FM27. Lance FM27, charge ta partie, puis compare les valeurs ci-dessous avec les fiches du jeu.",
       "run": "Lancer l'essai",
       "reading": "Lecture…",
       "error": "Lecture impossible : {{reason}}",
@@ -1582,7 +1583,7 @@
         "noneUp": "Personne ne progresse nettement sur la période.",
         "noneDown": "Personne ne recule nettement sur la période.",
         "help": "Période récente (stats depuis cette date) comparée à la saison jusque-là. Un joueur doit avoir joué au moins 180 minutes de chaque côté. Seuil : 3 points pour un pourcentage, 15 % pour une stat par 90 minutes. Sert à voir si l'entraînement et les consignes paient.",
-        "wait": "La comparaison apparaît quand Simloom a au moins une semaine de jeu de relevés avec stats (le premier date du {{date}}). Continue à jouer avec le plugin actif.",
+        "wait": "La comparaison apparaît quand FM Immersion a au moins une semaine de jeu de relevés avec stats (le premier date du {{date}}). Continue à jouer avec le plugin actif.",
         "waitNone": "Pas encore de relevés avec stats de match.",
         "team": {
           "passPct": "Passes réussies",
@@ -1670,7 +1671,7 @@
     },
     "evo": {
       "title": "Plan d'évolution",
-      "help": "Ce que deviennent ta tactique et ton effectif aux prochains mercatos si tu suis Simloom : départs conseillés et fins de contrat faits, joueurs vieillis selon leur progression mesurée. On garde la même base tant qu'une autre tactique ne gagne pas nettement, et on ajoute des consignes à mesure que le groupe progresse. Aucune recrue n'est inventée : un poste à recruter le reste tant que personne n'a signé.",
+      "help": "Ce que deviennent ta tactique et ton effectif aux prochains mercatos si tu suis FM Immersion : départs conseillés et fins de contrat faits, joueurs vieillis selon leur progression mesurée. On garde la même base tant qu'une autre tactique ne gagne pas nettement, et on ajoute des consignes à mesure que le groupe progresse. Aucune recrue n'est inventée : un poste à recruter le reste tant que personne n'a signé.",
       "extendFirst": "À prolonger d'abord :",
       "window": {
         "summer": "Mercato d'été · {{date}}",
@@ -1689,7 +1690,7 @@
       "replaces": "{{name}} prend la place de {{other}} ({{pos}})",
       "starts": "{{name}} devient titulaire ({{pos}})",
       "recruit": "Encore à recruter pour le projet : {{list}}",
-      "foot": "Fenêtres calculées depuis le mois de reprise du championnat (réglage Entraînement). Coûts provisoires, choix de Simloom : changer de tactique demande un gain d'une demi-étoile ; un style trop complexe pour le groupe perd jusqu'à une demi-étoile."
+      "foot": "Fenêtres calculées depuis le mois de reprise du championnat (réglage Entraînement). Coûts provisoires, choix de FM Immersion : changer de tactique demande un gain d'une demi-étoile ; un style trop complexe pour le groupe perd jusqu'à une demi-étoile."
     },
     "abilities": {
       "toggle": "Lire le CA/PA",
@@ -1698,7 +1699,7 @@
     "dec": {
       "title_one": "{{count}} décision à prendre",
       "title_other": "{{count}} décisions à prendre",
-      "help": "Ce que Simloom te conseille, de la plus urgente à la moins urgente. Tu restes seul juge : clique une carte pour voir le détail.",
+      "help": "Ce que FM Immersion te conseille, de la plus urgente à la moins urgente. Tu restes seul juge : clique une carte pour voir le détail.",
       "none": "Rien à décider pour l'instant : garde ta base et ton onze du jour.",
       "before": "avant le {{date}}",
       "anytime": "pas d'échéance",
@@ -1749,7 +1750,7 @@
       "basis": {
         "read": "lu dans le jeu",
         "real": "CA/PA réels",
-        "computed": "calcul Simloom"
+        "computed": "calcul FM Immersion"
       }
     },
     "subtabs": {
@@ -1850,7 +1851,7 @@
       "live": {
         "start": "Suivre le match",
         "on": "En direct",
-        "help": "Pendant le match : règle la minute et le score au fil du jeu. Simloom surligne les changements à faire et les ajustements à activer maintenant. Rien n'est lu dans le jeu.",
+        "help": "Pendant le match : règle la minute et le score au fil du jeu. FM Immersion surligne les changements à faire et les ajustements à activer maintenant. Rien n'est lu dans le jeu.",
         "minute": "Minute",
         "score": "Score",
         "scored": "But marqué",
@@ -1885,8 +1886,8 @@
     },
     "results": {
       "title": "Résultats",
-      "none": "Aucun match retrouvé pour l'instant. Il faut une relecture de l'effectif avant un match et une après : le plugin relit toutes les 5 minutes et Simloom garde une relecture par jour de jeu, le premier match suivi apparaîtra donc au prochain match joué.",
-      "how": "Rien de nouveau n'est lu dans le jeu. Entre deux relectures, Simloom fait la différence des cumuls de saison du Centre de données (minutes, titularisations, buts de l'équipe pendant que le joueur est sur le terrain, victoires, xG…) : avec un seul match entre les deux, on retrouve le score exact (le joueur resté 90 minutes a tout vu), le onze de départ et la note de chaque joueur. L'adversaire vient du « prochain match » de la relecture d'avant, la tactique de celle d'après. Plusieurs matchs entre deux relectures sont regroupés en un bilan.",
+      "none": "Aucun match retrouvé pour l'instant. Il faut une relecture de l'effectif avant un match et une après : le plugin relit toutes les 5 minutes et FM Immersion garde une relecture par jour de jeu, le premier match suivi apparaîtra donc au prochain match joué.",
+      "how": "Rien de nouveau n'est lu dans le jeu. Entre deux relectures, FM Immersion fait la différence des cumuls de saison du Centre de données (minutes, titularisations, buts de l'équipe pendant que le joueur est sur le terrain, victoires, xG…) : avec un seul match entre les deux, on retrouve le score exact (le joueur resté 90 minutes a tout vu), le onze de départ et la note de chaque joueur. L'adversaire vient du « prochain match » de la relecture d'avant, la tactique de celle d'après. Plusieurs matchs entre deux relectures sont regroupés en un bilan.",
       "kpi": {
         "matches": "Matchs suivis",
         "record": "V-N-D",
@@ -1894,7 +1895,7 @@
         "ppm": "Points / match",
         "goals": "Buts pour - contre",
         "form": "Forme",
-        "matchesSub": "depuis que Simloom suit la partie"
+        "matchesSub": "depuis que FM Immersion suit la partie"
       },
       "outcome": {
         "W": "V",
@@ -2007,7 +2008,7 @@
         "morale": "Moral : {{text}}.",
         "better": "{{name}} serait mieux noté à ce créneau ({{fit}})."
       },
-      "how": "Même onze que Tactique > Composition. La note vient des derniers matchs retrouvés dans Résultats (sinon de la saison) et elle est comparée à la moyenne des titulaires : un joueur est signalé à 0,25 point sous cette moyenne, ou sous 6,6. Les causes viennent de ce que Simloom lit déjà : familiarité au poste, pied, note au rôle et attributs clés du rôle (barème FM27), seuil des rôles exigeants, stats du Centre de données comparées à sa ligne, condition, rythme, moral, et les remplaçants mieux notés au même créneau."
+      "how": "Même onze que Tactique > Composition. La note vient des derniers matchs retrouvés dans Résultats (sinon de la saison) et elle est comparée à la moyenne des titulaires : un joueur est signalé à 0,25 point sous cette moyenne, ou sous 6,6. Les causes viennent de ce que FM Immersion lit déjà : familiarité au poste, pied, note au rôle et attributs clés du rôle (barème FM27), seuil des rôles exigeants, stats du Centre de données comparées à sa ligne, condition, rythme, moral, et les remplaçants mieux notés au même créneau."
     },
     "staff": {
       "title": "Staff technique",
@@ -2017,7 +2018,7 @@
       "reading": "Lecture de la base…",
       "noClub": "Aucun club trouvé pour le manager humain (partie non chargée ?).",
       "none": "Aucun membre du staff trouvé.",
-      "help": "Lecture seule de la base de FM27, à la demande, partie ouverte. Les notes (1-20) sont celles du jeu ; la note d'un domaine est un calcul Simloom, pas les étoiles du jeu : la note du domaine compte triple, plus la détermination, l'autorité et la motivation, divisé par 6. Les affectations donnent chaque domaine au meilleur entraîneur disponible, deux domaines au plus chacun, en gardant pour la fin ceux qui sont meilleurs hors du terrain (kiné, recruteur, analyste…). Sous 12, le domaine est à renforcer. Le staff sans club se recrute sans indemnité.",
+      "help": "Lecture seule de la base de FM27, à la demande, partie ouverte. Les notes (1-20) sont celles du jeu ; la note d'un domaine est un calcul FM Immersion, pas les étoiles du jeu : la note du domaine compte triple, plus la détermination, l'autorité et la motivation, divisé par 6. Les affectations donnent chaque domaine au meilleur entraîneur disponible, deux domaines au plus chacun, en gardant pour la fin ceux qui sont meilleurs hors du terrain (kiné, recruteur, analyste…). Sous 12, le domaine est à renforcer. Le staff sans club se recrute sans indemnité.",
       "planTitle": "Affectations proposées",
       "weak_one": "1 domaine à renforcer : {{list}}.",
       "weak_other": "{{count}} domaines à renforcer : {{list}}.",
@@ -2066,7 +2067,7 @@
     "leave": {
       "title_one": "Départs annoncés · {{count}}",
       "title_other": "Départs annoncés · {{count}}",
-      "help": "Les joueurs que tu as signalés partants. Simloom planifie l'effectif sans eux (titulaires, doublures, contrats, jeunes) et cherche leur remplaçant au même poste du onze cible : d'abord parmi tes cibles suivies et dans l'effectif, puis dans la base du jeu (lancée d'office au moment du signalement). Annule le signalement s'il reste finalement.",
+      "help": "Les joueurs que tu as signalés partants. FM Immersion planifie l'effectif sans eux (titulaires, doublures, contrats, jeunes) et cherche leur remplaçant au même poste du onze cible : d'abord parmi tes cibles suivies et dans l'effectif, puis dans la base du jeu (lancée d'office au moment du signalement). Annule le signalement s'il reste finalement.",
       "mark": "Il part…",
       "cancel": "Annuler",
       "close": "Fermer",
@@ -2113,14 +2114,149 @@
       "how": "Titulaires : le meilleur onze dans la tactique de base (même style et même schéma que Prochain match > Composition), sans tenir compte de la forme du jour, des blessures ni des suspensions, puisqu'un numéro vaut pour la saison. Chaque poste prend son numéro classique : 1 gardien, 2 latéral droit, 3 latéral gauche, 4 et 5 défenseurs centraux, 6 milieu défensif, 8 milieu axial, 7 et 11 côtés, 10 meneur, 9 avant-centre. Doublures : le meilleur onze sans les titulaires (l'équipe B), le numéro du titulaire + 10, et 30 pour le gardien. Les autres suivent à partir de 22, ligne par ligne (défense, milieu, attaque), le mieux noté d'abord ; les autres gardiens prennent 40, 50… Les joueurs prêtés ne sont pas numérotés."
     }
   },
-  "pz2": {
-    "back": "Mes parties",
-    "loading": "Ouverture du registre Zoologix…",
-    "error": "Le registre Zoologix de cette partie n'a pas pu être ouvert. Relance Simloom, puis réessaie.",
-    "frame": "Zoologix, ton registre Planet Zoo 2"
+  "modes": {
+    "soon": "Bientôt",
+    "available": "Disponible",
+    "open": "Ouvrir",
+    "home": {
+      "title": "Accueil",
+      "heading": "Bienvenue dans FM Immersion",
+      "intro": "Choisis un mode. Chacun fonctionne seul : tu n'utilises que ce qui t'intéresse."
+    },
+    "faces": {
+      "title": "Visages photoréalistes",
+      "summary": "Remplace les visages générés de FM27 par des portraits photoréalistes, et les remet après une mise à jour Steam."
+    },
+    "coach": {
+      "title": "FM Coach",
+      "summary": "Ton assistant de carrière : effectif, tactique, entraînement, mercato, adversaire et finances, lus dans ta partie."
+    },
+    "gazette": {
+      "title": "Gazette",
+      "summary": "Le journal de la semaine de ta carrière : résultats, transferts, licenciements et rumeurs.",
+      "details": "Chaque semaine de jeu, FM Immersion rédige un journal à partir de ta partie : la une, les brèves, le mercato et « la chaise du coach ». Les anciens numéros restent archivés."
+    },
+    "discord": {
+      "title": "Live Discord",
+      "summary": "Raconte ta carrière en direct dans un salon Discord, en solo ou dans un monde partagé.",
+      "details": "Les moments forts de ta partie (victoires, défaites, transferts, blessures, place au classement) sont postés dans un salon Discord. En solo, il suffit d'un lien webhook ; dans un monde partagé, un bot publie aussi les matchs entre humains et le classement officiel."
+    },
+    "world": {
+      "title": "Monde partagé",
+      "summary": "Multijoueur asynchrone : chacun joue sa partie à son rythme, dans le même monde.",
+      "details": "Chaque coach joue sa propre sauvegarde. Les résultats, transferts et changements de poste des autres humains arrivent dans ta partie à la bonne date, avec un rendez-vous commun tous les six mois."
+    }
   },
-  "tf3": {
-    "back": "Mes parties",
-    "frame": "Calculateur de lignes, pour Transport Fever 3"
+  "faces": {
+    "intro": "Les visages générés (jeunes joueurs, staff, entraîneurs) passent de la 3D du jeu à des portraits photoréalistes. Coche ensuite dans FM27 l'option « Utilisez des images pré-générées des joueurs et du personnel ».",
+    "statusTitle": "État dans ton jeu",
+    "gameDir": "Dossier de Football Manager 27",
+    "size": "({{mb}} Mo)",
+    "state": {
+      "noGame": "FM27 introuvable dans ce dossier (fm.exe absent).",
+      "missing": "Fichier des portraits introuvable : vérifie les fichiers du jeu dans Steam.",
+      "original": "Portraits d'origine du jeu : le pack n'est pas installé.",
+      "photorealV1": "Pack photoréaliste v1.0 installé.",
+      "unknown": "Fichier des portraits modifié ou mis à jour par Steam : réinstalle le pack."
+    },
+    "installTitle": "Installer le pack",
+    "installSoon": "L'installation en un clic arrive dans la prochaine version. En attendant :",
+    "step1": "Ferme FM27, puis télécharge le dernier zip à l'adresse ci-dessous.",
+    "step2": "Décompresse-le et lance INSTALLER.bat (DESINSTALLER.bat pour revenir aux visages d'origine).",
+    "step3": "Relance FM27 et coche l'option des images pré-générées dans les préférences."
+  },
+  "gazette": {
+    "paper": "La Gazette de {{club}}",
+    "issue": "N° {{number}}",
+    "week": "Semaine du {{from}} au {{to}}",
+    "save": "Partie",
+    "noSave": "La gazette se rédige à partir d'une partie suivie dans FM Coach. Ajoute d'abord ta partie, puis importe tes instantanés.",
+    "empty": "Pas encore assez d'instantanés pour écrire une gazette. Elle se remplit au fil des jours de jeu importés.",
+    "archives": "Anciens numéros",
+    "sendDiscord": "Envoyer sur Discord",
+    "setupDiscord": "Relier Discord pour partager",
+    "sent": "Gazette envoyée sur Discord.",
+    "opponentUnknown": "son adversaire",
+    "home": "À domicile",
+    "away": "À l'extérieur",
+    "scorers": "Buteurs : {{names}}.",
+    "best": "Meilleur joueur : {{name}} ({{rating}}).",
+    "story": {
+      "result": {
+        "title_W": "{{club}} s'impose {{score}} face à {{opponent}}",
+        "title_D": "{{club}} et {{opponent}} se quittent sur un nul {{score}}",
+        "title_L": "{{club}} chute {{score}} face à {{opponent}}"
+      },
+      "results": {
+        "title": "{{matches}} matchs cette semaine",
+        "body": "Bilan : {{wins}} victoire(s), {{draws}} nul(s), {{losses}} défaite(s)."
+      },
+      "position": {
+        "title": "Classement : de la {{from}}e à la {{to}}e place",
+        "body": "Le club bouge au classement après les matchs de la semaine."
+      },
+      "scorer": {
+        "title": "{{name}} en feu",
+        "body": "{{goals}} buts cette semaine pour {{name}}."
+      },
+      "injury": {
+        "title": "Coup dur : {{name}} blessé",
+        "body": "{{injury}}. Retour estimé dans {{days}} jour(s)."
+      },
+      "return": {
+        "title": "{{name}} de retour",
+        "body": "Remis de sa blessure, {{name}} est de nouveau disponible."
+      },
+      "arrival": {
+        "title": "Arrivée de {{name}}",
+        "body": "{{name}} ({{age}} ans) rejoint l'effectif."
+      },
+      "youthIntake": {
+        "title": "{{count}} jeunes arrivent du centre de formation",
+        "body": "À suivre en priorité : {{names}}."
+      },
+      "departure": {
+        "title": "{{name}} quitte le club",
+        "body": "{{name}} ne fait plus partie de l'effectif."
+      },
+      "extension": {
+        "title": "{{name}} prolonge jusqu'en {{until}}",
+        "body": "Le club s'assure l'avenir de {{name}}."
+      },
+      "fans": {
+        "title": "Supporters : {{mood}}",
+        "body": "L'humeur des tribunes a changé cette semaine."
+      },
+      "job": {
+        "title": "La chaise du coach : {{status}}",
+        "body": "La direction a revu sa confiance envers l'entraîneur."
+      },
+      "nextMatch": {
+        "title": "Prochain rendez-vous : {{opponent}}",
+        "body": ""
+      },
+      "quiet": {
+        "title": "Semaine calme à {{club}}",
+        "body": "Pas de match ni de mouvement notable cette semaine."
+      }
+    }
+  },
+  "discord": {
+    "intro": "Raconte ta carrière dans un salon Discord : chaque gazette peut y être envoyée en un clic, pour que tes amis suivent ta partie.",
+    "webhookTitle": "Relier ton salon",
+    "step1": "Dans Discord, ouvre les paramètres du salon, puis Intégrations › Webhooks › Nouveau webhook.",
+    "step2": "Copie l'URL du webhook.",
+    "step3": "Colle-la ci-dessous, enregistre, puis envoie un message de test.",
+    "webhook": "Lien webhook",
+    "invalid": "Ce n'est pas un lien de webhook Discord (https://discord.com/api/webhooks/…).",
+    "save": "Enregistrer",
+    "remove": "Retirer le lien",
+    "test": "Envoyer un test",
+    "saved": "Lien enregistré sur ce PC.",
+    "testMessage": "FM Immersion est relié à ce salon. Les gazettes de ma carrière arriveront ici.",
+    "testOk": "Message de test envoyé.",
+    "whatTitle": "Ce qui est envoyé",
+    "what": "Pour l'instant, la gazette de la semaine, quand tu cliques sur « Envoyer sur Discord » dans la Gazette. L'envoi automatique des moments forts (buts, résultats, transferts) arrivera ensuite.",
+    "privacy": "Le lien reste sur ton PC. FM Immersion n'envoie rien à Discord sans ton clic, et seulement vers l'adresse des webhooks de Discord."
   }
 }

@@ -1,6 +1,6 @@
 //! Lecture directe de la base de FM27 en mémoire, de l'extérieur du jeu et en lecture seule.
 //!
-//! Simloom ouvre le processus `fm.exe` avec les seuls droits de lecture (`PROCESS_VM_READ`) et lit la base
+//! FM Immersion ouvre le processus `fm.exe` avec les seuls droits de lecture (`PROCESS_VM_READ`) et lit la base
 //! native du moteur (module `game_plugin.dll`). Il n'écrit jamais dans le jeu, n'y injecte rien et n'y lance
 //! aucun code : une adresse invalide fait seulement échouer la lecture, sans effet sur la partie.
 //! Rien ne se lit sans une action du joueur dans l'interface.
@@ -375,7 +375,7 @@ mod off {
     pub const CL_SHORT_NAME: u64 = 0xC8;
 }
 
-/// Les 47 attributs : clé Simloom et position après `ACTUAL_PLAYER+0x150` (table du jeu à la RVA 0x4D36B3E).
+/// Les 47 attributs : clé FM Immersion et position après `ACTUAL_PLAYER+0x150` (table du jeu à la RVA 0x4D36B3E).
 const ATTRIBUTES: [(&str, usize); 47] = [
     ("AerialReach", 27),
     ("CommandOfArea", 28),
@@ -426,7 +426,7 @@ const ATTRIBUTES: [(&str, usize); 47] = [
     ("NaturalFitness", 65),
 ];
 
-/// Les 15 postes (octets `+0x150` à `+0x15E`) en codes Simloom ; le libéro n'a pas d'équivalent.
+/// Les 15 postes (octets `+0x150` à `+0x15E`) en codes FM Immersion ; le libéro n'a pas d'équivalent.
 const POSITIONS: [Option<&str>; 15] = [
     Some("GB"),
     None,
@@ -522,7 +522,7 @@ pub struct DbPlayer {
     pub ca: i16,
     pub pa: i16,
     pub reputation: [i16; 3],
-    /// Postes à 15 ou plus sur 20 (« compétent » et au-delà), au format texte de Simloom.
+    /// Postes à 15 ou plus sur 20 (« compétent » et au-delà), au format texte de FM Immersion.
     pub positions_text: String,
     pub position_ratings: BTreeMap<&'static str, u8>,
     pub attributes: BTreeMap<&'static str, u8>,
@@ -893,7 +893,7 @@ const STAFF_ADAPTABILITY: u64 = 0x48;
 /// Nombre maximal de personnes acceptées dans la table (joueurs, staff, managers…).
 const MAX_PERSONS: usize = 5_000_000;
 
-/// Notes du staff : clé Simloom, position dans l'objet, stockée sur 100 (convertie en 1-20 comme le jeu).
+/// Notes du staff : clé FM Immersion, position dans l'objet, stockée sur 100 (convertie en 1-20 comme le jeu).
 /// Retrouvées par l'accesseur des notes (RVA 0x17D40C0, table de sauts 0x4D8EB14) et le dictionnaire des codes.
 const STAFF_ATTRIBUTES: [(&str, usize, bool); 21] = [
     ("Attacking", 0x32, true),
@@ -1356,7 +1356,7 @@ fn matches(query: &Option<String>, value: &Option<String>) -> bool {
 #[derive(Debug, Default, Clone, serde::Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct SearchFilter {
-    /// Postes Simloom (`DC`, `MC`…) : au moins un tenu à `min_rating` ou plus (15 par défaut).
+    /// Postes FM Immersion (`DC`, `MC`…) : au moins un tenu à `min_rating` ou plus (15 par défaut).
     pub positions: Vec<String>,
     pub min_rating: Option<u8>,
     pub max_age: Option<u16>,

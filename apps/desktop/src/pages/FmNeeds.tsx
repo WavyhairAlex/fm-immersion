@@ -1,4 +1,4 @@
-import { POS_LABEL, type FmPlayer, type NeedPriority, type Project, type RecruitNeed, type TacticEngine } from '@simloom/module-fm';
+import { POS_LABEL, type FmPlayer, type NeedPriority, type Project, type RecruitNeed, type TacticEngine } from '@fm-immersion/module-fm';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ReplacementFinder } from './FmReplacement';
@@ -49,7 +49,7 @@ export function NeedsPanel({
                 </span>
               )}
               {project && n.player && open !== i && (
-                <button type="button" className="text-xs font-bold text-eau-fonce hover:underline" onClick={() => setOpen(i)}>
+                <button type="button" className="text-xs font-bold text-orange-fonce hover:underline" onClick={() => setOpen(i)}>
                   {t('fm.needs.search')}
                 </button>
               )}

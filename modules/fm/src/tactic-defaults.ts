@@ -8,7 +8,7 @@ import type { RoleRef, StyleRef, TacticReference } from './tactic';
  * défensive y reste Standard et « Ralentissez le rythme » (relances du GB) remplace « Gagnez du temps » lu
  * dans le fichier ; ces deux lectures du fichier sont donc écartées pour tous les styles.
  *
- * Repères maison de Simloom : rôles et styles de jeu décrits avec nos propres pondérations
+ * Repères maison de FM Immersion : rôles et styles de jeu décrits avec nos propres pondérations
  * (3 = essentiel, 2 = important, 1 = utile). Ils servent par défaut ; un fichier local de repères
  * plus fins, placé par le joueur dans le dossier du plugin, les remplace.
  */

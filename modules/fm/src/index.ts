@@ -1,9 +1,9 @@
-import type { GameModuleManifest } from '@simloom/shared';
+import type { GameModuleManifest } from '@fm-immersion/shared';
 
 /**
  * Module Football Manager.
  * Les données viennent du plugin BepInEx (lecture seule) qui écrit un instantané JSON
- * dans le dossier du jeu ; Simloom l'importe, le garde en historique et l'analyse.
+ * dans le dossier du jeu ; FM Immersion l'importe, le garde en historique et l'analyse.
  */
 export const manifest: GameModuleManifest = {
   id: 'fm',
@@ -44,3 +44,4 @@ export * from './needs';
 export * from './diagnose';
 export * from './staff';
 export * from './shirts';
+export * from './gazette';

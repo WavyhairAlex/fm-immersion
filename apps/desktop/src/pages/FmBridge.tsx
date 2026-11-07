@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 type BridgeStatus = { gameFound: boolean; bepinex: boolean; running: boolean; installedVersion: string | null };
 
-const GAME_DIR_KEY = 'simloom.fm.gameDir';
+const GAME_DIR_KEY = 'fmi.gameDir';
 const read = (k: string) => {
   try {
     return localStorage.getItem(k);
@@ -84,7 +84,7 @@ export function FmBridge({ dataFolder, onHealth }: { dataFolder: string; onHealt
       <p className="mt-1 flex items-center gap-2 text-xs text-brun">
         <span className="h-2 w-2 rounded-full bg-eau" aria-hidden />
         {t('fm.bridge.compact', { version: installed })}
-        <button type="button" className="font-bold text-eau-fonce hover:underline" onClick={() => setOpen(true)}>
+        <button type="button" className="font-bold text-orange-fonce hover:underline" onClick={() => setOpen(true)}>
           {t('fm.bridge.details')}
         </button>
       </p>
@@ -95,7 +95,7 @@ export function FmBridge({ dataFolder, onHealth }: { dataFolder: string; onHealt
       <div className="flex items-start justify-between gap-3">
         <h2 className="font-display text-lg font-semibold">{t('fm.bridge.title')}</h2>
         {healthy && (
-          <button type="button" className="text-sm font-bold text-eau-fonce hover:underline" onClick={() => setOpen(false)}>
+          <button type="button" className="text-sm font-bold text-orange-fonce hover:underline" onClick={() => setOpen(false)}>
             {t('fm.bridge.hide')}
           </button>
         )}

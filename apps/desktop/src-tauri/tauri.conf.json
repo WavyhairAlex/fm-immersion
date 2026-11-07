@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Simloom",
+  "productName": "FM Immersion",
   "version": "../package.json",
-  "identifier": "app.simloom.desktop",
+  "identifier": "app.fmimmersion.desktop",
   "build": {
     "beforeDevCommand": "pnpm dev:web",
     "devUrl": "http://localhost:5173",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Simloom",
+        "title": "FM Immersion",
         "width": 1280,
         "height": 820,
         "minWidth": 960,
@@ -28,11 +28,11 @@
     "active": true,
     "targets": ["nsis"],
     "createUpdaterArtifacts": true,
-    "publisher": "Simloom",
-    "copyright": "Simloom — licence MIT",
+    "publisher": "FM Immersion",
+    "copyright": "FM Immersion — licence MIT",
     "category": "Utility",
-    "shortDescription": "Le compagnon de tes parties de jeux de gestion",
-    "longDescription": "Simloom regroupe le suivi de tes parties de jeux de gestion dans un seul tableau de bord. Toutes les données restent sur ton PC.",
+    "shortDescription": "Le compagnon de tes parties de Football Manager",
+    "longDescription": "FM Immersion : visages photoréalistes, assistant FM Coach et outils d'immersion pour Football Manager. Projet indépendant, sans lien avec Sports Interactive ni SEGA. Toutes les données restent sur ton PC.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -50,8 +50,8 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDlEMkQ4N0Q1MjVERkNBQ0QKUldUTnl0OGwxWWN0blVDWkUxbmh2VTArS1NZaGxwbUhrTTJIOTlXazJnTW9halFNazBFQU5aeDYK",
-      "endpoints": ["https://github.com/amnesix-nt/simloom/releases/latest/download/latest.json"],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEQ2ODI3OUI2NDA5MUYyQUMKUldTczhwRkF0bm1DMXR2R3lubE5USFJaK2loQjh1S3hlTVp4UGZmVGdWNzN3TEU2UmxFRXhBaE0K",
+      "endpoints": ["https://github.com/amnesix-nt/fm-immersion/releases/latest/download/latest.json"],
       "windows": { "installMode": "passive" }
     }
   }

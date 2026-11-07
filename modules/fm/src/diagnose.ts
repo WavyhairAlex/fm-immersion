@@ -14,7 +14,7 @@ import { footInfo, INVERTED, sideOf, type FormationPlan, type TacticEngine } fro
  * - le match : stats de sa ligne où il est dans le moins bon quart ;
  * - la forme : condition, rythme, moral ;
  * - et s'il y a mieux : un autre joueur disponible noté plus haut à ce créneau.
- * Tout vient de ce que Simloom lit déjà (instantané, Centre de données, résultats) : rien de nouveau dans le jeu.
+ * Tout vient de ce que FM Immersion lit déjà (instantané, Centre de données, résultats) : rien de nouveau dans le jeu.
  */
 
 export type DiagReason =

@@ -1,4 +1,4 @@
-import { POS_LABEL, lineOf, type FmPlayer, type Line, type PosCode } from '@simloom/module-fm';
+import { POS_LABEL, lineOf, type FmPlayer, type Line, type PosCode } from '@fm-immersion/module-fm';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -7,22 +7,22 @@ import { useTranslation } from 'react-i18next';
  * colorés comme sur la fiche du jeu, carte des postes et profil en radar.
  */
 
-/** Couleur de chaque ligne (gardien, défense, milieu, attaque), dans la palette Simloom (pas d'orange). */
+/** Couleur de chaque ligne (gardien, défense, milieu, attaque), dans la palette FM Immersion (anthracite, vert, orange). */
 export const LINE_COLOR: Record<Line, { bg: string; text: string; ring: string; fill: string }> = {
-  GB: { bg: 'bg-brun', text: 'text-white', ring: 'ring-brun', fill: '#8B5E3C' },
+  GB: { bg: 'bg-brun', text: 'text-white', ring: 'ring-brun', fill: '#5C6067' },
   DEF: {
     bg: 'bg-canard',
     text: 'text-white',
     ring: 'ring-canard',
-    fill: '#0F4B58',
+    fill: '#25282D',
   },
   MIL: {
     bg: 'bg-eau-fonce',
     text: 'text-white',
     ring: 'ring-eau-fonce',
-    fill: '#1B7F67',
+    fill: '#1E7A45',
   },
-  ATT: { bg: 'bg-eau', text: 'text-canard', ring: 'ring-eau', fill: '#63D1B1' },
+  ATT: { bg: 'bg-orange', text: 'text-canard', ring: 'ring-orange', fill: '#F26B1D' },
 };
 
 const initials = (name: string) =>
@@ -178,20 +178,20 @@ export function ProfileRadar({ axes, compare }: { axes: { id: string; value: num
   return (
     <svg viewBox="-28 -6 156 112" className="h-auto w-full max-w-[22rem]" role="img" aria-label={t('fm.foot.profile')}>
       {[5, 10, 15, 20].map((g) => (
-        <polygon key={g} points={poly(axes.map(() => g))} fill="none" stroke="#0F4B58" strokeOpacity={g === 20 ? 0.25 : 0.1} strokeWidth="0.4" />
+        <polygon key={g} points={poly(axes.map(() => g))} fill="none" stroke="#25282D" strokeOpacity={g === 20 ? 0.25 : 0.1} strokeWidth="0.4" />
       ))}
       {axes.map((_, i) => {
         const [x, y] = pt(i, 20);
-        return <line key={i} x1="50" y1="50" x2={x} y2={y} stroke="#0F4B58" strokeOpacity="0.1" strokeWidth="0.4" />;
+        return <line key={i} x1="50" y1="50" x2={x} y2={y} stroke="#25282D" strokeOpacity="0.1" strokeWidth="0.4" />;
       })}
-      {compare && <polygon points={poly(compare)} fill="none" stroke="#8B5E3C" strokeWidth="0.6" strokeDasharray="1.5 1" />}
-      <polygon points={poly(axes.map((a) => a.value))} fill="#63D1B1" fillOpacity="0.45" stroke="#1B7F67" strokeWidth="0.9" />
+      {compare && <polygon points={poly(compare)} fill="none" stroke="#5C6067" strokeWidth="0.6" strokeDasharray="1.5 1" />}
+      <polygon points={poly(axes.map((a) => a.value))} fill="#F26B1D" fillOpacity="0.35" stroke="#C2410C" strokeWidth="0.9" />
       {axes.map((a, i) => {
         const [x, y] = pt(i, 20, 46);
         return (
-          <text key={a.id} x={x} y={y} textAnchor={x < 45 ? 'end' : x > 55 ? 'start' : 'middle'} dominantBaseline="middle" fontSize="4.2" fill="#0F4B58" fontWeight="700">
+          <text key={a.id} x={x} y={y} textAnchor={x < 45 ? 'end' : x > 55 ? 'start' : 'middle'} dominantBaseline="middle" fontSize="4.2" fill="#25282D" fontWeight="700">
             {t(`fm.foot.axis.${a.id}`)}
-            <tspan fill="#8B5E3C" fontWeight="400">
+            <tspan fill="#5C6067" fontWeight="400">
               {' '}
               {a.value != null ? nf.format(a.value) : '–'}
             </tspan>

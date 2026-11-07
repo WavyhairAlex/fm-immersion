@@ -41,7 +41,7 @@ import {
   type SessionCategory,
   type SessionId,
   type TrainingPhase,
-} from '@simloom/module-fm';
+} from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
@@ -69,7 +69,7 @@ function Session({ id }: { id: SessionId }) {
  * Réglages individuels notés comme faits en jeu, par partie (retenus sur ce PC).
  * Ils étaient rangés par dossier du plugin, commun à toutes les parties : la plus ancienne partie les reprend.
  */
-const SETUP_KEY = 'simloom.fm.individual';
+const SETUP_KEY = 'fmi.individual';
 export function useAppliedSetups(folder: string) {
   const scope = useFmSaveScope();
   const [applied, setApplied] = useState(() => readScoped<Record<string, IndividualSetup>>(SETUP_KEY, scope, {}, `${SETUP_KEY}.${folder}`));

@@ -1,4 +1,4 @@
-import { rotation, upcomingFixtures, type FmPlayer, type FmSnapshot } from '@simloom/module-fm';
+import { rotation, upcomingFixtures, type FmPlayer, type FmSnapshot } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Empty, Level, Panel, Pos, Row, Tag, useFormat, PlayerLink } from './FmUi';

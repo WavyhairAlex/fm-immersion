@@ -154,7 +154,7 @@ mod tests {
              values (?, ?, ?, ?, ?, ?, ?) returning id, name, game_version",
             vec![
                 json!("a1"),
-                json!("tf3"),
+                json!("fm"),
                 json!("Europe 1850"),
                 Json::Null,
                 json!("{}"),

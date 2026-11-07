@@ -8,7 +8,7 @@ import {
   type CoachDomain,
   type DbStaff,
   type StaffJob,
-} from '@simloom/module-fm';
+} from '@fm-immersion/module-fm';
 import { useMutation } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useMemo, useState } from 'react';

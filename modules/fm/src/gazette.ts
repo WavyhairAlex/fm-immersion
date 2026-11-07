@@ -1,0 +1,201 @@
+import { normalizePlayer, toNumber, type FmPlayer } from './player';
+import { matchResults, type MatchResult } from './results';
+import type { FmSnapshot } from './snapshot';
+
+/**
+ * Gazette de la semaine : à partir des instantanés déjà importés (un par jour de jeu), on repère ce qui s'est passé
+ * pendant chaque semaine de jeu (lundi → dimanche) et on en fait des « brèves ». Aucune nouvelle lecture du jeu.
+ * Les textes ne sont pas écrits ici : chaque brève a un type et des paramètres, l'interface les met en mots (FR/EN).
+ *
+ * Sources, de la plus sûre à la plus fragile :
+ * - matchs : différence des cumuls de saison entre deux instantanés (`matchResults`) ;
+ * - effectif : arrivées, départs, blessures, retours, prolongations, buts (comparaison des joueurs) ;
+ * - classement, confiance, sécurité de l'emploi : `custom.equipe` (chemins.json), seulement si le plugin les lit.
+ */
+
+export type StoryKind =
+  | 'result'
+  | 'results'
+  | 'position'
+  | 'scorer'
+  | 'injury'
+  | 'return'
+  | 'arrival'
+  | 'youthIntake'
+  | 'departure'
+  | 'extension'
+  | 'fans'
+  | 'job'
+  | 'nextMatch'
+  | 'quiet';
+
+export interface GazetteStory {
+  kind: StoryKind;
+  /** Importance pour choisir la une (plus grand = plus important). */
+  weight: number;
+  params: Record<string, string | number | null>;
+}
+
+export interface GazetteIssue {
+  /** Numéro de la gazette dans la carrière (1 = première semaine suivie). */
+  number: number;
+  club: string;
+  /** Lundi et dimanche de la semaine de jeu (ISO). */
+  weekStart: string;
+  weekEnd: string;
+  /** Dernier instantané de la semaine. */
+  date: string;
+  headline: GazetteStory;
+  stories: GazetteStory[];
+}
+
+type Entry = { gameDate: string; data: FmSnapshot };
+const DAY_MS = 86_400_000;
+
+/** Lundi de la semaine d'une date ISO (AAAA-MM-JJ). */
+export function weekStartOf(date: string): string {
+  const d = new Date(`${date.slice(0, 10)}T00:00:00Z`);
+  const dow = (d.getUTCDay() + 6) % 7; // lundi = 0
+  return new Date(d.getTime() - dow * DAY_MS).toISOString().slice(0, 10);
+}
+
+const addDays = (date: string, n: number) => new Date(new Date(`${date}T00:00:00Z`).getTime() + n * DAY_MS).toISOString().slice(0, 10);
+
+const equipe = (s: FmSnapshot): Record<string, unknown> => {
+  const custom = (s as { custom?: { equipe?: Record<string, unknown> } }).custom;
+  return custom?.equipe ?? {};
+};
+
+const text = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v.replace(/<[^>]*>/g, '').trim() : null);
+
+/** Place au classement lue par le plugin (`classementPosition`), si elle est connue. */
+export function leaguePosition(s: FmSnapshot): number | null {
+  const n = toNumber(equipe(s).classementPosition as never);
+  return n != null && n > 0 && n < 100 ? Math.round(n) : null;
+}
+
+const players = (s: FmSnapshot) => new Map<string, FmPlayer>(s.players.map((p) => [String(p.id), normalizePlayer(p)]));
+
+function resultStory(r: MatchResult): GazetteStory {
+  if (r.matches === 1 && r.outcome) {
+    const margin = r.goalsFor != null && r.goalsAgainst != null ? r.goalsFor - r.goalsAgainst : 0;
+    const scorers = r.players
+      .filter((p) => (p.goals ?? 0) > 0)
+      .sort((a, b) => (b.goals ?? 0) - (a.goals ?? 0))
+      .map((p) => (p.goals! > 1 ? `${p.name} (${p.goals})` : p.name))
+      .join(', ');
+    const best = [...r.players].filter((p) => p.rating != null).sort((a, b) => b.rating! - a.rating!)[0];
+    return {
+      kind: 'result',
+      // Une défaite pèse un peu plus qu'une victoire (la presse aime les crises), un gros écart encore plus.
+      weight: (r.outcome === 'L' ? 62 : r.outcome === 'W' ? 58 : 50) + Math.min(10, Math.abs(margin) * 3),
+      params: {
+        outcome: r.outcome,
+        opponent: r.opponent,
+        home: r.home == null ? null : r.home ? 1 : 0,
+        goalsFor: r.goalsFor,
+        goalsAgainst: r.goalsAgainst,
+        scorers: scorers || null,
+        best: best?.name ?? null,
+        rating: best?.rating ?? null,
+        date: r.date,
+      },
+    };
+  }
+  return {
+    kind: 'results',
+    weight: 45,
+    params: { matches: r.matches, wins: r.wins, draws: r.draws, losses: r.losses, goalsFor: r.goalsFor, goalsAgainst: r.goalsAgainst },
+  };
+}
+
+/** Brèves d'une semaine : `prev` = dernier instantané avant la semaine (ou null), `week` = instantanés de la semaine. */
+export function weekStories(prev: FmSnapshot | null, week: FmSnapshot[], results: MatchResult[]): GazetteStory[] {
+  const cur = week[week.length - 1]!;
+  const out: GazetteStory[] = results.map(resultStory);
+
+  if (prev && prev.club === cur.club) {
+    const before = players(prev);
+    const after = players(cur);
+
+    // Classement.
+    const p0 = leaguePosition(prev);
+    const p1 = leaguePosition(cur);
+    if (p1 != null && p0 != null && p1 !== p0) {
+      out.push({ kind: 'position', weight: 40 + Math.min(15, Math.abs(p1 - p0) * 3) + (p1 === 1 ? 15 : 0), params: { from: p0, to: p1 } });
+    }
+
+    // Arrivées : les jeunes du centre de formation arrivent tous le même jour, on en fait une seule brève.
+    const arrivals = [...after.values()].filter((p) => !before.has(p.id));
+    const youngsters = arrivals.filter((p) => p.age != null && p.age <= 17);
+    const intake = youngsters.length >= 3;
+    if (intake) {
+      const best = [...youngsters].sort((a, b) => (b.level ?? 0) - (a.level ?? 0)).slice(0, 3);
+      out.push({ kind: 'youthIntake', weight: 45, params: { count: youngsters.length, names: best.map((p) => p.name).join(', ') } });
+    }
+    for (const p of arrivals) {
+      if (intake && youngsters.includes(p)) continue;
+      out.push({ kind: 'arrival', weight: 35 + Math.min(10, (p.level ?? 0) - 10), params: { name: p.name, age: p.age, position: p.positionsLabel || null } });
+    }
+
+    for (const [id, p] of after) {
+      const old = before.get(id);
+      if (!old) continue;
+      const g = (p.goals ?? 0) - (old.goals ?? 0);
+      if (g >= 2) out.push({ kind: 'scorer', weight: 30 + g * 5, params: { name: p.name, goals: g } });
+      if (p.injury && !old.injury) out.push({ kind: 'injury', weight: 30 + Math.min(15, Math.round((p.injuryDays ?? 0) / 7)), params: { name: p.name, injury: p.injury, days: p.injuryDays } });
+      if (!p.injury && old.injury) out.push({ kind: 'return', weight: 20, params: { name: p.name } });
+      if (p.contractEnd && old.contractEnd && p.contractEnd > old.contractEnd) {
+        out.push({ kind: 'extension', weight: 25, params: { name: p.name, until: p.contractEnd.slice(0, 4) } });
+      }
+    }
+    for (const [id, p] of before) {
+      if (!after.has(id)) out.push({ kind: 'departure', weight: 35 + Math.min(10, (p.level ?? 0) - 10), params: { name: p.name, age: p.age } });
+    }
+
+    // Ambiance : supporters et sécurité de l'emploi (textes du jeu), seulement quand ils changent.
+    const fans0 = text(equipe(prev).confianceSupporters);
+    const fans1 = text(equipe(cur).confianceSupporters);
+    if (fans1 && fans0 && fans1 !== fans0) out.push({ kind: 'fans', weight: 28, params: { mood: fans1 } });
+    const job0 = text(equipe(prev).securiteEmploi);
+    const job1 = text(equipe(cur).securiteEmploi);
+    if (job1 && job0 && job1 !== job0) out.push({ kind: 'job', weight: /insécur|danger|insecure|precarious/i.test(job1) ? 70 : 30, params: { status: job1 } });
+  }
+
+  const next = (cur as { nextMatch?: Record<string, unknown> }).nextMatch;
+  const opponent = text(next?.opponent);
+  if (opponent) {
+    out.push({
+      kind: 'nextMatch',
+      weight: 10,
+      params: { opponent, competition: text(next?.competition), inDays: text(next?.inDays), location: text(next?.location) },
+    });
+  }
+
+  if (!out.some((s) => s.weight >= 20)) out.push({ kind: 'quiet', weight: 5, params: { club: cur.club } });
+  return out.sort((a, b) => b.weight - a.weight);
+}
+
+/** Toutes les gazettes de la carrière, de la plus récente à la plus ancienne. */
+export function gazetteIssues(history: Entry[]): GazetteIssue[] {
+  const sorted = [...history].sort((a, b) => a.gameDate.localeCompare(b.gameDate));
+  if (!sorted.length) return [];
+  const results = matchResults(sorted);
+  const weeks = new Map<string, Entry[]>();
+  for (const e of sorted) {
+    const w = weekStartOf(e.gameDate);
+    weeks.set(w, [...(weeks.get(w) ?? []), e]);
+  }
+  const issues: GazetteIssue[] = [];
+  let prev: Entry | null = null;
+  let n = 0;
+  for (const [w, entries] of weeks) {
+    const end = addDays(w, 6);
+    const last = entries[entries.length - 1]!;
+    const inWeek = results.filter((r) => r.date >= w && r.date <= end);
+    const stories = weekStories(prev?.data ?? null, entries.map((e) => e.data), inWeek);
+    issues.push({ number: ++n, club: last.data.club, weekStart: w, weekEnd: end, date: last.gameDate, headline: stories[0]!, stories: stories.slice(1) });
+    prev = last;
+  }
+  return issues.reverse();
+}

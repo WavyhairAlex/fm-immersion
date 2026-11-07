@@ -1,5 +1,5 @@
-import { saves, type Save } from '@simloom/db';
-import { createSaveInput, updateSaveInput, type CreateSaveInput, type UpdateSaveInput } from '@simloom/shared';
+import { saves, type Save } from '@fm-immersion/db';
+import { createSaveInput, updateSaveInput, type CreateSaveInput, type UpdateSaveInput } from '@fm-immersion/shared';
 import { desc, eq } from 'drizzle-orm';
 import type { Db } from './db';
 

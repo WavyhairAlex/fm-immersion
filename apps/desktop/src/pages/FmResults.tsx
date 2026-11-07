@@ -1,4 +1,4 @@
-import { analyzeResults, type FmPlayer, type FmSnapshot, type Insight, type MatchResult, type Outcome } from '@simloom/module-fm';
+import { analyzeResults, type FmPlayer, type FmSnapshot, type Insight, type MatchResult, type Outcome } from '@fm-immersion/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Empty, Kpi, More, Panel, PlayerLink, Tag, type Tone } from './FmUi';

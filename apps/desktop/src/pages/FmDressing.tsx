@@ -1,4 +1,4 @@
-import { dressingRoom, moraleLevel, type FmPlayer } from '@simloom/module-fm';
+import { dressingRoom, moraleLevel, type FmPlayer } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Empty, Kpi, Level, Panel, PlayerName, Row, Tag, type Tone } from './FmUi';

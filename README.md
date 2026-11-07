@@ -1,27 +1,37 @@
-# Simloom
+# FM Immersion
 
-Le compagnon de tes parties de jeux de gestion : un seul tableau de bord pour suivre toutes tes parties,
-plus besoin de 36 feuilles Excel. Application Windows gratuite et open source.
+Le logiciel compagnon de tes parties de **Football Manager 27** : visages photoréalistes, assistant FM Coach,
+et outils pour rendre ta carrière plus vivante. Application Windows gratuite et open source.
 
-Modules : Transport Fever 3 et Planet Zoo 2 (en cours), puis Football Manager.
+> FM Immersion est un projet indépendant, sans lien avec Sports Interactive ni SEGA.
+> Football Manager et FM sont des marques de leurs propriétaires.
 
-> Simloom est un projet indépendant, sans lien avec les éditeurs des jeux cités.
-> Les noms des jeux appartiennent à leurs propriétaires.
+## Modules
+
+| Module | État |
+|---|---|
+| **FM Coach** : effectif, tactique, entraînement, mercato, adversaire, finances (lecture de ta partie) | disponible |
+| **Plugin en jeu** (Archivix Bridge, BepInEx) : installation et mise à jour | disponible |
+| **Visages photoréalistes** : installation en un clic, réinstallation après une mise à jour Steam | à venir |
+| **Gazette** de la semaine : résultats, classement, blessures, transferts, centre de formation | disponible |
+| **Live Discord** : envoi de la gazette dans ton salon (webhook) | disponible (solo) |
+| **Monde partagé** (multijoueur asynchrone) | à venir |
 
 ## Installer
 
-Télécharge le dernier `Simloom_x.y.z_x64-setup.exe` dans les [releases](https://github.com/amnesix-nt/simloom/releases/latest).
-L'installation se fait dans ton profil Windows, sans droits administrateur. Ensuite, Simloom se met à jour
+Télécharge le dernier `FM.Immersion_x.y.z_x64-setup.exe` dans les [releases](https://github.com/amnesix-nt/fm-immersion/releases/latest).
+L'installation se fait dans ton profil Windows, sans droits administrateur. Ensuite, FM Immersion se met à jour
 tout seul au démarrage quand une nouvelle version est publiée.
 
-Désinstaller : Paramètres Windows › Applications › Simloom › Désinstaller.
-Tes données sont dans `%APPDATA%\app.simloom.desktop\simloom.db` : supprime ce dossier pour tout effacer.
+Désinstaller : Paramètres Windows › Applications › FM Immersion › Désinstaller.
+Tes données sont dans `%APPDATA%\app.fmimmersion.desktop\fm-immersion.db` : supprime ce dossier pour tout effacer.
 
 ## Confidentialité
 
-Simloom ne collecte, ne stocke à distance ni n'envoie aucune donnée personnelle. Tes parties restent dans
-une base SQLite sur ton PC. Simloom ne se connecte qu'à GitHub (`github.com/amnesix-nt/simloom/releases`) :
+FM Immersion ne collecte, ne stocke à distance ni n'envoie aucune donnée personnelle. Tes parties restent dans
+une base SQLite sur ton PC. FM Immersion ne se connecte qu'à GitHub (`github.com/amnesix-nt/fm-immersion/releases`) :
 pour chercher ses mises à jour au démarrage et, seulement si tu le demandes, pour télécharger le plugin FM27.
+Si tu relies un salon Discord, la gazette n'y part que quand tu cliques sur « Envoyer sur Discord ».
 GitHub voit alors ton adresse IP, comme pour toute visite de son site.
 
 ## Politique de signature du code
@@ -33,7 +43,7 @@ la SignPath Foundation. La mention officielle sera alors :
 Seuls les binaires construits par GitHub Actions à partir de ce dépôt sont signés, et chaque signature
 est approuvée manuellement. Le plugin FM27 (`modules/fm/bridge`) n'en fait pas partie : il se compile contre des
 fichiers du jeu qui ne peuvent pas être publiés, il est donc compilé en local et distribué à part, non signé,
-avec une empreinte SHA-256 vérifiée par Simloom avant installation.
+avec une empreinte SHA-256 vérifiée par FM Immersion avant installation.
 
 | Rôle | Membres |
 |---|---|

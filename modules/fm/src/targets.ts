@@ -5,7 +5,7 @@ import { fmPlayerSchema, LOAN_SOURCE, loanShortlist, type FmSnapshot } from './s
 
 /**
  * Cibles du mercato : joueurs d'autres clubs que le joueur suit dans FM27 (liste de suivi, cibles du recrutement),
- * lus par le plugin 0.4.0 (réglage LireCibles, bloc `shortlist` de l'instantané). Simloom les garde dans sa base
+ * lus par le plugin 0.4.0 (réglage LireCibles, bloc `shortlist` de l'instantané). FM Immersion les garde dans sa base
  * (table fm_targets) : une cible retirée de la liste du jeu reste consultable, avec la date où elle a été vue.
  */
 
@@ -124,7 +124,7 @@ const hasContract = (x: unknown) => {
 
 /**
  * Joueurs à l'essai : le jeu les range dans l'effectif, mais sans contrat (ni fin de contrat, ni salaire, ni statut).
- * Simloom les sort de l'effectif et les montre dans les cibles du mercato, pour les juger avant de leur proposer
+ * FM Immersion les sort de l'effectif et les montre dans les cibles du mercato, pour les juger avant de leur proposer
  * un contrat. Seulement si l'instantané donne les contrats des autres joueurs (sinon un vieux plugin ferait
  * passer tout l'effectif pour des essais).
  */
@@ -216,7 +216,7 @@ export interface TargetRecord {
   lastSeen: string;
   /** Encore dans une liste du jeu au dernier instantané qui les a lues. */
   inList: boolean;
-  /** Écartée à la main dans Simloom : masquée, sans toucher au jeu. */
+  /** Écartée à la main dans FM Immersion : masquée, sans toucher au jeu. */
   dismissed: boolean;
   data: unknown;
 }
@@ -279,7 +279,7 @@ export function storedTargets(rows: TargetRecord[]): StoredTarget[] {
 /* ---------- Recherche dans la base du jeu ---------- */
 
 /**
- * Joueur lu directement dans la base de FM27 par Simloom (lecture seule en mémoire, `fm_memory_search`).
+ * Joueur lu directement dans la base de FM27 par FM Immersion (lecture seule en mémoire, `fm_memory_search`).
  * Les attributs sont les vraies valeurs (pas l'avis des recruteurs) ; salaire par semaine et valeur dans la
  * monnaie de base du jeu.
  */

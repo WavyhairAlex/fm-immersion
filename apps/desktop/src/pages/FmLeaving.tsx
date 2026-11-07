@@ -1,4 +1,4 @@
-import { LEAVING_REASONS, type FmPlayer, type LeavingMarks, type LeavingReason } from '@simloom/module-fm';
+import { LEAVING_REASONS, type FmPlayer, type LeavingMarks, type LeavingReason } from '@fm-immersion/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -38,14 +38,14 @@ export function LeaveButton({ player, gameDate, onMarked }: { player: FmPlayer; 
     return (
       <span className="inline-flex items-center gap-1.5">
         <Tag tone="bad">{t(`fm.leave.reason.${mark.reason}`)}</Tag>
-        <button type="button" className="text-xs font-bold text-eau-fonce hover:underline" disabled={set.isPending} onClick={() => set.mutate({ player, reason: null, gameDate })}>
+        <button type="button" className="text-xs font-bold text-orange-fonce hover:underline" disabled={set.isPending} onClick={() => set.mutate({ player, reason: null, gameDate })}>
           {t('fm.leave.cancel')}
         </button>
       </span>
     );
   if (!open)
     return (
-      <button type="button" className="text-xs font-bold text-eau-fonce hover:underline" onClick={() => setOpen(true)}>
+      <button type="button" className="text-xs font-bold text-orange-fonce hover:underline" onClick={() => setOpen(true)}>
         {t('fm.leave.mark')}
       </button>
     );

@@ -14,7 +14,7 @@ import {
   type FmSnapshot,
   type Line,
   type SquadAt,
-} from '@simloom/module-fm';
+} from '@fm-immersion/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -89,7 +89,7 @@ type View = (typeof SECTIONS)[number]['views'][number];
 const isView = (v: string): v is View => SECTIONS.some((s) => (s.views as readonly string[]).includes(v));
 /** Onglet qui contient un écran (lui-même, ou l'onglet où il a été regroupé). */
 const pageOf = (v: string): View => (isView(v) ? v : ((Object.keys(PARTS).find((k) => PARTS[k]!.includes(v)) as View | undefined) ?? 'home'));
-const VIEW_KEY = 'simloom.fm.view';
+const VIEW_KEY = 'fmi.view';
 /** Nom d'un onglet : son nom propre s'il regroupe plusieurs écrans, sinon celui de l'écran. */
 const pageLabel = (t: (k: string, o?: Record<string, unknown>) => string, v: string) => t(`fm.pages.${v}`, { defaultValue: t(`fm.views.${v}`) });
 /** Dernier écran ouvert : un onglet, ou une partie d'onglet regroupé (rouverte telle quelle). */
@@ -405,7 +405,7 @@ export function FmSave() {
       {/* Barre latérale sombre (grand écran) : la partie, sa date de jeu, l'état de l'import et le menu. */}
       <aside className="hidden w-60 shrink-0 flex-col bg-canard text-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:overflow-y-auto">
         <div className="border-b border-white/10 px-4 pb-4 pt-5">
-          <Link to="/" className="text-xs font-bold text-white/60 hover:text-white">
+          <Link to="/coach" className="text-xs font-bold text-white/60 hover:text-white">
             ← {t('fm.back')}
           </Link>
           <p className="mt-2 font-display text-xl font-semibold leading-tight">{save?.name ?? '…'}</p>
@@ -464,7 +464,7 @@ export function FmSave() {
         {/* En-tête sur une ligne (petit écran) : partie, club et date de jeu à gauche ; état de l'import et réglages à droite. */}
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 lg:hidden">
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-3">
-            <Link to="/" className="text-sm font-bold text-canard/70 hover:text-canard" title={t('fm.back')}>
+            <Link to="/coach" className="text-sm font-bold text-canard/70 hover:text-canard" title={t('fm.back')}>
               ←
             </Link>
             <h1 className="text-2xl font-semibold">{save?.name ?? '…'}</h1>
@@ -589,7 +589,6 @@ export function FmSave() {
 
         {!isLoading && !snapshot && (
           <div className="card mt-6 flex flex-col items-center gap-3 py-10 text-center">
-            <img src="/brand/football-sm.webp" alt="" className="h-28 w-auto rounded-2xl" />
             <p className="max-w-md text-brun">{t('fm.empty')}</p>
           </div>
         )}
@@ -708,7 +707,7 @@ function SquadViews({ players, folder }: { players: FmPlayer[]; folder: string }
   const { t } = useTranslation();
   const [mode, setMode] = useState<'pitch' | 'table'>(() => {
     try {
-      return localStorage.getItem('simloom.fm.squadView') === 'table' ? 'table' : 'pitch';
+      return localStorage.getItem('fmi.squadView') === 'table' ? 'table' : 'pitch';
     } catch {
       return 'pitch';
     }
@@ -716,7 +715,7 @@ function SquadViews({ players, folder }: { players: FmPlayer[]; folder: string }
   const choose = (m: 'pitch' | 'table') => {
     setMode(m);
     try {
-      localStorage.setItem('simloom.fm.squadView', m);
+      localStorage.setItem('fmi.squadView', m);
     } catch {
       /* stockage indisponible : le choix vaut pour cette visite */
     }

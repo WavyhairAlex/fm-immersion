@@ -1,9 +1,9 @@
 {
-  "name": "@simloom/module-fm",
+  "name": "@fm-immersion/module-fm",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Module Simloom pour Football Manager : effectif, contrats, état de forme.",
+  "description": "Module FM Immersion pour Football Manager : effectif, contrats, état de forme.",
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema.ts"
@@ -13,8 +13,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@simloom/db": "workspace:*",
-    "@simloom/shared": "workspace:*",
+    "@fm-immersion/db": "workspace:*",
+    "@fm-immersion/shared": "workspace:*",
     "drizzle-orm": "^0.38.3",
     "zod": "^3.24.1"
   },

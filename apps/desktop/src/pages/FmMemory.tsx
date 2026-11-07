@@ -111,7 +111,7 @@ export function FmMemory() {
   if (!open)
     return (
       <p className="mt-1 text-xs text-brun">
-        <button type="button" className="font-bold text-eau-fonce hover:underline" onClick={() => setOpen(true)}>
+        <button type="button" className="font-bold text-orange-fonce hover:underline" onClick={() => setOpen(true)}>
           {t('fm.memory.open')}
         </button>
       </p>
@@ -122,7 +122,7 @@ export function FmMemory() {
     <section className="rounded-xl bg-creme/60 p-4 ring-1 ring-canard/10">
       <div className="flex items-start justify-between gap-3">
         <h2 className="font-display text-lg font-semibold">{t('fm.memory.title')}</h2>
-        <button type="button" className="text-sm font-bold text-eau-fonce hover:underline" onClick={() => setOpen(false)}>
+        <button type="button" className="text-sm font-bold text-orange-fonce hover:underline" onClick={() => setOpen(false)}>
           {t('fm.bridge.hide')}
         </button>
       </div>

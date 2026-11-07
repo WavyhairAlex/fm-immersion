@@ -95,7 +95,7 @@ const norm = (s: string) =>
     .trim();
 
 /**
- * Anciens libellés (repères locaux `simloom-roles.json`, versions précédentes de Simloom) → consigne du jeu.
+ * Anciens libellés (repères locaux `simloom-roles.json`, versions précédentes de FM Immersion) → consigne du jeu.
  * Relevés sur l'écran Consignes d'équipe de FM27 le 01/11/2026.
  */
 const ALIASES: Record<string, [number, number]> = {

@@ -1,11 +1,11 @@
-import { abilityNeeded, keyAttrs, styleComplexity, tactAbility, type FmPlayer, type Phase } from '@simloom/module-fm';
+import { abilityNeeded, keyAttrs, styleComplexity, tactAbility, type FmPlayer, type Phase } from '@fm-immersion/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, scopedKey, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticChoice } from './FmTactic';
 import { Chips, Empty, Fit, fitGap, Kpi, Panel, Tag, TeamCards, useNames } from './FmUi';
 
-const STYLE_KEY = 'simloom.fm.styleView';
+const STYLE_KEY = 'fmi.styleView';
 
 /** Style de jeu : styles classés selon l'effectif, profil du groupe, consignes et meilleurs joueurs par rôle typique. */
 export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: string }) {
