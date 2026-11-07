@@ -47,6 +47,7 @@ pub fn run() {
             discord::discord_send_image,
             discord::discord_post,
             discord::discord_edit,
+            discord::discord_live_image,
             fm::fm_read_live,
             facepack::fm_face
         ])

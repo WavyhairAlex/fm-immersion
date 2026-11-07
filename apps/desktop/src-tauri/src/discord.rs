@@ -171,6 +171,39 @@ pub fn discord_send_image(webhook: String, payload: serde_json::Value, png: Vec<
     }
 }
 
+/// Tableau de score du direct avec son image (`direct.png`) : envoi (`message_id` absent, renvoie l'identifiant) ou
+/// modification du même message (image remplacée : le JSON doit lister `attachments: [{id: 0, filename: "direct.png"}]`).
+#[tauri::command]
+pub fn discord_live_image(webhook: String, message_id: Option<String>, payload: serde_json::Value, png: Vec<u8>) -> Result<String, DiscordError> {
+    let webhook = webhook.trim();
+    let body = checked(webhook, &payload)?;
+    if png.len() > 8 * 1024 * 1024 || !png.starts_with(&PNG_MAGIC) {
+        return Err(DiscordError::TooLong);
+    }
+    if let Some(id) = &message_id {
+        if id.is_empty() || id.len() > 25 || !id.chars().all(|c| c.is_ascii_digit()) {
+            return Err(DiscordError::BadUrl);
+        }
+    }
+    let boundary = format!("fmimmersion{:x}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0));
+    let data = multipart(&boundary, &body, "direct.png", &png);
+    let req = match &message_id {
+        Some(id) => ureq::request("PATCH", &format!("{webhook}/messages/{id}")),
+        None => ureq::post(&format!("{webhook}?wait=true")),
+    };
+    match req
+        .set("Content-Type", &format!("multipart/form-data; boundary={boundary}"))
+        .set("User-Agent", "FM-Immersion")
+        .send_bytes(&data)
+    {
+        Ok(resp) => message_id
+            .or_else(|| self::message_id(&resp.into_string().unwrap_or_default()))
+            .ok_or_else(|| DiscordError::Refused("réponse sans identifiant".into())),
+        Err(ureq::Error::Status(code, resp)) => Err(refused(code, resp)),
+        Err(e) => Err(DiscordError::Network(e.to_string())),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -202,6 +235,11 @@ mod tests {
             Err(DiscordError::BadUrl)
         ));
         assert!(matches!(discord_post("https://evil.io/x".into(), serde_json::json!({})), Err(DiscordError::BadUrl)));
+        let png = vec![0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A];
+        assert!(matches!(
+            discord_live_image("https://discord.com/api/webhooks/1/x".into(), Some("1/../2".into()), serde_json::json!({}), png),
+            Err(DiscordError::BadUrl)
+        ));
     }
 
     #[test]
