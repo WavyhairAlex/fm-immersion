@@ -55,17 +55,17 @@ describe('cases de l’écran Consignes d’équipe', () => {
     const shown = (cs: typeof c.ip) => cs.map((x) => `${x.def.title} : ${x.value}`);
     expect(shown(c.ip)).toEqual([
       'Caract. direct des passes : Plus courtes', 'Rythme : Plus lent', 'Largeur du jeu offensif : Standard', 'Transition offensive : Standard',
-      'Liberté créative : Équilibrée', 'Perdre du temps : Normal', 'Obtenir des coups de pied arrêtés : Garder le ballon en jeu',
+      'Liberté créative : Plus expressifs', 'Perdre du temps : Normal', 'Obtenir des coups de pied arrêtés : Garder le ballon en jeu',
       'Patience : Jouer le ballon dans la surface', 'Tirs de loin : Standard', 'Style de centres : Équilibrées', 'Dribbles : Standard',
       'Courses de soutien : Équilibré', 'Progression : Équilibrée', 'Réception des passes : Standard', "Stratégie d'attaques placées : Gérer le pressing",
       'Sorties de but : Courtes', 'Relances GB (vitesse) : Ralentir le rythme', 'Relances GB : Défenseurs centraux',
     ]);
     expect(shown(c.oop)).toEqual([
-      'Hauteur du pressing : Pressing haut', 'Ligne défensive : Standard', 'Comportement de la ligne défensive : Équilibré', 'Déclench. pressing : Plus souvent',
+      'Hauteur du pressing : Pressing haut', 'Ligne défensive : Standard', 'Comportement de la ligne défensive : Rester plus haut', 'Déclench. pressing : Plus souvent',
       'Transition défensive : Effectuer un contre-pressing', 'En taclant : Standard', 'Relance courte du gardien : Oui', 'Piège du pressing : Équilibrée',
       'Pressing sur centres : Équilibré',
     ]);
-    expect(c.ip.filter((x) => x.set)).toHaveLength(7);
+    expect(c.ip.filter((x) => x.set)).toHaveLength(8);
   });
 });
 

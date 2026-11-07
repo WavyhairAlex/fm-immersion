@@ -76,7 +76,7 @@ export const MATCH_SITUATIONS = ['leading', 'drawing', 'losing', 'lateLosing', '
 export type MatchSituation = (typeof MATCH_SITUATIONS)[number];
 
 /** Styles qui gardent le ballon : les longs ballons cassent ce qu'ils construisent, réservés aux dernières minutes. */
-const KEEP_BALL = new Set(['possession', 'possession-433', 'tikitaka', 'tikitaka-v']);
+const KEEP_BALL = new Set(['possession', 'tikitaka', 'tikitaka-v']);
 
 /**
  * Ce qu'on active selon la situation, sans changer la tactique de base (« une base, des ajustements ») :
