@@ -2627,7 +2627,12 @@
       "halves": "1st half: {{first}} · 2nd half: {{second}}",
       "first": "First goal: {{scorer}} ({{minute}})",
       "penalties_one": "{{count}} penalty scored",
-      "penalties_other": "{{count}} penalties scored"
+      "penalties_other": "{{count}} penalties scored",
+      "possession": "Possession: {{home}} · {{away}}",
+      "shots": "Shots: {{home}} ({{homeOn}} on target) · {{away}} ({{awayOn}} on target)",
+      "xg": "xG: {{home}} · {{away}}",
+      "motm": "Player of the match: {{name}} ({{rating}})",
+      "motmNoRating": "Player of the match: {{name}}"
     },
     "prematch": {
       "title": "Pre-match",

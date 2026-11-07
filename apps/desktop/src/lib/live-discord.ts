@@ -122,9 +122,61 @@ export function liveContext(snap: unknown): LiveContext {
   };
 }
 
-/** Relevé du direct complété par l'appli (compétition et contexte lus dans l'instantané). */
-type LiveIn = FmLive & { competition?: unknown; context?: LiveContext | null };
+/** Relevé du direct complété par l'appli (compétition, contexte et, après le match, ses chiffres lus dans l'instantané). */
+type LiveIn = FmLive & { competition?: unknown; context?: LiveContext | null; stats?: MatchStats | null };
 const contextOf = (l: FmLive) => (l as LiveIn).context ?? null;
+const statsOf = (l: FmLive) => (l as LiveIn).stats ?? null;
+
+/** Chiffres du dernier match joué (domicile, extérieur), lus dans l'instantané une fois le match fini. */
+export interface MatchStats {
+  possession: [number, number] | null;
+  shots: [number, number] | null;
+  onTarget: [number, number] | null;
+  xg: [number, number] | null;
+  motm: { name: string; rating: number | null } | null;
+}
+
+const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : typeof v === 'string' && v.trim() !== '' && Number.isFinite(+v.replace(',', '.')) ? +v.replace(',', '.') : null);
+const pair = (a: unknown, b: unknown): [number, number] | null => {
+  const x = num(a);
+  const y = num(b);
+  return x != null && y != null ? [x, y] : null;
+};
+
+/**
+ * Chiffres du match qui vient de finir, lus dans `custom.equipe` (chemins.json : `dernierMatch*` = LastFixture/…,
+ * 07/11/2026). Le jeu ne remplit possession, tirs et xG qu'une fois le match terminé, et sa date est un objet opaque :
+ * on reconnaît le match par son score, pour un instantané écrit au plus tard une semaine de jeu après le direct.
+ * Un match sans aucun tir ni possession lue (50/50, 0 tir) est tenu pour non renseigné.
+ */
+export function lastMatchStats(snap: unknown, l: FmLive): MatchStats | null {
+  const s = (snap ?? {}) as { gameDate?: unknown; custom?: { equipe?: Record<string, unknown> } };
+  const e = s.custom?.equipe;
+  if (!e || !l.final || typeof s.gameDate !== 'string' || !l.gameDate) return null;
+  const days = (Date.parse(s.gameDate) - Date.parse(l.gameDate)) / 86_400_000;
+  if (!Number.isFinite(days) || days < 0 || days > 7) return null;
+  if (num(e.dernierMatchScoreDomicile) !== (l.homeScore ?? 0) || num(e.dernierMatchScoreExterieur) !== (l.awayScore ?? 0)) return null;
+  const possession = pair(e.dernierMatchPossDom, e.dernierMatchPossExt);
+  const shots = pair(e.dernierMatchTirsDom, e.dernierMatchTirsExt);
+  const onTarget = pair(e.dernierMatchTirsCadresDom, e.dernierMatchTirsCadresExt);
+  const xg = pair(e.dernierMatchXgDom, e.dernierMatchXgExt);
+  const name = typeof e.dernierMatchHommeDuMatch === 'string' && e.dernierMatchHommeDuMatch.trim() && !e.dernierMatchHommeDuMatch.startsWith('SI.') ? e.dernierMatchHommeDuMatch.replace(/<[^>]*>/g, '').trim() : null;
+  const empty = (!shots || (shots[0] === 0 && shots[1] === 0)) && (!possession || (possession[0] === 50 && possession[1] === 50));
+  if (empty) return null;
+  return { possession, shots, onTarget, xg, motm: name ? { name, rating: num(e.dernierMatchNoteHommeDuMatch) } : null };
+}
+
+/** Lignes « En chiffres » tirées des stats du jeu : possession, tirs (cadrés), xG, homme du match. */
+export function statsLines(t: TFunction, st: MatchStats): string[] {
+  const pct = (n: number) => `${Math.round(n)} %`;
+  const xg = (n: number) => n.toFixed(2).replace('.', ',');
+  const lines: string[] = [];
+  if (st.possession) lines.push(t('live.figures.possession', { home: pct(st.possession[0]), away: pct(st.possession[1]) }));
+  if (st.shots) lines.push(t('live.figures.shots', { home: st.shots[0], away: st.shots[1], homeOn: st.onTarget?.[0] ?? '?', awayOn: st.onTarget?.[1] ?? '?' }));
+  if (st.xg) lines.push(t('live.figures.xg', { home: xg(st.xg[0]), away: xg(st.xg[1]) }));
+  if (st.motm) lines.push(st.motm.rating != null ? t('live.figures.motm', { name: st.motm.name, rating: st.motm.rating.toFixed(1).replace('.', ',') }) : t('live.figures.motmNoRating', { name: st.motm.name }));
+  return lines;
+}
 
 /** Buts d'un même joueur dans ce match jusqu'à ce but compris (doublé, triplé). */
 function goalsInMatch(tl: TimelineGoal[] | null, goal: TimelineGoal) {
@@ -163,7 +215,9 @@ export function commentaryFact(t: TFunction, l: FmLive, club: string | null, goa
 /** Les chiffres du match qu'on peut tirer du relevé : buts par mi-temps, premier buteur, but le plus tardif. */
 export function matchFigures(t: TFunction, l: FmLive): string | null {
   const tl = timeline(l);
-  if (!tl || !tl.length) return null;
+  const st = statsOf(l);
+  const game = st ? statsLines(t, st) : [];
+  if (!tl || !tl.length) return game.length ? game.join('\n') : null;
   const half = (first: boolean) => {
     const g = tl.filter((x) => (first ? x.minute <= 45 || /^45\s*\+/.test(x.time) : x.minute > 45 && !/^45\s*\+/.test(x.time)));
     return `${g.filter((x) => x.side === 'home').length} - ${g.filter((x) => x.side === 'away').length}`;
@@ -172,7 +226,7 @@ export function matchFigures(t: TFunction, l: FmLive): string | null {
   const lines = [t('live.figures.halves', { first: half(true), second: half(false) }), t('live.figures.first', { scorer: first.name, minute: first.time })];
   const pens = tl.filter((g) => /^pen/i.test(g.time)).length;
   if (pens) lines.push(t('live.figures.penalties', { count: pens }));
-  return lines.join('\n');
+  return [...game, ...lines].join('\n');
 }
 
 /** Un but reste « l'actualité » du commentateur pendant ces minutes de jeu, puis il reparle du match. */
@@ -292,6 +346,8 @@ interface LiveState {
   messageId: string | null;
   last: FmLive;
   done: boolean;
+  /** Chiffres du jeu ajoutés à l'encart après le match (une seule fois). */
+  stats?: boolean;
 }
 
 const STATE_KEY = 'fmi.discord.liveState';
@@ -339,8 +395,18 @@ export async function liveStep(
   now = Date.now(),
   render?: LiveRender,
 ): Promise<LiveState | null> {
-  if (!liveIsFresh(l, now)) return state;
   const key = liveKey(l);
+  // Après le match : les chiffres du jeu arrivent avec l'instantané suivant (jusqu'à quelques minutes plus tard,
+  // le relevé n'est alors plus « frais ») ; on complète l'encart une seule fois.
+  if (state?.done && !state.stats && state.key === key && state.messageId && statsOf(l)) {
+    try {
+      await publish(t, l, club, state.messageId, render);
+      return { ...state, last: l, stats: true };
+    } catch {
+      return state;
+    }
+  }
+  if (!liveIsFresh(l, now)) return state;
   if (!state || state.key !== key) {
     if (l.final) return { key, messageId: null, last: l, done: true }; // match déjà fini quand l'appli l'a vu
     const messageId = await publish(t, l, club, null, render);
@@ -375,6 +441,8 @@ export function useLiveDiscord() {
     let state = loadState();
     // Compétition du match en cours (« Match Amical »…), lue une fois par match dans l'instantané du plugin.
     let comp: { key: string; context: LiveContext | null } | null = null;
+    // Chiffres du match fini : instantané relu au plus une fois par minute tant qu'ils manquent.
+    let statsAt = 0;
     const render: LiveRender = async (l, club, comment) => {
       const { drawLiveBoard } = await import('./live-image');
       const { canvasPng } = await import('./gazette-une');
@@ -398,7 +466,13 @@ export function useLiveDiscord() {
           const context = snapRaw ? liveContext(JSON.parse(snapRaw)) : null;
           comp = { key, context };
         }
-        const next = await liveStep(t, { ...live.data, competition: comp.context?.competition ?? null, context: comp.context } as FmLive, club, state, Date.now(), render);
+        let stats: MatchStats | null = null;
+        if (live.data.final && state?.done && !state.stats && state.key === key && Date.now() - statsAt >= 60_000) {
+          statsAt = Date.now();
+          const snapRaw = await invoke<string | null>('fm_read_snapshot', { folder }).catch(() => null);
+          stats = snapRaw ? lastMatchStats(JSON.parse(snapRaw), live.data) : null;
+        }
+        const next = await liveStep(t, { ...live.data, competition: comp.context?.competition ?? null, context: comp.context, stats } as FmLive, club, state, Date.now(), render);
         if (next && next !== state) {
           state = next;
           saveState(next);
