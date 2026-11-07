@@ -14,7 +14,8 @@ extraite avec son historique ; Simloom garde Planet Zoo 2 et Transport Fever 3.
   Releases : la recherche de mise à jour au démarrage, et, à la demande du joueur, le téléchargement du plugin FM27
   (`modules/fm/bridge`, vérifié par SHA-256, voir son README).
   Exception choisie par le joueur : le **Live Discord** envoie une gazette à son salon par le lien webhook qu'il a
-  collé (`src-tauri/src/discord.rs`, seulement vers `discord.com/api/webhooks/`, seulement sur son clic).
+  collé (`src-tauri/src/discord.rs`, seulement vers `discord.com/api/webhooks/`, seulement sur son clic), et un certificat de
+  défi joint (`modules/fm/src/challenges.ts`, mode Défis) quand il clique sur « Partager sur Discord ».
 - **Mises à jour automatiques** au lancement (`UpdateGate`) via `tauri-plugin-updater`. Les fichiers de mise à
   jour sont signés avec une clé minisign (secret GitHub `TAURI_SIGNING_PRIVATE_KEY`, clé publique dans
   `tauri.conf.json`). **Perdre cette clé = plus aucune mise à jour possible pour les installations existantes.**

@@ -54,12 +54,14 @@ pub fn run() {
             faces::faces_ageswap_set,
             discord::discord_send,
             discord::discord_send_image,
+            discord::discord_send_certificate,
             discord::discord_post,
             discord::discord_edit,
             discord::discord_live_image,
             fm::fm_read_live,
             facepack::fm_face,
-            images::image_save
+            images::image_save,
+            images::certificate_save
         ])
         .run(tauri::generate_context!())
         .expect("impossible de démarrer FM Immersion");

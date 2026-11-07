@@ -2558,6 +2558,10 @@
       "title": "Monde partagé",
       "summary": "Multijoueur asynchrone : chacun joue sa partie à son rythme, dans le même monde.",
       "details": "Chaque coach joue sa propre sauvegarde. Les résultats, transferts et changements de poste des autres humains arrivent dans ta partie à la bonne date, avec un rendez-vous commun tous les six mois."
+    },
+    "challenges": {
+      "title": "Défis",
+      "summary": "Les défis célèbres de FM (De zéro à héros, Invincibles…) prouvés par ta partie, avec un certificat à partager."
     }
   },
   "faces": {
@@ -3158,5 +3162,121 @@
     "send": "Envoyer la carte sur Discord",
     "sent": "Carte envoyée sur Discord.",
     "faces": "Les photos viennent de ton facepack ou des portraits photoréalistes ; sans photo, les initiales sont affichées."
+  },
+  "challenges": {
+    "save": "Partie",
+    "intro": "Inscris-toi à un défi avant de jouer : FM Immersion le vérifie tout seul à partir des instantanés du plugin. Pas de déclaration sur l'honneur, un certificat que les autres peuvent revérifier.",
+    "noSave": "Aucune partie FM pour l'instant. Crée-la dans FM Coach, puis reviens t'inscrire.",
+    "coach": "Ton pseudo sur les certificats",
+    "coachPlaceholder": "Pseudo Discord, par exemple",
+    "anonymous": "Anonyme",
+    "mine": "Mes défis en cours",
+    "none": "Aucun défi en cours pour cette partie. Choisis-en un ci-dessous.",
+    "catalog": "Choisir un défi",
+    "checked": "Vérifié :",
+    "enroll": "M'inscrire",
+    "nationality": "Nationalité (ex. France)",
+    "since": "Suivi depuis le {{date}} (date de jeu)",
+    "shareDiscord": "Partager sur Discord",
+    "export": "Exporter le certificat",
+    "abandon": "Abandonner",
+    "abandonConfirm": "Abandonner ce défi ? Il ne sera plus suivi (on ne peut pas reprendre une inscription).",
+    "noWebhook": "Pour partager sur Discord, colle d'abord le lien webhook de ton salon dans",
+    "shared": "Certificat envoyé sur Discord (empreinte {{digest}}).",
+    "blocked": {
+      "soon": "Pas encore jouable : il faut d'abord lire le palmarès dans le jeu.",
+      "taken": "Déjà en cours dans cette partie.",
+      "needUnemployed": "Il faut une nouvelle carrière sans club : lance-la dans FM27 et ouvre-la dans FM Coach tant que ton manager est sans club.",
+      "needSnapshot": "Il faut au moins un instantané de la partie (ouvre-la dans FM Coach)."
+    },
+    "status": {
+      "running": "En cours",
+      "success": "Réussi",
+      "failed": "Échoué",
+      "unproven": "Non prouvé",
+      "unavailable": "Bientôt"
+    },
+    "step": {
+      "unemployed": "Carrière commencée sans club",
+      "firstClub": "Premier club : {{value}}",
+      "titles": "Titres de champion : {{value}} {{detail}}",
+      "topTitle": "Champion de 1re division {{detail}}",
+      "seasonUnbeaten": "Saison de championnat sans défaite {{detail}}",
+      "currentSeason": "Saison en cours : {{value}} défaite(s) en {{detail}} matchs",
+      "u19Matches": "Matchs avec au moins 3 titulaires de moins de 19 ans : {{value}} / {{target}}",
+      "localsSeason": "Une saison complète avec seulement des joueurs « {{value}} » ({{detail}})",
+      "localsUsed": "Joueurs alignés : {{value}}, aucun étranger",
+      "pentagonSoon": "Les 5 Ligues des champions continentales : lecture du palmarès à venir",
+      "localsForeign": "Étrangers alignés : {{detail}}"
+    },
+    "issue": {
+      "editor": "Éditeur en jeu utilisé (signalé par FM27 le {{date}}) : défi éliminé.",
+      "editorUnknown": "Le plugin ne lit pas encore l'indicateur de l'éditeur en jeu : mets-le à jour.",
+      "replayed": "Match du {{date}} rejoué après un rechargement : {{before}} devenu {{after}}. Défi éliminé.",
+      "rewind": "Partie rechargée : retour au {{to}} alors que le {{from}} était déjà joué (aucun résultat changé).",
+      "notUnemployed": "La carrière n'a pas commencé sans club.",
+      "untracked": "Saison {{season}} pas suivie de bout en bout ({{tracked}} matchs suivis sur {{expected}}) : ne compte pas.",
+      "unknownLoss": "Défaite dans {{matches}} matchs regroupés avant le {{date}} : compétition inconnue, saison non prouvée. Laisse FM Immersion ouvert ou relis après chaque match.",
+      "nationalityUnknown": "Nationalité inconnue pour {{count}} joueur(s) : le plugin doit lire « nationalites »."
+    },
+    "def": {
+      "zero-to-hero": {
+        "name": "De zéro à héros",
+        "rules": "Commence sans club et sans réputation, trouve un premier poste et grimpe jusqu'au titre de champion d'une première division.",
+        "checked": "état « sans club » du plugin au départ, place finale de chaque saison, nom du championnat."
+      },
+      "invincibles": {
+        "name": "Les Invincibles",
+        "rules": "Termine une saison de championnat sans aucune défaite.",
+        "checked": "chaque match de championnat, de la 1re à la dernière journée."
+      },
+      "u19": {
+        "name": "Génération U19",
+        "rules": "Joue 10 matchs officiels avec au moins 3 titulaires de moins de 19 ans.",
+        "checked": "onze de départ et âge des joueurs à chaque match."
+      },
+      "locals": {
+        "name": "Que des locaux",
+        "rules": "Une saison entière où tous les joueurs alignés en match officiel ont la nationalité choisie, façon Athletic Bilbao.",
+        "checked": "nationalités lues dans le jeu pour chaque joueur entré en jeu."
+      },
+      "pentagon": {
+        "name": "Pentagone",
+        "rules": "Sans club au départ, gagne les cinq Ligues des champions continentales (Europe, Amérique du Sud, Asie, Afrique, Amérique du Nord) dans la même carrière.",
+        "checked": "départ sans club ; la victoire finale demande la lecture du palmarès dans le jeu (à venir)."
+      }
+    },
+    "discord": {
+      "title": "🏆 {{coach}} · {{challenge}}",
+      "footer": "Empreinte {{digest}} · FM Immersion {{version}} · certificat joint, vérifiable dans l'appli"
+    },
+    "board": "Classement",
+    "boardIntro": "Importe les certificats des autres joueurs (fichier joint sur Discord) : FM Immersion refait tous les calculs et dit s'ils sont vérifiés ou modifiés.",
+    "boardEmpty": "Aucun certificat pour l'instant.",
+    "import": "Importer un certificat",
+    "importOk": "Certificat vérifié et ajouté au classement.",
+    "importBad": "Certificat refusé ou modifié : {{problems}}.",
+    "verified": "Vérifié",
+    "altered": "Modifié",
+    "remove": "Retirer",
+    "col": {
+      "coach": "Coach",
+      "challenge": "Défi",
+      "status": "Statut",
+      "check": "Vérification",
+      "clubs": "Clubs",
+      "digest": "Empreinte"
+    },
+    "problem": {
+      "format": "ce n'est pas un certificat FM Immersion",
+      "digest": "le fichier a été modifié après sa création",
+      "status": "le statut ne correspond pas aux règles",
+      "dates": "dates incohérentes",
+      "scores": "score et résultat ne concordent pas",
+      "counts": "nombres de matchs ou de titulaires impossibles",
+      "ages": "des joueurs rajeunissent"
+    },
+    "limit": "Tout se passe sur ton PC et le code est ouvert : un certificat prouve que la partie est cohérente et suivie de bout en bout, pas qu'il est impossible de fabriquer une fausse saison entière. Projet indépendant, sans lien avec Sports Interactive ni SEGA.",
+    "saved": "Certificat enregistré : {{path}}"
   }
 }

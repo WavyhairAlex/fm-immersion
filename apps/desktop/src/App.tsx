@@ -4,6 +4,7 @@ import { UpdateGate } from './components/UpdateGate';
 import { useGazetteAuto } from './lib/gazette-auto';
 import { useLiveDiscord } from './lib/live-discord';
 import { Discord } from './pages/Discord';
+import { Challenges } from './pages/Challenges';
 import { Faces } from './pages/Faces';
 import { FmSave } from './pages/FmSave';
 import { Gazette } from './pages/Gazette';
@@ -26,6 +27,7 @@ export function App() {
             <Route path="/fm/:saveId" element={<FmSave />} />
             <Route path="/gazette" element={<Gazette />} />
             <Route path="/discord" element={<Discord />} />
+            <Route path="/defis" element={<Challenges />} />
             <Route path="/monde" element={<Soon mode="world" />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
