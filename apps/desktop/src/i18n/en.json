@@ -1077,7 +1077,7 @@
       "rule3": "If a match moves, put preparation back the day before and recovery the day after.",
       "rule4": "Players back from international duty are handled separately.",
       "rule5": "Judge the plan over several weeks, not one result, and lighten it if the workload doesn't suit.",
-      "source": "\"Freedom\" method (FM Scout, FM27 training schedules): 44 schedules, 4-week themed cycles. The article ships no .fmf files: Archivix rebuilds each day with FM27's sessions, steered by your target style. Copy it into the game's Training screen. Adjusted from AlexJeuVideal's benchmark (\"The truth about tactical effectiveness\"): Rest the day after every match, 2 pressing trap sessions a week, priority to build-up, chance creation, line of engagement and out-of-possession shape, full rest in three-match weeks.",
+      "source": "\"Freedom\" method (FM Scout, FM27 training schedules): 44 schedules, 4-week themed cycles. The article ships no .fmf files: FM Immersion rebuilds each day with FM27's sessions, steered by your target style. Copy it into the game's Training screen. Adjusted from AlexJeuVideal's benchmark (\"The truth about tactical effectiveness\"): Rest the day after every match, 2 pressing trap sessions a week, priority to build-up, chance creation, line of engagement and out-of-possession shape, full rest in three-match weeks.",
       "clubStatus": "Club status",
       "status": {
         "pro": "Professional",
@@ -1190,7 +1190,7 @@
       "matchesCol": "Matches",
       "scheduleFocus": "Schedule Focus",
       "workloadCol": "Workload",
-      "upcomingHelp": "Set ahead in the game's Training Schedule screen: one Schedule Focus and one workload per week. Light in two-match weeks, medium with one match, heavy with no match and early in pre-season. Beyond the next known fixtures, Archivix assumes a Saturday match.",
+      "upcomingHelp": "Set ahead in the game's Training Schedule screen: one Schedule Focus and one workload per week. Light in two-match weeks, medium with one match, heavy with no match and early in pre-season. Beyond the next known fixtures, FM Immersion assumes a Saturday match.",
       "reasonHint": "Hover a player's intensity to see why it is advised.",
       "metaAdaptHelp": "AlexJeuVideal's Meta base: 2 pressing-trap sessions a week, the day before the match Ball Progression, Defensive Block, Conditioning, rest otherwise. The other 4 tactical sessions follow your priority areas (the weakest from the game and your matches) among those the benchmark finds useful: Line of Engagement, Build-Up, Chance Creation, In and Out of Possession Shape. They change when your weaknesses change.",
       "metaSwaps": "After loading it, replace: {{list}}."

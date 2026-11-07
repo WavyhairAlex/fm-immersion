@@ -1,7 +1,7 @@
 {
   "name": "fm-immersion",
   "private": true,
-  "description": "FM Immersion — le compagnon de bureau de tes jeux de gestion. Every game, one thread.",
+  "description": "FM Immersion — le compagnon de bureau de tes parties de Football Manager 27.",
   "packageManager": "pnpm@9.15.0",
   "engines": {
     "node": ">=22"

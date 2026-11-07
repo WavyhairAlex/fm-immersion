@@ -10,8 +10,8 @@ et outils pour rendre ta carrière plus vivante. Application Windows gratuite et
 
 | Module | État |
 |---|---|
-| **FM Coach** : effectif, tactique, entraînement, mercato, adversaire, finances (lecture de ta partie) | repris de Simloom, disponible |
-| **Plugin en jeu** (Archivix Bridge, BepInEx) : installation et mise à jour | repris de Simloom, disponible |
+| **FM Coach** : effectif, tactique, entraînement, mercato, adversaire, finances (lecture de ta partie) | disponible |
+| **Plugin en jeu** (Archivix Bridge, BepInEx) : installation et mise à jour | disponible |
 | **Visages photoréalistes** : installation en un clic, réinstallation après une mise à jour Steam | à venir |
 | **Gazette** de la semaine : résultats, classement, blessures, transferts, centre de formation | disponible |
 | **Live Discord** : envoi de la gazette dans ton salon (webhook) | disponible (solo) |

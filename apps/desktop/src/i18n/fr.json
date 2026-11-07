@@ -1077,7 +1077,7 @@
       "rule3": "Si un match est déplacé, remets la préparation la veille et la récupération le lendemain.",
       "rule4": "Les joueurs qui reviennent de sélection se gèrent à part.",
       "rule5": "Juge le plan sur plusieurs semaines, pas sur un résultat, et allège si la charge ne convient pas.",
-      "source": "Méthode « Freedom » (FM Scout, FM27 training schedules) : 44 plannings, cycles de 4 semaines à thème. L'article ne fournit pas les fichiers .fmf : Archivix reconstruit chaque journée avec les séances de FM27, orientées par ton style visé. À recopier dans l'écran Entraînement du jeu. Corrigé d'après le banc d'essai d'AlexJeuVideal (« La vérité sur l'efficacité tactique ») : Repos chaque lendemain de match, 2 pièges de pressing par semaine, priorité à la construction, la création, la ligne d'engagement et l'organisation sans ballon, semaine entière de repos à 3 matchs.",
+      "source": "Méthode « Freedom » (FM Scout, FM27 training schedules) : 44 plannings, cycles de 4 semaines à thème. L'article ne fournit pas les fichiers .fmf : FM Immersion reconstruit chaque journée avec les séances de FM27, orientées par ton style visé. À recopier dans l'écran Entraînement du jeu. Corrigé d'après le banc d'essai d'AlexJeuVideal (« La vérité sur l'efficacité tactique ») : Repos chaque lendemain de match, 2 pièges de pressing par semaine, priorité à la construction, la création, la ligne d'engagement et l'organisation sans ballon, semaine entière de repos à 3 matchs.",
       "clubStatus": "Statut du club",
       "status": {
         "pro": "Professionnel",
@@ -1190,7 +1190,7 @@
       "matchesCol": "Matchs",
       "scheduleFocus": "Priorité du calendrier",
       "workloadCol": "Charge",
-      "upcomingHelp": "À régler d'avance dans l'écran Programme d'entraînement du jeu : une « Priorité du calendrier » et une charge par semaine. Charge légère les semaines à deux matchs, moyenne avec un match, intensive sans match et en début de présaison. Au-delà des prochains matchs connus, Archivix suppose un match le samedi.",
+      "upcomingHelp": "À régler d'avance dans l'écran Programme d'entraînement du jeu : une « Priorité du calendrier » et une charge par semaine. Charge légère les semaines à deux matchs, moyenne avec un match, intensive sans match et en début de présaison. Au-delà des prochains matchs connus, FM Immersion suppose un match le samedi.",
       "reasonHint": "Survole l'intensité d'un joueur pour voir pourquoi elle est conseillée.",
       "metaAdaptHelp": "Base Méta d'AlexJeuVideal : 2 pièges du pressing par semaine, la veille du match Progression du ballon, Bloc défensif, Condition physique, le reste au repos. Les 4 autres séances tactiques suivent tes zones prioritaires (les plus faibles d'après le jeu et tes matchs) parmi celles que le banc d'essai juge utiles : Hauteur du pressing, Construction, Création d'occasions, Organisation avec et sans le ballon. Elles changent quand tes faiblesses changent.",
       "metaSwaps": "Après chargement, remplace : {{list}}."

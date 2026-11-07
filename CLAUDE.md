@@ -52,7 +52,7 @@ Monorepo pnpm + Turborepo.
 | `packages/db` | Schéma Drizzle (dialecte SQLite) du socle ; les modules ajoutent le leur |
 | `packages/shared` | Schémas zod, types partagés, liste des jeux, contrat des modules |
 | `modules/<jeu>` | Un module par jeu : manifeste, `src/schema.ts` (tables préfixées `<jeu>_`), carte de tableau de bord |
-| `brand/source` | Sources de l'identité (PNG mascottes, SVG logo) — ne pas embarquer directement |
+| `brand/source` | Source de l'icône (SVG) ; les icônes de `src-tauri/icons` en sont tirées avec `pnpm tauri icon` |
 
 ### Accès aux données
 - Les requêtes sont écrites en TypeScript avec Drizzle (`drizzle-orm/sqlite-proxy`, `src/lib/db.ts`) et

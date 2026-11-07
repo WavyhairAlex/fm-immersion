@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="FM Immersion">
+  <title>FM Immersion</title>
+  <!-- Icône de l'appli : anthracite et orange. Texte en Fraunces 700 : les PNG et .ico de src-tauri/icons en sont tirés avec `pnpm tauri icon`. -->
+  <rect width="512" height="512" rx="112" fill="#25282D"/>
+  <text x="256" y="318" text-anchor="middle" font-family="Fraunces" font-weight="700" font-size="236" fill="#FFFFFF" letter-spacing="-6">FM</text>
+  <rect x="120" y="364" width="272" height="34" rx="17" fill="#F26B1D"/>
+</svg>
