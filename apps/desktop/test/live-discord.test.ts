@@ -10,7 +10,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   }),
 }));
 
-const { commentary, goalSituation, liveStep, matchPhase, minuteOf, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
+const { commentary, goalSituation, liveContext, liveStep, matchFigures, matchPhase, minuteOf, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
 const t = ((k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k)) as unknown as TFunction;
 
 const at = '2026-11-07T07:20:00.000Z';
@@ -31,6 +31,26 @@ const base: FmLive = {
 describe('direct Discord', () => {
   beforeEach(() => {
     calls.length = 0;
+  });
+
+  it('donne du relief : doublé, buts de la saison, classement au coup d\'envoi, chiffres', () => {
+    const ctx = liveContext({
+      nextMatch: { competition: '2. liga', threatLevel: 'Il ne sera pas évident de battre Inter Bratislava.' },
+      custom: { equipe: { classementPosition: 4 } },
+      players: [{ name: 'Marek Fábry', goals: 12 }, { name: 'Arthur', goals: 15 }],
+    });
+    expect(ctx).toMatchObject({ position: 4, friendly: false, topScorer: { name: 'Arthur', goals: 15 } });
+    const one = { ...base, awayScore: 1, minute: '12 min.', scorers: "M. Fábry 11'", context: ctx } as FmLive;
+    expect(commentary(t, one, 'Malženice', timeline(one)!.at(-1)!)).toContain('live.fact.tally {"count":13}');
+    const two = { ...base, awayScore: 2, minute: '40 min.', scorers: "M. Fábry 11', 38'", context: ctx } as FmLive;
+    expect(commentary(t, two, 'Malženice', timeline(two)!.at(-1)!)).toContain('live.fact.brace');
+    const ko = commentary(t, { ...base, context: ctx } as FmLive, 'Malženice', null);
+    expect(ko).toContain('live.fact.position');
+    expect(ko).toContain('Il ne sera pas évident');
+    expect(matchFigures(t, { ...two, homeScore: 1, scorers: "Novák 70', M. Fábry 11', 38'" } as FmLive)).toContain('"first":"0 - 2","second":"1 - 0"');
+    // Amical : pas de total de la saison.
+    const friendly = { ...one, context: { ...ctx, friendly: true } } as FmLive;
+    expect(commentary(t, friendly, 'Malženice', timeline(friendly)!.at(-1)!)).not.toContain('tally');
   });
 
   it("annonce la compétition dans l'encart (match amical)", () => {

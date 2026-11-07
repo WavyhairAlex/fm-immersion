@@ -1,4 +1,4 @@
-import { fmLiveSchema, liveIsFresh, liveKey, liveNews, parseScorers, type FmLive } from '@fm-immersion/module-fm';
+import { fmLiveSchema, isFriendly, liveIsFresh, liveKey, liveNews, parseScorers, type FmLive } from '@fm-immersion/module-fm';
 import { invoke } from '@tauri-apps/api/core';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
@@ -77,6 +77,104 @@ export function matchPhase(minute: number | null) {
   return 'stoppage';
 }
 
+/* ---------- Contexte d'avant-match ---------- */
+
+/**
+ * Ce que le commentateur sait avant le coup d'envoi, lu une fois par match dans l'instantané du plugin : compétition,
+ * classement du club, avis du jeu sur l'adversaire, buts de la saison de nos joueurs. Le relevé du direct (plugin)
+ * ne donne que le score, la minute et les buteurs : pas de possession ni de tirs.
+ */
+export interface LiveContext {
+  competition: string | null;
+  friendly: boolean;
+  /** Place du club au classement avant le match. */
+  position: number | null;
+  /** Phrase du jeu sur l'adversaire (« Il ne sera pas évident de battre … »). */
+  threat: string | null;
+  /** Buts de la saison avant le match, par nom de famille (en minuscules). */
+  goals: Record<string, number>;
+  topScorer: { name: string; goals: number } | null;
+}
+
+const lastName = (name: string) => (name.trim().split(/\s+/).at(-1) ?? '').toLowerCase();
+
+export function liveContext(snap: unknown): LiveContext {
+  const s = (snap ?? {}) as { nextMatch?: Record<string, unknown> | null; players?: unknown[]; custom?: { equipe?: Record<string, unknown> } };
+  const next = s.nextMatch ?? null;
+  const competition = typeof next?.competition === 'string' && next.competition.trim() ? next.competition.trim() : null;
+  const pos = Number(s.custom?.equipe?.classementPosition);
+  const goals: Record<string, number> = {};
+  let top: LiveContext['topScorer'] = null;
+  for (const raw of Array.isArray(s.players) ? s.players : []) {
+    const p = raw as { name?: unknown; goals?: unknown };
+    const g = Number(p.goals);
+    if (typeof p.name !== 'string' || !Number.isFinite(g)) continue;
+    goals[lastName(p.name)] = g;
+    if (g > 0 && (!top || g > top.goals)) top = { name: p.name, goals: g };
+  }
+  return {
+    competition,
+    friendly: isFriendly(competition),
+    position: Number.isInteger(pos) && pos > 0 ? pos : null,
+    threat: typeof next?.threatLevel === 'string' && next.threatLevel.trim() ? next.threatLevel.trim() : null,
+    goals,
+    topScorer: top,
+  };
+}
+
+/** Relevé du direct complété par l'appli (compétition et contexte lus dans l'instantané). */
+type LiveIn = FmLive & { competition?: unknown; context?: LiveContext | null };
+const contextOf = (l: FmLive) => (l as LiveIn).context ?? null;
+
+/** Buts d'un même joueur dans ce match jusqu'à ce but compris (doublé, triplé). */
+function goalsInMatch(tl: TimelineGoal[] | null, goal: TimelineGoal) {
+  return (tl ?? []).filter((g) => g.side === goal.side && g.name === goal.name && g.minute <= goal.minute).length;
+}
+
+/**
+ * Le fait qui donne du relief à la phrase : doublé ou triplé, total de buts de la saison du buteur (nos joueurs, hors
+ * amicaux), classement et avis du jeu au coup d'envoi, longue période sans but. Chaîne vide si rien à dire.
+ */
+export function commentaryFact(t: TFunction, l: FmLive, club: string | null, goal: TimelineGoal | null, fresh: boolean): string {
+  const ctx = contextOf(l);
+  const side = mySide(l, club);
+  const tl = timeline(l);
+  const minute = minuteOf(l.minute);
+  if (goal && fresh) {
+    const n = goalsInMatch(tl, goal);
+    if (n >= 3) return t('live.fact.hattrick', { scorer: goal.name });
+    if (n === 2) return t('live.fact.brace', { scorer: goal.name });
+    if (ctx && !ctx.friendly && side === goal.side) {
+      const before = ctx.goals[lastName(goal.name)];
+      if (before != null) return t('live.fact.tally', { count: before + n });
+    }
+    return '';
+  }
+  if (matchPhase(minute) === 'kickoff' && ctx) {
+    const parts = [ctx.position && !ctx.friendly && club ? t(ctx.position === 1 ? 'live.fact.leader' : 'live.fact.position', { club, position: ctx.position }) : '', ctx.threat ?? ''];
+    return parts.filter(Boolean).join(' ');
+  }
+  const last = lastOf(tl);
+  const since = minute == null ? null : minute - (last?.minute ?? 0);
+  if (since != null && since >= 30 && !l.final) return last ? t('live.fact.drought', { count: since }) : '';
+  return '';
+}
+
+/** Les chiffres du match qu'on peut tirer du relevé : buts par mi-temps, premier buteur, but le plus tardif. */
+export function matchFigures(t: TFunction, l: FmLive): string | null {
+  const tl = timeline(l);
+  if (!tl || !tl.length) return null;
+  const half = (first: boolean) => {
+    const g = tl.filter((x) => (first ? x.minute <= 45 || /^45\s*\+/.test(x.time) : x.minute > 45 && !/^45\s*\+/.test(x.time)));
+    return `${g.filter((x) => x.side === 'home').length} - ${g.filter((x) => x.side === 'away').length}`;
+  };
+  const first = tl[0]!;
+  const lines = [t('live.figures.halves', { first: half(true), second: half(false) }), t('live.figures.first', { scorer: first.name, minute: first.time })];
+  const pens = tl.filter((g) => /^pen/i.test(g.time)).length;
+  if (pens) lines.push(t('live.figures.penalties', { count: pens }));
+  return lines.join('\n');
+}
+
 /** Un but reste « l'actualité » du commentateur pendant ces minutes de jeu, puis il reparle du match. */
 const GOAL_NEWS_MINUTES = 6;
 
@@ -86,6 +184,14 @@ const GOAL_NEWS_MINUTES = 6;
  * parmi plusieurs variantes, stable pendant une dizaine de minutes pour ne pas changer à chaque relevé.
  */
 export function commentary(t: TFunction, l: FmLive, club: string | null, goal: TimelineGoal | null): string {
+  const minute = minuteOf(l.minute);
+  const fresh = !!goal && (minute == null || minute - goal.minute <= GOAL_NEWS_MINUTES);
+  const fact = l.final ? '' : commentaryFact(t, l, club, goal, fresh);
+  const base = baseCommentary(t, l, club, goal);
+  return fact ? `${base} ${fact}` : base;
+}
+
+function baseCommentary(t: TFunction, l: FmLive, club: string | null, goal: TimelineGoal | null): string {
   const side = mySide(l, club);
   const minute = minuteOf(l.minute);
   const vars = { home: l.home, away: l.away, score: score(l) };
@@ -121,7 +227,7 @@ const lastOf = (tl: TimelineGoal[] | null) => (tl && tl.length ? tl[tl.length - 
 
 /** Compétition du match (lue dans l'instantané du plugin par l'appli, pas dans le relevé du direct). */
 const competitionOf = (l: FmLive) => {
-  const c = (l as FmLive & { competition?: unknown }).competition;
+  const c = (l as LiveIn).competition;
   return typeof c === 'string' && c.trim() ? c.trim() : null;
 };
 
@@ -141,6 +247,15 @@ export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, 
     const mine = side ? g.side === side : true;
     return `\`${g.time.replace(/^pen\.?\s*/i, '').padStart(5)}\` ${mine ? '⚽' : '🥅'} **${g.name}** · ${g.side === 'home' ? l.home : l.away}${/^pen/i.test(g.time) ? ` (${t('live.penalty')})` : ''}`;
   });
+  const figures = matchFigures(t, l);
+  // Avant-match : seulement au début (ensuite le déroulé et les chiffres prennent la place).
+  const ctx = contextOf(l);
+  const prematch =
+    ctx && !tl?.length && !l.final
+      ? [ctx.position && !ctx.friendly && club ? t(ctx.position === 1 ? 'live.fact.leader' : 'live.fact.position', { club, position: ctx.position }) : '', ctx.topScorer && !ctx.friendly ? t('live.prematch.top', { name: ctx.topScorer.name, count: ctx.topScorer.goals }) : '']
+          .filter(Boolean)
+          .join('\n')
+      : '';
   return {
     username: 'FM Immersion',
     embeds: [
@@ -149,11 +264,15 @@ export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, 
         title: `${l.home}  ${score(l)}  ${l.away}`,
         description: [clock, `🎙️ *${commentary(t, l, club, lastOf(tl))}*`].join('\n\n'),
         color,
-        fields: lines.length
-          ? [{ name: t('live.timeline'), value: lines.join('\n').slice(0, 1000) }]
-          : l.scorers
-            ? [{ name: t('live.scorers'), value: l.scorers.slice(0, 1000) }]
-            : [],
+        fields: [
+          ...(lines.length
+            ? [{ name: t('live.timeline'), value: lines.join('\n').slice(0, 1000) }]
+            : l.scorers
+              ? [{ name: t('live.scorers'), value: l.scorers.slice(0, 1000) }]
+              : []),
+          ...(figures ? [{ name: t('live.figures.title'), value: figures.slice(0, 1000) }] : []),
+          ...(prematch ? [{ name: t('live.prematch.title'), value: prematch.slice(0, 1000) }] : []),
+        ],
         ...(opts.image ? { image: { url: 'attachment://direct.png' } } : {}),
         footer: {
           text: [l.gameDate && new Date(`${l.gameDate}T12:00:00`).toLocaleDateString(), 'FM Immersion'].filter(Boolean).join('  ·  '),
@@ -255,7 +374,7 @@ export function useLiveDiscord() {
   useEffect(() => {
     let state = loadState();
     // Compétition du match en cours (« Match Amical »…), lue une fois par match dans l'instantané du plugin.
-    let comp: { key: string; name: string | null } | null = null;
+    let comp: { key: string; context: LiveContext | null } | null = null;
     const render: LiveRender = async (l, club, comment) => {
       const { drawLiveBoard } = await import('./live-image');
       const { canvasPng } = await import('./gazette-une');
@@ -276,10 +395,10 @@ export function useLiveDiscord() {
         const key = liveKey(live.data);
         if (comp?.key !== key) {
           const snapRaw = await invoke<string | null>('fm_read_snapshot', { folder }).catch(() => null);
-          const next = snapRaw ? ((JSON.parse(snapRaw) as { nextMatch?: { competition?: unknown } | null }).nextMatch ?? null) : null;
-          comp = { key, name: typeof next?.competition === 'string' ? next.competition : null };
+          const context = snapRaw ? liveContext(JSON.parse(snapRaw)) : null;
+          comp = { key, context };
         }
-        const next = await liveStep(t, { ...live.data, competition: comp.name } as FmLive, club, state, Date.now(), render);
+        const next = await liveStep(t, { ...live.data, competition: comp.context?.competition ?? null, context: comp.context } as FmLive, club, state, Date.now(), render);
         if (next && next !== state) {
           state = next;
           saveState(next);

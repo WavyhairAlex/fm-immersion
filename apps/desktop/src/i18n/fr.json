@@ -2591,6 +2591,28 @@
       "final_0": "Fin du match : {{home}} {{score}} {{away}}.",
       "final_1": "Coup de sifflet final, {{score}}.",
       "final_2": "C'est terminé : {{home}} {{score}} {{away}}."
+    },
+    "fact": {
+      "hattrick": "Triplé pour {{scorer}} !",
+      "brace": "Doublé pour {{scorer}} !",
+      "tally_one": "Son premier but de la saison.",
+      "tally_other": "Son {{count}}e but de la saison.",
+      "position": "{{club}} aborde ce match à la {{position}}e place.",
+      "leader": "{{club}} aborde ce match en leader.",
+      "drought_one": "Plus de but depuis {{count}} minute.",
+      "drought_other": "Plus de but depuis {{count}} minutes."
+    },
+    "figures": {
+      "title": "En chiffres",
+      "halves": "1re mi-temps : {{first}} · 2e mi-temps : {{second}}",
+      "first": "Premier but : {{scorer}} ({{minute}})",
+      "penalties_one": "{{count}} penalty transformé",
+      "penalties_other": "{{count}} penalties transformés"
+    },
+    "prematch": {
+      "title": "Avant-match",
+      "top_one": "Meilleur buteur : {{name}} ({{count}} but)",
+      "top_other": "Meilleur buteur : {{name}} ({{count}} buts)"
     }
   },
   "season": {
