@@ -78,7 +78,10 @@
       "wage": "Salaire",
       "status": "Statut",
       "starsHelp": "Étoiles de niveau actuel / potentiel selon ton staff",
-      "compat": "Projet"
+      "compat": "Projet",
+      "apps": "Matchs",
+      "goals": "Buts",
+      "avgRating": "Note moy."
     },
     "an": {
       "xi": "Niveau du onze",
@@ -1356,7 +1359,7 @@
         "replace_other": "À remplacer pour le projet · {{count}}"
       },
       "groupHelp": {
-        "sell": "Pas de place dans les deux onze, même comme doublure : mets-les sur la liste des transferts.",
+        "sell": "Pas de place dans les deux onze, même comme doublure : mets-les sur la liste des transferts. Le prix conseillé (valeur du jeu corrigée par le contrat restant et l'âge) sert de point de départ ; refuse sous le plancher.",
         "release": "Pas de place dans les deux onze et aucune valeur marchande : ne pas prolonger, ou résilier pour libérer le salaire.",
         "loan": "Jeunes prometteurs bloqués derrière les titulaires et les doublures : un prêt leur donne du temps de jeu.",
         "extend": "Contrat qui finit dans moins d'un an : à prolonger avant qu'ils ne partent libres.",
@@ -2192,6 +2195,23 @@
         "5": "espoir",
         "6": "jeune"
       }
+    },
+    "price": {
+      "ask": "Demander {{ask}} · plancher {{floor}}",
+      "value": "valeur {{value}}",
+      "factor": {
+        "longContract": "contrat de plus de 2 ans : ×1,5",
+        "midContract": "contrat de 1 à 2 ans : ×1,2",
+        "shortContract": "contrat de 6 à 12 mois : ×0,9",
+        "expiring": "fin de contrat dans moins de 6 mois : ×0,6",
+        "young": "23 ans ou moins : ×1,25",
+        "prospect": "gros potentiel : ×1,2",
+        "thirty": "30-31 ans : ×0,85",
+        "veteran": "32 ans ou plus : ×0,7"
+      }
+    },
+    "squadTable": {
+      "watch": "À surveiller"
     }
   },
   "modes": {

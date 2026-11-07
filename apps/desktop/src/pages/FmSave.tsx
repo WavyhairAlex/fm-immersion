@@ -1,5 +1,8 @@
 import {
   buildProject,
+  isUnwanted,
+  monthsBetween,
+  moraleLevel,
   compatMap,
   gameFormationOf,
   gameLineup,
@@ -255,7 +258,6 @@ export function FmSave() {
       stop = true;
       clearInterval(id);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [folder, saveId]);
 
   // Effectif sous contrat (hors essais) : salaires, contrats, finances. Les joueurs prêtés ailleurs n'entrent
@@ -295,7 +297,7 @@ export function FmSave() {
           />
         );
       case 'squad':
-        return <SquadViews players={players} folder={folder} />;
+        return <SquadViews players={players} folder={folder} gameDate={snapshot.gameDate} />;
       case 'analysis':
         return <FmAnalysis players={players} gameDate={snapshot.gameDate} />;
       case 'stats':
@@ -707,7 +709,7 @@ function NextStep({ views, view, go }: { views: readonly string[]; view: string;
 }
 
 /** Effectif : vue terrain (par poste) ou tableau détaillé ; le choix est gardé d'une visite à l'autre. */
-function SquadViews({ players, folder }: { players: FmPlayer[]; folder: string }) {
+function SquadViews({ players, folder, gameDate }: { players: FmPlayer[]; folder: string; gameDate: string }) {
   const { t } = useTranslation();
   const [mode, setMode] = useState<'pitch' | 'table'>(() => {
     try {
@@ -740,14 +742,14 @@ function SquadViews({ players, folder }: { players: FmPlayer[]; folder: string }
           </button>
         ))}
       </div>
-      {mode === 'pitch' ? <FmSquadPitch players={players} /> : <SquadTable players={players} folder={folder} />}
+      {mode === 'pitch' ? <FmSquadPitch players={players} /> : <SquadTable players={players} folder={folder} gameDate={gameDate} />}
     </div>
   );
 }
 
-type SortKey = 'name' | 'age' | 'level' | 'condition' | 'contractEnd' | 'wage';
+type SortKey = 'name' | 'age' | 'level' | 'condition' | 'contractEnd' | 'wage' | 'apps' | 'goals' | 'avgRating';
 
-function SquadTable({ players, folder }: { players: FmPlayer[]; folder: string }) {
+function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder: string; gameDate: string }) {
   const { t, i18n } = useTranslation();
   // Compatibilité de chaque profil avec le projet de jeu (style visé dans « Mon projet »).
   const { engine } = useTacticEngine(folder, players);
@@ -773,9 +775,15 @@ function SquadTable({ players, folder }: { players: FmPlayer[]; folder: string }
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   });
+  const nf2 = new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // « À surveiller » : blessé ou suspendu, fin de contrat dans six mois ou moins, indésirable, moral bas.
+  const [watch, setWatch] = useState(false);
+  const watched = (p: FmPlayer) =>
+    !!p.injury || !!p.suspension || isUnwanted(p.squadStatus) || (p.contractEnd != null && monthsBetween(gameDate, p.contractEnd) <= 6) || (moraleLevel(p.morale) ?? 3) <= 1;
 
   const rows = useMemo(() => {
-    const list = line ? players.filter((p) => p.line === line) : players;
+    const byLine = line ? players.filter((p) => p.line === line) : players;
+    const list = watch ? byLine.filter(watched) : byLine;
     const val = (p: FmPlayer) => p[sort.key];
     return [...list].sort((a, b) => {
       const x = val(a);
@@ -785,7 +793,7 @@ function SquadTable({ players, folder }: { players: FmPlayer[]; folder: string }
       const c = typeof x === 'string' ? x.localeCompare(String(y)) : x - (y as number);
       return sort.desc ? -c : c;
     });
-  }, [players, line, sort]);
+  }, [players, line, sort, watch, gameDate]);
 
   const head = (key: SortKey, label: string) => (
     <th className="px-3 py-2 text-left">
@@ -819,6 +827,9 @@ function SquadTable({ players, folder }: { players: FmPlayer[]; folder: string }
               {t(`fm.line.${l ?? 'all'}`)} · {l ? players.filter((p) => p.line === l).length : players.length}
             </button>
           ))}
+          <button type="button" aria-pressed={watch} onClick={() => setWatch((w) => !w)} className={`chip ${watch ? 'chip-on' : ''}`}>
+            {t('fm.squadTable.watch')} · {players.filter(watched).length}
+          </button>
         </div>
       </div>
       <div className="card mt-4 overflow-x-auto p-0">
@@ -830,6 +841,9 @@ function SquadTable({ players, folder }: { players: FmPlayer[]; folder: string }
               {head('age', t('fm.col.age'))}
               {head('level', t('fm.col.level'))}
               {head('condition', t('fm.col.condition'))}
+              {head('apps', t('fm.col.apps'))}
+              {head('goals', t('fm.col.goals'))}
+              {head('avgRating', t('fm.col.avgRating'))}
               {head('contractEnd', t('fm.col.contract'))}
               {head('wage', t('fm.col.wage'))}
               <th className="px-3 py-2 text-left font-bold">{t('fm.col.status')}</th>
@@ -870,6 +884,9 @@ function SquadTable({ players, folder }: { players: FmPlayer[]; folder: string }
                   )}
                 </td>
                 <td className="px-3 py-2">{p.condition != null ? `${Math.round(p.condition)} %` : '–'}</td>
+                <td className="px-3 py-2 tabular-nums">{p.apps ?? '–'}</td>
+                <td className="px-3 py-2 tabular-nums">{p.goals ?? '–'}</td>
+                <td className="px-3 py-2 tabular-nums">{p.avgRating != null && p.avgRating > 0 ? nf2.format(p.avgRating) : '–'}</td>
                 <td className="px-3 py-2">{p.contractEnd ? date.format(new Date(p.contractEnd)) : '–'}</td>
                 <td className="px-3 py-2">{p.wage != null ? money.format(p.wage) : '–'}</td>
                 <td className="px-3 py-2 text-brun">{p.squadStatus ?? '–'}</td>
