@@ -25,3 +25,7 @@ export const isWebhook = (url: string) =>
   /^https:\/\/(?:(?:ptb|canary)\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w-]+$/.test(url.trim());
 
 export const sendDiscord = (payload: unknown, webhook = getWebhook()) => invoke<void>('discord_send', { webhook, payload });
+
+/** Message avec une image PNG jointe (la une de la gazette), affichée dans l'encart par `attachment://une.png`. */
+export const sendDiscordImage = (payload: unknown, png: Uint8Array, webhook = getWebhook()) =>
+  invoke<void>('discord_send_image', { webhook, payload, png: Array.from(png) });

@@ -68,6 +68,51 @@ pub fn discord_send(webhook: String, payload: serde_json::Value) -> Result<(), D
     }
 }
 
+/// Corps multipart d'un message avec une image jointe (`files[0]`, nommée `name`) : Discord l'affiche dans
+/// l'encart quand le JSON y fait référence par `attachment://<name>`.
+pub fn multipart(boundary: &str, payload: &str, name: &str, png: &[u8]) -> Vec<u8> {
+    let mut body = Vec::with_capacity(payload.len() + png.len() + 400);
+    body.extend_from_slice(
+        format!("--{boundary}\r\nContent-Disposition: form-data; name=\"payload_json\"\r\nContent-Type: application/json\r\n\r\n{payload}\r\n").as_bytes(),
+    );
+    body.extend_from_slice(
+        format!("--{boundary}\r\nContent-Disposition: form-data; name=\"files[0]\"; filename=\"{name}\"\r\nContent-Type: image/png\r\n\r\n").as_bytes(),
+    );
+    body.extend_from_slice(png);
+    body.extend_from_slice(format!("\r\n--{boundary}--\r\n").as_bytes());
+    body
+}
+
+/// Une image PNG commence toujours par ces 8 octets.
+const PNG_MAGIC: [u8; 8] = [0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A];
+
+/// Envoie un message avec une image PNG dessinée par l'appli (la une de la gazette), au plus 8 Mo.
+#[tauri::command]
+pub fn discord_send_image(webhook: String, payload: serde_json::Value, png: Vec<u8>) -> Result<(), DiscordError> {
+    let webhook = webhook.trim();
+    if !valid_webhook(webhook) {
+        return Err(DiscordError::BadUrl);
+    }
+    let body = payload.to_string();
+    if body.len() > 20_000 || png.len() > 8 * 1024 * 1024 || !png.starts_with(&PNG_MAGIC) {
+        return Err(DiscordError::TooLong);
+    }
+    let boundary = format!("fmimmersion{:x}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0));
+    let data = multipart(&boundary, &body, "une.png", &png);
+    match ureq::post(webhook)
+        .set("Content-Type", &format!("multipart/form-data; boundary={boundary}"))
+        .set("User-Agent", "FM-Immersion")
+        .send_bytes(&data)
+    {
+        Ok(_) => Ok(()),
+        Err(ureq::Error::Status(code, resp)) => {
+            let detail = resp.into_string().unwrap_or_default();
+            Err(DiscordError::Refused(format!("{code} {}", detail.chars().take(200).collect::<String>())))
+        }
+        Err(e) => Err(DiscordError::Network(e.to_string())),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -87,5 +132,21 @@ mod tests {
     fn refuse_un_lien_invalide_sans_reseau() {
         let err = discord_send("https://example.com/hook".into(), serde_json::json!({ "content": "x" })).unwrap_err();
         assert!(matches!(err, DiscordError::BadUrl));
+    }
+
+    #[test]
+    fn corps_multipart_avec_image() {
+        let png = [0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A, 1, 2];
+        let body = multipart("b", r#"{"a":1}"#, "une.png", &png);
+        let text = String::from_utf8_lossy(&body);
+        assert!(text.starts_with("--b\r\nContent-Disposition: form-data; name=\"payload_json\""));
+        assert!(text.contains("{\"a\":1}\r\n--b\r\n"));
+        assert!(text.contains("name=\"files[0]\"; filename=\"une.png\"\r\nContent-Type: image/png\r\n\r\n"));
+        assert!(body.ends_with(b"\x01\x02\r\n--b--\r\n"));
+        assert!(matches!(
+            discord_send_image("https://discord.com/api/webhooks/1/x".into(), serde_json::json!({}), vec![1, 2, 3]),
+            Err(DiscordError::TooLong)
+        ));
+        assert!(matches!(discord_send_image("https://evil.io".into(), serde_json::json!({}), png.to_vec()), Err(DiscordError::BadUrl)));
     }
 }

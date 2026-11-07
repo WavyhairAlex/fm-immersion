@@ -2213,7 +2213,9 @@
       },
       "injury": {
         "title": "Blow: {{name}} injured",
-        "body": "{{injury}}. Expected back in {{days}} day(s)."
+        "body_one": "{{injury}}. Expected back in {{count}} day.",
+        "body_other": "{{injury}}. Expected back in {{count}} days.",
+        "bodyNoDate": "{{injury}}."
       },
       "return": {
         "title": "{{name}} is back",
@@ -2251,7 +2253,52 @@
         "title": "Quiet week at {{club}}",
         "body": "No match or notable move this week."
       }
-    }
+    },
+    "discord": {
+      "briefs": "IN BRIEF"
+    },
+    "une": {
+      "form": "Form",
+      "streak_W_one": "won the last match",
+      "streak_W_other": "{{count}} wins in a row",
+      "streak_D_one": "drew the last match",
+      "streak_D_other": "{{count}} draws in a row",
+      "streak_L_one": "lost the last match",
+      "streak_L_other": "{{count}} defeats in a row",
+      "tagline": "The newspaper of your career",
+      "kicker_W": "Win",
+      "kicker_D": "Draw",
+      "kicker_L": "Defeat",
+      "atHome": "at home",
+      "away": "away",
+      "section": {
+        "default": "Club life",
+        "results": "Results",
+        "position": "League table",
+        "scorer": "Attack",
+        "injury": "Treatment room",
+        "return": "Treatment room",
+        "arrival": "Transfers",
+        "youthIntake": "Academy",
+        "departure": "Transfers",
+        "extension": "Contracts",
+        "fans": "The stands",
+        "job": "Boardroom",
+        "nextMatch": "Coming up",
+        "quiet": "Club life"
+      },
+      "scorers": "Scorers",
+      "motm": "Player of the match",
+      "lastMatches_one": "Last match",
+      "lastMatches_other": "Last {{count}} matches",
+      "letter_W": "W",
+      "letter_D": "D",
+      "letter_L": "L",
+      "briefs": "In brief",
+      "noBriefs": "No other news this week.",
+      "next": "Next match"
+    },
+    "preview": "Preview of the front page sent to Discord"
   },
   "discord": {
     "intro": "Tell your career in a Discord channel: each gazette can be sent there in one click, so your friends can follow your save.",

@@ -2213,7 +2213,9 @@
       },
       "injury": {
         "title": "Coup dur : {{name}} blessé",
-        "body": "{{injury}}. Retour estimé dans {{days}} jour(s)."
+        "body_one": "{{injury}}. Retour estimé dans {{count}} jour.",
+        "body_other": "{{injury}}. Retour estimé dans {{count}} jours.",
+        "bodyNoDate": "{{injury}}."
       },
       "return": {
         "title": "{{name}} de retour",
@@ -2251,7 +2253,52 @@
         "title": "Semaine calme à {{club}}",
         "body": "Pas de match ni de mouvement notable cette semaine."
       }
-    }
+    },
+    "discord": {
+      "briefs": "EN BREF"
+    },
+    "une": {
+      "form": "Forme",
+      "streak_W_one": "victoire au dernier match",
+      "streak_W_other": "{{count}} victoires de suite",
+      "streak_D_one": "nul au dernier match",
+      "streak_D_other": "{{count}} nuls de suite",
+      "streak_L_one": "défaite au dernier match",
+      "streak_L_other": "{{count}} défaites de suite",
+      "tagline": "Le journal de ta carrière",
+      "kicker_W": "Victoire",
+      "kicker_D": "Match nul",
+      "kicker_L": "Défaite",
+      "atHome": "à domicile",
+      "away": "à l'extérieur",
+      "section": {
+        "default": "Vie du club",
+        "results": "Résultats",
+        "position": "Classement",
+        "scorer": "Attaque",
+        "injury": "Infirmerie",
+        "return": "Infirmerie",
+        "arrival": "Mercato",
+        "youthIntake": "Formation",
+        "departure": "Mercato",
+        "extension": "Contrats",
+        "fans": "Tribunes",
+        "job": "Direction",
+        "nextMatch": "À l'affiche",
+        "quiet": "Vie du club"
+      },
+      "scorers": "Buteurs",
+      "motm": "Homme du match",
+      "lastMatches_one": "Dernier match",
+      "lastMatches_other": "{{count}} derniers matchs",
+      "letter_W": "V",
+      "letter_D": "N",
+      "letter_L": "D",
+      "briefs": "En bref",
+      "noBriefs": "Pas d'autre nouvelle cette semaine.",
+      "next": "Prochain match"
+    },
+    "preview": "Aperçu de la une envoyée sur Discord"
   },
   "discord": {
     "intro": "Raconte ta carrière dans un salon Discord : chaque gazette peut y être envoyée en un clic, pour que tes amis suivent ta partie.",

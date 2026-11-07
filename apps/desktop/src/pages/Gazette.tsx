@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { fmData, savesData } from '../lib/data';
-import { getWebhook, isWebhook, sendDiscord } from '../lib/discord';
-import { discordPayload, paperName, storyText } from '../lib/gazette-text';
+import { getWebhook, isWebhook, sendDiscordImage } from '../lib/discord';
+import { discordPayload, paperName, storyText, weekLabel } from '../lib/gazette-text';
+import { canvasPng, drawUne, recentForm } from '../lib/gazette-une';
 
 const SAVE_KEY = 'fmi.gazette.save';
 const readSave = () => {
@@ -66,9 +67,12 @@ export function Gazette() {
 
       {issue && (
         <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
-          <Paper issue={issue} />
+          <div className="min-w-0 space-y-6">
+            <UnePreview issues={issues} index={index} />
+            <Paper issue={issue} />
+          </div>
           <aside className="flex flex-col gap-2">
-            <SendButton issue={issue} />
+            <SendButton issues={issues} index={index} />
             <h2 className="mt-4 text-xs font-bold uppercase tracking-wide text-brun">{t('gazette.archives')}</h2>
             <ul className="flex max-h-[60vh] flex-col gap-1 overflow-auto">
               {issues.map((x, i) => (
@@ -88,14 +92,14 @@ export function Gazette() {
 }
 
 export function Paper({ issue }: { issue: GazetteIssue }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const head = storyText(t, issue.club, issue.headline);
   return (
     <article className="card rounded-xl p-0">
       <header className="border-b-4 border-orange px-6 py-4">
         <p className="font-display text-3xl font-semibold">{paperName(t, issue.club)}</p>
         <p className="mt-1 text-xs font-bold uppercase tracking-wide text-brun">
-          {t('gazette.issue', { number: issue.number })} · {t('gazette.week', { from: issue.weekStart, to: issue.weekEnd })}
+          {t('gazette.issue', { number: issue.number })} · {weekLabel(t, i18n.resolvedLanguage, issue.weekStart, issue.weekEnd)}
         </p>
       </header>
       <section className="border-b border-canard/10 px-6 py-5">
@@ -117,10 +121,32 @@ export function Paper({ issue }: { issue: GazetteIssue }) {
   );
 }
 
-function SendButton({ issue }: { issue: GazetteIssue }) {
-  const { t } = useTranslation();
+/** Une en image, telle qu'elle part sur Discord. */
+function UnePreview({ issues, index }: { issues: GazetteIssue[]; index: number }) {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage;
+  const issue = issues[index]!;
+  const { data: url } = useQuery({
+    queryKey: ['gazette', 'une', issue.club, issue.weekStart, issue.date, lang, index, issues.length],
+    queryFn: async () => (await drawUne(t, issue, { form: recentForm(issues, index), lang })).toDataURL('image/png'),
+  });
+  if (!url) return <div className="aspect-video w-full animate-pulse rounded-xl bg-canard/5" />;
+  return <img src={url} alt={t('gazette.preview')} className="w-full rounded-xl shadow-sm ring-1 ring-canard/10" />;
+}
+
+function SendButton({ issues, index }: { issues: GazetteIssue[]; index: number }) {
+  const { t, i18n } = useTranslation();
   const webhook = getWebhook();
-  const send = useMutation({ mutationFn: () => sendDiscord(discordPayload(t, issue)) });
+  const issue = issues[index]!;
+  const send = useMutation({
+    mutationFn: async () => {
+      const lang = i18n.resolvedLanguage;
+      const png = await canvasPng(await drawUne(t, issue, { form: recentForm(issues, index), lang }));
+      const payload = discordPayload(t, issue, lang);
+      const embed = { ...payload.embeds[0]!, image: { url: 'attachment://une.png' } };
+      return sendDiscordImage({ ...payload, embeds: [embed], attachments: [{ id: 0, filename: 'une.png' }] }, png);
+    },
+  });
   if (!isWebhook(webhook)) {
     return (
       <Link to="/discord" className="btn-secondary text-sm">
