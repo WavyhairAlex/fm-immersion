@@ -2130,6 +2130,33 @@
       "progress": "Importing: {{done}} / {{total}}…",
       "result_one": "{{count}} day imported.",
       "result_other": "{{count}} days imported."
+    },
+    "off": {
+      "title": "Off-season plan",
+      "help": "The new season is close: the summer in order, built from the decisions below. Amounts come from wages and values read in the game.",
+      "helpOver": "The league is over: here is the summer in order, built from the decisions below. Amounts come from wages and values read in the game.",
+      "nothing": "Nothing to do here.",
+      "before": "before {{date}}",
+      "now": "now",
+      "range": "{{from}} to {{to}}",
+      "wagesFreed_one": "wages freed ({{count}} departure)",
+      "wagesFreed_other": "wages freed ({{count}} departures)",
+      "wageRoomAfter": "wage room after",
+      "saleValue": "sale value",
+      "budget": "Transfer budget: {{transfer}} · wage room after departures: {{wages}}",
+      "preseasonText": "Pre-season schedule P1 to P4 (Training), friendlies to arrange, newcomers to settle in before the restart.",
+      "step": {
+        "contracts": "Settle contracts",
+        "departures": "Make departures",
+        "recruits": "Recruit",
+        "preseason": "Pre-season"
+      },
+      "go": {
+        "contracts": "Contracts",
+        "departures": "Transfers",
+        "recruits": "Targets",
+        "preseason": "Training"
+      }
     }
   },
   "modes": {

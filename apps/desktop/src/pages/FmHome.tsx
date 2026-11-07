@@ -13,9 +13,10 @@ import {
 } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FmDecisions } from './FmDecisions';
+import { FmDecisions, useDecisions } from './FmDecisions';
 import { Avatar } from './FmFoot';
 import { FmMatchCenter } from './FmMatchCenter';
+import { FmOffseason } from './FmOffseason';
 import { FmSummary } from './FmSummary';
 import { useTacticChoice } from './FmTactic';
 import { useIndividualSetups } from './FmTraining';
@@ -70,6 +71,7 @@ export function FmHome({
     [snap, coach.seasonStart, coach.winterBreak, coach.clubStatus, coach.trainingDays, style],
   );
   const tr = useMemo(() => trainingAlerts(players), [players]);
+  const decisionList = useDecisions(snap, players, folder, history);
   const setups = useIndividualSetups(engine, players, folder, week.days.filter((d) => d.kind === 'match').length, snap);
   const toChange = setups.rows.filter((r) => r.status === 'change').map((r) => r.plan.player);
   const short = (list: FmPlayer[]) => list.map((p) => p.name.split(' ').at(-1)).join(', ');
@@ -98,7 +100,8 @@ export function FmHome({
     <div className="space-y-4">
       <FmMatchCenter snap={snap} players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameTactic={gameTactic} go={go} />
       <FmSummary snap={snap} players={players} />
-      <FmDecisions snap={snap} players={players} folder={folder} history={history} go={go} />
+      <FmOffseason snap={snap} players={players} list={decisionList} go={go} />
+      <FmDecisions list={decisionList} go={go} />
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6 xl:[&>*]:col-span-2 xl:[&>*:nth-last-child(-n+2)]:col-span-3">
         <Panel title={t('fm.home.todo')} action={link('squad', t('fm.views.squad'))}>
           {h.contracts && (

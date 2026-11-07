@@ -10,19 +10,20 @@ const BASIS_TONE: Record<Basis, Tone> = { read: 'good', real: 'good', computed: 
 /** Écran où trouver le détail de chaque type de décision. */
 const KIND_VIEW: Record<Decision['kind'], string> = { contract: 'contracts', recruit: 'project', departure: 'mercato', tactic: 'tactic' };
 
-/** Décisions à prendre : une carte par décision (quoi, pourquoi, avant quand, sur quoi repose le conseil). */
-export function FmDecisions({ snap, players, folder, history = [], go }: { snap: FmSnapshot; players: FmPlayer[]; folder: string; history?: SquadAt[]; go: (view: string) => void }) {
-  const { t, i18n } = useTranslation();
-  const names = useNames();
+/** Décisions calculées pour l'accueil (cartes « Décisions » et plan d'intersaison), une seule fois. */
+export function useDecisions(snap: FmSnapshot, players: FmPlayer[], folder: string, history: SquadAt[] = []): Decision[] {
   const { engine } = useTacticChoice(players, folder, null);
   const [coach] = useCoach();
   const gameTactic = typeof snap.tactic?.name === 'string' ? snap.tactic.name : null;
   const base = useMemo(() => styleOfGameTactic(gameTactic, engine.ref.styles), [gameTactic, engine]);
   const { ids: leavingIds } = useLeaving();
-  const list = useMemo(() => decisions(engine, players, snap.gameDate, coach, history, base, leavingIds), [engine, players, snap.gameDate, coach, history, base, leavingIds]);
-  const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { day: 'numeric', month: 'short', year: 'numeric' });
-  const when = (d: Decision) => (d.deadline ? t('fm.dec.before', { date: date.format(new Date(`${d.deadline}T00:00:00Z`)) }) : t('fm.dec.anytime'));
-  const vals = (d: Decision) => ({
+  return useMemo(() => decisions(engine, players, snap.gameDate, coach, history, base, leavingIds), [engine, players, snap.gameDate, coach, history, base, leavingIds]);
+}
+
+/** Valeurs des textes d'une décision (noms, poste, styles traduits). */
+export function useDecisionVals() {
+  const names = useNames();
+  return (d: Decision) => ({
     ...d.values,
     names: d.players.map((p) => p.name).join(', '),
     pos: d.pos ? POS_LABEL[d.pos] : '',
@@ -30,6 +31,14 @@ export function FmDecisions({ snap, players, folder, history = [], go }: { snap:
     other: d.other ? names.style(d.other) : '',
     count: Number(d.values.years ?? 0),
   });
+}
+
+/** Décisions à prendre : une carte par décision (quoi, pourquoi, avant quand, sur quoi repose le conseil). */
+export function FmDecisions({ list, go }: { list: Decision[]; go: (view: string) => void }) {
+  const { t, i18n } = useTranslation();
+  const vals = useDecisionVals();
+  const date = new Intl.DateTimeFormat(i18n.resolvedLanguage, { day: 'numeric', month: 'short', year: 'numeric' });
+  const when = (d: Decision) => (d.deadline ? t('fm.dec.before', { date: date.format(new Date(`${d.deadline}T00:00:00Z`)) }) : t('fm.dec.anytime'));
 
   // Rien à décider : une ligne discrète plutôt qu'un grand cadre vide.
   if (!list.length)
