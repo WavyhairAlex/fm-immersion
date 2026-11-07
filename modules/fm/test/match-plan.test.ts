@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isHighThreat, matchPlan, mergeReference, styleOptions, type FmPlayer, type FormationPlan, type OpponentReport } from '../src';
+import { isHighThreat, matchPlan, mergeReference, oppositionInstructions, styleOptions, weakFootOf, type FmPlayer, type FormationPlan, type OpponentReport } from '../src';
 
 const styles = mergeReference(undefined).styles;
 const possession = styles.find((s) => s.id === 'possession')!;
@@ -78,5 +78,41 @@ describe('plan de match (réglages contre l’adversaire)', () => {
     expect(matchPlan(possession, nitra, null, 'Élevé').mentality).toEqual({ from: 'Positive', to: 'Équilibrée', reason: 'threat' });
     expect(matchPlan(possession, leaky, null, 'Élevé').mentality).toBeNull();
     expect(isHighThreat('Faible')).toBe(false);
+  });
+});
+
+describe('écran Adversaire du jeu (consignes sur leurs joueurs)', () => {
+  const squad = [
+    { name: 'Tomáš Lukošík', positions: 'GB', stars: 14, foot: 'Droit' },
+    { name: 'Andrej Štrba', positions: 'D (C)', stars: 15, foot: 'Gauche' },
+    { name: 'Manuel Yendare', positions: 'D (C)', stars: 17, foot: 'Droit' },
+    { name: 'Daniel Prekop', positions: 'D (D)', stars: 16, foot: 'Droit' },
+    { name: 'Michal Klec', positions: 'M/MO (C), BT (C)', stars: 19, foot: 'Les deux' },
+    { name: 'Jonathan Stato', positions: 'MO (DGC)', stars: 17, foot: 'Gauche' },
+  ];
+  const opp = { ...nitra, squad } as OpponentReport;
+
+  it('marquage strict sur les joueurs clés, pied faible et tacles doux sur le créateur qui joue devant', () => {
+    const rows = oppositionInstructions(opp, possession);
+    const stato = rows.find((r) => r.name === 'Jonathan Stato')!;
+    expect(stato).toMatchObject({ marking: 'always', tackling: 'softer', weakFoot: 'right' });
+    expect(stato.reasons).toEqual(['creator', 'weakFoot', 'softTackle']);
+    const klec = rows.find((r) => r.name === 'Michal Klec')!;
+    expect(klec).toMatchObject({ marking: 'always', weakFoot: null, tackling: null });
+    expect(klec.reasons).toEqual(['scorer', 'rated']);
+  });
+
+  it('pressing haut : gardien et centraux pressés toujours ; sinon seulement les moins bien notés', () => {
+    const high = oppositionInstructions(opp, possession).filter((r) => r.pressing === 'always').map((r) => r.name);
+    expect(high).toEqual(['Tomáš Lukošík', 'Andrej Štrba', 'Manuel Yendare']);
+    const low = oppositionInstructions(opp, styles.find((s) => s.id === 'ultra-def')!).filter((r) => r.pressing === 'always');
+    expect(low.map((r) => r.name)).toEqual(['Tomáš Lukošík']);
+    expect(low[0]!.reasons).toContain('pressWeak');
+  });
+
+  it('ne renvoie que les joueurs qui reçoivent une consigne', () => {
+    expect(oppositionInstructions(opp, possession).some((r) => r.name === 'Daniel Prekop')).toBe(false);
+    expect(weakFootOf('Droit uniquement')).toBe('left');
+    expect(weakFootOf(null)).toBeNull();
   });
 });

@@ -337,6 +337,34 @@
           "leaky": "leur défense concède souvent",
           "threat": "adversaire plus fort : un cran de prudence"
         }
+      },
+      "oppScreen": {
+        "title": "Écran Adversaire du jeu contre {{name}}",
+        "intro": "Tactiques › Adversaire dans FM27 : une ligne par joueur adverse à régler, les autres restent vides.",
+        "player": "Joueur",
+        "positions": "Postes",
+        "marking": "Marquage strict",
+        "pressing": "Déclench. pressing",
+        "tackling": "Tacles",
+        "foot": "Forcer mauvais pied",
+        "always": "Toujours",
+        "never": "Jamais",
+        "harder": "Plus engagés",
+        "softer": "Plus doux",
+        "left": "Pied gauche",
+        "right": "Pied droit",
+        "footHint": "Le pied de leurs joueurs n'est pas encore lu : il apparaîtra au prochain relevé du plugin (chemins ajoutés le 07/11/2026).",
+        "none": "Rien à régler : le rapport ne nomme aucun joueur clé.",
+        "help": "Règles : marquage strict « Toujours » sur le créateur, le buteur et la meilleure moyenne ; pressing « Toujours » sur leur gardien et leurs centraux quand ton style presse haut, sinon seulement sur les moins bien notés d'entre eux (forcer la faute à la relance) ; tacles « Plus doux » sur le créateur quand il joue devant, pour ne pas offrir de coups francs ; mauvais pied = le pied faible lu dans le jeu, jamais pour un joueur des deux pieds. Les dribbles et cartons de l'écran ne sont pas lus par le plugin.",
+        "reason": {
+          "creator": "meilleur passeur",
+          "scorer": "meilleur buteur",
+          "rated": "meilleure moyenne",
+          "pressBuildUp": "on presse haut : relance adverse",
+          "pressWeak": "relanceur le moins bien noté",
+          "softTackle": "joue devant : pas de coup franc offert",
+          "weakFoot": "un seul bon pied"
+        }
       }
     },
     "nav": "Sections de la partie",
