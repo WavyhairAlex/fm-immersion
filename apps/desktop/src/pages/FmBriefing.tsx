@@ -7,7 +7,13 @@ import {
   nameList,
   pruneBriefDone,
   type BriefDone,
-  type BriefItem, type Decision, type FmPlayer, type FmSnapshot, type PlaytimeRow } from '@fm-immersion/module-fm';
+  trialistIds,
+  type BriefItem,
+  type Decision,
+  type FmPlayer,
+  type FmSnapshot,
+  type PlaytimeRow,
+} from '@fm-immersion/module-fm';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
@@ -57,9 +63,16 @@ export function FmBriefing({
       competition: typeof next?.competition === 'string' ? next.competition : null,
     };
   }, [next]);
+  // Joueurs à l'essai : hors de l'effectif (`players`), lus directement dans l'instantané.
+  const trialists = useMemo(() => {
+    const ids = trialistIds(snap);
+    return (snap.players as unknown as { id: unknown; name?: unknown }[])
+      .filter((p) => ids.has(String(p.id)))
+      .map((p) => ({ id: String(p.id), name: String(p.name ?? '') }) as FmPlayer);
+  }, [snap]);
   const items = useMemo(
-    () => briefing({ players, nextMatch: nm, starters, decisions, playtime, setupsToChange, offseason, backForMatch }),
-    [players, nm, starters, decisions, playtime, setupsToChange, offseason],
+    () => briefing({ players, nextMatch: nm, starters, decisions, playtime, setupsToChange, offseason, trialists, backForMatch }),
+    [players, nm, starters, decisions, playtime, setupsToChange, offseason, trialists],
   );
   const scope = useFmSaveScope();
   const [done, setDone] = useState<BriefDone>(() => readScoped<BriefDone>(DONE_KEY, { ...scope, inheritsLegacy: false }, {}));

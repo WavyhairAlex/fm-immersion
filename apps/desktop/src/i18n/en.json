@@ -2272,10 +2272,13 @@
         "unhappy": "See the dressing room",
         "playtimeOver": "See playing time",
         "training": "Change training",
-        "mercato": "Open transfers"
+        "mercato": "Open transfers",
+        "trialists": "Judge the trial"
       },
       "tabBadge_one": "{{count}} thing to do here",
-      "tabBadge_other": "{{count}} things to do here"
+      "tabBadge_other": "{{count}} things to do here",
+      "trialists_one": "{{names}} is on trial at the club: check whether he beats your squad before offering a contract.",
+      "trialists_other": "{{names}} are on trial at the club: check whether they beat your squad before offering contracts."
     }
   },
   "modes": {

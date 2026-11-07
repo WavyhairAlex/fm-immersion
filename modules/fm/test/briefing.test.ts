@@ -22,6 +22,10 @@ describe("briefing de l'adjoint", () => {
     const b = briefing({ players: ps, nextMatch: { opponent: 'X', home: null, inDays: 5, competition: null }, starters: new Set(['A']), backForMatch: () => true });
     expect(b.map((x) => x.kind)).toEqual(['nextMatch', 'allGood']);
   });
+  it("signale les joueurs à l'essai, à juger dans les cibles", () => {
+    const b = briefing({ players: [pl('A')], nextMatch: null, trialists: [pl('V', { name: 'Konstantin Veretynskiy' })] });
+    expect(b.map((x) => [x.kind, x.view])).toEqual([['trialists', 'targets']]);
+  });
   it('intersaison sans match : rien à signaler sinon', () => {
     expect(briefing({ players: [pl('A')], nextMatch: null, offseason: true }).map((x) => x.kind)).toEqual(['offseason']);
     expect(briefing({ players: [pl('A')], nextMatch: null }).map((x) => x.kind)).toEqual(['allGood']);

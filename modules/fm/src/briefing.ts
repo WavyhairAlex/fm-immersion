@@ -15,6 +15,7 @@ export type BriefKind =
   | 'nextMatch'
   | 'tiredStarters'
   | 'contracts'
+  | 'trialists'
   | 'playtimeShort'
   | 'unhappy'
   | 'playtimeOver'
@@ -43,6 +44,8 @@ export interface BriefingInput {
   /** Joueurs dont l'entraînement individuel est à changer. */
   setupsToChange?: number;
   offseason?: boolean;
+  /** Joueurs à l'essai au club : à juger avant la fin de l'essai (cibles du mercato). */
+  trialists?: FmPlayer[];
   /** Joueur absent mais rétabli d'ici le match. */
   backForMatch?: (p: FmPlayer) => boolean;
 }
@@ -83,6 +86,8 @@ export function briefing(input: BriefingInput): BriefItem[] {
     });
   const tired = xi.filter((p) => !p.injury && p.condition != null && p.condition < TIRED_CONDITION);
   if (nextMatch && tired.length) item('tiredStarters', 'warn', 'depth', tired);
+
+  if (input.trialists?.length) item('trialists', 'warn', 'targets', input.trialists);
 
   const contracts = decisions.filter((d) => d.kind === 'contract');
   if (contracts.length) {

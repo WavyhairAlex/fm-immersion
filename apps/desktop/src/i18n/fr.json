@@ -2272,10 +2272,13 @@
         "unhappy": "Voir le vestiaire",
         "playtimeOver": "Voir le temps de jeu",
         "training": "Changer l'entraînement",
-        "mercato": "Ouvrir le mercato"
+        "mercato": "Ouvrir le mercato",
+        "trialists": "Juger l'essai"
       },
       "tabBadge_one": "{{count}} chose à faire ici",
-      "tabBadge_other": "{{count}} choses à faire ici"
+      "tabBadge_other": "{{count}} choses à faire ici",
+      "trialists_one": "{{names}} est à l'essai au club : regarde s'il vaut mieux que ton effectif avant de lui proposer un contrat.",
+      "trialists_other": "{{names}} sont à l'essai au club : regarde s'ils valent mieux que ton effectif avant de leur proposer un contrat."
     }
   },
   "modes": {
