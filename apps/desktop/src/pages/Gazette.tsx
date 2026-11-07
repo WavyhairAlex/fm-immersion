@@ -35,10 +35,8 @@ export function Gazette() {
   const figures = useMemo(() => (issue ? seasonSoFar(history, issue.date) : null), [history, issue]);
 
   return (
-    <div className="w-full px-6 py-6 xl:px-10">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-3xl font-semibold">{t('modes.gazette.title')}</h1>
-      </div>
+    <div className="w-full">
+      <p className="max-w-3xl text-brun">{t('modes.gazette.details')}</p>
 
       {!fmSaves.length && (
         <div className="card mt-6 max-w-3xl">

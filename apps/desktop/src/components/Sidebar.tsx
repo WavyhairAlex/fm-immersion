@@ -104,8 +104,7 @@ export function Sidebar() {
           <Item key={p} to={`/club/${p}`} icon={p} label={t(`layout.nav.${p}`)} active={clubOpen === p} badge={<Count n={count(p)} label={t('fm.brief.tabBadge', { count: count(p) })} />} />
         ))}
         <p className="nav-group">{t('layout.groups.story')}</p>
-        <Item to="/gazette" icon="gazette" label={t('modes.gazette.title')} />
-        <Item to="/discord" icon="discord" label={t('modes.discord.title')} />
+        <Item to="/gazette" icon="gazette" label={t('layout.nav.story')} active={pathname === '/gazette' || pathname === '/discord'} />
         <Item to="/defis" icon="challenges" label={t('modes.challenges.title')} />
         <p className="nav-group">{t('layout.groups.game')}</p>
         <Item to="/visages" icon="faces" label={t('layout.nav.faces')} />

@@ -7,13 +7,12 @@ import { useFmSync } from './lib/fm-sync';
 import { useGazetteAuto } from './lib/gazette-auto';
 import { useLiveDiscord } from './lib/live-discord';
 import { Challenges } from './pages/Challenges';
-import { Discord } from './pages/Discord';
 import { Faces } from './pages/Faces';
 import { FmSave } from './pages/FmSave';
-import { Gazette } from './pages/Gazette';
 import { Home } from './pages/Home';
 import { Overview } from './pages/Overview';
 import { Soon } from './pages/Soon';
+import { Story } from './pages/Story';
 
 export function App() {
   useLiveDiscord();
@@ -30,8 +29,8 @@ export function App() {
             <Route path="/reglages" element={<CareerOnly><FmSave page="settings" /></CareerOnly>} />
             <Route path="/parties" element={<Home />} />
             <Route path="/visages" element={<Faces />} />
-            <Route path="/gazette" element={<Gazette />} />
-            <Route path="/discord" element={<Discord />} />
+            <Route path="/gazette" element={<Story tab="gazette" />} />
+            <Route path="/discord" element={<Story tab="discord" />} />
             <Route path="/defis" element={<Challenges />} />
             <Route path="/monde" element={<Soon mode="world" />} />
             {/* Anciennes adresses (avant la barre latérale unique). */}
