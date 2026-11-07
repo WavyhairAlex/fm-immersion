@@ -2,7 +2,7 @@ import { unavailable, type FmPlayer } from './player';
 import type { PosCode } from './positions';
 import { snapshotFixtures } from './fixtures';
 import type { FmSnapshot } from './snapshot';
-import { FORMATIONS, type FormationPlan } from './tactic';
+import { FORMATIONS, type FormationPlan, formationKeys } from './tactic';
 
 /**
  * Progression, projection et profondeur d'effectif (portées de la page Archivix).
@@ -81,7 +81,7 @@ export interface DepthRow {
 }
 
 /** Schéma connu le plus proche du nom donné par le jeu (« 4-4-2 Diamant » → « 4-4-2 »), sinon 4-2-3-1. */
-export const formationKey = (form: string | null | undefined) => Object.keys(FORMATIONS).find((k) => (form ?? '').startsWith(k)) ?? '4-2-3-1';
+export const formationKey = (form: string | null | undefined) => formationKeys().find((k) => (form ?? '').startsWith(k)) ?? '4-2-3-1';
 
 export function depthChart(players: FmPlayer[], form: string | null | undefined, history: SquadAt[] = []): DepthRow[] {
   const slots = FORMATIONS[formationKey(form)]!;
