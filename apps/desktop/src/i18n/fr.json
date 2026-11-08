@@ -3245,7 +3245,18 @@
       "board_cupOut_2": "La direction ne s'emballe pas, mais le message est clair : le championnat n'autorise plus d'écart."
     },
     "page": {
-      "story": "Le récit du match"
+      "story": "Le récit du match",
+      "price": "Édition gratuite",
+      "fullTime": "Score final",
+      "stats": "Le match en chiffres",
+      "stat": {
+        "possession": "Possession",
+        "shots": "Tirs",
+        "onTarget": "Tirs cadrés",
+        "xg": "xG"
+      },
+      "board": "Direction",
+      "vs": "vs"
     }
   },
   "discord": {

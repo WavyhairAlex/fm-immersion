@@ -3245,7 +3245,18 @@
       "board_cupOut_2": "The board is not panicking, but the message is clear: no more slip-ups in the league."
     },
     "page": {
-      "story": "Match report"
+      "story": "Match report",
+      "price": "Free edition",
+      "fullTime": "Full time",
+      "stats": "The match in numbers",
+      "stat": {
+        "possession": "Possession",
+        "shots": "Shots",
+        "onTarget": "On target",
+        "xg": "xG"
+      },
+      "board": "Board",
+      "vs": "vs"
     }
   },
   "discord": {

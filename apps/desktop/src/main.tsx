@@ -1,5 +1,6 @@
 import '@fontsource-variable/fraunces';
 import '@fontsource-variable/nunito';
+import '@fontsource-variable/fraunces/wght-italic.css';
 import './index.css';
 import './i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
