@@ -27,7 +27,18 @@
     "for": "for {{game}}",
     "available": "Available",
     "soon": "Coming soon",
-    "open": "Open"
+    "open": "Open",
+    "current": "followed",
+    "menu": "More actions",
+    "confirmDelete": "Delete \"{{name}}\" and all its history in FM Immersion? Your FM27 save is not touched.",
+    "inGame": "In game: {{date}}",
+    "notLinked": "Save not linked yet",
+    "resume": "Resume",
+    "link": "Link my FM27 save",
+    "firstHelp": "Name your career. FM Immersion then helps you link your FM27 save.",
+    "namePlaceholder": "e.g. Malženice, promotion push",
+    "more": "More options",
+    "createLink": "Create and link my save"
   },
   "footer": {
     "disclaimer": "FM Immersion is an independent project, not affiliated with Sports Interactive or SEGA. Football Manager and FM are trademarks of their respective owners.",
@@ -2811,7 +2822,14 @@
     "home": {
       "title": "Home",
       "heading": "Welcome to FM Immersion",
-      "intro": "Create your FM27 career: FM Immersion follows it through the plugin, and every mode uses it. Photorealistic faces install even without a career."
+      "intro": "Create your FM27 career: FM Immersion follows it through the plugin, and every mode uses it. Photorealistic faces install even without a career.",
+      "lead": "A dashboard for your FM27 career: it reads your game without writing anything to it and helps you decide.",
+      "follow": "Follow my FM27 career",
+      "followText": "Create your career and link your save: the assistant, tactics, squad, transfers, Gazette and Challenges fill in on every game day.",
+      "faces": "Install the faces",
+      "facesText": "Photorealistic portraits instead of generated faces. Works without a career.",
+      "facesGo": "See the faces",
+      "later": "In development: the Shared World, where everyone plays their own career in one universe."
     },
     "faces": {
       "title": "Photorealistic faces",
@@ -3830,7 +3848,10 @@
       "cropSide": "Left-right",
       "cropSave": "Save",
       "cropOther": "Another image",
-      "cropCancel": "Cancel"
+      "cropCancel": "Cancel",
+      "lastRead": "Read {{date}}",
+      "lastReadClosed": "FM27 closed · read {{date}}",
+      "lastReadHelp": "Last time the plugin read your career: the app shows the situation at that moment."
     },
     "assistant": {
       "label": "Your assistant",
@@ -3855,6 +3876,21 @@
       "open": "Open",
       "more": "{{text}} (+{{count}})",
       "game": "Game and plugin"
+    },
+    "dev": "{{name}} · in development",
+    "connect": {
+      "title": "Connect FM27",
+      "advanced": "Advanced options",
+      "next": "Next step:",
+      "ready": "All connected.",
+      "createCareer": "Create my career to continue",
+      "step": {
+        "career": "create your career. You can already install the plugin below.",
+        "plugin": "install or update the FM27 plugin below, with the game closed.",
+        "save": "pick your FM27 save in the list.",
+        "read": "start FM27 and load your save. The first read arrives on its own, or click \"Import\".",
+        "done": "FM Immersion follows {{club}} on every new game day."
+      }
     }
   },
   "ai": {
