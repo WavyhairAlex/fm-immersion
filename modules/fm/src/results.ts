@@ -1,10 +1,11 @@
-import { normalizePlayer, toNumber } from './player';
+import { normalizePlayer } from './player';
 import type { Line } from './positions';
 import type { FmSnapshot } from './snapshot';
-import { snapshotFixtures } from './fixtures';
+import { daysUntil, snapshotFixtures } from './fixtures';
 import { deriveStats, matchStatsFull, type PlayerStats, type RawStats } from './stats';
 import { isFriendly } from './rules';
 import { gameFormationOf } from './tactic';
+import { addDays } from './training';
 
 /**
  * Résultats des matchs et stats de chaque joueur par match, retrouvés sans nouvelle lecture dans le jeu : entre deux
@@ -39,6 +40,8 @@ export interface MatchResult {
   date: string;
   /** Date de l'instantané précédent : le match a eu lieu entre les deux. */
   since: string;
+  /** Jour du match d'après le calendrier de l'instantané précédent (un seul match), sinon absent : `date` reste la clé. */
+  played?: string | null;
   /** Matchs joués pendant la période (1 = détail exact). */
   matches: number;
   opponent: string | null;
@@ -65,21 +68,55 @@ const apps = (r: RawStats) => (r.StartingAppearances ?? 0) + (r.SubAppearances ?
 const DAY_MS = 86_400_000;
 const days = (a: string, b: string) => Math.round((new Date(b).getTime() - new Date(a).getTime()) / DAY_MS);
 
-/** Différence des cumuls ; null si le joueur n'était pas dans l'instantané précédent ou si la saison a changé. */
-function delta(now: RawStats, ref: RawStats | undefined): RawStats | null {
+/**
+ * Différence des cumuls ; null si le joueur n'était pas dans l'instantané précédent ou si la saison a changé.
+ * `known` : stats lues dans l'instantané précédent (pour au moins un joueur). Une stat que le plugin ne lisait pas
+ * encore n'est pas « zéro » : sans cette précaution, le premier instantané après l'ajout des stats au plugin
+ * (14/02/2027 dans la partie de Malženice) faisait de toute la première moitié de saison une période de 20 matchs nuls.
+ */
+function delta(now: RawStats, ref: RawStats | undefined, known: Set<string>): RawStats | null {
   if (!ref || (now.Minutes ?? 0) < (ref.Minutes ?? 0)) return null;
   const out: RawStats = {};
-  for (const [k, v] of Object.entries(now)) out[k] = v - (ref[k] ?? 0);
+  for (const [k, v] of Object.entries(now)) if (known.has(k)) out[k] = v - (ref[k] ?? 0);
   return out;
 }
 
+const outcomeOf = (d: RawStats): Outcome => ((d.GamesWon ?? 0) > 0 ? 'W' : (d.GamesLost ?? 0) > 0 ? 'L' : 'D');
+
+/**
+ * Joueurs du match de l'équipe première quand la période ne contient qu'un match. Les cumuls bougent aussi pour un
+ * joueur qui a joué ce jour-là avec la réserve ou les U19 (vu le 08/11/2026 : Frimpong, 90 minutes et un but avec la
+ * réserve, compté dans le 3-0 contre Nitra ; Drobný, deux buts de la réserve, qui changeaient le 1-3 de coupe contre
+ * Púchov en 2-3). On garde le résultat (victoire, nul, défaite) vu par le plus de titulaires, puis on écarte qui a vu
+ * plus de buts que ceux restés tout le match, ou en a vu un autre nombre en étant resté aussi longtemps.
+ */
+function firstTeamRows<T extends { d: RawStats }>(rows: T[]): T[] {
+  let kept = rows;
+  if (rows.some((r) => r.d.GamesWon != null || r.d.GamesLost != null)) {
+    const weight = new Map<Outcome, number>();
+    for (const r of rows) weight.set(outcomeOf(r.d), (weight.get(outcomeOf(r.d)) ?? 0) + Math.max(0, r.d.StartingAppearances ?? 0) + (r.d.Minutes ?? 0) / 10_000);
+    const best = [...weight].sort((a, b) => b[1] - a[1])[0]![0];
+    kept = rows.filter((r) => outcomeOf(r.d) === best);
+  }
+  const longest = Math.max(...kept.map((r) => r.d.Minutes ?? 0));
+  const seen = kept.filter((r) => (r.d.Minutes ?? 0) >= longest && r.d.TeamGoals != null).map((r) => r.d.TeamGoals!);
+  if (seen.length) {
+    const count = new Map<number, number>();
+    for (const g of seen) count.set(g, (count.get(g) ?? 0) + 1);
+    const tg = [...count].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0]![0];
+    kept = kept.filter((r) => r.d.TeamGoals == null || (r.d.TeamGoals <= tg && ((r.d.Minutes ?? 0) < longest || r.d.TeamGoals === tg)));
+  }
+  return kept.length ? kept : rows;
+}
+
 /** Prochain match annoncé par un instantané, s'il tombe avant `until`. */
-function nextOpponent(snap: FmSnapshot, until: string): { opponent: string | null; competition: string | null; home: boolean | null } {
-  const none = { opponent: null, competition: null, home: null };
+function nextOpponent(snap: FmSnapshot, until: string): { opponent: string | null; competition: string | null; home: boolean | null; played: string | null } {
+  const none = { opponent: null, competition: null, home: null, played: null };
   const next = (snap.nextMatch ?? null) as Raw | null;
   const fx = snapshotFixtures(snap).filter((f) => f.date > snap.gameDate || days(snap.gameDate, f.date) === 0);
   const first = fx[0];
-  const inDays = toNumber(next?.inDays);
+  // « Dans 3 jours », « Demain » : texte du jeu, pas un nombre.
+  const inDays = typeof next?.inDays === 'number' ? next.inDays : daysUntil(next?.inDays);
   const date = first?.date ?? null;
   if (date ? days(date, until) < 0 : inDays == null || inDays > days(snap.gameDate, until)) return none;
   const location = typeof next?.location === 'string' ? next.location.toLowerCase() : '';
@@ -87,7 +124,22 @@ function nextOpponent(snap: FmSnapshot, until: string): { opponent: string | nul
     opponent: first?.opponent ?? (typeof next?.opponent === 'string' ? next.opponent : null),
     competition: first?.competition ?? (typeof next?.competition === 'string' ? next.competition : null),
     home: first?.home ?? (/dom|home/.test(location) ? true : /ext|away/.test(location) ? false : null),
+    played: date ?? (inDays != null ? addDays(snap.gameDate, inDays) : null),
   };
+}
+
+type Tactic = { name: string | null; formation?: string | null; formationSource?: unknown };
+
+/**
+ * Tactique d'un instantané : son nom, sinon le nom lu à part par chemins.json (`custom.tactique.nomTactique`, lu même
+ * quand la lecture complète de la tactique échoue, comme au printemps 2027 dans la partie de Malženice). Null si aucun
+ * nom : on prend alors l'instantané d'avant le match.
+ */
+function matchTactic(snap: FmSnapshot): Tactic | null {
+  const t = (snap.tactic ?? null) as Partial<Tactic> | null;
+  const custom = ((snap as Raw).custom as { tactique?: { nomTactique?: unknown } } | undefined)?.tactique?.nomTactique;
+  const name = typeof t?.name === 'string' && t.name ? t.name : typeof custom === 'string' && custom && !custom.startsWith('FM.UI.') ? custom : null;
+  return name ? { ...t, name } : null;
 }
 
 /** Le match (ou les matchs) joué(s) entre deux instantanés, ou null s'il n'y en a pas. */
@@ -97,16 +149,21 @@ export function resultBetween(prev: FmSnapshot, cur: FmSnapshot): MatchResult | 
   const before = matchStatsFull(prev);
   const after = matchStatsFull(cur);
   const prevPlayers = new Map(prev.players.map((p) => [String(p.id), p]));
-  const rows: { id: string; d: RawStats }[] = [];
+  const read = new Set([...before.values()].flatMap((m) => Object.keys(m.raw)));
+  // Le plugin ne lisait pas encore les stats de match : rien à comparer.
+  if (!read.has('Minutes') || !read.has('StartingAppearances')) return null;
+  let rows: { id: string; d: RawStats }[] = [];
   let reset = 0;
   for (const [id, m] of after) {
     const ref = before.get(id);
     if (ref && (m.raw.Minutes ?? 0) < (ref.raw.Minutes ?? 0)) reset++;
-    const d = delta(m.raw, ref?.raw);
+    const d = delta(m.raw, ref?.raw, read);
     if (d && (d.Minutes ?? 0) > 0) rows.push({ id, d });
   }
   // Nouvelle saison entre les deux : les cumuls repartent de zéro, la différence ne veut rien dire.
   if (reset > rows.length) return null;
+  // Personne n'a joué deux matchs : un seul match de l'équipe première, on écarte la réserve et les U19.
+  if (rows.length && Math.max(...rows.map((r) => apps(r.d))) === 1) rows = firstTeamRows(rows);
   // Un match de l'équipe première = 11 titularisations chez nous. Les cumuls bougent aussi pour un joueur qui joue
   // avec la réserve ou les U19, ou une recrue qui arrive avec ses stats d'un autre club : ce n'est pas un match.
   const starts = sum(rows.map((r) => Math.max(0, r.d.StartingAppearances ?? 0)));
@@ -154,11 +211,12 @@ export function resultBetween(prev: FmSnapshot, cur: FmSnapshot): MatchResult | 
   players.sort((a, b) => Number(b.started) - Number(a.started) || b.minutes - a.minutes);
 
   const xgs = rows.map((r) => r.d.ExpectedGoals).filter((x): x is number => x != null);
-  const opp = matches === 1 ? nextOpponent(prev, cur.gameDate) : { opponent: null, competition: null, home: null };
-  const tactic = (cur.tactic ?? prev.tactic ?? null) as { name?: string | null; formation?: string | null } | null;
+  const { played, ...opp } = matches === 1 ? nextOpponent(prev, cur.gameDate) : { opponent: null, competition: null, home: null, played: null };
+  const tactic = matchTactic(cur) ?? matchTactic(prev);
   return {
     date: cur.gameDate,
     since: prev.gameDate,
+    played,
     matches,
     ...opp,
     friendly: isFriendly(opp.competition),
@@ -169,8 +227,9 @@ export function resultBetween(prev: FmSnapshot, cur: FmSnapshot): MatchResult | 
     goalsFor: gf,
     goalsAgainst: ga,
     xg: xgs.length ? Math.round(sum(xgs) * 100) / 100 : null,
-    tactic: typeof tactic?.name === 'string' ? tactic.name : null,
-    formation: gameFormationOf(tactic) ?? (typeof tactic?.formation === 'string' ? tactic.formation : null),
+    tactic: tactic?.name ?? null,
+    // Pas la « formation la plus utilisée » du jeu (souvent « Personnalisée ») : elle ne dit rien du match.
+    formation: gameFormationOf(tactic),
     players,
   };
 }

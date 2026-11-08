@@ -47,7 +47,7 @@ describe('résultats entre deux instantanés', () => {
     const after = snap('2027-02-17', [
       { id: 'gk', min: 990, starts: 11, tg: 14, tc: 11, won: 1, apps: 11, avg: 6.8 },
       { id: 'a', min: 870, starts: 10, tg: 13, tc: 10, xg: 3.9, won: 1, apps: 10, avg: 7.1, goals: 5 },
-      { id: 'b', min: 120, starts: 1, subs: 3, tg: 1, tc: 2, xg: 0.2, apps: 4, avg: 6.5 },
+      { id: 'b', min: 120, starts: 1, subs: 3, tg: 1, tc: 2, xg: 0.2, won: 1, apps: 4, avg: 6.5 },
     ], { tactic: { name: 'Possession 4-3-3' } });
     const r = resultBetween(before, after)!;
     expect(r).toMatchObject({ matches: 1, outcome: 'W', goalsFor: 2, goalsAgainst: 1, opponent: 'Senica', home: true, tactic: 'Possession 4-3-3' });
@@ -107,22 +107,73 @@ describe('résultats entre deux instantanés', () => {
   });
 });
 
+describe('données réelles du plugin (partie de Malženice, 08/11/2026)', () => {
+  const before = snap('2027-08-20', [
+    { id: 'gk', min: 450, starts: 5, tg: 4, tc: 5, won: 2, lost: 2, apps: 5 },
+    { id: 'a', min: 197, starts: 2, subs: 1, tg: 1, tc: 0, won: 1, lost: 2, apps: 3 },
+    { id: 'r', min: 90, starts: 1, tg: 0, tc: 0, apps: 1 },
+  ], { nextMatch: { opponent: 'Nitra', inDays: 'Dans 2 jours', location: 'Domicile', competition: '2. liga' }, tactic: { name: '4-4-2' } });
+
+  it('un joueur de la réserve qui joue le même jour ne compte pas dans le match (buts, xG, titulaires)', () => {
+    // Nitra 3-0 : Frimpong (r) joue 90 minutes avec la réserve (nul 0-0) et y marque.
+    const after = snap('2027-08-22', [
+      { id: 'gk', min: 540, starts: 6, tg: 7, tc: 5, won: 3, lost: 2, xg: 0.04, apps: 6 },
+      { id: 'a', min: 287, starts: 3, subs: 1, tg: 4, tc: 0, won: 2, lost: 2, xg: 0.66, apps: 4, goals: 2 },
+      { id: 'r', min: 180, starts: 2, tg: 0, tc: 0, xg: 1.19, apps: 2, goals: 1 },
+    ], { tactic: { name: '4-4-2' } });
+    const r = resultBetween(before, after)!;
+    expect(r).toMatchObject({ matches: 1, outcome: 'W', goalsFor: 3, goalsAgainst: 0, opponent: 'Nitra', played: '2027-08-22' });
+    expect(r.players.map((p) => p.id)).not.toContain('r');
+    expect(r.xg).toBeCloseTo(0.7);
+  });
+
+  it('les buts de la réserve ne changent pas le score (coupe perdue 1-3, pas 2-3)', () => {
+    // Drobný (r) gagne 2-0 avec la réserve le jour où l'équipe première perd 1-3 à Púchov.
+    const after = snap('2027-09-01', [
+      { id: 'gk', min: 540, starts: 6, tg: 5, tc: 8, won: 2, lost: 3, apps: 6 },
+      { id: 'a', min: 242, starts: 2, subs: 2, tg: 2, tc: 0, won: 1, lost: 3, apps: 4, goals: 1 },
+      { id: 'r', min: 165, starts: 2, tg: 2, tc: 0, won: 1, apps: 2 },
+    ]);
+    const r = resultBetween(before, after)!;
+    expect(r).toMatchObject({ outcome: 'L', goalsFor: 1, goalsAgainst: 3 });
+    expect(r.players.filter((p) => p.started)).toHaveLength(10);
+  });
+
+  it('stats de match pas encore lues dans l’instantané précédent : pas une période de matchs nuls', () => {
+    const empty = { ...before, gameDate: '2027-02-07', custom: { joueurs: Object.fromEntries(before.players.map((p) => [p.id, { id: p.id }])) } } as FmSnapshot;
+    expect(resultBetween(empty, snap('2027-02-14', [{ id: 'gk', min: 1800, starts: 20, tg: 15, tc: 19, apps: 20 }]))).toBeNull();
+  });
+
+  it('tactique : nom lu à part, sinon celle d’avant le match ; jamais la « formation la plus utilisée »', () => {
+    const after = (extra: Record<string, unknown>) =>
+      snap('2027-08-22', [
+        { id: 'gk', min: 540, starts: 6, tg: 7, tc: 5, won: 3, lost: 2, apps: 6 },
+        { id: 'a', min: 287, starts: 3, subs: 1, tg: 4, tc: 0, won: 2, lost: 2, apps: 4 },
+      ], extra);
+    const unread = { name: null, formation: 'Personnalisée', formationSource: 'MostUsedFormation' };
+    const custom = (s: FmSnapshot, nom: string) => ({ ...s, custom: { ...(s.custom as object), tactique: { nomTactique: nom } } }) as FmSnapshot;
+    expect(resultBetween(before, custom(after({ tactic: unread }), '4-2-3-1 Pressing'))).toMatchObject({ tactic: '4-2-3-1 Pressing', formation: '4-2-3-1 Pressing' });
+    expect(resultBetween(before, after({ tactic: unread }))).toMatchObject({ tactic: '4-4-2', formation: '4-4-2' });
+    expect(resultBetween({ ...before, tactic: unread } as FmSnapshot, after({ tactic: unread }))).toMatchObject({ tactic: null, formation: null });
+  });
+});
+
 describe('ce qui marche ou pas', () => {
   /** Une saison fictive : 8 matchs, `a` titulaire dans les 4 premiers (gagnés), absent ensuite (perdus). */
   function season() {
     const h: { gameDate: string; data: FmSnapshot }[] = [];
-    let gkTg = 0, gkTc = 0, aMin = 0, aStarts = 0;
+    let gkTg = 0, gkTc = 0, aMin = 0, aStarts = 0, aTg = 0;
     const push = (i: number) =>
       h.push({
         gameDate: `2027-03-${String(i + 1).padStart(2, '0')}`,
         data: snap(`2027-03-${String(i + 1).padStart(2, '0')}`, [
           { id: 'gk', min: 90 * i, starts: i, tg: gkTg, tc: gkTc },
-          { id: 'a', min: aMin, starts: aStarts, tg: 0, tc: 0 },
+          { id: 'a', min: aMin, starts: aStarts, tg: aTg, tc: 0 },
         ], { tactic: { name: i <= 4 ? 'Possession 4-3-3' : 'Direct 4-4-2' } }),
       });
     push(0);
     for (let i = 1; i <= 8; i++) {
-      if (i <= 4) { gkTg += 2; aMin += 90; aStarts++; } else gkTc += 1;
+      if (i <= 4) { gkTg += 2; aTg += 2; aMin += 90; aStarts++; } else gkTc += 1;
       push(i);
     }
     return h;

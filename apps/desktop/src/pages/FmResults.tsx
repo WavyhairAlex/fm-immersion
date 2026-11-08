@@ -168,7 +168,7 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
             return (
               <li key={key} className="py-2">
                 <button type="button" className="flex w-full flex-wrap items-center gap-3 text-left text-sm" onClick={() => setOpen(shown ? null : key)} aria-expanded={shown}>
-                  <span className="w-28 text-brun">{date(r.date)}</span>
+                  <span className="w-28 text-brun">{date(r.played ?? r.date)}</span>
                   {r.outcome ? <Tag tone={TONE[r.outcome]}>{letter(r.outcome)}</Tag> : <Tag>{t('fm.results.merged', { count: r.matches })}</Tag>}
                   <span className="font-display text-lg font-semibold tabular-nums">{score(r)}</span>
                   <span className="font-bold">

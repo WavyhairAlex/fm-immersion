@@ -2164,7 +2164,7 @@
     "results": {
       "title": "Résultats",
       "none": "Aucun match retrouvé pour l'instant. Il faut une relecture de l'effectif avant un match et une après : le plugin relit toutes les 5 minutes et FM Immersion garde une relecture par jour de jeu, le premier match suivi apparaîtra donc au prochain match joué.",
-      "how": "Rien de nouveau n'est lu dans le jeu. Entre deux relectures, FM Immersion fait la différence des cumuls de saison du Centre de données (minutes, titularisations, buts de l'équipe pendant que le joueur est sur le terrain, victoires, xG…) : avec un seul match entre les deux, on retrouve le score exact (le joueur resté 90 minutes a tout vu), le onze de départ et la note de chaque joueur. L'adversaire vient du « prochain match » de la relecture d'avant, la tactique de celle d'après. Plusieurs matchs entre deux relectures sont regroupés en un bilan.",
+      "how": "Rien de nouveau n'est lu dans le jeu. Entre deux relectures, FM Immersion fait la différence des cumuls de saison du Centre de données (minutes, titularisations, buts de l'équipe pendant que le joueur est sur le terrain, victoires, xG…) : avec un seul match entre les deux, on retrouve le score exact (le joueur resté 90 minutes a tout vu), le onze de départ et la note de chaque joueur. L'adversaire vient du « prochain match » de la relecture d'avant, la tactique de celle d'après. Les joueurs qui ont joué le même jour avec la réserve ou les U19 sont écartés (autre résultat, autre score). Plusieurs matchs entre deux relectures sont regroupés en un bilan. Les amicaux ne changent en général pas les cumuls du Centre de données : ils n'apparaissent alors pas ici.",
       "kpi": {
         "matches": "Matchs suivis",
         "record": "V-N-D",
