@@ -298,6 +298,8 @@
         "a": "Attack"
       },
       "auto": "Automatic: best choice",
+      "styles": "Playing styles",
+      "myTactics": "My tactics (Build)",
       "bestNow": "Best applicable tactic",
       "projectBest": "Your project is now the best choice",
       "baseKept": "Your base tactic, kept",

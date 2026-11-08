@@ -40,6 +40,11 @@ import { Empty, Fit, More, Panel, useNames } from './FmUi';
  */
 
 const KEY = 'fmi.builder.v1';
+
+/** Tactiques construites de la partie (lues aussi par « Le onze », qui permet de les choisir). */
+export function readBuiltTactics(scope: Parameters<typeof readScoped>[1]) {
+  return parseBuiltTactics(readScoped<{ list: unknown[] }>(KEY, { ...scope, inheritsLegacy: false }, { list: [] }).list);
+}
 interface Stored {
   list: unknown[];
   current?: string;

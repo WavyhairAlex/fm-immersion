@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { FmPlayer } from './player';
 import { lineOf, POS_ORDER, type PosCode } from './positions';
-import { assignMax, FORMATIONS, phaseXY, readiness, shapeOf, sideOf, slotContexts, type BalanceCheck, type Phase, type RoleRef, type Slot, type StyleRef, type TacticEngine } from './tactic';
+import { assignMax, FORMATIONS, formationOfPositions, phaseXY, readiness, shapeOf, sideOf, slotContexts, type BalanceCheck, type FormationPlan, type Phase, type RoleRef, type Slot, type StyleRef, type TacticEngine } from './tactic';
 import { checkTeamInstructions, MENTALITIES_FM27, TEAM_INSTRUCTIONS_FM27, teamInstructionOf, type TeamInstructionDef } from './team-instructions-fm27';
 import type { TacticSlot } from './tactic-slots';
 import { INSTRUCTION_GROUP, roleImposes, roleLocks, type InstructionId } from './instructions';
@@ -602,4 +602,53 @@ export function squadFit(engine: TacticEngine, t: BuiltTactic, players: FmPlayer
     return { player, fit: player ? fitOf(player, i) : null, second };
   });
   return { xi, fit: xi.reduce((a, x) => a + (x.fit ?? 0), 0) / xi.length };
+}
+
+/* ---------- Tactique construite choisie dans « Le onze » ---------- */
+
+/** Style équivalent à une tactique construite : sa mentalité, ses consignes d'équipe et ses rôles. */
+export function builtStyle(t: BuiltTactic): StyleRef {
+  const l = builtInstructionLabels(t);
+  return {
+    id: `built:${t.id}`,
+    name: t.name,
+    inPossession: l.ip,
+    outOfPossession: l.oop,
+    weights: {},
+    mentality: t.mentality,
+    signatureRoles: { ip: [...new Set(t.slots.map((s) => s.ip))], oop: [...new Set(t.slots.map((s) => s.oop))] },
+  };
+}
+
+/**
+ * Onze d'une tactique construite : postes et rôles fixés par le joueur, meilleure attribution des joueurs
+ * (adéquation avec et sans ballon + forme du jour). Un poste que l'équipe première ne peut pas tenir est
+ * confié à la réserve. Remplaçants : les deux meilleurs restants à chaque poste.
+ */
+export function builtPlan(engine: TacticEngine, t: BuiltTactic, players: FmPlayer[], reserve: FmPlayer[] = []): FormationPlan {
+  const S = t.slots;
+  const fitOf = (p: FmPlayer, i: number) => ((engine.roleFit(p, S[i]!.ip, 'ip', S[i]!.pos) ?? 0) + (engine.roleFit(p, S[i]!.oop, 'oop', S[i]!.posOOP) ?? 0)) / 2;
+  const ok = (p: FmPlayer, i: number) => engine.canPlay(p, S[i]!.pos);
+  const pick = (list: FmPlayer[], open: number[]) => {
+    const value = open.map((i) => list.map((p) => (ok(p, i) ? fitOf(p, i) + readiness(p) : null)));
+    return assignMax(value).map((j) => (j >= 0 ? list[j]! : null));
+  };
+  const xi: (FmPlayer | null)[] = pick(players, S.map((_, i) => i));
+  const holes = S.map((_, i) => i).filter((i) => !xi[i]);
+  if (holes.length && reserve.length) pick(reserve, holes).forEach((p, k) => (xi[holes[k]!] = p));
+  const used = new Set(xi.flatMap((p) => (p ? [p.id] : [])));
+  const xy = layoutPositions(S.map((s) => s.pos));
+  const slots: Slot[] = S.map((s, i) => {
+    const player = xi[i] ?? null;
+    return { pos: s.pos, x: xy[i]![0], y: xy[i]![1], ip: s.ip, oop: s.oop, player, fit: player ? fitOf(player, i) : null };
+  });
+  const subs = S.map((_, i) =>
+    players
+      .filter((p) => !used.has(p.id) && ok(p, i))
+      .sort((a, b) => fitOf(b, i) - fitOf(a, i))
+      .slice(0, 2),
+  );
+  const fit = slots.reduce((a, s) => a + (s.fit ?? 0), 0) / slots.length;
+  const form = formationOfPositions(S.map((s) => s.pos)) ?? shapeOf(slots.filter((s) => s.pos !== 'GB').map((s) => [s.x, s.y] as [number, number]));
+  return { form, slots, subs, score: fit, fit, penalty: 0, holes: slots.filter((s) => !s.player).length };
 }
