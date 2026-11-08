@@ -12,7 +12,11 @@ export type PackManifest = {
   sha256: string | null;
   url: string | null;
 };
-export type PackOffer = { manifest: PackManifest; source: 'remote' | 'local'; path: string | null };
+export type PackOffer = {
+  manifest: PackManifest;
+  source: 'remote' | 'local';
+  path: string | null;
+};
 export type RemoteCheck = {
   remote: PackManifest | null;
   remoteError: string | null;
@@ -43,9 +47,18 @@ export const writeKey = (k: string, v: string) => {
 
 /** Dossiers du jeu et de l'atelier : réglage mémorisé, sinon détection automatique. */
 export function useFacesDirs() {
-  const { data: defaultDir } = useQuery({ queryKey: ['fm', 'bridge', 'default-dir'], queryFn: () => invoke<string | null>('fm_bridge_default_game_dir') });
-  const { data: defaultWorkshop } = useQuery({ queryKey: ['faces', 'workshop-default'], queryFn: () => invoke<string | null>('faces_default_workshop') });
-  return { gameDir: readKey(GAME_DIR_KEY) || defaultDir || '', workshop: readKey(WORKSHOP_KEY) || defaultWorkshop || '' };
+  const { data: defaultDir } = useQuery({
+    queryKey: ['fm', 'bridge', 'default-dir'],
+    queryFn: () => invoke<string | null>('fm_bridge_default_game_dir'),
+  });
+  const { data: defaultWorkshop } = useQuery({
+    queryKey: ['faces', 'workshop-default'],
+    queryFn: () => invoke<string | null>('faces_default_workshop'),
+  });
+  return {
+    gameDir: readKey(GAME_DIR_KEY) || defaultDir || '',
+    workshop: readKey(WORKSHOP_KEY) || defaultWorkshop || '',
+  };
 }
 
 /**
@@ -55,7 +68,11 @@ export function useFacesDirs() {
 export function useFacesUpdate(gameDir: string, workshop: string) {
   return useQuery({
     queryKey: ['faces', 'remote', gameDir, workshop],
-    queryFn: () => invoke<RemoteCheck>('faces_remote_check', { gameDir, workshopDir: workshop || null }),
+    queryFn: () =>
+      invoke<RemoteCheck>('faces_remote_check', {
+        gameDir,
+        workshopDir: workshop || null,
+      }),
     enabled: !!gameDir,
     staleTime: 60 * 60_000,
     refetchInterval: 60 * 60_000,
@@ -72,4 +89,12 @@ export function pcState(state: string, offer: boolean): 'noGame' | 'none' | 'upT
   if (state === 'photorealV1' || state === 'photorealCustom') return offer ? 'update' : 'upToDate';
   if (state === 'unknown') return 'unknown';
   return offer ? 'update' : 'none';
+}
+
+/** Date courte d'un pack (« 08/11 ») à partir de sa version « AAAA-MM-JJ hh:mm:ss » ; sinon la version telle quelle. */
+export function packDate(version: string | null | undefined, lang: string): string {
+  if (!version) return '?';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(version);
+  if (!m) return version;
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).toLocaleDateString(lang, { day: '2-digit', month: '2-digit' });
 }
