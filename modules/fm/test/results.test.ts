@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { analyzeResults, resultBetween, type FmSnapshot } from '../src';
+import { analyzeResults, matchResults, resultBetween, type FmSnapshot } from '../src';
 
 type P = { id: string; min: number; starts: number; subs?: number; tg: number; tc: number; won?: number; lost?: number; xg?: number; apps?: number; avg?: number; goals?: number };
 
@@ -56,6 +56,21 @@ describe('résultats entre deux instantanés', () => {
     expect(a).toMatchObject({ started: true, minutes: 70, goals: 1 });
     expect(a.rating).toBeCloseTo(8.0);
     expect(r.players.find((p) => p.id === 'b')!.started).toBe(false);
+  });
+
+  it('buteur connu le lendemain : le jeu met à jour les buts un jour après les cumuls du match', () => {
+    const day = (goals: number) =>
+      snap('2027-02-17', [
+        { id: 'gk', min: 990, starts: 11, tg: 14, tc: 11, won: 1, apps: 11, avg: 6.8 },
+        { id: 'a', min: 870, starts: 10, tg: 13, tc: 10, xg: 3.9, won: 1, apps: 10, avg: 7.1, goals },
+        { id: 'b', min: 120, starts: 1, subs: 3, tg: 1, tc: 2, xg: 0.2, apps: 4, avg: 6.5 },
+      ]);
+    const next = { ...day(6), gameDate: '2027-02-18' } as FmSnapshot;
+    const h = [before, day(4), next].map((data) => ({ gameDate: data.gameDate, data }));
+    const [r] = matchResults(h);
+    expect(r!.players.find((p) => p.id === 'a')!.goals).toBe(2);
+    // Sans instantané le lendemain : on garde ce qu'on sait.
+    expect(matchResults(h.slice(0, 2))[0]!.players.find((p) => p.id === 'a')!.goals).toBe(0);
   });
 
   it('un seul joueur qui bouge (réserve, recrue) ou un changement de club : pas un match', () => {
