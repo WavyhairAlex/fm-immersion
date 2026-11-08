@@ -3437,7 +3437,14 @@
       "shots": "Tirs {{home}} ({{homeOn}}) – {{away}} ({{awayOn}})",
       "xg": "xG {{home}} – {{away}}",
       "motm": "Homme du match : {{name}} ({{rating}})",
-      "motmNoRating": "Homme du match : {{name}}"
+      "motmNoRating": "Homme du match : {{name}}",
+      "possessionLabel": "Possession",
+      "shotsLabel": "Tirs",
+      "onTargetLabel": "Tirs cadrés",
+      "firstHalf": "1re mi-temps",
+      "secondHalf": "2e mi-temps",
+      "statsSoon": "Les chiffres du jeu arrivent dans un instant",
+      "statsLater": "Les chiffres du jeu arrivent au coup de sifflet final"
     },
     "say": {
       "early_level_0": "Les débats commencent, {{home}} et {{away}} s'observent encore ({{score}}).",
@@ -3581,9 +3588,17 @@
       "redFor": "CARTON ROUGE ! {{player}} est expulsé ({{team}}, {{minute}}e)",
       "redAgainst": "Carton rouge pour {{team}} : {{player}} expulsé ({{minute}}e)",
       "ownGoalFor": "Contre son camp ! {{player}} offre le but à {{team}} ({{minute}})",
-      "ownGoalAgainst": "Contre son camp… {{player}} trompe son propre gardien, but pour {{team}} ({{minute}})"
+      "ownGoalAgainst": "Contre son camp… {{player}} trompe son propre gardien, but pour {{team}} ({{minute}})",
+      "redForUnknown": "CARTON ROUGE pour {{team}} : un joueur expulsé ({{minute}}e)",
+      "redAgainstUnknown": "Carton rouge pour {{team}} : un joueur expulsé ({{minute}}e)",
+      "yellowForUnknown": "Carton jaune pour {{team}} ({{minute}}e)",
+      "yellowAgainstUnknown": "Carton jaune côté {{team}} ({{minute}}e)",
+      "disallowedFor": "But refusé pour {{team}} ! On reste à {{score}}",
+      "disallowedAgainst": "Ouf, but refusé pour {{team}} : toujours {{score}}"
     },
-    "cards": "Cartons"
+    "cards": "Cartons",
+    "redUnknown": "Expulsion",
+    "yellowUnknown": "Avertissement"
   },
   "season": {
     "title": "Bilan de la saison {{season}}",

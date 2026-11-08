@@ -177,8 +177,21 @@ public class FmBindingReader : IGameReader
         d["homeScore"] = score.Success ? int.Parse(score.Groups[1].Value) : null;
         d["awayScore"] = score.Success ? int.Parse(score.Groups[2].Value) : null;
         d["final"] = Flag(d["final"]);
-        d["homeEvents"] = LiveEvents(d["homeEvents"]);
-        d["awayEvents"] = LiveEvents(d["awayEvents"]);
+        var home = LiveEvents(d["homeEvents"]);
+        var away = LiveEvents(d["awayEvents"]);
+        // 0.5.6 : joueur de chaque événement (buteur, expulsé), quand le jeu le donne pendant le match ; null sinon.
+        var reqs = new List<Req>();
+        foreach (var (side, evs) in new[] { ("Home", home), ("Away", away) })
+            for (int j = 0; j < Math.Min(evs.Count, EventMax); j++) reqs.Add(new Req(null, $"{LiveFixture}{side}EventInfos/#{j}/Player/Name"));
+        if (reqs.Count > 0)
+        {
+            var names = Batch.Run(reqs.ToArray(), 4000);
+            int at = 0;
+            foreach (var evs in new[] { home, away })
+                for (int j = 0; j < Math.Min(evs.Count, EventMax); j++) evs[j]["player"] = CleanName(names[at++] as string);
+        }
+        d["homeEvents"] = home;
+        d["awayEvents"] = away;
         return d;
     }
 
@@ -186,14 +199,14 @@ public class FmBindingReader : IGameReader
     // (mêmes équipes) : homeEvents/awayEvents gagnent player (buteur) et assist (passeur), homeLineup/awayLineup
     // donnent [{name, rating, events}] (events : liste brute du jeu, à cartographier quand on en aura vu). Sans effet si
     // le jeu ne répond pas.
-    public static void AddMatchReport(Dictionary<string, object?> live)
+    public static bool AddMatchReport(Dictionary<string, object?> live)
     {
         var head = Batch.Run(new[]
         {
             new Req(null, LastFixture + "HomeTeam/Name"), new Req(null, LastFixture + "AwayTeam/Name"),
             new Req(null, LastFixture + "HomeEventInfosLong", true), new Req(null, LastFixture + "AwayEventInfosLong", true),
         }, 4000);
-        if (CleanName(head[0] as string) != live["home"] as string || CleanName(head[1] as string) != live["away"] as string) return;
+        if (CleanName(head[0] as string) != live["home"] as string || CleanName(head[1] as string) != live["away"] as string) return false;
         var home = LiveEvents(head[2]);
         var away = LiveEvents(head[3]);
         var reqs = new List<Req>();
@@ -234,6 +247,7 @@ public class FmBindingReader : IGameReader
         }
         if (home.Count > 0) live["homeEvents"] = home;
         if (away.Count > 0) live["awayEvents"] = away;
+        return true;
     }
 
     static bool Flag(object? v) => v switch

@@ -50,6 +50,11 @@ pendant le match, `HomeLineup`/`AwayLineup` du match en cours sont vides et le p
 vérifié par les noms des équipes. FM Immersion en tire les passeurs décisifs du résumé final sur Discord.
 Penalty : le jeu préfixe la minute du buteur (« pen 36' », événement de type 2) ; un penalty manqué n'apparaît pas.
 
+**0.5.6** : pendant le match, chaque événement reçoit `player` (`HomeEventInfos/#n/Player/Name`, null si le jeu ne le
+donne pas). Type 3 = expulsion (vu en jeu le 08/11/2026 : « expulsé 74' ») ; les cartons jaunes ne sont pas dans cette
+liste. Le rapport de match, absent du relevé final quand `LastFixture` désigne encore le match précédent au coup de
+sifflet, est retenté toutes les 15 s pendant 3 minutes, et le relevé réécrit dès qu'il est lu.
+
 ## Garde-fou « écran Tactique » (0.3.0)
 
 Toute lecture liée à la tactique (`LireTactique`, `LireEfficacite`, `LireCompo`, section `tactique` de `chemins.json`,

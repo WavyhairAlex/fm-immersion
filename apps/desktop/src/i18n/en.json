@@ -3437,7 +3437,14 @@
       "shots": "Shots {{home}} ({{homeOn}}) – {{away}} ({{awayOn}})",
       "xg": "xG {{home}} – {{away}}",
       "motm": "Player of the match: {{name}} ({{rating}})",
-      "motmNoRating": "Player of the match: {{name}}"
+      "motmNoRating": "Player of the match: {{name}}",
+      "possessionLabel": "Possession",
+      "shotsLabel": "Shots",
+      "onTargetLabel": "On target",
+      "firstHalf": "1st half",
+      "secondHalf": "2nd half",
+      "statsSoon": "The game's figures are on their way",
+      "statsLater": "The game's figures come at the final whistle"
     },
     "say": {
       "early_level_0": "Early exchanges, {{home}} and {{away}} still sizing each other up ({{score}}).",
@@ -3581,9 +3588,17 @@
       "redFor": "RED CARD! {{player}} is sent off ({{team}}, {{minute}}')",
       "redAgainst": "Red card for {{team}}: {{player}} sent off ({{minute}}')",
       "ownGoalFor": "Own goal! {{player}} gifts {{team}} a goal ({{minute}})",
-      "ownGoalAgainst": "Own goal… {{player}} beats his own keeper, goal for {{team}} ({{minute}})"
+      "ownGoalAgainst": "Own goal… {{player}} beats his own keeper, goal for {{team}} ({{minute}})",
+      "redForUnknown": "RED CARD for {{team}}: a player is sent off ({{minute}}')",
+      "redAgainstUnknown": "Red card for {{team}}: a player is sent off ({{minute}}')",
+      "yellowForUnknown": "Yellow card for {{team}} ({{minute}}')",
+      "yellowAgainstUnknown": "Yellow card for {{team}} ({{minute}}')",
+      "disallowedFor": "Goal disallowed for {{team}}! Still {{score}}",
+      "disallowedAgainst": "Phew, {{team}} goal disallowed: still {{score}}"
     },
-    "cards": "Cards"
+    "cards": "Cards",
+    "redUnknown": "Sending-off",
+    "yellowUnknown": "Booking"
   },
   "season": {
     "title": "Season review {{season}}",

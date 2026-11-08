@@ -18,7 +18,7 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.5.5";
+    public const string Version = "0.5.6";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que FM Immersion renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
@@ -169,17 +169,34 @@ public class Plugin : BasePlugin
     // Lecture seule, comme le reste. Le fichier garde le dernier état (match fini compris) jusqu'au match suivant.
     // 0.5.4 : à la fin du match (dernière lecture, ou résultat final), le rapport du match (buteurs, passeurs, feuille de
     // match) est ajouté au relevé depuis LastFixture (FmBindingReader.AddMatchReport).
+    // 0.5.6 : le jeu ne désigne pas toujours le match fini par LastFixture au coup de sifflet (08/11/2026 : relevé final
+    // sans rapport). Le rapport est donc retenté toutes les 15 s pendant 3 minutes après le match, et le relevé réécrit
+    // dès qu'il est lu.
     void LiveLoop()
     {
         bool was = false;
         string? gameDate = null;
         Dictionary<string, object?>? last = null;
+        Dictionary<string, object?>? pending = null;
+        DateTime pendingUntil = DateTime.MinValue;
+        void WriteLive(Dictionary<string, object?> live, bool inMatch)
+        {
+            var doc = new Dictionary<string, object?> { ["schema"] = "archivix-live/1", ["gameDate"] = gameDate, ["inMatch"] = inMatch, ["updatedAt"] = DateTime.UtcNow.ToString("o") };
+            foreach (var kv in live) doc[kv.Key] = kv.Value;
+            Directory.CreateDirectory(DataDir);
+            WriteAtomic(Path.Combine(DataDir, "archivix-live.json"), JsonSerializer.Serialize(doc, Json));
+        }
+        bool Report(Dictionary<string, object?> live)
+        {
+            try { return FmBindingReader.AddMatchReport(live); }
+            catch (Exception e) { Log.LogWarning($"Rapport de match : {e.Message}"); return false; }
+        }
         while (true)
         {
             try
             {
                 var now = FmBindingReader.DuringMatch() == true;
-                if (now && !was) { gameDate = FmBindingReader.CurrentDate(); last = null; Log.LogInfo("Match en cours : direct dans archivix-live.json"); }
+                if (now && !was) { gameDate = FmBindingReader.CurrentDate(); last = null; pending = null; Log.LogInfo("Match en cours : direct dans archivix-live.json"); }
                 if (now || was)   // une dernière lecture après la fin du match, pour le résultat final
                 {
                     var live = FmBindingReader.ReadLive();
@@ -190,19 +207,22 @@ public class Plugin : BasePlugin
                     if (live != null)
                     {
                         if (!now) live["final"] = true;
-                        if (!now || live["final"] is true)
-                            try { FmBindingReader.AddMatchReport(live); } catch (Exception e) { Log.LogWarning($"Rapport de match : {e.Message}"); }
-                        var doc = new Dictionary<string, object?> { ["schema"] = "archivix-live/1", ["gameDate"] = gameDate, ["inMatch"] = now, ["updatedAt"] = DateTime.UtcNow.ToString("o") };
-                        foreach (var kv in live) doc[kv.Key] = kv.Value;
-                        Directory.CreateDirectory(DataDir);
-                        WriteAtomic(Path.Combine(DataDir, "archivix-live.json"), JsonSerializer.Serialize(doc, Json));
+                        var reported = (!now || live["final"] is true) && Report(live);
+                        // Match fini sans rapport : on le retente pendant 3 minutes.
+                        if (!now && !reported) { pending = live; pendingUntil = DateTime.UtcNow.AddMinutes(3); }
+                        WriteLive(live, now);
                         last = now ? live : null;
                     }
+                }
+                else if (pending != null)
+                {
+                    if (Report(pending)) { WriteLive(pending, false); pending = null; Log.LogInfo("Rapport de match ajouté au relevé"); }
+                    else if (DateTime.UtcNow > pendingUntil) pending = null;
                 }
                 was = now;
             }
             catch (Exception e) { Log.LogWarning($"Match en direct : {e.Message}"); }
-            Thread.Sleep(was ? 15_000 : 20_000);
+            Thread.Sleep(was || pending != null ? 15_000 : 20_000);
         }
     }
 

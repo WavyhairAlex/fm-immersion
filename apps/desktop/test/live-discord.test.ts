@@ -102,7 +102,8 @@ describe('direct Discord', () => {
     expect(s?.last.final).toBe(true);
     const embed = (calls[0]!.args.payload as { embeds: { author: { name: string }; description: string }[] }).embeds[0]!;
     expect(embed.author.name).toContain('live.finalTag');
-    expect(embed.description).toContain('live.ended');
+    expect(embed.description).toContain('live.moment.final');
+    expect(embed.description).not.toContain('live.ended'); // pas deux fois « fin du match »
     calls.length = 0;
     await liveStep(t, stuck, 'Malženice', s, later, undefined, ended);
     expect(calls).toEqual([]);
@@ -193,8 +194,8 @@ describe('chiffres du jeu après le match', () => {
     // Carton lu dans la feuille de match : un temps fort à part, et l'encart liste les cartons.
     const clean = { ...base, minute: '30 min.', awayLineup: [{ name: 'M. Fábry', yellow: false }] };
     const carded = { ...clean, minute: '31 min.', awayLineup: [{ name: 'M. Fábry', yellow: true }] };
-    expect(momentsBetween(clean, carded)).toEqual([{ kind: 'card', side: 'away', player: 'M. Fábry', card: 'yellow' }]);
-    expect(momentLine(t, carded, base.home, { kind: 'card', side: 'away', player: 'M. Fábry', card: 'yellow' })).toContain('M. Fábry');
+    expect(momentsBetween(clean, carded)).toEqual([{ kind: 'card', side: 'away', player: 'M. Fábry', card: 'yellow', time: null }]);
+    expect(momentLine(t, carded, base.home, { kind: 'card', side: 'away', player: 'M. Fábry', card: 'yellow', time: null })).toContain('M. Fábry');
     expect(JSON.stringify(scoreboardPayload(t, carded, base.home).embeds[0]!.fields)).toContain('🟨 **M. Fábry**');
     // Penalty : le titre du but le dit, la minute perd le préfixe « pen ».
     const pen = momentLine(t, { ...base, homeScore: 1, scorers: "T. Astorga pen 20'" }, base.home, { kind: 'goal', side: 'home', scorer: { name: 'T. Astorga', time: "pen 20'" }, penalty: true, assist: 'J. Novák' });
@@ -269,5 +270,15 @@ describe('but contre son camp', () => {
     expect(e.description).toMatch(/⏱️ 58'/);
     expect(e.description).toMatch(/\*\*live\.moment\./);
     expect(e.fields[0]!.value.split('\n')).toHaveLength(2);
+  });
+});
+
+describe('encart avec image', () => {
+  it("la phrase du commentateur n'est que dans l'image, l'expulsion du jeu est listée", () => {
+    const red = { ...base, minute: '74 min.', awayEvents: [{ type: 3, time: "expulsé 74'", slice: 74 }] } as FmLive;
+    const e = scoreboardPayload(t, red, base.home, { image: true }).embeds[0]!;
+    expect(e.description).not.toContain('🎙️');
+    expect(scoreboardPayload(t, red, base.home).embeds[0]!.description).toContain('🎙️');
+    expect(JSON.stringify(e.fields)).toContain("🟥 live.redUnknown · Malženice (74')".replace('Malženice', base.away));
   });
 });
