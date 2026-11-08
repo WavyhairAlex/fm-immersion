@@ -158,7 +158,7 @@ public class FmBindingReader : IGameReader
     // sonde Carnet le 07/11/2026), nom et compteurs du match : buts, passes décisives, carton jaune, carton rouge.
     // 2 × 20 × 5 lectures simples ; Plugin.LiveLoop ne les demande qu'un relevé sur deux (toutes les 30 s).
     const int LineupMax = 20;
-    static readonly (string Key, string Path)[] LineupFields =
+    static readonly (string Key, string Path)[] LiveLineupFields =
     {
         ("name", "Player/Name"), ("goals", "Goals"), ("assists", "Assists"),
         ("yellow", "YellowCardedInMatch"), ("red", "RedCardedInMatch"),
@@ -196,19 +196,19 @@ public class FmBindingReader : IGameReader
     {
         var reqs = new List<Req>();
         for (int i = 0; i < LineupMax; i++)
-            foreach (var f in LineupFields) reqs.Add(new Req(null, $"{LiveFixture}{list}/#{i}/{f.Path}"));
+            foreach (var f in LiveLineupFields) reqs.Add(new Req(null, $"{LiveFixture}{list}/#{i}/{f.Path}"));
         var res = Batch.Run(reqs.ToArray(), 4000);
         var players = new List<Dictionary<string, object?>>();
         for (int i = 0; i < LineupMax; i++)
         {
-            int at = i * LineupFields.Length;
+            int at = i * LiveLineupFields.Length;
             var name = CleanName(res[at] as string);
             if (string.IsNullOrWhiteSpace(name)) continue;
             players.Add(new Dictionary<string, object?>
             {
                 ["name"] = name,
-                ["goals"] = Num(res[at + 1]),
-                ["assists"] = Num(res[at + 2]),
+                ["goals"] = NumInt(res[at + 1]),
+                ["assists"] = NumInt(res[at + 2]),
                 ["yellow"] = Flag(res[at + 3]),
                 ["red"] = Flag(res[at + 4]),
             });
@@ -224,7 +224,7 @@ public class FmBindingReader : IGameReader
         _ => false,
     };
 
-    static int? Num(object? v) => v switch
+    static int? NumInt(object? v) => v switch
     {
         double x => (int)Math.Round(x),
         string s when int.TryParse(s, out var n) => n,
