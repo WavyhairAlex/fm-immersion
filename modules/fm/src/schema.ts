@@ -1,6 +1,6 @@
 import { saves } from '@fm-immersion/db';
 import { index, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
-import type { ChallengeCertificate, Rewind } from './challenges';
+import type { ChallengeCertificate, ChallengeParams, Rewind } from './challenges';
 import type { GazetteWriting } from './gazette';
 import type { FmSnapshot } from './snapshot';
 
@@ -75,7 +75,7 @@ export const fmChallenges = sqliteTable(
       .notNull()
       .references(() => saves.id, { onDelete: 'cascade' }),
     challengeId: text('challenge_id').notNull(),
-    params: text('params', { mode: 'json' }).$type<{ nationality?: string }>().notNull(),
+    params: text('params', { mode: 'json' }).$type<ChallengeParams>().notNull(),
     /** Date de jeu de l'inscription : seuls les instantanés de cette date et après comptent. */
     startDate: text('start_date').notNull(),
     /** Manager sans club au moment de l'inscription (lu dans l'état du plugin). */

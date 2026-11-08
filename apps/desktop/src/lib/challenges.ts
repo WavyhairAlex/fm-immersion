@@ -5,6 +5,7 @@ import {
   verifyCertificate,
   type ChallengeCertificate,
   type ChallengeId,
+  type ChallengeParams,
   type FmSnapshot,
   type Rewind,
 } from '@fm-immersion/module-fm';
@@ -22,7 +23,7 @@ export function challengesRepo(db: Db) {
       return db.select().from(fmChallenges).where(eq(fmChallenges.saveId, saveId)).orderBy(asc(fmChallenges.enrolledAt));
     },
 
-    async enroll(saveId: string, input: { challengeId: ChallengeId; startDate: string; unemployedStart: boolean; params?: { nationality?: string } }) {
+    async enroll(saveId: string, input: { challengeId: ChallengeId; startDate: string; unemployedStart: boolean; params?: ChallengeParams }) {
       const [row] = await db
         .insert(fmChallenges)
         .values({ saveId, challengeId: input.challengeId, startDate: input.startDate, unemployedStart: input.unemployedStart, params: input.params ?? {}, rewinds: [] })
