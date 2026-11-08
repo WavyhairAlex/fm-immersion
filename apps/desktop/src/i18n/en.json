@@ -2164,7 +2164,7 @@
     "results": {
       "title": "Results",
       "none": "No match found yet. It takes one squad read before a match and one after: the plugin reads every 5 minutes and FM Immersion keeps one read per game day, so the first tracked match will show after the next match played.",
-      "how": "Nothing new is read in the game. Between two reads, FM Immersion takes the difference of the Data Hub season totals (minutes, starts, team goals while the player is on the pitch, wins, xG…): with a single match in between, it finds the exact score (the player who stayed 90 minutes saw everything), the starting eleven and each player's rating. The opponent comes from the previous read's \"next match\", the tactic from the following one. Several matches between two reads are grouped into one summary.",
+      "how": "Nothing new is read in the game. Between two reads, FM Immersion takes the difference of the Data Hub season totals (minutes, starts, team goals while the player is on the pitch, wins, xG…): with a single match in between, it finds the exact score (the player who stayed 90 minutes saw everything), the starting eleven and each player's rating. The opponent comes from the previous read's \"next match\", the tactic from the following one. Players who played the same day for the reserves or U19s are left out (different result, different score). Several matches between two reads are grouped into one summary. Friendlies usually don't change the Data Hub totals, so they usually don't show here.",
       "kpi": {
         "matches": "Matches tracked",
         "record": "W-D-L",
