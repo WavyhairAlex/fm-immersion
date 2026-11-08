@@ -30,7 +30,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { TodayCards } from '../components/TodayCards';
 import { shownGameDate, useCareer, useCareerStore } from '../lib/career';
-import { clubPath, pageOf, PARTS, VISIBLE_PARTS, type ClubPage } from '../lib/club-nav';
+import { clubPath, pageOf, PARTS, TABS, tabOf, type ClubPage } from '../lib/club-nav';
 import { fmData } from '../lib/data';
 import { useHistory } from '../lib/fm-cache';
 import { importMissingHistory, type FmHistoryFile } from '../lib/fm-history';
@@ -331,7 +331,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
         </div>
       </header>
 
-      <div className="px-6 py-5 xl:px-10">
+      <div className="mx-auto w-full max-w-[96rem] px-6 py-5 xl:px-10">
         {other && (
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl bg-white px-4 py-3 text-sm ring-1 ring-corail/40" role="alert">
             <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-full bg-ambre" aria-hidden />
@@ -516,54 +516,33 @@ function PageParts({ page, current, go, render }: { page: ClubPage; current: str
   const { t } = useTranslation();
   const parts = PARTS[page];
   const active = parts.includes(current) ? current : parts[0]!;
-  const shown = parts.slice(0, VISIBLE_PARTS);
-  const more = parts.slice(VISIBLE_PARTS);
-  const [open, setOpen] = useState(false);
+  const tabs = TABS[page];
+  const tab = tabOf(page, active);
   const label = (v: string) => t(`fm.subtabs.${v}`, { defaultValue: t(`fm.views.${v}`) });
-  const tab = (v: string) =>
-    `-mb-px rounded-t-lg border-b-2 px-3 py-1.5 text-sm font-bold ${v === active ? 'border-orange text-canard' : 'border-transparent text-canard/60 hover:text-canard'}`;
+  // Un sous-onglet regroupé porte son propre nom ; seul, il garde celui de sa partie.
+  const tabLabel = (g: readonly string[]) => (g.length > 1 ? t(`fm.tabs.${g[0]}`, { defaultValue: label(g[0]!) }) : label(g[0]!));
+  const cls = (on: boolean) => `-mb-px rounded-t-lg border-b-2 px-3 py-1.5 text-sm font-bold ${on ? 'border-orange text-canard' : 'border-transparent text-canard/60 hover:text-canard'}`;
   return (
     <>
-      {parts.length > 1 && (
-        <div className="sticky top-[3.25rem] z-30 -mx-1 mb-5 flex flex-wrap gap-1 border-b border-canard/10 bg-creme px-1 pt-2" role="tablist" aria-label={t('fm.onThisPage')}>
-          {shown.map((v) => (
-            <button key={v} type="button" role="tab" aria-selected={v === active} onClick={() => go(v)} className={tab(v)}>
+      {tabs.length > 1 && (
+        <div className="sticky top-[3.25rem] z-30 -mx-1 mb-4 flex flex-wrap gap-1 border-b border-canard/10 bg-creme px-1 pt-2" role="tablist" aria-label={t('fm.onThisPage')}>
+          {tabs.map((g) => (
+            <button key={g[0]} type="button" role="tab" aria-selected={g === tab} onClick={() => go(g.includes(active) ? active : g[0]!)} className={cls(g === tab)}>
+              {tabLabel(g)}
+            </button>
+          ))}
+        </div>
+      )}
+      {tab.length > 1 && (
+        <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label={tabLabel(tab)}>
+          {tab.map((v) => (
+            <button key={v} type="button" role="tab" aria-selected={v === active} onClick={() => go(v)} className={`chip ${v === active ? 'chip-on' : ''}`}>
               {label(v)}
             </button>
           ))}
-          {more.length > 0 && (
-            <div className="relative">
-              <button
-                type="button"
-                aria-expanded={open}
-                onClick={() => setOpen(!open)}
-                className={tab(more.includes(active) ? active : '')}
-              >
-                {more.includes(active) ? label(active) : t('layout.more')} ▾
-              </button>
-              {open && (
-                <div className="absolute left-0 top-full z-40 mt-1 min-w-[12rem] rounded-lg bg-white py-1 shadow-lg ring-1 ring-canard/10" role="menu">
-                  {more.map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      role="menuitem"
-                      onClick={() => {
-                        setOpen(false);
-                        go(v);
-                      }}
-                      className={`block w-full px-3 py-1.5 text-left text-sm font-bold hover:bg-creme ${v === active ? 'text-orange-fonce' : 'text-canard'}`}
-                    >
-                      {label(v)}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       )}
-      <section key={active} role={parts.length > 1 ? 'tabpanel' : undefined}>
+      <section key={active} role={tabs.length > 1 ? 'tabpanel' : undefined}>
         {render(active)}
       </section>
     </>

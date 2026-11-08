@@ -447,7 +447,9 @@
       "setupChanges_one": "{{count}} individual training to change",
       "setupChanges_other": "{{count}} individual trainings to change",
       "tired_one": "{{count}} player under 80% condition",
-      "tired_other": "{{count}} players under 80% condition"
+      "tired_other": "{{count}} players under 80% condition",
+      "fixtures": "Fixtures",
+      "lastResult": "Last result"
     },
     "contracts": {
       "byYear": "Monthly wages freed by contract end year",
@@ -2590,6 +2592,14 @@
         "mercato": "Transfers",
         "home": "Assistant"
       }
+    },
+    "tabs": {
+      "tactic": "The XI",
+      "depth": "Rotation",
+      "style": "Game plan",
+      "training": "Training",
+      "squad": "Players",
+      "playtime": "Playing time and dressing room"
     }
   },
   "modes": {

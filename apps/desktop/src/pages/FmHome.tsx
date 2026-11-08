@@ -3,6 +3,7 @@ import {
   currentTrainingWeek,
   snapshotFixtures,
   homeOverview,
+  officialResults,
   nearestPreset,
   offseasonDue,
   playingTime,
@@ -154,6 +155,7 @@ export function FmHome({
             hideMatch
           />
         }
+        asideAfter={<FixturesCard snap={snap} entries={entries ?? []} go={go} />}
       />
       <FmOffseason snap={snap} players={players} list={decisionList} go={go} />
       <button type="button" className="chip" aria-expanded={detail} onClick={toggleDetail}>
@@ -278,5 +280,57 @@ export function FmHome({
         </Panel>
       </div>)}
     </div>
+  );
+}
+
+const OUTCOME_TONE = { W: 'bg-eau-fonce', D: 'bg-ambre', L: 'bg-corail' } as const;
+
+/** Dernier résultat et prochains matchs, sous le briefing de l'accueil. */
+function FixturesCard({ snap, entries, go }: { snap: FmSnapshot; entries: { gameDate: string; data: FmSnapshot }[]; go: (view: string) => void }) {
+  const { t, i18n } = useTranslation();
+  const last = useMemo(() => officialResults(entries).filter((r) => r.matches === 1).at(-1) ?? null, [entries]);
+  const next = useMemo(() => snapshotFixtures(snap).filter((f) => f.date >= snap.gameDate).slice(1, 4), [snap]);
+  const day = new Intl.DateTimeFormat(i18n.resolvedLanguage, { weekday: 'short', day: 'numeric', month: 'short' });
+  if (!last && !next.length) return null;
+  const where = (home: boolean | null) => (home == null ? '' : t(home ? 'fm.mc.homeShort' : 'fm.mc.awayShort'));
+  return (
+    <section className="card p-5" aria-labelledby="fm-home-fixtures">
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 id="fm-home-fixtures" className="text-lg">
+          {t('fm.home.fixtures')}
+        </h2>
+        <button type="button" className="text-sm font-bold text-orange-fonce hover:underline" onClick={() => go('calendar')}>
+          {t('fm.mc.calendar')} →
+        </button>
+      </div>
+      <ul className="mt-2 divide-y divide-canard/10 text-sm">
+        {last && (
+          <li className="flex items-center gap-3 py-2">
+            <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-extrabold text-white ${last.outcome ? OUTCOME_TONE[last.outcome] : 'bg-brun'}`}>
+              {last.outcome ? t(`fm.results.outcome.${last.outcome}`) : '?'}
+            </span>
+            <span className="min-w-0 flex-1 truncate">
+              <span className="text-xs font-bold uppercase tracking-wide text-brun">{t('fm.home.lastResult')}</span>
+              <br />
+              <b className="text-canard">{last.opponent ?? '–'}</b> {last.home != null && <span className="text-brun">({where(last.home)})</span>}
+            </span>
+            {last.goalsFor != null && last.goalsAgainst != null && (
+              <span className="font-display text-lg font-semibold tabular-nums text-canard">
+                {last.goalsFor}-{last.goalsAgainst}
+              </span>
+            )}
+          </li>
+        )}
+        {next.map((f, i) => (
+          <li key={i} className="flex items-center gap-3 py-2">
+            <span className="w-24 shrink-0 text-xs tabular-nums text-brun first-letter:uppercase">{day.format(new Date(f.date))}</span>
+            <span className="min-w-0 flex-1 truncate text-canard">
+              {f.opponent ?? '–'} {f.home != null && <span className="text-brun">({where(f.home)})</span>}
+            </span>
+            {f.competition && <span className="hidden truncate text-xs text-brun sm:inline">{f.competition}</span>}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
