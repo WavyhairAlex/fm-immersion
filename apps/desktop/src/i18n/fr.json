@@ -2049,7 +2049,22 @@
       "fewMinutes": "Moins de 270 minutes : à confirmer avec plus de matchs.",
       "mercato": "Mercato",
       "inTwo": "Dans deux saisons :",
-      "open": "Voir la fiche de {{name}}"
+      "open": "Voir la fiche de {{name}}",
+      "actions": "Actions sur ce joueur",
+      "seeProgress": "Voir sa progression",
+      "seePlaytime": "Examiner son temps de jeu",
+      "compareTo": "Comparer à…",
+      "contractTitle": "Son contrat",
+      "deadline": "Échéance",
+      "status": "Statut promis",
+      "place": "Place dans le groupe",
+      "placeValue": "{{place}}e sur {{count}} au poste {{pos}}",
+      "rivals": "Cibles suivies au même poste :",
+      "noRivals": "aucune pour l'instant.",
+      "playtime": "Temps de jeu de la saison",
+      "playShare": "{{pct}} % des minutes possibles, {{starts}} titularisations sur {{available}} matchs où il était disponible.",
+      "noPlay": "Pas encore de match suivi cette saison.",
+      "promised": "Son statut ({{status}}) promet environ {{pct}} % des minutes."
     },
     "foot": {
       "profile": "Profil",
@@ -2254,6 +2269,26 @@
         "shots": "Tirs {{us}} ({{usOn}} cadrés) – {{them}} ({{themOn}} cadrés)",
         "xg": "xG du jeu {{us}} – {{them}}",
         "motm": "Homme du match : {{name}} ({{rating}})"
+      },
+      "q": {
+        "label": "Les trois questions des résultats",
+        "what": "Que s'est-il passé ?",
+        "repeat": "Qu'est-ce qui se répète ?",
+        "adjust": "Que puis-je ajuster ?",
+        "adjustTitle": "Pistes tirées des matchs",
+        "nothing": "Rien à ajuster pour l'instant : pas encore de tendance assez nette.",
+        "proof_one": "Voir le match",
+        "proof_other": "Voir les {{count}} matchs",
+        "proofOf": "Matchs qui appuient :",
+        "all": "Tous les matchs"
+      },
+      "move": {
+        "tacticBest": "Privilégier {{name}}, qui rapporte {{ppm}} pt/match, plutôt que {{other}}.",
+        "tacticWorst": "Revoir {{name}} ou en changer : {{ppm}} pt/match seulement.",
+        "playerPlus": "Garder {{name}} dans le onze : l'équipe prend {{with}} pt/match avec lui.",
+        "playerMinus": "Essayer sans {{name}} : {{without}} pt/match sans lui, {{with}} avec.",
+        "wasteful": "Travailler la finition : {{goals}} buts pour {{xg}} xG par match.",
+        "leaky": "Resserrer la défense : {{ga}} buts encaissés par match."
       }
     },
     "repl": {
@@ -2821,6 +2856,9 @@
       "piHelp": "Seules les consignes que le rôle permet à ce poste sont proposées ; une seule par groupe (choisir « Dribbler plus » retire « Dribbler moins »). Au-delà de 3 par joueur, la tactique devient longue à assimiler.",
       "savedAuto": "Enregistrée",
       "savedHelp": "Chaque changement est enregistré sur ce PC, pour cette partie. Retrouve la tactique par son nom dans la liste."
+    },
+    "secondary": {
+      "numbers": "Attribuer les numéros de maillot"
     }
   },
   "modes": {

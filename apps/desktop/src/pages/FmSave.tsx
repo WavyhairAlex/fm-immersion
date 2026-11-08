@@ -70,7 +70,7 @@ import { FmTactic, ReserveContext, useTacticEngine } from './FmTactic';
 import { FmTargets } from './FmTargets';
 import { FmTraining } from './FmTraining';
 import { FmWages } from './FmWages';
-import { CompatTag, HelpHost, PlayerLink, PlayerSheetContext, useCoach } from './FmUi';
+import { CompatTag, HelpHost, PlayerLink, PlayerSheetContext, useCoach, type SheetFocus } from './FmUi';
 import { FmPlayerSheet } from './FmPlayerSheet';
 
 const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
@@ -117,7 +117,8 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
     window.scrollTo({ top: 0 });
   };
   // Fiche joueur ouverte depuis n'importe quel nom cliquable.
-  const [sheet, setSheet] = useState<string | null>(null);
+  const [sheet, setSheetState] = useState<{ id: string; focus?: SheetFocus } | null>(null);
+  const setSheet = useCallback((id: string, focus?: SheetFocus) => setSheetState({ id, focus }), []);
   // Fiche demandée par la recherche rapide (Ctrl+K).
   const wanted = useUi((s) => s.openPlayer);
   const setWanted = useUi((s) => s.setOpenPlayer);
@@ -125,7 +126,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
     if (!wanted) return;
     setSheet(wanted);
     setWanted(null);
-  }, [wanted, setWanted]);
+  }, [wanted, setWanted, setSheet]);
   const folder = useFmFolder(saveId);
   // Ce que le briefing laisse à faire, par écran : une pastille dans la barre latérale (remise à zéro à chaque nouvelle date).
   const setTodo = useCareerStore((s) => s.setTodo);
@@ -400,7 +401,21 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
                         <PageParts page={view} current={current} go={go} render={part} />
                       </>
                     )}
-                    {sheet && <FmPlayerSheet id={sheet} players={players} snap={snapshot.data} history={history} folder={folder} gameDate={snapshot.gameDate} onClose={() => setSheet(null)} />}
+                    {sheet && (
+                      <FmPlayerSheet
+                        key={`${sheet.id}|${sheet.focus ?? ''}`}
+                        id={sheet.id}
+                        focus={sheet.focus}
+                        players={players}
+                        snap={snapshot.data}
+                        history={history}
+                        entries={all as { gameDate: string; data: FmSnapshot }[] | undefined}
+                        folder={folder}
+                        gameDate={snapshot.gameDate}
+                        go={go}
+                        onClose={() => setSheetState(null)}
+                      />
+                    )}
                   </PlayerSheetContext.Provider>
                 </ReserveContext.Provider>
               </FmSaveScopeContext.Provider>
@@ -555,6 +570,9 @@ export function NextStep({ step, club }: { step: 'career' | 'plugin' | 'save' | 
 }
 
 /** Parties d'un écran regroupé : une à la fois, choisie par des sous-onglets ; au-delà de cinq, dans « Plus ». */
+/** Parties qui sont des actions de groupe ponctuelles plutôt que des vues : proposées en lien discret. */
+const SECONDARY_PARTS = new Set(['numbers']);
+
 function PageParts({ page, current, go, render }: { page: ClubPage; current: string; go: (v: string) => void; render: (v: string) => ReactNode }) {
   const { t } = useTranslation();
   const parts = PARTS[page];
@@ -578,11 +596,21 @@ function PageParts({ page, current, go, render }: { page: ClubPage; current: str
       )}
       {tab.length > 1 && (
         <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label={tabLabel(tab)}>
-          {tab.map((v) => (
-            <button key={v} type="button" role="tab" aria-selected={v === active} onClick={() => go(v)} className={`chip ${v === active ? 'chip-on' : ''}`}>
-              {label(v)}
-            </button>
-          ))}
+          {tab
+            .filter((v) => !SECONDARY_PARTS.has(v) || v === active)
+            .map((v) => (
+              <button key={v} type="button" role="tab" aria-selected={v === active} onClick={() => go(v)} className={`chip ${v === active ? 'chip-on' : ''}`}>
+                {label(v)}
+              </button>
+            ))}
+          {/* Action de groupe secondaire (numéros de maillot) : un lien discret, pas une vue au même rang. */}
+          {tab
+            .filter((v) => SECONDARY_PARTS.has(v) && v !== active)
+            .map((v) => (
+              <button key={v} type="button" onClick={() => go(v)} className="ml-auto text-sm font-bold text-orange-fonce hover:underline">
+                {t(`fm.secondary.${v}`)} →
+              </button>
+            ))}
         </div>
       )}
       <section key={active} role={tabs.length > 1 ? 'tabpanel' : undefined}>

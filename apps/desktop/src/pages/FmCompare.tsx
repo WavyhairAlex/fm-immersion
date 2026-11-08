@@ -9,7 +9,7 @@ import { Level, Panel, Tag, useFormat } from './FmUi';
 
 type Person = FmPlayer & { target?: boolean; club?: string | null };
 
-const CMP_KEY = 'fmi.compare';
+export const CMP_KEY = 'fmi.compare';
 /** Joueurs du club et cibles du mercato gardées dans la base (sauf celles écartées). */
 const pool = (players: FmPlayer[], targets: FmPlayer[]): Person[] =>
   [...players, ...targets.map((t) => ({ ...t, target: true }))].filter((p) => Object.keys(p.attributes).length);

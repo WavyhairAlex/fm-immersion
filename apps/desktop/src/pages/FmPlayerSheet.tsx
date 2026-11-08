@@ -3,7 +3,11 @@ import {
   levelSeries,
   matchStatsFull,
   mercatoAdvice,
+  monthsLeft,
+  playingTime,
+  POS_LABEL,
   roleMatrix,
+  storedTargets,
   statsBoard,
   STAT_METRICS,
   type FmPlayer,
@@ -13,14 +17,18 @@ import {
   type StatKey,
 } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
-import { useEffect, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useMemo, useRef } from 'react';
+import { fmData } from '../lib/data';
+import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
+import { CMP_KEY } from './FmCompare';
 import { useTranslation } from 'react-i18next';
 import { AttrValue, Avatar, Gauge, LINE_COLOR, PosBadge, PositionMap, ProfileRadar, profileAxes, RankBar } from './FmFoot';
 import { LeaveButton, useLeaving } from './FmLeaving';
 import { TONE, useReason } from './FmMercato';
 import { Spark } from './FmProgression';
 import { useTacticEngine } from './FmTactic';
-import { CompatTag, fitPct, Level, Tag, useCoach, useFormat, useNames } from './FmUi';
+import { CompatTag, fitPct, Level, Tag, useCoach, useFormat, useNames, type SheetFocus } from './FmUi';
 
 const PCT = new Set<StatKey>(['passPct', 'tacklePct', 'headerPct', 'shotsOnTargetPct', 'savePct']);
 
@@ -37,6 +45,9 @@ export function FmPlayerSheet({
   folder,
   gameDate,
   onClose,
+  focus,
+  entries = [],
+  go,
 }: {
   id: string;
   players: FmPlayer[];
@@ -45,6 +56,12 @@ export function FmPlayerSheet({
   folder: string;
   gameDate: string;
   onClose: () => void;
+  /** Raison de l'ouverture : la section correspondante passe en tête. */
+  focus?: SheetFocus;
+  /** Instantanés de la saison, pour le temps de jeu. */
+  entries?: { gameDate: string; data: FmSnapshot }[];
+  /** Change d'écran du club (comparateur) ; absent, l'action est masquée. */
+  go?: (view: string) => void;
 }) {
   const { t, i18n } = useTranslation();
   const f = useFormat();
@@ -88,7 +105,24 @@ export function FmPlayerSheet({
     [engine, players, gameDate, coach, history, id, leavingIds, loanIds],
   );
   const series = useMemo(() => levelSeries(history, id), [history, id]);
+  const scope = useFmSaveScope();
+  const play = useMemo(() => playingTime(players, entries).rows.find((r) => r.player.id === id) ?? null, [players, entries, id]);
+  const { data: targetRows } = useQuery({ queryKey: ['fm', scope.saveId, 'targets', gameDate], queryFn: () => fmData.targets(scope.saveId), enabled: focus === 'contract' });
+  const progressRef = useRef<HTMLElement>(null);
   if (!p) return null;
+  // Place dans le groupe : rang de niveau parmi les joueurs qui jouent au même poste principal.
+  const main = p.positions[0];
+  const mates = players.filter((x) => main && x.positions.includes(main)).sort((a, b) => (b.level ?? 0) - (a.level ?? 0));
+  const place = mates.findIndex((x) => x.id === p.id) + 1;
+  // Cibles suivies qui jouent au même poste : de quoi trancher une prolongation.
+  const rivals = storedTargets(targetRows ?? []).filter((x) => !x.dismissed && x.id !== p.id && main && x.positions.includes(main));
+  const months = monthsLeft(p, gameDate);
+  const compare = () => {
+    const prev = readScoped<string[]>(CMP_KEY, scope, []).filter((x) => x !== p.id);
+    writeScoped(CMP_KEY, scope, [p.id, ...prev].slice(0, 3));
+    onClose();
+    go?.('compare');
+  };
   const isGk = p.positions.includes('GB');
   const groups = ATTR_GROUPS.filter(([g]) => (isGk ? g !== 'technical' : g !== 'goalkeeping'));
   const nf = (d: number) =>
@@ -100,6 +134,39 @@ export function FmPlayerSheet({
   const metrics = stats ? STAT_METRICS.filter((m) => p.line && m.lines.includes(p.line) && stats.stats[m.key] != null) : [];
   const line = LINE_COLOR[p.line ?? 'MIL'];
   const levels = series.filter((x): x is number => x != null);
+
+  // Forme du moment.
+  const formSection = (
+            <section className="card space-y-3 p-4">
+              <h3 className="font-semibold">{t('fm.foot.form')}</h3>
+              <Gauge value={p.condition} label={t('fm.col.condition')} />
+              <Gauge value={p.sharpness} label={t('fm.foot.sharpness')} />
+              <dl className="grid grid-cols-3 gap-2 pt-1 text-center">
+                {(
+                  [
+                    [t('fm.foot.apps'), p.apps != null ? String(p.apps) : '–'],
+                    [t('fm.foot.goals'), p.goals != null ? String(p.goals) : '–'],
+                    [t('fm.foot.rating'), p.avgRating != null ? nf(2).format(p.avgRating) : '–'],
+                  ] as [string, string][]
+                ).map(([k, v]) => (
+                  <div key={k} className="rounded-lg bg-creme/70 py-1.5">
+                    <dd className="font-display text-xl font-semibold">{v}</dd>
+                    <dt className="text-xs text-brun">{k}</dt>
+                  </div>
+                ))}
+              </dl>
+            </section>
+  );
+  // Temps de jeu de la saison face au statut promis.
+  const playSection = play && (
+    <section id="sheet-playtime" className="card p-4">
+      <h3 className="font-semibold">{t('fm.sheet.playtime')}</h3>
+      <p className="mt-1 text-sm">
+        {play.share != null ? t('fm.sheet.playShare', { pct: Math.round(play.share * 100), starts: play.starts, available: play.available }) : t('fm.sheet.noPlay')}
+      </p>
+      {play.expected != null && <p className="mt-1 text-xs text-brun">{t('fm.sheet.promised', { pct: Math.round(play.expected * 100), status: p.squadStatus ?? '' })}</p>}
+    </section>
+  );
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end bg-canard/30" onClick={onClose}>
@@ -161,6 +228,61 @@ export function FmPlayerSheet({
         </header>
 
         <div className="space-y-4 p-5">
+          <nav className="flex flex-wrap gap-2" aria-label={t('fm.sheet.actions')}>
+            <button type="button" className="chip" onClick={() => progressRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}>
+              {t('fm.sheet.seeProgress')}
+            </button>
+            {play && (
+              <a href="#sheet-playtime" className="chip">
+                {t('fm.sheet.seePlaytime')}
+              </a>
+            )}
+            {go && (
+              <button type="button" className="chip" onClick={compare}>
+                {t('fm.sheet.compareTo')}
+              </button>
+            )}
+          </nav>
+
+          {focus === 'contract' && (
+            <section className="card border-l-4 border-orange p-4" aria-labelledby="sheet-contract">
+              <h3 id="sheet-contract" className="font-semibold">
+                {t('fm.sheet.contractTitle')}
+              </h3>
+              <dl className="mt-2 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-brun">{t('fm.sheet.deadline')}</dt>
+                  <dd className="font-bold">
+                    {f.date(p.contractEnd)}
+                    {months != null && <span className="block text-xs font-normal text-brun">{months <= 0 ? t('fm.contracts.expired') : t('fm.home.endsIn', { count: months })}</span>}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-brun">{t('fm.col.wage')}</dt>
+                  <dd className="font-bold">{f.money(p.wage)}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-brun">{t('fm.sheet.status')}</dt>
+                  <dd className="font-bold">{p.squadStatus ?? '–'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs uppercase tracking-wide text-brun">{t('fm.sheet.place')}</dt>
+                  <dd className="font-bold">{place > 0 && main ? t('fm.sheet.placeValue', { place, count: mates.length, pos: POS_LABEL[main] }) : '–'}</dd>
+                </div>
+              </dl>
+              {play && play.share != null && (
+                <p className="mt-2 text-sm">{t('fm.sheet.playShare', { pct: Math.round(play.share * 100), starts: play.starts, available: play.available })}</p>
+              )}
+              <p className="mt-2 text-sm">
+                <span className="font-bold">{t('fm.sheet.rivals')} </span>
+                {rivals.length ? rivals.map((x) => `${x.name}${x.level != null ? ` (${nf(1).format(x.level)})` : ''}`).join(', ') : t('fm.sheet.noRivals')}
+              </p>
+            </section>
+          )}
+
+          {focus === 'form' && formSection}
+          {focus === 'form' && playSection}
+
           {/* Profil et postes côte à côte. */}
           <section className="card grid gap-4 p-4 sm:grid-cols-[1fr_auto]">
             <div>
@@ -211,29 +333,9 @@ export function FmPlayerSheet({
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
-            {/* Forme du moment. */}
-            <section className="card space-y-3 p-4">
-              <h3 className="font-semibold">{t('fm.foot.form')}</h3>
-              <Gauge value={p.condition} label={t('fm.col.condition')} />
-              <Gauge value={p.sharpness} label={t('fm.foot.sharpness')} />
-              <dl className="grid grid-cols-3 gap-2 pt-1 text-center">
-                {(
-                  [
-                    [t('fm.foot.apps'), p.apps != null ? String(p.apps) : '–'],
-                    [t('fm.foot.goals'), p.goals != null ? String(p.goals) : '–'],
-                    [t('fm.foot.rating'), p.avgRating != null ? nf(2).format(p.avgRating) : '–'],
-                  ] as [string, string][]
-                ).map(([k, v]) => (
-                  <div key={k} className="rounded-lg bg-creme/70 py-1.5">
-                    <dd className="font-display text-xl font-semibold">{v}</dd>
-                    <dt className="text-xs text-brun">{k}</dt>
-                  </div>
-                ))}
-              </dl>
-            </section>
-
+            {focus !== 'form' && formSection}
             {/* Progression du niveau. */}
-            <section className="card p-4">
+            <section ref={progressRef} className="card p-4">
               <h3 className="font-semibold">{t('fm.sheet.progress')}</h3>
               {levels.length > 1 ? (
                 <div className="mt-3 flex flex-col items-start gap-2">
@@ -252,6 +354,8 @@ export function FmPlayerSheet({
               )}
             </section>
           </div>
+
+          {focus !== 'form' && playSection}
 
           {/* Stats de match : percentile dans sa ligne. */}
           {stats && stats.minutes > 0 && metrics.length > 0 && (
