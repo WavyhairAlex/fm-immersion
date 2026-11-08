@@ -10,7 +10,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   }),
 }));
 
-const { commentary, goalSituation, lastMatchStats, liveContext, liveStep, matchEnded, matchFigures, matchPhase, minuteOf, momentLine, momentsBetween, personIdFor, prematchLines, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
+const { commentary, goalSituation, lastMatchStats, liveContext, liveStep, matchEnded, matchFigures, matchPhase, minuteOf, momentLine, momentsBetween, personIdFor, prematchLines, progressBar, scoreboardPayload, timeline, livePreviewPayload } = await import('../src/lib/live-discord');
 const t = ((k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k)) as unknown as TFunction;
 
 const at = '2026-11-07T07:20:00.000Z';
@@ -261,5 +261,13 @@ describe('but contre son camp', () => {
     expect(line).toMatch(/^😬 \*\*live\.moment\.ownGoalAgainst .*"player":"A. Lajčiak"/);
     // Vu de Slovan : un cadeau.
     expect(commentary(t, og, 'Slovan B', g)).toMatch(/^live\.say\.for_ownGoal_/);
+  });
+
+  it("montre un exemple d'encart avant d'activer le direct : 2-0 juste après un but", () => {
+    const e = livePreviewPayload(t, 'Malženice', 'Adversaire').embeds[0]!;
+    expect(e.title).toBe('Malženice  2 - 0  Adversaire');
+    expect(e.description).toMatch(/⏱️ 58'/);
+    expect(e.description).toMatch(/\*\*live\.moment\./);
+    expect(e.fields[0]!.value.split('\n')).toHaveLength(2);
   });
 });
