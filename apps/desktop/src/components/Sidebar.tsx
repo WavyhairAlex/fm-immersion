@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { useCareer, useCareerStore } from '../lib/career';
+import { shownGameDate, useCareer, useCareerStore } from '../lib/career';
 import { CLUB_PAGES, pageOf, type ClubPage } from '../lib/club-nav';
 import { coachPhotoFromFile } from '../lib/coach-photo';
 import { fmData } from '../lib/data';
@@ -130,6 +130,8 @@ function CareerCard() {
   const { data: snapshot } = useQuery({ queryKey: ['fm', saveId, 'latest'], queryFn: () => fmData.latest(saveId), enabled: !!saveId });
   const { data: settings } = useQuery({ queryKey: ['fm', saveId, 'settings'], queryFn: () => fmData.settings(saveId), enabled: !!saveId });
   const free = useCareerStore((s) => s.sync.free);
+  const now = useCareerStore((s) => s.sync.now);
+  const gameDate = shownGameDate(snapshot, now);
   const [picking, setPicking] = useState(false);
   const file = useRef<HTMLInputElement>(null);
   const photo = useMutation({
@@ -186,7 +188,7 @@ function CareerCard() {
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-extrabold" title={save?.name}>{save?.name}</p>
           <p className="truncate text-xs text-white/70">{free ? t('layout.career.free') : (snapshot?.club ?? t('layout.career.noData'))}</p>
-          {snapshot && <p className="truncate text-xs text-white/70">{dateFmt.format(new Date(snapshot.gameDate))}</p>}
+          {snapshot && gameDate && <p className="truncate text-xs text-white/70">{dateFmt.format(new Date(gameDate))}</p>}
         </div>
       </div>
       {photo.isError && <p className="mt-2 text-xs font-bold text-white">{t('layout.career.photoError')}</p>}

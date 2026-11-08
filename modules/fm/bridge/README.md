@@ -6,6 +6,8 @@ le club et le prochain match via le système de bindings de l'interface du jeu, 
 
 - Jamais d'écriture dans la mémoire du jeu ni dans les sauvegardes, jamais d'action de jeu (`SendEvent`, `ActionID`).
 - Un instantané au chargement d'une partie, puis à chaque nouveau jour de jeu (au plus tard toutes les 60 s).
+- `archivix-status.json` (date de jeu et club) suit le jeu toutes les 10 s depuis 0.5.3 : un instantané complet prend
+  1 à 2 minutes et garde la date de son début, FM Immersion affiche donc la date de ce fichier quand elle est plus récente.
 - Écriture atomique (`.tmp` puis renommage) ; jamais d'instantané vide.
 
 ## Fichiers
