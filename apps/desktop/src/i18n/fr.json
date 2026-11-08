@@ -3610,6 +3610,13 @@
       "open": "FM27 ouvert",
       "closed": "FM27 fermé",
       "plugin": "Plugin à régler"
+    },
+    "board": {
+      "label": "Tableau de bord",
+      "calm": "Rien à faire ici.",
+      "open": "Ouvrir",
+      "more": "{{text}} (+{{count}})",
+      "game": "Jeu et plugin"
     }
   },
   "ai": {

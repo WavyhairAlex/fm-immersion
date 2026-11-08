@@ -31,7 +31,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useUi } from '../lib/ui-store';
 import { TodayCards } from '../components/TodayCards';
 import { shownGameDate, useCareer, useCareerStore } from '../lib/career';
-import { clubPath, pageOf, PARTS, TABS, tabOf, type ClubPage } from '../lib/club-nav';
+import { CLUB_PAGES, clubPath, pageOf, PARTS, TABS, tabOf, type ClubPage } from '../lib/club-nav';
 import { fmData } from '../lib/data';
 import { useHistory } from '../lib/fm-cache';
 import { importMissingHistory, type FmHistoryFile } from '../lib/fm-history';
@@ -385,6 +385,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
                           <h1 className="text-3xl font-semibold">{t('layout.today.title')}</h1>
                           <p className="mt-1 text-brun first-letter:uppercase">{longDateFmt.format(new Date(shownGameDate(snapshot, sync.now) ?? snapshot.gameDate))}</p>
                         </header>
+                        <ControlBoard saveId={saveId} go={go} />
                         {part('home')}
                         <TodayCards saveId={saveId} />
                       </>
@@ -909,5 +910,51 @@ function GameState() {
         </Link>
       )}
     </>
+  );
+}
+
+/**
+ * Tableau de commande en tête de l'accueil : un voyant par écran du club (ce que l'adjoint laisse à faire, le plus
+ * urgent d'abord) et un pour le jeu (FM27 ouvert, plugin). Chaque voyant a une seule action.
+ */
+function ControlBoard({ saveId, go }: { saveId: string; go: (v: string) => void }) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const brief = useCareerStore((s) => s.brief);
+  const bridgeOk = useCareerStore((s) => s.sync.bridgeOk);
+  const { status } = useGameStatus();
+  // Le prochain match a son bandeau juste en dessous : pas de voyant pour lui.
+  const items = brief.at.startsWith(`${saveId}|`) ? brief.items.filter((x) => !/^(nextMatch|friendly):/.test(x.key)) : [];
+  const rank = (tone: string) => (tone === 'bad' ? 0 : tone === 'warn' ? 1 : 2);
+  const dot = (tone: string) => (tone === 'bad' ? 'bg-corail' : tone === 'warn' ? 'bg-ambre' : 'bg-eau');
+  const tile = (key: string, label: string, tone: string, text: string, action: string, onClick: () => void) => (
+    <button key={key} type="button" onClick={onClick} className="card flex min-w-0 flex-col gap-1 p-3 text-left hover:ring-orange/40">
+      <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-brun">
+        <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${dot(tone)}`} aria-hidden />
+        {label}
+      </span>
+      <span className="line-clamp-2 text-sm text-canard">{text}</span>
+      <span className="mt-auto text-xs font-bold text-orange-fonce">{action} →</span>
+    </button>
+  );
+  const pluginBad = bridgeOk === false;
+  return (
+    <nav className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5" aria-label={t('layout.board.label')}>
+      {CLUB_PAGES.map((page) => {
+        const open = items.filter((x) => pageOf(x.view) === page);
+        const first = [...open].sort((a, b) => rank(a.tone) - rank(b.tone))[0];
+        return first
+          ? tile(page, t(`layout.nav.${page}`), first.tone === 'bad' ? 'bad' : 'warn', open.length > 1 ? t('layout.board.more', { text: first.text, count: open.length - 1 }) : first.text, first.action, () => go(first.view))
+          : tile(page, t(`layout.nav.${page}`), 'good', t('layout.board.calm'), t('layout.board.open'), () => go(page));
+      })}
+      {tile(
+        'game',
+        t('layout.board.game'),
+        pluginBad ? 'warn' : status?.running ? 'good' : 'idle',
+        pluginBad ? t('layout.state.plugin') : t(status?.running ? 'layout.state.open' : 'layout.state.closed'),
+        t('layout.nav.settings'),
+        () => navigate('/reglages'),
+      )}
+    </nav>
   );
 }
