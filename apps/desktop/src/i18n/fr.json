@@ -2978,7 +2978,7 @@
     "intro": "Pendant tes matchs dans FM27, un encart est posté dans ton salon puis mis à jour toutes les 15 secondes (image du tableau de score, minute, déroulé des buts, phrase du commentateur), et chaque temps fort (but, mi-temps, coup de sifflet final) arrive en message à part, comme un fil de match.",
     "enable": "Raconter mes matchs en direct sur Discord",
     "needWebhook": "Relie d'abord un salon avec le lien webhook ci-dessus.",
-    "plugin": "Il faut le plugin FM27 0.5.0 ou plus récent, et FM Immersion ouvert pendant le match. Sont envoyés : score, buteurs, penaltys transformés, mi-temps et fin de match ; avec le plugin 0.5.2, aussi les passeurs décisifs et les cartons.",
+    "plugin": "Il faut le plugin FM27 0.5.0 ou plus récent, et FM Immersion ouvert pendant le match. Sont envoyés : score, buteurs, penaltys transformés, mi-temps et fin de match ; avec le plugin 0.5.4, les passeurs décisifs dans le résumé final.",
     "liveTag": "🔴 EN DIRECT",
     "finalTag": "🏁 SCORE FINAL",
     "kickoff": "Coup d'envoi",
@@ -3102,7 +3102,8 @@
       "shots": "Tirs : {{home}} ({{homeOn}} cadrés) · {{away}} ({{awayOn}} cadrés)",
       "xg": "xG : {{home}} · {{away}}",
       "motm": "Homme du match : {{name}} ({{rating}})",
-      "motmNoRating": "Homme du match : {{name}}"
+      "motmNoRating": "Homme du match : {{name}}",
+      "assists": "Passes décisives : {{names}}"
     },
     "prematch": {
       "title": "Avant-match",

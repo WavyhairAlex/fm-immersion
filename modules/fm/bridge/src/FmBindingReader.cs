@@ -154,21 +154,18 @@ public class FmBindingReader : IGameReader
         ("homeEvents", "HomeEventInfos", true), ("awayEvents", "AwayEventInfos", true),
     };
 
-    // Feuille de match (0.5.2) : par joueur de HomeLineup/AwayLineup (MatchPlayerReference, propriétés relevées par la
-    // sonde Carnet le 07/11/2026), nom et compteurs du match : buts, passes décisives, carton jaune, carton rouge.
-    // 2 × 20 × 5 lectures simples ; Plugin.LiveLoop ne les demande qu'un relevé sur deux (toutes les 30 s).
-    const int LineupMax = 20;
-    static readonly (string Key, string Path)[] LiveLineupFields =
-    {
-        ("name", "Player/Name"), ("goals", "Goals"), ("assists", "Assists"),
-        ("yellow", "YellowCardedInMatch"), ("red", "RedCardedInMatch"),
-    };
+    // Rapport de match (0.5.4). Sonde Carnet du 08/11/2026 : pendant le match, HomeLineup/AwayLineup du match en cours
+    // sont vides et le passeur (Player2 des événements longs) n'est pas encore renseigné ; tout cela n'existe que sur
+    // GameCurrentManagerClubTeam/LastFixture, qui désigne le match en cours dès les dernières minutes. On le lit donc
+    // à la fin : événements longs (buteur, passeur) et feuille de match (joueur, note, événements du joueur, bruts).
+    const string LastFixture = "game.GameCurrentManagerClubTeam/LastFixture/";
+    const int LineupMax = 20, EventMax = 12;
 
     // Match du manager humain en cours (chemins validés en jeu le 07/11/2026 avec la sonde Carnet : 15 lectures en
     // 15-20 s sans gêne). Format archivix-live/1 : home, away, homeScore, awayScore, result ("2 - 5"), minute ("19 min.",
-    // "FDM" à la fin), final, scorers (texte du jeu), homeEvents/awayEvents [{type: 0 but, 2 penalty, time: "11', 90+1'"}],
-    // et, si `lineups`, homeLineup/awayLineup [{name, goals, assists, yellow, red}] (0.5.2). null si aucun match n'est lisible.
-    public static Dictionary<string, object?>? ReadLive(bool lineups = false)
+    // "FDM" à la fin), final, scorers (texte du jeu), homeEvents/awayEvents [{type: 0 but, 2 penalty, time: "11', 90+1'"}].
+    // null si aucun match n'est lisible.
+    public static Dictionary<string, object?>? ReadLive()
     {
         var res = Batch.Run(LiveFields.Select(f => new Req(null, LiveFixture + f.Path, f.Deep)).ToArray(), 4000);
         var d = new Dictionary<string, object?>();
@@ -182,38 +179,61 @@ public class FmBindingReader : IGameReader
         d["final"] = Flag(d["final"]);
         d["homeEvents"] = LiveEvents(d["homeEvents"]);
         d["awayEvents"] = LiveEvents(d["awayEvents"]);
-        if (lineups)
-        {
-            d["homeLineup"] = ReadLineup("HomeLineup");
-            d["awayLineup"] = ReadLineup("AwayLineup");
-        }
         return d;
     }
 
-    // Les deux feuilles de match en une seule salve de lectures : un joueur sans nom lisible (place vide du banc,
-    // chemin refusé) est ignoré. Liste vide si le jeu n'expose pas la compo : FM Immersion s'en passe alors.
-    static List<Dictionary<string, object?>> ReadLineup(string list)
+    // Complète le relevé de fin de match avec le rapport du dernier match du club, s'il s'agit bien du même match
+    // (mêmes équipes) : homeEvents/awayEvents gagnent player (buteur) et assist (passeur), homeLineup/awayLineup
+    // donnent [{name, rating, events}] (events : liste brute du jeu, à cartographier quand on en aura vu). Sans effet si
+    // le jeu ne répond pas.
+    public static void AddMatchReport(Dictionary<string, object?> live)
     {
-        var reqs = new List<Req>();
-        for (int i = 0; i < LineupMax; i++)
-            foreach (var f in LiveLineupFields) reqs.Add(new Req(null, $"{LiveFixture}{list}/#{i}/{f.Path}"));
-        var res = Batch.Run(reqs.ToArray(), 4000);
-        var players = new List<Dictionary<string, object?>>();
-        for (int i = 0; i < LineupMax; i++)
+        var head = Batch.Run(new[]
         {
-            int at = i * LiveLineupFields.Length;
-            var name = CleanName(res[at] as string);
-            if (string.IsNullOrWhiteSpace(name)) continue;
-            players.Add(new Dictionary<string, object?>
+            new Req(null, LastFixture + "HomeTeam/Name"), new Req(null, LastFixture + "AwayTeam/Name"),
+            new Req(null, LastFixture + "HomeEventInfosLong", true), new Req(null, LastFixture + "AwayEventInfosLong", true),
+        }, 4000);
+        if (CleanName(head[0] as string) != live["home"] as string || CleanName(head[1] as string) != live["away"] as string) return;
+        var home = LiveEvents(head[2]);
+        var away = LiveEvents(head[3]);
+        var reqs = new List<Req>();
+        foreach (var (side, evs) in new[] { ("Home", home), ("Away", away) })
+            for (int j = 0; j < Math.Min(evs.Count, EventMax); j++)
             {
-                ["name"] = name,
-                ["goals"] = NumInt(res[at + 1]),
-                ["assists"] = NumInt(res[at + 2]),
-                ["yellow"] = Flag(res[at + 3]),
-                ["red"] = Flag(res[at + 4]),
-            });
+                reqs.Add(new Req(null, $"{LastFixture}{side}EventInfosLong/#{j}/Player/Name"));
+                reqs.Add(new Req(null, $"{LastFixture}{side}EventInfosLong/#{j}/Player2/Name"));
+            }
+        foreach (var side in new[] { "Home", "Away" })
+            for (int i = 0; i < LineupMax; i++)
+            {
+                reqs.Add(new Req(null, $"{LastFixture}{side}Lineup/#{i}/Player/Name"));
+                reqs.Add(new Req(null, $"{LastFixture}{side}Lineup/#{i}/Rating"));
+                reqs.Add(new Req(null, $"{LastFixture}{side}Lineup/#{i}/PlayerEvents", true));
+            }
+        var res = Batch.Run(reqs.ToArray(), 6000);
+        int at = 0;
+        foreach (var evs in new[] { home, away })
+            for (int j = 0; j < Math.Min(evs.Count, EventMax); j++)
+            {
+                evs[j]["player"] = CleanName(res[at++] as string);
+                evs[j]["assist"] = CleanName(res[at++] as string);
+            }
+        foreach (var key in new[] { "homeLineup", "awayLineup" })
+        {
+            var players = new List<Dictionary<string, object?>>();
+            for (int i = 0; i < LineupMax; i++)
+            {
+                var name = CleanName(res[at] as string);
+                var rating = res[at + 1];
+                var events = res[at + 2];
+                at += 3;
+                if (string.IsNullOrWhiteSpace(name)) continue;
+                players.Add(new Dictionary<string, object?> { ["name"] = name, ["rating"] = rating is double r ? Math.Round(r, 1) : null, ["events"] = events });
+            }
+            live[key] = players;
         }
-        return players;
+        if (home.Count > 0) live["homeEvents"] = home;
+        if (away.Count > 0) live["awayEvents"] = away;
     }
 
     static bool Flag(object? v) => v switch

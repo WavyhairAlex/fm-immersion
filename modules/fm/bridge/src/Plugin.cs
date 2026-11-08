@@ -18,7 +18,7 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.5.3";
+    public const string Version = "0.5.4";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que FM Immersion renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
@@ -167,27 +167,22 @@ public class Plugin : BasePlugin
     // Match en direct (0.5.0) : toutes les 20 s, le plugin demande au jeu si un match est en cours ; pendant le match,
     // il relit toutes les 15 s le score du match du manager (FmBindingReader.ReadLive) et écrit archivix-live.json.
     // Lecture seule, comme le reste. Le fichier garde le dernier état (match fini compris) jusqu'au match suivant.
-    // 0.5.2 : la feuille de match (buts, passes décisives, cartons par joueur) est relue un relevé sur deux et reportée
-    // entre deux lectures, pour que le fichier la garde toujours.
+    // 0.5.4 : à la fin du match (dernière lecture, ou résultat final), le rapport du match (buteurs, passeurs, feuille de
+    // match) est ajouté au relevé depuis LastFixture (FmBindingReader.AddMatchReport).
     void LiveLoop()
     {
         bool was = false;
         string? gameDate = null;
         Dictionary<string, object?>? last = null;
-        int tick = 0;
         while (true)
         {
             try
             {
                 var now = FmBindingReader.DuringMatch() == true;
-                if (now && !was) { gameDate = FmBindingReader.CurrentDate(); last = null; tick = 0; Log.LogInfo("Match en cours : direct dans archivix-live.json"); }
+                if (now && !was) { gameDate = FmBindingReader.CurrentDate(); last = null; Log.LogInfo("Match en cours : direct dans archivix-live.json"); }
                 if (now || was)   // une dernière lecture après la fin du match, pour le résultat final
                 {
-                    bool lineups = tick++ % 2 == 0 || !now;
-                    var live = FmBindingReader.ReadLive(lineups);
-                    if (live != null && !lineups && last != null)
-                        foreach (var k in new[] { "homeLineup", "awayLineup" })
-                            if (last.TryGetValue(k, out var v)) live[k] = v;
+                    var live = FmBindingReader.ReadLive();
                     // Match fini : le jeu ne répond plus toujours sur le match (0.5.0 laissait alors le relevé « en cours »
                     // à la dernière minute lue, et le direct Discord ne se terminait jamais). On ferme avec le dernier
                     // score connu, marqué final.
@@ -195,6 +190,8 @@ public class Plugin : BasePlugin
                     if (live != null)
                     {
                         if (!now) live["final"] = true;
+                        if (!now || live["final"] is true)
+                            try { FmBindingReader.AddMatchReport(live); } catch (Exception e) { Log.LogWarning($"Rapport de match : {e.Message}"); }
                         var doc = new Dictionary<string, object?> { ["schema"] = "archivix-live/1", ["gameDate"] = gameDate, ["inMatch"] = now, ["updatedAt"] = DateTime.UtcNow.ToString("o") };
                         foreach (var kv in live) doc[kv.Key] = kv.Value;
                         Directory.CreateDirectory(DataDir);

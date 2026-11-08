@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fmLiveSchema, liveCardList, liveCoachState, liveIsFresh, liveMinute, liveNews, parseScorers, type FmLive } from '../src/live';
+import { fmLiveSchema, liveAssists, liveCardList, liveCoachState, liveIsFresh, liveMinute, liveNews, parseScorers, type FmLive } from '../src/live';
 
 const base: FmLive = {
   schema: 'archivix-live/1',
@@ -88,6 +88,21 @@ describe('match en direct', () => {
       awayLineup: [{ name: 'M. Fábry', goals: 2, assists: 0 }, { name: 'A. Mojžiš', goals: 1, assists: 2 }],
     };
     expect(liveNews(pen, assisted)).toEqual([{ kind: 'goal', side: 'away', scorer: { name: 'M. Fábry', time: "80'" }, penalty: false, assist: 'A. Mojžiš' }]);
+  });
+
+  it('rapport de match : passeurs sur les événements, repris sur un but de fin de match', () => {
+    const report = {
+      ...base,
+      homeEvents: [{ type: 0, time: "36'", player: 'L. Carrero', assist: null }],
+      awayEvents: [
+        { type: 0, time: "11'", player: 'M. Fábry', assist: 'A. Mojžiš' },
+        { type: 0, time: "26'", player: 'A. Mojžiš', assist: null },
+      ],
+    };
+    expect(liveAssists(report)).toEqual([{ side: 'away', assist: 'A. Mojžiš', player: 'M. Fábry', time: "11'" }]);
+    expect(liveAssists(base)).toEqual([]);
+    const late = { ...report, awayScore: 3, minute: 'FDM', final: true, scorers: base.scorers + ", M. Henyig 90+2'", awayEvents: [...report.awayEvents, { type: 0, time: "90+2'", player: 'M. Henyig', assist: 'M. Fábry' }] };
+    expect(liveNews(report, late)[0]).toMatchObject({ kind: 'goal', side: 'away', assist: 'M. Fábry' });
   });
 
   it('cartons : jaune, puis rouge (second jaune annoncé une fois, en rouge)', () => {
