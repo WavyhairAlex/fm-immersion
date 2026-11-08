@@ -2,9 +2,13 @@ import {
   analyseBuiltTactic,
   defaultOption,
   defaultOOPPos,
+  normalizePi,
+  piChoice,
+  piLabel,
   piOptions,
   piStale,
-  togglePi,
+  setPi,
+  piKeyGroup,
   zonePos,
   builtFromGame,
   FORMATIONS,
@@ -68,7 +72,8 @@ const DROP_ZONES: { pos: PosCode; x0: number; x1: number; y0: number; y1: number
 })();
 
 export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; players: FmPlayer[]; folder: string }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const en = i18n.resolvedLanguage === 'en';
   const names = useNames();
   const scope = useFmSaveScope();
   const { engine } = useTacticEngine(folder, players);
@@ -398,7 +403,7 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
               const oopRoles = rolesAt(engine, cur.slots.map((x) => ({ pos: x.posOOP })), i, 'oop');
               const sq = analysis.squad?.xi[i];
               const lit = hover?.includes(i);
-              const pi = s.pi ?? [];
+              const pi = normalizePi(s.pi ?? []);
               const stale = piStale(engine, cur, i);
               const open = openPi === i;
               const opts = open ? piOptions(engine, cur, i) : null;
@@ -470,33 +475,57 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
                   <tr className="bg-creme/60">
                     <td colSpan={analysis.squad ? 6 : 5} className="px-2 py-2">
                       {(['ip', 'oop'] as const).map((ph) => (
-                        <div key={ph} className="mb-1 flex flex-wrap items-center gap-1.5">
-                          <span className="w-24 shrink-0 text-xs font-bold uppercase text-canard/60">{t(`fm.tac.phase.${ph}`)}</span>
-                          {opts[ph].length ? (
-                            opts[ph].map((o) =>
-                              o.state === 'imposed' ? (
-                                <span key={o.id} className="chip cursor-default opacity-60" title={t('fm.builder.piImposed')}>
-                                  🔒 {t(`fm.pi.id.${o.id}`)}
-                                </span>
-                              ) : (
-                                <button key={o.id} type="button" aria-pressed={pi.includes(o.id)} onClick={() => setSlot(i, { pi: togglePi(pi, o.id) })} className={`chip ${pi.includes(o.id) ? 'chip-on' : ''}`}>
-                                  {t(`fm.pi.id.${o.id}`)}
-                                </button>
-                              ),
-                            )
-                          ) : (
-                            <span className="text-xs text-brun">{t('fm.builder.piNone')}</span>
-                          )}
+                        <div key={ph} className="mb-2">
+                          <div className="mb-1 text-xs font-bold uppercase text-canard/60">{t(`fm.tac.phase.${ph}`)}</div>
+                          <div className="grid gap-x-3 gap-y-1.5 sm:grid-cols-2 lg:grid-cols-3">
+                            {opts[ph].map((g) => {
+                              const title = en ? g.def.en : g.def.fr;
+                              const lab = (fr: string) => (en ? g.def.options.find((o) => o.fr === fr)?.en ?? fr : fr);
+                              const chosen = piChoice(pi, g.def.group);
+                              const value = chosen && g.options.includes(chosen) ? chosen : '';
+                              return (
+                                <label key={g.def.group} className={`flex flex-col text-xs ${g.state === 'free' ? '' : 'opacity-60'}`}>
+                                  <span className="mb-0.5 font-semibold text-canard">
+                                    {g.state !== 'free' && '🔒 '}
+                                    {title}
+                                  </span>
+                                  <select
+                                    className={`input py-1 text-sm ${value ? 'ring-1 ring-orange' : ''}`}
+                                    disabled={g.state !== 'free'}
+                                    title={g.state === 'imposed' ? t('fm.builder.piImposed') : g.state === 'locked' ? t('fm.builder.piLocked') : undefined}
+                                    value={g.state === 'imposed' ? g.imposed : value}
+                                    onChange={(e) => setSlot(i, { pi: setPi(pi, g.def.group, e.target.value || null) })}
+                                  >
+                                    {g.state === 'imposed' ? (
+                                      <option value={g.imposed}>{lab(g.imposed!)}</option>
+                                    ) : (
+                                      <>
+                                        <option value="">{en ? g.def.neutral.en : g.def.neutral.fr}</option>
+                                        {g.options.map((o) => (
+                                          <option key={o} value={o}>
+                                            {lab(o)}
+                                          </option>
+                                        ))}
+                                      </>
+                                    )}
+                                  </select>
+                                </label>
+                              );
+                            })}
+                          </div>
                         </div>
                       ))}
                       {stale.length > 0 && (
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
                           <span className="text-xs text-brun">{t('fm.builder.piStaleHelp')}</span>
-                          {stale.map((id) => (
-                            <button key={id} type="button" onClick={() => setSlot(i, { pi: pi.filter((x) => x !== id) })} className="chip line-through" title={t('fm.builder.piRemove')}>
-                              {t(`fm.pi.id.${id}`, { defaultValue: id })} ✕
-                            </button>
-                          ))}
+                          {stale.map((k) => {
+                            const l = piLabel(k, en);
+                            return (
+                              <button key={k} type="button" onClick={() => setSlot(i, { pi: setPi(pi, piKeyGroup(k), null) })} className="chip line-through" title={t('fm.builder.piRemove')}>
+                                {l.group} : {l.option} ✕
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                       <p className="mt-1 text-xs text-brun">{t('fm.builder.piHelp')}</p>

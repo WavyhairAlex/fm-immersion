@@ -2850,10 +2850,10 @@
       "piCount_one": "{{count}} instruction",
       "piCount_other": "{{count}} instructions",
       "piImposed": "Already set by the role",
-      "piNone": "The role leaves nothing to set here.",
       "piStaleHelp": "No longer possible with this role or position:",
       "piRemove": "Remove",
-      "piHelp": "Only the instructions the role allows at this position are offered; one per group (picking \"Dribble more\" removes \"Dribble less\"). Beyond 3 per player, the tactic takes long to learn.",
+      "piHelp": "The game's 17 individual instructions, with the locks of each phase's role and position (🔒: locked or already set by the role). One option per instruction, as in the game. Beyond 3 per player, the tactic takes long to learn.",
+      "piLocked": "Locked by the role or position",
       "savedAuto": "Saved",
       "savedHelp": "Every change is saved on this PC, for this save. Find the tactic by its name in the list."
     },
