@@ -36,6 +36,18 @@ interface CareerState {
   /** Écrans où le briefing de l'adjoint laisse quelque chose à faire, pour la date de jeu `at`. */
   todo: { at: string; views: string[] };
   setTodo: (todo: { at: string; views: string[] }) => void;
+  /** Messages encore ouverts du briefing de l'adjoint (déjà rédigés), repris en tête de chaque écran du club. */
+  brief: { at: string; items: BriefLine[] };
+  setBrief: (brief: { at: string; items: BriefLine[] }) => void;
+}
+
+/** Un message du briefing, prêt à afficher : l'écran où agir, le ton, la phrase et le libellé du bouton. */
+export interface BriefLine {
+  key: string;
+  view: string;
+  tone: 'bad' | 'warn' | 'info' | 'good';
+  text: string;
+  action: string;
 }
 
 export const useCareerStore = create<CareerState>((set) => ({
@@ -46,12 +58,14 @@ export const useCareerStore = create<CareerState>((set) => ({
     } catch {
       /* stockage indisponible : le choix n'est pas retenu */
     }
-    set({ saveId, sync: { free: null, other: null, bridgeOk: null }, todo: { at: '', views: [] } });
+    set({ saveId, sync: { free: null, other: null, bridgeOk: null }, todo: { at: '', views: [] }, brief: { at: '', items: [] } });
   },
   sync: { free: null, other: null, bridgeOk: null },
   setSync: (patch) => set((s) => ({ sync: { ...s.sync, ...patch } })),
   todo: { at: '', views: [] },
   setTodo: (todo) => set({ todo }),
+  brief: { at: '', items: [] },
+  setBrief: (brief) => set({ brief }),
 }));
 
 /**

@@ -20,6 +20,7 @@ import {
 } from '@fm-immersion/module-fm';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useCareerStore } from '../lib/career';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useFormat } from './FmUi';
 
@@ -116,6 +117,13 @@ export function FmBriefing({
     }
     return t(`fm.brief.${x.kind}`, v);
   };
+  // Messages encore ouverts, déjà rédigés : chaque écran du club reprend ceux qui le concernent.
+  const setBrief = useCareerStore((s) => s.setBrief);
+  const open = ordered.filter((x) => isBriefTask(x) && !isDone(x) && x.view !== 'home');
+  const openJson = JSON.stringify(
+    open.map((x) => ({ key: briefKey(x), view: x.view, tone: x.tone, text: text(x), action: t(`fm.brief.act.${x.kind}`, { defaultValue: t('fm.brief.go') }) })),
+  );
+  useEffect(() => setBrief({ at: `${scope.saveId}|${snap.gameDate}`, items: JSON.parse(openJson) }), [openJson, scope.saveId, snap.gameDate, setBrief]);
   const day = new Intl.DateTimeFormat(i18n.resolvedLanguage, { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(`${snap.gameDate.slice(0, 10)}T00:00:00Z`));
 
   return (

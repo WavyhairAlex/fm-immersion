@@ -3343,6 +3343,18 @@
       "switch": "Changer de carrière",
       "manage": "Gérer",
       "removePhoto": "Retirer la photo"
+    },
+    "assistant": {
+      "label": "Ton adjoint",
+      "initial": "A",
+      "elsewhere_one": "{{count}} autre point t'attend ailleurs : voir le briefing",
+      "elsewhere_other": "{{count}} autres points t'attendent ailleurs : voir le briefing",
+      "calm": {
+        "tactic": "Rien ne presse côté tactique et entraînement cette semaine : le onze tient, garde le cap.",
+        "squad": "Le groupe va bien cette semaine : pas de joueur à recadrer ni à rassurer.",
+        "results": "Rien d'inquiétant dans les résultats : continue comme ça.",
+        "mercato": "Pas de décision de mercato ni de finances à prendre cette semaine."
+      }
     }
   }
 }
