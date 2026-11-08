@@ -1,5 +1,6 @@
-import type { FmLive } from '@fm-immersion/module-fm';
+import { contrast, visibleOn, type FmLive } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
+import { clubArt, drawCrest, type ClubArt } from './club-look';
 import { wrap } from './gazette-une';
 import { minuteOf, timeline, type MatchStats } from './live-discord';
 
@@ -7,6 +8,8 @@ import { minuteOf, timeline, type MatchStats } from './live-discord';
  * Image du tableau de score du direct (1000 × 450, 510 avec les chiffres), redessinée à chaque relevé : bandeau (en
  * direct / score final, minute, compétition), équipes et grand score, frise du match avec les buts à leur minute,
  * buteurs, chiffres du jeu après le match (possession, tirs, xG, homme du match), et phrase du commentateur.
+ * Chaque équipe a son logo (pack de logos du joueur) ou son écusson à ses couleurs, le liseré du haut et les buts de
+ * la frise prennent la couleur de l'équipe quand le plugin la lit.
  */
 const W = 1000;
 const H0 = 450;
@@ -68,7 +71,18 @@ export function statsRows(t: TFunction, st: MatchStats, lang?: string): string[]
   return rows;
 }
 
-export async function drawLiveBoard(t: TFunction, l: FmLive, club: string | null, comment: string, lang?: string): Promise<HTMLCanvasElement> {
+/** Taille des logos à côté des noms d'équipe. */
+const CREST = 84;
+
+export async function drawLiveBoard(
+  t: TFunction,
+  l: FmLive,
+  club: string | null,
+  comment: string,
+  lang?: string,
+  arts?: { home: ClubArt | null; away: ClubArt | null },
+): Promise<HTMLCanvasElement> {
+  const [homeArt, awayArt] = arts ? [arts.home, arts.away] : await Promise.all([clubArt(l.home), clubArt(l.away)]);
   await Promise.all([font(900, 96, SERIF), font(800, 34, SERIF), font(800, 18), font(400, 18)].map((f) => document.fonts.load(f).catch(() => undefined)));
   const extra = l as { competition?: unknown; stats?: MatchStats | null };
   const stats = l.final && extra.stats ? statsRows(t, extra.stats, lang) : [];
@@ -79,8 +93,19 @@ export async function drawLiveBoard(t: TFunction, l: FmLive, club: string | null
   const ctx = canvas.getContext('2d')!;
   ctx.fillStyle = C.bg;
   ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = C.orange;
-  ctx.fillRect(0, 0, W, 6);
+  // Liseré du haut : moitié aux couleurs de chaque équipe (orange si le jeu ne les donne pas).
+  const teamColor = (a: ClubArt | null, fallback: string) => visibleOn(a?.look?.colors ?? [], C.bg, fallback, 1.8);
+  const homeColor = teamColor(homeArt, C.orange);
+  let awayColor = teamColor(awayArt, C.orange);
+  // Deux équipes de la même couleur : l'extérieur prend son autre couleur, sinon le crème, pour distinguer les buts.
+  if (contrast(homeColor, awayColor) < 1.4) {
+    const others = (awayArt?.look?.colors ?? []).filter((c) => contrast(c, homeColor) >= 1.4);
+    awayColor = visibleOn(others, C.bg, C.cream, 1.8);
+  }
+  ctx.fillStyle = homeColor;
+  ctx.fillRect(0, 0, W / 2, 6);
+  ctx.fillStyle = awayColor;
+  ctx.fillRect(W / 2, 0, W / 2, 6);
 
   const side = club === l.home ? 'home' : club === l.away ? 'away' : null;
   const hs = l.homeScore ?? 0;
@@ -115,13 +140,17 @@ export async function drawLiveBoard(t: TFunction, l: FmLive, club: string | null
   const scoreText = `${hs} – ${as}`;
   ctx.font = font(900, 96, SERIF);
   const sw = ctx.measureText(scoreText).width;
-  const nameW = (W - 2 * M - sw - 60) / 2;
+  const nameW = (W - 2 * M - sw - 60) / 2 - (CREST + 16);
   ctx.fillStyle = C.orange;
   ctx.textAlign = 'center';
   ctx.fillText(scoreText, W / 2, 170);
+  // Logos (ou écussons) aux deux bouts, les noms à côté.
+  if (homeArt) drawCrest(ctx, homeArt, M + CREST / 2, 128, CREST, { ring: C.bg });
+  if (awayArt) drawCrest(ctx, awayArt, W - M - CREST / 2, 128, CREST, { ring: C.bg });
+  ctx.textBaseline = 'alphabetic';
   for (const [name, x, align, me] of [
-    [l.home, M, 'left', side === 'home'],
-    [l.away, W - M, 'right', side === 'away'],
+    [l.home, M + CREST + 16, 'left', side === 'home'],
+    [l.away, W - M - CREST - 16, 'right', side === 'away'],
   ] as const) {
     const { lines, lh } = fitName(ctx, name, 36, nameW, 120);
     ctx.textAlign = align;
@@ -157,9 +186,10 @@ export async function drawLiveBoard(t: TFunction, l: FmLive, club: string | null
     const x = tx0 + tw * Math.min(1, g.minute / 90);
     const y = g.side === 'home' ? ty - 18 : ty + 18;
     const mine = side ? g.side === side : g.side === 'home';
+    const own = (g.side === 'home' ? homeArt : awayArt)?.look?.colors.length ? (g.side === 'home' ? homeColor : awayColor) : null;
     ctx.beginPath();
     ctx.arc(x, y, 8, 0, Math.PI * 2);
-    ctx.fillStyle = mine ? C.orange : C.cream;
+    ctx.fillStyle = own ?? (mine ? C.orange : C.cream);
     ctx.fill();
     ctx.strokeStyle = C.bg;
     ctx.lineWidth = 2;
