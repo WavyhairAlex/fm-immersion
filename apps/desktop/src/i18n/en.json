@@ -4198,7 +4198,7 @@
   },
   "saveFiles": {
     "title": "My saves",
-    "intro": "Your FM27 .fm files, the career each one follows and the in-game date of your last save. After {{days}} in-game days without saving, your career card warns you. FM Immersion only reads the files' name, size and date: it never opens or changes them.",
+    "intro": "Your FM27 .fm files, the career each one follows and the in-game date of your last save. After {{days}} in-game days without saving, your career card warns you. FM Immersion never changes these files: its backups go to a separate folder.",
     "noFolder": "The plugin folder isn't known yet: saves are looked for in the games folder right next to it.",
     "toSettings": "Open Plugin and settings",
     "folder": "Folder: {{folder}}",
@@ -4261,5 +4261,18 @@
     "sectionHelp": "Cup tie, top of the table clash or head-to-head: the poster goes out a few days before the match.",
     "send": "Send the poster",
     "sent": "Poster sent to Discord."
+  },
+  "saveBackups": {
+    "title": "Backups: {{name}}",
+    "auto": "Copy after every FM27 save",
+    "keep": "Copies kept",
+    "now": "Back up now",
+    "copying": "Copying…",
+    "open": "Open the backups folder",
+    "help": "Backups go to the fm-immersion-secours folder, next to games. At most {{size}} on disk; the oldest are deleted.",
+    "busy": "FM27 is still writing the save: try again in a minute.",
+    "error": "The backup failed: {{error}}",
+    "none": "No backup yet.",
+    "restore": "To go back to a backup: close FM27, then copy it into the games folder (it shows up with its date in FM27). FM Immersion never replaces your save."
   }
 }

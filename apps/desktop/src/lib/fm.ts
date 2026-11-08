@@ -10,6 +10,12 @@ export interface FmSaveSettings {
   fmFolder?: string;
   /** Sauvegarde FM27 liée à la partie (nom du fichier .fm dans le dossier games). */
   fmSaveFile?: string;
+  /** Copies de secours automatiques de la sauvegarde liée, après chaque sauvegarde de FM27. Désactivé par défaut. */
+  fmBackups?: boolean;
+  /** Copies gardées (3 par défaut). */
+  fmBackupKeep?: number;
+  /** Date d'écriture (ms) de la sauvegarde liée lors de la dernière copie : pas de nouvelle copie tant qu'elle ne change pas. */
+  fmBackupDone?: number;
   /** Club suivi par la partie : un instantané d'un autre club vient d'une autre sauvegarde. */
   fmClub?: string;
   /** Date de jeu depuis laquelle le manager est sans club (lue dans l'état écrit par le plugin). */
