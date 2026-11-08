@@ -3429,7 +3429,7 @@
       "scorer": "L. Martin"
     },
     "breakingEnable": "Envoyer les dépêches automatiquement",
-    "breakingShort": "Recrue, départ d'un titulaire, blessure longue, affiche des grands matchs : la dépêche part dans le salon le jour où le plugin la voit."
+    "breakingShort": "Recrue, départ d'un titulaire, blessure longue, affiche des grands matchs, exploits (triplé, série, large victoire) : l'image part dans le salon le jour où le plugin la voit."
   },
   "live": {
     "title": "Match en direct",
@@ -4292,5 +4292,40 @@
     "error": "La copie a échoué : {{error}}",
     "none": "Pas encore de copie.",
     "restore": "Pour revenir à une copie : ferme FM27, puis copie-la dans le dossier games (elle s'affiche avec sa date dans FM27). FM Immersion ne remplace jamais ta sauvegarde."
+  },
+  "records": {
+    "kind": "Édition record",
+    "section": "Édition record",
+    "sectionHelp": "Triplé, série de victoires (5, 7, 10…), plus large victoire de la saison, fin d'une mauvaise passe : une une en image le jour de l'exploit.",
+    "send": "Envoyer l'édition record",
+    "sent": "Édition record envoyée sur Discord.",
+    "opponentUnknown": "l'adversaire",
+    "home": "à domicile",
+    "away": "à l'extérieur",
+    "tag": {
+      "hatTrick": "Triplé",
+      "streak": "Série en cours",
+      "bigWin": "Large victoire",
+      "runEnded": "Fin de la disette"
+    },
+    "title": {
+      "hatTrick": "{{name}} signe un triplé contre {{opponent}}",
+      "many": "{{name}} marque {{goals}} buts contre {{opponent}}",
+      "streak": "{{club}} enchaîne {{count}} victoires de suite",
+      "bigWin": "{{club}} écrase {{opponent}} {{score}}",
+      "runEnded": "{{club}} retrouve enfin la victoire"
+    },
+    "body": {
+      "hatTrick": "{{goals}} buts dans le même match officiel : une soirée que les supporters de {{club}} raconteront longtemps.",
+      "streak": "{{count}} matchs officiels, {{count}} victoires. La dernière en date : {{score}} contre {{opponent}}. Jusqu'où ira la série ?",
+      "bigWin": "Plus large victoire de la saison pour {{club}} : {{margin}} buts d'écart contre {{opponent}}.",
+      "runEnded": "{{count}} matchs sans gagner, c'est terminé : {{club}} s'impose {{score}} contre {{opponent}}. Le vestiaire respire."
+    },
+    "caption": {
+      "hatTrick": "buts",
+      "streak": "victoires de suite",
+      "bigWin": "plus large victoire de la saison",
+      "runEnded": "matchs sans victoire, c'est fini"
+    }
   }
 }
