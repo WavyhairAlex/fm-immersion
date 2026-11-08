@@ -91,3 +91,18 @@ describe('duos et jauges', () => {
     expect(a.risk).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe('ailiers qui redescendent', () => {
+  it('compte l’ailier redescendu au milieu comme une aide sur son flanc', () => {
+    let t = newBuiltTactic(engine, '4-3-3', 'a');
+    t = set(t, 1, { ip: 'WB', oop: 'FB' });
+    // Ailier gauche resté en MO sans ballon : le flanc est juste.
+    t = set(t, 8, { ip: 'IF', posOOP: 'MOG', oop: 'W' });
+    expect(analyseBuiltTactic(engine, t).findings.some((f) => f.id === 'flankThin' && f.params.side === 'L')).toBe(true);
+    // Redescendu en M (G) : il double le latéral.
+    t = set(t, 8, { posOOP: 'MG', oop: 'WM' });
+    const f = analyseBuiltTactic(engine, t).findings;
+    expect(f.some((x) => x.id === 'flankThin' && x.params.side === 'L')).toBe(false);
+    expect(f.find((x) => x.id === 'flankDoubled' && x.params.side === 'L')?.params.drop).toBe(true);
+  });
+});

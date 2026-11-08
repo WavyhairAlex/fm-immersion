@@ -2719,7 +2719,7 @@
         "flankOpen": "Nobody defends the {{side}} flank out of possession.",
         "flankExposed": "{{side}} channel exposed on the turnover: the full-back pushes on and the winger stays forward to counter.",
         "flankThin": "On the {{side}}, the full-back pushes on with no winger tracking back: watch out against a quick winger.",
-        "flankDoubled": "{{side}} flank doubled out of possession: a tracking winger helps the full-back.",
+        "flankDoubled": "{{side}} flank doubled out of possession: the winger drops into midfield or tracks back to help the full-back.",
         "restSolid": "Solid rest defence when attacking: {{count}} players stay back, one of them in front of the defence.",
         "restThin": "Thin rest defence: {{count}} players stay back when you attack.",
         "restWeak": "Weak rest defence: only {{count}} player(s) back when you attack, big risk on the counter.",
@@ -2781,6 +2781,11 @@
         "pair_twoPlaymakers": "{{zone}}: two playmakers side by side fight for the ball.",
         "pair_bothDrop": "{{zone}}: both strikers drop off, nobody stays in the box.",
         "pair_sameRole": "{{zone}}: two strikers in the same role get in each other's way."
+      },
+      "dragHint": "Drag to change position",
+      "dragHelp": {
+        "ip": "Drag a player on the pitch to change his position in possession.",
+        "oop": "Drag a player on the pitch to change his position out of possession (a winger can drop back to the midfield line)."
       }
     }
   },

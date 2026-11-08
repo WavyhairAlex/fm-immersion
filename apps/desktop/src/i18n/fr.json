@@ -2719,7 +2719,7 @@
         "flankOpen": "Personne ne défend le flanc {{side}} sans ballon.",
         "flankExposed": "Couloir {{side}} exposé en transition : le latéral monte et l'ailier reste devant pour contrer.",
         "flankThin": "Côté {{side}}, le latéral monte sans ailier qui se replie : à surveiller contre un ailier rapide.",
-        "flankDoubled": "Flanc {{side}} doublé sans ballon : un ailier qui se replie aide le latéral.",
+        "flankDoubled": "Flanc {{side}} doublé sans ballon : l'ailier redescend au milieu ou se replie pour aider le latéral.",
         "restSolid": "Défense restante solide quand tu attaques : {{count}} joueurs restent derrière, dont un devant la défense.",
         "restThin": "Défense restante juste : {{count}} joueurs restent derrière quand tu attaques.",
         "restWeak": "Défense restante faible : seulement {{count}} joueur(s) derrière quand tu attaques, gros risque en contre.",
@@ -2781,6 +2781,11 @@
         "pair_twoPlaymakers": "{{zone}} : deux meneurs côte à côte se disputent le ballon.",
         "pair_bothDrop": "{{zone}} : les deux attaquants décrochent, personne ne reste dans la surface.",
         "pair_sameRole": "{{zone}} : deux attaquants au même rôle se marchent dessus."
+      },
+      "dragHint": "Glisse pour changer de poste",
+      "dragHelp": {
+        "ip": "Glisse un joueur sur le terrain pour changer son poste avec ballon.",
+        "oop": "Glisse un joueur sur le terrain pour changer son poste sans ballon (un ailier peut redescendre au niveau du milieu)."
       }
     }
   },

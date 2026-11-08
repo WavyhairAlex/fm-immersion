@@ -321,8 +321,12 @@ export function analyseBuiltTactic(engine: TacticEngine, t: BuiltTactic, players
     const wideCover = idx.some((i) => oopG(i) === 'wideCover') || S.filter((s) => s.pos === 'DC').length >= 3;
     if (!flankDef.length) add('flankOpen', 'lanes', 'bad', { side }, onSide);
     else if (highFull.length && outletWing.length && !wideCover) add('flankExposed', 'lanes', 'bad', { side }, [...highFull, ...outletWing]);
-    else if (highFull.length && !wideCover && !idx.some((i) => sideOf(S[i]!.posOOP) === side && oopG(i) === 'track')) add('flankThin', 'lanes', 'warn', { side }, highFull);
-    else if (flankDef.length && idx.some((i) => sideOf(S[i]!.posOOP) === side && oopG(i) === 'track')) add('flankDoubled', 'lanes', 'good', { side });
+    // Aide du côté : un ailier qui se replie, ou qui redescend au niveau du milieu sans ballon (MO → M) sans rester devant.
+    const helps = idx.filter((i) => sideOf(S[i]!.posOOP) === side && lineOf(S[i]!.posOOP) !== 'DEF' && (oopG(i) === 'track' || ((S[i]!.posOOP === 'MG' || S[i]!.posOOP === 'MD') && oopG(i) !== 'outlet')));
+    if (!flankDef.length || (highFull.length && outletWing.length && !wideCover)) {
+      /* déjà signalé */
+    } else if (highFull.length && !wideCover && !helps.length) add('flankThin', 'lanes', 'warn', { side }, highFull);
+    else if (helps.length) add('flankDoubled', 'lanes', 'good', { side, drop: helps.some((i) => S[i]!.pos !== S[i]!.posOOP) }, [...flankDef, ...helps]);
   }
 
   // 3. Défense restante : joueurs de champ qui restent derrière quand l'équipe attaque (rest defence).

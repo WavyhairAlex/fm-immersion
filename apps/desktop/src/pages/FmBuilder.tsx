@@ -1,6 +1,8 @@
 import {
   analyseBuiltTactic,
   defaultOption,
+  defaultOOPPos,
+  zonePos,
   builtFromGame,
   FORMATIONS,
   MENTALITIES_FM27,
@@ -22,7 +24,7 @@ import {
   type Phase,
   type PosCode,
 } from '@fm-immersion/module-fm';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticEngine } from './FmTactic';
@@ -44,6 +46,18 @@ const newId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? c
 const TONE_DOT = { good: 'bg-eau', warn: 'bg-ambre', bad: 'bg-corail' } as const;
 const AREAS: Area[] = ['roles', 'lanes', 'centre', 'rest', 'attack', 'transition', 'press', 'coherence', 'squad'];
 const STAGES = ['ip', 'transition', 'oop'] as const;
+
+/** Poste de la zone visée, ou null dans la surface de son propre gardien (le gardien ne se déplace pas). */
+const dropPos = (x: number, y: number): PosCode | null => (y >= 86 ? null : zonePos(x, y));
+
+/** Zones du terrain et leur poste (mêmes bornes que zonePos), affichées pendant un déplacement. */
+const DROP_ZONES: { pos: PosCode; x0: number; x1: number; y0: number; y1: number }[] = (() => {
+  const cols: [number, number, 'G' | 'C' | 'D'][] = [[3, 27, 'G'], [27, 73, 'C'], [73, 97, 'D']];
+  const rows: [number, number][] = [[18, 36], [36, 55], [55, 68], [68, 86]];
+  const out: { pos: PosCode; x0: number; x1: number; y0: number; y1: number }[] = [{ pos: 'BT', x0: 3, x1: 97, y0: 2, y1: 18 }];
+  for (const [y0, y1] of rows) for (const [x0, x1] of cols) out.push({ pos: zonePos((x0 + x1) / 2, (y0 + y1) / 2), x0, x1, y0, y1 });
+  return out;
+})();
 
 export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; players: FmPlayer[]; folder: string }) {
   const { t } = useTranslation();
@@ -69,6 +83,9 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
   const [form, setForm] = useState('4-3-3');
   const [phase, setPhase] = useState<Phase>('ip');
   const [hover, setHover] = useState<number[] | null>(null);
+  // Glisser-déposer sur le terrain : le créneau déplacé et sa position en % du terrain.
+  const pitchRef = useRef<HTMLDivElement>(null);
+  const [drag, setDrag] = useState<{ i: number; x: number; y: number } | null>(null);
   const analysis = useMemo(() => (cur ? analyseBuiltTactic(engine, cur, avail) : null), [engine, cur, avail]);
 
   const create = () => put(newBuiltTactic(engine, form, newId(), t('fm.builder.defaultName', { form })));
@@ -116,6 +133,37 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
     if (p.pos) fix('ip');
     if (p.posOOP || p.pos) fix('oop');
     put({ ...cur, slots });
+  };
+  // Glisser-déposer : position du pointeur en % du terrain, poste de la zone visée au relâchement.
+  const at = (e: ReactPointerEvent): [number, number] | null => {
+    const r = pitchRef.current?.getBoundingClientRect();
+    if (!r || !r.width || !r.height) return null;
+    return [Math.max(4, Math.min(96, ((e.clientX - r.left) / r.width) * 100)), Math.max(3, Math.min(97, ((e.clientY - r.top) / r.height) * 100))];
+  };
+  const startDrag = (e: ReactPointerEvent<HTMLDivElement>, i: number) => {
+    const p = at(e);
+    if (!p) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setDrag({ i, x: p[0], y: p[1] });
+  };
+  const moveDrag = (e: ReactPointerEvent, i: number) => {
+    if (drag?.i !== i) return;
+    const p = at(e);
+    if (p) setDrag({ i, x: p[0], y: p[1] });
+  };
+  const endDrag = (e: ReactPointerEvent, i: number) => {
+    if (drag?.i !== i) return;
+    const p = at(e) ?? [drag.x, drag.y];
+    setDrag(null);
+    const pos = dropPos(p[0], p[1]);
+    if (!pos) return;
+    const s = cur.slots[i]!;
+    if (phase === 'oop') {
+      if (pos !== s.posOOP) setSlot(i, { posOOP: pos });
+    } else if (pos !== s.pos) {
+      // Le poste sans ballon suit tant que le joueur ne l'avait pas changé lui-même.
+      setSlot(i, s.posOOP === defaultOOPPos(s.pos) ? { pos, posOOP: defaultOOPPos(pos) } : { pos });
+    }
   };
   const roleLabel = (code: string, ph: Phase) => {
     const r = engine.roles.get(code);
@@ -200,7 +248,7 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
       <div className="grid gap-4 lg:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)]">
         {/* Terrain : forme avec ou sans ballon, rôles appliqués. */}
         <section className="card">
-          <div className="relative mx-auto aspect-[3/4] w-full max-w-[24rem] overflow-hidden rounded-2xl bg-eau-fonce/90">
+          <div ref={pitchRef} className="relative mx-auto aspect-[3/4] w-full max-w-[24rem] overflow-hidden rounded-2xl bg-eau-fonce/90">
             <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden>
               <g fill="none" stroke="white" strokeOpacity="0.35" strokeWidth="0.4">
                 <rect x="3" y="2" width="94" height="96" />
@@ -210,14 +258,44 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
                 <rect x="25" y="83" width="50" height="15" />
               </g>
             </svg>
+            {drag && (
+              // Zones du jeu pendant un déplacement : la case visée prend le poste.
+              <div className="pointer-events-none absolute inset-0" aria-hidden>
+                {DROP_ZONES.map((z) => {
+                  const on = dropPos(drag.x, drag.y) === z.pos && z.x0 <= drag.x && drag.x < z.x1 && z.y0 <= drag.y && drag.y < z.y1;
+                  return (
+                    <div
+                      key={`${z.pos}${z.x0}${z.y0}`}
+                      className={`absolute flex items-center justify-center border border-white/20 text-[0.65rem] font-bold ${on ? 'bg-ambre/40 text-white' : 'text-white/40'}`}
+                      style={{ left: `${z.x0}%`, top: `${z.y0}%`, width: `${z.x1 - z.x0}%`, height: `${z.y1 - z.y0}%` }}
+                    >
+                      {POS_LABEL[z.pos]}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             {cur.slots.map((s, i) => {
-              const [x, y] = pts[i]!;
+              const dragging = drag?.i === i;
+              const [x, y] = dragging ? [drag.x, drag.y] : pts[i]!;
               const code = phase === 'ip' ? s.ip : s.oop;
               const pos = phase === 'ip' ? s.pos : s.posOOP;
               const lit = hover?.includes(i);
+              const gk = s.pos === 'GB';
               return (
-                <div key={i} className="absolute flex w-[24%] -translate-x-1/2 -translate-y-1/2 flex-col items-center transition-all duration-500" style={{ left: `${x}%`, top: `${y}%` }}>
-                  <span className={`whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-xs font-bold text-canard shadow ring-2 ${lit ? 'ring-ambre' : 'ring-white/0'}`}>{POS_LABEL[pos]}</span>
+                <div
+                  key={i}
+                  className={`absolute flex w-[24%] -translate-x-1/2 -translate-y-1/2 select-none flex-col items-center ${dragging ? 'z-10' : 'transition-all duration-500'} ${gk ? '' : 'cursor-grab touch-none active:cursor-grabbing'}`}
+                  style={{ left: `${x}%`, top: `${y}%` }}
+                  title={gk ? undefined : t('fm.builder.dragHint')}
+                  onPointerDown={gk ? undefined : (e) => startDrag(e, i)}
+                  onPointerMove={gk ? undefined : (e) => moveDrag(e, i)}
+                  onPointerUp={gk ? undefined : (e) => endDrag(e, i)}
+                  onPointerCancel={() => setDrag(null)}
+                >
+                  <span className={`whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-xs font-bold text-canard shadow ring-2 ${dragging ? 'ring-orange' : lit ? 'ring-ambre' : 'ring-white/0'}`}>
+                    {dragging ? POS_LABEL[dropPos(drag.x, drag.y) ?? pos] : POS_LABEL[pos]}
+                  </span>
                   <span className="mt-0.5 max-w-full truncate rounded bg-canard/85 px-1.5 text-[0.7rem] font-bold text-white">{engine.roles.get(code)?.code ?? code}</span>
                 </div>
               );
@@ -230,6 +308,7 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
               </button>
             ))}
           </div>
+          <p className="mt-2 text-center text-xs text-brun">{t(`fm.builder.dragHelp.${phase}`)}</p>
         </section>
 
         {/* L'analyse : jauges, risque, forces et faiblesses, duos. */}
