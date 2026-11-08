@@ -76,6 +76,12 @@ pub fn run() {
             images::image_save,
             images::certificate_save
         ])
-        .run(tauri::generate_context!())
-        .expect("impossible de démarrer FM Immersion");
+        .build(tauri::generate_context!())
+        .expect("impossible de démarrer FM Immersion")
+        .run(|_app, event| {
+            // L'IA s'arrête avec l'appli : le modèle Ollama libère la mémoire vidéo.
+            if let tauri::RunEvent::Exit = event {
+                ai::unload_all();
+            }
+        });
 }
