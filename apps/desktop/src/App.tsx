@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
+import { QuickSearch } from './components/QuickSearch';
 import { Sidebar } from './components/Sidebar';
 import { UpdateGate } from './components/UpdateGate';
 import { useCareer, useCareerStore } from './lib/career';
@@ -22,6 +23,7 @@ export function App() {
     <UpdateGate>
       <div className="flex min-h-screen">
         <Sidebar />
+        <QuickSearch />
         <main className="min-w-0 flex-1">
           <Routes>
             <Route path="/" element={<Today />} />

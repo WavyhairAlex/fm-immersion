@@ -175,7 +175,34 @@
       "offline": "Could not check the latest version (offline?).",
       "compact": "FM27 plugin {{version}} · up to date",
       "details": "Details",
-      "hide": "Hide"
+      "hide": "Hide",
+      "options": {
+        "title": "What the plugin reads in FM27",
+        "intro": "Tick a read to turn it on: FM Immersion edits the plugin's settings file for you. Experimental reads go through the game's display and never run while the Tactics screen is open.",
+        "next": "Saved: the plugin will use it the next time FM27 starts.",
+        "restart": "Saved. FM27 is open: restart the game for the plugin to use it.",
+        "error": "Could not change the setting: {{reason}}",
+        "LireCompo": {
+          "label": "Game line-up (experimental)",
+          "help": "The player in each position and the roles. The app then follows your real XI, and its line-up advice clears itself when you change the XI in FM."
+        },
+        "LireCibles": {
+          "label": "Transfer targets (experimental)",
+          "help": "Your shortlist, recruitment targets and loaned-out players."
+        },
+        "LireJoueursEtendus": {
+          "label": "Morale and dressing room (experimental)",
+          "help": "Morale, happiness, dressing-room hierarchy, staff stars and personality."
+        },
+        "LireEfficacite": {
+          "label": "Tactical effectiveness",
+          "help": "FM27's effectiveness rating, its 4 pillars and its advice."
+        },
+        "LireMatchDirect": {
+          "label": "Live match",
+          "help": "Score, minute and scorers during a match, for the match sheet and Live Discord."
+        }
+      }
     },
     "tac": {
       "noAttributes": "Player attributes are needed: import again from FM27.",
@@ -3596,6 +3623,18 @@
         "results": "Nothing worrying in the results: keep it up.",
         "mercato": "No transfer or finance decision to make this week."
       }
+    },
+    "state": {
+      "open": "FM27 open",
+      "closed": "FM27 closed",
+      "plugin": "Plugin needs attention"
+    },
+    "board": {
+      "label": "Dashboard",
+      "calm": "Nothing to do here.",
+      "open": "Open",
+      "more": "{{text}} (+{{count}})",
+      "game": "Game and plugin"
     }
   },
   "ai": {
@@ -3656,5 +3695,14 @@
     "linkOn": "Connected to {{model}}.",
     "linkSetup": "Connect an AI",
     "linkChange": "AI settings"
+  },
+  "search": {
+    "label": "Quick search",
+    "button": "Search",
+    "placeholder": "A player or a screen…",
+    "player": "Player",
+    "screen": "Screen",
+    "none": "No match.",
+    "keys": "↑ ↓ to choose · Enter to open · Esc to close"
   }
 }
