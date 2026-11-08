@@ -6,7 +6,10 @@
   },
   "update": {
     "checking": "Checking for updates…",
-    "installing": "Installing version {{version}}…"
+    "installing": "Installing version {{version}}…",
+    "failed": "The automatic update failed",
+    "manual": "You can download the latest version from github.com/amnesix-nt/fm-immersion/releases and install it over this one: your saves are kept.",
+    "dismiss": "Close"
   },
   "home": {
     "title": "FM Coach: your saves",

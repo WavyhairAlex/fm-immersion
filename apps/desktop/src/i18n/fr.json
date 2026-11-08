@@ -6,7 +6,10 @@
   },
   "update": {
     "checking": "Recherche de mises à jour…",
-    "installing": "Installation de la version {{version}}…"
+    "installing": "Installation de la version {{version}}…",
+    "failed": "La mise à jour automatique a échoué",
+    "manual": "Tu peux télécharger la dernière version sur github.com/amnesix-nt/fm-immersion/releases et l'installer par-dessus : tes parties sont gardées.",
+    "dismiss": "Fermer"
   },
   "home": {
     "title": "FM Coach : tes parties",
