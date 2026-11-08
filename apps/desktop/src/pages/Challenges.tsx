@@ -113,6 +113,7 @@ export function Challenges() {
                 unemployedSince={settings?.fmFreeSince ?? null}
                 freshCareer={!history.length}
                 latest={history.at(-1)?.gameDate ?? null}
+                club={history.at(-1)?.data.club ?? null}
               />
             ))}
           </div>
@@ -167,6 +168,8 @@ function Enrolled({ row, history, coach }: { row: FmChallengeRow; history: { gam
       <p className="mt-1 text-xs text-brun">
         {t('challenges.since', { date: row.startDate })}
         {row.params.nationality ? ` · ${row.params.nationality}` : ''}
+        {row.params.club ? ` · ${row.params.club}` : ''}
+        {row.params.until ? ` · ${t('challenges.untilShort', { date: row.params.until })}` : ''}
       </p>
       <Steps result={result} />
       <div className="mt-4 flex flex-wrap gap-2">
@@ -225,10 +228,11 @@ function Steps({ result }: { result: ChallengeResult }) {
   );
 }
 
-function CatalogCard(p: { def: ChallengeDef; saveId: string; taken: boolean; unemployedSince: string | null; freshCareer: boolean; latest: string | null }) {
+function CatalogCard(p: { def: ChallengeDef; saveId: string; taken: boolean; unemployedSince: string | null; freshCareer: boolean; latest: string | null; club: string | null }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const [nationality, setNationality] = useState('');
+  const [until, setUntil] = useState('');
   const { def } = p;
   // Départ sans club : nouvelle carrière (aucun instantané d'un club) avec un manager sans club selon le plugin.
   const unemployed = !!p.unemployedSince && p.freshCareer;
@@ -239,7 +243,14 @@ function CatalogCard(p: { def: ChallengeDef; saveId: string; taken: boolean; une
         challengeId: def.id,
         startDate: (def.unemployedStart ? p.unemployedSince : p.latest) ?? p.latest ?? '',
         unemployedStart: unemployed,
-        params: def.param === 'nationality' ? { nationality: nationality.trim() } : {},
+        params:
+          def.param === 'nationality'
+            ? { nationality: nationality.trim() }
+            : def.param === 'club'
+              ? { club: p.club ?? undefined }
+              : def.param === 'until'
+                ? { until }
+                : {},
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['challenges', p.saveId] }),
   });
@@ -254,6 +265,13 @@ function CatalogCard(p: { def: ChallengeDef; saveId: string; taken: boolean; une
         <span className="font-bold">{t('challenges.checked')} </span>
         {t(`challenges.def.${def.id}.checked`)}
       </p>
+      {def.param === 'until' && !blocked && (
+        <label className="mt-1 block text-xs font-bold">
+          {t('challenges.until')}
+          <input type="date" className="input mt-1" value={until} min={p.latest ?? undefined} onChange={(e) => setUntil(e.target.value)} />
+        </label>
+      )}
+      {def.param === 'club' && !blocked && p.club && <p className="text-xs font-bold">{t('challenges.clubParam', { club: p.club })}</p>}
       {def.param === 'nationality' && !blocked && (
         <input className="input mt-1" value={nationality} placeholder={t('challenges.nationality')} onChange={(e) => setNationality(e.target.value)} />
       )}
@@ -264,7 +282,7 @@ function CatalogCard(p: { def: ChallengeDef; saveId: string; taken: boolean; une
           <button
             type="button"
             className="btn-primary text-sm"
-            disabled={enroll.isPending || (def.param === 'nationality' && !nationality.trim())}
+            disabled={enroll.isPending || (def.param === 'nationality' && !nationality.trim()) || (def.param === 'until' && !until) || (def.param === 'club' && !p.club)}
             onClick={() => enroll.mutate()}
           >
             {t('challenges.enroll')}

@@ -15,7 +15,7 @@ et outils pour rendre ta carrière plus vivante. Application Windows gratuite et
 | **Visages photoréalistes** : installation en un clic, réinstallation après une mise à jour Steam | à venir |
 | **Gazette** de la semaine : résultats, classement, blessures, transferts, centre de formation | disponible |
 | **Live Discord** : envoi de la gazette dans ton salon (webhook) | disponible (solo) |
-| **Défis** : De zéro à héros, Invincibles, Génération U19, Que des locaux, vérifiés par ta partie, certificat à partager | disponible |
+| **Défis** : De zéro à héros, Invincibles, Génération U19, Que des locaux, Ancienne Génération, Vikings, Sir Alex Ferguson, Économiste, Dunkerque… vérifiés par ta partie, certificat à partager | disponible |
 | **Monde partagé** (multijoueur asynchrone) | à venir |
 
 ## Installer
