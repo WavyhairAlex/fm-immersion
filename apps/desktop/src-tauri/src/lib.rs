@@ -11,6 +11,7 @@ mod fm;
 mod fm_bridge;
 mod fm_memory;
 mod images;
+mod save_backup;
 
 use std::sync::Mutex;
 use tauri::Manager;
@@ -35,6 +36,9 @@ pub fn run() {
             fm::fm_read_reference,
             fm::fm_default_folder,
             fm::fm_list_saves,
+            save_backup::fm_backup_list,
+            save_backup::fm_backup_make,
+            save_backup::fm_backup_open,
             fm::fm_read_status,
             fm::fm_history_list,
             fm::fm_history_read,

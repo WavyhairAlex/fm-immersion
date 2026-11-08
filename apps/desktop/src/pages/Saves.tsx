@@ -1,10 +1,12 @@
-import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useCareer } from '../lib/career';
 import { fmData } from '../lib/data';
 import type { FmSaveFile } from '../lib/fm';
 import { useFmFolder } from '../lib/fm-sync';
+import { BACKUP_KEEP_CHOICES, BACKUP_KEEP_DEFAULT, makeBackup, useBackupErrors, useBackups } from '../lib/save-backup';
 import { UNSAVED_DAYS_WARN, useSaveFiles, useSaveStatus } from '../lib/save-files';
 import type { Save } from '../lib/saves';
 
@@ -100,6 +102,13 @@ export function Saves() {
         </div>
       )}
 
+      {folder &&
+        files &&
+        fmSaves.map((s, i) => {
+          const f = files.find((x) => x.name === settings[i]?.data?.fmSaveFile);
+          return f ? <BackupPanel key={s.id} career={s} file={f} /> : null;
+        })}
+
       {missing.length > 0 && (
         <div className="card mt-4 space-y-2 p-4">
           <h2 className="text-lg font-semibold">{t('saveFiles.missingTitle')}</h2>
@@ -191,5 +200,87 @@ function LinkedCells({ career, current }: { career: Save; current: boolean }) {
         {savedGameDate && <span className="ml-2 text-xs text-brun">{t('saveFiles.savedAt', { date: dateFmt.format(new Date(savedGameDate)) })}</span>}
       </td>
     </>
+  );
+}
+
+/**
+ * Copies de secours de la sauvegarde liée à une carrière : copie automatique après chaque sauvegarde de FM27
+ * (option), copie à la demande, liste des copies et dossier où les trouver. La restauration reste manuelle.
+ */
+function BackupPanel({ career, file }: { career: Save; file: FmSaveFile }) {
+  const { t, i18n } = useTranslation();
+  const qc = useQueryClient();
+  const folder = useFmFolder(career.id);
+  const { data: settings } = useQuery({ queryKey: ['fm', career.id, 'settings'], queryFn: () => fmData.settings(career.id) });
+  const { data: backups } = useBackups(folder, file.name);
+  const autoError = useBackupErrors((s) => s.errors[career.id]);
+  const keep = settings?.fmBackupKeep ?? BACKUP_KEEP_DEFAULT;
+  const ago = useAgo();
+  const stampFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium', timeStyle: 'short' });
+  const mbFmt = new Intl.NumberFormat(i18n.resolvedLanguage, { style: 'unit', unit: 'megabyte', maximumFractionDigits: 0 });
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ['fm', 'backups', folder, file.name] });
+    qc.invalidateQueries({ queryKey: ['fm', career.id, 'settings'] });
+  };
+  const update = useMutation({
+    mutationFn: (patch: { fmBackups?: boolean; fmBackupKeep?: number }) => fmData.updateSettings(career.id, patch),
+    onSuccess: refresh,
+  });
+  const now = useMutation({
+    mutationFn: () => makeBackup(career.id, folder, file, keep),
+    onSuccess: () => {
+      useBackupErrors.getState().set(career.id, null);
+      refresh();
+    },
+  });
+  const nowError = now.error ? String(now.error) : null;
+  const shownError = nowError ?? autoError;
+  return (
+    <section className="card mt-4 space-y-3 p-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-lg font-semibold">{t('saveBackups.title', { name: file.name.replace(/\.fm$/i, '') })}</h2>
+        <span className="text-xs text-brun">{career.name}</span>
+      </div>
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+        <label className="flex items-center gap-1.5">
+          <input type="checkbox" checked={!!settings?.fmBackups} disabled={update.isPending} onChange={(e) => update.mutate({ fmBackups: e.target.checked })} />
+          {t('saveBackups.auto')}
+        </label>
+        <label className="flex items-center gap-1.5">
+          {t('saveBackups.keep')}
+          <select className="input w-auto py-1 pr-8 text-sm" value={keep} disabled={update.isPending} onChange={(e) => update.mutate({ fmBackupKeep: Number(e.target.value) })}>
+            {BACKUP_KEEP_CHOICES.map((n) => (
+              <option key={n} value={n}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button type="button" className="btn-primary px-4 py-1.5 text-sm" disabled={now.isPending || !folder} onClick={() => now.mutate()}>
+          {t(now.isPending ? 'saveBackups.copying' : 'saveBackups.now')}
+        </button>
+        <button type="button" className="btn-secondary px-4 py-1.5 text-sm" onClick={() => void invoke('fm_backup_open', { folder, name: file.name }).catch(() => undefined)}>
+          {t('saveBackups.open')}
+        </button>
+      </div>
+      <p className="text-xs text-brun">{t('saveBackups.help', { size: mbFmt.format((file.bytes * keep) / 1_000_000) })}</p>
+      {shownError && <p className="text-sm text-corail">{t(shownError.includes("cours d'écriture") ? 'saveBackups.busy' : 'saveBackups.error', { error: shownError })}</p>}
+      {backups && backups.length > 0 ? (
+        <ul className="space-y-1 text-sm">
+          {backups.map((b) => (
+            <li key={b.name} className="flex flex-wrap gap-x-3">
+              <span className="font-bold">{b.name}</span>
+              <span className="text-brun" title={b.modifiedMs != null ? stampFmt.format(new Date(b.modifiedMs)) : undefined}>
+                {b.modifiedMs != null ? ago(b.modifiedMs) : ''}
+              </span>
+              <span className="text-brun">{mbFmt.format(b.bytes / 1_000_000)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="text-sm text-brun">{t('saveBackups.none')}</p>
+      )}
+      <p className="text-xs text-brun">{t('saveBackups.restore')}</p>
+    </section>
   );
 }

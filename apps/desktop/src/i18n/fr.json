@@ -4216,7 +4216,7 @@
   },
   "saveFiles": {
     "title": "Mes sauvegardes",
-    "intro": "Tes fichiers .fm de FM27, la carrière que chacun suit et la date de jeu de ta dernière sauvegarde. Au-delà de {{days}} jours de jeu sans sauvegarde, la carte de ta carrière te prévient. FM Immersion lit seulement le nom, la taille et la date des fichiers : il ne les ouvre pas et ne les modifie jamais.",
+    "intro": "Tes fichiers .fm de FM27, la carrière que chacun suit et la date de jeu de ta dernière sauvegarde. Au-delà de {{days}} jours de jeu sans sauvegarde, la carte de ta carrière te prévient. FM Immersion ne modifie jamais ces fichiers : ses copies de secours vont dans un dossier à part.",
     "noFolder": "Le dossier du plugin n'est pas encore connu : les sauvegardes sont cherchées dans le dossier games, juste à côté.",
     "toSettings": "Ouvrir Plugin et réglages",
     "folder": "Dossier : {{folder}}",
@@ -4279,5 +4279,18 @@
     "sectionHelp": "Coupe, choc au sommet ou duel direct : l'affiche part quelques jours avant le match.",
     "send": "Envoyer l'affiche",
     "sent": "Affiche envoyée sur Discord."
+  },
+  "saveBackups": {
+    "title": "Copies de secours : {{name}}",
+    "auto": "Copier après chaque sauvegarde de FM27",
+    "keep": "Copies gardées",
+    "now": "Faire une copie maintenant",
+    "copying": "Copie en cours…",
+    "open": "Ouvrir le dossier des copies",
+    "help": "Les copies vont dans le dossier fm-immersion-secours, à côté de games. Au plus {{size}} sur le disque ; les plus anciennes sont effacées.",
+    "busy": "FM27 est encore en train d'écrire la sauvegarde : réessaie dans une minute.",
+    "error": "La copie a échoué : {{error}}",
+    "none": "Pas encore de copie.",
+    "restore": "Pour revenir à une copie : ferme FM27, puis copie-la dans le dossier games (elle s'affiche avec sa date dans FM27). FM Immersion ne remplace jamais ta sauvegarde."
   }
 }
