@@ -3,7 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useFacesUpdate, v2Count, type PackOffer } from '../lib/faces';
+import { useFacesUpdate, v2Count, type PackOffer, pcState } from '../lib/faces';
 
 type FacesState = 'noGame' | 'missing' | 'original' | 'photorealV1' | 'photorealCustom' | 'unknown';
 type FacesStatus = { state: FacesState; size: number | null; running: boolean; backup: boolean };
@@ -173,6 +173,12 @@ export function Faces() {
     <div className="w-full px-6 py-6 xl:px-10">
       <h1 className="text-3xl font-semibold">{t('modes.faces.title')}</h1>
       <p className="mt-2 max-w-3xl text-brun">{t('faces.intro')}</p>
+      {/* L'état de TON PC d'abord ; l'avancement du projet de portraits vient plus bas, avec son propre libellé. */}
+      <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm ring-1 ring-canard/10" role="status">
+        <span className={`h-2.5 w-2.5 rounded-full ${DOT[state]}`} aria-hidden />
+        <span className="text-brun">{t('faces.pc.label')}</span>
+        <b>{t(`faces.pc.${pcState(state, !!offer)}`)}</b>
+      </p>
 
       {offer && (
         <section className="card mt-6 max-w-6xl ring-2 ring-orange">
@@ -279,6 +285,7 @@ export function Faces() {
               </span>
             )}
           </div>
+          <p className="mt-1 text-xs font-bold text-brun">{t('faces.projectNote')}</p>
           <p className="mt-1 text-sm text-brun">{progress?.found ? t('faces.completeHelp') : t('faces.workshopHelp')}</p>
           <label className="mt-4 block text-sm font-bold">
             {t('faces.workshop')}
@@ -386,3 +393,4 @@ export function Faces() {
     </div>
   );
 }
+

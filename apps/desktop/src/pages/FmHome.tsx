@@ -15,7 +15,9 @@ import {
   type SquadAt,
   tacticAdvice,
 } from '@fm-immersion/module-fm';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
+import { useCareerStore } from '../lib/career';
+import { useFmSaveScope } from '../lib/save-store';
 import { useTranslation } from 'react-i18next';
 import { FmBriefing } from './FmBriefing';
 import { FmDecisions, useDecisions } from './FmDecisions';
@@ -47,6 +49,7 @@ export function FmHome({
   lineup = null,
   gameTactic = null,
   onTodo,
+  board = null,
 }: {
   snap: FmSnapshot;
   players: FmPlayer[];
@@ -60,6 +63,8 @@ export function FmHome({
   gameTactic?: string | null;
   /** Écrans où le briefing laisse quelque chose à faire. */
   onTodo?: (views: string[]) => void;
+  /** Voyants du centre de contrôle, sous le fil du jour et le bandeau du match. */
+  board?: ReactNode;
 }) {
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
@@ -131,6 +136,7 @@ export function FmHome({
 
   return (
     <div className="space-y-4">
+      <DayThread snap={snap} entries={entries ?? []} go={go} />
       <FmMatchCenter
         snap={snap}
         players={players}
@@ -157,6 +163,7 @@ export function FmHome({
         }
         asideAfter={<FixturesCard snap={snap} entries={entries ?? []} go={go} />}
       />
+      {board}
       <FmOffseason snap={snap} players={players} list={decisionList} go={go} />
       <button type="button" className="chip" aria-expanded={detail} onClick={toggleDetail}>
         {t(detail ? 'fm.brief.detailHide' : 'fm.brief.detail')}
@@ -284,6 +291,79 @@ export function FmHome({
 }
 
 const OUTCOME_TONE = { W: 'bg-eau-fonce', D: 'bg-ambre', L: 'bg-corail' } as const;
+
+/**
+ * Le fil du jour, en haut de l'accueil quand une décision attend : dernier match → prochain adversaire → décision
+ * du jour (le message le plus urgent du briefing). Quand rien n'attend, il disparaît et le bandeau du match mène.
+ */
+function DayThread({ snap, entries, go }: { snap: FmSnapshot; entries: { gameDate: string; data: FmSnapshot }[]; go: (view: string) => void }) {
+  const { t } = useTranslation();
+  const scope = useFmSaveScope();
+  const brief = useCareerStore((s) => s.brief);
+  const last = useMemo(() => officialResults(entries).filter((r) => r.matches === 1).at(-1) ?? null, [entries]);
+  const rank = (tone: string) => (tone === 'bad' ? 0 : tone === 'warn' ? 1 : 2);
+  const items = brief.at === `${scope.saveId}|${snap.gameDate}` ? brief.items.filter((x) => !/^(nextMatch|friendly):/.test(x.key) && x.tone !== 'info') : [];
+  const decision = [...items].sort((a, b) => rank(a.tone) - rank(b.tone))[0];
+  if (!decision) return null;
+  const nm = (snap.nextMatch ?? null) as Record<string, unknown> | null;
+  const opponent = typeof nm?.opponent === 'string' ? nm.opponent : null;
+  const loc = String(nm?.location ?? '').toLowerCase();
+  const home = /dom|home/.test(loc) ? true : /ext|away/.test(loc) ? false : null;
+  const days = Number(nm?.inDays);
+  const where = (h: boolean | null) => (h == null ? '' : ` (${t(h ? 'fm.mc.homeShort' : 'fm.mc.awayShort')})`);
+  const arrow = (
+    <span aria-hidden className="hidden self-center text-xl text-orange md:block">
+      →
+    </span>
+  );
+  const step = 'flex min-w-0 flex-1 flex-col gap-1 rounded-xl p-3 text-left';
+  const label = 'text-xs font-bold uppercase tracking-wide text-brun';
+  return (
+    <section aria-label={t('fm.home.thread.label')} className="card flex flex-col gap-2 p-3 md:flex-row md:items-stretch">
+      <button type="button" className={`${step} hover:bg-creme`} onClick={() => go('results')}>
+        <span className={label}>{t('fm.home.lastResult')}</span>
+        {last ? (
+          <span className="flex items-center gap-2">
+            <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-extrabold text-white ${last.outcome ? OUTCOME_TONE[last.outcome] : 'bg-brun'}`}>
+              {last.outcome ? t(`fm.results.outcome.${last.outcome}`) : '?'}
+            </span>
+            <span className="truncate">
+              <b>{last.goalsFor != null && last.goalsAgainst != null ? `${last.goalsFor}-${last.goalsAgainst} ` : ''}</b>
+              {last.opponent ?? '–'}
+              <span className="text-brun">{where(last.home)}</span>
+            </span>
+          </span>
+        ) : (
+          <span className="text-sm text-brun">{t('fm.home.thread.noLast')}</span>
+        )}
+      </button>
+      {arrow}
+      <button type="button" className={`${step} hover:bg-creme`} onClick={() => go('opponent')}>
+        <span className={label}>{t('fm.home.thread.next')}</span>
+        {opponent ? (
+          <span className="truncate">
+            <b>{opponent}</b>
+            <span className="text-brun">{where(home)}</span>
+            {Number.isFinite(days) && <span className="text-brun"> · {days === 0 ? t('fm.mc.today') : days === 1 ? t('fm.mc.tomorrow') : t('fm.mc.inDaysLong', { count: days })}</span>}
+          </span>
+        ) : (
+          <span className="text-sm text-brun">{t('fm.home.thread.noNext')}</span>
+        )}
+        {opponent && <span className="mt-auto text-xs font-bold text-orange-fonce">{t('fm.home.thread.opponent')} →</span>}
+      </button>
+      {arrow}
+      <button
+        type="button"
+        className={`${step} border-l-4 ${decision.tone === 'bad' ? 'border-corail' : 'border-orange'} bg-orange-clair/60 hover:bg-orange-clair md:flex-[1.6]`}
+        onClick={() => go(decision.view)}
+      >
+        <span className={label}>{t('fm.home.thread.decision')}</span>
+        <span className="line-clamp-2 text-sm">{decision.text}</span>
+        <span className="mt-auto text-xs font-bold text-orange-fonce">{decision.action} →</span>
+      </button>
+    </section>
+  );
+}
 
 /** Dernier résultat et prochains matchs, sous le briefing de l'accueil. */
 function FixturesCard({ snap, entries, go }: { snap: FmSnapshot; entries: { gameDate: string; data: FmSnapshot }[]; go: (view: string) => void }) {

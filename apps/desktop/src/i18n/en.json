@@ -490,7 +490,15 @@
       "tired_one": "{{count}} player under 80% condition",
       "tired_other": "{{count}} players under 80% condition",
       "fixtures": "Fixtures",
-      "lastResult": "Last result"
+      "lastResult": "Last result",
+      "thread": {
+        "label": "Today's thread",
+        "next": "Next opponent",
+        "decision": "Today's decision",
+        "opponent": "See the opponent",
+        "noLast": "No official match read yet.",
+        "noNext": "No match scheduled."
+      }
     },
     "contracts": {
       "byYear": "Monthly wages freed by contract end year",
@@ -2041,7 +2049,22 @@
       "fewMinutes": "Under 270 minutes: confirm over more matches.",
       "mercato": "Transfers",
       "inTwo": "In two seasons:",
-      "open": "Open {{name}}'s profile"
+      "open": "Open {{name}}'s profile",
+      "actions": "Actions on this player",
+      "seeProgress": "See his progress",
+      "seePlaytime": "Review his playing time",
+      "compareTo": "Compare with…",
+      "contractTitle": "Contract",
+      "deadline": "Expires",
+      "status": "Promised status",
+      "place": "Place in the group",
+      "placeValue": "{{place}} of {{count}} at {{pos}}",
+      "rivals": "Tracked targets in the same position:",
+      "noRivals": "none yet.",
+      "playtime": "Playing time this season",
+      "playShare": "{{pct}}% of possible minutes, {{starts}} starts in {{available}} matches he was available for.",
+      "noPlay": "No tracked match yet this season.",
+      "promised": "His status ({{status}}) promises about {{pct}}% of minutes."
     },
     "foot": {
       "profile": "Profile",
@@ -2246,6 +2269,26 @@
         "shots": "Shots {{us}} ({{usOn}} on target) – {{them}} ({{themOn}} on target)",
         "xg": "Game xG {{us}} – {{them}}",
         "motm": "Player of the match: {{name}} ({{rating}})"
+      },
+      "q": {
+        "label": "The three results questions",
+        "what": "What happened?",
+        "repeat": "What keeps happening?",
+        "adjust": "What can I adjust?",
+        "adjustTitle": "Leads from the matches",
+        "nothing": "Nothing to adjust yet: no clear trend so far.",
+        "proof_one": "See the match",
+        "proof_other": "See the {{count}} matches",
+        "proofOf": "Matches behind it:",
+        "all": "All matches"
+      },
+      "move": {
+        "tacticBest": "Favour {{name}}, worth {{ppm}} pts/match, over {{other}}.",
+        "tacticWorst": "Rework or drop {{name}}: only {{ppm}} pts/match.",
+        "playerPlus": "Keep {{name}} in the XI: the team takes {{with}} pts/match with him.",
+        "playerMinus": "Try without {{name}}: {{without}} pts/match without, {{with}} with.",
+        "wasteful": "Work on finishing: {{goals}} goals from {{xg}} xG per match.",
+        "leaky": "Tighten the defence: {{ga}} goals conceded per match."
       }
     },
     "repl": {
@@ -2584,7 +2627,7 @@
         "offseason": "See the plan",
         "absentStarters": "Fix the line-up",
         "nextMatch": "Scout the opponent",
-        "tiredStarters": "Rotate",
+        "tiredStarters": "See options for that position",
         "contracts": "Decide",
         "playtimeShort": "See playing time",
         "unhappy": "See the dressing room",
@@ -2807,12 +2850,15 @@
       "piCount_one": "{{count}} instruction",
       "piCount_other": "{{count}} instructions",
       "piImposed": "Already set by the role",
-      "piNone": "The role leaves nothing to set here.",
       "piStaleHelp": "No longer possible with this role or position:",
       "piRemove": "Remove",
-      "piHelp": "Only the instructions the role allows at this position are offered; one per group (picking \"Dribble more\" removes \"Dribble less\"). Beyond 3 per player, the tactic takes long to learn.",
+      "piHelp": "The game's 17 individual instructions, with the locks of each phase's role and position (🔒: locked or already set by the role). One option per instruction, as in the game. Beyond 3 per player, the tactic takes long to learn.",
+      "piLocked": "Locked by the role or position",
       "savedAuto": "Saved",
       "savedHelp": "Every change is saved on this PC, for this save. Find the tactic by its name in the list."
+    },
+    "secondary": {
+      "numbers": "Assign shirt numbers"
     }
   },
   "modes": {
@@ -2888,7 +2934,7 @@
     "nothingToRemove": "The pack was not installed: nothing to do.",
     "lastStep": "In FM27 > Preferences, tick \"Use pre-generated images of players and staff instead of dynamically generated ones\". After a Steam update, come back here and reinstall.",
     "download": "No workshop on this PC: download the latest zip, unzip it and enter above the path of the portraits_assets_all.bundle file.",
-    "progressTitle": "Progress",
+    "progressTitle": "Portrait project progress",
     "completeHelp": "Complete edition: quality base (25 years) and five other age brackets, i.e. 6 × 14,000 portraits.",
     "workshopHelp": "Enter the generation workshop folder (FM27-PhotoReal) to follow progress.",
     "workshop": "Workshop folder",
@@ -2932,7 +2978,16 @@
       "downloadingMb": "Downloading… {{mb}} MB",
       "checking": "Checking the pack…",
       "badge": "New faces pack"
-    }
+    },
+    "pc": {
+      "label": "On your PC:",
+      "noGame": "FM27 not found",
+      "none": "No pack installed",
+      "upToDate": "Pack up to date",
+      "update": "Update available",
+      "unknown": "Unrecognised pack"
+    },
+    "projectNote": "Portraits being generated by FM Immersion for everyone: this is not your installation."
   },
   "gazette": {
     "paper": "The {{club}} Gazette",
@@ -3800,7 +3855,24 @@
     "saved": "Certificate saved: {{path}}",
     "until": "No signing until (game date)",
     "untilShort": "until {{date}}",
-    "clubParam": "Challenge club: {{club}} (your current club)"
+    "clubParam": "Challenge club: {{club}} (your current club)",
+    "next": "Next step to validate",
+    "nextWhen": "Validated when:",
+    "fit": {
+      "yes": "Fits your career",
+      "no": "Doesn't fit your career",
+      "taken": "Already running"
+    },
+    "start": {
+      "label": "To start:",
+      "unemployed": "a new career, with your manager still unemployed.",
+      "current": "your current career, from the last date read.",
+      "param": {
+        "nationality": "You pick a nationality.",
+        "club": "The challenge is about your current club.",
+        "until": "You set a deadline."
+      }
+    }
   },
   "layout": {
     "readNow": "Refresh the game",
@@ -3834,7 +3906,7 @@
       "pickChallenge": "Pick a challenge",
       "noChallenge": "No challenge running.",
       "steps": "{{done}} of {{total}} steps",
-      "facesProgress": "Portrait generation: {{pct}}%",
+      "facesProgress": "Portrait project: {{pct}} %",
       "facesUpdate": "New faces pack: {{count}} V2 portraits"
     },
     "career": {

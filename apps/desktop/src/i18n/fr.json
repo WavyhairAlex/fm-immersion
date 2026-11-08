@@ -490,7 +490,15 @@
       "tired_one": "{{count}} joueur sous 80 % de condition",
       "tired_other": "{{count}} joueurs sous 80 % de condition",
       "fixtures": "Calendrier",
-      "lastResult": "Dernier résultat"
+      "lastResult": "Dernier résultat",
+      "thread": {
+        "label": "Le fil du jour",
+        "next": "Prochain adversaire",
+        "decision": "Décision du jour",
+        "opponent": "Voir l'adversaire",
+        "noLast": "Pas encore de match officiel lu.",
+        "noNext": "Aucun match annoncé."
+      }
     },
     "contracts": {
       "byYear": "Salaires mensuels libérés par année de fin de contrat",
@@ -2041,7 +2049,22 @@
       "fewMinutes": "Moins de 270 minutes : à confirmer avec plus de matchs.",
       "mercato": "Mercato",
       "inTwo": "Dans deux saisons :",
-      "open": "Voir la fiche de {{name}}"
+      "open": "Voir la fiche de {{name}}",
+      "actions": "Actions sur ce joueur",
+      "seeProgress": "Voir sa progression",
+      "seePlaytime": "Examiner son temps de jeu",
+      "compareTo": "Comparer à…",
+      "contractTitle": "Son contrat",
+      "deadline": "Échéance",
+      "status": "Statut promis",
+      "place": "Place dans le groupe",
+      "placeValue": "{{place}}e sur {{count}} au poste {{pos}}",
+      "rivals": "Cibles suivies au même poste :",
+      "noRivals": "aucune pour l'instant.",
+      "playtime": "Temps de jeu de la saison",
+      "playShare": "{{pct}} % des minutes possibles, {{starts}} titularisations sur {{available}} matchs où il était disponible.",
+      "noPlay": "Pas encore de match suivi cette saison.",
+      "promised": "Son statut ({{status}}) promet environ {{pct}} % des minutes."
     },
     "foot": {
       "profile": "Profil",
@@ -2246,6 +2269,26 @@
         "shots": "Tirs {{us}} ({{usOn}} cadrés) – {{them}} ({{themOn}} cadrés)",
         "xg": "xG du jeu {{us}} – {{them}}",
         "motm": "Homme du match : {{name}} ({{rating}})"
+      },
+      "q": {
+        "label": "Les trois questions des résultats",
+        "what": "Que s'est-il passé ?",
+        "repeat": "Qu'est-ce qui se répète ?",
+        "adjust": "Que puis-je ajuster ?",
+        "adjustTitle": "Pistes tirées des matchs",
+        "nothing": "Rien à ajuster pour l'instant : pas encore de tendance assez nette.",
+        "proof_one": "Voir le match",
+        "proof_other": "Voir les {{count}} matchs",
+        "proofOf": "Matchs qui appuient :",
+        "all": "Tous les matchs"
+      },
+      "move": {
+        "tacticBest": "Privilégier {{name}}, qui rapporte {{ppm}} pt/match, plutôt que {{other}}.",
+        "tacticWorst": "Revoir {{name}} ou en changer : {{ppm}} pt/match seulement.",
+        "playerPlus": "Garder {{name}} dans le onze : l'équipe prend {{with}} pt/match avec lui.",
+        "playerMinus": "Essayer sans {{name}} : {{without}} pt/match sans lui, {{with}} avec.",
+        "wasteful": "Travailler la finition : {{goals}} buts pour {{xg}} xG par match.",
+        "leaky": "Resserrer la défense : {{ga}} buts encaissés par match."
       }
     },
     "repl": {
@@ -2584,7 +2627,7 @@
         "offseason": "Voir le plan",
         "absentStarters": "Revoir la compo",
         "nextMatch": "Voir l'adversaire",
-        "tiredStarters": "Faire tourner",
+        "tiredStarters": "Voir les options à son poste",
         "contracts": "Trancher",
         "playtimeShort": "Voir le temps de jeu",
         "unhappy": "Voir le vestiaire",
@@ -2807,12 +2850,15 @@
       "piCount_one": "{{count}} consigne",
       "piCount_other": "{{count}} consignes",
       "piImposed": "Déjà imposée par le rôle",
-      "piNone": "Le rôle ne laisse rien à régler ici.",
       "piStaleHelp": "Plus possibles avec ce rôle ou ce poste :",
       "piRemove": "Retirer",
-      "piHelp": "Seules les consignes que le rôle permet à ce poste sont proposées ; une seule par groupe (choisir « Dribbler plus » retire « Dribbler moins »). Au-delà de 3 par joueur, la tactique devient longue à assimiler.",
+      "piHelp": "Les 17 consignes individuelles du jeu, avec les verrous du rôle et du poste de chaque phase (🔒 : verrouillée ou déjà fixée par le rôle). Une option par consigne, comme dans le jeu. Au-delà de 3 par joueur, la tactique devient longue à assimiler.",
+      "piLocked": "Verrouillée par le rôle ou le poste",
       "savedAuto": "Enregistrée",
       "savedHelp": "Chaque changement est enregistré sur ce PC, pour cette partie. Retrouve la tactique par son nom dans la liste."
+    },
+    "secondary": {
+      "numbers": "Attribuer les numéros de maillot"
     }
   },
   "modes": {
@@ -2888,7 +2934,7 @@
     "nothingToRemove": "Le pack n'était pas installé : rien à faire.",
     "lastStep": "Dans FM27 > Préférences, coche « Utilisez des images pré-générées des joueurs et du personnel plutôt que des images générées dynamiquement ». Après une mise à jour Steam, reviens ici et réinstalle.",
     "download": "Pas d'atelier sur ce PC : télécharge le zip de la dernière version, décompresse-le et indique ci-dessus le chemin du fichier portraits_assets_all.bundle.",
-    "progressTitle": "Avancement",
+    "progressTitle": "Avancement du projet de portraits",
     "completeHelp": "Version complète : base qualité (25 ans) et cinq autres tranches d'âge, soit 6 × 14 000 portraits.",
     "workshopHelp": "Indique le dossier de l'atelier de génération (FM27-PhotoReal) pour suivre l'avancement.",
     "workshop": "Dossier de l'atelier",
@@ -2932,7 +2978,16 @@
       "downloadingMb": "Téléchargement… {{mb}} Mo",
       "checking": "Vérification du pack…",
       "badge": "Nouveau pack de visages"
-    }
+    },
+    "pc": {
+      "label": "Sur ton PC :",
+      "noGame": "FM27 introuvable",
+      "none": "Aucun pack installé",
+      "upToDate": "Pack à jour",
+      "update": "Mise à jour disponible",
+      "unknown": "Pack non reconnu"
+    },
+    "projectNote": "Génération des portraits par FM Immersion, pour tous les joueurs : ce n'est pas ton installation."
   },
   "gazette": {
     "paper": "La Gazette de {{club}}",
@@ -3800,7 +3855,24 @@
     "saved": "Certificat enregistré : {{path}}",
     "until": "Pas de recrue jusqu'au (date de jeu)",
     "untilShort": "jusqu'au {{date}}",
-    "clubParam": "Club du défi : {{club}} (ton club actuel)"
+    "clubParam": "Club du défi : {{club}} (ton club actuel)",
+    "next": "Prochaine étape à valider",
+    "nextWhen": "Validé quand :",
+    "fit": {
+      "yes": "Compatible avec ta partie",
+      "no": "Pas compatible avec ta partie",
+      "taken": "Déjà en cours"
+    },
+    "start": {
+      "label": "Pour commencer :",
+      "unemployed": "une nouvelle carrière, avec ton manager encore sans club.",
+      "current": "ta partie actuelle, à partir de la dernière date lue.",
+      "param": {
+        "nationality": "Tu choisis une nationalité.",
+        "club": "Le défi porte sur ton club actuel.",
+        "until": "Tu fixes une date limite."
+      }
+    }
   },
   "layout": {
     "readNow": "Actualiser la partie",
@@ -3834,7 +3906,7 @@
       "pickChallenge": "Choisir un défi",
       "noChallenge": "Aucun défi en cours.",
       "steps": "Étapes franchies : {{done}} sur {{total}}",
-      "facesProgress": "Génération des portraits : {{pct}} %",
+      "facesProgress": "Projet de portraits : {{pct}} %",
       "facesUpdate": "Nouveau pack de visages : {{count}} portraits V2"
     },
     "career": {
