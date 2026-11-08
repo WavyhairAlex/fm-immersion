@@ -42,7 +42,7 @@ export function useFmSync() {
         const st = await invoke<string | null>('fm_read_status', { folder });
         if (!stop && st) {
           const status = await fmData.noteStatus(saveId, JSON.parse(st));
-          setSync({ free: status.club ? null : status.gameDate });
+          setSync({ free: status.club ? null : status.gameDate, now: { gameDate: status.gameDate, club: status.club ?? null } });
           qc.invalidateQueries({ queryKey: [...key, 'settings'] });
         }
       } catch {

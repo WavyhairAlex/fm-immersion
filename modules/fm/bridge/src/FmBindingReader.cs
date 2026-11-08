@@ -113,6 +113,16 @@ public class FmBindingReader : IGameReader
         return d == null || d.StartsWith("1900") ? null : d;
     }
 
+    // Date de jeu et club du manager en une seule requête (0.5.3, DateLoop). (null, null) sans équipe chargée.
+    public static (string? Date, string? Club) CurrentDateAndClub()
+    {
+        var r = Batch.Run(new[] { new Req(null, Team + "/Name"), new Req(null, "game.CurrentGameDate") }, 3000);
+        var club = CleanName(r[0] as string);
+        var d = DecodeDate(r[1] as string);
+        if (string.IsNullOrEmpty(club) || d == null || d.StartsWith("1900")) return (null, null);
+        return (d, club);
+    }
+
     // Date de jeu quand aucune équipe n'est chargée (manager sans club, 0.4.2, accord du joueur le 01/11) : seule
     // lecture faite sans équipe. null au menu (1900-01-01) ou sans réponse.
     public static string? DateWithoutTeam()
