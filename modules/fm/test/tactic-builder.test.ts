@@ -152,6 +152,15 @@ describe('Repères locaux anciens', () => {
     const codes = rolesAt(e, t.slots.map((s) => ({ pos: s.posOOP })), i, 'oop').map((r) => r.code);
     expect(codes).toEqual(expect.arrayContaining(['WM', 'TWM', 'WOM']));
   });
+
+  it('garde la mission de FM27 quand un ancien fichier local n’en donne pas', () => {
+    const old = { roles: ['IF', 'F9', 'CHM'].map((code) => ({ code, fr: code, en: code, phase: 'ip' as const, positions: ['ST'], group: 'ST', weights: {} })), styles: [] };
+    const e = new TacticEngine(mergeReference(old as never));
+    expect(['IF', 'F9', 'CHM'].map((c) => e.roles.get(c)?.duty)).toEqual(['a', 'a', 'a']);
+    let t = newBuiltTactic(e, '4-3-3', 'a');
+    t = set(t, 8, { ip: 'IF' });
+    expect(analyseBuiltTactic(e, t).findings.find((f) => f.id === 'fewAttack')?.params.count ?? 99).not.toBe(0);
+  });
 });
 
 describe('Tactique construite dans Le onze', () => {
