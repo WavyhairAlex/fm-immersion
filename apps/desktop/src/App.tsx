@@ -9,7 +9,7 @@ import { useGazetteAuto } from './lib/gazette-auto';
 import { useLiveDiscord } from './lib/live-discord';
 import { Challenges } from './pages/Challenges';
 import { Faces } from './pages/Faces';
-import { FmSave } from './pages/FmSave';
+import { FmSave, SettingsWithoutCareer } from './pages/FmSave';
 import { Home } from './pages/Home';
 import { Overview } from './pages/Overview';
 import { Soon } from './pages/Soon';
@@ -28,7 +28,7 @@ export function App() {
           <Routes>
             <Route path="/" element={<Today />} />
             <Route path="/club/:view" element={<CareerOnly><FmSave /></CareerOnly>} />
-            <Route path="/reglages" element={<CareerOnly><FmSave page="settings" /></CareerOnly>} />
+            <Route path="/reglages" element={<Settings />} />
             <Route path="/parties" element={<Home />} />
             <Route path="/visages" element={<Faces />} />
             <Route path="/gazette" element={<Story tab="gazette" />} />
@@ -58,6 +58,13 @@ function CareerOnly({ children }: { children: React.ReactNode }) {
   const { saveId, isLoading } = useCareer();
   if (isLoading) return null;
   return saveId ? <>{children}</> : <Navigate to="/" replace />;
+}
+
+/** Plugin et réglages : avec une carrière, ses réglages ; sans, la marche à suivre pour en créer une. */
+function Settings() {
+  const { saveId, isLoading } = useCareer();
+  if (isLoading) return null;
+  return saveId ? <FmSave page="settings" /> : <SettingsWithoutCareer />;
 }
 
 /** Ancien lien vers une partie : elle devient la carrière suivie. */

@@ -27,7 +27,18 @@
     "for": "pour {{game}}",
     "available": "Disponible",
     "soon": "Bientôt",
-    "open": "Ouvrir"
+    "open": "Ouvrir",
+    "current": "suivie",
+    "menu": "Plus d’actions",
+    "confirmDelete": "Supprimer « {{name}} » et tout son historique dans FM Immersion ? Ta sauvegarde FM27 n’est pas touchée.",
+    "inGame": "En jeu : {{date}}",
+    "notLinked": "Sauvegarde pas encore reliée",
+    "resume": "Reprendre",
+    "link": "Relier ma sauvegarde FM27",
+    "firstHelp": "Donne un nom à ta carrière. Ensuite, FM Immersion t’aide à relier ta sauvegarde FM27.",
+    "namePlaceholder": "ex. Malženice, objectif montée",
+    "more": "Plus d’options",
+    "createLink": "Créer et relier ma sauvegarde"
   },
   "footer": {
     "disclaimer": "FM Immersion est un projet indépendant, sans lien avec Sports Interactive ni SEGA. Football Manager et FM sont des marques de leurs propriétaires.",
@@ -2811,7 +2822,14 @@
     "home": {
       "title": "Accueil",
       "heading": "Bienvenue dans FM Immersion",
-      "intro": "Crée ta carrière FM27 : FM Immersion la suit avec le plugin, et chaque mode s'en sert. Les visages photoréalistes s'installent même sans carrière."
+      "intro": "Crée ta carrière FM27 : FM Immersion la suit avec le plugin, et chaque mode s'en sert. Les visages photoréalistes s'installent même sans carrière.",
+      "lead": "Un tableau de bord pour ta partie FM27 : il lit ton jeu sans rien y écrire et t'aide à décider.",
+      "follow": "Suivre ma partie FM27",
+      "followText": "Crée ta carrière et relie ta sauvegarde : l'adjoint, la tactique, l'effectif, le mercato, la Gazette et les Défis se remplissent à chaque jour de jeu.",
+      "faces": "Installer les visages",
+      "facesText": "Des portraits photoréalistes à la place des visages générés. Marche sans carrière.",
+      "facesGo": "Voir les visages",
+      "later": "En développement : le Monde partagé, pour jouer chacun sa partie dans un même univers."
     },
     "faces": {
       "title": "Visages photoréalistes",
@@ -3811,7 +3829,10 @@
       "cropSide": "Gauche-droite",
       "cropSave": "Enregistrer",
       "cropOther": "Autre image",
-      "cropCancel": "Annuler"
+      "cropCancel": "Annuler",
+      "lastRead": "Lu le {{date}}",
+      "lastReadClosed": "FM27 fermé · lu le {{date}}",
+      "lastReadHelp": "Dernière lecture de ta partie par le plugin : l'appli montre la situation à ce moment-là."
     },
     "assistant": {
       "label": "Ton adjoint",
@@ -3836,6 +3857,21 @@
       "open": "Ouvrir",
       "more": "{{text}} (+{{count}})",
       "game": "Jeu et plugin"
+    },
+    "dev": "{{name}} · en développement",
+    "connect": {
+      "title": "Connecter FM27",
+      "advanced": "Options avancées",
+      "next": "Prochaine étape :",
+      "ready": "Tout est relié.",
+      "createCareer": "Créer ma carrière pour continuer",
+      "step": {
+        "career": "crée ta carrière. Le plugin peut déjà être installé en dessous.",
+        "plugin": "installe ou mets à jour le plugin FM27 ci-dessous, jeu fermé.",
+        "save": "choisis ta sauvegarde FM27 dans la liste.",
+        "read": "lance FM27 et charge ta partie. La première lecture arrive toute seule, ou clique sur « Importer ».",
+        "done": "FM Immersion suit {{club}} à chaque nouveau jour de jeu."
+      }
     }
   },
   "ai": {
