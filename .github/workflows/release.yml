@@ -63,49 +63,29 @@ jobs:
       - if: steps.version.outputs.skip != 'true'
         run: pnpm install --frozen-lockfile
 
-      # NSIS (outil de l'installeur) : tauri build le télécharge depuis les releases GitHub de tauri-apps à chaque
-      # build, sans nouvel essai. Le 08/11/2026, ces téléchargements ont répondu 504 pendant des heures et aucune
-      # version n'a pu sortir (0.1.59 à 0.1.69). On le garde en cache, et sinon on le télécharge ici avec de
-      # nouveaux essais, au même endroit et avec les mêmes empreintes que tauri-bundler 2.12 (nsis/mod.rs).
-      - if: steps.version.outputs.skip != 'true'
-        id: nsis-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/AppData/Local/tauri/NSIS
-          key: tauri-nsis-3.11-utils-0.5.3
-      - name: Préparer NSIS (avec nouveaux essais)
-        if: steps.version.outputs.skip != 'true' && steps.nsis-cache.outputs.cache-hit != 'true'
-        shell: bash
+      # NSIS (installeur Windows) est rangé dans le dépôt (.github/vendor/nsis, voir son README) : tauri build le
+      # téléchargeait depuis les releases GitHub de tauri-apps, qui répondaient 502/503/504 depuis la 0.1.59, et la
+      # copie SourceForge refusait aussi les machines de GitHub. On l'installe là où tauri-bundler le cherche, après
+      # avoir vérifié les mêmes SHA-1 que tauri-bundler 2.12 : plus aucun téléchargement pendant la release.
+      - name: Préparer NSIS (copie du dépôt)
+        if: steps.version.outputs.skip != 'true'
+        shell: pwsh
         run: |
-          set -euo pipefail
-          TOOLS="$LOCALAPPDATA/tauri"
-          mkdir -p "$TOOLS"
-          # Chaque essai passe par toutes les adresses connues du fichier ; la somme SHA-1 (celle de tauri-bundler)
-          # garantit que c'est le même fichier, quelle que soit la source. NSIS est aussi publié sur SourceForge par
-          # ses auteurs (même archive, même SHA-1), utile quand les releases GitHub répondent 502/503/504.
-          get() { # fichier, sha1 attendu, adresses...
-            local out="$1" sum="$2"; shift 2
-            for i in $(seq 1 12); do
-              for url in "$@"; do
-                if curl -fsSL --max-time 300 -o "$out" "$url" \
-                  && [ "$(sha1sum "$out" | cut -d' ' -f1 | tr a-f A-F)" = "$sum" ]; then echo "OK : $url"; return 0; fi
-                echo "Essai $i : $url indisponible."
-              done
-              sleep 20
-            done
-            echo "Téléchargement impossible : $out"; return 1
+          $ErrorActionPreference = 'Stop'
+          $v = '.github/vendor/nsis'
+          foreach ($f in @(@("$v/nsis-3.11.zip", 'EF7FF767E5CBD9EDD22ADD3A32C9B8F4500BB10D'), @("$v/nsis_tauri_utils.dll", '75197FEE3C6A814FE035788D1C34EAD39349B860'))) {
+            $h = (Get-FileHash -Algorithm SHA1 $f[0]).Hash
+            if ($h -ne $f[1]) { throw "SHA-1 inattendue pour $($f[0]) : $h" }
           }
-          get "$RUNNER_TEMP/nsis.zip" EF7FF767E5CBD9EDD22ADD3A32C9B8F4500BB10D \
-            https://github.com/tauri-apps/binary-releases/releases/download/nsis-3.11/nsis-3.11.zip \
-            https://downloads.sourceforge.net/project/nsis/NSIS%203/3.11/nsis-3.11.zip
-          get "$RUNNER_TEMP/nsis_tauri_utils.dll" 75197FEE3C6A814FE035788D1C34EAD39349B860 \
-            https://github.com/tauri-apps/nsis-tauri-utils/releases/download/nsis_tauri_utils-v0.5.3/nsis_tauri_utils.dll
-          rm -rf "$TOOLS/NSIS" "$TOOLS/nsis-3.11"
-          unzip -q "$RUNNER_TEMP/nsis.zip" -d "$TOOLS"
-          mv "$TOOLS/nsis-3.11" "$TOOLS/NSIS"
-          mkdir -p "$TOOLS/NSIS/Plugins/x86-unicode/additional"
-          cp "$RUNNER_TEMP/nsis_tauri_utils.dll" "$TOOLS/NSIS/Plugins/x86-unicode/additional/"
-          ls "$TOOLS/NSIS"
+          $tools = Join-Path $env:LOCALAPPDATA 'tauri'
+          New-Item -ItemType Directory -Force $tools | Out-Null
+          Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $tools 'NSIS'), (Join-Path $tools 'nsis-3.11')
+          Expand-Archive -Path "$v/nsis-3.11.zip" -DestinationPath $tools -Force
+          Rename-Item (Join-Path $tools 'nsis-3.11') 'NSIS'
+          $add = Join-Path $tools 'NSIS/Plugins/x86-unicode/additional'
+          New-Item -ItemType Directory -Force $add | Out-Null
+          Copy-Item "$v/nsis_tauri_utils.dll" $add
+          Get-ChildItem (Join-Path $tools 'NSIS') | Select-Object -ExpandProperty Name
 
       # Signature Windows (Authenticode) : à brancher ici avec SignPath une fois le projet accepté.
       # Les fichiers de mise à jour, eux, sont déjà signés avec la clé TAURI_SIGNING_PRIVATE_KEY.
