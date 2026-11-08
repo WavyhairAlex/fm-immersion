@@ -108,20 +108,28 @@ describe('ailiers qui redescendent', () => {
 });
 
 describe('consignes individuelles', () => {
-  it('propose les consignes que le rôle permet et en garde une par groupe', async () => {
-    const { piOptions, togglePi, piStale } = await import('../src');
+  it('propose les 17 consignes du jeu avec les verrous du rôle et du poste, une option par groupe', async () => {
+    const { piOptions, setPi, piStale, normalizePi } = await import('../src');
     let t = newBuiltTactic(engine, '4-3-3', 'a');
-    // Milieu défensif de couverture : presser plus est verrouillé (pressing « Moins souvent » imposé).
+    // Milieu défensif de couverture : pressing « Moins souvent » imposé.
     t = set(t, 5, { oop: 'SCRDM' });
     const o = piOptions(engine, t, 5);
-    expect(o.oop.find((x) => x.id === 'pressMore')).toBeUndefined();
-    expect(o.oop.find((x) => x.id === 'pressLess')?.state).toBe('imposed');
-    expect(togglePi(['shortPass'], 'directPass')).toEqual(['directPass']);
+    expect(o.ip.length + o.oop.length).toBe(17);
+    const press = o.oop.find((x) => x.def.group === 'TriggerPress')!;
+    expect(press.state).toBe('imposed');
+    expect(press.imposed).toBe('Moins souvent');
+    // Gardien : la plupart des groupes avec ballon sont verrouillés.
+    const gk = piOptions(engine, t, 0).ip;
+    expect(gk.find((x) => x.def.group === 'Shooting')?.state).toBe('locked');
+    expect(gk.find((x) => x.def.group === 'PassingStrategy')?.options).toEqual(['Plus courtes', 'Plus directes']);
+    expect(setPi(['PassingStrategy:Plus courtes'], 'PassingStrategy', 'Plus directes')).toEqual(['PassingStrategy:Plus directes']);
+    expect(setPi(['PassingStrategy:Plus courtes'], 'PassingStrategy', null)).toEqual([]);
+    expect(normalizePi(['shortPass', 'directPass', 'pressMore'])).toEqual(['PassingStrategy:Plus directes', 'TriggerPress:Plus souvent']);
     // Consigne choisie puis rôle changé : signalée.
-    t = set(t, 5, { oop: 'DM', pi: ['pressMore'] });
+    t = set(t, 5, { oop: 'DM', pi: ['TriggerPress:Plus souvent'] });
     expect(piStale(engine, t, 5)).toEqual([]);
     t = set(t, 5, { oop: 'SCRDM' });
-    expect(piStale(engine, t, 5)).toEqual(['pressMore']);
+    expect(piStale(engine, t, 5)).toEqual(['TriggerPress:Plus souvent']);
     expect(ids(t)).toContain('piStale');
   });
 

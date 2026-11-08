@@ -174,6 +174,27 @@ function fallbackBlocked(r: RoleRef, press: RoleLocks['press']): InstructionId[]
   return blocked;
 }
 
+/** Verrous du jeu pour un rôle dans une phase, au poste donné : groupes verrouillés, options imposées, options refusées (rôle et poste). */
+export interface PhaseLocks {
+  locked: InstructionGroup[];
+  imposed: Partial<Record<InstructionGroup, string>>;
+  refused: Partial<Record<InstructionGroup, string[]>>;
+}
+
+/** Verrous d'une phase ; null si le rôle n'est pas dans la table du jeu. */
+export function phaseLocks(r: RoleRef | undefined, phase: Phase, pos?: PosCode, x?: number): PhaseLocks | null {
+  if (!r) return null;
+  const gp = pos ? gamePos(pos, x) : undefined;
+  const hit = gameEntry(r, phase, gp);
+  if (!hit) return null;
+  const posOff = POSITION_OPTIONS_OFF[gp ?? hit.pos] ?? {};
+  const refused: PhaseLocks['refused'] = {};
+  for (const src of [hit.entry.o ?? {}, posOff]) {
+    for (const [g, opts] of Object.entries(src) as [InstructionGroup, readonly string[]][]) refused[g] = [...(refused[g] ?? []), ...opts];
+  }
+  return { locked: [...(hit.entry.l ?? [])], imposed: { ...(hit.entry.i ?? {}) }, refused };
+}
+
 /** Le rôle impose déjà cette consigne (même groupe, même option) : inutile de la conseiller ou de changer de rôle pour elle. */
 export function roleImposes(r: RoleRef | undefined, id: InstructionId, pos?: PosCode, x?: number): boolean {
   const g = INSTRUCTION_GROUP[id];

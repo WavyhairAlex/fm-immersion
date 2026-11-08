@@ -28,6 +28,7 @@ export * from './youth';
 export * from './training-yield';
 export * from './fixtures';
 export * from './instructions';
+export * from './player-instructions-fm27';
 export * from './team-instructions-fm27';
 export * from './role-ratings-fm27';
 export * from './game-stars';

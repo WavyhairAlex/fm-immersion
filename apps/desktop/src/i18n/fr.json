@@ -2807,10 +2807,10 @@
       "piCount_one": "{{count}} consigne",
       "piCount_other": "{{count}} consignes",
       "piImposed": "Déjà imposée par le rôle",
-      "piNone": "Le rôle ne laisse rien à régler ici.",
       "piStaleHelp": "Plus possibles avec ce rôle ou ce poste :",
       "piRemove": "Retirer",
-      "piHelp": "Seules les consignes que le rôle permet à ce poste sont proposées ; une seule par groupe (choisir « Dribbler plus » retire « Dribbler moins »). Au-delà de 3 par joueur, la tactique devient longue à assimiler.",
+      "piHelp": "Les 17 consignes individuelles du jeu, avec les verrous du rôle et du poste de chaque phase (🔒 : verrouillée ou déjà fixée par le rôle). Une option par consigne, comme dans le jeu. Au-delà de 3 par joueur, la tactique devient longue à assimiler.",
+      "piLocked": "Verrouillée par le rôle ou le poste",
       "savedAuto": "Enregistrée",
       "savedHelp": "Chaque changement est enregistré sur ce PC, pour cette partie. Retrouve la tactique par son nom dans la liste."
     }

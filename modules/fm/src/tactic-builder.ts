@@ -4,7 +4,8 @@ import { lineOf, POS_ORDER, type PosCode } from './positions';
 import { assignMax, FORMATIONS, formationOfPositions, phaseXY, readiness, shapeOf, sideOf, slotContexts, type BalanceCheck, type FormationPlan, type Phase, type RoleRef, type Slot, type StyleRef, type TacticEngine } from './tactic';
 import { checkTeamInstructions, MENTALITIES_FM27, TEAM_INSTRUCTIONS_FM27, teamInstructionOf, type TeamInstructionDef } from './team-instructions-fm27';
 import type { TacticSlot } from './tactic-slots';
-import { INSTRUCTION_GROUP, roleImposes, roleLocks, type InstructionId } from './instructions';
+import { phaseLocks, roleLocks, type InstructionGroup } from './instructions';
+import { LEGACY_PI, lockLabel, piKey, piKeyGroup, piKeyOption, PLAYER_INSTRUCTIONS_FM27, type PiGroupDef } from './player-instructions-fm27';
 
 /*
  * Tactique construite par le joueur (« from scratch ») : il place ses onze postes et rôles avec et sans ballon,
@@ -80,8 +81,8 @@ export const builtSlotSchema = z.object({
   ip: z.string(),
   /** Rôle sans ballon. */
   oop: z.string(),
-  /** Consignes individuelles choisies (identifiants de instructions.ts), avec et sans ballon. */
-  pi: z.array(z.string()).default([]),
+  /** Consignes individuelles choisies (« Groupe:Option » du jeu), avec et sans ballon ; les anciens identifiants sont convertis. */
+  pi: z.array(z.string()).default([]).transform((l) => normalizePi(l)),
 });
 
 export const builtTacticSchema = z.object({
@@ -196,48 +197,76 @@ export function builtInstructionLabels(t: BuiltTactic): { ip: string[]; oop: str
 
 /* ---------- Consignes individuelles ---------- */
 
-/** Consignes individuelles proposées par l'éditeur, dans l'ordre de l'écran du jeu. */
-const PI_GK: InstructionId[] = ['gkShort', 'gkLong', 'riskMore', 'riskLess', 'dribbleLess'];
-const PI_IP: InstructionId[] = ['shortPass', 'directPass', 'riskMore', 'riskLess', 'dribbleMore', 'dribbleLess', 'cutInside', 'shootMore', 'shootLess', 'holdPosition', 'roam', 'holdBall', 'runBehind', 'lateRuns', 'nearPost', 'farPost', 'crossByline', 'crossToTarget'];
-const PI_OOP: InstructionId[] = ['pressMore', 'pressLess', 'tackleHarder', 'tackleLess', 'markTighter'];
-
-/** Groupe du jeu d'une consigne : deux consignes du même groupe s'excluent (le jeu n'en garde qu'une). */
-export const piGroup = (id: string): string => INSTRUCTION_GROUP[id as InstructionId] ?? id;
-
-/** Ajoute ou retire une consigne ; en l'ajoutant, retire celle du même groupe. */
-export function togglePi(list: readonly string[], id: string): string[] {
-  if (list.includes(id)) return list.filter((x) => x !== id);
-  return [...list.filter((x) => piGroup(x) !== piGroup(id)), id];
+/** Ramène une liste de consignes aux clés du jeu (anciens identifiants convertis), une seule par groupe (la dernière). */
+export function normalizePi(list: readonly string[]): string[] {
+  const byGroup = new Map<string, string>();
+  for (const raw of list) {
+    const key = LEGACY_PI[raw] ?? raw;
+    if (!key.includes(':')) continue;
+    byGroup.delete(piKeyGroup(key));
+    byGroup.set(piKeyGroup(key), key);
+  }
+  return [...byGroup.values()];
 }
 
-export interface PiOption {
-  id: InstructionId;
-  /** free : au choix ; imposed : déjà imposée par le rôle (rien à cocher). */
-  state: 'free' | 'imposed';
+/** Choisit une option d'un groupe (null : valeur neutre du jeu, donc aucune consigne). Le jeu n'en garde qu'une par groupe. */
+export function setPi(list: readonly string[], group: InstructionGroup, option: string | null): string[] {
+  const rest = list.filter((k) => piKeyGroup(k) !== group);
+  return option ? [...rest, piKey(group, option)] : rest;
 }
 
-/** Consignes individuelles possibles à un créneau, avec ballon (rôle et poste avec ballon) et sans ballon. */
-export function piOptions(engine: TacticEngine, t: BuiltTactic, i: number): Record<Phase, PiOption[]> {
+/** Option choisie dans un groupe, ou null. */
+export const piChoice = (list: readonly string[], group: InstructionGroup): string | null => {
+  const k = list.find((x) => piKeyGroup(x) === group);
+  return k ? piKeyOption(k) : null;
+};
+
+export interface PiGroupState {
+  def: PiGroupDef;
+  /** free : au choix ; locked : verrouillé par le rôle ou le poste ; imposed : le rôle fixe déjà une option. */
+  state: 'free' | 'locked' | 'imposed';
+  /** Option imposée (libellé FR de l'écran). */
+  imposed?: string;
+  /** Options que le rôle et le poste laissent choisir (libellés FR de l'écran). */
+  options: string[];
+}
+
+/** Les 17 consignes individuelles du jeu à un créneau, par phase, avec les verrous du rôle et du poste de cette phase. */
+export function piOptions(engine: TacticEngine, t: BuiltTactic, i: number): Record<Phase, PiGroupState[]> {
   const s = t.slots[i]!;
   const xIp = layoutPositions(t.slots.map((x) => x.pos))[i]![0];
   const xOop = layoutPositions(t.slots.map((x) => x.posOOP))[i]![0];
-  const of = (ph: Phase, ids: InstructionId[], pos: PosCode, x: number): PiOption[] => {
+  const of = (ph: Phase, pos: PosCode, x: number): PiGroupState[] => {
     const r = engine.roles.get(ph === 'ip' ? s.ip : s.oop);
-    const blocked = new Set(roleLocks(r, pos, x, ph).blocked);
-    return ids.flatMap<PiOption>((id) => (roleImposes(r, id, pos, x) ? [{ id, state: 'imposed' as const }] : blocked.has(id) ? [] : [{ id, state: 'free' as const }]));
+    const lk = phaseLocks(r, ph, pos, x);
+    // Rôle absent de la table du jeu : seul le pressing déduit de son nom est fixé.
+    const press = !lk && ph === 'oop' ? roleLocks(r, pos, x, 'oop').press : null;
+    return PLAYER_INSTRUCTIONS_FM27.filter((d) => d.phase === ph).map<PiGroupState>((def) => {
+      const g = def.group;
+      if (lk?.locked.includes(g)) return { def, state: 'locked', options: [] };
+      const imp = lk?.imposed[g] ?? (g === 'TriggerPress' && press ? (press === 'more' ? 'Plus souvent' : 'Moins souvent') : undefined);
+      if (imp) return { def, state: 'imposed', imposed: lockLabel(imp), options: [] };
+      const refused = new Set((lk?.refused[g] ?? []).map(lockLabel));
+      const options = def.options.map((o) => o.fr).filter((o) => !refused.has(o));
+      return options.length ? { def, state: 'free', options } : { def, state: 'locked', options: [] };
+    });
   };
-  const gk = s.pos === 'GB';
-  return { ip: of('ip', gk ? PI_GK : PI_IP, s.pos, xIp), oop: gk ? [] : of('oop', PI_OOP, s.posOOP, xOop) };
+  return { ip: of('ip', s.pos, xIp), oop: of('oop', s.posOOP, xOop) };
 }
 
 /** Consignes choisies que les rôles ou postes actuels n'autorisent plus (rôle changé depuis). */
 export function piStale(engine: TacticEngine, t: BuiltTactic, i: number): string[] {
   const o = piOptions(engine, t, i);
-  const free = new Set([...o.ip, ...o.oop].filter((x) => x.state === 'free').map((x) => x.id as string));
-  return (t.slots[i]!.pi ?? []).filter((id) => !free.has(id));
+  const free = new Set([...o.ip, ...o.oop].flatMap((g) => g.options.map((x) => piKey(g.def.group, x))));
+  return normalizePi(t.slots[i]!.pi ?? []).filter((k) => !free.has(k));
 }
 
 /* ---------- Analyse ---------- */
+
+const PI_HOLD = 'ForwardRuns:Effectuez moins de courses';
+const PI_RUN_BEHIND = 'AttackBoxDepth:Attaquer la ligne défensive';
+const PI_PRESS_MORE = 'TriggerPress:Plus souvent';
+const PI_PRESS_LESS = 'TriggerPress:Moins souvent';
 
 export type Area = 'roles' | 'lanes' | 'centre' | 'rest' | 'attack' | 'transition' | 'press' | 'coherence' | 'squad';
 export type Tone = 'good' | 'warn' | 'bad';
@@ -328,18 +357,18 @@ export function analyseBuiltTactic(engine: TacticEngine, t: BuiltTactic, players
   const idx = S.map((_, i) => i);
   // Les consignes individuelles corrigent le comportement du rôle : « moins de courses » garde le joueur en place,
   // « plus de courses » le fait monter, « presser plus / moins » change son comportement sans ballon.
-  const pis = (i: number) => S[i]!.pi ?? [];
+  const pis = (i: number) => normalizePi(S[i]!.pi ?? []);
   const ipT = (i: number): IpTrait | undefined => {
     const tr = IP_TRAITS[S[i]!.ip];
     if (!tr) return tr;
-    if (pis(i).includes('holdPosition') && tr.move !== 'drop') return { ...tr, move: 'stay' };
-    if (pis(i).includes('runBehind') && lineOf(S[i]!.pos) === 'ATT') return { ...tr, box: true };
+    if (pis(i).includes(PI_HOLD) && tr.move !== 'drop') return { ...tr, move: 'stay' };
+    if (pis(i).includes(PI_RUN_BEHIND) && lineOf(S[i]!.pos) === 'ATT') return { ...tr, box: true };
     return tr;
   };
   const oopG = (i: number): Guard | undefined => {
     const g = OOP_TRAITS[S[i]!.oop];
-    if (pis(i).includes('pressMore') && g !== 'outlet') return 'press';
-    if (pis(i).includes('pressLess') && g === 'press') return 'base';
+    if (pis(i).includes(PI_PRESS_MORE) && g !== 'outlet') return 'press';
+    if (pis(i).includes(PI_PRESS_LESS) && g === 'press') return 'base';
     return g;
   };
   const outfield = idx.filter((i) => S[i]!.pos !== 'GB');
@@ -478,7 +507,7 @@ export function analyseBuiltTactic(engine: TacticEngine, t: BuiltTactic, players
   const nTi = TEAM_INSTRUCTIONS_FM27.filter((d) => t.ti[d.id] != null && t.ti[d.id] !== defaultOption(d)).length;
   // Une tactique chargée de consignes met jusqu'à une vingtaine de matchs à être assimilée ; épurée, elle est prête tout de suite.
   // Les consignes individuelles comptent aussi (le jeu les additionne dans la complexité).
-  const nPi = S.reduce((a, s) => a + (s.pi?.length ?? 0), 0);
+  const nPi = idx.reduce((a, i) => a + pis(i).length, 0);
   if (nTi >= 10 || nTi + nPi / 2 >= 14) add('complex', 'coherence', 'warn', { count: nTi, pi: nPi });
   else if (nTi <= 5 && nPi <= 6) add('simple', 'coherence', 'good', { count: nTi, pi: nPi });
   const tooMany = idx.filter((i) => pis(i).length > 3);
