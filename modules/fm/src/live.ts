@@ -6,7 +6,8 @@ import { z } from 'zod';
  * buteurs en texte du jeu (« L. Carrero pen 36', M. Fábry 11', 90+1' »), fin du match.
  */
 /**
- * Événement du match tel que le jeu le liste (`HomeEventInfos`) : type 0 but, 2 penalty ; temps affiché (« pen 36' »).
+ * Événement du match tel que le jeu le liste (`HomeEventInfos`) : type 0 but, 2 penalty, 3 expulsion (vu en jeu le
+ * 08/11/2026 : « expulsé 74' ») ; temps affiché (« pen 36' »). `player` est lu quand le plugin sait le résoudre.
  * En fin de match (plugin 0.5.4, rapport du match), `player` = buteur et `assist` = passeur décisif (null sans passe).
  */
 export const fmLiveEventSchema = z
@@ -117,11 +118,39 @@ export const liveKey = (l: FmLive) => `${l.gameDate ?? ''}|${l.home}|${l.away}`;
  */
 export type LiveNews =
   | { kind: 'goal'; side: 'home' | 'away'; scorer: LiveGoal | null; penalty: boolean; assist: string | null }
-  | { kind: 'card'; side: 'home' | 'away'; player: string; card: 'yellow' | 'red' }
+  | { kind: 'card'; side: 'home' | 'away'; player: string | null; card: 'yellow' | 'red'; time: string | null }
+  | { kind: 'disallowed'; side: 'home' | 'away' }
   | { kind: 'final' };
 
 export type LiveGoalNews = Extract<LiveNews, { kind: 'goal' }>;
 export type LiveCardNews = Extract<LiveNews, { kind: 'card' }>;
+export type LiveDisallowedNews = Extract<LiveNews, { kind: 'disallowed' }>;
+
+/** Carton d'un événement du match : type 3 (« expulsé 74' ») ou temps affiché qui le dit ; null pour un but. */
+export function eventCard(e: FmLiveEvent): 'yellow' | 'red' | null {
+  const time = (e.time ?? '').toLowerCase();
+  if (e.type === 3 || /expuls|sent off|rouge|\bred\b/.test(time)) return 'red';
+  if (/avert|book|caution|jaune|yellow/.test(time)) return 'yellow';
+  return null;
+}
+
+/** Minute d'un événement sans son libellé (« expulsé 74' » → « 74' »). */
+export const eventMinute = (time: string | null | undefined) => {
+  const m = /(\d+(?:\+\d+)?)\s*'?/.exec(time ?? '');
+  return m ? `${m[1]}'` : null;
+};
+
+/** Cartons de la liste d'événements du jeu (côté, joueur s'il est connu, couleur, minute), dans l'ordre du jeu. */
+export function liveEventCards(l: FmLive): Omit<LiveCardNews, 'kind'>[] {
+  const out: Omit<LiveCardNews, 'kind'>[] = [];
+  for (const side of ['home', 'away'] as const) {
+    for (const e of (side === 'home' ? l.homeEvents : l.awayEvents) ?? []) {
+      const card = eventCard(e);
+      if (card) out.push({ side, player: e.player ?? null, card, time: eventMinute(e.time) });
+    }
+  }
+  return out;
+}
 
 const goalId = (g: LiveGoal) => `${g.name}|${g.time}`;
 
@@ -146,9 +175,17 @@ export function liveCards(prev: FmLive, cur: FmLive): LiveCardNews[] {
     const was = new Map(before.map((p) => [p.name, p]));
     for (const p of after) {
       const w = was.get(p.name);
-      if (p.red && !w?.red) out.push({ kind: 'card', side, player: p.name, card: 'red' });
-      else if (p.yellow && !w?.yellow) out.push({ kind: 'card', side, player: p.name, card: 'yellow' });
+      if (p.red && !w?.red) out.push({ kind: 'card', side, player: p.name, card: 'red', time: null });
+      else if (p.yellow && !w?.yellow) out.push({ kind: 'card', side, player: p.name, card: 'yellow', time: null });
     }
+  }
+  // Cartons de la liste d'événements (pendant le match) : nouveaux d'un relevé à l'autre, pas déjà vus sur la feuille.
+  const id = (c: Omit<LiveCardNews, 'kind'>) => `${c.side}|${c.card}|${c.time}`;
+  const seen = new Set(liveEventCards(prev).map(id));
+  for (const c of liveEventCards(cur)) {
+    if (seen.has(id(c))) continue;
+    if (out.some((o) => o.side === c.side && o.card === c.card && (!c.player || o.player === c.player))) continue;
+    out.push({ kind: 'card', ...c });
   }
   return out;
 }
@@ -167,6 +204,12 @@ export function liveNews(prev: FmLive | null, cur: FmLive): LiveNews[] {
     const before = (side === 'home' ? prev.homeScore : prev.awayScore) ?? 0;
     const after = (side === 'home' ? cur.homeScore : cur.awayScore) ?? 0;
     for (let i = before; i < after; i++) news.push({ kind: 'goal', side, scorer: null, penalty: false, assist: null });
+  }
+  // Score qui recule (but refusé après coup, VAR) : annoncé tel quel.
+  for (const side of ['home', 'away'] as const) {
+    const before = (side === 'home' ? prev.homeScore : prev.awayScore) ?? 0;
+    const after = (side === 'home' ? cur.homeScore : cur.awayScore) ?? 0;
+    for (let i = after; i < before; i++) news.push({ kind: 'disallowed', side });
   }
   const goals = news.filter((n): n is LiveGoalNews => n.kind === 'goal');
   // Un seul but : le nouveau nom est forcément le sien. Plusieurs buts d'un coup : on ne devine pas.
@@ -191,14 +234,22 @@ export function liveNews(prev: FmLive | null, cur: FmLive): LiveNews[] {
   return news;
 }
 
-/** Cartons de la feuille de match (jaunes puis rouges, chaque équipe), pour l'encart : vide sans feuille de match. */
-export function liveCardList(l: FmLive): { side: 'home' | 'away'; player: string; card: 'yellow' | 'red' }[] {
-  const out: { side: 'home' | 'away'; player: string; card: 'yellow' | 'red' }[] = [];
+/**
+ * Cartons du match pour l'encart : ceux de la feuille de match (fin du match), puis ceux de la liste d'événements du
+ * jeu (pendant le match : expulsions) qui n'y sont pas déjà. Le joueur est null quand le jeu ne le donne pas.
+ */
+export function liveCardList(l: FmLive): Omit<LiveCardNews, 'kind'>[] {
+  const out: Omit<LiveCardNews, 'kind'>[] = [];
   for (const side of ['home', 'away'] as const) {
     for (const p of lineupOf(l, side) ?? []) {
-      if (p.red) out.push({ side, player: p.name, card: 'red' });
-      else if (p.yellow) out.push({ side, player: p.name, card: 'yellow' });
+      if (p.red) out.push({ side, player: p.name, card: 'red', time: null });
+      else if (p.yellow) out.push({ side, player: p.name, card: 'yellow', time: null });
     }
+  }
+  for (const c of liveEventCards(l)) {
+    const same = out.find((o) => o.side === c.side && o.card === c.card && !o.time && (!c.player || o.player === c.player));
+    if (same) same.time = c.time;
+    else out.push({ ...c });
   }
   return out;
 }

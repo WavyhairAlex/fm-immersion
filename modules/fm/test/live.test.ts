@@ -109,18 +109,35 @@ describe('match en direct', () => {
     const clean = { ...base, homeLineup: [{ name: 'J. Novák', yellow: false, red: false }], awayLineup: [{ name: 'M. Fábry' }] };
     const yellow = { ...clean, minute: '50 min.', homeLineup: [{ name: 'J. Novák', yellow: true, red: false }], awayLineup: [{ name: 'M. Fábry', yellow: true }] };
     expect(liveNews(clean, yellow)).toEqual([
-      { kind: 'card', side: 'home', player: 'J. Novák', card: 'yellow' },
-      { kind: 'card', side: 'away', player: 'M. Fábry', card: 'yellow' },
+      { kind: 'card', side: 'home', player: 'J. Novák', card: 'yellow', time: null },
+      { kind: 'card', side: 'away', player: 'M. Fábry', card: 'yellow', time: null },
     ]);
     const red = { ...yellow, minute: '77 min.', homeLineup: [{ name: 'J. Novák', yellow: true, red: true }] };
-    expect(liveNews(yellow, red)).toEqual([{ kind: 'card', side: 'home', player: 'J. Novák', card: 'red' }]);
+    expect(liveNews(yellow, red)).toEqual([{ kind: 'card', side: 'home', player: 'J. Novák', card: 'red', time: null }]);
     expect(liveNews(red, red)).toEqual([]);
     // Pas de feuille de match au relevé précédent : rien à rejouer.
     expect(liveNews(base, yellow)).toEqual([]);
     expect(liveCardList(red)).toEqual([
-      { side: 'home', player: 'J. Novák', card: 'red' },
-      { side: 'away', player: 'M. Fábry', card: 'yellow' },
+      { side: 'home', player: 'J. Novák', card: 'red', time: null },
+      { side: 'away', player: 'M. Fábry', card: 'yellow', time: null },
     ]);
+  });
+
+  it("expulsion lue dans la liste d'événements pendant le match (type 3, « expulsé 74' »)", () => {
+    const before = { ...base, homeScore: 0, awayScore: 0, scorers: '', homeEvents: [], awayEvents: [] };
+    const red = { ...before, minute: '74 min.', awayEvents: [{ type: 3, time: "expulsé 74'", slice: 74 }] };
+    expect(liveNews(before, red)).toEqual([{ kind: 'card', side: 'away', player: null, card: 'red', time: "74'" }]);
+    expect(liveNews(red, { ...red, minute: '80 min.' })).toEqual([]);
+    expect(liveCardList(red)).toEqual([{ side: 'away', player: null, card: 'red', time: "74'" }]);
+    // La feuille de match de fin de match nomme le joueur : un seul carton, avec sa minute.
+    const report = { ...red, final: true, awayLineup: [{ name: 'P. Kováč', red: true }] };
+    expect(liveCardList(report)).toEqual([{ side: 'away', player: 'P. Kováč', card: 'red', time: "74'" }]);
+    expect(liveNews(red, report).filter((n) => n.kind === 'card')).toEqual([]);
+  });
+
+  it('but refusé : le score recule', () => {
+    const one = { ...base, homeScore: 1, awayScore: 0, scorers: "J. Novák 30'" };
+    expect(liveNews(one, { ...one, homeScore: 0, scorers: '' })).toEqual([{ kind: 'disallowed', side: 'home' }]);
   });
 
   it('lit le fichier du plugin et vérifie sa fraîcheur', () => {
