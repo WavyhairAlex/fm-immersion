@@ -3633,6 +3633,10 @@
       "written": "Rédigée par l'IA ({{model}})",
       "failed": "L'IA n'a pas pu rédiger cette gazette : phrases habituelles.",
       "rewrite": "Réécrire"
-    }
+    },
+    "linkOff": "Fais écrire ta gazette et commenter tes matchs par une IA, sur ton PC (Ollama) ou avec ta clé API.",
+    "linkOn": "Branchée sur {{model}}.",
+    "linkSetup": "Brancher une IA",
+    "linkChange": "Réglages de l'IA"
   }
 }

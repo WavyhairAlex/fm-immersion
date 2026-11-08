@@ -3633,6 +3633,10 @@
       "written": "Written by the AI ({{model}})",
       "failed": "The AI could not write this gazette: usual sentences.",
       "rewrite": "Rewrite"
-    }
+    },
+    "linkOff": "Have an AI write your gazette and commentate your matches, on your PC (Ollama) or with your API key.",
+    "linkOn": "Connected to {{model}}.",
+    "linkSetup": "Connect an AI",
+    "linkChange": "AI settings"
   }
 }

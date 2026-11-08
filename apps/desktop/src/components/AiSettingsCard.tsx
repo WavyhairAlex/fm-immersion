@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import {
+  aiFor,
   AI_PROVIDERS,
   AI_TONES,
   aiComplete,
@@ -166,6 +168,23 @@ export function AiSettingsCard() {
           <p className="mt-4 text-xs text-brun">{t('ai.fallback')}</p>
         </>
       )}
+    </section>
+  );
+}
+
+/** Encart qui mène aux réglages de l'IA (Plugin et réglages), avec son état : branchée sur quel modèle, ou coupée. */
+export function AiLink({ use = 'gazette' }: { use?: 'gazette' | 'live' }) {
+  const { t } = useTranslation();
+  const ai = aiFor(use);
+  return (
+    <section className="card mt-6 flex max-w-3xl flex-wrap items-center justify-between gap-3">
+      <div>
+        <h2 className="text-lg font-semibold">{t('ai.title')}</h2>
+        <p className="mt-1 text-sm text-brun">{ai ? t('ai.linkOn', { model: ai.model }) : t('ai.linkOff')}</p>
+      </div>
+      <Link to="/reglages" className={ai ? 'btn-secondary text-sm' : 'btn-primary text-sm'}>
+        {ai ? t('ai.linkChange') : t('ai.linkSetup')}
+      </Link>
     </section>
   );
 }

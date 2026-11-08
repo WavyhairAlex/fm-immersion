@@ -1,3 +1,4 @@
+import { AiSettingsCard } from '../components/AiSettingsCard';
 import {
   buildProject,
   isUnwanted,
@@ -507,6 +508,7 @@ function SettingsPage({
         <FmBridge dataFolder={folder} onHealth={onHealth} />
         <FmMemory />
       </div>
+      <AiSettingsCard />
     </div>
   );
 }
