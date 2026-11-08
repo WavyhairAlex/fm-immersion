@@ -7,7 +7,7 @@ export const CLUB_PAGES = ['tactic', 'squad', 'results', 'mercato'] as const;
 export type ClubPage = (typeof CLUB_PAGES)[number];
 
 export const PARTS: Record<ClubPage, readonly string[]> = {
-  tactic: ['tactic', 'instructions', 'opponent', 'depth', 'calendar', 'style', 'effectiveness', 'project', 'training', 'staff'],
+  tactic: ['tactic', 'instructions', 'builder', 'opponent', 'depth', 'calendar', 'style', 'effectiveness', 'project', 'training', 'staff'],
   squad: ['squad', 'playtime', 'dressing', 'progression', 'roles', 'compare', 'numbers', 'loans'],
   results: ['results', 'diagnosis', 'stats', 'analysis'],
   mercato: ['mercato', 'targets', 'finances', 'wages', 'contracts'],
@@ -18,7 +18,7 @@ export const PARTS: Record<ClubPage, readonly string[]> = {
  * montrées une à la fois derrière des pastilles. L'ordre des parties suit PARTS.
  */
 export const TABS: Record<ClubPage, readonly (readonly string[])[]> = {
-  tactic: [['tactic', 'instructions'], ['opponent'], ['depth', 'calendar'], ['style', 'effectiveness', 'project'], ['training', 'staff']],
+  tactic: [['tactic', 'instructions', 'builder'], ['opponent'], ['depth', 'calendar'], ['style', 'effectiveness', 'project'], ['training', 'staff']],
   squad: [['squad', 'loans', 'numbers'], ['playtime', 'dressing'], ['progression'], ['roles'], ['compare']],
   results: [['results'], ['diagnosis'], ['stats'], ['analysis']],
   mercato: [['mercato'], ['targets'], ['finances'], ['wages'], ['contracts']],

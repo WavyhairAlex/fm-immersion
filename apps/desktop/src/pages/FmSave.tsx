@@ -65,6 +65,7 @@ import { FmStats } from './FmStats';
 import { FmResults } from './FmResults';
 import { FmDiagnosis } from './FmDiagnosis';
 import { FmStyle } from './FmStyle';
+import { FmBuilder } from './FmBuilder';
 import { FmTactic, ReserveContext, useTacticEngine } from './FmTactic';
 import { FmTargets } from './FmTargets';
 import { FmTraining } from './FmTraining';
@@ -242,6 +243,8 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
         return <FmCalendar snap={snapshot.data} players={players} />;
       case 'roles':
         return <FmRoles players={players} folder={folder} />;
+      case 'builder':
+        return <FmBuilder snap={snapshot.data} players={players} folder={folder} />;
       case 'style':
         return <FmStyle players={players} folder={folder} />;
       case 'effectiveness':
