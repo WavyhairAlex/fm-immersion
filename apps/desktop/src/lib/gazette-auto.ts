@@ -1,4 +1,4 @@
-import { breakingNews, coachExits, gazetteIssues, seasonReviews, seasonSoFar, type BreakingNews, type CoachExit, type ExitReason, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
+import { bigMatchNow, breakingNews, coachExits, gazetteIssues, seasonReviews, seasonSoFar, type BigMatch, type BreakingNews, type CoachExit, type ExitReason, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { withWriting } from './ai-gazette';
 import { CAREER_KEY } from './career';
 import { rememberClubLooks } from './club-look';
+import { bigMatchPayload, drawBigMatch } from './bigmatch-page';
 import { breakingPayload, drawBreaking } from './breaking-page';
 import { fmData, savesData } from './data';
 import { getWebhook, isWebhook, sendDiscordImage } from './discord';
@@ -103,6 +104,28 @@ export async function sendBreaking(t: TFunction, n: BreakingNews, lang?: string,
   const png = await canvasPng(await drawBreaking(t, n, { lang, face: await loadFace(n.id) }));
   return sendDiscordImage(breakingPayload(t, n, lang), png, webhook);
 }
+
+/** Affiche du choc : image et court encart, avec la photo de notre meilleur buteur. */
+export async function sendBigMatch(t: TFunction, m: BigMatch, lang?: string, webhook = getWebhook()) {
+  const png = await canvasPng(await drawBigMatch(t, m, { lang, face: await loadFace(m.ourScorer?.id) }));
+  return sendDiscordImage(bigMatchPayload(t, m, lang), png, webhook);
+}
+
+/**
+ * Affiches déjà envoyées : partie, adversaire, compétition et date du match. La date tirée du « Dans 3 jours » du jeu
+ * peut bouger d'un jour d'un relevé à l'autre : une affiche du même match à trois jours près compte comme envoyée.
+ */
+const BIGMATCH_SENT_KEY = 'fmi.discord.bigMatchSent';
+const bigMatchId = (saveId: string, m: BigMatch) => `${saveId}|${m.opponent}|${m.competition ?? ''}`;
+export const isBigMatchSent = (saveId: string, m: BigMatch) =>
+  (read(BIGMATCH_SENT_KEY) ?? '')
+    .split('\n')
+    .some((line) => {
+      const at = line.lastIndexOf('|');
+      return line.slice(0, at) === bigMatchId(saveId, m) && Math.abs(Date.parse(line.slice(at + 1)) - Date.parse(m.date)) <= 3 * 86_400_000;
+    });
+export const markBigMatchSent = (saveId: string, m: BigMatch) =>
+  write(BIGMATCH_SENT_KEY, [...(read(BIGMATCH_SENT_KEY) ?? '').split('\n').filter(Boolean), `${bigMatchId(saveId, m)}|${m.date}`].slice(-30).join('\n'));
 
 /** Dépêches déjà envoyées (aussi à la main), pour que l'envoi automatique ne les renvoie pas. */
 const BREAKING_SENT_KEY = 'fmi.discord.breakingSent';
@@ -208,6 +231,12 @@ export function useGazetteAuto() {
           for (const n of breakingToSend(breakingNews(history), lastDate, (x) => isBreakingSent(saveId, x))) {
             await sendBreaking(t, n, i18n.resolvedLanguage);
             markBreakingSent(saveId, n);
+          }
+          // Affiche du choc, quelques jours avant un match qui compte (une fois par match).
+          const big = bigMatchNow(history);
+          if (big && !isBigMatchSent(saveId, big)) {
+            await sendBigMatch(t, big, i18n.resolvedLanguage);
+            markBigMatchSent(saveId, big);
           }
         }
         if (!gazetteOn) return;

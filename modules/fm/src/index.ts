@@ -58,6 +58,7 @@ export * from './live';
 export * from './season';
 export * from './farewell';
 export * from './breaking';
+export * from './bigmatch';
 export * from './offseason';
 export * from './playtime';
 export * from './pricing';

@@ -1,5 +1,5 @@
 import { AiLink } from '../components/AiSettingsCard';
-import { breakingNews, coachExits, gazetteIssues, seasonReviews, seasonSoFar, visibleOn, type BreakingNews, type CoachExit, type ExitReason, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
+import { bigMatchNow, breakingNews, coachExits, gazetteIssues, seasonReviews, seasonSoFar, visibleOn, type BigMatch, type BreakingNews, type CoachExit, type ExitReason, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
 import { SeasonCard } from '../components/SeasonCard';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -12,7 +12,8 @@ import { useCareer } from '../lib/career';
 import { clubLook, rememberClubLooks } from '../lib/club-look';
 import { useHistory } from '../lib/fm-cache';
 import { getWebhook, isWebhook } from '../lib/discord';
-import { exitReason, loadCoachPhoto, markBreakingSent, markFarewellSent, markGazetteSent, markSeasonSent, sendBreaking, sendFarewell, sendGazette, sendSeason, setExitReason } from '../lib/gazette-auto';
+import { exitReason, loadCoachPhoto, markBigMatchSent, markBreakingSent, markFarewellSent, markGazetteSent, markSeasonSent, sendBigMatch, sendBreaking, sendFarewell, sendGazette, sendSeason, setExitReason } from '../lib/gazette-auto';
+import { drawBigMatch } from '../lib/bigmatch-page';
 import { drawBreaking } from '../lib/breaking-page';
 import { drawFarewell } from '../lib/farewell-page';
 import { fmData } from '../lib/data';
@@ -53,6 +54,8 @@ export function Gazette() {
     () => breakingNews(history).filter((n) => (Date.parse(lastDate.slice(0, 10)) - Date.parse(n.date.slice(0, 10))) / 86_400_000 <= 30),
     [history, lastDate],
   );
+  // Affiche du choc : le prochain match, s'il compte (coupe, choc au sommet, duel direct) et tombe dans les 5 jours.
+  const big = useMemo(() => bigMatchNow(history), [history]);
   const [index, setIndex] = useState(0);
   useEffect(() => setIndex(0), [saveId]);
   const raw = issues[index];
@@ -83,6 +86,7 @@ export function Gazette() {
       )}
 
       {exitFresh && <FarewellSection saveId={saveId} exits={exits} looks={looksReady} />}
+      {big && <BigMatchSection saveId={saveId} match={big} looks={looksReady} />}
       {breaking.length > 0 && <BreakingSection saveId={saveId} news={breaking} looks={looksReady} />}
 
       {issue && (
@@ -420,6 +424,48 @@ function BreakingSection({ saveId, news, looks }: { saveId: string; news: Breaki
           </Link>
         )}
         {send.isSuccess && <p className="text-xs font-bold text-eau-fonce">{t('breaking.sent')}</p>}
+        {send.isError && <p className="text-xs font-bold text-corail">{String(send.error)}</p>}
+      </aside>
+    </section>
+  );
+}
+
+/** Affiche du choc : le prochain grand match en image, à envoyer sur Discord. */
+function BigMatchSection({ saveId, match, looks }: { saveId: string; match: BigMatch; looks: number }) {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage;
+  const { data: url } = useQuery({
+    queryKey: ['gazette', 'bigmatch', saveId, match.opponent, match.date, match.kind, lang, looks],
+    queryFn: async () => (await drawBigMatch(t, match, { lang, face: await loadFace(match.ourScorer?.id) })).toDataURL('image/png'),
+  });
+  const send = useMutation({
+    mutationFn: async () => {
+      await sendBigMatch(t, match, lang);
+      markBigMatchSent(saveId, match);
+    },
+  });
+  return (
+    <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
+      <div className="min-w-0">
+        <h2 className="text-xs font-bold uppercase tracking-wide text-orange-fonce">🔥 {t('bigmatch.section')}</h2>
+        {url ? (
+          <img src={url} alt={t(`bigmatch.tag.${match.kind}`)} className="mt-3 w-full rounded-xl shadow-sm ring-1 ring-canard/10" />
+        ) : (
+          <div className="mt-3 aspect-[16/9] w-full animate-pulse rounded-xl bg-canard/5" />
+        )}
+      </div>
+      <aside className="flex flex-col gap-2 xl:pt-7">
+        <p className="text-xs text-brun">{t('bigmatch.sectionHelp')}</p>
+        {isWebhook(getWebhook()) ? (
+          <button type="button" className="btn-primary mt-2 text-sm" disabled={send.isPending} onClick={() => send.mutate()}>
+            {t('bigmatch.send')}
+          </button>
+        ) : (
+          <Link to="/discord" className="btn-secondary mt-2 text-sm">
+            {t('gazette.setupDiscord')}
+          </Link>
+        )}
+        {send.isSuccess && <p className="text-xs font-bold text-eau-fonce">{t('bigmatch.sent')}</p>}
         {send.isError && <p className="text-xs font-bold text-corail">{String(send.error)}</p>}
       </aside>
     </section>
