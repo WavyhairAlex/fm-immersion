@@ -927,7 +927,7 @@ export function setupStatus(rec: IndividualSetup, applied: IndividualSetup | und
 /* ---------- Groupes d'encadrement ---------- */
 
 /** Personnalités défavorables (FR/EN du jeu) : à tenir à l'écart des jeunes, l'influence se transmet. */
-const BAD_PERSONALITY = /peu professionnel|unprofessional|peu ambitieux|unambitious|tempéramental|temperamental|mercenaire|mercenary|désinvolte|casual|nonchalant|slack|manque de détermination|low determination|antisportif|unsporting|volatile|facilement découragé|easily discouraged|influençable|spineless|craintif|low self.belief/i;
+const BAD_PERSONALITY = /peu professionnel|unprofessional|peu ambitieux|unambitious|tempéramental|temperamental|mercenaire|mercenary|désinvolte|casual|nonchalant|slack|manque de détermination|faible détermination|low determination|sans ambition|manque d.ambition|faible confiance en soi|antisportif|unsporting|volatile|facilement découragé|easily discouraged|influençable|spineless|craintif|low self.belief/i;
 /** Personnalités favorables : modèles pour les jeunes. */
 const GOOD_PERSONALITY = /professionnel|professional|déterminé|determined|résolu|resolute|ambitieux|ambitious|perfectionni|leader|meneur|charismatique|charismatic|vaillant|spirited|dévoué|devoted|loyal|fidèle|honnête|honest|sportif|sporting/i;
 
