@@ -105,7 +105,11 @@ export function Challenges() {
 
           <h2 className="mt-8 text-xl font-semibold">{t('challenges.catalog')}</h2>
           <div className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {CHALLENGES.map((d) => (
+            {[...CHALLENGES]
+              .map((d) => ({ d, b: blockedOf(d, active.some((c) => c.challengeId === d.id), !!settings?.fmFreeSince && !history.length, history.at(-1)?.gameDate ?? null) }))
+              .sort((a, b) => (BLOCK_RANK[a.b ?? 'ok'] ?? 0) - (BLOCK_RANK[b.b ?? 'ok'] ?? 0))
+              .map(({ d }) => d)
+              .map((d) => (
               <CatalogCard
                 key={d.id}
                 def={d}
@@ -160,6 +164,7 @@ function Enrolled({ row, history, coach }: { row: FmChallengeRow; history: { gam
     onSuccess: () => qc.invalidateQueries({ queryKey: ['challenges', row.saveId] }),
   });
   const webhookOk = isWebhook(getWebhook());
+  const next = result.steps.find((s) => !s.done);
   return (
     <article className="card">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -172,6 +177,16 @@ function Enrolled({ row, history, coach }: { row: FmChallengeRow; history: { gam
         {row.params.club ? ` · ${row.params.club}` : ''}
         {row.params.until ? ` · ${t('challenges.untilShort', { date: row.params.until })}` : ''}
       </p>
+      {next && result.status === 'running' && (
+        <div className="mt-3 rounded-xl border-l-4 border-orange bg-orange-clair/60 p-3">
+          <p className="text-xs font-bold uppercase text-brun">{t('challenges.next')}</p>
+          <p className="font-bold">{stepText(t, next)}</p>
+          <p className="mt-1 text-xs">
+            <span className="font-bold">{t('challenges.nextWhen')} </span>
+            {t(`challenges.def.${row.challengeId}.checked`)}
+          </p>
+        </div>
+      )}
       <Steps result={result} />
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" className="btn-primary text-sm" disabled={share.isPending || !webhookOk} onClick={() => share.mutate()}>
@@ -237,7 +252,7 @@ function CatalogCard(p: { def: ChallengeDef; saveId: string; taken: boolean; une
   const { def } = p;
   // Départ sans club : nouvelle carrière (aucun instantané d'un club) avec un manager sans club selon le plugin.
   const unemployed = !!p.unemployedSince && p.freshCareer;
-  const blocked = !def.available ? 'soon' : p.taken ? 'taken' : def.unemployedStart && !unemployed ? 'needUnemployed' : !def.unemployedStart && !p.latest ? 'needSnapshot' : null;
+  const blocked = blockedOf(def, p.taken, unemployed, p.latest);
   const enroll = useMutation({
     mutationFn: () =>
       challengesData.enroll(p.saveId, {
@@ -257,10 +272,23 @@ function CatalogCard(p: { def: ChallengeDef; saveId: string; taken: boolean; une
   });
   return (
     <article className="card flex flex-col gap-2">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-start justify-between gap-2">
         <h3 className="text-lg font-semibold">{t(`challenges.def.${def.id}.name`)}</h3>
-        {!def.available && <span className="pill bg-canard/10">{t('modes.soon')}</span>}
+        {!def.available ? (
+          <span className="pill bg-canard/10">{t('modes.soon')}</span>
+        ) : blocked === 'taken' ? (
+          <span className="pill bg-canard/10">{t('challenges.fit.taken')}</span>
+        ) : blocked ? (
+          <span className="pill bg-ambre/30">{t('challenges.fit.no')}</span>
+        ) : (
+          <span className="pill bg-eau-soutenu/30">{t('challenges.fit.yes')}</span>
+        )}
       </div>
+      <p className="rounded-lg bg-creme px-3 py-2 text-xs">
+        <span className="font-bold">{t('challenges.start.label')} </span>
+        {t(def.unemployedStart ? 'challenges.start.unemployed' : 'challenges.start.current')}
+        {def.param ? ` ${t(`challenges.start.param.${def.param}`)}` : ''}
+      </p>
       <p className="text-sm">{t(`challenges.def.${def.id}.rules`)}</p>
       <p className="text-xs text-brun">
         <span className="font-bold">{t('challenges.checked')} </span>
@@ -293,6 +321,17 @@ function CatalogCard(p: { def: ChallengeDef; saveId: string; taken: boolean; une
     </article>
   );
 }
+
+type Blocked = 'soon' | 'taken' | 'needUnemployed' | 'needSnapshot' | null;
+/** Pourquoi un défi n'est pas jouable dans la partie en cours (null : compatible). */
+function blockedOf(def: ChallengeDef, taken: boolean, unemployed: boolean, latest: string | null): Blocked {
+  if (!def.available) return 'soon';
+  if (taken) return 'taken';
+  if (def.unemployedStart && !unemployed) return 'needUnemployed';
+  if (!def.unemployedStart && !latest) return 'needSnapshot';
+  return null;
+}
+const BLOCK_RANK: Record<string, number> = { ok: 0, needSnapshot: 1, needUnemployed: 2, taken: 3, soon: 4 };
 
 const RANK: Record<string, number> = { success: 0, running: 1, unproven: 2, failed: 3, unavailable: 4 };
 

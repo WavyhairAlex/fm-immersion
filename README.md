@@ -12,7 +12,7 @@ et outils pour rendre ta carrière plus vivante. Application Windows gratuite et
 |---|---|
 | **FM Coach** : effectif, tactique, entraînement, mercato, adversaire, finances (lecture de ta partie) | disponible |
 | **Plugin en jeu** (Archivix Bridge, BepInEx) : installation et mise à jour | disponible |
-| **Visages photoréalistes** : installation en un clic, réinstallation après une mise à jour Steam | à venir |
+| **Visages photoréalistes** : installation en un clic, réinstallation après une mise à jour Steam | disponible |
 | **Gazette** de la semaine : résultats, classement, blessures, transferts, centre de formation | disponible |
 | **Live Discord** : envoi de la gazette dans ton salon (webhook) | disponible (solo) |
 | **Défis** : De zéro à héros, Invincibles, Génération U19, Que des locaux, Ancienne Génération, Vikings, Sir Alex Ferguson, Économiste, Dunkerque… vérifiés par ta partie, certificat à partager | disponible |

@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { factsFor } from '../lib/challenges';
-import { useFacesDirs, useFacesUpdate, v2Count } from '../lib/faces';
+import { useFacesDirs, useFacesUpdate, v2Count, pcState } from '../lib/faces';
 import { challengesData } from '../lib/data';
 import { useHistory } from '../lib/fm-cache';
 import { storyText } from '../lib/gazette-text';
@@ -95,7 +95,7 @@ function FacesCard() {
   const pct = progress?.found ? progress.completePermille / 10 : null;
   return (
     <Card label={t('modes.faces.title')} to="/visages" action={t('layout.today.see')}>
-      {status && <p className="text-sm">{t(`faces.state.${status.state}`)}</p>}
+      {status && <p className="font-bold">{t(`faces.pc.${pcState(status.state, !!offer)}`)}</p>}
       {offer && <p className="mt-1 text-sm font-bold text-orange-fonce">{t('layout.today.facesUpdate', { count: v2Count(offer.manifest) })}</p>}
       {pct != null && pct < 100 && (
         <div className="mt-2">

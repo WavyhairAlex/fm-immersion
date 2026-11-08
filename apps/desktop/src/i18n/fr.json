@@ -2888,7 +2888,7 @@
     "nothingToRemove": "Le pack n'était pas installé : rien à faire.",
     "lastStep": "Dans FM27 > Préférences, coche « Utilisez des images pré-générées des joueurs et du personnel plutôt que des images générées dynamiquement ». Après une mise à jour Steam, reviens ici et réinstalle.",
     "download": "Pas d'atelier sur ce PC : télécharge le zip de la dernière version, décompresse-le et indique ci-dessus le chemin du fichier portraits_assets_all.bundle.",
-    "progressTitle": "Avancement",
+    "progressTitle": "Avancement du projet de portraits",
     "completeHelp": "Version complète : base qualité (25 ans) et cinq autres tranches d'âge, soit 6 × 14 000 portraits.",
     "workshopHelp": "Indique le dossier de l'atelier de génération (FM27-PhotoReal) pour suivre l'avancement.",
     "workshop": "Dossier de l'atelier",
@@ -2932,7 +2932,16 @@
       "downloadingMb": "Téléchargement… {{mb}} Mo",
       "checking": "Vérification du pack…",
       "badge": "Nouveau pack de visages"
-    }
+    },
+    "pc": {
+      "label": "Sur ton PC :",
+      "noGame": "FM27 introuvable",
+      "none": "Aucun pack installé",
+      "upToDate": "Pack à jour",
+      "update": "Mise à jour disponible",
+      "unknown": "Pack non reconnu"
+    },
+    "projectNote": "Génération des portraits par FM Immersion, pour tous les joueurs : ce n'est pas ton installation."
   },
   "gazette": {
     "paper": "La Gazette de {{club}}",
@@ -3770,7 +3779,24 @@
     "saved": "Certificat enregistré : {{path}}",
     "until": "Pas de recrue jusqu'au (date de jeu)",
     "untilShort": "jusqu'au {{date}}",
-    "clubParam": "Club du défi : {{club}} (ton club actuel)"
+    "clubParam": "Club du défi : {{club}} (ton club actuel)",
+    "next": "Prochaine étape à valider",
+    "nextWhen": "Validé quand :",
+    "fit": {
+      "yes": "Compatible avec ta partie",
+      "no": "Pas compatible avec ta partie",
+      "taken": "Déjà en cours"
+    },
+    "start": {
+      "label": "Pour commencer :",
+      "unemployed": "une nouvelle carrière, avec ton manager encore sans club.",
+      "current": "ta partie actuelle, à partir de la dernière date lue.",
+      "param": {
+        "nationality": "Tu choisis une nationalité.",
+        "club": "Le défi porte sur ton club actuel.",
+        "until": "Tu fixes une date limite."
+      }
+    }
   },
   "layout": {
     "readNow": "Actualiser la partie",
@@ -3804,7 +3830,7 @@
       "pickChallenge": "Choisir un défi",
       "noChallenge": "Aucun défi en cours.",
       "steps": "Étapes franchies : {{done}} sur {{total}}",
-      "facesProgress": "Génération des portraits : {{pct}} %",
+      "facesProgress": "Projet de portraits : {{pct}} %",
       "facesUpdate": "Nouveau pack de visages : {{count}} portraits V2"
     },
     "career": {
