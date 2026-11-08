@@ -1,4 +1,4 @@
-import { bigMatchNow, breakingNews, coachExits, gazetteIssues, seasonReviews, seasonSoFar, type BigMatch, type BreakingNews, type CoachExit, type ExitReason, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
+import { bigMatchNow, breakingNews, recordKey, recordNews, coachExits, gazetteIssues, seasonReviews, seasonSoFar, type BigMatch, type BreakingNews, type CoachExit, type ExitReason, type GazetteIssue, type RecordNews, type SeasonReview } from '@fm-immersion/module-fm';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
@@ -17,6 +17,7 @@ import { drawPage } from './gazette-page';
 import { discordPagePayload } from './gazette-text';
 import { canvasPng, recentForm } from './gazette-une';
 import { loadFace } from './player-face';
+import { drawRecord, recordPayload } from './records-page';
 import { drawSeason, seasonPayload } from './season-une';
 
 /** Envoie la gazette n° `index` (une en image + encart), comme le bouton « Envoyer sur Discord ». */
@@ -111,6 +112,19 @@ export async function sendBigMatch(t: TFunction, m: BigMatch, lang?: string, web
   return sendDiscordImage(bigMatchPayload(t, m, lang), png, webhook);
 }
 
+/** Édition record : image et court encart, avec le visage de l'auteur du triplé. */
+export async function sendRecord(t: TFunction, n: RecordNews, lang?: string, webhook = getWebhook()) {
+  const png = await canvasPng(await drawRecord(t, n, { lang, face: n.kind === 'hatTrick' ? await loadFace(n.id) : null }));
+  return sendDiscordImage(recordPayload(t, n, lang), png, webhook);
+}
+
+/** Exploits déjà envoyés (aussi à la main), pour que l'envoi automatique ne les renvoie pas. */
+const RECORD_SENT_KEY = 'fmi.discord.recordSent';
+const recordId = (saveId: string, n: RecordNews) => `${saveId}|${recordKey(n)}`;
+export const isRecordSent = (saveId: string, n: RecordNews) => (read(RECORD_SENT_KEY) ?? '').split('\n').includes(recordId(saveId, n));
+export const markRecordSent = (saveId: string, n: RecordNews) =>
+  write(RECORD_SENT_KEY, [...(read(RECORD_SENT_KEY) ?? '').split('\n').filter(Boolean), recordId(saveId, n)].slice(-60).join('\n'));
+
 /**
  * Affiches déjà envoyées : partie, adversaire, compétition et date du match. La date tirée du « Dans 3 jours » du jeu
  * peut bouger d'un jour d'un relevé à l'autre : une affiche du même match à trois jours près compte comme envoyée.
@@ -143,10 +157,10 @@ export const getBreakingAuto = () => {
 export const setBreakingAuto = (on: boolean) => write(BREAKING_AUTO_KEY, on ? '1' : '0');
 
 /**
- * Dépêches à envoyer : celles pas encore parties, vues dans les trois derniers jours de jeu (pas celles d'il y a des
+ * Dépêches (et exploits) à envoyer : ceux pas encore partis, vues dans les trois derniers jours de jeu (pas celles d'il y a des
  * mois à l'activation), trois au plus, de la plus ancienne à la plus récente.
  */
-export function breakingToSend(news: BreakingNews[], lastDate: string | undefined, sent: (n: BreakingNews) => boolean): BreakingNews[] {
+export function breakingToSend<N extends { date: string }>(news: N[], lastDate: string | undefined, sent: (n: N) => boolean): N[] {
   if (!lastDate) return [];
   const last = Date.parse(lastDate.slice(0, 10));
   return news
@@ -231,6 +245,11 @@ export function useGazetteAuto() {
           for (const n of breakingToSend(breakingNews(history), lastDate, (x) => isBreakingSent(saveId, x))) {
             await sendBreaking(t, n, i18n.resolvedLanguage);
             markBreakingSent(saveId, n);
+          }
+          // Exploits du jour (triplé, série, large victoire, fin de disette), avec les mêmes règles que les dépêches.
+          for (const n of breakingToSend(recordNews(history), lastDate, (x) => isRecordSent(saveId, x))) {
+            await sendRecord(t, n, i18n.resolvedLanguage);
+            markRecordSent(saveId, n);
           }
           // Affiche du choc, quelques jours avant un match qui compte (une fois par match).
           const big = bigMatchNow(history);
