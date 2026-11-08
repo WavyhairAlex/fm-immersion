@@ -3411,7 +3411,7 @@
       "scorer": "L. Martin"
     },
     "breakingEnable": "Send breaking news automatically",
-    "breakingShort": "New signing, departure of a starter, long injury: the news card goes to the channel on the day the plugin sees it."
+    "breakingShort": "New signing, departure of a starter, long injury, big match poster: the card goes to the channel on the day the plugin sees it."
   },
   "live": {
     "title": "Live match",
@@ -4229,5 +4229,37 @@
     "alertMissing": "Save \"{{name}}\" not found",
     "alertUnsaved_one": "{{count}} in-game day unsaved",
     "alertUnsaved_other": "{{count}} in-game days unsaved"
+  },
+  "bigmatch": {
+    "title": {
+      "cup": "{{club}} v {{opponent}}: the cup on the line",
+      "europe": "European night: {{club}} v {{opponent}}",
+      "top": "Top of the table clash: {{club}} v {{opponent}}",
+      "rival": "Head-to-head: {{club}} v {{opponent}}"
+    },
+    "tag": {
+      "cup": "Cup tie",
+      "europe": "European night",
+      "top": "Top of the table",
+      "rival": "Head-to-head"
+    },
+    "home": "at home, in {{club}}",
+    "away": "away, at {{club}}",
+    "rank1": "1st",
+    "rank": "#{{n}}",
+    "today": "Today",
+    "inDays_one": "In {{count}} day",
+    "inDays_other": "In {{count}} days",
+    "watch": "One to watch",
+    "ourScorer_one": "{{count}} goal this season",
+    "ourScorer_other": "{{count}} goals this season",
+    "theirScorer_one": "{{count}} goal this season",
+    "theirScorer_other": "{{count}} goals this season",
+    "theirScorerNoGoals": "Their top scorer",
+    "manager": "In the other dugout: {{name}} ({{club}}).",
+    "section": "Big match poster",
+    "sectionHelp": "Cup tie, top of the table clash or head-to-head: the poster goes out a few days before the match.",
+    "send": "Send the poster",
+    "sent": "Poster sent to Discord."
   }
 }

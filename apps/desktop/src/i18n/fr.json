@@ -3411,7 +3411,7 @@
       "scorer": "L. Martin"
     },
     "breakingEnable": "Envoyer les dépêches automatiquement",
-    "breakingShort": "Recrue, départ d'un titulaire, blessure longue : la dépêche part dans le salon le jour où le plugin la voit."
+    "breakingShort": "Recrue, départ d'un titulaire, blessure longue, affiche des grands matchs : la dépêche part dans le salon le jour où le plugin la voit."
   },
   "live": {
     "title": "Match en direct",
@@ -4229,5 +4229,37 @@
     "alertMissing": "Sauvegarde « {{name}} » introuvable",
     "alertUnsaved_one": "{{count}} jour de jeu sans sauvegarde",
     "alertUnsaved_other": "{{count}} jours de jeu sans sauvegarde"
+  },
+  "bigmatch": {
+    "title": {
+      "cup": "{{club}} – {{opponent}} : la coupe en jeu",
+      "europe": "Soirée européenne : {{club}} – {{opponent}}",
+      "top": "Choc au sommet : {{club}} – {{opponent}}",
+      "rival": "Duel direct : {{club}} – {{opponent}}"
+    },
+    "tag": {
+      "cup": "Affiche de coupe",
+      "europe": "Affiche européenne",
+      "top": "Choc au sommet",
+      "rival": "Duel direct"
+    },
+    "home": "à domicile, à {{club}}",
+    "away": "à l'extérieur, chez {{club}}",
+    "rank1": "1er",
+    "rank": "{{n}}e",
+    "today": "Aujourd'hui",
+    "inDays_one": "Dans {{count}} jour",
+    "inDays_other": "Dans {{count}} jours",
+    "watch": "À suivre",
+    "ourScorer_one": "{{count}} but cette saison",
+    "ourScorer_other": "{{count}} buts cette saison",
+    "theirScorer_one": "{{count}} but cette saison",
+    "theirScorer_other": "{{count}} buts cette saison",
+    "theirScorerNoGoals": "Leur meilleur buteur",
+    "manager": "En face, l'entraîneur {{name}} ({{club}}).",
+    "section": "Affiche du choc",
+    "sectionHelp": "Coupe, choc au sommet ou duel direct : l'affiche part quelques jours avant le match.",
+    "send": "Envoyer l'affiche",
+    "sent": "Affiche envoyée sur Discord."
   }
 }
