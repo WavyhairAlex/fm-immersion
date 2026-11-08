@@ -4,8 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { shownGameDate, useCareer, useCareerStore } from '../lib/career';
 import { CLUB_PAGES, pageOf, type ClubPage } from '../lib/club-nav';
-import { coachPhotoFromFile } from '../lib/coach-photo';
+import { coachPhotoSource, type CoachPhotoCrop } from '../lib/coach-photo';
 import { fmData } from '../lib/data';
+import { CoachPhotoEditor, type CoachPhotoResult } from './CoachPhotoEditor';
 
 /** Icônes au trait (24×24), dessinées ici : aucun visuel du jeu. */
 const ICONS: Record<string, ReactNode> = {
@@ -134,10 +135,21 @@ function CareerCard() {
   const gameDate = shownGameDate(snapshot, now);
   const [picking, setPicking] = useState(false);
   const file = useRef<HTMLInputElement>(null);
+  // Recadrage ouvert : image de départ et cadrage (repris de la photo actuelle, ou nouveau pour une autre image).
+  const [editing, setEditing] = useState<{ source: string; crop?: CoachPhotoCrop } | null>(null);
+  const [readError, setReadError] = useState(false);
   const photo = useMutation({
-    mutationFn: async (f: File | null) => fmData.updateSettings(saveId, { coachPhoto: f ? await coachPhotoFromFile(f) : undefined }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['fm', saveId, 'settings'] }),
+    mutationFn: (r: CoachPhotoResult | null) =>
+      fmData.updateSettings(saveId, { coachPhoto: r?.photo, coachPhotoSource: r?.source, coachPhotoCrop: r?.crop }),
+    onSuccess: () => {
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ['fm', saveId, 'settings'] });
+    },
   });
+  const pick = () => file.current?.click();
+  // Avec une photo : on rouvre son recadrage (l'image d'origine si on l'a, sinon la photo elle-même).
+  const editPhoto = () =>
+    settings?.coachPhoto ? setEditing({ source: settings.coachPhotoSource ?? settings.coachPhoto, crop: settings.coachPhotoSource ? settings.coachPhotoCrop : undefined }) : pick();
   const dateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium' });
 
   if (!saveId)
@@ -159,7 +171,7 @@ function CareerCard() {
         <button
           type="button"
           className="group relative h-12 w-12 shrink-0 rounded-full"
-          onClick={() => file.current?.click()}
+          onClick={editPhoto}
           title={t('layout.career.photo')}
           aria-label={t('layout.career.photo')}
         >
@@ -181,8 +193,13 @@ function CareerCard() {
           className="hidden"
           onChange={(e) => {
             const f = e.target.files?.[0];
-            if (f) photo.mutate(f);
             e.target.value = '';
+            if (!f) return;
+            setReadError(false);
+            coachPhotoSource(f).then(
+              (source) => setEditing({ source }),
+              () => setReadError(true),
+            );
           }}
         />
         <div className="min-w-0 flex-1">
@@ -191,15 +208,15 @@ function CareerCard() {
           {snapshot && gameDate && <p className="truncate text-xs text-white/70">{dateFmt.format(new Date(gameDate))}</p>}
         </div>
       </div>
-      {photo.isError && <p className="mt-2 text-xs font-bold text-white">{t('layout.career.photoError')}</p>}
+      {(photo.isError || readError) && <p className="mt-2 text-xs font-bold text-white">{t('layout.career.photoError')}</p>}
       <div className="mt-2 flex items-center gap-3 text-xs font-bold text-white/60">
         {fmSaves.length > 1 && (
           <button type="button" className="hover:text-white" aria-expanded={picking} onClick={() => setPicking(!picking)}>
             {t('layout.career.switch')} ▾
           </button>
         )}
-        <button type="button" className="text-orange hover:text-white" onClick={() => file.current?.click()}>
-          {t(settings?.coachPhoto ? 'layout.career.changePhoto' : 'layout.career.addPhoto')}
+        <button type="button" className="text-orange hover:text-white" onClick={editPhoto}>
+          {t(settings?.coachPhoto ? 'layout.career.adjustPhoto' : 'layout.career.addPhoto')}
         </button>
         {settings?.coachPhoto && (
           <button type="button" className="hover:text-white" onClick={() => photo.mutate(null)}>
@@ -210,6 +227,16 @@ function CareerCard() {
           {t('layout.career.manage')}
         </Link>
       </div>
+      {editing && (
+        <CoachPhotoEditor
+          source={editing.source}
+          initialCrop={editing.crop}
+          saving={photo.isPending}
+          onSave={(r) => photo.mutate(r)}
+          onCancel={() => setEditing(null)}
+          onPickOther={pick}
+        />
+      )}
       {picking && (
         <ul className="mt-2 space-y-0.5 border-t border-white/10 pt-2">
           {fmSaves.map((s) => (

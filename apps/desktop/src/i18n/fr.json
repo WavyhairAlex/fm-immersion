@@ -3343,7 +3343,7 @@
     },
     "career": {
       "create": "Créer ma carrière",
-      "photo": "Changer la photo du coach",
+      "photo": "Recadrer ou changer la photo du coach",
       "change": "Changer",
       "free": "Sans club",
       "noData": "Partie pas encore lue",
@@ -3352,7 +3352,18 @@
       "manage": "Gérer",
       "removePhoto": "Retirer",
       "addPhoto": "Ajouter ta photo",
-      "changePhoto": "Changer la photo"
+      "changePhoto": "Changer la photo",
+      "adjustPhoto": "Recadrer",
+      "cropTitle": "Photo du coach",
+      "cropIntro": "Glisse l'image pour la placer, puis règle le zoom et la hauteur. Ce cadrage sert dans l'appli et sur ton profil dans FM27.",
+      "cropDrag": "Aperçu de la photo : glisse pour la déplacer",
+      "cropBands": "Les bandes sombres ne s'affichent pas sur ton profil dans FM27.",
+      "cropZoom": "Zoom",
+      "cropHeight": "Hauteur",
+      "cropSide": "Gauche-droite",
+      "cropSave": "Enregistrer",
+      "cropOther": "Autre image",
+      "cropCancel": "Annuler"
     },
     "assistant": {
       "label": "Ton adjoint",

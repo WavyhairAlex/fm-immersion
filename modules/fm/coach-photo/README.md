@@ -22,7 +22,7 @@ quand il la retire (le plugin rend alors l'avatar).
 `BepInEx\config\fr.fmimmersion.coachphoto.cfg` :
 
 - `Active` : `false` = observation seule (le journal BepInEx liste les gros plans sans rien changer).
-- `Photo` : chemin de la photo. Par défaut `<Dossier d'Archivix Bridge>\photo-coach.png`.
+- `Photo` : chemin de la photo (PNG carré de 256 px recadré dans FM Immersion). Par défaut `<Dossier d'Archivix Bridge>\photo-coach.png`.
 - `Manager` : identifiant du manager à remplacer, `0` = tous les managers humains.
 
 ## Installation (test)

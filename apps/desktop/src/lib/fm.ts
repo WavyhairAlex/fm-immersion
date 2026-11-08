@@ -18,8 +18,11 @@ export interface FmSaveSettings {
   fmReadAbilities?: boolean;
   /** Joueurs signalés partants par le coach, par identifiant FM27. */
   fmLeaving?: LeavingMarks;
-  /** Photo du coach choisie par le joueur : PNG carré de 180 px (taille des photos de FM27), en data URL. */
+  /** Photo du coach choisie par le joueur : PNG carré de 256 px (gros plan du manager dans FM27), en data URL. */
   coachPhoto?: string;
+  /** Image d'origine réduite (JPEG en data URL) et recadrage choisi, pour pouvoir recadrer la photo plus tard. */
+  coachPhotoSource?: string;
+  coachPhotoCrop?: { zoom: number; x: number; y: number };
 }
 
 /** Fichier .fm listé par Rust (métadonnées seulement). */
