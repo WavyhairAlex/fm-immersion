@@ -1,4 +1,4 @@
-import { type FmLive, fmLiveSchema, gameLastMatch, isFriendly, type LiveGoal, liveIsFresh, liveKey, liveNews, type LiveNews, parseScorers } from '@fm-immersion/module-fm';
+import { type FmLive, fmLiveSchema, gameLastMatch, isFriendly, isPenalty, liveCardList, type LiveCardNews, type LiveGoalNews, liveIsFresh, liveKey, liveNews, parseScorers } from '@fm-immersion/module-fm';
 import { invoke } from '@tauri-apps/api/core';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
@@ -10,6 +10,7 @@ import { facePng } from './player-face';
 const LIVE_RED = 0xd93c3c;
 const GOOD = 0x2e9e5b;
 const ORANGE = 0xf26b1d;
+const AMBER = 0xf5b700;
 
 const score = (l: FmLive) => `${l.homeScore ?? 0} - ${l.awayScore ?? 0}`;
 
@@ -354,6 +355,8 @@ export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, 
     return `\`${g.time.replace(/^pen\.?\s*/i, '').padStart(5)}\` ${mine ? '⚽' : '🥅'} **${g.name}** · ${g.side === 'home' ? l.home : l.away}${/^pen/i.test(g.time) ? ` (${t('live.penalty')})` : ''}`;
   });
   const figures = matchFigures(t, l);
+  // Cartons de la feuille de match (plugin 0.5.2) : « 🟨 M. Fábry · Malženice ».
+  const cards = liveCardList(l).map((c) => `${c.card === 'red' ? '🟥' : '🟨'} **${c.player}** · ${c.side === 'home' ? l.home : l.away}`);
   // Avant-match : seulement au début (ensuite le déroulé et les chiffres prennent la place).
   const ctx = contextOf(l);
   const prematch =
@@ -376,6 +379,7 @@ export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, 
             : l.scorers
               ? [{ name: t('live.scorers'), value: l.scorers.slice(0, 1000) }]
               : []),
+          ...(cards.length ? [{ name: t('live.cards'), value: cards.join('\n').slice(0, 1000) }] : []),
           ...(figures ? [{ name: t('live.figures.title'), value: figures.slice(0, 1000) }] : []),
           ...(prematch ? [{ name: t('live.prematch.title'), value: prematch.slice(0, 1000) }] : []),
         ],
@@ -391,9 +395,10 @@ export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, 
 
 /**
  * Temps fort du match : un message à part dans le salon (donc une notification), en plus de l'encart modifié en
- * silence. But (pour ou contre), mi-temps, coup de sifflet final : c'est ce qui fait vivre le match dans le fil.
+ * silence. But (pour ou contre, penalty, passeur), carton, mi-temps, coup de sifflet final : c'est ce qui fait vivre
+ * le match dans le fil.
  */
-export type Moment = { kind: 'goal'; side: 'home' | 'away'; scorer: LiveGoal | null } | { kind: 'half' } | { kind: 'final' };
+export type Moment = LiveGoalNews | LiveCardNews | { kind: 'half' } | { kind: 'final' };
 
 export function momentPayload(t: TFunction, l: FmLive, club: string | null, m: Moment) {
   const side = mySide(l, club);
@@ -404,15 +409,28 @@ export function momentPayload(t: TFunction, l: FmLive, club: string | null, m: M
     const goal = (m.scorer && tl.find((g) => g.name === m.scorer!.name && g.time === m.scorer!.time)) ?? null;
     const mine = side ? m.side === side : true;
     const said = goal ? commentary(t, l, club, goal) : t(mine ? 'live.moment.goalUnknownFor' : 'live.moment.goalUnknownAgainst', { team, score: score(l) });
+    const penalty = m.penalty || isPenalty(goal?.time);
+    const minute = (goal?.time ?? l.minute ?? '').replace(/^pen\.?\s*/i, '');
+    const assist = m.assist ? `\n🅰️ ${t('live.moment.assist', { name: m.assist })}` : '';
     return {
       username: 'FM Immersion',
       embeds: [
         {
-          title: `${mine ? '⚽' : '😬'}  ${t(mine ? 'live.moment.goalFor' : 'live.moment.goalAgainst', { team, minute: goal?.time ?? l.minute ?? '' })}`,
-          description: `**${title}**\n🎙️ *${said}*`,
+          title: `${mine ? '⚽' : '😬'}  ${t(penalty ? (mine ? 'live.moment.penaltyFor' : 'live.moment.penaltyAgainst') : mine ? 'live.moment.goalFor' : 'live.moment.goalAgainst', { team, minute })}`,
+          description: `**${title}**\n🎙️ *${said}*${assist}`,
           color: side ? (mine ? GOOD : LIVE_RED) : ORANGE,
         },
       ],
+    };
+  }
+  if (m.kind === 'card') {
+    const team = m.side === 'home' ? l.home : l.away;
+    const mine = side ? m.side === side : true;
+    const red = m.card === 'red';
+    const key = red ? (mine ? 'live.moment.redFor' : 'live.moment.redAgainst') : mine ? 'live.moment.yellowFor' : 'live.moment.yellowAgainst';
+    return {
+      username: 'FM Immersion',
+      embeds: [{ title: `${red ? '🟥' : '🟨'}  ${t(key, { player: m.player, team, minute: minuteOf(l.minute) ?? '' })}`, description: `**${title}**`, color: red ? LIVE_RED : AMBER }],
     };
   }
   if (m.kind === 'half') {
@@ -431,15 +449,15 @@ export function momentPayload(t: TFunction, l: FmLive, club: string | null, m: M
   };
 }
 
-/** Temps forts entre deux relevés du même match : buts, passage à la mi-temps, fin. */
+/** Temps forts entre deux relevés du même match : buts, cartons, passage à la mi-temps, fin. */
 export function momentsBetween(prev: FmLive, cur: FmLive): Moment[] {
   const news = liveNews(prev, cur);
-  const out: Moment[] = news.filter((n): n is Extract<LiveNews, { kind: 'goal' }> => n.kind === 'goal').map((n) => ({ kind: 'goal', side: n.side, scorer: n.scorer }));
+  const out: Moment[] = news.filter((n): n is LiveGoalNews | LiveCardNews => n.kind === 'goal' || n.kind === 'card');
   const pm = minuteOf(prev.minute);
   const cm = minuteOf(cur.minute);
   // Mi-temps : la minute passe 45 (ou le jeu affiche un texte sans minute, « MT ») sans but ni fin.
   const half = pm != null && pm < 45 && !cur.final && (cm == null ? pm >= 40 : cm >= 45 && cm <= 50);
-  if (half && !out.length) out.push({ kind: 'half' });
+  if (half && !out.some((m) => m.kind === 'goal')) out.push({ kind: 'half' });
   if (news.some((n) => n.kind === 'final')) out.push({ kind: 'final' });
   return out;
 }
@@ -574,7 +592,7 @@ export async function liveStep(
       const closed: FmLive = { ...state.last, ...l, final: true, inMatch: false, minute: 'FDM', ...(ended.score ? { homeScore: ended.score[0], awayScore: ended.score[1] } : {}) };
       try {
         await publish(t, closed, club, state.messageId, render);
-        await postMoments(t, closed, club, [...momentsBetween(state.last, closed).filter((m) => m.kind === 'goal'), { kind: 'final' }]);
+        await postMoments(t, closed, club, [...momentsBetween(state.last, closed).filter((m) => m.kind === 'goal' || m.kind === 'card'), { kind: 'final' }]);
         return { key, messageId: state.messageId, last: closed, done: true };
       } catch {
         return state;
@@ -592,8 +610,8 @@ export async function liveStep(
   if (state.done) return state;
   const changed =
     liveNews(state.last, l).length > 0 ||
-    JSON.stringify([state.last.minute, state.last.homeScore, state.last.awayScore, state.last.scorers, state.last.final]) !==
-      JSON.stringify([l.minute, l.homeScore, l.awayScore, l.scorers, l.final]);
+    JSON.stringify([state.last.minute, state.last.homeScore, state.last.awayScore, state.last.scorers, state.last.final, liveCardList(state.last)]) !==
+      JSON.stringify([l.minute, l.homeScore, l.awayScore, l.scorers, l.final, liveCardList(l)]);
   let messageId = state.messageId;
   if (changed) {
     try {

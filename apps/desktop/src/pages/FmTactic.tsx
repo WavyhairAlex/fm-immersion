@@ -282,12 +282,19 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   <>
                     <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.tac.adjust.teamTitle')}</p>
                     <ul className="mt-1 space-y-1.5 text-sm">
-                      {adjust.team.map((a) => (
-                        <li key={a.title} className="rounded-xl bg-creme/50 px-3 py-2">
-                          <span className="mr-2 rounded-md bg-eau/20 px-1.5 py-0.5 text-xs font-bold text-canard">{t(`fm.style.${a.phase}`)}</span>
-                          <span className="text-brun">{a.title} :</span> <b>{a.label}</b>
-                          {a.replaces && <span className="ml-1 text-xs text-brun">{t('fm.tac.adjust.replaces', { label: a.replaces })}</span>}
-                          <span className="block text-xs text-brun">{t(`fm.tac.adjust.reason.${a.reason}`)}</span>
+                      {/* Une carte par raison : les consignes qu'elle justifie, listées dessous, sans répéter la phrase. */}
+                      {[...new Set(adjust.team.map((a) => a.reason))].map((reason) => (
+                        <li key={reason} className="rounded-xl bg-creme/50 px-3 py-2">
+                          <p className="text-xs text-brun first-letter:uppercase">{t(`fm.tac.adjust.reason.${reason}`)}</p>
+                          {adjust.team
+                            .filter((a) => a.reason === reason)
+                            .map((a) => (
+                              <p key={a.title} className="mt-1">
+                                <span className="mr-2 rounded-md bg-eau/20 px-1.5 py-0.5 text-xs font-bold text-canard">{t(`fm.style.${a.phase}`)}</span>
+                                <span className="text-brun">{a.title} :</span> <b>{a.label}</b>
+                                {a.replaces && <span className="ml-1 text-xs text-brun">{t('fm.tac.adjust.replaces', { label: a.replaces })}</span>}
+                              </p>
+                            ))}
                         </li>
                       ))}
                     </ul>

@@ -10,7 +10,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   }),
 }));
 
-const { commentary, goalSituation, lastMatchStats, liveContext, liveStep, matchEnded, matchFigures, matchPhase, minuteOf, momentsBetween, personIdFor, prematchPayload, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
+const { commentary, goalSituation, lastMatchStats, liveContext, liveStep, matchEnded, matchFigures, matchPhase, minuteOf, momentPayload, momentsBetween, personIdFor, prematchPayload, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
 const t = ((k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k)) as unknown as TFunction;
 
 const at = '2026-11-07T07:20:00.000Z';
@@ -192,7 +192,18 @@ describe('chiffres du jeu après le match', () => {
 
   it('temps forts entre deux relevés : buts, mi-temps (minute ou texte sans minute), fin', () => {
     const at44 = { ...base, minute: '44 min.' };
-    expect(momentsBetween(base, { ...base, homeScore: 1, minute: '20 min.', scorers: "T. Astorga 20'" })).toEqual([{ kind: 'goal', side: 'home', scorer: { name: 'T. Astorga', time: "20'" } }]);
+    expect(momentsBetween(base, { ...base, homeScore: 1, minute: '20 min.', scorers: "T. Astorga 20'" })).toEqual([{ kind: 'goal', side: 'home', scorer: { name: 'T. Astorga', time: "20'" }, penalty: false, assist: null }]);
+    // Carton lu dans la feuille de match : un temps fort à part, et l'encart liste les cartons.
+    const clean = { ...base, minute: '30 min.', awayLineup: [{ name: 'M. Fábry', yellow: false }] };
+    const carded = { ...clean, minute: '31 min.', awayLineup: [{ name: 'M. Fábry', yellow: true }] };
+    expect(momentsBetween(clean, carded)).toEqual([{ kind: 'card', side: 'away', player: 'M. Fábry', card: 'yellow' }]);
+    expect(momentPayload(t, carded, base.home, { kind: 'card', side: 'away', player: 'M. Fábry', card: 'yellow' }).embeds[0]!.title).toContain('M. Fábry');
+    expect(JSON.stringify(scoreboardPayload(t, carded, base.home).embeds[0]!.fields)).toContain('🟨 **M. Fábry**');
+    // Penalty : le titre du but le dit, la minute perd le préfixe « pen ».
+    const pen = momentPayload(t, { ...base, homeScore: 1, scorers: "T. Astorga pen 20'" }, base.home, { kind: 'goal', side: 'home', scorer: { name: 'T. Astorga', time: "pen 20'" }, penalty: true, assist: 'J. Novák' });
+    expect(pen.embeds[0]!.title.toLowerCase()).toContain('penalty');
+    expect(pen.embeds[0]!.title).toContain("20'");
+    expect(pen.embeds[0]!.description).toContain('J. Novák');
     expect(momentsBetween(at44, { ...base, minute: '45 min.' })).toEqual([{ kind: 'half' }]);
     expect(momentsBetween(at44, { ...base, minute: 'MT' })).toEqual([{ kind: 'half' }]);
     expect(momentsBetween({ ...base, minute: '30 min.' }, { ...base, minute: '36 min.' })).toEqual([]);
