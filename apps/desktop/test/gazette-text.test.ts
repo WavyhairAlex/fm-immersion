@@ -80,4 +80,28 @@ describe('textes de la gazette', () => {
     expect(editorialText(t, win, 'fr')!.fans).toBe('gazette.editorial.fansGame {"mood":"Ravis"}');
     expect(editorialText(t, { ...issue, headline: { kind: 'quiet', weight: 5, params: {} }, stories: [] } as GazetteIssue, 'fr')).toBeNull();
   });
+
+  it("une élimination en coupe se raconte comme telle : titre, ouverture, suite et ton du billet", () => {
+    const headline: GazetteStory = {
+      kind: 'result',
+      weight: 80,
+      params: { outcome: 'L', opponent: 'Matador Púchov', home: 0, goalsFor: 1, goalsAgainst: 3, competition: 'Slovenský pohár', compKind: 'cup', cup: 'out', legs: 1, aggFor: 1, aggAgainst: 3, rounds: 2, friendly: 0, date: '2027-08-31' },
+    };
+    const issue = { number: 5, club: 'Malženice', weekStart: '2027-08-30', weekEnd: '2027-09-05', date: '2027-09-01', headline, stories: [], board: null } as GazetteIssue;
+    const s = storyText(t, 'Malženice', headline);
+    expect(s.title).toMatch(/^gazette\.story\.result\.title_cupOut /);
+    expect(s.body).toMatch(/^gazette\.story\.result\.cupOut .*"count":2/);
+    const a = articleText(t, issue, 'fr')!;
+    expect(a).toMatch(/^gazette\.article\.open_cupOut_\d .*"competition":"Slovenský pohár"/);
+    expect(a).toContain('gazette.article.cupOutAfter_');
+    expect(a).not.toContain('aggregate');
+    expect(climateOf(issue)).toBe('cupOut');
+    expect(editorialText(t, issue, 'fr')!.body).toMatch(/^gazette\.editorial\.tone_cupOut_\d /);
+    // Aller-retour : le score cumulé est donné.
+    const legs = { ...issue, headline: { ...headline, params: { ...headline.params, legs: 2, aggFor: 2, aggAgainst: 4 } } } as GazetteIssue;
+    expect(articleText(t, legs, 'fr')).toContain('gazette.article.aggregate {"agg":"2-4"}');
+    // Match de coupe sans issue décidée : pas de « trois points » du championnat.
+    const plain = { ...issue, headline: { ...headline, params: { ...headline.params, cup: null, outcome: 'W', goalsFor: 2, goalsAgainst: 1 } } } as GazetteIssue;
+    expect(articleText(t, plain, 'fr')).toMatch(/^gazette\.article\.open_WCup_\d /);
+  });
 });

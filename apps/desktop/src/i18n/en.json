@@ -2645,7 +2645,13 @@
       "result": {
         "title_W": "{{club}} beat {{opponent}} {{score}}",
         "title_D": "{{club}} and {{opponent}} draw {{score}}",
-        "title_L": "{{club}} lose {{score}} to {{opponent}}"
+        "title_L": "{{club}} lose {{score}} to {{opponent}}",
+        "title_cupOut": "{{club}} knocked out of the {{competition}} by {{opponent}} ({{score}})",
+        "title_cupThrough": "{{club}} through in the {{competition}} ({{score}} against {{opponent}})",
+        "cupOut": "The {{competition}} run ends after {{count}} round(s).",
+        "cupOutLegs": "Beaten {{agg}} on aggregate, the club leaves the {{competition}} after {{count}} round(s).",
+        "cupThrough": "Into the next round of the {{competition}}.",
+        "cupThroughLegs": "Through {{agg}} on aggregate to the next round of the {{competition}}."
       },
       "results": {
         "title": "{{matches}} matches this week",
@@ -2778,7 +2784,9 @@
       "figRecord_one": "W-D-L ({{count}} match)",
       "figRecord_other": "W-D-L ({{count}} matches)",
       "figScorer_one": "goal, {{name}}",
-      "figScorer_other": "goals, {{name}}"
+      "figScorer_other": "goals, {{name}}",
+      "kicker_cupOut": "Knocked out",
+      "kicker_cupThrough": "Through"
     },
     "preview": "Preview of the front page sent to Discord",
     "inCompetition": "in the {{competition}}",
@@ -2845,7 +2853,29 @@
       "job": "In the corridors, the whisper is: {{status}}.",
       "next_0": "Next up: {{opponent}}{{where}}, {{inDays}}.",
       "next_1": "Attention now turns to {{opponent}}{{where}}, {{inDays}}.",
-      "next_2": "What's next? {{opponent}}{{where}}, {{inDays}}."
+      "next_2": "What's next? {{opponent}}{{where}}, {{inDays}}.",
+      "aggregate": "Over the two legs: {{agg}}.",
+      "open_cupOut_0": "It's over for {{club}} in the {{competition}}: beaten {{score}} by {{opponent}}{{where}}, the club bows out through the back door.",
+      "open_cupOut_1": "An abrupt halt in the {{competition}}: {{opponent}} knocked {{club}} out ({{score}}){{where}}.",
+      "open_cupOut_2": "The {{competition}} run of {{club}} ends here. A {{score}} defeat to {{opponent}}{{where}}, and no second chance.",
+      "open_cupThrough_0": "{{club}} are still alive in the {{competition}}: a {{score}} win over {{opponent}}{{where}} and the round is won.",
+      "open_cupThrough_1": "Mission accomplished in the {{competition}}: {{club}} see off {{opponent}} ({{score}}){{where}} and move on.",
+      "open_cupThrough_2": "Qualification for {{club}}, {{score}} winners over {{opponent}}{{where}} in the {{competition}}.",
+      "open_WCup_0": "{{club}} beat {{opponent}} {{score}}{{where}}{{comp}}.",
+      "open_WCup_1": "A good cup night for {{club}}, {{score}} winners over {{opponent}}{{where}}{{comp}}.",
+      "open_WCup_2": "{{club}} got the job done{{where}}: {{score}} against {{opponent}}{{comp}}.",
+      "open_DCup_0": "{{club}} and {{opponent}} cancelled each other out, {{score}}{{where}}{{comp}}: everything is still to play for.",
+      "open_DCup_1": "A {{score}} draw between {{club}} and {{opponent}}{{where}}{{comp}}, nothing is settled yet.",
+      "open_DCup_2": "{{club}} had to settle for {{score}} against {{opponent}}{{where}}{{comp}}.",
+      "open_LCup_0": "{{club}} lost {{score}} to {{opponent}}{{where}}{{comp}}.",
+      "open_LCup_1": "A setback for {{club}}, beaten {{score}} by {{opponent}}{{where}}{{comp}}.",
+      "open_LCup_2": "Nothing went right for {{club}}{{where}}: a {{score}} defeat to {{opponent}}{{comp}}.",
+      "cupOutAfter_0": "After {{count}} round(s), only the league is left to save the season.",
+      "cupOutAfter_1": "One competition fewer also means a lighter schedule: up to {{club}} to make it count in the league.",
+      "cupOutAfter_2": "The {{competition}} had the fans dreaming; they will need other reasons to believe.",
+      "cupThroughAfter_0": "The next draw will tell how far {{club}} can go.",
+      "cupThroughAfter_1": "One more round in the legs, and a hunger to go further.",
+      "cupThroughAfter_2": "The {{competition}} goes on, and the fans are starting to believe."
     },
     "editorial": {
       "title": "The column",
@@ -2907,7 +2937,16 @@
       "board_loss_2": "The board awaits the reaction.",
       "board_quiet_0": "The board is working behind the scenes.",
       "board_quiet_1": "Nothing leaks from the offices this week.",
-      "board_quiet_2": "The board is preparing the next deadlines."
+      "board_quiet_2": "The board is preparing the next deadlines.",
+      "tone_cupOut_0": "A cup exit always leaves a bitter taste. {{club}} had a chance to write a fine story against {{opponent}}; it closed too soon.",
+      "tone_cupOut_1": "Going out of the cup means losing a possible night to remember. {{club}} must turn the page quickly and focus on the league.",
+      "tone_cupOut_2": "The cup is unforgiving: one bad night and it is over. {{club}} pay dearly for their evening against {{opponent}}.",
+      "fans_cupOut_0": "In the stands, disappointment runs deep: many hoped for a long run.",
+      "fans_cupOut_1": "The fans left with heads down, the cup was their little escape this season.",
+      "fans_cupOut_2": "A few whistles, a lot of silence: the exit has gone down badly with the fans.",
+      "board_cupOut_0": "The board notes the exit and expects a reaction in the league.",
+      "board_cupOut_1": "At the club, people point out that the cup also brought in revenue: the exit is costly.",
+      "board_cupOut_2": "The board is not panicking, but the message is clear: no more slip-ups in the league."
     },
     "page": {
       "story": "Match report"

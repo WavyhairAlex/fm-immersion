@@ -4,6 +4,7 @@ import { calendarFixtures } from './fixtures';
 import { figuresForResultIn } from './lastmatch';
 import { normalizePlayer, toNumber, type FmPlayer } from './player';
 import { matchResults, type MatchResult, type Outcome } from './results';
+import { competitionKind } from './rules';
 import { seasonSegments } from './season';
 import type { FmSnapshot } from './snapshot';
 
@@ -104,15 +105,21 @@ function resultStory(r: MatchResult, week: FmSnapshot[], until: string | null): 
     // L'homme du match du jeu, quand c'est l'un des nôtres, vaut mieux que tout : sa note est celle du jeu.
     const byGame = fig?.motm ? r.players.find((p) => p.name === fig.motm!.name) : undefined;
     const best = byGame ?? r.players.find((p) => p.potm) ?? [...r.players].filter((p) => p.rating != null).sort((a, b) => b.rating! - a.rating!)[0];
+    const kind = r.friendly ? 'friendly' : competitionKind(r.competition);
     return {
       kind: 'result',
       // Une défaite pèse un peu plus qu'une victoire (la presse aime les crises), un gros écart encore plus.
-      // Un amical reste une brève : il ne fait la une que d'une semaine sans autre nouvelle.
-      weight: r.friendly ? 18 : (r.outcome === 'L' ? 62 : r.outcome === 'W' ? 58 : 50) + Math.min(10, Math.abs(margin) * 3),
+      // Un amical reste une brève : il ne fait la une que d'une semaine sans autre nouvelle. Un match de coupe
+      // d'Europe pèse un peu plus qu'un match de championnat ; l'issue d'un tour de coupe est ajoutée ensuite.
+      weight: r.friendly ? 18 : (r.outcome === 'L' ? 62 : r.outcome === 'W' ? 58 : 50) + Math.min(10, Math.abs(margin) * 3) + (kind === 'europe' ? 4 : 0),
       params: {
         outcome: r.outcome,
         opponent: r.opponent,
         competition: r.competition,
+        // Type de compétition (championnat, coupe nationale, coupe d'Europe, amical, autre) : le ton en dépend.
+        compKind: kind,
+        // Issue du tour de coupe joué ce jour-là (« out » : éliminé, « through » : qualifié), sinon null.
+        cup: null,
         friendly: r.friendly ? 1 : 0,
         home: r.home == null ? null : r.home ? 1 : 0,
         goalsFor: r.goalsFor,
@@ -287,9 +294,16 @@ export function gazetteIssues(history: Entry[]): GazetteIssue[] {
       const tie = c.ties.at(-1)!;
       const was = cupsBefore.get(c.competition);
       const params = { competition: c.competition, opponent: tie.opponent, goalsFor: tie.goalsFor, goalsAgainst: tie.goalsAgainst, legs: tie.legs, rounds: c.ties.length };
-      if (c.status === 'out' && was !== 'out') stories.push({ kind: 'cupOut', weight: 58, params });
-      else if (c.kind === 'cup' && tie.date >= w && tie.goalsFor > tie.goalsAgainst && c.status !== 'unknown' && !secondLegAhead(last.data, c.competition, tie))
-        stories.push({ kind: 'cupThrough', weight: 42, params });
+      const out = c.status === 'out' && was !== 'out';
+      const through = !out && c.kind === 'cup' && tie.date >= w && tie.goalsFor > tie.goalsAgainst && c.status !== 'unknown' && !secondLegAhead(last.data, c.competition, tie);
+      if (!out && !through) continue;
+      // Le match décisif joué cette semaine porte l'issue du tour : une élimination fait la une, devant une simple
+      // défaite de championnat ; une qualification passe devant une victoire ordinaire.
+      const match = stories.find((s) => s.kind === 'result' && s.params.competition === c.competition && s.params.opponent === tie.opponent && s.params.date === tie.date);
+      if (match) {
+        match.params = { ...match.params, cup: out ? 'out' : 'through', legs: tie.legs, aggFor: tie.goalsFor, aggAgainst: tie.goalsAgainst, rounds: c.ties.length };
+        match.weight = out ? Math.max(match.weight, 80) : Math.max(match.weight, 64);
+      } else stories.push({ kind: out ? 'cupOut' : 'cupThrough', weight: out ? 72 : 42, params });
     }
     cupsBefore = cupsNow;
     stories.sort((a, b) => b.weight - a.weight);
