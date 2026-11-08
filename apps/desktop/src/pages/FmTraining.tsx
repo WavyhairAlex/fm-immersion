@@ -267,7 +267,7 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
                     ? t('fm.train.coach.congested', { matches: summary.matches })
                     : seasonal
                       ? summary.matches
-                        ? t('fm.train.coach.season', { matches: summary.matches, tactical: summary.tactical, grow: summary.grow, zones: zoneList })
+                        ? t('fm.train.coach.season', { count: summary.matches, tactical: summary.tactical, grow: summary.grow, zones: zoneList })
                         : t('fm.train.coach.noMatch', { tactical: summary.tactical, grow: summary.grow, zones: zoneList })
                       : t(`fm.train.phaseHelp.${plan.phase}`)}
                 </p>
@@ -284,11 +284,14 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
                   <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.train.coach.yieldTitle')}</p>
                   {measured ? (
                     <>
-                      <p className="mt-1 text-sm">
-                        {t('fm.train.coach.yield', { from: f.date(measured.from), to: f.date(measured.to), days: measured.days, players: measured.players, delta: signed.format(measured.perPlayer), month: signed.format(measured.perMonth), expected: signed.format(measured.expectedPerMonth) })}
-                      </p>
+                      {/* Le verdict d'abord ; les chiffres qui le justifient sont repliés. */}
                       <p className="mt-1 text-sm font-bold">
                         <Tag tone={measured.verdict === 'good' ? 'good' : measured.verdict === 'bad' ? 'bad' : 'warn'}>{t(`fm.train.coach.yieldVerdict.${measured.verdict}`)}</Tag>
+                      </p>
+                      <details className="mt-1">
+                        <summary className="cursor-pointer select-none text-xs font-bold text-orange-fonce hover:underline">{t('fm.train.coach.yieldDetail')}</summary>
+                      <p className="mt-1 text-sm">
+                        {t('fm.train.coach.yield', { from: f.date(measured.from), to: f.date(measured.to), days: measured.days, players: measured.players, delta: signed.format(measured.perPlayer), month: signed.format(measured.perMonth), expected: signed.format(measured.expectedPerMonth) })}
                       </p>
                       <p className="mt-1 text-xs text-brun">
                         {t('fm.train.coach.yieldGroups', { technical: signed.format(measured.groups.technical), mental: signed.format(measured.groups.mental), physical: signed.format(measured.groups.physical) })}
@@ -303,6 +306,7 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
                       {measured.down.length > 0 && (
                         <p className="mt-1 text-xs text-corail">{t('fm.train.coach.yieldDown', { list: measured.down.slice(0, 5).map((g) => `${g.player.name} ${signed.format(g.delta)}`).join(', ') })}</p>
                       )}
+                      </details>
                     </>
                   ) : (
                     <p className="mt-1 text-sm text-brun">{t('fm.train.coach.yieldSoon', { count: Math.max(1, missingDays) })}</p>

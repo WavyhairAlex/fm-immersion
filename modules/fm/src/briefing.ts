@@ -107,17 +107,24 @@ export function briefing(input: BriefingInput): BriefItem[] {
       values: { opponent: nextMatch.opponent, days: nextMatch.inDays ?? -1, where: nextMatch.home == null ? '' : nextMatch.home ? 'home' : 'away', competition: nextMatch.competition ?? '', count: nextMatch.inDays ?? 0 },
     });
   const tired = xi.filter((p) => !p.injury && p.condition != null && p.condition < TIRED_CONDITION);
-  if (official && tired.length) item('tiredStarters', 'warn', 'depth', tired);
 
-  // Coupe ou calendrier chargé : faire tourner, en commençant par ceux qui manquent de temps de jeu et les
-  // titulaires entamés (sous 92 %), sans toucher à la colonne vertébrale.
+  // Coupe ou calendrier chargé : faire tourner, en commençant par les titulaires fatigués (sous 85 %), puis ceux qui
+  // manquent de temps de jeu et les titulaires entamés (sous 92 %), sans toucher à la colonne vertébrale.
+  // Ce conseil englobe celui des titulaires fatigués : un seul message, pas deux qui disent la même chose.
   const weight = official ? competitionWeight(official.competition, { congested: input.congested }) : null;
-  if (weight?.rotate && weight.reason) {
-    const shortIds = new Set(playtime.filter((r) => r.verdict === 'short').map((r) => r.player.id));
-    const worn = xi.filter((p) => !p.injury && !p.suspension && p.condition != null && p.condition < ROTATION_CONDITION);
-    const cand = [...players.filter((p) => shortIds.has(p.id) && !p.injury && !p.suspension), ...worn.filter((p) => !shortIds.has(p.id))];
-    if (cand.length) item(weight.reason === 'cup' ? 'rotation' : 'congested', 'info', 'depth', cand, { competition: official!.competition ?? '' });
-  }
+  const shortIds = new Set(playtime.filter((r) => r.verdict === 'short').map((r) => r.player.id));
+  const worn = xi.filter((p) => !p.injury && !p.suspension && p.condition != null && p.condition < ROTATION_CONDITION);
+  const tiredIds = new Set(tired.map((p) => p.id));
+  const cand =
+    weight?.rotate && weight.reason
+      ? [
+          ...tired.filter((p) => !p.suspension),
+          ...players.filter((p) => shortIds.has(p.id) && !tiredIds.has(p.id) && !p.injury && !p.suspension),
+          ...worn.filter((p) => !shortIds.has(p.id) && !tiredIds.has(p.id)),
+        ]
+      : [];
+  if (cand.length) item(weight!.reason === 'cup' ? 'rotation' : 'congested', tired.length ? 'warn' : 'info', 'depth', cand, { competition: official!.competition ?? '' });
+  else if (official && tired.length) item('tiredStarters', 'warn', 'depth', tired);
 
   if (input.trialists?.length) item('trialists', 'warn', 'targets', input.trialists);
 
