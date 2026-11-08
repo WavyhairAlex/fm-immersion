@@ -3343,7 +3343,7 @@
     },
     "career": {
       "create": "Create my career",
-      "photo": "Change the coach's photo",
+      "photo": "Adjust or change the coach's photo",
       "change": "Change",
       "free": "Unemployed",
       "noData": "Game not read yet",
@@ -3352,7 +3352,18 @@
       "manage": "Manage",
       "removePhoto": "Remove",
       "addPhoto": "Add your photo",
-      "changePhoto": "Change photo"
+      "changePhoto": "Change photo",
+      "adjustPhoto": "Adjust",
+      "cropTitle": "Manager photo",
+      "cropIntro": "Drag the image into place, then set the zoom and height. This framing is used in the app and on your profile in FM27.",
+      "cropDrag": "Photo preview: drag to move it",
+      "cropBands": "The dark bands are not shown on your profile in FM27.",
+      "cropZoom": "Zoom",
+      "cropHeight": "Height",
+      "cropSide": "Left-right",
+      "cropSave": "Save",
+      "cropOther": "Another image",
+      "cropCancel": "Cancel"
     },
     "assistant": {
       "label": "Your assistant",
