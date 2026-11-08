@@ -3051,7 +3051,25 @@
     "testOk": "Message de test envoyé.",
     "whatTitle": "Ce qui est envoyé",
     "what": "Pour l'instant, la gazette de la semaine, quand tu cliques sur « Envoyer sur Discord » dans la Gazette. L'envoi automatique des moments forts (buts, résultats, transferts) arrivera ensuite.",
-    "privacy": "Le lien reste sur ton PC. FM Immersion n'envoie rien à Discord sans ton clic, et seulement vers l'adresse des webhooks de Discord."
+    "privacy": "Le lien reste sur ton PC. FM Immersion n'envoie rien à Discord sans ton clic, et seulement vers l'adresse des webhooks de Discord.",
+    "status": {
+      "title": "Ce qui est branché",
+      "channel": "Salon",
+      "live": "Direct",
+      "auto": "Gazette auto",
+      "ai": "IA",
+      "linked": "Relié",
+      "notLinked": "Pas relié",
+      "on": "Activé",
+      "off": "Coupé"
+    },
+    "change": "Changer de salon",
+    "sendTitle": "Ce qui part dans ton salon",
+    "liveShort": "Un encart suit le match (score, minute, buteurs, phrase du commentateur), plus un message à chaque temps fort.",
+    "livePlugin": "Plugin FM27 0.5.0 ou plus, FM Immersion ouvert pendant le match.",
+    "autoShort": "La gazette de la semaine part toute seule dès qu'une semaine de jeu est finie. FM Immersion doit être ouvert.",
+    "manualTitle": "Envoyer une gazette à la main",
+    "manualShort": "Depuis la Gazette, bouton « Envoyer sur Discord », pour n'importe quel numéro."
   },
   "live": {
     "title": "Match en direct",
