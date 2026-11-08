@@ -1577,7 +1577,8 @@
         "overtakes_other": "at {{starter}}'s level in {{count}} seasons",
         "decline": "{{age}}, declining",
         "youthTeam": "develops with the youth team",
-        "offProject": "profile off the game plan"
+        "offProject": "profile off the game plan",
+        "loanIn": "on loan with us: counts this season, no sale or extension"
       },
       "stayNoYouth": "Players aged 21 or under are in their own panel above."
     },
@@ -2309,7 +2310,7 @@
     "leave": {
       "title_one": "Announced departures · {{count}}",
       "title_other": "Announced departures · {{count}}",
-      "help": "Players you flagged as leaving. FM Immersion plans the squad without them (starters, backups, contracts, youngsters) and looks for their replacement at the same position of the project eleven: first among your followed targets and the squad, then in the game database (run straight away when you flag them). Cancel the flag if they end up staying. Players loaned to your club are listed automatically (read from the game): they go back at the end of the loan, so the transfer screen never suggests selling or extending them.",
+      "help": "Players you flagged as leaving. FM Immersion plans the squad without them (starters, backups, contracts, youth) and looks for their replacement in the same slot of the target XI: first among your tracked targets and the squad, then in the game database (started automatically when you flag them). Cancel the flag if they end up staying. Players on loan at your club are listed too (read from the game): they count in the squad and this season's plans, but the transfer window never suggests selling or extending them, and the off-season counts them as gone home.",
       "mark": "Leaving…",
       "cancel": "Cancel",
       "close": "Close",

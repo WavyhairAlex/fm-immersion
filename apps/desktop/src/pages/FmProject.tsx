@@ -22,8 +22,8 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
   const gameTactic = typeof snap.tactic?.name === 'string' ? snap.tactic.name : null;
   const base = useMemo(() => styleOfGameTactic(gameTactic, engine.ref.styles), [gameTactic, engine]);
   // Les partants signalés quittent l'effectif à la première fenêtre du plan.
-  const { ids: leavingIds } = useLeaving();
-  const evo = useMemo(() => evolutionPlan(engine, list, snap.gameDate, coach, history, base, 4, leavingIds), [engine, list, snap.gameDate, coach, history, base, leavingIds]);
+  const { ids: leavingIds, loanUntil } = useLeaving();
+  const evo = useMemo(() => evolutionPlan(engine, list, snap.gameDate, coach, history, base, 4, leavingIds, loanUntil), [engine, list, snap.gameDate, coach, history, base, leavingIds, loanUntil]);
   if (!list.length || !pr || !sw) return <Empty>{t('fm.tac.noAttributes')}</Empty>;
 
   const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 });

@@ -23,6 +23,23 @@ const eleven = [
 const DATE = '2026-11-24';
 
 describe('mercato : départs et jeunes', () => {
+  it('un prêté chez nous compte dans le onze et les plans, sans vente ni prolongation', () => {
+    // Le 3 (titulaire DC) est prêté chez nous ; le 12 est un DC en trop et le 15, un prêté chez nous en trop.
+    const squad = [...eleven, p(12, 'D (C)', 11), p(15, 'D (C)', 6, { age: 29, contractEnd: '2027-06-30' })];
+    const r = mercatoAdvice(engine, squad, DATE, { style: 'possession' }, [], new Set(), new Set(['3', '15']))!;
+    const v = (id: number) => r.advice.find((a) => a.player.id === String(id))!;
+    expect(v(3).now.tier).toBe(0);
+    expect(v(3).verdict).toBe('core');
+    expect(v(3).reasons.some((x) => x.id === 'loanIn')).toBe(true);
+    // Un prêté en trop n'est ni à vendre ni à libérer, et son contrat (celui du club prêteur) n'est pas à décider.
+    expect(v(15).verdict).toBe('backup');
+    expect(v(15).months).toBeNull();
+    expect(contractDecisions(r).some((c) => c.advice.player.id === '15')).toBe(false);
+    expect(r.leaving).toEqual([]);
+    // Signalé partant, lui, il sort des plans.
+    expect(mercatoAdvice(engine, squad, DATE, { style: 'possession' }, [], new Set(['3']))!.leaving.map((x) => x.id)).toEqual(['3']);
+  });
+
   it('garde les titulaires et les doublures, fait partir les joueurs en trop', () => {
     const squad = [...eleven, p(12, 'D (C)', 11), p(13, 'D (C)', 10.5), p(14, 'D (C)', 10), p(15, 'D (C)', 6, { age: 29 }), p(16, 'GB', 10), p(17, 'GB', 9)];
     const r = mercatoAdvice(engine, squad, DATE, { style: 'possession' })!;
