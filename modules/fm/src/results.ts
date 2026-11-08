@@ -178,11 +178,31 @@ export function resultBetween(prev: FmSnapshot, cur: FmSnapshot): MatchResult | 
 /** Tous les matchs retrouvés dans l'historique (du plus ancien au plus récent). */
 export function matchResults(history: { gameDate: string; data: FmSnapshot }[]): MatchResult[] {
   const out: MatchResult[] = [];
+  const found = history.map((h, i) => (i ? resultBetween(history[i - 1]!.data, h.data) : null));
   for (let i = 1; i < history.length; i++) {
-    const r = resultBetween(history[i - 1]!.data, history[i]!.data);
-    if (r) out.push(r);
+    const r = found[i];
+    if (!r) continue;
+    out.push(lateScorers(r, history[i - 1]!.data, history[i + 1]?.data, !found[i + 1]));
   }
   return out;
+}
+
+/**
+ * Buteurs d'un match : le jeu met à jour les buts des joueurs (`goals`) un jour après les cumuls du Centre de données
+ * qui révèlent le match (vu le 08/11/2026 : le but de Fábry du 29/08 n'apparaît que dans l'instantané du 30/08). Quand
+ * il manque des buts et que l'instantané suivant ne contient pas d'autre match, on reprend les buts de celui-ci.
+ */
+function lateScorers(r: MatchResult, prev: FmSnapshot, next: FmSnapshot | undefined, quiet: boolean): MatchResult {
+  const counted = sum(r.players.map((p) => Math.max(0, p.goals ?? 0)));
+  if (r.matches !== 1 || r.goalsFor == null || counted >= r.goalsFor || !next || !quiet || next.club !== prev.club) return r;
+  const before = new Map(prev.players.map((p) => [String(p.id), p.goals ?? 0]));
+  const after = new Map(next.players.map((p) => [String(p.id), p.goals ?? null]));
+  const players = r.players.map((p) => {
+    const g = after.get(p.id);
+    return g == null ? p : { ...p, goals: Math.max(0, g - (before.get(p.id) ?? 0)) };
+  });
+  const total = sum(players.map((p) => p.goals ?? 0));
+  return total > counted && total <= r.goalsFor ? { ...r, players } : r;
 }
 
 /** Matchs officiels seulement (sans les amicaux) : bilans, forme, analyses, temps de jeu. */
