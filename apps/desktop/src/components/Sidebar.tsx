@@ -203,7 +203,7 @@ function CareerCard() {
           }}
         />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-extrabold" title={save?.name}>{save?.name}</p>
+          <p className="line-clamp-2 break-words text-sm font-extrabold leading-snug" title={save?.name}>{save?.name}</p>
           <p className="truncate text-xs text-white/70">{free ? t('layout.career.free') : (snapshot?.club ?? t('layout.career.noData'))}</p>
           {snapshot && gameDate && <p className="truncate text-xs text-white/70">{dateFmt.format(new Date(gameDate))}</p>}
         </div>

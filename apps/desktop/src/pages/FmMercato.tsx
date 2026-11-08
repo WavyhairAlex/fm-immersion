@@ -46,7 +46,7 @@ export function useReason() {
   return (x: MercatoReason) => {
     switch (x.id) {
       case 'surplus':
-        return t('fm.merc.why.surplus', { pos: POS_LABEL[x.pos], rank: x.rank, need: x.need });
+        return t('fm.merc.why.surplus', { pos: POS_LABEL[x.pos], rank: x.rank, count: x.need });
       case 'starterNow':
       case 'starterProject':
       case 'backupAt':

@@ -1306,7 +1306,8 @@
       "metaAdaptHelp": "Base Méta d'AlexJeuVideal : 2 pièges du pressing par semaine, la veille du match Progression du ballon, Bloc défensif, Condition physique, le reste au repos. Les 4 autres séances tactiques suivent tes zones prioritaires (les plus faibles d'après le jeu et tes matchs) parmi celles que le banc d'essai juge utiles : Hauteur du pressing, Construction, Création d'occasions, Organisation avec et sans le ballon. Elles changent quand tes faiblesses changent.",
       "metaSwaps": "Après chargement, remplace : {{list}}.",
       "coachHelp": "Programme FM Immersion, une seule proposition : chaque jour de travail, une séance tactique (deux Pièges du pressing par semaine, puis les zones que le jeu dit les moins comprises, sinon celles de ton style) et une séance de progression (Condition physique, Ballon offensif, Ballon défensif, Condition physique légère : les quatre séances qui font le plus progresser les attributs d'après les mesures d'harvestgreen22). Veille de match : une seule séance de préparation. Lendemain : Repos puis Récupération. Jamais de condition physique l'avant-veille d'un match. Quand le jeu dit que tout est compris, les séances tactiques se réduisent aux deux pièges.",
-      "coachSummary": "Cette semaine : {{tactical}} séances tactiques, {{grow}} séances de progression, {{matches}} match(s).",
+      "coachSummary_one": "Cette semaine : {{tactical}} séances tactiques, {{grow}} séances de progression, {{count}} match.",
+      "coachSummary_other": "Cette semaine : {{tactical}} séances tactiques, {{grow}} séances de progression, {{count}} matchs.",
       "teamIntensityCoach": "Réglage conseillé dans Entraînement > Intensité de l'équipe : double pour les joueurs en bonne et très bonne forme (c'est ce qui fait progresser, mesuré par harvestgreen22), moitié et repos pour les autres afin d'arriver frais au match (banc d'essai d'AlexJeuVideal). Le jeu applique ensuite le réglage à chacun. Priorité individuelle : le point faible vu en match, sinon Vitesse jusqu'à 23 ans pour un joueur lent (vitesse ou accélération sous 12), sinon l'attribut clé le plus faible du rôle.",
       "why": {
         "press": "efficacité : 2 pièges du pressing par semaine",
@@ -1323,7 +1324,8 @@
       "coach": {
         "title": "Ton adjoint, côté entraînement",
         "week": "Semaine du {{date}}, planning {{code}}.",
-        "season": "{{matches}} match(s) : {{tactical}} séances tactiques ({{zones}}) et {{grow}} séances de progression. Veille de match : une seule séance de préparation, lendemain : Repos puis Récupération.",
+        "season_one": "{{count}} match : {{tactical}} séances tactiques ({{zones}}) et {{grow}} séances de progression. Veille de match : une seule séance de préparation, lendemain : Repos puis Récupération.",
+        "season_other": "{{count}} matchs : {{tactical}} séances tactiques ({{zones}}) et {{grow}} séances de progression. Veille de match : une seule séance de préparation, lendemain : Repos puis Récupération.",
         "noMatch": "Aucun match : {{tactical}} séances tactiques ({{zones}}), {{grow}} séances de progression et Développement individuel le dernier jour.",
         "congested": "{{matches}} matchs en sept jours : semaine entière de repos entre les matchs, les résultats priment.",
         "inGame": "Dans le jeu : charge le programme « {{preset}} », charge de travail {{workload}}, puis recopie les séances ci-dessous.",
@@ -1333,6 +1335,7 @@
         "setups_other": "{{count}} réglages individuels à changer dans le jeu (section Individuel).",
         "setupsOk": "Les réglages individuels sont tous à jour dans le jeu.",
         "yieldTitle": "Ce que ça donne vraiment",
+        "yieldDetail": "Voir les chiffres",
         "yield": "Du {{from}} au {{to}} ({{days}} jours, {{players}} joueurs comparés) : {{delta}} point d'attribut par joueur, soit {{month}} par mois ; la courbe d'âge en laissait attendre {{expected}}.",
         "yieldVerdict": {
           "good": "Ça progresse : garde ce programme.",
@@ -1586,7 +1589,8 @@
         "starterNow": "titulaire aujourd'hui ({{pos}})",
         "starterProject": "titulaire du projet ({{pos}})",
         "backupAt": "doublure en {{pos}}",
-        "surplus": "{{rank}}e en {{pos}} pour {{need}} place(s)",
+        "surplus_one": "{{rank}}e en {{pos}} pour {{count}} place",
+        "surplus_other": "{{rank}}e en {{pos}} pour {{count}} places",
         "noPosition": "aucun poste dans les deux onze",
         "misfit": "moins adapté au style visé en {{pos}}",
         "contract_one": "contrat : {{count}} mois",
@@ -2709,14 +2713,16 @@
         "title_L": "{{club}} chute {{score}} face à {{opponent}}",
         "title_cupOut": "{{club}} éliminé de la {{competition}} par {{opponent}} ({{score}})",
         "title_cupThrough": "{{club}} passe le tour en {{competition}} ({{score}} face à {{opponent}})",
-        "cupOut": "Fin de l'aventure en {{competition}} après {{count}} tour(s).",
-        "cupOutLegs": "Battu {{agg}} sur les deux matchs, le club quitte la {{competition}} après {{count}} tour(s).",
+        "cupOut_one": "Fin de l'aventure en {{competition}} après {{count}} tour.",
+        "cupOut_other": "Fin de l'aventure en {{competition}} après {{count}} tours.",
+        "cupOutLegs_one": "Battu {{agg}} sur les deux matchs, le club quitte la {{competition}} après {{count}} tour.",
+        "cupOutLegs_other": "Battu {{agg}} sur les deux matchs, le club quitte la {{competition}} après {{count}} tours.",
         "cupThrough": "Qualifié pour le tour suivant de la {{competition}}.",
         "cupThroughLegs": "Qualifié {{agg}} sur les deux matchs pour le tour suivant de la {{competition}}."
       },
       "results": {
         "title": "{{matches}} matchs cette semaine",
-        "body": "Bilan : {{wins}} victoire(s), {{draws}} nul(s), {{losses}} défaite(s)."
+        "body": "Bilan : {{wins}} V · {{draws}} N · {{losses}} D."
       },
       "position": {
         "title": "Classement : de la {{from}}e à la {{to}}e place",
@@ -2787,8 +2793,10 @@
       },
       "cupOut": {
         "title": "{{club}} éliminé de la {{competition}}",
-        "body": "Battu {{score}} par {{opponent}}, le club quitte la compétition après {{count}} tour(s).",
-        "bodyLegs": "Battu {{score}} sur les deux matchs par {{opponent}}, le club quitte la compétition après {{count}} tour(s)."
+        "body_one": "Battu {{score}} par {{opponent}}, le club quitte la compétition après {{count}} tour.",
+        "body_other": "Battu {{score}} par {{opponent}}, le club quitte la compétition après {{count}} tours.",
+        "bodyLegs_one": "Battu {{score}} sur les deux matchs par {{opponent}}, le club quitte la compétition après {{count}} tour.",
+        "bodyLegs_other": "Battu {{score}} sur les deux matchs par {{opponent}}, le club quitte la compétition après {{count}} tours."
       },
       "cupThrough": {
         "title": "{{club}} passe un tour en {{competition}}",
@@ -2931,7 +2939,8 @@
       "open_LCup_0": "{{club}} s'est incliné {{score}} face à {{opponent}}{{where}}{{comp}}.",
       "open_LCup_1": "Revers pour {{club}}, battu {{score}} par {{opponent}}{{where}}{{comp}}.",
       "open_LCup_2": "Rien n'a tourné pour {{club}}{{where}} : défaite {{score}} contre {{opponent}}{{comp}}.",
-      "cupOutAfter_0": "Après {{count}} tour(s) disputé(s), il ne reste plus que le championnat pour sauver la saison.",
+      "cupOutAfter_0_one": "Après un seul tour disputé, il ne reste plus que le championnat pour sauver la saison.",
+      "cupOutAfter_0_other": "Après {{count}} tours disputés, il ne reste plus que le championnat pour sauver la saison.",
       "cupOutAfter_1": "Une coupe en moins, c'est aussi un calendrier allégé : à {{club}} de s'en servir en championnat.",
       "cupOutAfter_2": "La {{competition}} faisait rêver les supporters ; il faudra trouver d'autres raisons d'y croire.",
       "cupThroughAfter_0": "Le tirage du prochain tour dira jusqu'où peut aller {{club}}.",
@@ -3300,7 +3309,8 @@
       "through": "{{competition}} · qualifié",
       "out": "{{competition}} · éliminé par {{opponent}}",
       "won": "{{competition}} · vainqueur",
-      "unknown": "{{competition}} · {{count}} match(s)"
+      "unknown_one": "{{competition}} · {{count}} match",
+      "unknown_other": "{{competition}} · {{count}} matchs"
     }
   },
   "challenges": {
@@ -3342,7 +3352,7 @@
       "titles": "Titres de champion : {{value}} {{detail}}",
       "topTitle": "Champion de 1re division {{detail}}",
       "seasonUnbeaten": "Saison de championnat sans défaite {{detail}}",
-      "currentSeason": "Saison en cours : {{value}} défaite(s) en {{detail}} matchs",
+      "currentSeason": "Saison en cours : {{detail}} matchs, défaites : {{value}}",
       "u19Matches": "Matchs avec au moins 3 titulaires de moins de 19 ans : {{value}} / {{target}}",
       "localsSeason": "Une saison complète avec seulement des joueurs « {{value}} » ({{detail}})",
       "localsUsed": "Joueurs alignés : {{value}}, aucun étranger",
@@ -3374,10 +3384,12 @@
       "notUnemployed": "La carrière n'a pas commencé sans club.",
       "untracked": "Saison {{season}} pas suivie de bout en bout ({{tracked}} matchs suivis sur {{expected}}) : ne compte pas.",
       "unknownLoss": "Défaite dans {{matches}} matchs regroupés avant le {{date}} : compétition inconnue, saison non prouvée. Laisse FM Immersion ouvert ou relis après chaque match.",
-      "nationalityUnknown": "Nationalité inconnue pour {{count}} joueur(s) : le plugin doit lire « nationalites ».",
+      "nationalityUnknown_one": "Nationalité inconnue pour {{count}} joueur : le plugin doit lire « nationalites ».",
+      "nationalityUnknown_other": "Nationalité inconnue pour {{count}} joueurs : le plugin doit lire « nationalites ».",
       "notInDebt": "Le club n'était pas dans le rouge à l'inscription : le défi demande un club endetté.",
       "balanceUnknown": "Le solde du club n'est pas encore lu : ouvre la partie dans FM Coach.",
-      "promotionGuess": "{{count}} montée(s) devinée(s) d'après la place finale : le plugin doit lire la réputation de la division pour les prouver."
+      "promotionGuess_one": "{{count}} montée devinée d'après la place finale : le plugin doit lire la réputation de la division pour la prouver.",
+      "promotionGuess_other": "{{count}} montées devinées d'après la place finale : le plugin doit lire la réputation de la division pour les prouver."
     },
     "def": {
       "zero-to-hero": {
@@ -3518,7 +3530,7 @@
       "challenge": "Défi en cours",
       "pickChallenge": "Choisir un défi",
       "noChallenge": "Aucun défi en cours.",
-      "steps": "{{done}} étape(s) sur {{total}}",
+      "steps": "Étapes franchies : {{done}} sur {{total}}",
       "facesProgress": "Génération des portraits : {{pct}} %"
     },
     "career": {

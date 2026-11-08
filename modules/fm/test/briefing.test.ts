@@ -48,6 +48,14 @@ describe("briefing de l'adjoint", () => {
     const c = briefing({ players: ps, nextMatch, starters: new Set(['A', 'B']), congested: true }).find((x) => x.kind === 'congested')!;
     expect(c.players.map((p) => p.id)).toEqual(['A']);
   });
+  it('calendrier chargé avec des titulaires fatigués : un seul message de rotation, les fatigués en premier', () => {
+    const ps = [pl('A', { condition: 90 }), pl('B', { condition: 80 }), pl('C')];
+    const b = briefing({ players: ps, nextMatch: { opponent: 'Senica', home: true, inDays: 3, competition: '2. liga' }, starters: new Set(['A', 'B', 'C']), congested: true });
+    expect(b.some((x) => x.kind === 'tiredStarters')).toBe(false);
+    const c = b.find((x) => x.kind === 'congested')!;
+    expect(c.players.map((p) => p.id)).toEqual(['B', 'A']);
+    expect(c.tone).toBe('warn');
+  });
   it('intersaison sans match : rien à signaler sinon', () => {
     expect(briefing({ players: [pl('A')], nextMatch: null, offseason: true }).map((x) => x.kind)).toEqual(['offseason']);
     expect(briefing({ players: [pl('A')], nextMatch: null }).map((x) => x.kind)).toEqual(['allGood']);
