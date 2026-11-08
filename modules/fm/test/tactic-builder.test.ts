@@ -134,3 +134,14 @@ describe('consignes individuelles', () => {
     expect(analyseBuiltTactic(engine, t).scores.solidity).toBeGreaterThan(before);
   });
 });
+
+describe('Repères locaux anciens', () => {
+  it('un ancien fichier local ne retire pas un rôle sans ballon de FM27 de son poste', () => {
+    const old = { roles: [{ code: 'TWM', fr: 'x', en: 'x', phase: 'ip' as const, positions: ['AML'], group: 'WG', weights: { workRate: 3 } }], styles: [] };
+    const e = new TacticEngine(mergeReference(old as never));
+    const t = newBuiltTactic(e, '4-3-3', 'a');
+    const i = t.slots.findIndex((s) => s.pos === 'MOG');
+    const codes = rolesAt(e, t.slots.map((s) => ({ pos: s.posOOP })), i, 'oop').map((r) => r.code);
+    expect(codes).toEqual(expect.arrayContaining(['WM', 'TWM', 'WOM']));
+  });
+});
