@@ -13,8 +13,21 @@ export const PARTS: Record<ClubPage, readonly string[]> = {
   mercato: ['mercato', 'targets', 'finances', 'wages', 'contracts'],
 };
 
-/** Sous-onglets montrés directement ; les suivants passent dans « Plus ». */
-export const VISIBLE_PARTS = 5;
+/**
+ * Sous-onglets de chaque écran (5 au plus, tous visibles) : un sous-onglet regroupe une ou plusieurs parties,
+ * montrées une à la fois derrière des pastilles. L'ordre des parties suit PARTS.
+ */
+export const TABS: Record<ClubPage, readonly (readonly string[])[]> = {
+  tactic: [['tactic', 'instructions'], ['opponent'], ['depth', 'calendar'], ['style', 'effectiveness', 'project'], ['training', 'staff']],
+  squad: [['squad', 'loans', 'numbers'], ['playtime', 'dressing'], ['progression'], ['roles'], ['compare']],
+  results: [['results'], ['diagnosis'], ['stats'], ['analysis']],
+  mercato: [['mercato'], ['targets'], ['finances'], ['wages'], ['contracts']],
+};
+
+/** Sous-onglet qui contient une partie (le premier de l'écran à défaut). */
+export function tabOf(page: ClubPage, part: string): readonly string[] {
+  return TABS[page].find((t) => t.includes(part)) ?? TABS[page][0]!;
+}
 
 /** Écran qui contient une partie (lui-même, ou l'écran où elle a été regroupée) ; `home` pour l'accueil. */
 export function pageOf(v: string): ClubPage | 'home' {

@@ -45,6 +45,7 @@ export function FmMatchCenter({
   gameTactic,
   go,
   aside,
+  asideAfter,
 }: {
   snap: FmSnapshot;
   players: FmPlayer[];
@@ -55,6 +56,8 @@ export function FmMatchCenter({
   go: (view: string) => void;
   /** Colonne de gauche, à côté du onze probable (le briefing de l'adjoint). */
   aside?: ReactNode;
+  /** Sous la colonne de gauche (prochains matchs). */
+  asideAfter?: ReactNode;
 }) {
   const { t, i18n } = useTranslation();
   const names = useNames();
@@ -119,7 +122,6 @@ export function FmMatchCenter({
   const chip = (on: boolean) => `chip ${on ? 'chip-on' : ''}`;
   const tweaks = useMemo(() => matchTweaks(style?.id), [style]);
   const nm = s.nextMatch;
-  const day = new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short' });
   const rating = new Intl.NumberFormat(lang, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -179,20 +181,14 @@ export function FmMatchCenter({
               {t('fm.mc.calendar')}
             </button>
           </div>
-          {fixtures.length > 1 && (
-            <p className="mt-4 text-xs text-white/60">
-              <b className="text-white/80">{t('fm.mc.then')}</b>{' '}
-              {fixtures
-                .slice(1, 4)
-                .map((f) => `${f.opponent ?? '–'}${f.home != null ? ` (${t(f.home ? 'fm.mc.homeShort' : 'fm.mc.awayShort')})` : ''} ${day.format(new Date(f.date))}`)
-                .join(' · ')}
-            </p>
-          )}
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div className="min-w-0">{aside}</div>
+        <div className="min-w-0 space-y-4">
+          {aside}
+          {asideAfter}
+        </div>
 
         {/* Onze probable sur le terrain, et l'état de l'équipe juste dessous. */}
         <div className="card p-4">

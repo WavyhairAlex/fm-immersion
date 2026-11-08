@@ -447,7 +447,9 @@
       "setupChanges_one": "{{count}} entraînement individuel à changer",
       "setupChanges_other": "{{count}} entraînements individuels à changer",
       "tired_one": "{{count}} joueur sous 80 % de condition",
-      "tired_other": "{{count}} joueurs sous 80 % de condition"
+      "tired_other": "{{count}} joueurs sous 80 % de condition",
+      "fixtures": "Calendrier",
+      "lastResult": "Dernier résultat"
     },
     "contracts": {
       "byYear": "Salaires mensuels libérés par année de fin de contrat",
@@ -2590,6 +2592,14 @@
         "mercato": "Mercato",
         "home": "Adjoint"
       }
+    },
+    "tabs": {
+      "tactic": "Le onze",
+      "depth": "Rotation",
+      "style": "Projet de jeu",
+      "training": "Entraînement",
+      "squad": "Joueurs",
+      "playtime": "Temps de jeu et vestiaire"
     }
   },
   "modes": {
