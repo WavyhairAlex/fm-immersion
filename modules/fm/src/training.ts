@@ -525,14 +525,27 @@ export const COACH_INTENSITY: Record<(typeof CONDITION_LEVELS)[number], Individu
 
 /**
  * Priorité individuelle du programme FM Immersion : le point faible vu en match s'il y en a un ; sinon Vitesse pour
- * les joueurs de champ de 23 ans ou moins (l'attribut qui pèse le plus en match d'après harvestgreen22, et qui ne
- * progresse plus après) ; sinon l'attribut clé le plus faible du rôle.
+ * les joueurs de champ de 23 ans ou moins qui sont lents (vitesse ou accélération sous `SLOW_BELOW` : l'attribut qui
+ * pèse le plus en match d'après harvestgreen22, et qui ne progresse plus après) ; sinon l'attribut clé le plus faible
+ * du rôle. Un jeune déjà rapide gagne plus à travailler son vrai point faible (choix du 08/11/2026).
  */
-export function coachFocus(player: { age: number | null; positions: string[] }, weak: { key: string }[], fromStats: string | null): string | null {
+export const SLOW_BELOW = 12;
+export function coachFocus(
+  player: { age: number | null; positions: string[]; attributes?: Record<string, number> },
+  weak: { key: string }[],
+  fromStats: string | null,
+): string | null {
   const gk = player.positions[0] === 'GB';
   if (fromStats) return fromStats;
-  if (!gk && player.age != null && player.age <= 23) return HARVEST_FOCUS;
-  return individualFocus(weak, gk);
+  if (!gk && player.age != null && player.age <= 23 && isSlow(player.attributes)) return HARVEST_FOCUS;
+  return individualFocus(weak, gk) ?? (!gk && player.age != null && player.age <= 23 ? HARVEST_FOCUS : null);
+}
+/** Vitesse ou accélération sous le seuil ; attributs inconnus : on reste sur Vitesse, comme avant. */
+function isSlow(a: Record<string, number> | undefined): boolean {
+  const pace = a?.Pace;
+  const acc = a?.Acceleration;
+  if (pace == null && acc == null) return true;
+  return (pace ?? 20) < SLOW_BELOW || (acc ?? 20) < SLOW_BELOW;
 }
 
 /* ---------- Programme FM Immersion (toutes sources réunies) ---------- */
