@@ -1219,7 +1219,7 @@
         "normal": "nothing to force: the game sets it by condition"
       },
       "rusty": "lacking sharpness: reserve minutes or late appearances",
-      "individualHelp": "Matches the game's Individual Training screen. IP and OOP roles: those of his slot in the target XI, otherwise the project role he fits best. Focus: the weak point seen in matches, otherwise Quickness up to age 23, otherwise the role's weakest key attribute. Intensity: \"Team\" for everyone, i.e. the Team intensity setting above (double for players in good condition, half and rest for the others) that the game applies to each player according to his condition; no per-player manual setting.",
+      "individualHelp": "Matches the game's Individual Training screen. IP and OOP roles: those of his slot in the target XI, otherwise the project role he fits best. Focus: the weak point seen in matches, otherwise Quickness up to age 23 for a slow player (pace or acceleration below 12), otherwise the role's weakest key attribute. Intensity: \"Team\" for everyone, i.e. the Team intensity setting above (double for players in good condition, half and rest for the others) that the game applies to each player according to his condition; no per-player manual setting.",
       "mentoring": "Mentoring groups",
       "mentor": "Mentor",
       "mentees": "Mentored youngsters",
@@ -1291,7 +1291,7 @@
       "metaSwaps": "After loading it, replace: {{list}}.",
       "coachHelp": "FM Immersion programme, one proposal only: each working day, one tactical session (two Pressing Traps a week, then the areas the game rates least understood, otherwise your style's areas) and one development session (Conditioning, Attacking ball work, Defensive ball work, Light conditioning: the four sessions that raise attributes the most in harvestgreen22's measurements). Day before a match: a single match-prep session. Day after: Rest then Recovery. Never conditioning two days before a match. When the game says everything is understood, tactical sessions shrink to the two traps.",
       "coachSummary": "This week: {{tactical}} tactical sessions, {{grow}} development sessions, {{matches}} match(es).",
-      "teamIntensityCoach": "Recommended in Training > Team intensity: double for players in good and excellent condition (that is what makes them progress, measured by harvestgreen22), half and rest for the others so they reach the match fresh (AlexJeuVideal's test bench). The game then applies it to each player. Individual focus: the weak point seen in matches, otherwise Quickness up to age 23, otherwise the role's weakest key attribute.",
+      "teamIntensityCoach": "Recommended in Training > Team intensity: double for players in good and excellent condition (that is what makes them progress, measured by harvestgreen22), half and rest for the others so they reach the match fresh (AlexJeuVideal's test bench). The game then applies it to each player. Individual focus: the weak point seen in matches, otherwise Quickness up to age 23 for a slow player (pace or acceleration below 12), otherwise the role's weakest key attribute.",
       "why": {
         "press": "efficiency: 2 pressing traps a week",
         "weak": "area the game rates least understood",
@@ -1387,7 +1387,7 @@
           "low_one": "{{count}} with low potential",
           "low_other": "{{count}} with low potential"
         },
-        "help": "Reserve and youth players read by the plugin. The role to learn is the role in your game plan he fits best; the individual focus follows the same rule as the first team (quickness up to 23, measured as the most effective, otherwise his weakest key attributes, shown next to it). Status from his role fit compared with your first-team starters (median). The youth fixture list is not read: the typical week assumes a Saturday match. In the game, youth training is set in their Training screen, if you took charge of it in the staff responsibilities."
+        "help": "Reserve and youth players read by the plugin. The role to learn is the role in your game plan he fits best; the individual focus follows the same rule as the first team (quickness up to 23 for a slow player, measured as the most effective, otherwise his weakest key attributes, shown next to it). Status from his role fit compared with your first-team starters (median). The youth fixture list is not read: the typical week assumes a Saturday match. In the game, youth training is set in their Training screen, if you took charge of it in the staff responsibilities."
       }
     },
     "intro": {

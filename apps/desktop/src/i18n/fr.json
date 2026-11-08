@@ -1219,7 +1219,7 @@
         "normal": "rien à forcer : le jeu règle selon la condition"
       },
       "rusty": "manque de rythme : temps de jeu en réserve ou en fin de match",
-      "individualHelp": "Comme l'écran Entraîn. individuel du jeu. Rôles ALB et SLB : ceux de son poste dans le onze cible, sinon le rôle du projet où il est le plus adapté. Priorité : le point faible vu en match, sinon Vitesse jusqu'à 23 ans, sinon l'attribut clé le plus faible du rôle. Intensité : « Équipe » pour tout le monde, c'est le réglage Intensité de l'équipe ci-dessus (double pour les joueurs en forme, moitié et repos pour les autres) que le jeu applique à chacun selon sa condition ; pas de réglage à la main par joueur.",
+      "individualHelp": "Comme l'écran Entraîn. individuel du jeu. Rôles ALB et SLB : ceux de son poste dans le onze cible, sinon le rôle du projet où il est le plus adapté. Priorité : le point faible vu en match, sinon Vitesse jusqu'à 23 ans pour un joueur lent (vitesse ou accélération sous 12), sinon l'attribut clé le plus faible du rôle. Intensité : « Équipe » pour tout le monde, c'est le réglage Intensité de l'équipe ci-dessus (double pour les joueurs en forme, moitié et repos pour les autres) que le jeu applique à chacun selon sa condition ; pas de réglage à la main par joueur.",
       "mentoring": "Groupes d'encadrement",
       "mentor": "Tuteur",
       "mentees": "Jeunes encadrés",
@@ -1291,7 +1291,7 @@
       "metaSwaps": "Après chargement, remplace : {{list}}.",
       "coachHelp": "Programme FM Immersion, une seule proposition : chaque jour de travail, une séance tactique (deux Pièges du pressing par semaine, puis les zones que le jeu dit les moins comprises, sinon celles de ton style) et une séance de progression (Condition physique, Ballon offensif, Ballon défensif, Condition physique légère : les quatre séances qui font le plus progresser les attributs d'après les mesures d'harvestgreen22). Veille de match : une seule séance de préparation. Lendemain : Repos puis Récupération. Jamais de condition physique l'avant-veille d'un match. Quand le jeu dit que tout est compris, les séances tactiques se réduisent aux deux pièges.",
       "coachSummary": "Cette semaine : {{tactical}} séances tactiques, {{grow}} séances de progression, {{matches}} match(s).",
-      "teamIntensityCoach": "Réglage conseillé dans Entraînement > Intensité de l'équipe : double pour les joueurs en bonne et très bonne forme (c'est ce qui fait progresser, mesuré par harvestgreen22), moitié et repos pour les autres afin d'arriver frais au match (banc d'essai d'AlexJeuVideal). Le jeu applique ensuite le réglage à chacun. Priorité individuelle : le point faible vu en match, sinon Vitesse jusqu'à 23 ans, sinon l'attribut clé le plus faible du rôle.",
+      "teamIntensityCoach": "Réglage conseillé dans Entraînement > Intensité de l'équipe : double pour les joueurs en bonne et très bonne forme (c'est ce qui fait progresser, mesuré par harvestgreen22), moitié et repos pour les autres afin d'arriver frais au match (banc d'essai d'AlexJeuVideal). Le jeu applique ensuite le réglage à chacun. Priorité individuelle : le point faible vu en match, sinon Vitesse jusqu'à 23 ans pour un joueur lent (vitesse ou accélération sous 12), sinon l'attribut clé le plus faible du rôle.",
       "why": {
         "press": "efficacité : 2 pièges du pressing par semaine",
         "weak": "zone la moins comprise d'après le jeu",
@@ -1387,7 +1387,7 @@
           "low_one": "{{count}} avec peu de potentiel",
           "low_other": "{{count}} avec peu de potentiel"
         },
-        "help": "Joueurs de la réserve et des équipes de jeunes lus par le plugin. Le rôle à apprendre est celui de ton projet de jeu où le joueur est le plus adapté ; la priorité individuelle suit la même règle que l'équipe première (vitesse jusqu'à 23 ans, mesurée comme la plus rentable, sinon ses attributs clés les plus faibles, affichés à côté). Statut d'après son adéquation au rôle comparée à celle des titulaires de ton équipe première (médiane). Le calendrier des jeunes n'est pas lu : la semaine type suppose un match le samedi. Dans le jeu, le programme des jeunes se règle dans leur écran Entraînement, si tu en as pris la responsabilité dans les responsabilités du personnel."
+        "help": "Joueurs de la réserve et des équipes de jeunes lus par le plugin. Le rôle à apprendre est celui de ton projet de jeu où le joueur est le plus adapté ; la priorité individuelle suit la même règle que l'équipe première (vitesse jusqu'à 23 ans pour un joueur lent, mesurée comme la plus rentable, sinon ses attributs clés les plus faibles, affichés à côté). Statut d'après son adéquation au rôle comparée à celle des titulaires de ton équipe première (médiane). Le calendrier des jeunes n'est pas lu : la semaine type suppose un match le samedi. Dans le jeu, le programme des jeunes se règle dans leur écran Entraînement, si tu en as pris la responsabilité dans les responsabilités du personnel."
       }
     },
     "intro": {
