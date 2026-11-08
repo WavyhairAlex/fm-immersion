@@ -1,11 +1,13 @@
 import { loanedOutIds, normalizePlayer, squadSnapshot } from '@fm-immersion/module-fm';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useCareer } from '../lib/career';
 import { CLUB_PAGES, PARTS, clubPath } from '../lib/club-nav';
 import { fmData } from '../lib/data';
+import { useFmFolder } from '../lib/fm-sync';
 import { useUi } from '../lib/ui-store';
 
 /** Texte comparable : minuscules, sans accents. */
@@ -15,7 +17,7 @@ interface Hit {
   key: string;
   label: string;
   sub: string;
-  kind: 'screen' | 'player';
+  kind: 'action' | 'screen' | 'player';
   run: () => void;
 }
 
@@ -24,13 +26,15 @@ interface Hit {
  * ou un écran de l'appli. Flèches pour choisir, Entrée pour ouvrir, Échap pour fermer.
  */
 export function QuickSearch() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const qc = useQueryClient();
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const open = useUi((s) => s.searchOpen);
   const setOpen = useUi((s) => s.setSearchOpen);
   const openPlayer = useUi((s) => s.setOpenPlayer);
   const { saveId } = useCareer();
+  const folder = useFmFolder(saveId);
   const { data: snapshot } = useQuery({ queryKey: ['fm', saveId, 'latest'], queryFn: () => fmData.latest(saveId), enabled: !!saveId });
   const [q, setQ] = useState('');
   const [sel, setSel] = useState(0);
@@ -88,12 +92,34 @@ export function QuickSearch() {
         openPlayer(p.id);
       },
     }));
-    return [...people, ...screens];
-  }, [players, saveId, t, navigate, pathname, openPlayer]);
+    // Actions : ce que l'appli fait elle-même, sans passer par un écran.
+    const other = i18n.resolvedLanguage === 'en' ? 'fr' : 'en';
+    const actions: Hit[] = [
+      ...(saveId && folder
+        ? [
+            {
+              key: 'a:read',
+              label: t('search.actions.read'),
+              sub: t('search.actions.readSub'),
+              kind: 'action' as const,
+              run: () => {
+                void invoke<string>('fm_read_snapshot', { folder })
+                  .then((text) => fmData.importSnapshot(saveId, JSON.parse(text), {}))
+                  .then(() => qc.invalidateQueries({ queryKey: ['fm', saveId] }))
+                  .catch(() => undefined);
+              },
+            },
+          ]
+        : []),
+      { key: 'a:careers', label: t('search.actions.careers'), sub: '', kind: 'action', run: go('/parties') },
+      { key: 'a:lang', label: t('search.actions.lang'), sub: '', kind: 'action', run: () => void i18n.changeLanguage(other) },
+    ];
+    return [...actions, ...people, ...screens];
+  }, [players, saveId, folder, t, i18n, qc, navigate, pathname, openPlayer]);
 
   const hits = useMemo(() => {
     const words = fold(q).split(/\s+/).filter(Boolean);
-    if (!words.length) return all.filter((h) => h.kind === 'screen').slice(0, 8);
+    if (!words.length) return all.filter((h) => h.kind !== 'player').slice(0, 8);
     return all.filter((h) => words.every((w) => fold(`${h.label} ${h.sub}`).includes(w))).slice(0, 8);
   }, [all, q]);
 
@@ -141,7 +167,7 @@ export function QuickSearch() {
                   onClick={() => pick(h)}
                   className={`flex w-full items-baseline gap-3 px-5 py-2 text-left ${i === sel ? 'bg-orange-clair' : ''}`}
                 >
-                  <span className="w-16 shrink-0 text-xs font-bold uppercase text-brun">{t(h.kind === 'player' ? 'search.player' : 'search.screen')}</span>
+                  <span className="w-16 shrink-0 text-xs font-bold uppercase text-brun">{t(`search.${h.kind}`)}</span>
                   <span className="font-bold">{h.label}</span>
                   {h.sub && <span className="truncate text-sm text-brun">{h.sub}</span>}
                 </button>
