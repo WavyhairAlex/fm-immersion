@@ -10,6 +10,9 @@ describe('couleurs des clubs', () => {
     // Décimales à la française.
     expect(parseColour('RGBA(0,502, 0,000, 1,000, 1,000)')).toBe('#8000ff');
     expect(parseColour('rgb(0, 128, 255)')).toBe('#0080ff');
+    // Format réel de FM27 (instantané du 08/11/2026) : composantes 0-255 et opacité 255.
+    expect(parseColour('RGBA(16, 16, 16, 255)')).toBe('#101010');
+    expect(parseColour('RGBA(1, 1, 1, 255)')).toBe('#010101');
     expect(parseColour('Color { R = 255, G = 255, B = 0, A = 255 }')).toBe('#ffff00');
     expect(parseColour({ r: 0, g: 0.5, b: 1, a: 1 })).toBe('#0080ff');
     expect(parseColour({ R: 10, G: 20, B: 30 })).toBe('#0a141e');
