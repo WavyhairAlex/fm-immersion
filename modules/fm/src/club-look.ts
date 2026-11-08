@@ -23,11 +23,14 @@ export interface ClubLook {
 const hex2 = (n: number) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, '0');
 const toHex = (r: number, g: number, b: number) => `#${hex2(r)}${hex2(g)}${hex2(b)}`;
 
-/** Trois composantes 0-1 (toutes ≤ 1) ou 0-255 : en 0-255. */
-function scale(parts: number[]): [number, number, number] | null {
+/**
+ * Trois composantes 0-1 (toutes ≤ 1) ou 0-255 : en 0-255. L'opacité, quand elle est donnée, tranche l'échelle :
+ * FM27 écrit « RGBA(16, 16, 16, 255) », donc « RGBA(1, 1, 1, 255) » est un presque noir, pas du blanc.
+ */
+function scale(parts: number[], alpha?: number): [number, number, number] | null {
   const [r, g, b] = parts;
   if (![r, g, b].every((x) => typeof x === 'number' && Number.isFinite(x) && x >= 0)) return null;
-  const unit = r! <= 1 && g! <= 1 && b! <= 1;
+  const unit = typeof alpha === 'number' && Number.isFinite(alpha) ? alpha <= 1 && r! <= 1 && g! <= 1 && b! <= 1 : r! <= 1 && g! <= 1 && b! <= 1;
   const k = unit ? 255 : 1;
   if (!unit && (r! > 255 || g! > 255 || b! > 255)) return null;
   return [r! * k, g! * k, b! * k];
@@ -51,7 +54,7 @@ export function parseColour(v: unknown): string | null {
     };
     const a = pick('a');
     if (typeof a === 'number' && a === 0) return null;
-    const c = scale([pick('r'), pick('g'), pick('b')] as number[]);
+    const c = scale([pick('r'), pick('g'), pick('b')] as number[], typeof a === 'number' ? a : undefined);
     return c ? toHex(...c) : null;
   }
   if (typeof v !== 'string') return null;
@@ -65,7 +68,7 @@ export function parseColour(v: unknown): string | null {
   const nums = (s.match(/-?\d+(?:[.,]\d+)?/g) ?? []).map((x) => Number(x.replace(',', '.')));
   if (/^(rgba?|color|colour)\b/i.test(s) || /\bR\s*=/.test(s)) {
     if (nums.length >= 4 && nums[3] === 0) return null;
-    const c = scale(nums.slice(0, 3));
+    const c = scale(nums.slice(0, 3), nums[3]);
     return c ? toHex(...c) : null;
   }
   return null;
