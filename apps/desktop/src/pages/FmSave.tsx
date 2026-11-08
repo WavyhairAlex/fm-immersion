@@ -28,6 +28,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useUi } from '../lib/ui-store';
 import { TodayCards } from '../components/TodayCards';
 import { shownGameDate, useCareer, useCareerStore } from '../lib/career';
 import { clubPath, pageOf, PARTS, TABS, tabOf, type ClubPage } from '../lib/club-nav';
@@ -114,6 +115,14 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
   };
   // Fiche joueur ouverte depuis n'importe quel nom cliquable.
   const [sheet, setSheet] = useState<string | null>(null);
+  // Fiche demandée par la recherche rapide (Ctrl+K).
+  const wanted = useUi((s) => s.openPlayer);
+  const setWanted = useUi((s) => s.setOpenPlayer);
+  useEffect(() => {
+    if (!wanted) return;
+    setSheet(wanted);
+    setWanted(null);
+  }, [wanted, setWanted]);
   const folder = useFmFolder(saveId);
   // Ce que le briefing laisse à faire, par écran : une pastille dans la barre latérale (remise à zéro à chaque nouvelle date).
   const setTodo = useCareerStore((s) => s.setTodo);
