@@ -10,7 +10,7 @@ vi.mock('@tauri-apps/api/core', () => ({
   }),
 }));
 
-const { commentary, goalSituation, lastMatchStats, liveContext, liveStep, matchEnded, matchFigures, matchPhase, minuteOf, momentPayload, momentsBetween, personIdFor, prematchPayload, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
+const { commentary, goalSituation, lastMatchStats, liveContext, liveStep, matchEnded, matchFigures, matchPhase, minuteOf, momentLine, momentsBetween, personIdFor, prematchLines, progressBar, scoreboardPayload, timeline } = await import('../src/lib/live-discord');
 const t = ((k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k)) as unknown as TFunction;
 
 const at = '2026-11-07T07:20:00.000Z';
@@ -61,26 +61,23 @@ describe('direct Discord', () => {
 
   it('poste un seul encart puis le modifie : but, puis fin du match', async () => {
     let s = await liveStep(t, base, 'Malženice', null, now);
-    // L'encart, puis l'avant-match en message à part.
-    expect(calls.map((c) => c.cmd)).toEqual(['discord_post', 'discord_send']);
-    expect((calls[1]!.args.payload as { embeds: { title: string }[] }).embeds[0]!.title).toContain('live.prematch.kickoff');
+    // Un seul message : l'encart (l'avant-match y figure jusqu'au premier but).
+    expect(calls.map((c) => c.cmd)).toEqual(['discord_post']);
     expect(s?.messageId).toBe('42');
     calls.length = 0;
     s = await liveStep(t, { ...base, awayScore: 1, minute: '11 min.', scorers: "M. Fábry 11'" }, 'Malženice', s, now);
-    // L'encart est modifié, et le but part en message à part (temps fort).
-    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit', 'discord_send']);
-    const moment = (calls[1]!.args.payload as { embeds: { title: string; description: string }[] }).embeds[0]!;
-    expect(moment.title).toContain('live.moment.goalFor');
-    expect(moment.description).toContain('live.say.for_opener_');
+    // Le but ne fait pas de nouveau message : il passe en tête de l'encart, qui est modifié.
+    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit']);
     const embed = (calls[0]!.args.payload as { embeds: { description: string; fields: { value: string }[] }[] }).embeds[0]!;
+    expect(embed.description).toContain('live.moment.goalFor');
     expect(embed.description).toContain('live.say.for_opener_');
     expect(embed.description).toContain('M. Fábry');
     expect(embed.description).toContain("⏱️ 11'");
     expect(embed.fields[0]!.value).toContain('**M. Fábry**');
     calls.length = 0;
     s = await liveStep(t, { ...s!.last, minute: 'FDM', final: true }, 'Malženice', s, now);
-    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit', 'discord_send']);
-    expect((calls[1]!.args.payload as { embeds: { title: string }[] }).embeds[0]!.title).toContain('live.moment.final');
+    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit']);
+    expect((calls[0]!.args.payload as { embeds: { description: string }[] }).embeds[0]!.description).toContain('live.moment.final');
     expect(s?.done).toBe(true);
     calls.length = 0;
     await liveStep(t, { ...s!.last }, 'Malženice', s, now);
@@ -100,7 +97,7 @@ describe('direct Discord', () => {
     const ended = matchEnded(stuck, { gameDate: '2027-08-14' }, later);
     expect(ended).toEqual({ score: null });
     s = await liveStep(t, stuck, 'Malženice', s, later, undefined, ended);
-    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit', 'discord_send']);
+    expect(calls.map((c) => c.cmd)).toEqual(['discord_edit']);
     expect(s?.done).toBe(true);
     expect(s?.last.final).toBe(true);
     const embed = (calls[0]!.args.payload as { embeds: { author: { name: string }; description: string }[] }).embeds[0]!;
@@ -197,13 +194,13 @@ describe('chiffres du jeu après le match', () => {
     const clean = { ...base, minute: '30 min.', awayLineup: [{ name: 'M. Fábry', yellow: false }] };
     const carded = { ...clean, minute: '31 min.', awayLineup: [{ name: 'M. Fábry', yellow: true }] };
     expect(momentsBetween(clean, carded)).toEqual([{ kind: 'card', side: 'away', player: 'M. Fábry', card: 'yellow' }]);
-    expect(momentPayload(t, carded, base.home, { kind: 'card', side: 'away', player: 'M. Fábry', card: 'yellow' }).embeds[0]!.title).toContain('M. Fábry');
+    expect(momentLine(t, carded, base.home, { kind: 'card', side: 'away', player: 'M. Fábry', card: 'yellow' })).toContain('M. Fábry');
     expect(JSON.stringify(scoreboardPayload(t, carded, base.home).embeds[0]!.fields)).toContain('🟨 **M. Fábry**');
     // Penalty : le titre du but le dit, la minute perd le préfixe « pen ».
-    const pen = momentPayload(t, { ...base, homeScore: 1, scorers: "T. Astorga pen 20'" }, base.home, { kind: 'goal', side: 'home', scorer: { name: 'T. Astorga', time: "pen 20'" }, penalty: true, assist: 'J. Novák' });
-    expect(pen.embeds[0]!.title.toLowerCase()).toContain('penalty');
-    expect(pen.embeds[0]!.title).toContain("20'");
-    expect(pen.embeds[0]!.description).toContain('J. Novák');
+    const pen = momentLine(t, { ...base, homeScore: 1, scorers: "T. Astorga pen 20'" }, base.home, { kind: 'goal', side: 'home', scorer: { name: 'T. Astorga', time: "pen 20'" }, penalty: true, assist: 'J. Novák' });
+    expect(pen.toLowerCase()).toContain('penalty');
+    expect(pen).toContain('"minute":"20\'"');
+    expect(pen).toContain('J. Novák');
     expect(momentsBetween(at44, { ...base, minute: '45 min.' })).toEqual([{ kind: 'half' }]);
     expect(momentsBetween(at44, { ...base, minute: 'MT' })).toEqual([{ kind: 'half' }]);
     expect(momentsBetween({ ...base, minute: '30 min.' }, { ...base, minute: '36 min.' })).toEqual([]);
@@ -221,16 +218,21 @@ describe('chiffres du jeu après le match', () => {
     });
     expect(ctx.opponent).toEqual({ position: '12e', manager: 'V. Kúkoľ', formation: '4-2-4', scorer: 'M. Klec', scorerGoals: 3 });
     expect(ctx.lineup).toHaveLength(11);
-    const e = prematchPayload(t, base, 'Malženice', ctx).embeds[0]!;
-    expect(e.title).toContain('Inter Bratislava – Malženice');
-    expect(e.description).toContain('🏆 2. liga');
-    expect(e.description).toContain('live.prematch.ourPosition {"club":"Malženice","position":10}');
-    expect(e.description).toContain('live.prematch.theirPosition {"club":"Inter Bratislava","position":"12e"}');
-    expect(e.description).toContain('live.prematch.theirTop {"club":"Inter Bratislava","name":"M. Klec","count":3}');
-    expect(e.description).toContain('live.prematch.managerFormation');
-    expect(e.description).toContain('💬 Match disputé.');
-    expect(e.fields?.[0]?.value).toContain('J0 · J1');
-    expect(prematchPayload(t, base, null, null).embeds[0]!.description).toBe('live.prematch.soon');
+    const e = prematchLines(t, base, 'Malženice', ctx);
+    const text = e.lines.join('\n');
+    expect(text).toContain('🏆 2. liga');
+    expect(text).toContain('live.prematch.ourPosition {"club":"Malženice","position":10}');
+    expect(text).toContain('live.prematch.theirPosition {"club":"Inter Bratislava","position":"12e"}');
+    expect(text).toContain('live.prematch.theirTop {"club":"Inter Bratislava","name":"M. Klec","count":3}');
+    expect(text).toContain('live.prematch.managerFormation');
+    expect(text).toContain('💬 Match disputé.');
+    expect(e.lineup).toContain('J0 · J1');
+    expect(prematchLines(t, base, null, null)).toEqual({ lines: [], lineup: null });
+    // Dans l'encart, tant qu'aucun but n'est tombé.
+    const fields = scoreboardPayload(t, { ...base, context: ctx } as FmLive, 'Malženice').embeds[0]!.fields;
+    expect(fields.map((f) => f.name)).toEqual(['live.prematch.title', 'live.prematch.lineup']);
+    const scored = { ...base, homeScore: 1, minute: '20 min.', scorers: "T. Astorga 20'", context: ctx } as FmLive;
+    expect(scoreboardPayload(t, scored, 'Malženice').embeds[0]!.fields.map((f) => f.name)).not.toContain('live.prematch.title');
   });
 
   it('retrouve le joueur derrière le nom abrégé du jeu', () => {
@@ -241,5 +243,23 @@ describe('chiffres du jeu après le match', () => {
     expect(personIdFor(ctx, 'M. Fábry')).toBeNull(); // deux candidats
     expect(personIdFor(ctx, 'X. Inconnu')).toBeNull();
     expect(personIdFor(null, 'Astorga')).toBeNull();
+  });
+});
+
+describe('but contre son camp', () => {
+  // Capture du 08/11/2026 : Lajčiak (Malženice, à domicile) marque contre son camp, le jeu le range côté Slovan.
+  const og = { ...base, home: 'Malženice', away: 'Slovan B', awayScore: 1, minute: '27 min.', scorers: "A. Lajčiak c.s.c. 26'" } as FmLive;
+
+  it("est reconnu comme tel : le fautif n'ouvre pas le score pour l'adversaire", () => {
+    const g = timeline(og)!.at(-1)!;
+    expect(g).toMatchObject({ side: 'away', name: 'A. Lajčiak', own: true, minute: 26 });
+    const said = commentary(t, og, 'Malženice', g);
+    expect(said).toMatch(/^live\.say\.against_ownGoal_\d /);
+    expect(said).toContain('"minute":"26\'"');
+    expect(said).not.toContain('opener');
+    const line = momentLine(t, og, 'Malženice', { kind: 'goal', side: 'away', scorer: { name: 'A. Lajčiak', time: "c.s.c. 26'" }, penalty: false, assist: null });
+    expect(line).toMatch(/^😬 \*\*live\.moment\.ownGoalAgainst .*"player":"A. Lajčiak"/);
+    // Vu de Slovan : un cadeau.
+    expect(commentary(t, og, 'Slovan B', g)).toMatch(/^live\.say\.for_ownGoal_/);
   });
 });

@@ -56,6 +56,9 @@ export type FmLivePlayer = z.infer<typeof fmLivePlayerSchema>;
 /** But sur penalty : le jeu préfixe la minute (« pen 36' »). */
 export const isPenalty = (time: string | null | undefined) => /^pen/i.test(time ?? '');
 
+/** But contre son camp : le jeu note la minute « c.s.c. 26' » (« og 26' » en anglais). Le nom est celui du fautif. */
+export const isOwnGoal = (time: string | null | undefined) => /^(c\.?\s*s\.?\s*c\.?|o\.?\s*g\.?)(\s|\d|$)/i.test((time ?? '').trim());
+
 /** Passe décisive connue du rapport de match : passeur, buteur, minute, côté. */
 export interface LiveAssist {
   side: 'home' | 'away';
