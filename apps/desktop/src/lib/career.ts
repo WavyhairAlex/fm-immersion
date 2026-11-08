@@ -26,6 +26,21 @@ export interface SyncState {
   other: FmOtherSaveError | null;
   /** Plugin installé et à jour (null = pas encore vérifié). */
   bridgeOk: boolean | null;
+  /**
+   * Date de jeu actuelle et club, d'après archivix-status.json. Depuis le plugin 0.5.3, ce fichier suit la date du jeu
+   * toutes les 10 s, alors que l'instantané complet (1 à 2 min de lecture) garde la date du début de sa lecture.
+   */
+  now: { gameDate: string; club: string | null } | null;
+}
+
+/**
+ * Date de jeu à afficher : celle du jeu (état du plugin) quand elle concerne le même club et n'est pas plus ancienne
+ * que l'instantané, sinon celle de l'instantané. Évite d'afficher plusieurs jours de retard pendant que le joueur avance.
+ */
+export function shownGameDate(snapshot: { gameDate: string; club: string } | null | undefined, now: SyncState['now']): string | null {
+  if (!snapshot) return now?.gameDate ?? null;
+  if (now && now.club === snapshot.club && now.gameDate.slice(0, 10) > snapshot.gameDate.slice(0, 10)) return now.gameDate;
+  return snapshot.gameDate;
 }
 
 interface CareerState {
@@ -58,9 +73,9 @@ export const useCareerStore = create<CareerState>((set) => ({
     } catch {
       /* stockage indisponible : le choix n'est pas retenu */
     }
-    set({ saveId, sync: { free: null, other: null, bridgeOk: null }, todo: { at: '', views: [] }, brief: { at: '', items: [] } });
+    set({ saveId, sync: { free: null, other: null, bridgeOk: null, now: null }, todo: { at: '', views: [] }, brief: { at: '', items: [] } });
   },
-  sync: { free: null, other: null, bridgeOk: null },
+  sync: { free: null, other: null, bridgeOk: null, now: null },
   setSync: (patch) => set((s) => ({ sync: { ...s.sync, ...patch } })),
   todo: { at: '', views: [] },
   setTodo: (todo) => set({ todo }),

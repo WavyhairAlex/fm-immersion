@@ -27,7 +27,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { TodayCards } from '../components/TodayCards';
-import { useCareer, useCareerStore } from '../lib/career';
+import { shownGameDate, useCareer, useCareerStore } from '../lib/career';
 import { clubPath, pageOf, PARTS, VISIBLE_PARTS, type ClubPage } from '../lib/club-nav';
 import { fmData } from '../lib/data';
 import { importMissingHistory, type FmHistoryFile } from '../lib/fm-history';
@@ -302,7 +302,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
             <span className="font-extrabold">{snapshot.club}</span>
             <span className="text-sm text-brun">
               {typeof position === 'string' && position ? `${position} · ` : ''}
-              {dateFmt.format(new Date(snapshot.gameDate))}
+              {dateFmt.format(new Date(shownGameDate(snapshot, sync.now) ?? snapshot.gameDate))}
             </span>
           </>
         ) : (

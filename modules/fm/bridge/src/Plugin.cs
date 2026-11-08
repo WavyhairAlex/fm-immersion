@@ -18,7 +18,7 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.5.2";
+    public const string Version = "0.5.3";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que FM Immersion renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
@@ -65,6 +65,7 @@ public class Plugin : BasePlugin
             "Pendant un match, écrire toutes les 15 s archivix-live.json (score, minute, buteurs) pour le direct Discord de FM Immersion.").Value;
         AddComponent<MainThread>();
         new Thread(RefreshLoop) { IsBackground = true, Name = "ArchivixRefresh" }.Start();
+        new Thread(DateLoop) { IsBackground = true, Name = "ArchivixDate" }.Start();
         if (ReadLive) new Thread(LiveLoop) { IsBackground = true, Name = "ArchivixLive" }.Start();
         if (LocalServer) StartServer();
         Log.LogInfo($"Archivix Bridge {Version} : instantanés dans {DataDir}" + (_http != null ? $", serveur local sur {Prefix}" : ""));
@@ -138,6 +139,31 @@ public class Plugin : BasePlugin
         }
     }
 
+    // Date de jeu en direct (0.5.3) : toutes les 10 s, une seule lecture (club + date), et archivix-status.json dès que
+    // la date change. Un instantané complet prend 1 à 2 minutes et garde la date de son début : pendant que le joueur
+    // avance, FM Immersion affichait jusqu'à 3 jours de retard (08/11/2026). Rien pendant un chargement (SettleSeconds).
+    void DateLoop()
+    {
+        string? last = null;
+        DateTime? loadedSince = null;
+        while (true)
+        {
+            Thread.Sleep(10_000);
+            try
+            {
+                var (date, club) = FmBindingReader.CurrentDateAndClub();
+                if (date == null || club == null) { last = null; loadedSince = null; continue; }
+                loadedSince ??= DateTime.UtcNow;
+                if (DateTime.UtcNow - loadedSince < TimeSpan.FromSeconds(SettleSeconds)) continue;
+                var key = club + "|" + date;
+                if (key == last) continue;
+                WriteStatus(date, club, live: true);
+                last = key;
+            }
+            catch (Exception e) { Log.LogWarning($"Date de jeu : {e.Message}"); }
+        }
+    }
+
     // Match en direct (0.5.0) : toutes les 20 s, le plugin demande au jeu si un match est en cours ; pendant le match,
     // il relit toutes les 15 s le score du match du manager (FmBindingReader.ReadLive) et écrit archivix-live.json.
     // Lecture seule, comme le reste. Le fichier garde le dernier état (match fini compris) jusqu'au match suivant.
@@ -194,7 +220,7 @@ public class Plugin : BasePlugin
         var json = JsonSerializer.Serialize(snap, Json);
         WriteAtomic(Path.Combine(dir, "archivix-snapshot.json"), json);
         WriteAtomic(Path.Combine(dir, $"archivix-{snap.GameDate}.json"), json);
-        WriteStatus(snap.GameDate, snap.Club);
+        WriteStatus(snap.GameDate, snap.Club, live: false);
         if (WriteDiscovery && !_discovered)
         {
             _discovered = true;
@@ -205,8 +231,18 @@ public class Plugin : BasePlugin
 
     // État courant pour FM Immersion (0.4.2) : date de jeu et club du manager (null = sans club). Aucune lecture en plus :
     // reprend les valeurs de l'instantané. Format : {"schema":"archivix-status/1","gameDate":"yyyy-MM-dd","club":"Nom"|null}
-    internal static void WriteStatus(string gameDate, string? club)
+    // 0.5.3 : la date est aussi écrite par DateLoop, en avance sur l'instantané. Un instantané (live: false) ne la fait
+    // donc jamais reculer pour le même club ; un retour en arrière réel (sauvegarde rechargée) passe par DateLoop.
+    static string? _statusDate, _statusClub;
+    static readonly object StatusLock = new();
+    internal static void WriteStatus(string gameDate, string? club) => WriteStatus(gameDate, club, live: true);
+    internal static void WriteStatus(string gameDate, string? club, bool live)
     {
+        lock (StatusLock)
+        {
+            if (!live && club != null && club == _statusClub && _statusDate != null && string.CompareOrdinal(gameDate, _statusDate) < 0) return;
+            _statusDate = gameDate; _statusClub = club;
+        }
         try
         {
             var dir = DataDir;
