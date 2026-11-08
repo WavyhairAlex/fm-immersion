@@ -6,7 +6,7 @@ import { AiLink } from '../components/AiSettingsCard';
 import { DiscordEmbed } from '../components/DiscordEmbed';
 import { aiFor } from '../lib/ai';
 import { getLiveEnabled, getWebhook, isWebhook, sendDiscord, setLiveEnabled, setWebhook } from '../lib/discord';
-import { getGazetteAuto, setGazetteAuto } from '../lib/gazette-auto';
+import { getBreakingAuto, getGazetteAuto, setBreakingAuto, setGazetteAuto } from '../lib/gazette-auto';
 import { useCareer } from '../lib/career';
 import { fmData } from '../lib/data';
 import { livePreviewPayload } from '../lib/live-discord';
@@ -24,6 +24,7 @@ export function Discord() {
   const valid = isWebhook(url);
   const [live, setLive] = useState(getLiveEnabled());
   const [auto, setAuto] = useState(getGazetteAuto());
+  const [breaking, setBreaking] = useState(getBreakingAuto());
   const ai = aiFor('gazette') ?? aiFor('live');
   // Exemple d'encart du direct, au nom du club de la carrière suivie quand on le connaît.
   const { saveId } = useCareer();
@@ -152,6 +153,16 @@ export function Discord() {
             onChange={(v) => {
               setGazetteAuto(v);
               setAuto(v);
+            }}
+          />
+          <Toggle
+            on={breaking}
+            disabled={!saved}
+            title={t('discord.breakingEnable')}
+            help={t('discord.breakingShort')}
+            onChange={(v) => {
+              setBreakingAuto(v);
+              setBreaking(v);
             }}
           />
           <div className="flex flex-wrap items-center justify-between gap-3 py-3">

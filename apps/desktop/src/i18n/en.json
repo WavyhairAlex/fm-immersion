@@ -3399,7 +3399,9 @@
       "club": "Your club",
       "opponent": "The opponent",
       "scorer": "L. Martin"
-    }
+    },
+    "breakingEnable": "Send breaking news automatically",
+    "breakingShort": "New signing, departure of a starter, long injury: the news card goes to the channel on the day the plugin sees it."
   },
   "live": {
     "title": "Live match",
@@ -4134,5 +4136,38 @@
     "discordIntro": "⚡ **Breaking news**: {{title}}",
     "deck_one": "Arrived on {{start}}, left on {{end}}: {{count}} competitive match, record {{wins}}-{{draws}}-{{losses}} (won, drawn, lost).",
     "deck_other": "Arrived on {{start}}, left on {{end}}: {{count}} competitive matches, record {{wins}}-{{draws}}-{{losses}} (won, drawn, lost)."
+  },
+  "breaking": {
+    "kind": "Breaking",
+    "recent": "Recent breaking news",
+    "recentHelp": "New signing, departure of a first-team player, injury of four weeks or more: a news card, on the day the plugin sees it.",
+    "send": "Send the news",
+    "sent": "News sent to Discord.",
+    "age_one": "{{count}} year old",
+    "age_other": "{{count}} years old",
+    "injuryUnknown": "injury",
+    "tag": {
+      "signing": "Official",
+      "exit": "Departure",
+      "injury": "Injury flash"
+    },
+    "title": {
+      "signing": "{{name}} joins {{club}}",
+      "exit": "{{name}} leaves {{club}}",
+      "injury": "Blow for {{club}}: {{name}} injured"
+    },
+    "body": {
+      "signing": "It's official: {{name}} joins the {{club}} squad. The fans can't wait to see the new signing in action.",
+      "exit": "{{name}} is no longer part of the {{club}} squad. A departure that leaves a place to fill in the starting eleven.",
+      "injury": "Diagnosis: {{injury}}. {{name}} will miss about {{days}} days of football while recovering."
+    },
+    "weight": {
+      "top_signing": "A major signing: among the three best players in the squad.",
+      "starter_signing": "A signing for the starting eleven: ranked {{rank}} in the squad by ability.",
+      "top_exit": "A major loss: one of the three best players in the squad is leaving.",
+      "starter_exit": "One starter fewer: ranked {{rank}} in the squad by ability.",
+      "top_injury": "A real blow: one of the three best players in the squad.",
+      "starter_injury": "A key player missing: ranked {{rank}} in the squad by ability."
+    }
   }
 }
