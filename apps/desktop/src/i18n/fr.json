@@ -175,7 +175,34 @@
       "offline": "Impossible de vérifier la dernière version (hors ligne ?).",
       "compact": "Plugin FM27 {{version}} · à jour",
       "details": "Détails",
-      "hide": "Masquer"
+      "hide": "Masquer",
+      "options": {
+        "title": "Ce que le plugin lit dans FM27",
+        "intro": "Coche une lecture pour l'activer : FM Immersion modifie lui-même le fichier de réglages du plugin. Les lectures marquées expérimentales passent par l'affichage du jeu et ne se font jamais pendant que l'écran Tactique est ouvert.",
+        "next": "Enregistré : le plugin en tiendra compte au prochain lancement de FM27.",
+        "restart": "Enregistré. FM27 est ouvert : relance le jeu pour que le plugin en tienne compte.",
+        "error": "Réglage impossible : {{reason}}",
+        "LireCompo": {
+          "label": "Compo du jeu (expérimental)",
+          "help": "Le joueur à chaque poste et les rôles. L'appli suit alors ton vrai onze, et ses conseils de compo se règlent d'eux-mêmes quand tu changes le onze dans FM."
+        },
+        "LireCibles": {
+          "label": "Cibles du mercato (expérimental)",
+          "help": "Ta liste de suivi, les cibles du recrutement et tes joueurs prêtés."
+        },
+        "LireJoueursEtendus": {
+          "label": "Moral et vestiaire (expérimental)",
+          "help": "Moral, satisfaction, hiérarchie du vestiaire, étoiles du staff et personnalité."
+        },
+        "LireEfficacite": {
+          "label": "Efficacité tactique",
+          "help": "La note d'efficacité de FM27, ses 4 piliers et ses conseils."
+        },
+        "LireMatchDirect": {
+          "label": "Match en direct",
+          "help": "Score, minute et buteurs pendant un match, pour la feuille de match et le Live Discord."
+        }
+      }
     },
     "tac": {
       "noAttributes": "Il faut les attributs des joueurs : réimporte depuis FM27.",
@@ -3578,6 +3605,11 @@
         "results": "Rien d'inquiétant dans les résultats : continue comme ça.",
         "mercato": "Pas de décision de mercato ni de finances à prendre cette semaine."
       }
+    },
+    "state": {
+      "open": "FM27 ouvert",
+      "closed": "FM27 fermé",
+      "plugin": "Plugin à régler"
     }
   },
   "ai": {
