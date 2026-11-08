@@ -9,6 +9,7 @@ import {
   fmLiveSchema,
   liveCoachState,
   liveSubs,
+  matchdayPlan,
   matchTweaks,
   plannedSubs,
   ruleChecks,
@@ -60,10 +61,14 @@ export function FmMatchCenter({
   const lang = i18n.resolvedLanguage;
   const s = useMemo(() => summarize(snap, players), [snap, players]);
   const fixtures = useMemo(() => snapshotFixtures(snap), [snap]);
-  const { plan, style } = useTacticChoice(players, folder, gameFormation, lineup, gameTactic);
+  const { plan: basePlan, style, engine } = useTacticChoice(players, folder, gameFormation, lineup, gameTactic);
   const rules = competitionRules(s.nextMatch?.competition);
   // Poids du match : coupe ou calendrier chargé = faire tourner, championnat / Europe = meilleur onze.
   const weight = competitionWeight(s.nextMatch?.competition, { congested: isCongested(fixtures, snap.gameDate) });
+  // Onze du prochain match : le onze de base corrigé de la condition (et de la rotation en coupe ou calendrier chargé).
+  const matchday = useMemo(() => (basePlan ? matchdayPlan(engine, basePlan, players, { rotate: weight.rotate }) : null), [engine, basePlan, players, weight.rotate]);
+  const plan = matchday?.plan ?? basePlan;
+  const changes = matchday?.changes ?? [];
   const subs = useMemo(() => (plan ? substitutionPlan(plan, plannedSubs(rules)) : []), [plan, rules]);
   const benchPlayers = plan ? [...new Map(plan.subs.flatMap((l) => l.slice(0, 1)).map((p) => [p.id, p])).values()].slice(0, rules.bench ?? 9) : [];
   const eligibility = useMemo(() => eligibilityOf(snap), [snap]);
@@ -219,6 +224,22 @@ export function FmMatchCenter({
                 .map((p) => last(p.name))
                 .join(', ')}
             </p>
+          )}
+          {changes.length > 0 && (
+            <div className="mt-3 rounded-lg bg-orange-clair/60 p-2.5 text-xs">
+              <p className="font-bold text-canard">{t(weight.rotate ? 'fm.mc.rotationTitle' : 'fm.mc.changesTitle')}</p>
+              <ul className="mt-1 space-y-0.5">
+                {changes.map((c) => (
+                  <li key={c.slot} className="text-canard">
+                    <b>{last(c.out.name)}</b> → {c.in ? <b>{last(c.in.name)}</b> : t('fm.tac.nobody')}{' '}
+                    <span className="text-brun">
+                      ({c.reason === 'unavailable' ? t('fm.mc.why.unavailable') : t('fm.mc.why.condition', { pct: Math.round(c.out.condition ?? 0) })})
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-1 text-brun">{t('fm.mc.changesHint')}</p>
+            </div>
           )}
           <div className="mt-4 space-y-3 border-t border-canard/10 pt-4">
             <Gauge value={s.condition} label={t('fm.sum.condition')} />

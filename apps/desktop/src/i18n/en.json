@@ -368,6 +368,11 @@
           "softTackle": "plays up front: no free kick given",
           "weakFoot": "one good foot only"
         }
+      },
+      "sections": {
+        "xi": "The XI",
+        "match": "Against {{name}}",
+        "balance": "Balance and instructions"
       }
     },
     "nav": "Save sections",
@@ -782,6 +787,9 @@
           "min": "As little space as possible for the opponent against a low block. The game only offers this at the start of a season; the effect is a small bonus.",
           "normal": "No clear preference for this style: keep normal dimensions."
         }
+      },
+      "sections": {
+        "list": "The styles"
       }
     },
     "eff": {
@@ -897,7 +905,12 @@
       "inProject": "Project",
       "rotation": "Rotation",
       "trainingHelp": "Target role: his position's role for a starter in the target XI, otherwise the project role he fits best. Areas: his 3 weakest key attributes for that role, for individual training.",
-      "trainingDetail": "The player-by-player detail (target role, attributes to work on, intensity) is in the next step, Training."
+      "trainingDetail": "The player-by-player detail (target role, attributes to work on, intensity) is in the next step, Training.",
+      "sections": {
+        "plan": "The project",
+        "xi": "Target XI and training",
+        "evo": "Squad evolution"
+      }
     },
     "targets": {
       "title": "Transfer targets · {{style}} {{form}}",
@@ -1316,8 +1329,8 @@
         "inGame": "In the game: load the \"{{preset}}\" schedule, workload {{workload}}, then copy the sessions below.",
         "inGameRest": "In the game: load the \"{{preset}}\" schedule.",
         "intensity": "Team intensity: double for players in good and excellent condition, half for tired ones, nothing for exhausted ones.",
-        "setups_one": "{{count}} individual setting to change in the game (list below).",
-        "setups_other": "{{count}} individual settings to change in the game (list below).",
+        "setups_one": "{{count}} individual setting to change in the game (Individual section).",
+        "setups_other": "{{count}} individual settings to change in the game (Individual section).",
         "setupsOk": "All individual settings are up to date in the game.",
         "yieldTitle": "What it really yields",
         "yield": "From {{from}} to {{to}} ({{days}} days, {{players}} players compared): {{delta}} attribute point per player, i.e. {{month}} per month; the age curve suggested {{expected}}.",
@@ -1391,6 +1404,12 @@
           "low_other": "{{count}} with low potential"
         },
         "help": "Reserve and youth players read by the plugin. The role to learn is the role in your game plan he fits best; the individual focus follows the same rule as the first team (quickness up to 23 for a slow player, measured as the most effective, otherwise his weakest key attributes, shown next to it). Status from his role fit compared with your first-team starters (median). The youth fixture list is not read: the typical week assumes a Saturday match. In the game, youth training is set in their Training screen, if you took charge of it in the staff responsibilities."
+      },
+      "sections": {
+        "week": "This week",
+        "season": "The season",
+        "individual": "Individual",
+        "youth": "Youth and mentoring"
       }
     },
     "intro": {
@@ -2023,7 +2042,14 @@
       "inDaysLong": "In {{count}} days",
       "prepareMatch": "Prepare the match",
       "seeOpponent": "See the opponent",
-      "fit": "XI rating"
+      "fit": "XI rating",
+      "changesTitle": "Changes for this match",
+      "rotationTitle": "Rotation for this match",
+      "changesHint": "Your XI in FM is not changed: make the change in the game's line-up.",
+      "why": {
+        "unavailable": "unavailable",
+        "condition": "condition {{pct}}%"
+      }
     },
     "matchSheet": {
       "title": "Match sheet",

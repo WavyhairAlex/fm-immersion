@@ -368,6 +368,11 @@
           "softTackle": "joue devant : pas de coup franc offert",
           "weakFoot": "un seul bon pied"
         }
+      },
+      "sections": {
+        "xi": "Le onze",
+        "match": "Contre {{name}}",
+        "balance": "Équilibre et consignes"
       }
     },
     "nav": "Sections de la partie",
@@ -782,6 +787,9 @@
           "min": "Le moins d'espace possible pour l'adversaire face à un bloc bas. Le jeu ne propose ce choix qu'en début de saison ; l'effet reste un petit plus.",
           "normal": "Pas de préférence nette pour ce style : garde les dimensions normales."
         }
+      },
+      "sections": {
+        "list": "Les styles"
       }
     },
     "eff": {
@@ -897,7 +905,12 @@
       "inProject": "Projet",
       "rotation": "Rotation",
       "trainingHelp": "Rôle visé : celui de son poste pour un titulaire du onze cible, sinon le rôle du projet où il est le plus adapté. Axes : ses 3 attributs clés les plus faibles pour ce rôle, à cibler en entraînement individuel.",
-      "trainingDetail": "Le détail joueur par joueur (rôle visé, attributs à travailler, intensité) est à l'étape suivante, Entraînement."
+      "trainingDetail": "Le détail joueur par joueur (rôle visé, attributs à travailler, intensité) est à l'étape suivante, Entraînement.",
+      "sections": {
+        "plan": "Le projet",
+        "xi": "Onze cible et entraînement",
+        "evo": "Évolution de l'effectif"
+      }
     },
     "targets": {
       "title": "Cibles du mercato · {{style}} {{form}}",
@@ -1316,8 +1329,8 @@
         "inGame": "Dans le jeu : charge le programme « {{preset}} », charge de travail {{workload}}, puis recopie les séances ci-dessous.",
         "inGameRest": "Dans le jeu : charge le programme « {{preset}} ».",
         "intensity": "Intensité de l'équipe : double pour les joueurs en bonne et très bonne forme, moitié pour les fatigués, rien pour les épuisés.",
-        "setups_one": "{{count}} réglage individuel à changer dans le jeu (liste plus bas).",
-        "setups_other": "{{count}} réglages individuels à changer dans le jeu (liste plus bas).",
+        "setups_one": "{{count}} réglage individuel à changer dans le jeu (section Individuel).",
+        "setups_other": "{{count}} réglages individuels à changer dans le jeu (section Individuel).",
         "setupsOk": "Les réglages individuels sont tous à jour dans le jeu.",
         "yieldTitle": "Ce que ça donne vraiment",
         "yield": "Du {{from}} au {{to}} ({{days}} jours, {{players}} joueurs comparés) : {{delta}} point d'attribut par joueur, soit {{month}} par mois ; la courbe d'âge en laissait attendre {{expected}}.",
@@ -1391,6 +1404,12 @@
           "low_other": "{{count}} avec peu de potentiel"
         },
         "help": "Joueurs de la réserve et des équipes de jeunes lus par le plugin. Le rôle à apprendre est celui de ton projet de jeu où le joueur est le plus adapté ; la priorité individuelle suit la même règle que l'équipe première (vitesse jusqu'à 23 ans pour un joueur lent, mesurée comme la plus rentable, sinon ses attributs clés les plus faibles, affichés à côté). Statut d'après son adéquation au rôle comparée à celle des titulaires de ton équipe première (médiane). Le calendrier des jeunes n'est pas lu : la semaine type suppose un match le samedi. Dans le jeu, le programme des jeunes se règle dans leur écran Entraînement, si tu en as pris la responsabilité dans les responsabilités du personnel."
+      },
+      "sections": {
+        "week": "Cette semaine",
+        "season": "La saison",
+        "individual": "Individuel",
+        "youth": "Jeunes et encadrement"
       }
     },
     "intro": {
@@ -2023,7 +2042,14 @@
       "inDaysLong": "Dans {{count}} jours",
       "prepareMatch": "Préparer le match",
       "seeOpponent": "Voir l'adversaire",
-      "fit": "Note du onze"
+      "fit": "Note du onze",
+      "changesTitle": "Changements pour ce match",
+      "rotationTitle": "Rotation pour ce match",
+      "changesHint": "Ton onze dans FM n'est pas changé : fais-le dans la composition du jeu.",
+      "why": {
+        "unavailable": "absent",
+        "condition": "condition {{pct}} %"
+      }
     },
     "matchSheet": {
       "title": "Feuille de match",

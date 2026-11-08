@@ -56,7 +56,7 @@ import type { SeasonWeekKind } from '@fm-immersion/module-fm';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { ReserveContext, useTacticEngine } from './FmTactic';
-import { Chips, Fit, Panel, Pos, Tag, useCoach, useFormat, useNames, More, PlayerLink } from './FmUi';
+import { Chips, Fit, Panel, Pos, Tag, useCoach, useFormat, useNames, More, PlayerLink, SectionTabs } from './FmUi';
 
 /** Couleur des pastilles par catégorie de séance (texte toujours canard, sauf le match en bouton principal). */
 const CAT_CLS: Record<SessionCategory, string> = {
@@ -252,509 +252,539 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
   });
 
   return (
-    <div className="space-y-4">
-      <Panel title={t('fm.train.coach.title')}>
-        <p className="text-sm text-brun">{t('fm.train.coach.week', { date: dayMonth.format(new Date(`${monday}T00:00:00Z`)), code: plan.code })}</p>
-        <p className="mt-1 text-base font-bold text-canard">
-          {plan.congested
-            ? t('fm.train.coach.congested', { matches: summary.matches })
-            : seasonal
-              ? summary.matches
-                ? t('fm.train.coach.season', { matches: summary.matches, tactical: summary.tactical, grow: summary.grow, zones: zoneList })
-                : t('fm.train.coach.noMatch', { tactical: summary.tactical, grow: summary.grow, zones: zoneList })
-              : t(`fm.train.phaseHelp.${plan.phase}`)}
-        </p>
-        <ul className="mt-2 space-y-1 text-sm">
-          <li>{workload ? t('fm.train.coach.inGame', { preset: t(`fm.train.preset.${nearestPreset(plan)}`), workload: t(`fm.train.workload.${workload}`) }) : t('fm.train.coach.inGameRest', { preset: t(`fm.train.preset.${nearestPreset(plan)}`) })}</li>
-          <li>{t('fm.train.coach.intensity')}</li>
-          {setups.rows.length > 0 && (
-            <li>
-              {todoCount ? <Tag tone="warn">{t('fm.train.coach.setups', { count: todoCount })}</Tag> : <span className="text-brun">{t('fm.train.coach.setupsOk')}</span>}
-            </li>
-          )}
-        </ul>
-        <div className="mt-3 rounded-xl bg-white/60 p-3 ring-1 ring-canard/10">
-          <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.train.coach.yieldTitle')}</p>
-          {measured ? (
+    <SectionTabs
+      id="training"
+      sections={[
+        {
+          id: 'week',
+          label: t('fm.train.sections.week'),
+          node: (
             <>
-              <p className="mt-1 text-sm">
-                {t('fm.train.coach.yield', { from: f.date(measured.from), to: f.date(measured.to), days: measured.days, players: measured.players, delta: signed.format(measured.perPlayer), month: signed.format(measured.perMonth), expected: signed.format(measured.expectedPerMonth) })}
-              </p>
-              <p className="mt-1 text-sm font-bold">
-                <Tag tone={measured.verdict === 'good' ? 'good' : measured.verdict === 'bad' ? 'bad' : 'warn'}>{t(`fm.train.coach.yieldVerdict.${measured.verdict}`)}</Tag>
-              </p>
-              <p className="mt-1 text-xs text-brun">
-                {t('fm.train.coach.yieldGroups', { technical: signed.format(measured.groups.technical), mental: signed.format(measured.groups.mental), physical: signed.format(measured.groups.physical) })}
-                {measured.young != null && measured.senior != null && <> {t('fm.train.coach.yieldAges', { young: signed.format(measured.young), senior: signed.format(measured.senior) })}</>}
-              </p>
-              {measured.attrs.length > 0 && measured.attrs[0]!.delta > 0 && (
-                <p className="mt-1 text-xs text-brun">{t('fm.train.coach.yieldAttrs', { list: measured.attrs.filter((a) => a.delta > 0).slice(0, 4).map((a) => `${attr(a.key)} ${signed.format(a.delta)}`).join(', ') })}</p>
-              )}
-              {measured.up.length > 0 && (
-                <p className="mt-1 text-xs text-eau-fonce">{t('fm.train.coach.yieldUp', { list: measured.up.slice(0, 5).map((g) => `${g.player.name} ${signed.format(g.delta)}`).join(', ') })}</p>
-              )}
-              {measured.down.length > 0 && (
-                <p className="mt-1 text-xs text-corail">{t('fm.train.coach.yieldDown', { list: measured.down.slice(0, 5).map((g) => `${g.player.name} ${signed.format(g.delta)}`).join(', ') })}</p>
-              )}
-            </>
-          ) : (
-            <p className="mt-1 text-sm text-brun">{t('fm.train.coach.yieldSoon', { count: Math.max(1, missingDays) })}</p>
-          )}
-          <More>{t('fm.train.coach.yieldHelp')}</More>
-        </div>
-      </Panel>
-
-      <details className="rounded-2xl bg-white/40 ring-1 ring-canard/10">
-        <summary className="cursor-pointer select-none px-4 py-3 text-sm font-bold text-canard/70 hover:text-canard">
-          {t('fm.train.settings')} <span className="font-normal text-brun">· {settingsSummary}</span>
-        </summary>
-      <Panel title={t('fm.train.title')}>
-        <div className="flex flex-wrap items-end gap-4">
-          <div className={label}>
-            {t('fm.train.which')}
-            <div className="mt-1">
-              <Chips
-                value={offset}
-                options={[
-                  ['0', t('fm.train.thisWeek')],
-                  ['1', t('fm.train.nextWeek')],
-                  ...(Number(offset) > 1 ? ([[offset, t('fm.train.weekOfDate', { date: dayMonth.format(new Date(`${monday}T00:00:00Z`)) })]] as [string, string][]) : []),
-                ]}
-                onChange={(v) => {
-                  setOffset(v);
-                  resetWeek();
-                  setWeek(null);
-                }}
-              />
-            </div>
-          </div>
-          <label className={label}>
-            {t('fm.train.phaseLabel')}
-            <select
-              className="input mt-1"
-              value={phaseOverride ?? ''}
-              onChange={(e) => {
-                setPhase((e.target.value || null) as TrainingPhase | null);
-                setWeek(null);
-                resetWeek();
-              }}
-            >
-              <option value="">{t('fm.train.auto', { code: `${t(`fm.train.phase.${auto.phase}`)} ${auto.week}` })}</option>
-              {TRAINING_PHASES.map((p) => (
-                <option key={p} value={p}>
-                  {t(`fm.train.phase.${p}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className={label}>
-            {t('fm.train.cycleWeek')}
-            <select className="input mt-1" value={week} onChange={(e) => setWeek(Number(e.target.value) as CycleWeek)}>
-              {[1, 2, 3, 4].map((w) => (
-                <option key={w} value={w}>
-                  {phase}
-                  {w}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className={label}>
-            {t('fm.train.seasonStart')}
-            <select className="input mt-1" value={seasonStart} onChange={(e) => setCoach({ seasonStart: Number(e.target.value) })}>
-              {months.map((m) => (
-                <option key={m} value={m}>
-                  {monthName.format(new Date(2026, m - 1, 1))}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className={label}>
-            {t('fm.train.clubStatus')}
-            <div className="mt-1">
-              <Chips value={clubStatus} options={CLUB_STATUSES.map((c) => [c, t(`fm.train.status.${c}`)] as [ClubStatus, string])} onChange={(v) => setCoach({ clubStatus: v })} />
-            </div>
-          </div>
-          <div className={label}>
-            <span className="flex items-center gap-1.5">
-              <input
-                type="checkbox"
-                checked={!!winterBreak}
-                onChange={(e) => {
-                  setCoach({ winterBreak: e.target.checked ? { from: '12-28', to: '02-08' } : null });
-                  setPhase(null);
-                  setWeek(null);
-                }}
-              />
-              {t('fm.train.winterBreak')}
-            </span>
-            {winterBreak && (
-              <span className="mt-1 flex items-center gap-1.5 font-normal">
-                <input
-                  type="date"
-                  className="input"
-                  aria-label={t('fm.train.winterFrom')}
-                  value={`${monday.slice(0, 4)}-${winterBreak.from}`}
-                  onChange={(e) => e.target.value && setCoach({ winterBreak: { ...winterBreak, from: e.target.value.slice(5) } })}
-                />
-                →
-                <input
-                  type="date"
-                  className="input"
-                  aria-label={t('fm.train.winterTo')}
-                  value={`${monday.slice(0, 4)}-${winterBreak.to}`}
-                  onChange={(e) => e.target.value && setCoach({ winterBreak: { ...winterBreak, to: e.target.value.slice(5) } })}
-                />
-              </span>
-            )}
-          </div>
-        </div>
-
-        {trainingDays && (
-          <div className="mt-4">
-            <p className="text-xs font-bold text-canard/70">{t('fm.train.trainingDays')}</p>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              {[0, 1, 2, 3, 4, 5, 6].map((d) => (
-                <button
-                  key={d}
-                  type="button"
-                  onClick={() => setCoach({ trainingDays: trainingDays.includes(d) ? trainingDays.filter((x) => x !== d) : [...trainingDays, d].sort() })}
-                  className={`chip ${trainingDays.includes(d) ? 'chip-on' : ''}`}
-                >
-                  {t(`fm.train.days.${d}`)}
-                </button>
-              ))}
-            </div>
-            <More>{t('fm.train.trainingDaysHelp')}</More>
-          </div>
-        )}
-
-        <div className="mt-4">
-          <p className="text-xs font-bold text-canard/70">
-            {t('fm.train.matches')} {hasCalendar && manualDays == null && <span className="font-normal text-brun">({t('fm.train.fromCalendar')})</span>}
-          </p>
-          <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            {[0, 1, 2, 3, 4, 5, 6].map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => toggleDay(d)}
-                className={`chip ${matchDays.includes(d) ? 'chip-on' : ''}`}
-              >
-                {t(`fm.train.days.${d}`)}
-              </button>
-            ))}
-            <label className="ml-2 flex items-center gap-1.5 text-sm">
-              <input type="checkbox" checked={before} onChange={(e) => setEve(e.target.checked)} />
-              {t('fm.train.eve')}
-            </label>
-          </div>
-          {!hasCalendar && <p className="mt-1 text-xs text-brun">{t('fm.train.manual')}</p>}
-        </div>
-      </Panel>
-      </details>
-
-      <Panel title={t('fm.train.code', { code: plan.code })}>
-        <p className="text-sm">
-          <b>{t(`fm.train.phase.${plan.phase}`)}</b>
-          {plan.theme && <> · {t(`fm.train.theme.${plan.theme}`)}</>}
-          {plan.variant != null && <> · {plan.congested ? t('fm.train.congested') : t(`fm.train.variant_${plan.variant}`)}</>}
-        </p>
-        {weakest.length > 0 && <p className="mt-1 text-xs text-brun">{t('fm.train.weakest', { list: weakest.map((a) => t(`fm.train.session.${a}`)).join(', ') })}</p>}
-        {priorities.length > 0 && <p className="mt-1 text-xs text-brun">{t('fm.train.priorities', { list: priorities.map((a) => t(`fm.train.session.${a}`)).join(', ') })}</p>}
-
-        <div className="mt-3 grid gap-2 sm:grid-cols-4 lg:grid-cols-7">
-          {plan.days.map((d) => (
-            <div key={d.date} className={`rounded-xl p-2 ${d.kind === 'match' ? 'bg-eau/15' : d.kind === 'off' ? 'bg-creme/60 opacity-70' : 'bg-white/60'} ring-1 ring-canard/10`}>
-              <p className="text-sm font-bold">
-                {t(`fm.train.days.${d.weekday}`)} <span className="font-normal text-brun">{dayMonth.format(new Date(`${d.date}T00:00:00Z`))}</span>
-              </p>
-              <p className="mb-1.5 text-xs text-brun">
-                {t(`fm.train.kind.${d.kind}`)}
-                {d.kind === 'match' && cal.opponents[d.weekday] ? ` · ${cal.opponents[d.weekday]}` : ''}
-              </p>
-              <div className="space-y-1">
-                {d.sessions.map((s, i) =>
-                  s ? (
-                    <div key={i}>
-                      {d.kind !== 'match' && <span className="text-[10px] uppercase tracking-wide text-canard/50">{t(`fm.train.slot.${i}`)}</span>}
-                      <Session id={s} />
-                      {d.why?.[i] && <span className="mt-0.5 block text-[10px] leading-tight text-brun">{t(`fm.train.why.${d.why[i]}`)}</span>}
-                    </div>
-                  ) : d.kind !== 'match' ? (
-                    // Créneau vide : le jeu y affiche « Repos ».
-                    <div key={i}>
-                      <span className="text-[10px] uppercase tracking-wide text-canard/50">{t(`fm.train.slot.${i}`)}</span>
-                      <span className="block rounded-lg px-2 py-1 text-xs leading-tight text-brun ring-1 ring-canard/10">{t('fm.train.session.rest')}</span>
-                    </div>
-                  ) : null,
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-2 text-xs">
-          <span className="font-bold text-canard/70">{t('fm.train.load')} :</span>
-          {CATS.filter((c) => load[c]).map((c) => (
-            <span key={c} className={`rounded-full px-2 py-0.5 font-bold ${CAT_CLS[c]}`}>
-              {t(`fm.train.cat.${c}`)} × {load[c]}
-            </span>
-          ))}
-        </div>
-        <More>{plan.theme == null && seasonal ? t('fm.train.coachHelp') : t(`fm.train.phaseHelp.${plan.phase}`)}</More>
-      </Panel>
-
-      <Panel title={t('fm.train.season.title', { count: season.length })}>
-        <p className="mb-2 text-sm text-brun">{calendarComplete ? t('fm.train.season.leadFull') : t('fm.train.season.lead', { known: season.filter((w) => !w.estimated).length })}</p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-left text-canard/70">
-              <tr>
-                <th className="px-2 py-1">{t('fm.train.weekOf')}</th>
-                <th className="px-2 py-1">{t('fm.train.season.kindCol')}</th>
-                <th className="px-2 py-1">{t('fm.train.planCol')}</th>
-                <th className="px-2 py-1">{t('fm.train.season.matchesCol')}</th>
-                <th className="px-2 py-1">{t('fm.train.scheduleFocus')}</th>
-                <th className="px-2 py-1">{t('fm.train.workloadCol')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(allSeason ? season : season.slice(0, SEASON_PREVIEW)).map((w, i, list) => {
-                const month = w.monday.slice(0, 7);
-                const newMonth = i > 0 && list[i - 1]!.monday.slice(0, 7) !== month;
-                return (
-                  <tr
-                    key={w.monday}
-                    onClick={() => {
-                      setOffset(String(i));
-                      resetWeek();
-                      setPhase(null);
-                      setWeek(null);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                    }}
-                    title={t('fm.train.season.open')}
-                    className={`cursor-pointer border-t hover:bg-orange-clair/40 ${newMonth ? 'border-canard/25' : 'border-canard/5'} ${w.monday === monday ? 'bg-orange-clair/60' : ''}`}
-                  >
-                    <td className="whitespace-nowrap px-2 py-1.5">
-                      {dayMonth.format(new Date(`${w.monday}T00:00:00Z`))}
-                    </td>
-                    <td className="px-2 py-1.5">
-                      <Tag tone={KIND_TONE[w.kind]}>{t(`fm.train.season.kind.${w.kind}`)}</Tag>
-                    </td>
-                    <td className="px-2 py-1.5">
-                      <b>{w.plan.code}</b> <span className="text-xs text-brun">{t(`fm.train.phase.${w.plan.phase}`)}</span>
-                    </td>
-                    <td className="px-2 py-1.5">
-                      {w.estimated ? (
-                        <span className="text-xs italic text-brun">{w.matches ? t('fm.train.season.assumed', { count: w.matches }) : '–'}</span>
-                      ) : w.opponents.length ? (
-                        <span className="text-xs">
-                          {w.opponents.map((o) => `${t(`fm.train.days.${o.weekday}`)} ${o.name ?? '?'}`).join(' · ')}
-                          {w.competitions.length ? <span className="text-brun"> ({w.competitions.join(', ')})</span> : null}
-                        </span>
-                      ) : (
-                        '–'
-                      )}
-                    </td>
-                    <td className="px-2 py-1.5 font-bold">{w.kind === 'offseason' ? '–' : t(`fm.train.preset.${w.preset}`)}</td>
-                    <td className="px-2 py-1.5">{w.workload && w.kind !== 'offseason' ? <Tag tone={w.workload === 'heavy' ? 'good' : w.workload === 'medium' ? 'info' : 'warn'}>{t(`fm.train.workload.${w.workload}`)}</Tag> : '–'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        {season.length > SEASON_PREVIEW ? (
-          <button type="button" className="btn-secondary mt-2 text-sm" onClick={() => setAllSeason(!allSeason)}>
-            {allSeason ? t('fm.train.season.less') : t('fm.train.season.more', { count: season.length })}
-          </button>
-        ) : null}
-        <More>{t('fm.train.season.help')}</More>
-      </Panel>
-
-      <Panel title={t('fm.train.teamIntensity')}>
-        <div className="grid gap-2 sm:grid-cols-5">
-          {CONDITION_LEVELS.map((c) => (
-            <div key={c} className="rounded-xl bg-white/60 p-2 ring-1 ring-canard/10">
-              <p className="text-xs text-brun">{t(`fm.train.condition.${c}`)}</p>
-              <Tag tone={INTENSITY_TONE[teamIntensity[c]]}>{t(`fm.train.intensityLevel.${teamIntensity[c]}`)}</Tag>
-            </div>
-          ))}
-        </div>
-        <More>{t('fm.train.teamIntensityCoach')}</More>
-      </Panel>
-
-      <details className="rounded-2xl bg-white/40 ring-1 ring-canard/10">
-        <summary className="cursor-pointer select-none px-4 py-3 text-sm font-bold text-canard/70 hover:text-canard">{t('fm.train.yield.title')}</summary>
-      <Panel title={t('fm.train.yield.title')}>
-        <p className="text-sm">{t('fm.train.yield.intro', { best: nf1.format(HARVEST_WEEK_YIELD) })}</p>
-        <div className="mt-2 grid gap-2 sm:grid-cols-3">
-          {(['physical', 'ball', 'tactical'] as const).map((g) => (
-            <div key={g} className="rounded-xl bg-white/60 p-2 ring-1 ring-canard/10">
-              <p className="text-xs font-bold text-canard/70">{t(`fm.train.yield.${g}`)}</p>
-              <ul className="mt-1 space-y-0.5 text-sm">
-                {YIELD_GROUPS[g].map((id) => (
-                  <li key={id} className="flex justify-between gap-2">
-                    <span>{t(`fm.train.session.${id}`)}</span>
-                    <b className="tabular-nums text-canard">{nf1.format(SESSION_YIELD[id] ?? 0)}</b>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-        <More>{t('fm.train.yield.help')}</More>
-      </Panel>
-      </details>
-
-      {setups.rows.length > 0 && (
-        <Panel
-          title={t('fm.train.individual')}
-          action={
-            todoCount > 0 ? (
-              <button type="button" className="btn-secondary text-sm" onClick={() => setups.mark(setups.rows.filter((r) => r.status !== 'ok').map((r) => r.plan.player.id), true)}>
-                {t('fm.train.markAll')}
-              </button>
-            ) : undefined
-          }
-        >
-          <p className="mb-2 text-sm">
-            <b>{t('fm.train.setupDone', { done: setups.rows.length - todoCount, total: setups.rows.length })}</b>
-            {changeCount > 0 && (
-              <>
-                {' '}
-                <Tag tone="warn">{t('fm.train.setupChanges', { count: changeCount })}</Tag>
-              </>
-            )}
-          </p>
-          <div className="table-scroll">
-            <table className="data-table wide">
-              <thead className="text-left text-canard/70">
-                <tr>
-                  <th className="px-2 py-1">{t('fm.prog.player')}</th>
-                  <th className="px-2 py-1">{t('fm.train.inGame')}</th>
-                  <th className="px-2 py-1">{t('fm.train.roleIp')}</th>
-                  <th className="px-2 py-1">{t('fm.train.roleOop')}</th>
-                  <th className="px-2 py-1">{t('fm.train.focusCol')}</th>
-                  <th className="px-2 py-1">{t('fm.train.intensity')}</th>
-                  <th className="px-2 py-1 text-right">{t('fm.proj.fit')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {setups.rows.map(({ plan: x, rec, advice: a, status, changed, focusFromStats }) => {
-                  const ip = rec.ip ? engine.roles.get(rec.ip) : null;
-                  const oop = rec.oop ? engine.roles.get(rec.oop) : null;
-                  const was = setups.applied[x.player.id];
-                  const label = (f: SetupField, v: IndividualSetup) => {
-                    const val = v[f];
-                    if (val == null) return '–';
-                    if (f === 'focus') return t(`fm.train.focus.${val}`);
-                    if (f === 'intensity') return t(`fm.train.intensityLevel.${val}`);
-                    const r = engine.roles.get(val);
-                    return r ? names.role(r) : '–';
-                  };
-                  const cell = (f: SetupField, content: ReactNode) =>
-                    changed.includes(f) && was ? (
-                      <span>
-                        <span className="text-xs text-brun line-through">{label(f, was)}</span>
-                        <br />
-                        {content}
-                      </span>
-                    ) : (
-                      content
-                    );
-                  return (
-                    <tr key={x.player.id} className={`border-t border-canard/5 ${status === 'change' ? 'bg-ambre/10' : ''}`}>
-                      <td className="px-2 py-1.5 font-bold">
-                        <PlayerLink player={x.player} /> <Pos player={x.player} />
-                      </td>
-                      <td className="px-2 py-1.5">
-                        <label className="flex items-center gap-1.5">
-                          <input type="checkbox" checked={status === 'ok'} onChange={(e) => setups.mark([x.player.id], e.target.checked)} />
-                          {status === 'change' ? <Tag tone="warn">{t('fm.train.setupStatus.change')}</Tag> : status === 'todo' ? <span className="whitespace-nowrap text-xs text-brun">{t('fm.train.setupStatus.todo')}</span> : null}
-                        </label>
-                      </td>
-                      <td className="px-2 py-1.5">{cell('ip', ip ? names.role(ip) : '–')}</td>
-                      <td className="px-2 py-1.5">{cell('oop', oop ? names.role(oop) : '–')}</td>
-                      <td className="px-2 py-1.5">
-                        {cell('focus', rec.focus ? <b>{t(`fm.train.focus.${rec.focus}`)}</b> : '–')}
-                        {focusFromStats && (
-                          <>
-                            {' '}
-                            <Tag>{t('fm.train.focusFromStats')}</Tag>
-                          </>
-                        )}
-                        <span className="ml-1.5 text-xs text-brun">{x.weak.map((w) => `${attr(w.key)} ${Math.round(w.value)}`).join(', ')}</span>
-                      </td>
-                      <td className="px-2 py-1.5" title={[t(`fm.train.reason.${a.reason}`), a.rusty ? t('fm.train.rusty') : null].filter(Boolean).join(' · ')}>
-                        {cell('intensity', <Tag tone={INTENSITY_TONE[a.intensity]}>{t(`fm.train.intensityLevel.${a.intensity}`)}</Tag>)}
-                      </td>
-                      <td className="px-2 py-1.5 text-right">
-                        <Fit value={x.fit} />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          <More>
-            <p>{t('fm.train.setupHelp')}</p>
-            <p className="mt-1">{t('fm.train.individualHelp')}</p>
-            <p className="mt-1">{t('fm.train.reasonHint')}</p>
-          </More>
-        </Panel>
-      )}
-
-      <YouthPanel
-        engine={engine}
-        players={players}
-        week={youthWeek({ gameDate: snap.gameDate, seasonStart, winterBreak, trainingDays, priorities, style: style?.id, method })}
-      />
-
-      <Panel title={t('fm.train.mentoring')}>
-        {mentoring.groups.length ? (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {mentoring.groups.map((g) => (
-              <div key={g.mentor.id} className="rounded-xl bg-white/60 p-3 ring-1 ring-canard/10">
-                <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.train.mentor')}</p>
-                <p className="font-bold">
-                  {g.mentor.name} <Pos player={g.mentor} />
+              <Panel title={t('fm.train.coach.title')}>
+                <p className="text-sm text-brun">{t('fm.train.coach.week', { date: dayMonth.format(new Date(`${monday}T00:00:00Z`)), code: plan.code })}</p>
+                <p className="mt-1 text-base font-bold text-canard">
+                  {plan.congested
+                    ? t('fm.train.coach.congested', { matches: summary.matches })
+                    : seasonal
+                      ? summary.matches
+                        ? t('fm.train.coach.season', { matches: summary.matches, tactical: summary.tactical, grow: summary.grow, zones: zoneList })
+                        : t('fm.train.coach.noMatch', { tactical: summary.tactical, grow: summary.grow, zones: zoneList })
+                      : t(`fm.train.phaseHelp.${plan.phase}`)}
                 </p>
-                <p className="text-xs text-brun">{[g.mentor.personality, g.mentor.hierarchy, g.mentor.age != null ? t('fm.train.age', { count: g.mentor.age }) : null].filter(Boolean).join(' · ')}</p>
-                <p className="mt-2 text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.train.mentees')}</p>
-                {g.mentees.map((y) => (
-                  <p key={y.id} className="text-sm">
-                    {y.name} <Pos player={y} /> <span className="text-xs text-brun">{[y.personality, y.age != null ? t('fm.train.age', { count: y.age }) : null].filter(Boolean).join(' · ')}</span>
-                  </p>
-                ))}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-brun">{t('fm.train.noMentoring')}</p>
-        )}
-        {mentoring.avoid.length > 0 && (
-          <p className="mt-3 text-sm">
-            <Tag tone="warn">{t('fm.train.avoid')}</Tag> {mentoring.avoid.map((p) => `${p.name} (${p.personality})`).join(', ')}
-          </p>
-        )}
-        {mentoring.unassigned.length > 0 && <p className="mt-2 text-xs text-brun">{t('fm.train.unassigned', { list: mentoring.unassigned.map((p) => p.name).join(', ') })}</p>}
-        <More>{t('fm.train.mentoringHelp')}</More>
-      </Panel>
+                <ul className="mt-2 space-y-1 text-sm">
+                  <li>{workload ? t('fm.train.coach.inGame', { preset: t(`fm.train.preset.${nearestPreset(plan)}`), workload: t(`fm.train.workload.${workload}`) }) : t('fm.train.coach.inGameRest', { preset: t(`fm.train.preset.${nearestPreset(plan)}`) })}</li>
+                  <li>{t('fm.train.coach.intensity')}</li>
+                  {setups.rows.length > 0 && (
+                    <li>
+                      {todoCount ? <Tag tone="warn">{t('fm.train.coach.setups', { count: todoCount })}</Tag> : <span className="text-brun">{t('fm.train.coach.setupsOk')}</span>}
+                    </li>
+                  )}
+                </ul>
+                <div className="mt-3 rounded-xl bg-white/60 p-3 ring-1 ring-canard/10">
+                  <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.train.coach.yieldTitle')}</p>
+                  {measured ? (
+                    <>
+                      <p className="mt-1 text-sm">
+                        {t('fm.train.coach.yield', { from: f.date(measured.from), to: f.date(measured.to), days: measured.days, players: measured.players, delta: signed.format(measured.perPlayer), month: signed.format(measured.perMonth), expected: signed.format(measured.expectedPerMonth) })}
+                      </p>
+                      <p className="mt-1 text-sm font-bold">
+                        <Tag tone={measured.verdict === 'good' ? 'good' : measured.verdict === 'bad' ? 'bad' : 'warn'}>{t(`fm.train.coach.yieldVerdict.${measured.verdict}`)}</Tag>
+                      </p>
+                      <p className="mt-1 text-xs text-brun">
+                        {t('fm.train.coach.yieldGroups', { technical: signed.format(measured.groups.technical), mental: signed.format(measured.groups.mental), physical: signed.format(measured.groups.physical) })}
+                        {measured.young != null && measured.senior != null && <> {t('fm.train.coach.yieldAges', { young: signed.format(measured.young), senior: signed.format(measured.senior) })}</>}
+                      </p>
+                      {measured.attrs.length > 0 && measured.attrs[0]!.delta > 0 && (
+                        <p className="mt-1 text-xs text-brun">{t('fm.train.coach.yieldAttrs', { list: measured.attrs.filter((a) => a.delta > 0).slice(0, 4).map((a) => `${attr(a.key)} ${signed.format(a.delta)}`).join(', ') })}</p>
+                      )}
+                      {measured.up.length > 0 && (
+                        <p className="mt-1 text-xs text-eau-fonce">{t('fm.train.coach.yieldUp', { list: measured.up.slice(0, 5).map((g) => `${g.player.name} ${signed.format(g.delta)}`).join(', ') })}</p>
+                      )}
+                      {measured.down.length > 0 && (
+                        <p className="mt-1 text-xs text-corail">{t('fm.train.coach.yieldDown', { list: measured.down.slice(0, 5).map((g) => `${g.player.name} ${signed.format(g.delta)}`).join(', ') })}</p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="mt-1 text-sm text-brun">{t('fm.train.coach.yieldSoon', { count: Math.max(1, missingDays) })}</p>
+                  )}
+                  <More>{t('fm.train.coach.yieldHelp')}</More>
+                </div>
+              </Panel>
 
-      <details className="rounded-2xl bg-white/40 ring-1 ring-canard/10">
-        <summary className="cursor-pointer select-none px-4 py-3 text-sm font-bold text-canard/70 hover:text-canard">{t('fm.train.rules')}</summary>
-      <Panel title={t('fm.train.rules')}>
-        <ul className="list-disc space-y-1 pl-5 text-sm">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <li key={i}>{t(`fm.train.rule${i}`)}</li>
-          ))}
-        </ul>
-        <More>{t('fm.train.source')}</More>
-      </Panel>
-      </details>
-    </div>
+              <details className="rounded-2xl bg-white/40 ring-1 ring-canard/10">
+                <summary className="cursor-pointer select-none px-4 py-3 text-sm font-bold text-canard/70 hover:text-canard">
+                  {t('fm.train.settings')} <span className="font-normal text-brun">· {settingsSummary}</span>
+                </summary>
+              <Panel title={t('fm.train.title')}>
+                <div className="flex flex-wrap items-end gap-4">
+                  <div className={label}>
+                    {t('fm.train.which')}
+                    <div className="mt-1">
+                      <Chips
+                        value={offset}
+                        options={[
+                          ['0', t('fm.train.thisWeek')],
+                          ['1', t('fm.train.nextWeek')],
+                          ...(Number(offset) > 1 ? ([[offset, t('fm.train.weekOfDate', { date: dayMonth.format(new Date(`${monday}T00:00:00Z`)) })]] as [string, string][]) : []),
+                        ]}
+                        onChange={(v) => {
+                          setOffset(v);
+                          resetWeek();
+                          setWeek(null);
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <label className={label}>
+                    {t('fm.train.phaseLabel')}
+                    <select
+                      className="input mt-1"
+                      value={phaseOverride ?? ''}
+                      onChange={(e) => {
+                        setPhase((e.target.value || null) as TrainingPhase | null);
+                        setWeek(null);
+                        resetWeek();
+                      }}
+                    >
+                      <option value="">{t('fm.train.auto', { code: `${t(`fm.train.phase.${auto.phase}`)} ${auto.week}` })}</option>
+                      {TRAINING_PHASES.map((p) => (
+                        <option key={p} value={p}>
+                          {t(`fm.train.phase.${p}`)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className={label}>
+                    {t('fm.train.cycleWeek')}
+                    <select className="input mt-1" value={week} onChange={(e) => setWeek(Number(e.target.value) as CycleWeek)}>
+                      {[1, 2, 3, 4].map((w) => (
+                        <option key={w} value={w}>
+                          {phase}
+                          {w}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className={label}>
+                    {t('fm.train.seasonStart')}
+                    <select className="input mt-1" value={seasonStart} onChange={(e) => setCoach({ seasonStart: Number(e.target.value) })}>
+                      {months.map((m) => (
+                        <option key={m} value={m}>
+                          {monthName.format(new Date(2026, m - 1, 1))}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className={label}>
+                    {t('fm.train.clubStatus')}
+                    <div className="mt-1">
+                      <Chips value={clubStatus} options={CLUB_STATUSES.map((c) => [c, t(`fm.train.status.${c}`)] as [ClubStatus, string])} onChange={(v) => setCoach({ clubStatus: v })} />
+                    </div>
+                  </div>
+                  <div className={label}>
+                    <span className="flex items-center gap-1.5">
+                      <input
+                        type="checkbox"
+                        checked={!!winterBreak}
+                        onChange={(e) => {
+                          setCoach({ winterBreak: e.target.checked ? { from: '12-28', to: '02-08' } : null });
+                          setPhase(null);
+                          setWeek(null);
+                        }}
+                      />
+                      {t('fm.train.winterBreak')}
+                    </span>
+                    {winterBreak && (
+                      <span className="mt-1 flex items-center gap-1.5 font-normal">
+                        <input
+                          type="date"
+                          className="input"
+                          aria-label={t('fm.train.winterFrom')}
+                          value={`${monday.slice(0, 4)}-${winterBreak.from}`}
+                          onChange={(e) => e.target.value && setCoach({ winterBreak: { ...winterBreak, from: e.target.value.slice(5) } })}
+                        />
+                        →
+                        <input
+                          type="date"
+                          className="input"
+                          aria-label={t('fm.train.winterTo')}
+                          value={`${monday.slice(0, 4)}-${winterBreak.to}`}
+                          onChange={(e) => e.target.value && setCoach({ winterBreak: { ...winterBreak, to: e.target.value.slice(5) } })}
+                        />
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {trainingDays && (
+                  <div className="mt-4">
+                    <p className="text-xs font-bold text-canard/70">{t('fm.train.trainingDays')}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                      {[0, 1, 2, 3, 4, 5, 6].map((d) => (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => setCoach({ trainingDays: trainingDays.includes(d) ? trainingDays.filter((x) => x !== d) : [...trainingDays, d].sort() })}
+                          className={`chip ${trainingDays.includes(d) ? 'chip-on' : ''}`}
+                        >
+                          {t(`fm.train.days.${d}`)}
+                        </button>
+                      ))}
+                    </div>
+                    <More>{t('fm.train.trainingDaysHelp')}</More>
+                  </div>
+                )}
+
+                <div className="mt-4">
+                  <p className="text-xs font-bold text-canard/70">
+                    {t('fm.train.matches')} {hasCalendar && manualDays == null && <span className="font-normal text-brun">({t('fm.train.fromCalendar')})</span>}
+                  </p>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    {[0, 1, 2, 3, 4, 5, 6].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => toggleDay(d)}
+                        className={`chip ${matchDays.includes(d) ? 'chip-on' : ''}`}
+                      >
+                        {t(`fm.train.days.${d}`)}
+                      </button>
+                    ))}
+                    <label className="ml-2 flex items-center gap-1.5 text-sm">
+                      <input type="checkbox" checked={before} onChange={(e) => setEve(e.target.checked)} />
+                      {t('fm.train.eve')}
+                    </label>
+                  </div>
+                  {!hasCalendar && <p className="mt-1 text-xs text-brun">{t('fm.train.manual')}</p>}
+                </div>
+              </Panel>
+              </details>
+
+              <Panel title={t('fm.train.code', { code: plan.code })}>
+                <p className="text-sm">
+                  <b>{t(`fm.train.phase.${plan.phase}`)}</b>
+                  {plan.theme && <> · {t(`fm.train.theme.${plan.theme}`)}</>}
+                  {plan.variant != null && <> · {plan.congested ? t('fm.train.congested') : t(`fm.train.variant_${plan.variant}`)}</>}
+                </p>
+                {weakest.length > 0 && <p className="mt-1 text-xs text-brun">{t('fm.train.weakest', { list: weakest.map((a) => t(`fm.train.session.${a}`)).join(', ') })}</p>}
+                {priorities.length > 0 && <p className="mt-1 text-xs text-brun">{t('fm.train.priorities', { list: priorities.map((a) => t(`fm.train.session.${a}`)).join(', ') })}</p>}
+
+                <div className="mt-3 grid gap-2 sm:grid-cols-4 lg:grid-cols-7">
+                  {plan.days.map((d) => (
+                    <div key={d.date} className={`rounded-xl p-2 ${d.kind === 'match' ? 'bg-eau/15' : d.kind === 'off' ? 'bg-creme/60 opacity-70' : 'bg-white/60'} ring-1 ring-canard/10`}>
+                      <p className="text-sm font-bold">
+                        {t(`fm.train.days.${d.weekday}`)} <span className="font-normal text-brun">{dayMonth.format(new Date(`${d.date}T00:00:00Z`))}</span>
+                      </p>
+                      <p className="mb-1.5 text-xs text-brun">
+                        {t(`fm.train.kind.${d.kind}`)}
+                        {d.kind === 'match' && cal.opponents[d.weekday] ? ` · ${cal.opponents[d.weekday]}` : ''}
+                      </p>
+                      <div className="space-y-1">
+                        {d.sessions.map((s, i) =>
+                          s ? (
+                            <div key={i}>
+                              {d.kind !== 'match' && <span className="text-[10px] uppercase tracking-wide text-canard/50">{t(`fm.train.slot.${i}`)}</span>}
+                              <Session id={s} />
+                              {d.why?.[i] && <span className="mt-0.5 block text-[10px] leading-tight text-brun">{t(`fm.train.why.${d.why[i]}`)}</span>}
+                            </div>
+                          ) : d.kind !== 'match' ? (
+                            // Créneau vide : le jeu y affiche « Repos ».
+                            <div key={i}>
+                              <span className="text-[10px] uppercase tracking-wide text-canard/50">{t(`fm.train.slot.${i}`)}</span>
+                              <span className="block rounded-lg px-2 py-1 text-xs leading-tight text-brun ring-1 ring-canard/10">{t('fm.train.session.rest')}</span>
+                            </div>
+                          ) : null,
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                  <span className="font-bold text-canard/70">{t('fm.train.load')} :</span>
+                  {CATS.filter((c) => load[c]).map((c) => (
+                    <span key={c} className={`rounded-full px-2 py-0.5 font-bold ${CAT_CLS[c]}`}>
+                      {t(`fm.train.cat.${c}`)} × {load[c]}
+                    </span>
+                  ))}
+                </div>
+                <More>{plan.theme == null && seasonal ? t('fm.train.coachHelp') : t(`fm.train.phaseHelp.${plan.phase}`)}</More>
+              </Panel>
+
+              <Panel title={t('fm.train.teamIntensity')}>
+                <div className="grid gap-2 sm:grid-cols-5">
+                  {CONDITION_LEVELS.map((c) => (
+                    <div key={c} className="rounded-xl bg-white/60 p-2 ring-1 ring-canard/10">
+                      <p className="text-xs text-brun">{t(`fm.train.condition.${c}`)}</p>
+                      <Tag tone={INTENSITY_TONE[teamIntensity[c]]}>{t(`fm.train.intensityLevel.${teamIntensity[c]}`)}</Tag>
+                    </div>
+                  ))}
+                </div>
+                <More>{t('fm.train.teamIntensityCoach')}</More>
+              </Panel>
+
+              <details className="rounded-2xl bg-white/40 ring-1 ring-canard/10">
+                <summary className="cursor-pointer select-none px-4 py-3 text-sm font-bold text-canard/70 hover:text-canard">{t('fm.train.yield.title')}</summary>
+              <Panel title={t('fm.train.yield.title')}>
+                <p className="text-sm">{t('fm.train.yield.intro', { best: nf1.format(HARVEST_WEEK_YIELD) })}</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                  {(['physical', 'ball', 'tactical'] as const).map((g) => (
+                    <div key={g} className="rounded-xl bg-white/60 p-2 ring-1 ring-canard/10">
+                      <p className="text-xs font-bold text-canard/70">{t(`fm.train.yield.${g}`)}</p>
+                      <ul className="mt-1 space-y-0.5 text-sm">
+                        {YIELD_GROUPS[g].map((id) => (
+                          <li key={id} className="flex justify-between gap-2">
+                            <span>{t(`fm.train.session.${id}`)}</span>
+                            <b className="tabular-nums text-canard">{nf1.format(SESSION_YIELD[id] ?? 0)}</b>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+                <More>{t('fm.train.yield.help')}</More>
+              </Panel>
+              </details>
+            </>
+          ),
+        },
+        {
+          id: 'season',
+          label: t('fm.train.sections.season'),
+          node: season.length > 0 ? (
+            <>
+              <Panel title={t('fm.train.season.title', { count: season.length })}>
+                <p className="mb-2 text-sm text-brun">{calendarComplete ? t('fm.train.season.leadFull') : t('fm.train.season.lead', { known: season.filter((w) => !w.estimated).length })}</p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="text-left text-canard/70">
+                      <tr>
+                        <th className="px-2 py-1">{t('fm.train.weekOf')}</th>
+                        <th className="px-2 py-1">{t('fm.train.season.kindCol')}</th>
+                        <th className="px-2 py-1">{t('fm.train.planCol')}</th>
+                        <th className="px-2 py-1">{t('fm.train.season.matchesCol')}</th>
+                        <th className="px-2 py-1">{t('fm.train.scheduleFocus')}</th>
+                        <th className="px-2 py-1">{t('fm.train.workloadCol')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(allSeason ? season : season.slice(0, SEASON_PREVIEW)).map((w, i, list) => {
+                        const month = w.monday.slice(0, 7);
+                        const newMonth = i > 0 && list[i - 1]!.monday.slice(0, 7) !== month;
+                        return (
+                          <tr
+                            key={w.monday}
+                            onClick={() => {
+                              setOffset(String(i));
+                              resetWeek();
+                              setPhase(null);
+                              setWeek(null);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            title={t('fm.train.season.open')}
+                            className={`cursor-pointer border-t hover:bg-orange-clair/40 ${newMonth ? 'border-canard/25' : 'border-canard/5'} ${w.monday === monday ? 'bg-orange-clair/60' : ''}`}
+                          >
+                            <td className="whitespace-nowrap px-2 py-1.5">
+                              {dayMonth.format(new Date(`${w.monday}T00:00:00Z`))}
+                            </td>
+                            <td className="px-2 py-1.5">
+                              <Tag tone={KIND_TONE[w.kind]}>{t(`fm.train.season.kind.${w.kind}`)}</Tag>
+                            </td>
+                            <td className="px-2 py-1.5">
+                              <b>{w.plan.code}</b> <span className="text-xs text-brun">{t(`fm.train.phase.${w.plan.phase}`)}</span>
+                            </td>
+                            <td className="px-2 py-1.5">
+                              {w.estimated ? (
+                                <span className="text-xs italic text-brun">{w.matches ? t('fm.train.season.assumed', { count: w.matches }) : '–'}</span>
+                              ) : w.opponents.length ? (
+                                <span className="text-xs">
+                                  {w.opponents.map((o) => `${t(`fm.train.days.${o.weekday}`)} ${o.name ?? '?'}`).join(' · ')}
+                                  {w.competitions.length ? <span className="text-brun"> ({w.competitions.join(', ')})</span> : null}
+                                </span>
+                              ) : (
+                                '–'
+                              )}
+                            </td>
+                            <td className="px-2 py-1.5 font-bold">{w.kind === 'offseason' ? '–' : t(`fm.train.preset.${w.preset}`)}</td>
+                            <td className="px-2 py-1.5">{w.workload && w.kind !== 'offseason' ? <Tag tone={w.workload === 'heavy' ? 'good' : w.workload === 'medium' ? 'info' : 'warn'}>{t(`fm.train.workload.${w.workload}`)}</Tag> : '–'}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                {season.length > SEASON_PREVIEW ? (
+                  <button type="button" className="btn-secondary mt-2 text-sm" onClick={() => setAllSeason(!allSeason)}>
+                    {allSeason ? t('fm.train.season.less') : t('fm.train.season.more', { count: season.length })}
+                  </button>
+                ) : null}
+                <More>{t('fm.train.season.help')}</More>
+              </Panel>
+            </>
+          ) : null,
+        },
+        {
+          id: 'individual',
+          label: t('fm.train.sections.individual'),
+          node: setups.rows.length > 0 ? (
+            <>
+              <Panel
+                title={t('fm.train.individual')}
+                action={
+                  todoCount > 0 ? (
+                    <button type="button" className="btn-secondary text-sm" onClick={() => setups.mark(setups.rows.filter((r) => r.status !== 'ok').map((r) => r.plan.player.id), true)}>
+                      {t('fm.train.markAll')}
+                    </button>
+                  ) : undefined
+                }
+              >
+                <p className="mb-2 text-sm">
+                  <b>{t('fm.train.setupDone', { done: setups.rows.length - todoCount, total: setups.rows.length })}</b>
+                  {changeCount > 0 && (
+                    <>
+                      {' '}
+                      <Tag tone="warn">{t('fm.train.setupChanges', { count: changeCount })}</Tag>
+                    </>
+                  )}
+                </p>
+                <div className="table-scroll">
+                  <table className="data-table wide">
+                    <thead className="text-left text-canard/70">
+                      <tr>
+                        <th className="px-2 py-1">{t('fm.prog.player')}</th>
+                        <th className="px-2 py-1">{t('fm.train.inGame')}</th>
+                        <th className="px-2 py-1">{t('fm.train.roleIp')}</th>
+                        <th className="px-2 py-1">{t('fm.train.roleOop')}</th>
+                        <th className="px-2 py-1">{t('fm.train.focusCol')}</th>
+                        <th className="px-2 py-1">{t('fm.train.intensity')}</th>
+                        <th className="px-2 py-1 text-right">{t('fm.proj.fit')}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {setups.rows.map(({ plan: x, rec, advice: a, status, changed, focusFromStats }) => {
+                        const ip = rec.ip ? engine.roles.get(rec.ip) : null;
+                        const oop = rec.oop ? engine.roles.get(rec.oop) : null;
+                        const was = setups.applied[x.player.id];
+                        const label = (f: SetupField, v: IndividualSetup) => {
+                          const val = v[f];
+                          if (val == null) return '–';
+                          if (f === 'focus') return t(`fm.train.focus.${val}`);
+                          if (f === 'intensity') return t(`fm.train.intensityLevel.${val}`);
+                          const r = engine.roles.get(val);
+                          return r ? names.role(r) : '–';
+                        };
+                        const cell = (f: SetupField, content: ReactNode) =>
+                          changed.includes(f) && was ? (
+                            <span>
+                              <span className="text-xs text-brun line-through">{label(f, was)}</span>
+                              <br />
+                              {content}
+                            </span>
+                          ) : (
+                            content
+                          );
+                        return (
+                          <tr key={x.player.id} className={`border-t border-canard/5 ${status === 'change' ? 'bg-ambre/10' : ''}`}>
+                            <td className="px-2 py-1.5 font-bold">
+                              <PlayerLink player={x.player} /> <Pos player={x.player} />
+                            </td>
+                            <td className="px-2 py-1.5">
+                              <label className="flex items-center gap-1.5">
+                                <input type="checkbox" checked={status === 'ok'} onChange={(e) => setups.mark([x.player.id], e.target.checked)} />
+                                {status === 'change' ? <Tag tone="warn">{t('fm.train.setupStatus.change')}</Tag> : status === 'todo' ? <span className="whitespace-nowrap text-xs text-brun">{t('fm.train.setupStatus.todo')}</span> : null}
+                              </label>
+                            </td>
+                            <td className="px-2 py-1.5">{cell('ip', ip ? names.role(ip) : '–')}</td>
+                            <td className="px-2 py-1.5">{cell('oop', oop ? names.role(oop) : '–')}</td>
+                            <td className="px-2 py-1.5">
+                              {cell('focus', rec.focus ? <b>{t(`fm.train.focus.${rec.focus}`)}</b> : '–')}
+                              {focusFromStats && (
+                                <>
+                                  {' '}
+                                  <Tag>{t('fm.train.focusFromStats')}</Tag>
+                                </>
+                              )}
+                              <span className="ml-1.5 text-xs text-brun">{x.weak.map((w) => `${attr(w.key)} ${Math.round(w.value)}`).join(', ')}</span>
+                            </td>
+                            <td className="px-2 py-1.5" title={[t(`fm.train.reason.${a.reason}`), a.rusty ? t('fm.train.rusty') : null].filter(Boolean).join(' · ')}>
+                              {cell('intensity', <Tag tone={INTENSITY_TONE[a.intensity]}>{t(`fm.train.intensityLevel.${a.intensity}`)}</Tag>)}
+                            </td>
+                            <td className="px-2 py-1.5 text-right">
+                              <Fit value={x.fit} />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <More>
+                  <p>{t('fm.train.setupHelp')}</p>
+                  <p className="mt-1">{t('fm.train.individualHelp')}</p>
+                  <p className="mt-1">{t('fm.train.reasonHint')}</p>
+                </More>
+              </Panel>
+            </>
+          ) : null,
+        },
+        {
+          id: 'youth',
+          label: t('fm.train.sections.youth'),
+          node: (
+            <>
+              <YouthPanel
+                engine={engine}
+                players={players}
+                week={youthWeek({ gameDate: snap.gameDate, seasonStart, winterBreak, trainingDays, priorities, style: style?.id, method })}
+              />
+
+              <Panel title={t('fm.train.mentoring')}>
+                {mentoring.groups.length ? (
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                    {mentoring.groups.map((g) => (
+                      <div key={g.mentor.id} className="rounded-xl bg-white/60 p-3 ring-1 ring-canard/10">
+                        <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.train.mentor')}</p>
+                        <p className="font-bold">
+                          {g.mentor.name} <Pos player={g.mentor} />
+                        </p>
+                        <p className="text-xs text-brun">{[g.mentor.personality, g.mentor.hierarchy, g.mentor.age != null ? t('fm.train.age', { count: g.mentor.age }) : null].filter(Boolean).join(' · ')}</p>
+                        <p className="mt-2 text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.train.mentees')}</p>
+                        {g.mentees.map((y) => (
+                          <p key={y.id} className="text-sm">
+                            {y.name} <Pos player={y} /> <span className="text-xs text-brun">{[y.personality, y.age != null ? t('fm.train.age', { count: y.age }) : null].filter(Boolean).join(' · ')}</span>
+                          </p>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-brun">{t('fm.train.noMentoring')}</p>
+                )}
+                {mentoring.avoid.length > 0 && (
+                  <p className="mt-3 text-sm">
+                    <Tag tone="warn">{t('fm.train.avoid')}</Tag> {mentoring.avoid.map((p) => `${p.name} (${p.personality})`).join(', ')}
+                  </p>
+                )}
+                {mentoring.unassigned.length > 0 && <p className="mt-2 text-xs text-brun">{t('fm.train.unassigned', { list: mentoring.unassigned.map((p) => p.name).join(', ') })}</p>}
+                <More>{t('fm.train.mentoringHelp')}</More>
+              </Panel>
+
+              <details className="rounded-2xl bg-white/40 ring-1 ring-canard/10">
+                <summary className="cursor-pointer select-none px-4 py-3 text-sm font-bold text-canard/70 hover:text-canard">{t('fm.train.rules')}</summary>
+              <Panel title={t('fm.train.rules')}>
+                <ul className="list-disc space-y-1 pl-5 text-sm">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <li key={i}>{t(`fm.train.rule${i}`)}</li>
+                  ))}
+                </ul>
+                <More>{t('fm.train.source')}</More>
+              </Panel>
+              </details>
+            </>
+          ),
+        },
+      ]}
+    />
   );
 }
 

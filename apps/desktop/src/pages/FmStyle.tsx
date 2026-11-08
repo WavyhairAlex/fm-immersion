@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, scopedKey, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticChoice } from './FmTactic';
-import { Chips, Empty, Fit, fitGap, Kpi, Panel, Tag, TeamCards, useNames } from './FmUi';
+import { Chips, Empty, Fit, fitGap, Kpi, Panel, Tag, TeamCards, useNames, SectionTabs } from './FmUi';
 
 const STYLE_KEY = 'fmi.styleView';
 
@@ -81,113 +81,126 @@ export function FmStyle({ players, folder }: { players: FmPlayer[]; folder: stri
   };
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title={t('fm.style.which')}>
-          <p className="help">{t('fm.style.whichHelp')}</p>
-          {close && <p className="mb-3 rounded-xl bg-eau/15 px-3 py-2 text-sm text-canard">{t('fm.style.allClose', { gap: fitGap(hi - lo) })}</p>}
-          {ranked.map(({ style, fit }) => (
-            <button
-              key={style.id}
-              type="button"
-              onClick={() => choose(style.id)}
-              className={`flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left ${style.id === cur.id ? 'bg-eau/20' : 'hover:bg-canard/5'}`}
-            >
-              <span className="w-1/2 min-w-0">
-                <b>{names.style(style)}</b> {style.mentality && <span className="text-xs text-brun">{style.mentality}</span>}
-              </span>
-              <span className="flex-1">
-                <span className="block h-2 rounded-full bg-eau-fonce" style={{ width: `${close || hi <= lo ? Math.round((100 * (fit ?? 0)) / (hi || 1)) : Math.round(15 + (85 * ((fit ?? 0) - lo)) / (hi - lo))}%` }} />
-              </span>
-              <span className="w-14 text-right text-xs tabular-nums text-brun">{fit != null && fit < hi ? `−${fitGap(hi - fit)}` : ''}</span>
-              <Fit value={fit} />
-            </button>
-          ))}
-        </Panel>
+    <SectionTabs
+      id="style"
+      sections={[
+        { id: 'list', label: t('fm.style.sections.list'), node: (
+          <>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <Panel title={t('fm.style.which')}>
+                  <p className="help">{t('fm.style.whichHelp')}</p>
+                  {close && <p className="mb-3 rounded-xl bg-eau/15 px-3 py-2 text-sm text-canard">{t('fm.style.allClose', { gap: fitGap(hi - lo) })}</p>}
+                  {ranked.map(({ style, fit }) => (
+                    <button
+                      key={style.id}
+                      type="button"
+                      onClick={() => choose(style.id)}
+                      className={`flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left ${style.id === cur.id ? 'bg-eau/20' : 'hover:bg-canard/5'}`}
+                    >
+                      <span className="w-1/2 min-w-0">
+                        <b>{names.style(style)}</b> {style.mentality && <span className="text-xs text-brun">{style.mentality}</span>}
+                      </span>
+                      <span className="flex-1">
+                        <span className="block h-2 rounded-full bg-eau-fonce" style={{ width: `${close || hi <= lo ? Math.round((100 * (fit ?? 0)) / (hi || 1)) : Math.round(15 + (85 * ((fit ?? 0) - lo)) / (hi - lo))}%` }} />
+                      </span>
+                      <span className="w-14 text-right text-xs tabular-nums text-brun">{fit != null && fit < hi ? `−${fitGap(hi - fit)}` : ''}</span>
+                      <Fit value={fit} />
+                    </button>
+                  ))}
+                </Panel>
 
-        <Panel title={t('fm.style.profile')}>
-          {Object.entries(sig)
-            .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
-            .map(([k, v]) => (
-              <div key={k} className="flex items-center gap-3 py-1 text-sm">
-                <span className="w-28">{t(`fm.signal.${k}`)}</span>
-                <span className="flex-1">
-                  <span className={`block h-2 rounded-full ${(cur.weights[k] ?? 0) > 0 ? 'bg-eau-fonce' : 'bg-canard/15'}`} style={{ width: `${v && sigMax ? Math.round((100 * v) / sigMax) : 0}%` }} />
-                </span>
-                <span className="w-10 text-right tabular-nums">{v == null ? '–' : nf1.format(v)}</span>
+                <Panel title={t('fm.style.profile')}>
+                  {Object.entries(sig)
+                    .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
+                    .map(([k, v]) => (
+                      <div key={k} className="flex items-center gap-3 py-1 text-sm">
+                        <span className="w-28">{t(`fm.signal.${k}`)}</span>
+                        <span className="flex-1">
+                          <span className={`block h-2 rounded-full ${(cur.weights[k] ?? 0) > 0 ? 'bg-eau-fonce' : 'bg-canard/15'}`} style={{ width: `${v && sigMax ? Math.round((100 * v) / sigMax) : 0}%` }} />
+                        </span>
+                        <span className="w-10 text-right tabular-nums">{v == null ? '–' : nf1.format(v)}</span>
+                      </div>
+                    ))}
+                  <p className="mt-2 text-xs text-brun">{t('fm.style.profileHelp')}</p>
+                </Panel>
               </div>
-            ))}
-          <p className="mt-2 text-xs text-brun">{t('fm.style.profileHelp')}</p>
-        </Panel>
-      </div>
-
-      <Panel title={names.style(cur)}>
-        {cur.summary && <p className="-mt-2 mb-3">{cur.summary}</p>}
-        {(() => {
-          const pitch = pitchAdvice(cur.id);
-          return (
-            <p className="-mt-1 mb-3 rounded-lg bg-orange-clair px-3 py-2 text-sm text-canard">
-              <b>{t('fm.style.pitch.title')}</b> {t(`fm.style.pitch.choice.${pitch.choice}`)} ({t('fm.style.pitch.size', { length: pitch.length, width: pitch.width })}).{' '}
-              {t(`fm.style.pitch.why.${pitch.choice}`)}
-            </p>
-          );
-        })()}
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="text-sm">
-            {pros.length > 0 && (
-              <>
-                <p className="text-xs font-bold uppercase text-canard/60">{t('fm.style.pros')}</p>
-                {pros.map((x) => (
-                  <p key={x}>+ {x}</p>
-                ))}
-              </>
-            )}
-            {cons.length > 0 && (
-              <>
-                <p className="mt-2 text-xs font-bold uppercase text-canard/60">{t('fm.style.cons')}</p>
-                {cons.map((x) => (
-                  <p key={x}>− {x}</p>
-                ))}
-              </>
-            )}
-            {cur.mentality && <p className="mt-2">{t('fm.style.mentality', { value: cur.mentality })}</p>}
-            <p className="mt-1">
-              {t('fm.style.needs', {
-                list: Object.entries(cur.weights)
-                  .filter(([, w]) => w > 0)
-                  .map(([k]) => t(`fm.signal.${k}`))
-                  .join(', '),
-              })}
-            </p>
-          </div>
-          <div className="sm:col-span-2">
-            <TeamCards wide inPossession={cur.inPossession} outOfPossession={cur.outOfPossession} />
-          </div>
-        </div>
-        <div className="mb-2 mt-5 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="font-semibold">{t('fm.style.roles')}</h3>
-          <Chips
-            value={rolePhase}
-            options={(['ip', 'oop'] as const).map((ph) => [ph, `${t(`fm.tac.phase.${ph}`)} · ${cur.signatureRoles[ph].length}`] as [Phase, string])}
-            onChange={setRolePhase}
-          />
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{cur.signatureRoles[rolePhase].map((c) => roleBlock(c, rolePhase))}</div>
-        <p className="mt-2 text-xs text-brun">{t('fm.style.rolesHelp')}</p>
-      </Panel>
-
-      <Panel title={t('fm.style.effTitle')}>
-        <p className="help">{t('fm.style.effHelp')}</p>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Kpi label={t('fm.style.complexity')} value={'●'.repeat(cx) + '○'.repeat(5 - cx)} sub={t(`fm.style.cx.${cx}`)} />
-          <Kpi label={t('fm.style.ability')} value={ability == null ? '–' : nf1.format(ability)} sub={t('fm.style.abilitySub', { value: nf1.format(need) })} />
-          <Kpi
-            label={t('fm.style.verdict')}
-            value={verdict ? <Tag tone={verdict === 'ok' ? 'good' : verdict === 'slow' ? 'warn' : 'bad'}>{t(`fm.style.v.${verdict}`)}</Tag> : '–'}
-            sub={verdict && verdict !== 'ok' ? t('fm.style.simplify') : undefined}
-          />
-        </div>
-      </Panel>
-    </div>
+          </>
+        ) },
+        { id: 'detail', label: names.style(cur), node: (
+          <>
+              <Panel title={names.style(cur)}>
+                {cur.summary && <p className="-mt-2 mb-3">{cur.summary}</p>}
+                {(() => {
+                  const pitch = pitchAdvice(cur.id);
+                  return (
+                    <p className="-mt-1 mb-3 rounded-lg bg-orange-clair px-3 py-2 text-sm text-canard">
+                      <b>{t('fm.style.pitch.title')}</b> {t(`fm.style.pitch.choice.${pitch.choice}`)} ({t('fm.style.pitch.size', { length: pitch.length, width: pitch.width })}).{' '}
+                      {t(`fm.style.pitch.why.${pitch.choice}`)}
+                    </p>
+                  );
+                })()}
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="text-sm">
+                    {pros.length > 0 && (
+                      <>
+                        <p className="text-xs font-bold uppercase text-canard/60">{t('fm.style.pros')}</p>
+                        {pros.map((x) => (
+                          <p key={x}>+ {x}</p>
+                        ))}
+                      </>
+                    )}
+                    {cons.length > 0 && (
+                      <>
+                        <p className="mt-2 text-xs font-bold uppercase text-canard/60">{t('fm.style.cons')}</p>
+                        {cons.map((x) => (
+                          <p key={x}>− {x}</p>
+                        ))}
+                      </>
+                    )}
+                    {cur.mentality && <p className="mt-2">{t('fm.style.mentality', { value: cur.mentality })}</p>}
+                    <p className="mt-1">
+                      {t('fm.style.needs', {
+                        list: Object.entries(cur.weights)
+                          .filter(([, w]) => w > 0)
+                          .map(([k]) => t(`fm.signal.${k}`))
+                          .join(', '),
+                      })}
+                    </p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <TeamCards wide inPossession={cur.inPossession} outOfPossession={cur.outOfPossession} />
+                  </div>
+                </div>
+                <div className="mb-2 mt-5 flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="font-semibold">{t('fm.style.roles')}</h3>
+                  <Chips
+                    value={rolePhase}
+                    options={(['ip', 'oop'] as const).map((ph) => [ph, `${t(`fm.tac.phase.${ph}`)} · ${cur.signatureRoles[ph].length}`] as [Phase, string])}
+                    onChange={setRolePhase}
+                  />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{cur.signatureRoles[rolePhase].map((c) => roleBlock(c, rolePhase))}</div>
+                <p className="mt-2 text-xs text-brun">{t('fm.style.rolesHelp')}</p>
+              </Panel>
+          </>
+        ) },
+        { id: 'eff', label: t('fm.style.effTitle'), node: (
+          <>
+              <Panel title={t('fm.style.effTitle')}>
+                <p className="help">{t('fm.style.effHelp')}</p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <Kpi label={t('fm.style.complexity')} value={'●'.repeat(cx) + '○'.repeat(5 - cx)} sub={t(`fm.style.cx.${cx}`)} />
+                  <Kpi label={t('fm.style.ability')} value={ability == null ? '–' : nf1.format(ability)} sub={t('fm.style.abilitySub', { value: nf1.format(need) })} />
+                  <Kpi
+                    label={t('fm.style.verdict')}
+                    value={verdict ? <Tag tone={verdict === 'ok' ? 'good' : verdict === 'slow' ? 'warn' : 'bad'}>{t(`fm.style.v.${verdict}`)}</Tag> : '–'}
+                    sub={verdict && verdict !== 'ok' ? t('fm.style.simplify') : undefined}
+                  />
+                </div>
+              </Panel>
+          </>
+        ) },
+      ]}
+    />
   );
 }
