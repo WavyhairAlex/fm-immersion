@@ -50,6 +50,13 @@
       "when": 1794128674684,
       "tag": "0006_ia_gazette",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1794138241325,
+      "tag": "0007_instantane_unique",
+      "breakpoints": true
     }
   ]
 }

@@ -6,6 +6,7 @@ import { fmData } from './data';
 import { rememberClubLooks } from './club-look';
 import { importMissingHistory } from './fm-history';
 import { FmOtherSaveError } from './fm';
+import { noteImported } from './fm-cache';
 
 /** Relecture des fichiers du plugin (instantané, état du manager). */
 const LIVE_POLL_MS = 10_000;
@@ -44,8 +45,11 @@ export function useFmSync() {
         const st = await invoke<string | null>('fm_read_status', { folder });
         if (!stop && st) {
           const status = await fmData.noteStatus(saveId, JSON.parse(st));
-          setSync({ free: status.club ? null : status.gameDate, now: { gameDate: status.gameDate, club: status.club ?? null } });
-          qc.invalidateQueries({ queryKey: [...key, 'settings'] });
+          const free = status.club ? null : status.gameDate;
+          const prev = useCareerStore.getState().sync;
+          // Réglages relus seulement quand l'état change (ils contiennent la photo du coach : pas toutes les 10 s).
+          if (prev.free !== free || prev.now?.club !== (status.club ?? null)) qc.invalidateQueries({ queryKey: [...key, 'settings'] });
+          setSync({ free, now: { gameDate: status.gameDate, club: status.club ?? null } });
         }
       } catch {
         /* fichier absent ou en cours d'écriture */
@@ -53,16 +57,18 @@ export function useFmSync() {
       try {
         const text = await invoke<string>('fm_read_snapshot', { folder });
         if (!stop && text !== lastText.current) {
-          lastText.current = text;
           const snap = JSON.parse(text);
           rememberClubLooks([snap]);
-          await fmData.importSnapshot(saveId, snap);
+          const imported = await fmData.importSnapshot(saveId, snap);
+          // Retenu seulement une fois importé : un import raté est retenté au passage suivant.
+          lastText.current = text;
           setSync({ other: null });
-          qc.invalidateQueries({ queryKey: key });
+          noteImported(qc, saveId, imported);
           qc.invalidateQueries({ queryKey: ['saves'] });
         }
       } catch (e) {
-        // Autre sauvegarde chargée : on le signale ; sinon fichier absent ou en cours d'écriture, nouvel essai au prochain passage.
+        // Autre sauvegarde chargée : on le signale (sans relire ce même fichier toutes les 10 s) ; sinon fichier absent,
+        // en cours d'écriture ou import raté, nouvel essai au prochain passage.
         if (e instanceof FmOtherSaveError && !stop) setSync({ other: e });
       }
       // Historique : les jours de jeu passés pendant que l'appli était fermée sont rattrapés depuis les fichiers
@@ -93,7 +99,8 @@ export function useFmSync() {
         if (stop || r.gameDate?.slice(0, 10) !== latest.gameDate.slice(0, 10) || !r.players.length) return;
         if (await fmData.attachAbilities(saveId, latest.gameDate, r.players)) {
           abilitiesDate.current = latest.gameDate;
-          qc.invalidateQueries({ queryKey: key });
+          const updated = await fmData.latest(saveId);
+          if (updated && !stop) noteImported(qc, saveId, updated.data);
         }
       } catch {
         /* FM27 fermé ou version inconnue : nouvel essai dans une minute */

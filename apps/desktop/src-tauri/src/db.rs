@@ -9,6 +9,7 @@ use rusqlite::{params_from_iter, types::Value as SqlValue, Connection};
 use serde::{Deserialize, Serialize, Serializer};
 use serde_json::Value as Json;
 use std::{path::Path, sync::Mutex};
+use tauri::Manager;
 
 include!(concat!(env!("OUT_DIR"), "/migrations.rs"));
 
@@ -105,20 +106,32 @@ pub fn run_query(conn: &Connection, query: &Query) -> Result<Rows, DbError> {
     Ok(out)
 }
 
+/// Les requêtes tournent hors du fil principal : une lecture longue (historique d'une longue carrière) ne fige
+/// plus la fenêtre. Le verrou garde l'ordre des écritures.
 #[tauri::command]
-pub fn db_query(state: tauri::State<'_, Db>, sql: String, params: Vec<Json>) -> Result<Rows, DbError> {
-    let conn = state.0.lock().map_err(|_| DbError::Poisoned)?;
-    run_query(&conn, &Query { sql, params })
+pub async fn db_query(app: tauri::AppHandle, sql: String, params: Vec<Json>) -> Result<Rows, DbError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<Db>();
+        let conn = state.0.lock().map_err(|_| DbError::Poisoned)?;
+        run_query(&conn, &Query { sql, params })
+    })
+    .await
+    .map_err(|_| DbError::Poisoned)?
 }
 
 /// Plusieurs requêtes dans une seule transaction : tout passe ou rien.
 #[tauri::command]
-pub fn db_batch(state: tauri::State<'_, Db>, queries: Vec<Query>) -> Result<Vec<Rows>, DbError> {
-    let mut conn = state.0.lock().map_err(|_| DbError::Poisoned)?;
-    let tx = conn.transaction()?;
-    let results = queries.iter().map(|q| run_query(&tx, q)).collect::<Result<Vec<_>, _>>()?;
-    tx.commit()?;
-    Ok(results)
+pub async fn db_batch(app: tauri::AppHandle, queries: Vec<Query>) -> Result<Vec<Rows>, DbError> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let state = app.state::<Db>();
+        let mut conn = state.0.lock().map_err(|_| DbError::Poisoned)?;
+        let tx = conn.transaction()?;
+        let results = queries.iter().map(|q| run_query(&tx, q)).collect::<Result<Vec<_>, _>>()?;
+        tx.commit()?;
+        Ok(results)
+    })
+    .await
+    .map_err(|_| DbError::Poisoned)?
 }
 
 #[cfg(test)]

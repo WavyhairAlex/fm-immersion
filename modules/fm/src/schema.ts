@@ -1,5 +1,5 @@
 import { saves } from '@fm-immersion/db';
-import { index, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import type { ChallengeCertificate, ChallengeParams, Rewind } from './challenges';
 import type { GazetteWriting } from './gazette';
 import type { FmSnapshot } from './snapshot';
@@ -26,7 +26,8 @@ export const fmSnapshots = sqliteTable(
       .notNull()
       .$defaultFn(() => new Date().toISOString()),
   },
-  (t) => [index('fm_snapshots_save_idx').on(t.saveId, t.gameDate)],
+  // Un seul instantané par date de jeu (unique depuis la 0.1.75 ; les doublons d'avant sont retirés par la migration).
+  (t) => [uniqueIndex('fm_snapshots_save_date_idx').on(t.saveId, t.gameDate)],
 );
 
 export type FmSnapshotRow = typeof fmSnapshots.$inferSelect;

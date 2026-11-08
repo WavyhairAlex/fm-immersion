@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useCareer } from '../lib/career';
 import { clubLogoUrl, clubLook, rememberClubLooks } from '../lib/club-look';
-import { fmData } from '../lib/data';
+import { useHistory } from '../lib/fm-cache';
 import { getWebhook, isWebhook } from '../lib/discord';
 import { markGazetteSent, markSeasonSent, sendGazette, sendSeason } from '../lib/gazette-auto';
 import { articleText, editorialText, headlineText, paperName, storyText, weekLabel } from '../lib/gazette-text';
@@ -24,7 +24,7 @@ export function Gazette() {
   // Carrière suivie, choisie dans la barre latérale.
   const { saveId, fmSaves } = useCareer();
 
-  const { data: history = [], isLoading } = useQuery({ queryKey: ['fm', 'all', saveId], queryFn: () => fmData.all(saveId), enabled: !!saveId });
+  const { data: history = [], isLoading } = useHistory(saveId);
   // Couleurs et logos des clubs vus dans l'historique (bandeau, filets, logos de la une).
   const looksReady = useMemo(() => {
     rememberClubLooks(history.map((h) => h.data));

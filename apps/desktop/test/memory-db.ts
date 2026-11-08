@@ -32,6 +32,21 @@ export function memoryDb() {
       const rows = run(sql, params);
       return { rows: (method === 'get' ? rows[0] : rows) as unknown[] };
     },
+    // Comme db_batch : toutes les requêtes dans une transaction, tout passe ou rien.
+    async (queries) => {
+      sqlite.exec('BEGIN');
+      try {
+        const out = queries.map(({ sql, params, method }) => {
+          const rows = run(sql, params);
+          return { rows: (method === 'get' ? rows[0] : rows) as unknown[] };
+        });
+        sqlite.exec('COMMIT');
+        return out;
+      } catch (e) {
+        sqlite.exec('ROLLBACK');
+        throw e;
+      }
+    },
     { schema },
   );
 }

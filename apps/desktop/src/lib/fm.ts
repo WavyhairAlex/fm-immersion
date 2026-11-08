@@ -46,6 +46,9 @@ export class FmOtherSaveError extends Error {
   }
 }
 
+/** File des écritures des réglages (voir `updateSettings`). */
+let settingsQueue: Promise<unknown> = Promise.resolve();
+
 /**
  * Instantanés Football Manager d'une partie. Un seul instantané par date de jeu :
  * réimporter le même jour remplace le précédent, une nouvelle date l'ajoute à l'historique.
@@ -101,10 +104,11 @@ export function fmRepo(db: Db) {
       // Défis en cours : un retour à une date déjà vue (sauvegarde rechargée) est noté avant d'écraser ce jour.
       await challengesRepo(db).noteImport(saveId, snap.gameDate);
       const values = { saveId, gameDate: snap.gameDate, club: snap.club, playerCount: snap.players.length, data: snap };
-      await db
-        .delete(fmSnapshots)
-        .where(and(eq(fmSnapshots.saveId, saveId), eq(fmSnapshots.gameDate, snap.gameDate)));
-      await db.insert(fmSnapshots).values(values);
+      // Remplacement du jour en une seule transaction : jamais de jour perdu (appli fermée entre les deux) ni doublé.
+      await db.batch([
+        db.delete(fmSnapshots).where(and(eq(fmSnapshots.saveId, saveId), eq(fmSnapshots.gameDate, snap.gameDate))),
+        db.insert(fmSnapshots).values(values),
+      ]);
       await this.saveTargets(saveId, snap);
       await db.update(saves).set({ updatedAt: new Date().toISOString() }).where(eq(saves.id, saveId));
       return snap;
@@ -207,10 +211,19 @@ export function fmRepo(db: Db) {
       return status;
     },
 
-    async updateSettings(saveId: string, patch: Partial<FmSaveSettings>) {
-      const next: Record<string, unknown> = { ...(await this.settings(saveId)), ...patch };
-      for (const k of Object.keys(next)) if (next[k] === undefined) delete next[k];
-      await db.update(saves).set({ extra: next }).where(eq(saves.id, saveId));
+    /**
+     * Modifie les réglages sans écraser une autre modification faite au même moment : les écritures passent une à
+     * une (lecture puis écriture), et `patch` peut se calculer à partir des réglages relus juste avant.
+     */
+    updateSettings(saveId: string, patch: Partial<FmSaveSettings> | ((prev: FmSaveSettings) => Partial<FmSaveSettings>)) {
+      const run = settingsQueue.then(async () => {
+        const prev = await this.settings(saveId);
+        const next: Record<string, unknown> = { ...prev, ...(typeof patch === 'function' ? patch(prev) : patch) };
+        for (const k of Object.keys(next)) if (next[k] === undefined) delete next[k];
+        await db.update(saves).set({ extra: next }).where(eq(saves.id, saveId));
+      });
+      settingsQueue = run.catch(() => undefined);
+      return run;
     },
 
     setFolder(saveId: string, fmFolder: string) {
@@ -219,10 +232,12 @@ export function fmRepo(db: Db) {
 
     /** Signale un joueur partant (ou annule le signalement avec `null`). */
     async setLeaving(saveId: string, playerId: string, mark: LeavingMark | null) {
-      const next: LeavingMarks = { ...((await this.settings(saveId)).fmLeaving ?? {}) };
-      if (mark) next[playerId] = mark;
-      else delete next[playerId];
-      return this.updateSettings(saveId, { fmLeaving: Object.keys(next).length ? next : undefined });
+      return this.updateSettings(saveId, (prev) => {
+        const next: LeavingMarks = { ...(prev.fmLeaving ?? {}) };
+        if (mark) next[playerId] = mark;
+        else delete next[playerId];
+        return { fmLeaving: Object.keys(next).length ? next : undefined };
+      });
     },
 
     /** Lie la partie à une sauvegarde FM27 (ou défait le lien avec `null`). */

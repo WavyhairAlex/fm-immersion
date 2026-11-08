@@ -5,6 +5,8 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { aiLiveComment, type LiveMoment } from './ai';
 import { rememberClubLooks } from './club-look';
+import { useCareer } from './career';
+import { useFmFolder } from './fm-sync';
 import { editDiscord, getLiveEnabled, getWebhook, isWebhook, postDiscord } from './discord';
 
 const LIVE_RED = 0xd93c3c;
@@ -689,6 +691,11 @@ export async function liveStep(
 export function useLiveDiscord() {
   const { t, i18n } = useTranslation();
   const busy = useRef(false);
+  // Dossier du plugin de la carrière suivie (celui choisi dans les réglages, sinon celui trouvé sur le PC).
+  const { saveId } = useCareer();
+  const folderNow = useFmFolder(saveId);
+  const folderRef = useRef(folderNow);
+  folderRef.current = folderNow;
   useEffect(() => {
     let state = loadState();
     // Compétition du match en cours (« Match Amical »…), lue une fois par match dans l'instantané du plugin.
@@ -704,7 +711,7 @@ export function useLiveDiscord() {
       if (busy.current || !getLiveEnabled() || !isWebhook(getWebhook())) return;
       busy.current = true;
       try {
-        const folder = await invoke<string | null>('fm_default_folder');
+        const folder = folderRef.current || (await invoke<string | null>('fm_default_folder'));
         if (!folder) return;
         const raw = await invoke<string | null>('fm_read_live', { folder });
         if (!raw) return;
