@@ -1,6 +1,6 @@
 import { contrast, inkOn, type BreakingNews } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
-import { clubArt, drawCrest } from './club-look';
+import { clubArt, drawCrest, type ClubArt } from './club-look';
 import { grain, solid } from './gazette-page';
 import { paperName } from './gazette-text';
 import { fit, roundRect, wrap } from './gazette-une';
@@ -34,6 +34,37 @@ export function breakingText(t: TFunction, n: BreakingNews, lang?: string) {
     date: new Date(`${n.date.slice(0, 10)}T12:00:00`).toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' }),
     icon: ICON[n.kind],
   };
+}
+
+/**
+ * Cadre de gauche des dépêches : fond aux couleurs du club, trame de points qui grossit vers le bas et, s'il y en a
+ * un, le visage du joueur posé en bas. Renvoie la couleur du fond, pour écrire dessus.
+ */
+export function drawPanel(ctx: CanvasRenderingContext2D, club: ClubArt | null, PX: number, PY: number, PW: number, PH: number, face: CanvasImageSource | null): string {
+  const bg = solid(club, C.ink);
+  roundRect(ctx, PX, PY, PW, PH, 4, bg);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(PX, PY, PW, PH);
+  ctx.clip();
+  ctx.fillStyle = inkOn(bg) === '#FFFFFF' ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)';
+  for (let gy = PY + 6; gy < PY + PH; gy += 9) {
+    const rr = 0.6 + ((gy - PY) / PH) * 2.6;
+    for (let gx = PX + ((gy / 9) % 2 ? 4.5 : 0); gx < PX + PW; gx += 9) {
+      ctx.beginPath();
+      ctx.arc(gx, gy, rr, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  if (face) {
+    const fw = Number((face as { width?: number }).width) || 1;
+    const fh = Number((face as { height?: number }).height) || 1;
+    const side = Math.min(fw, fh);
+    const size = Math.min(PW, PH);
+    ctx.drawImage(face, (fw - side) / 2, 0, side, side, PX + (PW - size) / 2, PY + PH - size, size, size);
+  }
+  ctx.restore();
+  return bg;
 }
 
 export async function drawBreaking(t: TFunction, n: BreakingNews, opts: { lang?: string; face?: CanvasImageSource | null } = {}): Promise<HTMLCanvasElement> {
@@ -71,28 +102,8 @@ export async function drawBreaking(t: TFunction, n: BreakingNews, opts: { lang?:
   const PY = 104;
   const PW = 400;
   const PH = H - PY - 92;
-  const bg = solid(club, C.ink);
-  roundRect(ctx, PX, PY, PW, PH, 4, bg);
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(PX, PY, PW, PH);
-  ctx.clip();
-  ctx.fillStyle = inkOn(bg) === '#FFFFFF' ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)';
-  for (let gy = PY + 6; gy < PY + PH; gy += 9) {
-    const rr = 0.6 + ((gy - PY) / PH) * 2.6;
-    for (let gx = PX + ((gy / 9) % 2 ? 4.5 : 0); gx < PX + PW; gx += 9) {
-      ctx.beginPath();
-      ctx.arc(gx, gy, rr, 0, Math.PI * 2);
-      ctx.fill();
-    }
-  }
-  if (opts.face) {
-    const fw = Number((opts.face as { width?: number }).width) || 1;
-    const fh = Number((opts.face as { height?: number }).height) || 1;
-    const side = Math.min(fw, fh);
-    const size = Math.min(PW, PH);
-    ctx.drawImage(opts.face, (fw - side) / 2, 0, side, side, PX + (PW - size) / 2, PY + PH - size, size, size);
-  } else {
+  const bg = drawPanel(ctx, club, PX, PY, PW, PH, opts.face ?? null);
+  if (!opts.face) {
     const initials = n.name.split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join('');
     ctx.font = font(900, 170, SERIF);
     ctx.fillStyle = inkOn(bg);
@@ -102,7 +113,6 @@ export async function drawBreaking(t: TFunction, n: BreakingNews, opts: { lang?:
     ctx.globalAlpha = 1;
     ctx.textAlign = 'left';
   }
-  ctx.restore();
   if (club) drawCrest(ctx, club, PX + PW - 46, PY + 46, 64, { ring: bg });
 
   // La nouvelle à droite.

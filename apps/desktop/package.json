@@ -1,6 +1,6 @@
 {
   "name": "@fm-immersion/desktop",
-  "version": "0.1.108",
+  "version": "0.1.109",
   "private": true,
   "type": "module",
   "scripts": {
@@ -38,14 +38,10 @@
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
-    "d3-geo": "3.1.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
-    "topojson-client": "3.1.0",
-    "topojson-simplify": "3.0.3",
     "typescript": "^5.7.2",
     "vite": "^6.0.5",
-    "vitest": "^2.1.8",
-    "world-atlas": "2.0.2"
+    "vitest": "^2.1.8"
   }
 }
