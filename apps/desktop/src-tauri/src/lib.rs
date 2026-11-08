@@ -1,3 +1,4 @@
+mod club_logo;
 mod db;
 mod discord;
 mod faces;
@@ -60,6 +61,7 @@ pub fn run() {
             discord::discord_live_image,
             fm::fm_read_live,
             facepack::fm_face,
+            club_logo::fm_club_logo,
             images::image_save,
             images::certificate_save
         ])

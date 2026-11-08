@@ -57,7 +57,7 @@ pub fn index_faces(graphics: &Path) -> HashMap<String, PathBuf> {
 }
 
 /// Dossier `graphics` des données FM27 : à côté du dossier `archivix` du plugin.
-fn graphics_dir(plugin_folder: &Path) -> Option<PathBuf> {
+pub fn graphics_dir(plugin_folder: &Path) -> Option<PathBuf> {
     let g = plugin_folder.parent()?.join("graphics");
     g.is_dir().then_some(g)
 }
