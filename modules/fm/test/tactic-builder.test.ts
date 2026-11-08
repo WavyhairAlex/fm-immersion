@@ -106,3 +106,31 @@ describe('ailiers qui redescendent', () => {
     expect(f.find((x) => x.id === 'flankDoubled' && x.params.side === 'L')?.params.drop).toBe(true);
   });
 });
+
+describe('consignes individuelles', () => {
+  it('propose les consignes que le rôle permet et en garde une par groupe', async () => {
+    const { piOptions, togglePi, piStale } = await import('../src');
+    let t = newBuiltTactic(engine, '4-3-3', 'a');
+    // Milieu défensif de couverture : presser plus est verrouillé (pressing « Moins souvent » imposé).
+    t = set(t, 5, { oop: 'SCRDM' });
+    const o = piOptions(engine, t, 5);
+    expect(o.oop.find((x) => x.id === 'pressMore')).toBeUndefined();
+    expect(o.oop.find((x) => x.id === 'pressLess')?.state).toBe('imposed');
+    expect(togglePi(['shortPass'], 'directPass')).toEqual(['directPass']);
+    // Consigne choisie puis rôle changé : signalée.
+    t = set(t, 5, { oop: 'DM', pi: ['pressMore'] });
+    expect(piStale(engine, t, 5)).toEqual([]);
+    t = set(t, 5, { oop: 'SCRDM' });
+    expect(piStale(engine, t, 5)).toEqual(['pressMore']);
+    expect(ids(t)).toContain('piStale');
+  });
+
+  it('tient compte de « moins de courses » pour la défense restante', () => {
+    let t = newBuiltTactic(engine, '4-3-3', 'a');
+    t = set(t, 1, { ip: 'WB' });
+    t = set(t, 4, { ip: 'WB' });
+    const before = analyseBuiltTactic(engine, t).scores.solidity;
+    t = set(t, 4, { pi: ['holdPosition'] });
+    expect(analyseBuiltTactic(engine, t).scores.solidity).toBeGreaterThan(before);
+  });
+});

@@ -4,6 +4,7 @@ import { lineOf, POS_ORDER, type PosCode } from './positions';
 import { assignMax, FORMATIONS, phaseXY, readiness, shapeOf, sideOf, slotContexts, type BalanceCheck, type Phase, type RoleRef, type Slot, type StyleRef, type TacticEngine } from './tactic';
 import { checkTeamInstructions, MENTALITIES_FM27, TEAM_INSTRUCTIONS_FM27, teamInstructionOf, type TeamInstructionDef } from './team-instructions-fm27';
 import type { TacticSlot } from './tactic-slots';
+import { INSTRUCTION_GROUP, roleImposes, roleLocks, type InstructionId } from './instructions';
 
 /*
  * Tactique construite par le joueur (« from scratch ») : il place ses onze postes et rôles avec et sans ballon,
@@ -79,6 +80,8 @@ export const builtSlotSchema = z.object({
   ip: z.string(),
   /** Rôle sans ballon. */
   oop: z.string(),
+  /** Consignes individuelles choisies (identifiants de instructions.ts), avec et sans ballon. */
+  pi: z.array(z.string()).default([]),
 });
 
 export const builtTacticSchema = z.object({
@@ -149,7 +152,7 @@ export function newBuiltTactic(engine: TacticEngine, form: string, id: string, n
   const base = FORMATIONS[form] ?? FORMATIONS['4-3-3']!;
   const slots = base.map(([pos]) => {
     const posOOP = defaultOOPPos(pos);
-    return { pos, posOOP, ip: defaultRole(engine, pos, 'ip'), oop: defaultRole(engine, posOOP, 'oop') };
+    return { pos, posOOP, ip: defaultRole(engine, pos, 'ip'), oop: defaultRole(engine, posOOP, 'oop'), pi: [] };
   });
   return { id, name, slots, mentality: 'Équilibrée', ti: {} };
 }
@@ -161,7 +164,7 @@ export function builtFromGame(engine: TacticEngine, game: TacticSlot[], id: stri
     code ? engine.ref.roles.find((r) => (phase === 'ip' ? r.game?.ip === code && r.phase !== 'oop' : r.game?.oop === code && r.phase !== 'ip'))?.code : undefined;
   const slots = game.map((s) => {
     const posOOP = s.posOOP ?? defaultOOPPos(s.pos);
-    return { pos: s.pos, posOOP, ip: byGame(s.roleIP, 'ip') ?? defaultRole(engine, s.pos, 'ip'), oop: byGame(s.roleOOP, 'oop') ?? defaultRole(engine, posOOP, 'oop') };
+    return { pos: s.pos, posOOP, ip: byGame(s.roleIP, 'ip') ?? defaultRole(engine, s.pos, 'ip'), oop: byGame(s.roleOOP, 'oop') ?? defaultRole(engine, posOOP, 'oop'), pi: [] };
   });
   return { id, name, slots, mentality: 'Équilibrée', ti: {} };
 }
@@ -189,6 +192,49 @@ export function builtInstructionLabels(t: BuiltTactic): { ip: string[]; oop: str
     (def.phase === 'oop' || def.code === 'DefensiveTransition' ? oop : ip).push(label);
   }
   return { ip, oop };
+}
+
+/* ---------- Consignes individuelles ---------- */
+
+/** Consignes individuelles proposées par l'éditeur, dans l'ordre de l'écran du jeu. */
+const PI_GK: InstructionId[] = ['gkShort', 'gkLong', 'riskMore', 'riskLess', 'dribbleLess'];
+const PI_IP: InstructionId[] = ['shortPass', 'directPass', 'riskMore', 'riskLess', 'dribbleMore', 'dribbleLess', 'cutInside', 'shootMore', 'shootLess', 'holdPosition', 'roam', 'holdBall', 'runBehind', 'lateRuns', 'nearPost', 'farPost', 'crossByline', 'crossToTarget'];
+const PI_OOP: InstructionId[] = ['pressMore', 'pressLess', 'tackleHarder', 'tackleLess', 'markTighter'];
+
+/** Groupe du jeu d'une consigne : deux consignes du même groupe s'excluent (le jeu n'en garde qu'une). */
+export const piGroup = (id: string): string => INSTRUCTION_GROUP[id as InstructionId] ?? id;
+
+/** Ajoute ou retire une consigne ; en l'ajoutant, retire celle du même groupe. */
+export function togglePi(list: readonly string[], id: string): string[] {
+  if (list.includes(id)) return list.filter((x) => x !== id);
+  return [...list.filter((x) => piGroup(x) !== piGroup(id)), id];
+}
+
+export interface PiOption {
+  id: InstructionId;
+  /** free : au choix ; imposed : déjà imposée par le rôle (rien à cocher). */
+  state: 'free' | 'imposed';
+}
+
+/** Consignes individuelles possibles à un créneau, avec ballon (rôle et poste avec ballon) et sans ballon. */
+export function piOptions(engine: TacticEngine, t: BuiltTactic, i: number): Record<Phase, PiOption[]> {
+  const s = t.slots[i]!;
+  const xIp = layoutPositions(t.slots.map((x) => x.pos))[i]![0];
+  const xOop = layoutPositions(t.slots.map((x) => x.posOOP))[i]![0];
+  const of = (ph: Phase, ids: InstructionId[], pos: PosCode, x: number): PiOption[] => {
+    const r = engine.roles.get(ph === 'ip' ? s.ip : s.oop);
+    const blocked = new Set(roleLocks(r, pos, x, ph).blocked);
+    return ids.flatMap<PiOption>((id) => (roleImposes(r, id, pos, x) ? [{ id, state: 'imposed' as const }] : blocked.has(id) ? [] : [{ id, state: 'free' as const }]));
+  };
+  const gk = s.pos === 'GB';
+  return { ip: of('ip', gk ? PI_GK : PI_IP, s.pos, xIp), oop: gk ? [] : of('oop', PI_OOP, s.posOOP, xOop) };
+}
+
+/** Consignes choisies que les rôles ou postes actuels n'autorisent plus (rôle changé depuis). */
+export function piStale(engine: TacticEngine, t: BuiltTactic, i: number): string[] {
+  const o = piOptions(engine, t, i);
+  const free = new Set([...o.ip, ...o.oop].filter((x) => x.state === 'free').map((x) => x.id as string));
+  return (t.slots[i]!.pi ?? []).filter((id) => !free.has(id));
 }
 
 /* ---------- Analyse ---------- */
@@ -223,6 +269,8 @@ export interface BuiltAnalysis {
   xy: Record<Phase, [number, number][]>;
   /** Nombre de consignes d'équipe qui s'écartent de la valeur par défaut. */
   instructions: number;
+  /** Nombre de consignes individuelles choisies, tous postes confondus. */
+  playerInstructions: number;
   /**
    * Trois jauges sur 100 (estimations à partir des rôles, pas une mesure du jeu) : pénétration (joueurs qui attaquent
    * l'espace et la surface), soutien (création et relais derrière l'attaque), solidité (ce qui reste et protège).
@@ -278,8 +326,22 @@ export function analyseBuiltTactic(engine: TacticEngine, t: BuiltTactic, players
   const add = (id: string, area: Area, tone: Tone, params: Record<string, unknown> = {}, slots?: number[]) => F.push({ id, area, tone, params, ...(slots ? { slots } : {}) });
   const S = t.slots;
   const idx = S.map((_, i) => i);
-  const ipT = (i: number) => IP_TRAITS[S[i]!.ip];
-  const oopG = (i: number) => OOP_TRAITS[S[i]!.oop];
+  // Les consignes individuelles corrigent le comportement du rôle : « moins de courses » garde le joueur en place,
+  // « plus de courses » le fait monter, « presser plus / moins » change son comportement sans ballon.
+  const pis = (i: number) => S[i]!.pi ?? [];
+  const ipT = (i: number): IpTrait | undefined => {
+    const tr = IP_TRAITS[S[i]!.ip];
+    if (!tr) return tr;
+    if (pis(i).includes('holdPosition') && tr.move !== 'drop') return { ...tr, move: 'stay' };
+    if (pis(i).includes('runBehind') && lineOf(S[i]!.pos) === 'ATT') return { ...tr, box: true };
+    return tr;
+  };
+  const oopG = (i: number): Guard | undefined => {
+    const g = OOP_TRAITS[S[i]!.oop];
+    if (pis(i).includes('pressMore') && g !== 'outlet') return 'press';
+    if (pis(i).includes('pressLess') && g === 'press') return 'base';
+    return g;
+  };
   const outfield = idx.filter((i) => S[i]!.pos !== 'GB');
 
   // 1. Rôles : chaque rôle doit exister à son poste, dans sa phase ; un seul gardien.
@@ -415,8 +477,14 @@ export function analyseBuiltTactic(engine: TacticEngine, t: BuiltTactic, players
   for (const issue of checkTeamInstructions(builtLabelsAll(t))) if (issue.kind === 'condition') add('instructionCondition', 'coherence', 'warn', { label: issue.label, other: issue.other });
   const nTi = TEAM_INSTRUCTIONS_FM27.filter((d) => t.ti[d.id] != null && t.ti[d.id] !== defaultOption(d)).length;
   // Une tactique chargée de consignes met jusqu'à une vingtaine de matchs à être assimilée ; épurée, elle est prête tout de suite.
-  if (nTi >= 10) add('complex', 'coherence', 'warn', { count: nTi });
-  else if (nTi <= 5) add('simple', 'coherence', 'good', { count: nTi });
+  // Les consignes individuelles comptent aussi (le jeu les additionne dans la complexité).
+  const nPi = S.reduce((a, s) => a + (s.pi?.length ?? 0), 0);
+  if (nTi >= 10 || nTi + nPi / 2 >= 14) add('complex', 'coherence', 'warn', { count: nTi, pi: nPi });
+  else if (nTi <= 5 && nPi <= 6) add('simple', 'coherence', 'good', { count: nTi, pi: nPi });
+  const tooMany = idx.filter((i) => pis(i).length > 3);
+  if (tooMany.length) add('piHeavy', 'coherence', 'warn', { count: tooMany.length }, tooMany);
+  const stale = idx.filter((i) => piStale(engine, t, i).length > 0);
+  if (stale.length) add('piStale', 'coherence', 'warn', { count: stale.length }, stale);
 
   // 8. Effectif : le onze qui jouerait cette tactique, et ses limites physiques.
   const squad = players.length ? squadFit(engine, t, players) : null;
@@ -451,7 +519,7 @@ export function analyseBuiltTactic(engine: TacticEngine, t: BuiltTactic, players
   const block2 = blockOf(t);
   const xy = { ip: es.ip.map((s) => phaseXY(s, 'ip', block2)), oop: es.oop.map((s) => phaseXY(s, 'oop', block2)) };
   const field = (ph: Phase) => xy[ph].filter((_, i) => S[i]!.pos !== 'GB');
-  return { findings: F, areas, shape: { ip: shapeOf(field('ip')), oop: shapeOf(field('oop')) }, xy, instructions: nTi, scores, risk, partnerships, squad };
+  return { findings: F, areas, shape: { ip: shapeOf(field('ip')), oop: shapeOf(field('oop')) }, xy, instructions: nTi, playerInstructions: nPi, scores, risk, partnerships, squad };
 }
 
 /**

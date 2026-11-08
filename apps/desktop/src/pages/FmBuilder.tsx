@@ -2,6 +2,9 @@ import {
   analyseBuiltTactic,
   defaultOption,
   defaultOOPPos,
+  piOptions,
+  piStale,
+  togglePi,
   zonePos,
   builtFromGame,
   FORMATIONS,
@@ -24,7 +27,7 @@ import {
   type Phase,
   type PosCode,
 } from '@fm-immersion/module-fm';
-import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { Fragment, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTacticEngine } from './FmTactic';
@@ -86,6 +89,8 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
   // Glisser-déposer sur le terrain : le créneau déplacé et sa position en % du terrain.
   const pitchRef = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<{ i: number; x: number; y: number } | null>(null);
+  // Créneau dont les consignes individuelles sont ouvertes dans le tableau.
+  const [openPi, setOpenPi] = useState<number | null>(null);
   const analysis = useMemo(() => (cur ? analyseBuiltTactic(engine, cur, avail) : null), [engine, cur, avail]);
 
   const create = () => put(newBuiltTactic(engine, form, newId(), t('fm.builder.defaultName', { form })));
@@ -229,7 +234,13 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
             </option>
           ))}
         </select>
-        <input className="input w-auto max-w-[16rem] py-1.5" value={cur.name} onChange={(e) => put({ ...cur, name: e.target.value })} aria-label={t('fm.builder.name')} maxLength={60} />
+        <label className="flex items-center gap-2 text-sm font-bold">
+          {t('fm.builder.name')}
+          <input className="input w-auto max-w-[16rem] py-1.5 font-normal" value={cur.name} onChange={(e) => put({ ...cur, name: e.target.value })} maxLength={60} />
+        </label>
+        <span className="text-xs text-brun" title={t('fm.builder.savedHelp')}>
+          ✓ {t('fm.builder.savedAuto')}
+        </span>
         <button type="button" className="btn-secondary px-3 py-1.5 text-sm" onClick={() => put({ ...cur, id: newId(), name: t('fm.builder.copyName', { name: cur.name }) })}>
           {t('fm.builder.duplicate')}
         </button>
@@ -371,6 +382,7 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
               <th>{t('fm.builder.roleIp')}</th>
               <th>{t('fm.builder.posOop')}</th>
               <th>{t('fm.builder.roleOop')}</th>
+              <th>{t('fm.builder.pi')}</th>
               {analysis.squad && <th>{t('fm.builder.player')}</th>}
             </tr>
           </thead>
@@ -381,8 +393,13 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
               const oopRoles = rolesAt(engine, cur.slots.map((x) => ({ pos: x.posOOP })), i, 'oop');
               const sq = analysis.squad?.xi[i];
               const lit = hover?.includes(i);
+              const pi = s.pi ?? [];
+              const stale = piStale(engine, cur, i);
+              const open = openPi === i;
+              const opts = open ? piOptions(engine, cur, i) : null;
               return (
-                <tr key={i} className={`border-t border-canard/10 ${lit ? 'bg-ambre/15' : ''}`}>
+                <Fragment key={i}>
+                <tr className={`border-t border-canard/10 ${lit ? 'bg-ambre/15' : ''}`}>
                   <td className="py-1 pr-2">
                     <select className="input py-1" value={s.pos} disabled={gk} onChange={(e) => setSlot(i, { pos: e.target.value as PosCode, posOOP: e.target.value === 'MOG' ? 'MG' : e.target.value === 'MOD' ? 'MD' : (e.target.value as PosCode) })}>
                       {posOptions(gk).map((p) => (
@@ -421,6 +438,16 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
                       ))}
                     </select>
                   </td>
+                  <td className="pr-2">
+                    <button
+                      type="button"
+                      aria-expanded={open}
+                      onClick={() => setOpenPi(open ? null : i)}
+                      className={`chip whitespace-nowrap ${open ? 'chip-on' : ''} ${stale.length ? 'ring-1 ring-ambre' : ''}`}
+                    >
+                      {t('fm.builder.piCount', { count: pi.length })} {open ? '▴' : '▾'}
+                    </button>
+                  </td>
                   {analysis.squad && (
                     <td className="whitespace-nowrap">
                       {sq?.player ? (
@@ -434,6 +461,44 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
                     </td>
                   )}
                 </tr>
+                {open && opts && (
+                  <tr className="bg-creme/60">
+                    <td colSpan={analysis.squad ? 6 : 5} className="px-2 py-2">
+                      {(['ip', 'oop'] as const).map((ph) => (
+                        <div key={ph} className="mb-1 flex flex-wrap items-center gap-1.5">
+                          <span className="w-24 shrink-0 text-xs font-bold uppercase text-canard/60">{t(`fm.tac.phase.${ph}`)}</span>
+                          {opts[ph].length ? (
+                            opts[ph].map((o) =>
+                              o.state === 'imposed' ? (
+                                <span key={o.id} className="chip cursor-default opacity-60" title={t('fm.builder.piImposed')}>
+                                  🔒 {t(`fm.pi.id.${o.id}`)}
+                                </span>
+                              ) : (
+                                <button key={o.id} type="button" aria-pressed={pi.includes(o.id)} onClick={() => setSlot(i, { pi: togglePi(pi, o.id) })} className={`chip ${pi.includes(o.id) ? 'chip-on' : ''}`}>
+                                  {t(`fm.pi.id.${o.id}`)}
+                                </button>
+                              ),
+                            )
+                          ) : (
+                            <span className="text-xs text-brun">{t('fm.builder.piNone')}</span>
+                          )}
+                        </div>
+                      ))}
+                      {stale.length > 0 && (
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          <span className="text-xs text-brun">{t('fm.builder.piStaleHelp')}</span>
+                          {stale.map((id) => (
+                            <button key={id} type="button" onClick={() => setSlot(i, { pi: pi.filter((x) => x !== id) })} className="chip line-through" title={t('fm.builder.piRemove')}>
+                              {t(`fm.pi.id.${id}`, { defaultValue: id })} ✕
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <p className="mt-1 text-xs text-brun">{t('fm.builder.piHelp')}</p>
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               );
             })}
           </tbody>
