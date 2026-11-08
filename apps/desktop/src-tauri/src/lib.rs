@@ -1,10 +1,14 @@
+mod club_logo;
 mod db;
 mod discord;
 mod faces;
+mod faces_pack;
+mod faces_progress;
 mod facepack;
 mod fm;
 mod fm_bridge;
 mod fm_memory;
+mod images;
 
 use std::sync::Mutex;
 use tauri::Manager;
@@ -43,13 +47,23 @@ pub fn run() {
             fm_memory::fm_memory_division,
             fm_memory::fm_memory_staff,
             faces::faces_status,
+            faces::faces_install,
+            faces::faces_uninstall,
+            faces::faces_progress,
+            faces::faces_default_workshop,
+            faces::faces_ageswap_status,
+            faces::faces_ageswap_set,
             discord::discord_send,
             discord::discord_send_image,
+            discord::discord_send_certificate,
             discord::discord_post,
             discord::discord_edit,
             discord::discord_live_image,
             fm::fm_read_live,
-            facepack::fm_face
+            facepack::fm_face,
+            club_logo::fm_club_logo,
+            images::image_save,
+            images::certificate_save
         ])
         .run(tauri::generate_context!())
         .expect("impossible de démarrer FM Immersion");

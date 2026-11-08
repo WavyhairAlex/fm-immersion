@@ -129,12 +129,17 @@ pub fn discord_edit(webhook: String, message_id: String, payload: serde_json::Va
 /// Corps multipart d'un message avec une image jointe (`files[0]`, nommée `name`) : Discord l'affiche dans
 /// l'encart quand le JSON y fait référence par `attachment://<name>`.
 pub fn multipart(boundary: &str, payload: &str, name: &str, png: &[u8]) -> Vec<u8> {
+    multipart_typed(boundary, payload, name, "image/png", png)
+}
+
+/// Même corps multipart avec un fichier d'un autre type (certificat de défi en JSON).
+pub fn multipart_typed(boundary: &str, payload: &str, name: &str, content_type: &str, png: &[u8]) -> Vec<u8> {
     let mut body = Vec::with_capacity(payload.len() + png.len() + 400);
     body.extend_from_slice(
         format!("--{boundary}\r\nContent-Disposition: form-data; name=\"payload_json\"\r\nContent-Type: application/json\r\n\r\n{payload}\r\n").as_bytes(),
     );
     body.extend_from_slice(
-        format!("--{boundary}\r\nContent-Disposition: form-data; name=\"files[0]\"; filename=\"{name}\"\r\nContent-Type: image/png\r\n\r\n").as_bytes(),
+        format!("--{boundary}\r\nContent-Disposition: form-data; name=\"files[0]\"; filename=\"{name}\"\r\nContent-Type: {content_type}\r\n\r\n").as_bytes(),
     );
     body.extend_from_slice(png);
     body.extend_from_slice(format!("\r\n--{boundary}--\r\n").as_bytes());
@@ -157,6 +162,43 @@ pub fn discord_send_image(webhook: String, payload: serde_json::Value, png: Vec<
     }
     let boundary = format!("fmimmersion{:x}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0));
     let data = multipart(&boundary, &body, "une.png", &png);
+    match ureq::post(webhook)
+        .set("Content-Type", &format!("multipart/form-data; boundary={boundary}"))
+        .set("User-Agent", "FM-Immersion")
+        .send_bytes(&data)
+    {
+        Ok(_) => Ok(()),
+        Err(ureq::Error::Status(code, resp)) => {
+            let detail = resp.into_string().unwrap_or_default();
+            Err(DiscordError::Refused(format!("{code} {}", detail.chars().take(200).collect::<String>())))
+        }
+        Err(e) => Err(DiscordError::Network(e.to_string())),
+    }
+}
+
+/// Nom accepté pour un certificat joint : `defi-<lettres, chiffres, tirets>.json`.
+pub fn valid_certificate_name(name: &str) -> bool {
+    name.strip_prefix("defi-")
+        .and_then(|r| r.strip_suffix(".json"))
+        .is_some_and(|r| !r.is_empty() && r.len() <= 60 && r.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-'))
+}
+
+/// Envoie un message avec le certificat d'un défi joint (`defi-….json`, au plus 8 Mo), pour que les autres joueurs du
+/// salon le téléchargent et le vérifient dans leur FM Immersion. Seul un certificat FM Immersion est accepté.
+#[tauri::command]
+pub fn discord_send_certificate(webhook: String, payload: serde_json::Value, name: String, certificate: String) -> Result<(), DiscordError> {
+    let webhook = webhook.trim();
+    if !valid_webhook(webhook) {
+        return Err(DiscordError::BadUrl);
+    }
+    let body = payload.to_string();
+    let parsed: Option<serde_json::Value> = serde_json::from_str(&certificate).ok();
+    let is_cert = parsed.as_ref().and_then(|v| v.get("format")).and_then(|f| f.as_str()) == Some("fm-immersion-defi/1");
+    if body.len() > 20_000 || certificate.len() > 8 * 1024 * 1024 || !is_cert || !valid_certificate_name(&name) {
+        return Err(DiscordError::TooLong);
+    }
+    let boundary = format!("fmimmersion{:x}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0));
+    let data = multipart_typed(&boundary, &body, &name, "application/json", certificate.as_bytes());
     match ureq::post(webhook)
         .set("Content-Type", &format!("multipart/form-data; boundary={boundary}"))
         .set("User-Agent", "FM-Immersion")
@@ -240,6 +282,23 @@ mod tests {
             discord_live_image("https://discord.com/api/webhooks/1/x".into(), Some("1/../2".into()), serde_json::json!({}), png),
             Err(DiscordError::BadUrl)
         ));
+    }
+
+    #[test]
+    fn certificat_joint() {
+        assert!(valid_certificate_name("defi-invincibles-a1b2.json"));
+        assert!(!valid_certificate_name("defi-../x.json"));
+        assert!(!valid_certificate_name("defi-.json"));
+        assert!(!valid_certificate_name("autre.exe"));
+        let body = multipart_typed("b", "{}", "defi-x.json", "application/json", b"{\"format\":1}");
+        assert!(String::from_utf8_lossy(&body).contains("filename=\"defi-x.json\"\r\nContent-Type: application/json"));
+        let hook = "https://discord.com/api/webhooks/1/x".to_string();
+        assert!(matches!(discord_send_certificate(hook.clone(), serde_json::json!({}), "defi-x.json".into(), "{\"format\":\"autre\"}".into()), Err(DiscordError::TooLong)));
+        assert!(matches!(
+            discord_send_certificate(hook, serde_json::json!({}), "x.json".into(), "{\"format\":\"fm-immersion-defi/1\"}".into()),
+            Err(DiscordError::TooLong)
+        ));
+        assert!(matches!(discord_send_certificate("https://evil.io".into(), serde_json::json!({}), "defi-x.json".into(), String::new()), Err(DiscordError::BadUrl)));
     }
 
     #[test]

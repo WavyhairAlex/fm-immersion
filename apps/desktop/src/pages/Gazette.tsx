@@ -1,82 +1,66 @@
-import { gazetteIssues, seasonReviews, seasonSoFar, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
+import { gazetteIssues, seasonReviews, seasonSoFar, visibleOn, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
+import { SeasonCard } from '../components/SeasonCard';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { fmData, savesData } from '../lib/data';
+import { useCareer } from '../lib/career';
+import { clubLogoUrl, clubLook, rememberClubLooks } from '../lib/club-look';
+import { fmData } from '../lib/data';
 import { getWebhook, isWebhook } from '../lib/discord';
-import { GAZETTE_SAVE_KEY, markGazetteSent, markSeasonSent, sendGazette, sendSeason } from '../lib/gazette-auto';
+import { markGazetteSent, markSeasonSent, sendGazette, sendSeason } from '../lib/gazette-auto';
 import { articleText, editorialText, paperName, storyText, weekLabel } from '../lib/gazette-text';
 import { drawUne, recentForm } from '../lib/gazette-une';
 import { loadFace } from '../lib/player-face';
 import { drawSeason } from '../lib/season-une';
 
-const SAVE_KEY = GAZETTE_SAVE_KEY;
-const readSave = () => {
-  try {
-    return localStorage.getItem(SAVE_KEY) ?? '';
-  } catch {
-    return '';
-  }
-};
-
 /** Mode Gazette : un journal par semaine de jeu, rédigé à partir des instantanés de la partie. */
 export function Gazette() {
   const { t } = useTranslation();
-  const { data: saves = [] } = useQuery({ queryKey: ['saves'], queryFn: savesData.list });
-  const fmSaves = saves.filter((s) => s.gameId === 'fm');
-  const [saveId, setSaveId] = useState(readSave());
-  useEffect(() => {
-    if ((!saveId || !fmSaves.some((s) => s.id === saveId)) && fmSaves[0]) setSaveId(fmSaves[0].id);
-  }, [fmSaves, saveId]);
-  useEffect(() => {
-    try {
-      if (saveId) localStorage.setItem(SAVE_KEY, saveId);
-    } catch {
-      /* rien */
-    }
-  }, [saveId]);
+  // Carrière suivie, choisie dans la barre latérale.
+  const { saveId, fmSaves } = useCareer();
 
   const { data: history = [], isLoading } = useQuery({ queryKey: ['fm', 'all', saveId], queryFn: () => fmData.all(saveId), enabled: !!saveId });
+  // Couleurs et logos des clubs vus dans l'historique (bandeau, filets, logos de la une).
+  const looksReady = useMemo(() => {
+    rememberClubLooks(history.map((h) => h.data));
+    return history.length;
+  }, [history]);
   const issues = useMemo(() => gazetteIssues(history), [history]);
-  const season = useMemo(() => seasonReviews(history)[0] ?? null, [history]);
+  const reviews = useMemo(() => seasonReviews(history), [history]);
+  const season = reviews[0] ?? null;
+  // Carte de fin de saison : saisons finies, et la saison en cours en aperçu tant qu'elle n'est pas finie.
+  const cards = useMemo(() => {
+    const now = history.length ? seasonSoFar(history, history.reduce((a, e) => (e.gameDate > a ? e.gameDate : a), '')) : null;
+    return now?.ongoing && now.played > 0 ? [now, ...reviews] : reviews;
+  }, [history, reviews]);
   const [index, setIndex] = useState(0);
   useEffect(() => setIndex(0), [saveId]);
   const issue = issues[index];
   const figures = useMemo(() => (issue ? seasonSoFar(history, issue.date) : null), [history, issue]);
 
   return (
-    <div className="w-full px-6 py-6 xl:px-10">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-3xl font-semibold">{t('modes.gazette.title')}</h1>
-        {fmSaves.length > 1 && (
-          <select className="input w-auto" value={saveId} onChange={(e) => setSaveId(e.target.value)} aria-label={t('gazette.save')}>
-            {fmSaves.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        )}
-      </div>
+    <div className="w-full">
+      <p className="max-w-3xl text-brun">{t('modes.gazette.details')}</p>
 
       {!fmSaves.length && (
         <div className="card mt-6 max-w-3xl">
           <p className="text-brun">{t('gazette.noSave')}</p>
-          <Link to="/coach" className="btn-primary mt-4">
-            {t('modes.coach.title')}
+          <Link to="/parties" className="btn-primary mt-4">
+            {t('layout.career.create')}
           </Link>
         </div>
       )}
       {!!fmSaves.length && !isLoading && !issues.length && <p className="card mt-6 max-w-3xl text-brun">{t('gazette.empty')}</p>}
 
+      {cards.length > 0 && <SeasonCard saveId={saveId} seasons={cards} />}
       {season && <SeasonSection saveId={saveId} review={season} />}
 
       {issue && (
         <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
           <div className="min-w-0 space-y-6">
-            <UnePreview issues={issues} index={index} figures={figures} />
+            <UnePreview issues={issues} index={index} figures={figures} looks={looksReady} />
             <Paper issue={issue} />
           </div>
           <aside className="flex flex-col gap-2">
@@ -104,13 +88,20 @@ export function Paper({ issue }: { issue: GazetteIssue }) {
   const head = storyText(t, issue.club, issue.headline);
   const article = articleText(t, issue, i18n.resolvedLanguage) ?? head.body;
   const edito = editorialText(t, issue, i18n.resolvedLanguage);
+  // Aux couleurs du club : liseré du titre dans sa couleur qui se voit sur le fond clair, logo du pack de logos.
+  const look = clubLook(issue.club);
+  const accent = look ? visibleOn(look.colors, '#FFFFFF', '#F26B1D') : null;
+  const { data: logo } = useQuery({ queryKey: ['club-logo', issue.club, look?.id ?? null], queryFn: () => clubLogoUrl(issue.club) });
   return (
     <article className="card rounded-xl p-0">
-      <header className="border-b-4 border-orange px-6 py-4">
-        <p className="font-display text-3xl font-semibold">{paperName(t, issue.club)}</p>
-        <p className="mt-1 text-xs font-bold uppercase tracking-wide text-brun">
-          {t('gazette.issue', { number: issue.number })} · {weekLabel(t, i18n.resolvedLanguage, issue.weekStart, issue.weekEnd)}
-        </p>
+      <header className="flex items-center gap-4 border-b-4 border-orange px-6 py-4" style={accent ? { borderBottomColor: accent } : undefined}>
+        {logo && <img src={logo} alt="" className="h-14 w-14 shrink-0 object-contain" />}
+        <div className="min-w-0">
+          <p className="font-display text-3xl font-semibold">{paperName(t, issue.club)}</p>
+          <p className="mt-1 text-xs font-bold uppercase tracking-wide text-brun">
+            {t('gazette.issue', { number: issue.number })} · {weekLabel(t, i18n.resolvedLanguage, issue.weekStart, issue.weekEnd)}
+          </p>
+        </div>
       </header>
       <section className="border-b border-canard/10 px-6 py-5">
         <div className="flex items-start gap-4">
@@ -149,12 +140,12 @@ export function Paper({ issue }: { issue: GazetteIssue }) {
 }
 
 /** Une en image, telle qu'elle part sur Discord. */
-function UnePreview({ issues, index, figures }: { issues: GazetteIssue[]; index: number; figures: SeasonReview | null }) {
+function UnePreview({ issues, index, figures, looks }: { issues: GazetteIssue[]; index: number; figures: SeasonReview | null; looks: number }) {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage;
   const issue = issues[index]!;
   const { data: url } = useQuery({
-    queryKey: ['gazette', 'une', issue.club, issue.weekStart, issue.date, lang, index, issues.length, figures?.end, figures?.played],
+    queryKey: ['gazette', 'une', issue.club, issue.weekStart, issue.date, lang, index, issues.length, figures?.end, figures?.played, looks],
     queryFn: async () =>
       (await drawUne(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures })).toDataURL('image/png'),
   });

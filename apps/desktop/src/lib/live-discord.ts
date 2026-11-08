@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { rememberClubLooks } from './club-look';
 import { editDiscord, getLiveEnabled, getWebhook, isWebhook, postDiscord, sendDiscord, sendDiscordImage } from './discord';
 import { facePng } from './player-face';
 
@@ -658,7 +659,10 @@ export function useLiveDiscord() {
         const key = liveKey(live.data);
         if (comp?.key !== key) {
           const snapRaw = await invoke<string | null>('fm_read_snapshot', { folder }).catch(() => null);
-          const context = snapRaw ? liveContext(JSON.parse(snapRaw)) : null;
+          const snap = snapRaw ? JSON.parse(snapRaw) : null;
+          // Couleurs et identifiants des deux équipes (calendrier de l'instantané) pour le tableau en image.
+          if (snap) rememberClubLooks([snap]);
+          const context = snap ? liveContext(snap) : null;
           comp = { key, context };
         }
         let ended: MatchEnded | null = null;

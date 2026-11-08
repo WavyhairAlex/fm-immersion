@@ -38,8 +38,10 @@
   .num-pill { @apply inline-block min-w-[2.75rem] rounded-md px-1.5 py-0.5 text-center text-xs font-bold tabular-nums; }
   .card { @apply rounded-3xl bg-white p-6 shadow-sm ring-1 ring-canard/5; }
   /* Barre latérale des modes (fond anthracite) : le mode ouvert est souligné d'orange. */
-  .nav-link { @apply flex items-center justify-between gap-2 rounded-lg border-l-4 border-transparent px-3 py-2 text-sm font-bold text-white/75 transition hover:bg-white/5 hover:text-white; }
+  .nav-link { @apply flex items-center gap-2.5 rounded-lg border-l-4 border-transparent px-3 py-2 text-sm font-bold text-white/75 transition hover:bg-white/5 hover:text-white; }
   .nav-link.active { @apply border-orange bg-white/10 text-white; }
+  /* Titre de groupe de la barre latérale (Mon club, Ma carrière racontée, Le jeu). */
+  .nav-group { @apply px-3 pb-1 pt-4 text-[0.65rem] font-extrabold uppercase tracking-widest text-white/45; }
 }
 
 /* Module Football Manager : présentation « logiciel de foot », plus dense et régulière (cadres nets, titres de

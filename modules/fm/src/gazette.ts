@@ -1,7 +1,10 @@
 import { boardObjectives } from './club';
+import { cupRuns, type CupStatus, type CupTie } from './cups';
+import { calendarFixtures } from './fixtures';
 import { figuresForResultIn } from './lastmatch';
 import { normalizePlayer, toNumber, type FmPlayer } from './player';
 import { matchResults, type MatchResult, type Outcome } from './results';
+import { seasonSegments } from './season';
 import type { FmSnapshot } from './snapshot';
 
 /**
@@ -33,6 +36,8 @@ export type StoryKind =
   | 'fans'
   | 'job'
   | 'nextMatch'
+  | 'cupOut'
+  | 'cupThrough'
   | 'quiet';
 
 export interface GazetteStory {
@@ -247,6 +252,13 @@ export function weekStories(prev: FmSnapshot | null, week: FmSnapshot[], results
   return out.sort((a, b) => b.weight - a.weight);
 }
 
+/** Match retour à venir contre le même adversaire dans la compétition : l'aller ne qualifie encore personne. */
+function secondLegAhead(s: FmSnapshot, competition: string, tie: CupTie): boolean {
+  return calendarFixtures(s).some(
+    (f) => f.competition === competition && f.opponent === tie.opponent && f.date > tie.date && (Date.parse(f.date) - Date.parse(tie.date)) / DAY_MS <= 21,
+  );
+}
+
 /** Toutes les gazettes de la carrière, de la plus récente à la plus ancienne. */
 export function gazetteIssues(history: Entry[]): GazetteIssue[] {
   const sorted = [...history].sort((a, b) => a.gameDate.localeCompare(b.gameDate));
@@ -257,14 +269,30 @@ export function gazetteIssues(history: Entry[]): GazetteIssue[] {
     const w = weekStartOf(e.gameDate);
     weeks.set(w, [...(weeks.get(w) ?? []), e]);
   }
+  const segs = seasonSegments(sorted);
   const issues: GazetteIssue[] = [];
   let prev: Entry | null = null;
+  let cupsBefore = new Map<string, CupStatus>();
   let n = 0;
   for (const [w, entries] of weeks) {
     const end = addDays(w, 6);
     const last = entries[entries.length - 1]!;
     const inWeek = results.filter((r) => r.date >= w && r.date <= end);
     const stories = weekStories(prev?.data ?? null, entries.map((e) => e.data), inWeek, results.filter((r) => r.date < w));
+    // Coupes : élimination ou qualification de la semaine, sur les matchs de la saison en cours.
+    const seasonStart = [...segs].reverse().find((x) => x.entries[0]!.gameDate <= last.gameDate)?.entries[0]!.gameDate ?? '';
+    const runs = cupRuns(results.filter((r) => r.date >= seasonStart && r.date <= end), last.data);
+    const cupsNow = new Map(runs.map((c) => [c.competition, c.status]));
+    for (const c of runs) {
+      const tie = c.ties.at(-1)!;
+      const was = cupsBefore.get(c.competition);
+      const params = { competition: c.competition, opponent: tie.opponent, goalsFor: tie.goalsFor, goalsAgainst: tie.goalsAgainst, legs: tie.legs, rounds: c.ties.length };
+      if (c.status === 'out' && was !== 'out') stories.push({ kind: 'cupOut', weight: 58, params });
+      else if (c.kind === 'cup' && tie.date >= w && tie.goalsFor > tie.goalsAgainst && c.status !== 'unknown' && !secondLegAhead(last.data, c.competition, tie))
+        stories.push({ kind: 'cupThrough', weight: 42, params });
+    }
+    cupsBefore = cupsNow;
+    stories.sort((a, b) => b.weight - a.weight);
     const board = boardObjectives((last.data as { custom?: { club?: Record<string, unknown> } }).custom?.club)[0]?.label ?? null;
     issues.push({ number: ++n, club: last.data.club, weekStart: w, weekEnd: end, date: last.gameDate, headline: stories[0]!, stories: stories.slice(1), board });
     prev = last;

@@ -78,7 +78,7 @@ fn installed_version(game: &Path) -> Option<String> {
 
 /// FM27 tourne-t-il ? (liste des processus Windows, sans fenêtre de console)
 #[cfg(windows)]
-fn game_running(_game: &Path) -> bool {
+pub(crate) fn game_running(_game: &Path) -> bool {
     use std::os::windows::process::CommandExt;
     const CREATE_NO_WINDOW: u32 = 0x0800_0000;
     std::process::Command::new("tasklist")
@@ -90,7 +90,7 @@ fn game_running(_game: &Path) -> bool {
 }
 
 #[cfg(not(windows))]
-fn game_running(_game: &Path) -> bool {
+pub(crate) fn game_running(_game: &Path) -> bool {
     false
 }
 

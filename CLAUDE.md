@@ -14,7 +14,8 @@ extraite avec son historique ; Simloom garde Planet Zoo 2 et Transport Fever 3.
   Releases : la recherche de mise à jour au démarrage, et, à la demande du joueur, le téléchargement du plugin FM27
   (`modules/fm/bridge`, vérifié par SHA-256, voir son README).
   Exception choisie par le joueur : le **Live Discord** envoie une gazette à son salon par le lien webhook qu'il a
-  collé (`src-tauri/src/discord.rs`, seulement vers `discord.com/api/webhooks/`, seulement sur son clic).
+  collé (`src-tauri/src/discord.rs`, seulement vers `discord.com/api/webhooks/`, seulement sur son clic), et un certificat de
+  défi joint (`modules/fm/src/challenges.ts`, mode Défis) quand il clique sur « Partager sur Discord ».
 - **Mises à jour automatiques** au lancement (`UpdateGate`) via `tauri-plugin-updater`. Les fichiers de mise à
   jour sont signés avec une clé minisign (secret GitHub `TAURI_SIGNING_PRIVATE_KEY`, clé publique dans
   `tauri.conf.json`). **Perdre cette clé = plus aucune mise à jour possible pour les installations existantes.**
@@ -79,8 +80,13 @@ la publie et la marque « Latest » une fois latest.json envoyé. Plus de public
 ## Identité visuelle (choix du 06/11/2026)
 - **Anthracite et orange**, les couleurs d'Amnesix. Toujours lisible : texte anthracite sur fond clair, texte blanc
   sur anthracite ou sur orange foncé, jamais de texte blanc sur l'orange vif.
-- Mise en page : barre latérale anthracite avec un lien par **mode** (`src/lib/modes.ts`), le mode ouvert souligné
-  d'orange ; chaque mode est indépendant (Visages, FM Coach, Gazette, Live Discord, Monde partagé).
+- Mise en page (refonte du 07/11/2026, 0.1.48) : **une seule barre latérale** anthracite (`src/components/Sidebar.tsx`).
+  En haut, la **carte de carrière** : la partie FM suivie par toute l'appli (`src/lib/career.ts`, choisie une fois),
+  la photo du coach (choisie par le joueur), le club et la date de jeu. Puis trois groupes : *Mon club* (les écrans
+  de FM Coach à plat, `src/lib/club-nav.ts`, routes `/club/:vue`), *Ma carrière racontée* (Gazette, Live Discord,
+  Défis), *Le jeu* (Visages, Plugin et réglages, Monde partagé). L'accueil « Aujourd'hui » (`/`) montre le briefing
+  de l'adjoint et un cadre par mode. La lecture du plugin tourne pour toute l'appli (`src/lib/fm-sync.ts`).
+  Visages reste utilisable sans carrière.
 - Les jetons Tailwind gardent leurs noms hérités de Simloom pour ne pas réécrire les écrans :
   - `canard` #25282D — anthracite : texte principal, fonds sombres, barre latérale
   - `orange` #F26B1D — marque : liserés, sélection, logo ; `orange-fonce` #C2410C — boutons principaux et liens (texte blanc : 5,2) ;

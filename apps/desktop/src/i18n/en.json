@@ -1281,13 +1281,11 @@
         "heavy": "Heavy"
       },
       "workloadHint": "Week workload in the game: {{level}}.",
-      "upcoming": "Coming weeks",
       "weekOf": "Week of",
       "planCol": "Plan",
       "matchesCol": "Matches",
       "scheduleFocus": "Schedule Focus",
       "workloadCol": "Workload",
-      "upcomingHelp": "Set ahead in the game's Training Schedule screen: one Schedule Focus and one workload per week. Light in two-match weeks, medium with one match, heavy with no match and early in pre-season. Beyond the next known fixtures, FM Immersion assumes a Saturday match.",
       "reasonHint": "Hover a player's intensity to see why it is advised.",
       "metaAdaptHelp": "AlexJeuVideal's Meta base: 2 pressing-trap sessions a week, the day before the match Ball Progression, Defensive Block, Conditioning, rest otherwise. The other 4 tactical sessions follow your priority areas (the weakest from the game and your matches) among those the benchmark finds useful: Line of Engagement, Build-Up, Chance Creation, In and Out of Possession Shape. They change when your weaknesses change.",
       "metaSwaps": "After loading it, replace: {{list}}.",
@@ -1336,7 +1334,61 @@
       },
       "settings": "Schedule settings",
       "settingsSummary": "{{phase}}, {{status}} club, season starts in {{month}}{{winter}}",
-      "settingsWinter": ", winter break"
+      "settingsWinter": ", winter break",
+      "weekOfDate": "Week of {{date}}",
+      "season": {
+        "title_one": "Whole season ({{count}} week)",
+        "title_other": "Whole season ({{count}} weeks)",
+        "lead": "Every week until next pre-season, with its type and what to set in the game. {{known}} weeks use your real fixture list; after that, FM Immersion assumes a Saturday match. Click a week to see its day-by-day plan.",
+        "kindCol": "Type",
+        "matchesCol": "Matches",
+        "kind": {
+          "preseason": "Pre-season",
+          "tactical": "Tactical block",
+          "break": "Break",
+          "free": "No match",
+          "single": "One match",
+          "double": "Two matches",
+          "congested": "Run of games",
+          "offseason": "Off-season"
+        },
+        "assumed_one": "{{count}} assumed match",
+        "assumed_other": "{{count}} assumed matches",
+        "open": "See this week's plan",
+        "more": "Show the whole season ({{count}} weeks)",
+        "less": "Show less",
+        "help": "Set in advance in the game's Training Schedule screen: one \"Schedule priority\" and one workload per week. Light workload in two-match weeks, medium with one match, heavy with no match and early in pre-season; three matches or more is a run of games: full rest between matches. The fixture list comes from the plugin (up to 40 upcoming matches, all competitions); cup rounds not yet drawn are missing, and the view updates with each snapshot.",
+        "leadFull": "Every week until next pre-season, from your real fixture list (all competitions), with its type and what to set in the game. Click a week to see its day-by-day plan."
+      },
+      "youth": {
+        "title": "Youth and B team",
+        "week": "Typical week: schedule {{code}}, to load in the game as the \"{{preset}}\" schedule, workload {{workload}}. It aims at development: fewer tactical sessions, more development sessions.",
+        "noWorkload": "none (rest)",
+        "statusCol": "To do",
+        "roleCol": "Role to learn",
+        "potentialCol": "Potential",
+        "status": {
+          "promote": "With the first team",
+          "loan": "Loan out",
+          "develop": "Develop",
+          "low": "Low potential"
+        },
+        "statusHint": {
+          "promote": "Already at first-team level for this role: have him train with the first team, he will develop faster.",
+          "loan": "19 or older, with potential, but not at the level yet: he needs senior football. Loan him to a club where he will play.",
+          "develop": "He is developing with the youth team: keep this plan and his individual focus.",
+          "low": "20 or older with 2 potential stars or fewer: he takes a place a more promising youngster could have."
+        },
+        "count": {
+          "promote_one": "{{count}} ready for the first team",
+          "promote_other": "{{count}} ready for the first team",
+          "loan_one": "{{count}} to loan out",
+          "loan_other": "{{count}} to loan out",
+          "low_one": "{{count}} with low potential",
+          "low_other": "{{count}} with low potential"
+        },
+        "help": "Reserve and youth players read by the plugin. The role to learn is the role in your game plan he fits best; the individual focus follows the same rule as the first team (quickness up to 23, measured as the most effective, otherwise his weakest key attributes, shown next to it). Status from his role fit compared with your first-team starters (median). The youth fixture list is not read: the typical week assumes a Saturday match. In the game, youth training is set in their Training screen, if you took charge of it in the staff responsibilities."
+      }
     },
     "intro": {
       "home": "What needs your attention today, the styles that suit the squad, your best players and your youngsters.",
@@ -2482,7 +2534,7 @@
     "home": {
       "title": "Home",
       "heading": "Welcome to FM Immersion",
-      "intro": "Pick a mode. Each one works on its own: use only what you like."
+      "intro": "Create your FM27 career: FM Immersion follows it through the plugin, and every mode uses it. Photorealistic faces install even without a career."
     },
     "faces": {
       "title": "Photorealistic faces",
@@ -2506,25 +2558,72 @@
       "title": "Shared world",
       "summary": "Asynchronous multiplayer: everyone plays their own save at their own pace, in the same world.",
       "details": "Each manager plays their own save. Other humans' results, transfers and job changes reach your save on the right date, with a common checkpoint every six months."
+    },
+    "challenges": {
+      "title": "Challenges",
+      "summary": "Famous FM challenges (Zero to Hero, Invincibles…) proven by your save, with a certificate to share."
     }
   },
   "faces": {
-    "intro": "Generated faces (youngsters, staff, managers) switch from the game's 3D to photorealistic portraits. Then tick FM27's \"Use pre-generated images of players and staff\" option.",
+    "intro": "Generated faces (young players, staff, managers) go from the game's 3D to photorealistic portraits, then to portraits that follow each person's age. What is ready installs right now; the rest arrives as generation goes on.",
     "statusTitle": "Status in your game",
     "gameDir": "Football Manager 27 folder",
     "size": "({{mb}} MB)",
     "state": {
-      "noGame": "FM27 not found in this folder (no fm.exe).",
-      "missing": "Portraits file not found: verify the game files in Steam.",
+      "noGame": "FM27 not found in this folder (fm.exe missing).",
+      "missing": "Portrait file not found: verify the game files in Steam.",
       "original": "Original game portraits: the pack is not installed.",
       "photorealV1": "Photorealistic pack v1.0 installed.",
-      "unknown": "Portraits file modified or updated by Steam: reinstall the pack."
+      "photorealCustom": "Workshop photorealistic pack installed.",
+      "unknown": "Portrait file modified or updated by Steam: reinstall the pack."
     },
+    "running": "FM27 is open: close it to install or uninstall.",
     "installTitle": "Install the pack",
-    "installSoon": "One-click install comes in the next version. Meanwhile:",
-    "step1": "Close FM27, then download the latest zip from the address below.",
-    "step2": "Unzip it and run INSTALL.bat (UNINSTALL.bat to go back to the original faces).",
-    "step3": "Restart FM27 and tick the pre-generated images option in the preferences."
+    "packFile": "Pack file (portraits_assets_all.bundle)",
+    "packPlaceholder": "Path of the bundle unzipped from the release zip",
+    "packBuilt": "Latest pack built in the workshop, on {{date}}.",
+    "install": "Install the pack",
+    "reinstall": "Reinstall this pack",
+    "installing": "Installing…",
+    "uninstall": "Restore the original faces",
+    "uninstalling": "Restoring…",
+    "installed": "Pack installed. The original files are backed up in Documents\\FM27-Photoreal-Backup.",
+    "alreadyInstalled": "This pack is already in place: nothing to do.",
+    "uninstalled": "Original faces restored.",
+    "nothingToRemove": "The pack was not installed: nothing to do.",
+    "lastStep": "In FM27 > Preferences, tick \"Use pre-generated images of players and staff instead of dynamically generated ones\". After a Steam update, come back here and reinstall.",
+    "download": "No workshop on this PC: download the latest zip, unzip it and enter above the path of the portraits_assets_all.bundle file.",
+    "progressTitle": "Progress",
+    "completeHelp": "Complete edition: quality base (25 years) and five other age brackets, i.e. 6 × 14,000 portraits.",
+    "workshopHelp": "Enter the generation workshop folder (FM27-PhotoReal) to follow progress.",
+    "workshop": "Workshop folder",
+    "workshopMissing": "Workshop not found in this folder (out_full missing).",
+    "v1": "V1 · photorealistic",
+    "v1Help": "Published pack (release v1.0), installable right now.",
+    "v2": "V2 · quality base (25 years)",
+    "lot": {
+      "none": "Batch not started yet.",
+      "running": "Batch running (last activity on {{date}}).",
+      "stopped": "Batch stopped since {{date}}. It resumes where it stopped.",
+      "finished": "Batch finished."
+    },
+    "eta": "Estimated end: {{eta}}.",
+    "ages": "Age variants (catalog portraits)",
+    "ageLabel": "{{age}} y",
+    "agesHelp": "Each ready portrait is used in game by AgeSwap; the others keep the pack's face.",
+    "ageswapTitle": "Age-based portraits (AgeSwap)",
+    "ageswapIntro": "The game picks portraits without looking at age. The AgeSwap plugin (BepInEx) reads each person's age and shows the variant for their bracket (15 to 40) when it exists, otherwise the pack's portrait. It changes neither the save nor the game files.",
+    "ageswapNoBepinex": "BepInEx is not installed in FM27.",
+    "ageswapMissing": "AgeSwap plugin missing (BepInEx\\plugins\\FM27Faces).",
+    "ageswapOn": "AgeSwap {{version}} on: age variants show in game.",
+    "ageswapOff": "AgeSwap {{version}} installed but off: observation only.",
+    "ageswapNew": "AgeSwap installed: launch FM27 once to create its settings.",
+    "ageswapReady_one": "{{count}} portrait already has its variants, across {{brackets}} age brackets.",
+    "ageswapReady_other": "{{count}} portraits already have their variants, across {{brackets}} age brackets.",
+    "ageswapEnable": "Turn ages on",
+    "ageswapDisable": "Turn ages off",
+    "ageswapNextLaunch": "Applied on the next FM27 launch.",
+    "ageswapRestart": "FM27 is open: restart it to apply."
   },
   "gazette": {
     "paper": "The {{club}} Gazette",
@@ -2618,6 +2717,16 @@
         "body_winless": "The last competitive win was {{count}} matches ago.",
         "title_unbeaten": "{{count}} matches unbeaten for {{club}}",
         "body_unbeaten": "Unbeaten in the last {{count}} competitive matches."
+      },
+      "cupOut": {
+        "title": "{{club}} knocked out of the {{competition}}",
+        "body": "Beaten {{score}} by {{opponent}}, the club bows out after {{count}} round(s).",
+        "bodyLegs": "Beaten {{score}} on aggregate by {{opponent}}, the club bows out after {{count}} round(s)."
+      },
+      "cupThrough": {
+        "title": "{{club}} through in the {{competition}}",
+        "body": "A {{score}} win against {{opponent}}: the club awaits its next opponent.",
+        "bodyLegs": "{{score}} on aggregate against {{opponent}}: the club awaits its next opponent."
       }
     },
     "discord": {
@@ -3032,5 +3141,230 @@
     "cards": "{{yellow}} yellow, {{red}} red cards",
     "mostUsed": "Most used",
     "minutes": "{{name}}, {{minutes}} min"
+  },
+  "card": {
+    "title": "End-of-season card",
+    "intro": "A shareable recap image of your season: final position, key figures, team of the season with faces, top scorers and best moment.",
+    "kicker": "End-of-season card",
+    "ongoing_one": "Season in progress · after {{count}} match",
+    "ongoing_other": "Season in progress · after {{count}} matches",
+    "ongoingHeadline": "{{club}} sit {{position}} mid-season",
+    "preview": "Preview: the final card comes after the last league match.",
+    "position": "Position",
+    "points_one": "Points in {{count}} match",
+    "points_other": "Points in {{count}} matches",
+    "team": "Team of the season",
+    "formation": "{{formation}} formation",
+    "noTeam": "Not enough rated matches yet to pick the team of the season (at least 3 matches per player).",
+    "scorers": "Top scorers",
+    "noScorer": "No tracked goals yet.",
+    "noMoment": "The best moment will show up after a first win.",
+    "moment": {
+      "title": "Best moment",
+      "hatTrick": "Hat-trick for {{name}}",
+      "haul": "{{name}} scores {{count}}",
+      "vs": "{{score}} against {{opponent}}",
+      "score": "{{score}} win",
+      "bigWinBody": "The biggest win of the season, on {{date}}.",
+      "unbeaten": "{{count}} matches unbeaten",
+      "unbeatenBody": "The longest run of the season.",
+      "cupWin": "{{competition}} won!",
+      "cupWinBody": "The trophy of the season."
+    },
+    "footer": "FM Immersion · independent project, not affiliated with Sports Interactive or SEGA",
+    "season": "Season",
+    "current": "{{season}} (in progress)",
+    "copy": "Copy image",
+    "copied": "Image copied: paste it into Discord with Ctrl+V.",
+    "copyError": "Copy failed: save the image instead.",
+    "save": "Save image",
+    "saved": "Image saved: {{path}}",
+    "send": "Send the card to Discord",
+    "sent": "Card sent to Discord.",
+    "faces": "Photos come from your facepack or the photorealistic portraits; without a photo, initials are shown.",
+    "cups": "Cups",
+    "cup": {
+      "alive": "{{competition}} · still in",
+      "through": "{{competition}} · through",
+      "out": "{{competition}} · out to {{opponent}}",
+      "won": "{{competition}} · winners",
+      "unknown": "{{competition}} · {{count}} match(es)"
+    }
+  },
+  "challenges": {
+    "save": "Save",
+    "intro": "Sign up for a challenge before you play: FM Immersion checks it on its own from the plugin snapshots. No word of honour, a certificate others can verify again.",
+    "noSave": "No FM save yet. Create it in FM Coach, then come back to sign up.",
+    "coach": "Your nickname on certificates",
+    "coachPlaceholder": "Discord nickname, for example",
+    "anonymous": "Anonymous",
+    "mine": "My running challenges",
+    "none": "No running challenge for this save. Pick one below.",
+    "catalog": "Pick a challenge",
+    "checked": "Checked:",
+    "enroll": "Sign up",
+    "nationality": "Nationality (e.g. France)",
+    "since": "Tracked since {{date}} (game date)",
+    "shareDiscord": "Share on Discord",
+    "export": "Export certificate",
+    "abandon": "Give up",
+    "abandonConfirm": "Give up this challenge? It will no longer be tracked (a sign-up cannot be resumed).",
+    "noWebhook": "To share on Discord, first paste your channel's webhook link in",
+    "shared": "Certificate sent to Discord (fingerprint {{digest}}).",
+    "blocked": {
+      "soon": "Not playable yet: the trophy cabinet must be read from the game first.",
+      "taken": "Already running in this save.",
+      "needUnemployed": "Needs a new career without a club: start it in FM27 and open it in FM Coach while your manager is unemployed.",
+      "needSnapshot": "Needs at least one snapshot of the save (open it in FM Coach)."
+    },
+    "status": {
+      "running": "Running",
+      "success": "Completed",
+      "failed": "Failed",
+      "unproven": "Not proven",
+      "unavailable": "Soon"
+    },
+    "step": {
+      "unemployed": "Career started without a club",
+      "firstClub": "First club: {{value}}",
+      "titles": "League titles: {{value}} {{detail}}",
+      "topTitle": "Top-flight champion {{detail}}",
+      "seasonUnbeaten": "League season without a defeat {{detail}}",
+      "currentSeason": "Current season: {{value}} defeat(s) in {{detail}} matches",
+      "u19Matches": "Matches with at least 3 under-19 starters: {{value}} / {{target}}",
+      "localsSeason": "A full season with only “{{value}}” players ({{detail}})",
+      "localsUsed": "Players fielded: {{value}}, no foreigner",
+      "pentagonSoon": "The 5 continental Champions Leagues: trophy reading to come",
+      "localsForeign": "Foreigners fielded: {{detail}}"
+    },
+    "issue": {
+      "editor": "In-game editor used (reported by FM27 on {{date}}): challenge disqualified.",
+      "editorUnknown": "The plugin does not read the in-game editor flag yet: update it.",
+      "replayed": "Match of {{date}} replayed after a reload: {{before}} became {{after}}. Challenge disqualified.",
+      "rewind": "Save reloaded: back to {{to}} although {{from}} had already been played (no result changed).",
+      "notUnemployed": "The career did not start without a club.",
+      "untracked": "Season {{season}} not tracked from start to finish ({{tracked}} of {{expected}} matches tracked): it does not count.",
+      "unknownLoss": "Defeat in {{matches}} grouped matches before {{date}}: competition unknown, season not proven. Keep FM Immersion open or re-read after each match.",
+      "nationalityUnknown": "Nationality unknown for {{count}} player(s): the plugin must read “nationalites”."
+    },
+    "def": {
+      "zero-to-hero": {
+        "name": "Zero to Hero",
+        "rules": "Start without a club or reputation, find a first job and climb all the way to a top-flight league title.",
+        "checked": "plugin “unemployed” state at the start, final position each season, league name."
+      },
+      "invincibles": {
+        "name": "The Invincibles",
+        "rules": "Finish a league season without a single defeat.",
+        "checked": "every league match, from the first to the last matchday."
+      },
+      "u19": {
+        "name": "Generation U19",
+        "rules": "Play 10 competitive matches with at least 3 under-19 starters.",
+        "checked": "starting eleven and player ages for each match."
+      },
+      "locals": {
+        "name": "Locals only",
+        "rules": "A whole season where every player fielded in a competitive match has the chosen nationality, Athletic Bilbao style.",
+        "checked": "nationalities read from the game for every player who played."
+      },
+      "pentagon": {
+        "name": "Pentagon",
+        "rules": "Unemployed at the start, win all five continental Champions Leagues (Europe, South America, Asia, Africa, North America) in the same career.",
+        "checked": "unemployed start; the final win needs the trophy cabinet read from the game (to come)."
+      }
+    },
+    "discord": {
+      "title": "🏆 {{coach}} · {{challenge}}",
+      "footer": "Fingerprint {{digest}} · FM Immersion {{version}} · certificate attached, verifiable in the app"
+    },
+    "board": "Leaderboard",
+    "boardIntro": "Import other players' certificates (file attached on Discord): FM Immersion redoes every calculation and says whether they are verified or altered.",
+    "boardEmpty": "No certificate yet.",
+    "import": "Import a certificate",
+    "importOk": "Certificate verified and added to the leaderboard.",
+    "importBad": "Certificate refused or altered: {{problems}}.",
+    "verified": "Verified",
+    "altered": "Altered",
+    "remove": "Remove",
+    "col": {
+      "coach": "Coach",
+      "challenge": "Challenge",
+      "status": "Status",
+      "check": "Check",
+      "clubs": "Clubs",
+      "digest": "Fingerprint"
+    },
+    "problem": {
+      "format": "not an FM Immersion certificate",
+      "digest": "the file was changed after it was created",
+      "status": "the status does not match the rules",
+      "dates": "inconsistent dates",
+      "scores": "score and result do not match",
+      "counts": "impossible match or starter counts",
+      "ages": "players getting younger"
+    },
+    "limit": "Everything happens on your PC and the code is open: a certificate proves the save is consistent and tracked from start to finish, not that a whole fake season cannot be made up. Independent project, not affiliated with Sports Interactive or SEGA.",
+    "saved": "Certificate saved: {{path}}"
+  },
+  "layout": {
+    "readNow": "Read the game now",
+    "openSettings": "Open Plugin & settings",
+    "more": "More",
+    "bridgeAction": "The plugin needs an action",
+    "settingsIntro": "Where FM Immersion reads your game: plugin folder, linked save, history and the FM27 plugin.",
+    "manageCareers": "Manage my careers",
+    "groups": {
+      "club": "My club",
+      "story": "My career, told",
+      "game": "The game"
+    },
+    "nav": {
+      "today": "Today",
+      "tactic": "Tactics & training",
+      "squad": "Squad",
+      "results": "Results",
+      "mercato": "Transfers & finances",
+      "faces": "Faces",
+      "settings": "Plugin & settings",
+      "story": "Gazette & Discord"
+    },
+    "today": {
+      "title": "Today",
+      "intro": "What your assistant spotted in your game, and the rest of your career at a glance.",
+      "read": "Read",
+      "see": "See",
+      "noGazette": "The first issue comes out after your first tracked game week.",
+      "challenge": "Current challenge",
+      "pickChallenge": "Pick a challenge",
+      "noChallenge": "No challenge running.",
+      "steps": "{{done}} of {{total}} step(s)",
+      "facesProgress": "Portrait generation: {{pct}}%"
+    },
+    "career": {
+      "create": "Create my career",
+      "photo": "Change the coach's photo",
+      "change": "Change",
+      "free": "Unemployed",
+      "noData": "Game not read yet",
+      "photoError": "Unreadable image: pick a PNG, JPEG or WebP.",
+      "switch": "Switch career",
+      "manage": "Manage",
+      "removePhoto": "Remove",
+      "addPhoto": "Add your photo",
+      "changePhoto": "Change photo"
+    },
+    "assistant": {
+      "label": "Your assistant",
+      "initial": "A",
+      "elsewhere_one": "{{count}} more item is waiting elsewhere: see the briefing",
+      "elsewhere_other": "{{count}} more items are waiting elsewhere: see the briefing",
+      "calm": {
+        "tactic": "Nothing urgent on tactics and training this week: the XI holds, stay the course.",
+        "squad": "The squad is fine this week: nobody to calm down or reassure.",
+        "results": "Nothing worrying in the results: keep it up.",
+        "mercato": "No transfer or finance decision to make this week."
+      }
+    }
   }
 }

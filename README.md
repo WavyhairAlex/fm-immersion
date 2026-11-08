@@ -15,6 +15,7 @@ et outils pour rendre ta carrière plus vivante. Application Windows gratuite et
 | **Visages photoréalistes** : installation en un clic, réinstallation après une mise à jour Steam | à venir |
 | **Gazette** de la semaine : résultats, classement, blessures, transferts, centre de formation | disponible |
 | **Live Discord** : envoi de la gazette dans ton salon (webhook) | disponible (solo) |
+| **Défis** : De zéro à héros, Invincibles, Génération U19, Que des locaux, vérifiés par ta partie, certificat à partager | disponible |
 | **Monde partagé** (multijoueur asynchrone) | à venir |
 
 ## Installer
@@ -31,7 +32,7 @@ Tes données sont dans `%APPDATA%\app.fmimmersion.desktop\fm-immersion.db` : sup
 FM Immersion ne collecte, ne stocke à distance ni n'envoie aucune donnée personnelle. Tes parties restent dans
 une base SQLite sur ton PC. FM Immersion ne se connecte qu'à GitHub (`github.com/amnesix-nt/fm-immersion/releases`) :
 pour chercher ses mises à jour au démarrage et, seulement si tu le demandes, pour télécharger le plugin FM27.
-Si tu relies un salon Discord, la gazette n'y part que quand tu cliques sur « Envoyer sur Discord ».
+Si tu relies un salon Discord, la gazette n'y part que quand tu cliques sur « Envoyer sur Discord », et un certificat de défi (pseudo choisi, clubs, résultats des matchs, âges et nationalités des joueurs alignés) seulement quand tu cliques sur « Partager sur Discord ».
 GitHub voit alors ton adresse IP, comme pour toute visite de son site.
 
 ## Politique de signature du code

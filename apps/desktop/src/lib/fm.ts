@@ -2,6 +2,7 @@ import { saves } from '@fm-immersion/db';
 import { addBaseTarget, carryRoleStars, fmSnapshotSchema, fmStatusSchema, type DbPlayer, type FmStatus, type LeavingMark, type LeavingMarks, mergeTargets, type FmSnapshot, type TargetRecord } from '@fm-immersion/module-fm';
 import { fmSnapshots, fmTargets } from '@fm-immersion/module-fm/schema';
 import { and, asc, desc, eq } from 'drizzle-orm';
+import { challengesRepo } from './challenges';
 import type { Db } from './db';
 
 /** Réglages FM rangés dans saves.extra. */
@@ -17,6 +18,8 @@ export interface FmSaveSettings {
   fmReadAbilities?: boolean;
   /** Joueurs signalés partants par le coach, par identifiant FM27. */
   fmLeaving?: LeavingMarks;
+  /** Photo du coach choisie par le joueur : PNG carré de 180 px (taille des photos de FM27), en data URL. */
+  coachPhoto?: string;
 }
 
 /** Fichier .fm listé par Rust (métadonnées seulement). */
@@ -92,6 +95,8 @@ export function fmRepo(db: Db) {
       let snap = carryRoleStars(parsed, prev?.club === parsed.club ? prev?.data : undefined);
       // CA/PA lus en mémoire pour cette date : le plugin réécrit l'instantané, on les garde.
       if (!snap.abilities && prev?.gameDate === snap.gameDate && prev.club === snap.club && prev.data.abilities) snap = { ...snap, abilities: prev.data.abilities };
+      // Défis en cours : un retour à une date déjà vue (sauvegarde rechargée) est noté avant d'écraser ce jour.
+      await challengesRepo(db).noteImport(saveId, snap.gameDate);
       const values = { saveId, gameDate: snap.gameDate, club: snap.club, playerCount: snap.players.length, data: snap };
       await db
         .delete(fmSnapshots)
