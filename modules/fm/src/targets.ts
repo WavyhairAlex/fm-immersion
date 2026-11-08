@@ -1,3 +1,4 @@
+import { decodeGameDate } from './fixtures';
 import { starsOf, withExtended } from './lineup';
 import { normalizePlayer, toNumber, type FmPlayer } from './player';
 import { range, type Range } from './project';
@@ -165,6 +166,21 @@ export function loanedInFrom(snap: FmSnapshot): Map<string, string | null> {
   for (const [id, row] of Object.entries(custom?.joueurs ?? {})) {
     const from = text(row?.pretDe);
     if (from && from !== snap.club) out.set(String(row?.id ?? id), from);
+  }
+  return out;
+}
+
+/**
+ * Fin du prêt des joueurs prêtés à notre club (`pretFin` = LoanContract/EndDate, 08/11/2026), en ISO ; null quand le
+ * plugin ne la lit pas encore. Jusqu'à cette date, le prêté compte dans l'effectif et les plans de la saison ; après,
+ * il rentre chez lui.
+ */
+export function loanedInUntil(snap: FmSnapshot): Map<string, string | null> {
+  const out = new Map<string, string | null>();
+  const custom = (snap as { custom?: { joueurs?: Record<string, Record<string, unknown>> } }).custom;
+  for (const [id] of loanedInFrom(snap)) {
+    const row = Object.values(custom?.joueurs ?? {}).find((r) => String(r?.id) === id) ?? custom?.joueurs?.[id];
+    out.set(id, decodeGameDate(row?.pretFin));
   }
   return out;
 }

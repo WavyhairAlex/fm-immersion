@@ -502,6 +502,8 @@
     "stat_YellowCards": "YellowCards",
     "pretDe": "OnLoanFrom/Name",
     "pretStatut": "LoanStatusDetails",
+    "pretFin": "LoanContract/EndDate",
+    "pretEntrant": "IsLoanIn",
     "equipe": "PrimaryClubTeam/Name",
     "equipeType": "PrimaryClubTeam/TeamTypeStringDefault",
     "equipeTypeBrut": "TeamType",

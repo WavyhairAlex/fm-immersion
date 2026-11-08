@@ -1,4 +1,4 @@
-import { LEAVING_REASONS, loanedInFrom, type FmPlayer, type FmSnapshot, type LeavingMarks, type LeavingReason } from '@fm-immersion/module-fm';
+import { LEAVING_REASONS, loanedInFrom, loanedInUntil, type FmPlayer, type FmSnapshot, type LeavingMarks, type LeavingReason } from '@fm-immersion/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -19,6 +19,8 @@ export function useLeaving() {
   const { data: latest } = useQuery({ queryKey: ['fm', saveId, 'latest'], queryFn: () => fmData.latest(saveId), enabled: !!saveId });
   const stored: LeavingMarks = useMemo(() => settings?.fmLeaving ?? {}, [settings]);
   const loanedIn = useMemo(() => (latest ? loanedInFrom(latest.data as FmSnapshot) : new Map<string, string | null>()), [latest]);
+  /** Fin du prêt de chaque prêté chez nous (null si le plugin ne la lit pas). */
+  const loanUntil = useMemo(() => (latest ? loanedInUntil(latest.data as FmSnapshot) : new Map<string, string | null>()), [latest]);
   const marks: LeavingMarks = useMemo(() => {
     if (!latest || !loanedIn.size) return stored;
     const snap = latest.data as FmSnapshot;
@@ -29,13 +31,20 @@ export function useLeaving() {
     }
     return { ...auto, ...stored };
   }, [stored, loanedIn, latest]);
-  const ids = useMemo(() => new Set(Object.keys(marks)), [marks]);
+  /**
+   * `ids` : les partants de la saison (signalés par le coach) : le mercato et les décisions planifient sans eux.
+   * Un prêté chez nous n'en fait pas partie : il joue la saison et compte dans les plans (`loanIds`), mais ni vente ni
+   * prolongation ; il ne quitte l'effectif qu'à la fin du prêt (`nextSeasonIds`, pour l'intersaison).
+   */
+  const loanIds = useMemo(() => new Set(Object.entries(marks).filter(([id, m]) => m.reason === 'loanIn' && !stored[id]).map(([id]) => id)), [marks, stored]);
+  const ids = useMemo(() => new Set(Object.keys(marks).filter((id) => !loanIds.has(id))), [marks, loanIds]);
+  const nextSeasonIds = useMemo(() => new Set(Object.keys(marks)), [marks]);
   const set = useMutation({
     mutationFn: ({ player, reason, gameDate }: { player: FmPlayer; reason: LeavingReason | null; gameDate: string }) =>
       fmData.setLeaving(saveId, player.id, reason ? { reason, since: gameDate, name: player.name } : null),
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
   });
-  return { marks, ids, set, loanedIn, stored };
+  return { marks, ids, loanIds, loanUntil, nextSeasonIds, set, loanedIn, stored };
 }
 
 /**
