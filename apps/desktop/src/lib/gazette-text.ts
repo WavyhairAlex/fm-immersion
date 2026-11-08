@@ -65,9 +65,13 @@ export function storyText(t: TFunction, club: string, s: GazetteStory, lang?: st
       const opponent = str(p.opponent) ?? t('gazette.opponentUnknown');
       const score = p.goalsFor != null && p.goalsAgainst != null ? `${p.goalsFor}-${p.goalsAgainst}` : '';
       const parts = resultParts(t, s, lang);
+      // Match décisif d'un tour de coupe : le titre dit l'élimination ou la qualification, pas seulement le score.
+      const cup = p.cup === 'out' ? 'cupOut' : p.cup === 'through' ? 'cupThrough' : null;
+      const agg = `${p.aggFor}-${p.aggAgainst}`;
+      const round = cup ? k(`${cup}${Number(p.legs) === 2 ? 'Legs' : ''}`, { opponent, agg, count: Number(p.rounds) }) : '';
       return {
-        title: k(`title_${p.outcome}`, { opponent, score }),
-        body: [parts.venue && `${parts.venue}.`, parts.scorers, parts.best, parts.figures && `${parts.figures}.`].filter(Boolean).join(' '),
+        title: k(`title_${cup ?? p.outcome}`, { opponent, score }),
+        body: [round, parts.venue && `${parts.venue}.`, parts.scorers, parts.best, parts.figures && `${parts.figures}.`].filter(Boolean).join(' '),
       };
     }
     case 'streak':
@@ -135,7 +139,13 @@ export function articleText(t: TFunction, issue: GazetteIssue, lang?: string): s
   const margin = p.goalsFor != null && p.goalsAgainst != null ? Math.abs(Number(p.goalsFor) - Number(p.goalsAgainst)) : 0;
   const where = p.home == null ? '' : t(p.home ? 'gazette.article.atHome' : 'gazette.article.away');
   const comp = p.friendly ? t('gazette.article.friendly') : p.competition ? t('gazette.article.inComp', { competition: p.competition }) : '';
-  const out: string[] = [v(`open_${p.outcome}${margin >= 3 && p.outcome !== 'D' ? 'Big' : ''}`, { opponent, score, where, comp })];
+  // L'ouverture suit l'enjeu : un tour de coupe perdu ou gagné se raconte comme tel, un match de coupe ne rapporte
+  // pas de points, un match de championnat si.
+  const cup = p.cup === 'out' ? 'cupOut' : p.cup === 'through' ? 'cupThrough' : null;
+  const cupMatch = p.compKind === 'cup' || p.compKind === 'europe';
+  const opener = cup ?? `${p.outcome}${margin >= 3 && p.outcome !== 'D' ? 'Big' : cupMatch ? 'Cup' : ''}`;
+  const out: string[] = [v(`open_${opener}`, { opponent, score, where, comp, competition: p.competition ?? '' })];
+  if (cup && Number(p.legs) === 2) out.push(t('gazette.article.aggregate', { agg: `${p.aggFor}-${p.aggAgainst}` }));
   if (p.scorers) out.push(v('scorers', { scorers: p.scorers }));
 
   // Lecture des chiffres : la possession et les xG racontent si le score est logique, cruel ou volé.
@@ -152,6 +162,7 @@ export function articleText(t: TFunction, issue: GazetteIssue, lang?: string): s
   else if (poss != null && xgDiff != null) stat = 'balanced';
   if (stat) out.push(v(`stat_${stat}`, nums));
   if (p.best) out.push(v('best', { best: p.best, rating: rating(p.rating, lang) }));
+  if (cup) out.push(v(`${cup}After`, { competition: p.competition ?? '', count: Number(p.rounds) }));
 
   // Ce que ce match change : série en cours, sinon mouvement au classement, sinon siège du coach.
   const stories = issue.stories;
@@ -171,10 +182,12 @@ export function articleText(t: TFunction, issue: GazetteIssue, lang?: string): s
 }
 
 /** Climat de la semaine, pour le ton du billet et des réactions. */
-export function climateOf(issue: GazetteIssue): 'crisis' | 'hot' | 'win' | 'draw' | 'loss' | 'quiet' {
+export function climateOf(issue: GazetteIssue): 'crisis' | 'cupOut' | 'hot' | 'win' | 'draw' | 'loss' | 'quiet' {
   const all = [issue.headline, ...issue.stories];
   const streak = all.find((s) => s.kind === 'streak');
   if (streak && (streak.params.outcome === 'L' || streak.params.outcome === 'winless')) return 'crisis';
+  // Élimination en coupe : un moment marquant, qui donne le ton de la semaine (sauf en pleine crise).
+  if ((issue.headline.kind === 'result' && issue.headline.params.cup === 'out') || issue.headline.kind === 'cupOut') return 'cupOut';
   if (streak && (streak.params.outcome === 'W' || streak.params.outcome === 'unbeaten')) return 'hot';
   const results = all.filter((s) => s.kind === 'result' && !s.params.friendly && s.params.outcome).sort((a, b) => String(b.params.date ?? '').localeCompare(String(a.params.date ?? '')));
   const last = results[0];
@@ -205,7 +218,7 @@ export function editorialText(t: TFunction, issue: GazetteIssue, lang?: string):
   const board = jobStory
     ? t('gazette.editorial.boardGame', { status: jobStory.params.status })
     : issue.board
-      ? t(`gazette.editorial.boardObjective_${climate === 'crisis' ? 'worried' : climate === 'hot' ? 'pleased' : 'neutral'}`, { objective: lower(issue.board, lang) })
+      ? t(`gazette.editorial.boardObjective_${climate === 'crisis' || climate === 'cupOut' ? 'worried' : climate === 'hot' ? 'pleased' : 'neutral'}`, { objective: lower(issue.board, lang) })
       : v(`board_${climate}`, vars);
   return { title: t('gazette.editorial.title'), body, fans, board };
 }
@@ -234,6 +247,9 @@ const ICON: Record<GazetteStory['kind'], string> = {
   quiet: '☕',
 };
 
+/** Pictogramme d'une brève : un match décisif de coupe prend celui de l'élimination ou de la qualification. */
+const iconOf = (s: GazetteStory) => (s.kind === 'result' && s.params.cup === 'out' ? ICON.cupOut : s.kind === 'result' && s.params.cup === 'through' ? ICON.cupThrough : ICON[s.kind]);
+
 /** Couleur du liseré : vert après une victoire à la une, rouge après une défaite, orange sinon. */
 function accent(s: GazetteStory) {
   if (s.kind === 'result' && s.params.outcome === 'W') return 0x2e9e5b;
@@ -256,7 +272,7 @@ export function discordPagePayload(t: TFunction, issue: GazetteIssue, lang?: str
     embeds: [
       {
         author: { name: cut(`📰  ${paperName(t, issue.club).toUpperCase()}  ·  ${t('gazette.issue', { number: issue.number })}`, 256) },
-        title: cut(`${ICON[issue.headline.kind]}  ${head.title}`, 256),
+        title: cut(`${iconOf(issue.headline)}  ${head.title}`, 256),
         color: accent(issue.headline),
         image: { url: 'attachment://une.png' },
         footer: { text: `${weekLabel(t, lang, issue.weekStart, issue.weekEnd)}  ·  FM Immersion` },
@@ -283,7 +299,7 @@ export function discordPayload(t: TFunction, issue: GazetteIssue, lang?: string,
   const briefs = all.filter((s) => s.kind !== 'nextMatch' && s.kind !== 'quiet').slice(0, 9);
   const field = (s: GazetteStory, inline = false) => {
     const x = storyText(t, issue.club, s, lang);
-    return { name: cut(`${ICON[s.kind]}  ${x.title}`, 256), value: cut(x.body || '​', 1024), inline };
+    return { name: cut(`${iconOf(s)}  ${x.title}`, 256), value: cut(x.body || '​', 1024), inline };
   };
   const fig = figures && (figures.played || figures.position != null) ? figures : null;
   const figLine = fig
@@ -309,7 +325,7 @@ export function discordPayload(t: TFunction, issue: GazetteIssue, lang?: string,
     embeds: [
       {
         author: { name: cut(`📰  ${paperName(t, issue.club).toUpperCase()}  ·  ${t('gazette.issue', { number: issue.number })}`, 256) },
-        title: cut(`${ICON[issue.headline.kind]}  ${head.title}`, 256),
+        title: cut(`${iconOf(issue.headline)}  ${head.title}`, 256),
         description: cut([lead, '━━━━━━━━━━━━━━━━━━━━'].filter(Boolean).join('\n'), 4000),
         color: accent(issue.headline),
         fields,

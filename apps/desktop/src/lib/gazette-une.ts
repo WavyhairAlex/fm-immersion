@@ -220,7 +220,7 @@ export async function drawUne(
   const isResult = head.kind === 'result';
   const p = head.params;
   const kicker = isResult
-    ? `${t(`gazette.une.kicker_${p.outcome}`)}${p.home == null ? '' : ` ${t(p.home ? 'gazette.une.atHome' : 'gazette.une.away')}`}`
+    ? `${t(`gazette.une.kicker_${p.cup === 'out' ? 'cupOut' : p.cup === 'through' ? 'cupThrough' : p.outcome}`)}${p.home == null ? '' : ` ${t(p.home ? 'gazette.une.atHome' : 'gazette.une.away')}`}`
     : t(`gazette.une.section.${head.kind}`, { defaultValue: t('gazette.une.section.default') });
   ctx.font = font(800, 14);
   const kw = ctx.measureText(caps(kicker)).width + 20;

@@ -139,7 +139,7 @@ export async function drawPage(
   let y = 206;
   const headText = storyText(t, issue.club, head, lang);
   const kicker = isResult
-    ? `${t(`gazette.une.kicker_${p.outcome}`)}${p.home == null ? '' : ` ${t(p.home ? 'gazette.une.atHome' : 'gazette.une.away')}`}`
+    ? `${t(`gazette.une.kicker_${p.cup === 'out' ? 'cupOut' : p.cup === 'through' ? 'cupThrough' : p.outcome}`)}${p.home == null ? '' : ` ${t(p.home ? 'gazette.une.atHome' : 'gazette.une.away')}`}`
     : t(`gazette.une.section.${head.kind}`, { defaultValue: t('gazette.une.section.default') });
   ctx.font = font(800, 14);
   roundRect(ctx, M, y, ctx.measureText(caps(kicker)).width + 20, 26, 3, isResult ? outcomeColor(p.outcome as Outcome) : C.ink);
@@ -335,7 +335,7 @@ export async function drawPage(
     ry += 16;
     ctx.font = font(800, 17);
     ctx.fillStyle = C.ink;
-    for (const l of wrap(ctx, `${ICON[b.kind] ?? '•'} ${txt.title}`, SIDE, 3)) {
+    for (const l of wrap(ctx, `${(b.kind === 'result' && b.params.cup === 'out' ? ICON.cupOut : b.kind === 'result' && b.params.cup === 'through' ? ICON.cupThrough : ICON[b.kind]) ?? '•'} ${txt.title}`, SIDE, 3)) {
       ry += 23;
       ctx.fillText(l, sx, ry);
     }

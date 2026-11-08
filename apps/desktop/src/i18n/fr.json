@@ -2645,7 +2645,13 @@
       "result": {
         "title_W": "{{club}} s'impose {{score}} face à {{opponent}}",
         "title_D": "{{club}} et {{opponent}} se quittent sur un nul {{score}}",
-        "title_L": "{{club}} chute {{score}} face à {{opponent}}"
+        "title_L": "{{club}} chute {{score}} face à {{opponent}}",
+        "title_cupOut": "{{club}} éliminé de la {{competition}} par {{opponent}} ({{score}})",
+        "title_cupThrough": "{{club}} passe le tour en {{competition}} ({{score}} face à {{opponent}})",
+        "cupOut": "Fin de l'aventure en {{competition}} après {{count}} tour(s).",
+        "cupOutLegs": "Battu {{agg}} sur les deux matchs, le club quitte la {{competition}} après {{count}} tour(s).",
+        "cupThrough": "Qualifié pour le tour suivant de la {{competition}}.",
+        "cupThroughLegs": "Qualifié {{agg}} sur les deux matchs pour le tour suivant de la {{competition}}."
       },
       "results": {
         "title": "{{matches}} matchs cette semaine",
@@ -2778,7 +2784,9 @@
       "figRecord_one": "V-N-D ({{count}} match)",
       "figRecord_other": "V-N-D ({{count}} matchs)",
       "figScorer_one": "but, {{name}}",
-      "figScorer_other": "buts, {{name}}"
+      "figScorer_other": "buts, {{name}}",
+      "kicker_cupOut": "Éliminé",
+      "kicker_cupThrough": "Qualifié"
     },
     "preview": "Aperçu de la une envoyée sur Discord",
     "inCompetition": "en {{competition}}",
@@ -2845,7 +2853,29 @@
       "job": "Dans les couloirs, on murmure : {{status}}.",
       "next_0": "Prochain rendez-vous : {{opponent}}{{where}}, {{inDays}}.",
       "next_1": "Place maintenant à {{opponent}}{{where}}, {{inDays}}.",
-      "next_2": "La suite ? {{opponent}}{{where}}, {{inDays}}."
+      "next_2": "La suite ? {{opponent}}{{where}}, {{inDays}}.",
+      "aggregate": "Sur l'ensemble des deux matchs : {{agg}}.",
+      "open_cupOut_0": "C'est fini pour {{club}} en {{competition}} : battu {{score}} par {{opponent}}{{where}}, le club sort de la compétition par la petite porte.",
+      "open_cupOut_1": "Coup d'arrêt brutal en {{competition}} : {{opponent}} a éliminé {{club}} ({{score}}){{where}}.",
+      "open_cupOut_2": "Le parcours de {{club}} en {{competition}} s'arrête là. Défaite {{score}} contre {{opponent}}{{where}}, et aucune séance de rattrapage.",
+      "open_cupThrough_0": "{{club}} est toujours en course en {{competition}} : victoire {{score}} face à {{opponent}}{{where}}, le tour est passé.",
+      "open_cupThrough_1": "Mission accomplie en {{competition}} : {{club}} écarte {{opponent}} ({{score}}){{where}} et file au tour suivant.",
+      "open_cupThrough_2": "Qualification au bout pour {{club}}, vainqueur {{score}} de {{opponent}}{{where}} en {{competition}}.",
+      "open_WCup_0": "{{club}} s'est imposé {{score}} face à {{opponent}}{{where}}{{comp}}.",
+      "open_WCup_1": "Soirée de coupe réussie pour {{club}}, vainqueur {{score}} de {{opponent}}{{where}}{{comp}}.",
+      "open_WCup_2": "{{club}} a fait le travail{{where}} : {{score}} contre {{opponent}}{{comp}}.",
+      "open_DCup_0": "{{club}} et {{opponent}} se sont neutralisés {{score}}{{where}}{{comp}} : tout reste à faire.",
+      "open_DCup_1": "Match nul {{score}} entre {{club}} et {{opponent}}{{where}}{{comp}}, rien n'est encore joué.",
+      "open_DCup_2": "{{club}} a dû se contenter d'un {{score}} face à {{opponent}}{{where}}{{comp}}.",
+      "open_LCup_0": "{{club}} s'est incliné {{score}} face à {{opponent}}{{where}}{{comp}}.",
+      "open_LCup_1": "Revers pour {{club}}, battu {{score}} par {{opponent}}{{where}}{{comp}}.",
+      "open_LCup_2": "Rien n'a tourné pour {{club}}{{where}} : défaite {{score}} contre {{opponent}}{{comp}}.",
+      "cupOutAfter_0": "Après {{count}} tour(s) disputé(s), il ne reste plus que le championnat pour sauver la saison.",
+      "cupOutAfter_1": "Une coupe en moins, c'est aussi un calendrier allégé : à {{club}} de s'en servir en championnat.",
+      "cupOutAfter_2": "La {{competition}} faisait rêver les supporters ; il faudra trouver d'autres raisons d'y croire.",
+      "cupThroughAfter_0": "Le tirage du prochain tour dira jusqu'où peut aller {{club}}.",
+      "cupThroughAfter_1": "Un tour de plus dans les jambes, et l'envie d'aller plus loin.",
+      "cupThroughAfter_2": "La {{competition}} continue, et les supporters commencent à y croire."
     },
     "editorial": {
       "title": "Le billet",
@@ -2907,7 +2937,16 @@
       "board_loss_2": "La direction attend la réaction.",
       "board_quiet_0": "La direction travaille en coulisses.",
       "board_quiet_1": "Rien ne filtre des bureaux cette semaine.",
-      "board_quiet_2": "La direction prépare les prochaines échéances."
+      "board_quiet_2": "La direction prépare les prochaines échéances.",
+      "tone_cupOut_0": "Une élimination en coupe laisse toujours un goût amer. {{club}} avait l'occasion d'écrire une belle histoire face à {{opponent}} ; elle s'est refermée trop tôt.",
+      "tone_cupOut_1": "Sortir de la coupe, c'est perdre une soirée de rêve possible. {{club}} doit vite tourner la page et se concentrer sur le championnat.",
+      "tone_cupOut_2": "La coupe ne pardonne pas : un match raté et c'est terminé. {{club}} paie cher sa soirée contre {{opponent}}.",
+      "fans_cupOut_0": "Dans les tribunes, la déception est grande : beaucoup espéraient un beau parcours.",
+      "fans_cupOut_1": "Les supporters sont repartis la tête basse, la coupe était leur petite échappée de la saison.",
+      "fans_cupOut_2": "Quelques sifflets, beaucoup de silence : l'élimination passe mal chez les supporters.",
+      "board_cupOut_0": "La direction prend acte de l'élimination et attend une réaction en championnat.",
+      "board_cupOut_1": "Au club, on rappelle que la coupe rapportait aussi des recettes : l'élimination coûte cher.",
+      "board_cupOut_2": "La direction ne s'emballe pas, mais le message est clair : le championnat n'autorise plus d'écart."
     },
     "page": {
       "story": "Le récit du match"
