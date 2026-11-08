@@ -1,9 +1,15 @@
-import type { BreakingNews, CoachExit, GazetteIssue, SeasonReview } from '@fm-immersion/module-fm';
+import type { BigMatch, BreakingNews, CoachExit, GazetteIssue, SeasonReview } from '@fm-immersion/module-fm';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 vi.mock('../src/lib/data', () => ({ fmData: {}, savesData: {} }));
-const { breakingToSend, farewellToSend, gazetteToSend, seasonToSend } = await import('../src/lib/gazette-auto');
+const store = new Map<string, string>();
+vi.stubGlobal('localStorage', {
+  getItem: (k: string) => store.get(k) ?? null,
+  setItem: (k: string, v: string) => void store.set(k, v),
+  removeItem: (k: string) => void store.delete(k),
+});
+const { breakingToSend, farewellToSend, isBigMatchSent, markBigMatchSent, gazetteToSend, seasonToSend } = await import('../src/lib/gazette-auto');
 
 const issue = (weekStart: string) => ({ weekStart }) as GazetteIssue;
 
@@ -41,5 +47,14 @@ describe('gazette automatique', () => {
     expect(breakingToSend(news, '2027-09-01', (x) => x.id === 'd').map((x) => x.id)).toEqual(['a', 'b', 'c']);
     expect(breakingToSend(news, '2027-12-01', () => false)).toEqual([]);
     expect(breakingToSend(news, undefined, () => false)).toEqual([]);
+  });
+
+  it("affiche du choc envoyée une fois, même si la date du match bouge d'un jour", () => {
+    const m = { opponent: 'Matador Púchov', competition: 'Slovenský pohár', date: '2027-09-01' } as BigMatch;
+    expect(isBigMatchSent('s', m)).toBe(false);
+    markBigMatchSent('s', m);
+    expect(isBigMatchSent('s', { ...m, date: '2027-08-31' })).toBe(true);
+    expect(isBigMatchSent('s', { ...m, date: '2028-03-01' })).toBe(false);
+    expect(isBigMatchSent('autre', m)).toBe(false);
   });
 });
