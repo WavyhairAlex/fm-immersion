@@ -17,6 +17,7 @@ import {
   type FmPlayer,
   type FmSnapshot,
   type PlaytimeRow,
+  type TacticAdvice,
 } from '@fm-immersion/module-fm';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -41,6 +42,7 @@ export function FmBriefing({
   offseason,
   go,
   onTodo,
+  tactic = null,
 }: {
   snap: FmSnapshot;
   players: FmPlayer[];
@@ -52,6 +54,8 @@ export function FmBriefing({
   go: (view: string) => void;
   /** Écrans où il reste quelque chose à faire (pastilles des onglets). */
   onTodo?: (views: string[]) => void;
+  /** Garder ou changer la tactique jouée (historique des instantanés). */
+  tactic?: TacticAdvice | null;
 }) {
   const { t, i18n } = useTranslation();
   const f = useFormat();
@@ -86,8 +90,8 @@ export function FmBriefing({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [snap, players, i18n.resolvedLanguage]);
   const items = useMemo(
-    () => briefing({ players, nextMatch: nm, starters, decisions, playtime, setupsToChange, offseason, trialists, backForMatch, congested, finances }),
-    [players, nm, starters, decisions, playtime, setupsToChange, offseason, trialists, congested, finances],
+    () => briefing({ players, nextMatch: nm, starters, decisions, playtime, setupsToChange, offseason, trialists, backForMatch, congested, finances, tactic }),
+    [players, nm, starters, decisions, playtime, setupsToChange, offseason, trialists, congested, finances, tactic],
   );
   const scope = useFmSaveScope();
   const [done, setDone] = useState<BriefDone>(() => readScoped<BriefDone>(DONE_KEY, { ...scope, inheritsLegacy: false }, {}));

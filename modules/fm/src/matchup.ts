@@ -16,6 +16,9 @@ import { MENTALITIES_FM27 } from './team-instructions-fm27';
  * fait baisser : changer de style (consignes d'équipe) coûte CHANGE_STYLE, et on ne change de schéma que sur une
  * faille mesurée (au moins MIN_MINUTES observées), au prix de CHANGE_FORM. Ces coûts sont des estimations,
  * pas des valeurs lues dans le jeu.
+ * Relevés en 0.1.65 après les tests de Stybb Gaming sur FM27 (11/2026) : changer de schéma tous les 10 matchs fait
+ * nettement pire que garder le même toute la saison, et changer les rôles remet la familiarité à zéro. Un schéma
+ * différent pour un seul match ne passe donc que sur une faille mesurée nette (CHANGE_FORM proche du bonus maximal).
  */
 export type MatchupReasonId =
   | 'coverStrikers'
@@ -58,8 +61,8 @@ export interface MatchTactic {
 const MAX = 0.6;
 /** Minutes adverses observées pour croire à une faille (3 matchs). */
 export const MIN_MINUTES = 270;
-export const CHANGE_STYLE = 0.2;
-export const CHANGE_FORM = 0.3;
+export const CHANGE_STYLE = 0.3;
+export const CHANGE_FORM = 0.5;
 const round2 = (x: number) => Math.round(x * 100) / 100;
 /** « 4-2-3-1 MD MO Jeu large » → « 4-2-3-1 » ; « 4-4-2 2MD » → « 4-4-2 ». */
 export const formationFamily = (f: string) => f.match(/\d(?:-\d)+/)?.[0] ?? f;

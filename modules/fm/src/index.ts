@@ -32,6 +32,8 @@ export * from './team-instructions-fm27';
 export * from './role-ratings-fm27';
 export * from './game-stars';
 export * from './lineup';
+export * from './tactic-slots';
+export * from './tactic-advice';
 export * from './opponent';
 export * from './matchup';
 export * from './match-plan';

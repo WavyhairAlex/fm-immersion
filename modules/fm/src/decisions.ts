@@ -60,6 +60,8 @@ export function decisions(
   base?: StyleRef | null,
   leavingIds: ReadonlySet<string> = new Set(),
   loanIds: ReadonlySet<string> = new Set(),
+  /** Schéma joué dans FM27 (avec la base) : garder la tactique, c'est garder aussi ce schéma. */
+  baseForm?: string | null,
 ): Decision[] {
   const all = players.filter((p) => Object.keys(p.attributes).length);
   // Partants signalés : hors recrutement et départs conseillés (on planifie sans eux), mais leur remplacement est une décision.
@@ -87,7 +89,7 @@ export function decisions(
   // La tactique du prochain match compte encore les partants : ils jouent jusqu'à leur départ.
   const avail = all.filter((p) => !unavailable(p));
   const ranked = rankTactics(engine, avail);
-  const pick = bestTactic(engine, avail, coach, ranked, base);
+  const pick = bestTactic(engine, avail, coach, ranked, base, baseForm);
   if (pick) {
     if (pick.kept)
       out.push({

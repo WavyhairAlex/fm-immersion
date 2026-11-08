@@ -2525,7 +2525,15 @@
       "rotation_one": "{{competition}}: secondary match, rotate. {{names}} lacks minutes or freshness; keep the spine.",
       "rotation_other": "{{competition}}: secondary match, rotate. {{names}} lack minutes or freshness; keep the spine.",
       "congested_one": "Busy schedule (two matches within 3 days): plan a rotation, {{names}} first.",
-      "congested_other": "Busy schedule (two matches within 3 days): plan a rotation, {{names}} first."
+      "congested_other": "Busy schedule (two matches within 3 days): plan a rotation, {{names}} first.",
+      "tacticRoles_one": "You changed 1 player's role in your tactic: their familiarity starts again from zero. If it wasn't on purpose, switch it back; otherwise keep it and leave roles alone.",
+      "tacticRoles_other": "You changed {{count}} roles in your tactic: those players' familiarity starts again from zero. Tweak instructions instead and keep roles fixed.",
+      "tacticSwitches_one": "1 tactic change in recent months: every change drops your players' understanding.",
+      "tacticSwitches_other": "{{count}} tactic changes in recent months: that is what costs the most. Pick one and stick with it, tweaking instructions if needed.",
+      "tacticRethink_one": "You are losing on xG ({{xg}} per match in the last match) and tactical effectiveness is stuck at {{te}}%: this formation isn't working. Try another formation with default instructions, then tweak slowly without changing roles.",
+      "tacticRethink_other": "You are losing on xG ({{xg}} per match over {{count}} matches) and tactical effectiveness is stuck at {{te}}%: this formation isn't working. Try another formation with default instructions, then tweak slowly without changing roles.",
+      "tacticPatience_one": "Your tactic is still bedding in (1 match): its effectiveness is rising (+{{gain}}, {{te}}%). Keep it; a complex tactic can take 20 matches to show its worth.",
+      "tacticPatience_other": "Your tactic is still bedding in ({{count}} matches): its effectiveness is rising (+{{gain}}, {{te}}%). Keep it; a complex tactic can take 20 matches to show its worth."
     }
   },
   "modes": {

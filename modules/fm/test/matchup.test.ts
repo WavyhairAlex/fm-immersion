@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formationFamily, matchupOf, mergeReference, rankForMatch, type FormationPlan, type OpponentReport } from '../src';
+import { CHANGE_FORM, formationFamily, matchupOf, mergeReference, rankForMatch, type FormationPlan, type OpponentReport } from '../src';
 
 const styles = mergeReference(undefined).styles;
 const style = styles[0]!;
@@ -53,7 +53,7 @@ describe("tactique du match (affrontement)", () => {
     ] } } as unknown as OpponentReport;
     const m = rankForMatch(ranked, measured, base).find((x) => x.form === '4-2-3-1')!;
     expect(m.reasons.map((r) => r.id)).toContain('changeForm');
-    expect(m.bonus).toBeCloseTo(matchupOf('4-2-3-1', style, measured).bonus - 0.3, 5);
+    expect(m.bonus).toBeCloseTo(matchupOf('4-2-3-1', style, measured).bonus - CHANGE_FORM, 5);
   });
 
   it('famille de formation', () => {
