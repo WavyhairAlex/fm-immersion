@@ -3699,10 +3699,17 @@
   "search": {
     "label": "Recherche rapide",
     "button": "Rechercher",
-    "placeholder": "Un joueur ou un écran…",
+    "placeholder": "Un joueur, un écran ou une action…",
     "player": "Joueur",
     "screen": "Écran",
     "none": "Rien ne correspond.",
-    "keys": "↑ ↓ pour choisir · Entrée pour ouvrir · Échap pour fermer"
+    "keys": "↑ ↓ pour choisir · Entrée pour ouvrir · Échap pour fermer",
+    "actions": {
+      "read": "Actualiser la partie",
+      "readSub": "relire le dernier instantané du plugin",
+      "careers": "Gérer les carrières",
+      "lang": "Passer en anglais"
+    },
+    "action": "Action"
   }
 }
