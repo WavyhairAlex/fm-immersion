@@ -1,11 +1,14 @@
-import type { GazetteIssue, GazetteStory, SeasonReview } from '@fm-immersion/module-fm';
+import { contrast, inkOn, type GazetteIssue, type GazetteStory, type SeasonReview } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
+import { clubArt, drawCrest, type ClubArt } from './club-look';
 import { articleText, figuresLine, paperName, storyText, weekLabel } from './gazette-text';
 
 /**
  * Une de la gazette en image (1200 × 675), dessinée sur le PC dans un canvas, pour l'envoi sur Discord.
  * Mise en page de journal : bandeau (numéro, semaine, compétition), titre du journal, filets, une à gauche
  * (pastille, gros titre, score, buteurs, homme du match, forme), « En bref » à droite, prochain match en pied.
+ * Aux couleurs du club quand le plugin les lit (bandeau, filets, pied) et avec les logos du pack de logos du joueur
+ * (titre du journal, score) ; sinon aux couleurs de FM Immersion, avec des écussons à défaut de logo.
  */
 export type Outcome = 'W' | 'D' | 'L';
 
@@ -128,9 +131,20 @@ export async function drawUne(
     face?: CanvasImageSource | null;
     /** Saison en cours du club (encadré « Les chiffres »). */
     figures?: SeasonReview | null;
+    /** Club du journal et adversaire du match à la une (couleurs, logo) ; lus dans la table des clubs si absents. */
+    club?: ClubArt | null;
+    opponent?: ClubArt | null;
   },
 ): Promise<HTMLCanvasElement> {
   const { lang } = opts;
+  const oppName = issue.headline.kind === 'result' ? String(issue.headline.params.opponent ?? '') : '';
+  const [club, opponent] = await Promise.all([opts.club !== undefined ? opts.club : clubArt(issue.club), opts.opponent !== undefined ? opts.opponent : clubArt(oppName || null)]);
+  // Couleurs du club : bandeau, filets et pied dans sa première couleur qui se voit sur le papier (un club blanc et
+  // bleu prend son bleu), liseré fin dans une autre de ses couleurs visibles.
+  const colors = club?.look?.colors ?? [];
+  const band = colors.find((c) => contrast(c, C.paper) >= 1.6) ?? null;
+  const stripe = colors.find((c) => c !== band && contrast(c, C.paper) >= 1.6 && contrast(c, band ?? C.paper) >= 1.4) ?? null;
+  const accent = band ?? C.orange;
   await Promise.all([font(900, 76, SERIF), font(800, 50, SERIF), font(400, 19), font(800, 19)].map((f) => document.fonts.load(f).catch(() => undefined)));
   const canvas = document.createElement('canvas');
   canvas.width = W;
@@ -139,6 +153,14 @@ export async function drawUne(
   ctx.textBaseline = 'alphabetic';
   ctx.fillStyle = C.paper;
   ctx.fillRect(0, 0, W, H);
+  if (band) {
+    ctx.fillStyle = band;
+    ctx.fillRect(0, 0, W, 10);
+    if (stripe) {
+      ctx.fillStyle = stripe;
+      ctx.fillRect(0, 10, W, 4);
+    }
+  }
 
   const head = issue.headline;
   const headText = storyText(t, issue.club, head, lang);
@@ -159,14 +181,22 @@ export async function drawUne(
   ctx.textAlign = 'right';
   ctx.fillText(caps(competition).slice(0, 40), W - M, top);
 
-  // Titre du journal.
+  // Titre du journal, précédé du logo du club (ou de son écusson).
   const name = paperName(t, issue.club);
-  const size = fit(ctx, name, 900, 76, 40, W - 2 * M, SERIF);
-  ctx.textAlign = 'center';
+  const crest = club ? 72 : 0;
+  const gap = club ? 18 : 0;
+  const size = fit(ctx, name, 900, 76, 40, W - 2 * M - 2 * (crest + gap), SERIF);
+  const nameW = ctx.measureText(name).width;
+  const x0 = (W - (crest + gap + nameW)) / 2;
+  if (club) drawCrest(ctx, club, x0 + crest / 2, 62 + size * 0.47, crest, { ring: C.paper });
+  ctx.font = font(900, size, SERIF);
+  ctx.textAlign = 'left';
   ctx.fillStyle = C.ink;
-  ctx.fillText(name, W / 2, 62 + size * 0.8);
-  // Filets.
+  ctx.fillText(name, x0 + crest + gap, 62 + size * 0.8);
+  // Filets : le gros à la couleur du club.
+  ctx.fillStyle = accent;
   ctx.fillRect(M, 141, W - 2 * M, 3);
+  ctx.fillStyle = C.ink;
   ctx.fillRect(M, 147, W - 2 * M, 1);
   ctx.fillRect(M, 180, W - 2 * M, 1);
   ctx.font = font(800, 15);
@@ -226,17 +256,27 @@ export async function drawUne(
     const rw = ctx.measureText(team(right)).width;
     ctx.font = font(900, 46, SERIF);
     const sw = ctx.measureText(score).width;
-    const boxW = Math.min(colW, 22 + lw + 18 + sw + 18 + rw + 22);
+    // Logos (ou écussons) de part et d'autre, quand les deux clubs sont connus.
+    const [leftArt, rightArt] = p.home === 0 ? [opponent, club] : [club, opponent];
+    const logos = !!(leftArt && rightArt);
+    const lg = logos ? 46 + 12 : 0;
+    const boxW = Math.min(colW, 22 + lg + lw + 18 + sw + 18 + rw + lg + 22);
     roundRect(ctx, M, y, boxW, 74, 10, C.ink);
+    if (logos) {
+      drawCrest(ctx, leftArt!, M + 22 + 23, y + 37, 46, { ring: C.ink });
+      drawCrest(ctx, rightArt!, M + boxW - 22 - 23, y + 37, 46, { ring: C.ink });
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
+    }
     ctx.font = font(800, 22);
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(team(left), M + 22, y + 45);
+    ctx.fillText(team(left), M + 22 + lg, y + 45);
     ctx.font = font(900, 46, SERIF);
     ctx.fillStyle = C.orange;
-    ctx.fillText(score, M + 22 + lw + 18, y + 54);
+    ctx.fillText(score, M + 22 + lg + lw + 18, y + 54);
     ctx.font = font(800, 22);
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillText(team(right), M + 22 + lw + 18 + sw + 18, y + 45);
+    ctx.fillText(team(right), M + 22 + lg + lw + 18 + sw + 18, y + 45);
     y += 74 + 36;
     if (p.scorers) {
       ctx.font = font(800, 19);
@@ -358,7 +398,7 @@ export async function drawUne(
   ctx.fillRect(sx - 28, 204, 1, 362);
   ctx.font = font(800, 22, SERIF);
   ctx.fillText(t('gazette.une.briefs'), sx, 226);
-  roundRect(ctx, sx, 233, ctx.measureText(t('gazette.une.briefs')).width, 3, 0, C.orange);
+  roundRect(ctx, sx, 233, ctx.measureText(t('gazette.une.briefs')).width, 3, 0, accent);
   let by = 236;
   const briefs = issue.stories.filter((x) => x.kind !== 'nextMatch' && x.kind !== 'quiet' && x.kind !== 'result');
   const resultsBriefs = issue.stories.filter((x) => x.kind === 'result');
@@ -398,8 +438,10 @@ export async function drawUne(
     ctx.fillText(t('gazette.une.noBriefs'), sx, 270);
   }
 
-  // Pied : prochain match.
-  ctx.fillStyle = C.ink;
+  // Pied : prochain match, sur la couleur principale du club (texte blanc ou anthracite selon le fond).
+  const foot = band ?? C.ink;
+  const footInk = inkOn(foot);
+  ctx.fillStyle = foot;
   ctx.fillRect(0, H - 51, W, 51);
   ctx.font = font(400, 17);
   ctx.textAlign = 'left';
@@ -412,13 +454,13 @@ export async function drawUne(
     fx += ctx.measureText(text).width;
   };
   if (next?.params.opponent) {
-    piece(`${t('gazette.une.next')} : `, '#FFFFFF');
-    piece(String(next.params.opponent), C.orange, 800);
+    piece(`${t('gazette.une.next')} : `, footInk);
+    piece(String(next.params.opponent), band ? footInk : C.orange, 800);
     const extra = [next.params.location, next.params.inDays].filter(Boolean).map(String).join(' · ');
-    if (extra) piece(` · ${extra}`, '#FFFFFF');
+    if (extra) piece(` · ${extra}`, footInk);
   }
   ctx.font = font(400, 14);
-  ctx.fillStyle = 'rgba(255,255,255,0.67)';
+  ctx.fillStyle = footInk === '#FFFFFF' ? 'rgba(255,255,255,0.67)' : 'rgba(37,40,45,0.7)';
   ctx.textAlign = 'right';
   ctx.fillText('FM Immersion', W - M, fy);
   return canvas;

@@ -1,4 +1,4 @@
-import { gazetteIssues, seasonReviews, seasonSoFar, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
+import { gazetteIssues, seasonReviews, seasonSoFar, visibleOn, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
 import { SeasonCard } from '../components/SeasonCard';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useCareer } from '../lib/career';
+import { clubLogoUrl, clubLook, rememberClubLooks } from '../lib/club-look';
 import { fmData } from '../lib/data';
 import { getWebhook, isWebhook } from '../lib/discord';
 import { markGazetteSent, markSeasonSent, sendGazette, sendSeason } from '../lib/gazette-auto';
@@ -21,6 +22,11 @@ export function Gazette() {
   const { saveId, fmSaves } = useCareer();
 
   const { data: history = [], isLoading } = useQuery({ queryKey: ['fm', 'all', saveId], queryFn: () => fmData.all(saveId), enabled: !!saveId });
+  // Couleurs et logos des clubs vus dans l'historique (bandeau, filets, logos de la une).
+  const looksReady = useMemo(() => {
+    rememberClubLooks(history.map((h) => h.data));
+    return history.length;
+  }, [history]);
   const issues = useMemo(() => gazetteIssues(history), [history]);
   const reviews = useMemo(() => seasonReviews(history), [history]);
   const season = reviews[0] ?? null;
@@ -54,7 +60,7 @@ export function Gazette() {
       {issue && (
         <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
           <div className="min-w-0 space-y-6">
-            <UnePreview issues={issues} index={index} figures={figures} />
+            <UnePreview issues={issues} index={index} figures={figures} looks={looksReady} />
             <Paper issue={issue} />
           </div>
           <aside className="flex flex-col gap-2">
@@ -82,13 +88,20 @@ export function Paper({ issue }: { issue: GazetteIssue }) {
   const head = storyText(t, issue.club, issue.headline);
   const article = articleText(t, issue, i18n.resolvedLanguage) ?? head.body;
   const edito = editorialText(t, issue, i18n.resolvedLanguage);
+  // Aux couleurs du club : liseré du titre dans sa couleur qui se voit sur le fond clair, logo du pack de logos.
+  const look = clubLook(issue.club);
+  const accent = look ? visibleOn(look.colors, '#FFFFFF', '#F26B1D') : null;
+  const { data: logo } = useQuery({ queryKey: ['club-logo', issue.club, look?.id ?? null], queryFn: () => clubLogoUrl(issue.club) });
   return (
     <article className="card rounded-xl p-0">
-      <header className="border-b-4 border-orange px-6 py-4">
-        <p className="font-display text-3xl font-semibold">{paperName(t, issue.club)}</p>
-        <p className="mt-1 text-xs font-bold uppercase tracking-wide text-brun">
-          {t('gazette.issue', { number: issue.number })} · {weekLabel(t, i18n.resolvedLanguage, issue.weekStart, issue.weekEnd)}
-        </p>
+      <header className="flex items-center gap-4 border-b-4 border-orange px-6 py-4" style={accent ? { borderBottomColor: accent } : undefined}>
+        {logo && <img src={logo} alt="" className="h-14 w-14 shrink-0 object-contain" />}
+        <div className="min-w-0">
+          <p className="font-display text-3xl font-semibold">{paperName(t, issue.club)}</p>
+          <p className="mt-1 text-xs font-bold uppercase tracking-wide text-brun">
+            {t('gazette.issue', { number: issue.number })} · {weekLabel(t, i18n.resolvedLanguage, issue.weekStart, issue.weekEnd)}
+          </p>
+        </div>
       </header>
       <section className="border-b border-canard/10 px-6 py-5">
         <div className="flex items-start gap-4">
@@ -127,12 +140,12 @@ export function Paper({ issue }: { issue: GazetteIssue }) {
 }
 
 /** Une en image, telle qu'elle part sur Discord. */
-function UnePreview({ issues, index, figures }: { issues: GazetteIssue[]; index: number; figures: SeasonReview | null }) {
+function UnePreview({ issues, index, figures, looks }: { issues: GazetteIssue[]; index: number; figures: SeasonReview | null; looks: number }) {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage;
   const issue = issues[index]!;
   const { data: url } = useQuery({
-    queryKey: ['gazette', 'une', issue.club, issue.weekStart, issue.date, lang, index, issues.length, figures?.end, figures?.played],
+    queryKey: ['gazette', 'une', issue.club, issue.weekStart, issue.date, lang, index, issues.length, figures?.end, figures?.played, looks],
     queryFn: async () =>
       (await drawUne(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures })).toDataURL('image/png'),
   });

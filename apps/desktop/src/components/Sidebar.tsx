@@ -158,13 +158,21 @@ function CareerCard() {
       <div className="flex items-center gap-3">
         <button
           type="button"
-          className="group relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-white/10 ring-2 ring-orange/70"
+          className="group relative h-12 w-12 shrink-0 rounded-full"
           onClick={() => file.current?.click()}
           title={t('layout.career.photo')}
           aria-label={t('layout.career.photo')}
         >
-          {settings?.coachPhoto ? <img src={settings.coachPhoto} alt="" className="h-full w-full object-cover" /> : <span className="text-sm font-extrabold">{initials}</span>}
-          <span className="absolute inset-0 hidden items-center justify-center bg-canard/70 text-[0.625rem] font-extrabold uppercase group-hover:flex">{t('layout.career.change')}</span>
+          <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-white/10 ring-2 ring-orange/70">
+            {settings?.coachPhoto ? <img src={settings.coachPhoto} alt="" className="h-full w-full object-cover" /> : <span className="text-sm font-extrabold">{initials}</span>}
+          </span>
+          {/* Appareil photo : montre que le rond se clique pour choisir la photo du coach. */}
+          <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-fonce ring-2 ring-canard group-hover:brightness-110" aria-hidden>
+            <svg viewBox="0 0 24 24" className="h-3 w-3 fill-none stroke-white" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
+              <circle cx="12" cy="13" r="3.5" />
+            </svg>
+          </span>
         </button>
         <input
           ref={file}
@@ -190,14 +198,17 @@ function CareerCard() {
             {t('layout.career.switch')} ▾
           </button>
         )}
-        <Link to="/parties" className="hover:text-white">
-          {t('layout.career.manage')}
-        </Link>
+        <button type="button" className="text-orange hover:text-white" onClick={() => file.current?.click()}>
+          {t(settings?.coachPhoto ? 'layout.career.changePhoto' : 'layout.career.addPhoto')}
+        </button>
         {settings?.coachPhoto && (
-          <button type="button" className="ml-auto hover:text-white" onClick={() => photo.mutate(null)}>
+          <button type="button" className="hover:text-white" onClick={() => photo.mutate(null)}>
             {t('layout.career.removePhoto')}
           </button>
         )}
+        <Link to="/parties" className="ml-auto hover:text-white">
+          {t('layout.career.manage')}
+        </Link>
       </div>
       {picking && (
         <ul className="mt-2 space-y-0.5 border-t border-white/10 pt-2">

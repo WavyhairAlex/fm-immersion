@@ -3342,7 +3342,9 @@
       "photoError": "Unreadable image: pick a PNG, JPEG or WebP.",
       "switch": "Switch career",
       "manage": "Manage",
-      "removePhoto": "Remove photo"
+      "removePhoto": "Remove",
+      "addPhoto": "Add your photo",
+      "changePhoto": "Change photo"
     },
     "assistant": {
       "label": "Your assistant",

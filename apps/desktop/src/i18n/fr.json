@@ -3342,7 +3342,9 @@
       "photoError": "Image illisible : choisis un PNG, un JPEG ou un WebP.",
       "switch": "Changer de carrière",
       "manage": "Gérer",
-      "removePhoto": "Retirer la photo"
+      "removePhoto": "Retirer",
+      "addPhoto": "Ajouter ta photo",
+      "changePhoto": "Changer la photo"
     },
     "assistant": {
       "label": "Ton adjoint",

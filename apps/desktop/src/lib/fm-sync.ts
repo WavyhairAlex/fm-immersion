@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useRef } from 'react';
 import { useCareer, useCareerStore } from './career';
 import { fmData } from './data';
+import { rememberClubLooks } from './club-look';
 import { importMissingHistory } from './fm-history';
 import { FmOtherSaveError } from './fm';
 
@@ -30,6 +31,7 @@ export function useFmSync() {
   const abilitiesDate = useRef<string | null>(null);
   const abilitiesTry = useRef(0);
   const historyTry = useRef(0);
+  useCoachPhotoFile(saveId, folder);
 
   useEffect(() => {
     if (!folder || !saveId) return;
@@ -52,7 +54,9 @@ export function useFmSync() {
         const text = await invoke<string>('fm_read_snapshot', { folder });
         if (!stop && text !== lastText.current) {
           lastText.current = text;
-          await fmData.importSnapshot(saveId, JSON.parse(text));
+          const snap = JSON.parse(text);
+          rememberClubLooks([snap]);
+          await fmData.importSnapshot(saveId, snap);
           setSync({ other: null });
           qc.invalidateQueries({ queryKey: key });
           qc.invalidateQueries({ queryKey: ['saves'] });
@@ -102,4 +106,31 @@ export function useFmSync() {
       clearInterval(id);
     };
   }, [folder, saveId]);
+}
+
+/** Octets d'une image en data URL (`data:image/png;base64,…`). */
+function dataUrlBytes(url: string): number[] {
+  const bin = atob(url.slice(url.indexOf(',') + 1));
+  const out = new Array<number>(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+/**
+ * Photo du coach recopiée dans le dossier du plugin (`photo-coach.png`) : le plugin CoachPhoto l'affiche dans FM27
+ * à la place du portrait 3D du manager. Réécrite quand elle change, retirée quand le joueur la retire.
+ */
+function useCoachPhotoFile(saveId: string, folder: string) {
+  const { data: settings } = useQuery({ queryKey: ['fm', saveId, 'settings'], queryFn: () => fmData.settings(saveId), enabled: !!saveId });
+  const photo = settings ? (settings.coachPhoto ?? '') : null;
+  const written = useRef<string | null>(null);
+  useEffect(() => {
+    if (!folder || photo === null) return;
+    const key = `${folder}|${photo}`;
+    if (written.current === key) return;
+    written.current = key;
+    invoke('fm_write_coach_photo', { folder, png: photo ? dataUrlBytes(photo) : null }).catch(() => {
+      written.current = null; // dossier absent : nouvel essai au prochain changement
+    });
+  }, [folder, photo]);
 }
