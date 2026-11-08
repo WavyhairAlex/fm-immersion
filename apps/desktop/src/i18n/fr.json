@@ -490,7 +490,15 @@
       "tired_one": "{{count}} joueur sous 80 % de condition",
       "tired_other": "{{count}} joueurs sous 80 % de condition",
       "fixtures": "Calendrier",
-      "lastResult": "Dernier résultat"
+      "lastResult": "Dernier résultat",
+      "thread": {
+        "label": "Le fil du jour",
+        "next": "Prochain adversaire",
+        "decision": "Décision du jour",
+        "opponent": "Voir l'adversaire",
+        "noLast": "Pas encore de match officiel lu.",
+        "noNext": "Aucun match annoncé."
+      }
     },
     "contracts": {
       "byYear": "Salaires mensuels libérés par année de fin de contrat",
@@ -2584,7 +2592,7 @@
         "offseason": "Voir le plan",
         "absentStarters": "Revoir la compo",
         "nextMatch": "Voir l'adversaire",
-        "tiredStarters": "Faire tourner",
+        "tiredStarters": "Voir les options à son poste",
         "contracts": "Trancher",
         "playtimeShort": "Voir le temps de jeu",
         "unhappy": "Voir le vestiaire",

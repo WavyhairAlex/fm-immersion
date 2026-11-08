@@ -179,6 +179,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
             lineup={lineup}
             gameTactic={typeof snapshot.data.tactic?.name === 'string' ? snapshot.data.tactic.name : null}
             onTodo={reportTodo}
+            board={<ControlBoard saveId={saveId} go={go} />}
           />
         );
       case 'squad':
@@ -389,7 +390,6 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
                           <h1 className="text-3xl font-semibold">{t('layout.today.title')}</h1>
                           <p className="mt-1 text-brun first-letter:uppercase">{longDateFmt.format(new Date(shownGameDate(snapshot, sync.now) ?? snapshot.gameDate))}</p>
                         </header>
-                        <ControlBoard saveId={saveId} go={go} />
                         {part('home')}
                         <TodayCards saveId={saveId} />
                       </>
