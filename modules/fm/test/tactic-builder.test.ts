@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { analyseBuiltTactic, builtFromGame, mergeReference, newBuiltTactic, parseBuiltTactics, rolesAt, styleInstructions, TacticEngine, type BuiltTactic } from '../src';
+import { analyseBuiltTactic, builtFromGame, builtPlan, builtStyle, mergeReference, newBuiltTactic, parseBuiltTactics, rolesAt, styleInstructions, TacticEngine, type BuiltTactic } from '../src';
 import { normalizePlayer } from '../src/player';
 
 const engine = new TacticEngine(mergeReference(undefined));
@@ -143,5 +143,21 @@ describe('Repères locaux anciens', () => {
     const i = t.slots.findIndex((s) => s.pos === 'MOG');
     const codes = rolesAt(e, t.slots.map((s) => ({ pos: s.posOOP })), i, 'oop').map((r) => r.code);
     expect(codes).toEqual(expect.arrayContaining(['WM', 'TWM', 'WOM']));
+  });
+});
+
+describe('Tactique construite dans Le onze', () => {
+  it('garde postes et rôles choisis et place un joueur à chaque poste', () => {
+    const pos = ['GB', 'D (G)', 'D (C)', 'D (C)', 'D (D)', 'MD (C)', 'M (C)', 'M (C)', 'MO (G)', 'BT', 'MO (D)', 'D (C)', 'M (C)'];
+    const players = pos.map((p, i) => normalizePlayer({ id: i + 1, name: `J${i}`, positions: p, level: 12, attributes: { Pace: 12, Acceleration: 12, Passing: 12, Tackling: 12, Finishing: 12, Reflexes: 12, Handling: 12, WorkRate: 12, Stamina: 12, Heading: 12 } }));
+    const t = newBuiltTactic(engine, '4-3-3', 'a', 'Ma 4-3-3');
+    t.slots[8] = { ...t.slots[8]!, ip: 'IF', oop: 'TWM' };
+    const plan = builtPlan(engine, t, players);
+    expect(plan.form).toBe('4-3-3');
+    expect(plan.slots[8]).toMatchObject({ pos: 'MOG', ip: 'IF', oop: 'TWM' });
+    expect(plan.holes).toBe(0);
+    expect(new Set(plan.slots.map((s) => s.player?.id)).size).toBe(11);
+    expect(plan.subs.some((s) => s.length > 0)).toBe(true);
+    expect(builtStyle(t)).toMatchObject({ id: 'built:a', name: 'Ma 4-3-3' });
   });
 });

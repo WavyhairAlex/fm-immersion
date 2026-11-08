@@ -4,6 +4,8 @@ import {
   STYLE_FORMS,
   TacticEngine,
   bestTactic,
+  builtPlan,
+  builtStyle,
   rankTactics,
   knownFormation,
   mergeReference,
@@ -35,6 +37,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { createContext, useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
+import { readBuiltTactics } from './FmBuilder';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach, SectionTabs } from './FmUi';
 
@@ -45,7 +48,9 @@ interface Prefs {
   form?: string;
   phase?: Phase;
   /** Onze affiché : celui lu dans le jeu (par défaut quand il existe) ou celui calculé par FM Immersion. */
-  source?: 'game' | 'simloom';
+  source?: 'game' | 'simloom' | 'built';
+  /** Tactique construite (Construire) choisie quand source = 'built'. */
+  built?: string;
 }
 
 /** Repères locaux (`simloom-roles.json` dans le dossier du plugin) s'ils existent et sont valides. */
@@ -100,16 +105,22 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
   const base = useMemo(() => styleOfGameTactic(gameTactic, engine.ref.styles), [gameTactic, engine]);
   const gameForm0 = knownFormation(gameFormation);
   const pick = useMemo(() => bestTactic(engine, avail, coach, ranked, base, gameForm0), [engine, avail, coach, ranked, base, gameForm0]);
-  const auto = !prefs.style;
-  const style = (auto ? pick?.style : ranked.find((r) => r.style.id === prefs.style)?.style) ?? ranked[0]?.style;
+  // Tactiques construites dans Tactique > Construire : on peut en choisir une à la place d'un style.
+  const builtList = useMemo(() => readBuiltTactics(scope), [scope]);
+  const built = prefs.source === 'built' ? (builtList.find((b) => b.id === prefs.built) ?? null) : null;
+  const builtStyleRef = useMemo(() => (built ? builtStyle(built) : null), [built]);
+  const auto = !prefs.style && !built;
+  const style = builtStyleRef ?? (auto ? pick?.style : ranked.find((r) => r.style.id === prefs.style)?.style) ?? ranked[0]?.style;
   const gameForm = gameForm0;
   const natural = (style && STYLE_FORMS[style.id]?.filter((f) => FORMATIONS[f])) || ['4-3-3'];
   const form = prefs.form && FORMATIONS[prefs.form] ? prefs.form : auto && pick ? pick.form : (gameForm ?? natural[0] ?? '4-3-3');
   const plans = useMemo(() => ranked.find((r) => r.style.id === style?.id)?.plans ?? [], [ranked, style]);
   const gamePlan = useMemo(() => (lineup ? planFromLineup(engine, lineup, players, gameForm ?? gameFormation) : null), [engine, lineup, players, gameForm, gameFormation]);
-  const fromGame = !!gamePlan && prefs.source !== 'simloom';
-  const plan = fromGame ? gamePlan : plans.find((p) => p.form === form);
-  return { engine, local, prefs, update, avail, reserve, ranked, style, natural, form: fromGame ? gamePlan.form || form : form, plans, plan, gamePlan, fromGame, auto, pick };
+  const builtPlanA = useMemo(() => (built ? builtPlan(engine, built, avail, reserve) : null), [engine, built, avail, reserve]);
+  const fromGame = !!gamePlan && prefs.source !== 'simloom' && !built;
+  const plan = builtPlanA ?? (fromGame ? gamePlan : plans.find((p) => p.form === form));
+  const shownForm = builtPlanA ? builtPlanA.form : fromGame ? gamePlan.form || form : form;
+  return { engine, local, prefs, update, avail, reserve, ranked, style, natural, form: shownForm, plans, plan, gamePlan, fromGame, auto, pick, built, builtList };
 }
 
 const DOT: Record<BalanceCheck['status'], string> = { good: 'bg-eau', warn: 'bg-ambre', bad: 'bg-corail' };
@@ -122,7 +133,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   const gameTactic = typeof snap?.tactic?.name === 'string' ? snap.tactic.name : null;
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
-  const { engine, local, prefs, update, avail, reserve, ranked, style, natural, form, plans, plan: planA, gamePlan, fromGame, auto, pick } = useTacticChoice(players, folder, gameFormation, lineup, gameTactic);
+  const { engine, local, prefs, update, avail, reserve, ranked, style, natural, form, plans, plan: planA, gamePlan, fromGame, auto, pick, built, builtList } = useTacticChoice(players, folder, gameFormation, lineup, gameTactic);
   const phase: Phase = prefs.phase ?? 'ip';
   // Équipe B : le meilleur onze possible sans les titulaires de l'équipe A, même schéma et même style
   // (rotation, coupes, matchs rapprochés). Au poste, toujours le meilleur joueur restant.
@@ -130,9 +141,10 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   const planB = useMemo(() => {
     if (!planA || !style) return null;
     const starters = new Set(planA.slots.flatMap((sl) => (sl.player ? [sl.player.id] : [])));
+    if (built) return builtPlan(engine, built, avail.filter((p) => !starters.has(p.id)), reserve.filter((p) => !starters.has(p.id)));
     const bForm = FORMATIONS[form] ? form : (pick?.form ?? '4-3-3');
     return engine.formationPlan(bForm, style, avail.filter((p) => !starters.has(p.id)), reserve.filter((p) => !starters.has(p.id)));
-  }, [engine, planA, style, form, pick, avail, reserve]);
+  }, [engine, planA, style, form, pick, avail, reserve, built]);
   const plan = team === 'B' && planB ? planB : planA;
   const opp = useMemo(() => (snap ? opponentReport(snap) : null), [snap]);
   // Tactique du match : la meilleure combinaison style × schéma contre le prochain adversaire.
@@ -176,19 +188,38 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
       <div className="flex flex-wrap items-center gap-3">
         <label className="flex items-center gap-2 whitespace-nowrap text-sm font-bold" title={style.summary ?? undefined}>
           {t('fm.tac.style')}
-          <select className="input py-1.5 font-normal" value={auto ? '' : style.id} onChange={(e) => update({ style: e.target.value || undefined, form: undefined })}>
+          <select
+            className="input py-1.5 font-normal"
+            value={built ? `built:${built.id}` : auto ? '' : style.id}
+            onChange={(e) => {
+              const v = e.target.value;
+              if (v.startsWith('built:')) update({ source: 'built', built: v.slice(6) });
+              else update({ style: v || undefined, form: undefined, ...(built ? { source: 'simloom' as const, built: undefined } : {}) });
+            }}
+          >
             <option value="">{t('fm.tac.auto')}</option>
-            {ranked.map((r) => (
-              <option key={r.style.id} value={r.style.id}>
-                {styleName(r.style)} · {note(r.fit)}
-              </option>
-            ))}
+            <optgroup label={t('fm.tac.styles')}>
+              {ranked.map((r) => (
+                <option key={r.style.id} value={r.style.id}>
+                  {styleName(r.style)} · {note(r.fit)}
+                </option>
+              ))}
+            </optgroup>
+            {builtList.length > 0 && (
+              <optgroup label={t('fm.tac.myTactics')}>
+                {builtList.map((b) => (
+                  <option key={b.id} value={`built:${b.id}`}>
+                    {b.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
           </select>
         </label>
         <label className="flex items-center gap-2 whitespace-nowrap text-sm font-bold">
           {t('fm.tac.formation')}
-          <select className="input py-1.5 font-normal" value={form} disabled={fromGame} onChange={(e) => update({ form: e.target.value })}>
-            {fromGame && !FORMATIONS[form] && <option value={form}>{form || gameFormation}</option>}
+          <select className="input py-1.5 font-normal" value={form} disabled={fromGame || !!built} onChange={(e) => update({ form: e.target.value })}>
+            {(fromGame || built) && !plans.some((p) => p.form === form) && <option value={form}>{form || gameFormation}</option>}
             {plans.map((p) => (
               <option key={p.form} value={p.form}>
                 {p.form} · {note(p.score)}
@@ -203,9 +234,9 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                 key={src}
                 type="button"
                 role="tab"
-                aria-selected={(src === 'game') === fromGame}
+                aria-selected={!built && (src === 'game') === fromGame}
                 onClick={() => update({ source: src })}
-                className={`chip ${(src === 'game') === fromGame ? 'chip-on' : ''}`}
+                className={`chip ${!built && (src === 'game') === fromGame ? 'chip-on' : ''}`}
               >
                 {t(`fm.tac.source.${src}`)}
               </button>
