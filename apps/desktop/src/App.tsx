@@ -8,6 +8,7 @@ import { useFmSync } from './lib/fm-sync';
 import { useAutoBackups } from './lib/save-backup';
 import { useGazetteAuto } from './lib/gazette-auto';
 import { useLiveDiscord } from './lib/live-discord';
+import { Career } from './pages/Career';
 import { Challenges } from './pages/Challenges';
 import { Faces } from './pages/Faces';
 import { FmSave, SettingsWithoutCareer } from './pages/FmSave';
@@ -35,6 +36,7 @@ export function App() {
             <Route path="/parties" element={<Home />} />
             <Route path="/visages" element={<Faces />} />
             <Route path="/sauvegardes" element={<Saves />} />
+            <Route path="/carriere" element={<Career />} />
             <Route path="/gazette" element={<Story tab="gazette" />} />
             <Route path="/discord" element={<Story tab="discord" />} />
             <Route path="/defis" element={<Challenges />} />

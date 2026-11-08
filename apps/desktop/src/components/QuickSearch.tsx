@@ -76,6 +76,7 @@ export function QuickSearch() {
         for (const v of PARTS[page]) screens.push({ key: `s:${v}`, label: t(`fm.views.${v}`), sub: t(`layout.nav.${page}`), kind: 'screen', run: go(clubPath(v)) });
     }
     screens.push(
+      { key: 's:carriere', label: t('careerPage.title'), sub: '', kind: 'screen', run: go('/carriere') },
       { key: 's:gazette', label: t('layout.nav.story'), sub: '', kind: 'screen', run: go('/gazette') },
       { key: 's:defis', label: t('modes.challenges.title'), sub: '', kind: 'screen', run: go('/defis') },
       { key: 's:faces', label: t('layout.nav.faces'), sub: '', kind: 'screen', run: go('/visages') },
