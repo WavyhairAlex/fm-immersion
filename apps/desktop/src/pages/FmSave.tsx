@@ -39,7 +39,8 @@ import { useFmFolder } from '../lib/fm-sync';
 import { FmOtherSaveError, type FmSaveFile } from '../lib/fm';
 import { FmSaveScopeContext, type FmSaveScope } from '../lib/save-store';
 import { FmAnalysis } from './FmAnalysis';
-import { FmBridge } from './FmBridge';
+import { FmBridge, FmBridgeOptions } from './FmBridge';
+import { useGameStatus } from '../lib/game';
 import { FmMemory } from './FmMemory';
 import { FmMercato } from './FmMercato';
 import { FmCalendar } from './FmCalendar';
@@ -325,6 +326,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
           </span>
         )}
         <div className="ml-auto flex items-center gap-3">
+          <GameState />
           {snapshot && (
             <span className="flex items-center gap-1.5 text-xs text-brun" title={t('fm.autoImport')}>
               <span className={`h-2 w-2 rounded-full ${importSnap.isError && !other ? 'bg-corail' : 'bg-eau'}`} aria-hidden />
@@ -514,6 +516,7 @@ function SettingsPage({
         </form>
         <FmHistoryImport saveId={saveId} folder={folder} club={club} />
         <FmBridge dataFolder={folder} onHealth={onHealth} />
+        <FmBridgeOptions />
         <FmMemory />
       </div>
     </div>
@@ -881,5 +884,30 @@ function FmHistoryImport({ saveId, folder, club }: { saveId: string; folder: str
       {run.isSuccess && !progress && <p className="mt-2 text-xs text-eau-fonce">{t('fm.history.result', { count: run.data })}</p>}
       {run.isError && <p className="mt-2 text-xs text-corail">{t('fm.importError', { reason: String(run.error?.message ?? run.error) })}</p>}
     </div>
+  );
+}
+
+/**
+ * Barre d'état du centre de contrôle : FM27 ouvert ou fermé, et le plugin s'il demande une action (lien vers ses
+ * réglages). La lecture de la partie suit, à droite.
+ */
+function GameState() {
+  const { t } = useTranslation();
+  const { status } = useGameStatus();
+  const bridgeOk = useCareerStore((s) => s.sync.bridgeOk);
+  if (!status?.gameFound) return null;
+  return (
+    <>
+      <span className="flex items-center gap-1.5 text-xs text-brun">
+        <span className={`h-2 w-2 rounded-full ${status.running ? 'bg-eau' : 'bg-canard/25'}`} aria-hidden />
+        {t(status.running ? 'layout.state.open' : 'layout.state.closed')}
+      </span>
+      {bridgeOk === false && (
+        <Link to="/reglages" className="flex items-center gap-1.5 text-xs font-bold text-orange-fonce hover:underline">
+          <span className="h-2 w-2 rounded-full bg-ambre" aria-hidden />
+          {t('layout.state.plugin')}
+        </Link>
+      )}
+    </>
   );
 }
