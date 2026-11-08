@@ -387,8 +387,10 @@ export function analyseBuiltTactic(engine: TacticEngine, t: BuiltTactic, players
   // Missions avec ballon fixées par les rôles de FM27.
   const duty = (d: 'd' | 's' | 'a') => outfield.filter((i) => engine.roles.get(S[i]!.ip)?.duty === d);
   const att = duty('a');
-  if (att.length >= 6) add('tooManyAttack', 'roles', 'warn', { count: att.length }, att);
-  else if (att.length <= 1) add('fewAttack', 'roles', 'warn', { count: att.length }, att);
+  // Sans mission connue pour les rôles (repère incomplet), pas de constat plutôt qu'un faux « 0 en Attaque ».
+  const dutyKnown = outfield.some((i) => engine.roles.get(S[i]!.ip)?.duty);
+  if (dutyKnown && att.length >= 6) add('tooManyAttack', 'roles', 'warn', { count: att.length }, att);
+  else if (dutyKnown && att.length <= 1) add('fewAttack', 'roles', 'warn', { count: att.length }, att);
 
   // 2. Couloirs.
   const width = ti(t, 'TeamWidth') ?? 2;

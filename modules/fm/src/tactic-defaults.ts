@@ -255,11 +255,11 @@ const GAME_PRESETS: Record<string, Pick<StyleRef, 'inPossession' | 'outOfPossess
 export function mergeReference(local: TacticReference | null | undefined): TacticReference {
   if (!local) return DEFAULT_TACTIC_REFERENCE;
   const roles = new Map(DEFAULT_TACTIC_REFERENCE.roles.map((r) => [r.code, r]));
-  // Un rôle de FM27 garde les postes et la phase relevés dans le jeu : un ancien fichier local
+  // Un rôle de FM27 garde les postes, la phase et la mission relevés dans le jeu : un ancien fichier local
   // (repères de Simloom) ne règle que ses pondérations, sans retirer un rôle d'un poste où le jeu le propose.
   for (const r of local.roles) {
     const d = roles.get(r.code);
-    roles.set(r.code, d?.game ? { ...r, phase: d.phase, positions: d.positions, positionsOOP: d.positionsOOP, cond: d.cond, game: d.game } : r);
+    roles.set(r.code, d?.game ? { ...r, phase: d.phase, duty: d.duty, positions: d.positions, positionsOOP: d.positionsOOP, cond: d.cond, game: d.game } : r);
   }
   const styles = new Map(DEFAULT_TACTIC_REFERENCE.styles.map((s) => [s.id, s]));
   for (const s of local.styles) {
