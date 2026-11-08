@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useRef } from 'react';
 import { useCareer, useCareerStore } from './career';
 import { fmData } from './data';
+import { rememberClubLooks } from './club-look';
 import { importMissingHistory } from './fm-history';
 import { FmOtherSaveError } from './fm';
 
@@ -52,7 +53,9 @@ export function useFmSync() {
         const text = await invoke<string>('fm_read_snapshot', { folder });
         if (!stop && text !== lastText.current) {
           lastText.current = text;
-          await fmData.importSnapshot(saveId, JSON.parse(text));
+          const snap = JSON.parse(text);
+          rememberClubLooks([snap]);
+          await fmData.importSnapshot(saveId, snap);
           setSync({ other: null });
           qc.invalidateQueries({ queryKey: key });
           qc.invalidateQueries({ queryKey: ['saves'] });

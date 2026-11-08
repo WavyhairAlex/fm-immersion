@@ -5,6 +5,7 @@ import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { CAREER_KEY } from './career';
+import { rememberClubLooks } from './club-look';
 import { fmData, savesData } from './data';
 import { getWebhook, isWebhook, sendDiscordImage } from './discord';
 import { importMissingHistory } from './fm-history';
@@ -134,6 +135,7 @@ export function useGazetteAuto() {
           /* dossier illisible */
         }
         const history = await fmData.all(saveId);
+        rememberClubLooks(history.map((h) => h.data));
         const issues = gazetteIssues(history);
         const index = gazetteToSend(issues, saveId, read(SENT_KEY));
         if (index != null) {
