@@ -1,4 +1,4 @@
-import { gazetteIssues, seasonReviews, seasonSoFar, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
+import { coachExits, gazetteIssues, seasonReviews, seasonSoFar, type CoachExit, type ExitReason, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
@@ -6,9 +6,11 @@ import { useTranslation } from 'react-i18next';
 import { withWriting } from './ai-gazette';
 import { CAREER_KEY } from './career';
 import { rememberClubLooks } from './club-look';
-import { savesData } from './data';
+import { fmData, savesData } from './data';
 import { getWebhook, isWebhook, sendDiscordImage } from './discord';
 import { fetchHistory } from './fm-cache';
+import { drawFarewell } from './farewell-page';
+import { farewellPayload } from './farewell-text';
 import { drawPage } from './gazette-page';
 import { discordPagePayload } from './gazette-text';
 import { canvasPng, recentForm } from './gazette-une';
@@ -34,6 +36,51 @@ export async function sendGazette(
 export async function sendSeason(t: TFunction, r: SeasonReview, lang?: string, webhook = getWebhook()) {
   const png = await canvasPng(await drawSeason(t, r, { face: await loadFace(r.topScorer?.id), lang }));
   return sendDiscordImage(seasonPayload(t, r, lang), png, webhook);
+}
+
+/** Photo du coach choisie dans la barre latérale (data URL), en image prête à dessiner ; null sans photo. */
+export async function loadCoachPhoto(saveId: string): Promise<HTMLImageElement | null> {
+  try {
+    const src = (await fmData.settings(saveId)).coachPhoto;
+    if (!src) return null;
+    const img = new Image();
+    img.src = src;
+    await img.decode();
+    return img;
+  } catch {
+    return null;
+  }
+}
+
+/** Raison du départ corrigée par le joueur (licenciement ou départ), sinon celle devinée. Gardée sur ce PC. */
+const exitKey = (saveId: string, x: CoachExit) => `fmi.gazette.exit.${saveId}|${x.club}|${x.end}`;
+export const exitReason = (saveId: string, x: CoachExit): ExitReason => {
+  const v = read(exitKey(saveId, x));
+  return v === 'sacked' || v === 'left' ? v : x.reason;
+};
+export const setExitReason = (saveId: string, x: CoachExit, r: ExitReason) => write(exitKey(saveId, x), r);
+
+/** Hors-série « Flash spécial » du départ du coach (page en image + encart). */
+export async function sendFarewell(t: TFunction, saveId: string, x: CoachExit, lang?: string, webhook = getWebhook()) {
+  const reason = exitReason(saveId, x);
+  const png = await canvasPng(await drawFarewell(t, x, { reason, lang, photo: await loadCoachPhoto(saveId) }));
+  return sendDiscordImage(farewellPayload(t, x, reason, lang), png, webhook);
+}
+
+/** Hors-série déjà envoyés (aussi à la main), pour que l'envoi automatique ne les renvoie pas. */
+const FAREWELL_SENT_KEY = 'fmi.discord.farewellSent';
+const farewellId = (saveId: string, x: CoachExit) => `${saveId}|${x.club}|${x.end}`;
+export const isFarewellSent = (saveId: string, x: CoachExit) => (read(FAREWELL_SENT_KEY) ?? '').split('\n').includes(farewellId(saveId, x));
+export const markFarewellSent = (saveId: string, x: CoachExit) =>
+  write(FAREWELL_SENT_KEY, [...(read(FAREWELL_SENT_KEY) ?? '').split('\n').filter(Boolean), farewellId(saveId, x)].slice(-20).join('\n'));
+
+/** Le hors-série part une fois, peu après le départ (pas celui d'un club quitté il y a des mois). */
+export function farewellToSend(exits: CoachExit[], lastDate: string | undefined, sent: (x: CoachExit) => boolean): CoachExit | null {
+  const x = exits[0];
+  if (!x || sent(x)) return null;
+  const ref = lastDate && lastDate > x.end ? lastDate : x.end;
+  const days = (Date.parse(ref.slice(0, 10)) - Date.parse(x.end.slice(0, 10))) / 86_400_000;
+  return days <= 45 ? x : null;
 }
 
 /** Dernier bilan de saison envoyé : partie et date de fin de saison. */
@@ -96,8 +143,8 @@ export function gazetteToSend(issues: GazetteIssue[], saveId: string, sent: stri
 
 /**
  * Monté une fois pour toute l'appli : chaque minute, si le joueur l'a activé et relié un salon, relit l'instantané
- * du plugin (comme FM Coach) puis envoie la gazette dès qu'une semaine de jeu est terminée, et le bilan de la saison
- * dès que le dernier match de championnat est joué.
+ * du plugin (comme FM Coach) puis envoie la gazette dès qu'une semaine de jeu est terminée, le bilan de la saison
+ * dès que le dernier match de championnat est joué, et le hors-série quand le coach quitte son club.
  */
 export function useGazetteAuto() {
   const { t, i18n } = useTranslation();
@@ -132,6 +179,13 @@ export function useGazetteAuto() {
         if (season) {
           await sendSeason(t, season, i18n.resolvedLanguage);
           markSeasonSent(saveId, season);
+        }
+        // Le coach a quitté son club (autre club, ou sans club d'après le plugin) : hors-série « Flash spécial ».
+        const freeSince = (await fmData.settings(saveId)).fmFreeSince ?? null;
+        const exit = farewellToSend(coachExits(history, { freeSince }), lastDate, (x) => isFarewellSent(saveId, x));
+        if (exit) {
+          await sendFarewell(t, saveId, exit, i18n.resolvedLanguage);
+          markFarewellSent(saveId, exit);
         }
       } catch (e) {
         console.warn('Gazette automatique :', e);

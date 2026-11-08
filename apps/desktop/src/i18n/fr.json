@@ -3094,12 +3094,13 @@
       "next": "Prochain match",
       "figures": "Les chiffres de la saison {{season}}",
       "figPosition": "Classement",
-      "figRecord_one": "V-N-D ({{count}} match)",
-      "figRecord_other": "V-N-D ({{count}} matchs)",
+      "figRecord_one": "V-N-D en championnat ({{count}} match)",
+      "figRecord_other": "V-N-D en championnat ({{count}} matchs)",
       "figScorer_one": "but, {{name}}",
       "figScorer_other": "buts, {{name}}",
       "kicker_cupOut": "Éliminé",
-      "kicker_cupThrough": "Qualifié"
+      "kicker_cupThrough": "Qualifié",
+      "figGoals": "Buts pour – contre (championnat)"
     },
     "preview": "Aperçu de la une envoyée sur Discord",
     "inCompetition": "en {{competition}}",
@@ -3285,6 +3286,16 @@
         "shotsAgainst": "tirs subis, pour {{us}} tentés : l’adversaire a fait le siège.",
         "possession": "de possession sur l’ensemble du match.",
         "xg": "xG produits, contre {{them}} pour {{opponent}}."
+      },
+      "league": "Championnat",
+      "cup": {
+        "alive": "En lice",
+        "through": "Qualifié",
+        "out": "Éliminé par {{opponent}}",
+        "won": "Vainqueur !",
+        "unknown": "En lice",
+        "line_one": "V-N-D {{record}} · {{count}} tour joué",
+        "line_other": "V-N-D {{record}} · {{count}} tours joués"
       }
     },
     "actions": "Réécrire et partager",
@@ -3967,5 +3978,89 @@
       "lang": "Passer en anglais"
     },
     "action": "Action"
+  },
+  "farewell": {
+    "flash": "Flash spécial",
+    "special": "Hors-série",
+    "kicker": {
+      "sacked": "Licenciement",
+      "left": "Départ"
+    },
+    "title": {
+      "sacked": "{{club}} limoge son entraîneur",
+      "left": "L’entraîneur quitte {{club}}",
+      "leftNext": "L’entraîneur quitte {{club}} pour {{next}}"
+    },
+    "stamp": {
+      "sacked": "Limogé",
+      "left": "Départ"
+    },
+    "deckNone": "Arrivé le {{start}}, parti le {{end}}.",
+    "record": "Le bilan",
+    "seasons": "Saison par saison",
+    "interview": "L’interview",
+    "trophies": "Palmarès",
+    "noTrophy": "Aucun titre",
+    "league": "Championnat",
+    "tile": {
+      "played": "matchs",
+      "record": "V-N-D",
+      "goals": "buts pour – contre",
+      "winRate": "de victoires",
+      "best": "meilleure place",
+      "trophies_one": "titre",
+      "trophies_other": "titres"
+    },
+    "line": {
+      "topScorer": "Meilleur buteur : {{name}} ({{count}} buts)",
+      "biggestWin": "Plus large victoire : {{score}} contre {{opponent}}",
+      "potm": "Le plus souvent homme du match : {{name}} ({{count}})"
+    },
+    "seasonRow": "{{season}} · {{position}} · {{record}}",
+    "seasonOngoing": "(en cours au départ)",
+    "coach": "L’entraîneur",
+    "reasonLabel": "Raison du départ",
+    "reasonHint": "Devinée d’après la sécurité de ton emploi au dernier relevé : corrige-la si besoin.",
+    "send": "Envoyer le hors-série sur Discord",
+    "sent": "Hors-série envoyé.",
+    "q": {
+      "feel": "Comment vivez-vous ce départ ?",
+      "memory": "Quel souvenir emportez-vous ?",
+      "player": "Un joueur vous a-t-il marqué ?",
+      "whySacked": "Qu’est-ce qui n’a pas fonctionné ?",
+      "whyLeft": "Pourquoi partir maintenant ?",
+      "fans": "Un dernier mot pour les supporters ?"
+    },
+    "a": {
+      "feel_sacked_0": "C’est un coup dur, je ne vais pas le cacher. La direction a fait son choix, je le respecte, même si je ne le partage pas.",
+      "feel_sacked_1": "Dans ce métier, on sait que ça peut arriver. Mais quand ça tombe, ça fait mal. J’avais encore tellement de choses à construire ici.",
+      "feel_sacked_2": "Je l’ai appris dans le bureau du président, en quelques minutes. Le football va vite, parfois trop.",
+      "feel_left_0": "Avec beaucoup d’émotion. On ne quitte pas {{club}} comme on quitte un club de passage.",
+      "feel_left_1": "C’est une décision mûrie, pas un coup de tête. Mais le dernier jour au centre d’entraînement, j’avais la gorge serrée.",
+      "feel_left_2": "Sereinement. Je pars la tête haute, avec le sentiment du devoir accompli.",
+      "memory_trophy_0": "Le titre en {{season}} ({{trophy}}). Voir ce vestiaire soulever le trophée, c’est pour ces moments-là qu’on fait ce métier.",
+      "memory_trophy_1": "Forcément {{trophy}} en {{season}}. Personne ne nous attendait là, et on l’a fait ensemble.",
+      "memory_win_0": "Le {{score}} contre {{opponent}}. Ce jour-là, tout ce qu’on travaillait la semaine a fonctionné.",
+      "memory_win_1": "La victoire {{score}} face à {{opponent}}. Le stade chantait encore une heure après le coup de sifflet.",
+      "memory_none_0": "Les gens. Les joueurs, le staff, les employés du club. Ce sont eux qui font {{club}}.",
+      "memory_none_1": "Les matinées au centre d’entraînement, avant que tout le monde arrive. Ce calme-là, je ne l’oublierai pas.",
+      "player_0": "{{name}}. {{count}} buts avec moi, toujours là à l’entraînement avant tout le monde. Promis à une belle carrière.",
+      "player_1": "Je pense à {{name}} : {{count}} buts, un état d’esprit irréprochable. Le genre de profil dont tout entraîneur rêve.",
+      "player_none_0": "Je ne veux citer personne : c’est le groupe entier qui m’a marqué.",
+      "why_sacked_good_0": "Honnêtement, je ne sais pas. Les résultats étaient là, {{wins}} victoires en {{played}} matchs. Il faudra poser la question à la direction.",
+      "why_sacked_good_1": "Les chiffres parlent pour moi. Mais dans le football, on ne juge pas toujours sur les chiffres.",
+      "why_sacked_bad_0": "Les résultats n’ont pas suivi, {{losses}} défaites, je l’assume. On a manqué de régularité et je suis le premier responsable.",
+      "why_sacked_bad_1": "On a perdu trop de points bêtement. Le groupe avait les qualités, je n’ai pas réussi à trouver la bonne carburation à temps.",
+      "why_left_next_0": "Le projet de {{next}} m’a convaincu. C’est un nouveau défi et je ne pouvais pas le laisser passer.",
+      "why_left_next_1": "Quand {{next}} a appelé, j’ai senti que c’était le moment. Le cycle était arrivé à son terme ici.",
+      "why_left_none_0": "J’avais le sentiment d’avoir tout donné. Il fallait laisser la place à quelqu’un d’autre, avec une énergie nouvelle.",
+      "why_left_none_1": "Je vais prendre un peu de recul, regarder des matchs, apprendre. Puis je repartirai.",
+      "fans_0": "Merci. Pour chaque déplacement, chaque chant, chaque soir de pluie. Je resterai un supporter de {{club}}.",
+      "fans_1": "Continuez à pousser derrière l’équipe. Le club est plus grand que n’importe quel entraîneur.",
+      "fans_2": "Simplement merci. Vous m’avez fait me sentir chez moi dès le premier jour."
+    },
+    "discordIntro": "⚡ **Flash spécial** : {{title}}",
+    "deck_one": "Arrivé le {{start}}, parti le {{end}} : {{count}} match officiel, bilan {{wins}}-{{draws}}-{{losses}} (victoires, nuls, défaites).",
+    "deck_other": "Arrivé le {{start}}, parti le {{end}} : {{count}} matchs officiels, bilan {{wins}}-{{draws}}-{{losses}} (victoires, nuls, défaites)."
   }
 }

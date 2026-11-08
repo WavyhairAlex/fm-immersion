@@ -90,9 +90,11 @@ export function fit(ctx: CanvasRenderingContext2D, text: string, weight: number,
 export function figureTiles(t: TFunction, f: SeasonReview): [string, string][] {
   const out: [string, string][] = [];
   if (f.position != null) out.push([t(`season.ordinal${f.position <= 3 ? f.position : ''}`, { n: f.position }), t('gazette.une.figPosition')]);
-  if (f.played) {
-    out.push([`${f.wins}-${f.draws}-${f.losses}`, t('gazette.une.figRecord', { count: f.played })]);
-    out.push([`${f.goalsFor}-${f.goalsAgainst}`, t('season.goals')]);
+  // Championnat seul, comme le classement du jeu (une défaite en coupe ne compte pas dans le bilan de la ligue).
+  const l = f.league;
+  if (l.played) {
+    out.push([`${l.wins}-${l.draws}-${l.losses}`, t('gazette.une.figRecord', { count: l.played })]);
+    out.push([`${l.goalsFor}-${l.goalsAgainst}`, t('gazette.une.figGoals')]);
   }
   if (f.topScorer) out.push([String(f.topScorer.value), t('gazette.une.figScorer', { count: f.topScorer.value, name: f.topScorer.name })]);
   return out;

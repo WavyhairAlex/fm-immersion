@@ -1,5 +1,5 @@
 import { AiLink } from '../components/AiSettingsCard';
-import { gazetteIssues, seasonReviews, seasonSoFar, visibleOn, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
+import { coachExits, gazetteIssues, seasonReviews, seasonSoFar, visibleOn, type CoachExit, type ExitReason, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
 import { SeasonCard } from '../components/SeasonCard';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -12,7 +12,9 @@ import { useCareer } from '../lib/career';
 import { clubLook, rememberClubLooks } from '../lib/club-look';
 import { useHistory } from '../lib/fm-cache';
 import { getWebhook, isWebhook } from '../lib/discord';
-import { markGazetteSent, markSeasonSent, sendGazette, sendSeason } from '../lib/gazette-auto';
+import { exitReason, loadCoachPhoto, markFarewellSent, markGazetteSent, markSeasonSent, sendFarewell, sendGazette, sendSeason, setExitReason } from '../lib/gazette-auto';
+import { drawFarewell } from '../lib/farewell-page';
+import { fmData } from '../lib/data';
 import { articleText, editorialText, headlineText, paperName, storyText, weekLabel } from '../lib/gazette-text';
 import { drawPage } from '../lib/gazette-page';
 import { recentForm } from '../lib/gazette-une';
@@ -39,6 +41,12 @@ export function Gazette() {
     const now = history.length ? seasonSoFar(history, history.reduce((a, e) => (e.gameDate > a ? e.gameDate : a), '')) : null;
     return now?.ongoing && now.played > 0 ? [now, ...reviews] : reviews;
   }, [history, reviews]);
+  // Départs du coach (autre club, ou sans club d'après le plugin) : hors-série « Flash spécial ».
+  const { data: settings } = useQuery({ queryKey: ['fm', saveId, 'settings'], queryFn: () => fmData.settings(saveId), enabled: !!saveId });
+  const exits = useMemo(() => coachExits(history, { freeSince: settings?.fmFreeSince ?? null }), [history, settings?.fmFreeSince]);
+  // Hors-série en tête tant que le départ est récent (45 jours de jeu), sinon en bas avec les bilans de saison.
+  const lastDate = history.reduce((a, e) => (e.gameDate > a ? e.gameDate : a), '');
+  const exitFresh = !!exits[0] && (Date.parse(lastDate.slice(0, 10) || exits[0].end) - Date.parse(exits[0].end.slice(0, 10))) / 86_400_000 <= 45;
   const [index, setIndex] = useState(0);
   useEffect(() => setIndex(0), [saveId]);
   const raw = issues[index];
@@ -68,8 +76,10 @@ export function Gazette() {
         </div>
       )}
 
+      {exitFresh && <FarewellSection saveId={saveId} exits={exits} looks={looksReady} />}
+
       {issue && (
-        <div className="grid gap-6 xl:grid-cols-[1fr_16rem]">
+        <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
           <div className="min-w-0 space-y-6">
             <Une issue={issue} />
             <UnePreview issues={shown} index={index} figures={figures} looks={looksReady} />
@@ -103,6 +113,11 @@ export function Gazette() {
 
       {cards.length > 0 && <SeasonCard saveId={saveId} seasons={cards} />}
       {season && <SeasonSection saveId={saveId} review={season} />}
+      {exits.length > 0 && !exitFresh && (
+        <div className="mt-6">
+          <FarewellSection saveId={saveId} exits={exits} looks={looksReady} />
+        </div>
+      )}
     </div>
   );
 }
@@ -271,6 +286,77 @@ function SeasonSection({ saveId, review }: { saveId: string; review: SeasonRevie
           </Link>
         )}
         {send.isSuccess && <p className="text-xs font-bold text-eau-fonce">{t('season.sent')}</p>}
+        {send.isError && <p className="text-xs font-bold text-corail">{String(send.error)}</p>}
+      </aside>
+    </section>
+  );
+}
+
+/** Hors-série « Flash spécial » : le coach a quitté son club. Raison corrigeable (licenciement ou départ), envoi Discord. */
+function FarewellSection({ saveId, exits, looks }: { saveId: string; exits: CoachExit[]; looks: number }) {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage;
+  const [at, setAt] = useState(0);
+  const x = exits[Math.min(at, exits.length - 1)]!;
+  const [reason, setReason] = useState<ExitReason>(() => exitReason(saveId, x));
+  useEffect(() => setReason(exitReason(saveId, x)), [saveId, x]);
+  const { data: url } = useQuery({
+    queryKey: ['gazette', 'farewell', saveId, x.club, x.end, reason, lang, looks],
+    queryFn: async () => (await drawFarewell(t, x, { reason, lang, photo: await loadCoachPhoto(saveId) })).toDataURL('image/png'),
+  });
+  const send = useMutation({
+    mutationFn: async () => {
+      await sendFarewell(t, saveId, x, lang);
+      markFarewellSent(saveId, x);
+    },
+  });
+  return (
+    <section className="grid gap-6 xl:grid-cols-[1fr_16rem]">
+      <div className="min-w-0">
+        <p className="text-xs font-bold uppercase tracking-wide text-corail">⚡ {t('farewell.flash')} · {t('farewell.special')}</p>
+        {url ? (
+          <img src={url} alt={t('farewell.special')} className="mt-3 w-full rounded-xl shadow-sm ring-1 ring-canard/10" />
+        ) : (
+          <div className="mt-3 aspect-[3/4] w-full animate-pulse rounded-xl bg-canard/5" />
+        )}
+      </div>
+      <aside className="flex flex-col gap-2 xl:pt-7">
+        {exits.length > 1 && (
+          <div className="flex flex-wrap gap-1">
+            {exits.map((e, i) => (
+              <button key={`${e.club}|${e.end}`} type="button" className={`chip ${i === at ? 'chip-on' : ''}`} onClick={() => setAt(i)}>
+                {e.club}
+              </button>
+            ))}
+          </div>
+        )}
+        <p className="text-xs font-bold uppercase tracking-wide text-brun">{t('farewell.reasonLabel')}</p>
+        <div className="flex flex-wrap gap-1">
+          {(['sacked', 'left'] as const).map((r) => (
+            <button
+              key={r}
+              type="button"
+              className={`chip ${reason === r ? 'chip-on' : ''}`}
+              onClick={() => {
+                setExitReason(saveId, x, r);
+                setReason(r);
+              }}
+            >
+              {t(`farewell.kicker.${r}`)}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-brun">{t('farewell.reasonHint')}</p>
+        {isWebhook(getWebhook()) ? (
+          <button type="button" className="btn-primary mt-2 text-sm" disabled={send.isPending} onClick={() => send.mutate()}>
+            {t('farewell.send')}
+          </button>
+        ) : (
+          <Link to="/discord" className="btn-secondary mt-2 text-sm">
+            {t('gazette.setupDiscord')}
+          </Link>
+        )}
+        {send.isSuccess && <p className="text-xs font-bold text-eau-fonce">{t('farewell.sent')}</p>}
         {send.isError && <p className="text-xs font-bold text-corail">{String(send.error)}</p>}
       </aside>
     </section>

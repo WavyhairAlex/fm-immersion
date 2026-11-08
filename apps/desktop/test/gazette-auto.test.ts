@@ -1,9 +1,9 @@
-import type { GazetteIssue, SeasonReview } from '@fm-immersion/module-fm';
+import type { CoachExit, GazetteIssue, SeasonReview } from '@fm-immersion/module-fm';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
 vi.mock('../src/lib/data', () => ({ fmData: {}, savesData: {} }));
-const { gazetteToSend, seasonToSend } = await import('../src/lib/gazette-auto');
+const { farewellToSend, gazetteToSend, seasonToSend } = await import('../src/lib/gazette-auto');
 
 const issue = (weekStart: string) => ({ weekStart }) as GazetteIssue;
 
@@ -23,5 +23,14 @@ describe('gazette automatique', () => {
     expect(seasonToSend([r], '2027-05-15', () => true)).toBeNull();
     expect(seasonToSend([r], '2027-09-01', () => false)).toBeNull();
     expect(seasonToSend([], '2027-05-15', () => false)).toBeNull();
+  });
+
+  it('envoie le hors-série du départ une fois, peu après le départ', () => {
+    const x = { club: 'Malženice', end: '2027-09-01' } as CoachExit;
+    expect(farewellToSend([x], '2027-09-01', () => false)).toBe(x);
+    expect(farewellToSend([x], '2027-09-20', () => false)).toBe(x);
+    expect(farewellToSend([x], '2027-09-20', () => true)).toBeNull();
+    expect(farewellToSend([x], '2027-12-01', () => false)).toBeNull();
+    expect(farewellToSend([], '2027-09-01', () => false)).toBeNull();
   });
 });

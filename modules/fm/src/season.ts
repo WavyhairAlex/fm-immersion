@@ -3,6 +3,7 @@ import { leaguePosition } from './gazette';
 import { normalizePlayer } from './player';
 import { lineOf, type PosCode } from './positions';
 import { officialResults, type MatchResult } from './results';
+import { competitionKind } from './rules';
 import type { FmSnapshot } from './snapshot';
 import { assignMax, FORMATIONS } from './tactic';
 
@@ -56,6 +57,11 @@ export interface SeasonReview {
   position: number | null;
   positions: { date: string; position: number }[];
   played: number;
+  /**
+   * Bilan du seul championnat (sans les coupes), comme le classement du jeu : c'est lui qu'affichent les cases
+   * « V-N-D » et « buts » de la gazette. Les matchs de compétition inconnue y sont comptés.
+   */
+  league: { played: number; wins: number; draws: number; losses: number; goalsFor: number; goalsAgainst: number };
   /** Matchs joués sans détail connu (plusieurs matchs entre deux instantanés), hors bilan chiffré. */
   untracked: number;
   wins: number;
@@ -123,6 +129,9 @@ function exact(r: MatchResult): SeasonMatch | null {
     ? { date: r.date, opponent: r.opponent, goalsFor: r.goalsFor, goalsAgainst: r.goalsAgainst }
     : null;
 }
+
+/** Bilan d'une suite d'instantanés quelconque (une saison, ou tout un passage au club pour le hors-série du départ). */
+export const reviewOf = (entries: Entry[], ongoing = false) => review(entries, ongoing);
 
 function review(season: Entry[], ongoing = false): SeasonReview {
   const first = season[0]!;
@@ -233,6 +242,11 @@ function review(season: Entry[], ongoing = false): SeasonReview {
     position: leaguePosition(last.data) ?? positions.at(-1)?.position ?? null,
     positions,
     played: sum((r) => r.matches),
+    league: (() => {
+      const ls = results.filter((r) => !['cup', 'europe', 'friendly'].includes(competitionKind(r.competition)));
+      const add = (f: (r: MatchResult) => number) => ls.reduce((a, r) => a + f(r), 0);
+      return { played: add((r) => r.matches), wins: add((r) => r.wins), draws: add((r) => r.draws), losses: add((r) => r.losses), goalsFor: add((r) => r.goalsFor ?? 0), goalsAgainst: add((r) => r.goalsAgainst ?? 0) };
+    })(),
     untracked: firstKnown < 0 ? 0 : all.filter((r, i) => i > firstKnown && !results.includes(r)).reduce((a, r) => a + r.matches, 0),
     wins: sum((r) => r.wins),
     draws: sum((r) => r.draws),

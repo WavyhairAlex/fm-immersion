@@ -1,4 +1,4 @@
-import { contrast, inkOn, type GazetteIssue, type GazetteStory, type SeasonReview } from '@fm-immersion/module-fm';
+import { competitionKind, contrast, inkOn, type GazetteIssue, type GazetteStory, type SeasonReview } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
 import { clubArt, drawCrest, type ClubArt } from './club-look';
 import { articleText, headlineText, editorialText, paperName, storyText, weekLabel } from './gazette-text';
@@ -68,7 +68,7 @@ function briefColor(s: GazetteStory): string {
 const MAX_H = 4200;
 
 /** Ligne justifiée : les espaces sont élargis pour remplir `width` (la dernière ligne d'un paragraphe reste à gauche). */
-function justified(ctx: CanvasRenderingContext2D, line: string, x: number, y: number, width: number, last: boolean) {
+export function justified(ctx: CanvasRenderingContext2D, line: string, x: number, y: number, width: number, last: boolean) {
   const words = line.split(' ');
   if (last || words.length < 2) {
     ctx.fillText(line, x, y);
@@ -88,7 +88,7 @@ function justified(ctx: CanvasRenderingContext2D, line: string, x: number, y: nu
 }
 
 /** Grain du papier : petits points clairs et sombres, toujours les mêmes pour un numéro donné. */
-function grain(ctx: CanvasRenderingContext2D, h: number, seed: number) {
+export function grain(ctx: CanvasRenderingContext2D, h: number, seed: number) {
   let a = seed >>> 0 || 1;
   const rnd = () => {
     a = (a + 0x6d2b79f5) >>> 0;
@@ -103,7 +103,7 @@ function grain(ctx: CanvasRenderingContext2D, h: number, seed: number) {
 }
 
 /** Couleur principale d'un club assez soutenue pour porter du texte, sinon celle donnée. */
-function solid(art: ClubArt | null, fallback: string): string {
+export function solid(art: ClubArt | null, fallback: string): string {
   const colors = art?.look?.colors ?? [];
   return colors.find((c) => contrast(c, '#FFFFFF') >= 2.2 || contrast(c, C.ink) >= 6) ?? colors[0] ?? fallback;
 }
@@ -690,6 +690,14 @@ export async function drawPage(
   const fig = opts.figures;
   if (fig && (fig.played || fig.position != null)) {
     y = section(t('gazette.une.figures', { season: fig.label }), M, y + 16, W - 2 * M) + 14;
+    // Un encadré par compétition : d'abord le championnat (place, bilan, buts, buteur), puis chaque coupe engagée.
+    const leagueName =
+      [head, ...issue.stories].map((x) => (x.kind === 'result' || x.kind === 'nextMatch' ? x.params.competition : null)).find((c) => c && competitionKind(String(c)) === 'league') ??
+      t('gazette.page.league');
+    ctx.font = font(900, 14);
+    ctx.fillStyle = C.ink;
+    ctx.fillText(`🏟️ ${caps(String(leagueName))}`, M, y + 14);
+    y += 26;
     const tiles = figureTiles(t, fig);
     const tw = (W - 2 * M - 14 * (tiles.length - 1)) / tiles.length;
     tiles.forEach(([value, label], i) => {
@@ -704,6 +712,30 @@ export async function drawPage(
       ctx.fillText(wrap(ctx, label, tw - 28, 1)[0]!, tx + 16, y + 82);
     });
     y += 96;
+    const cups = fig.cups ?? [];
+    if (cups.length) {
+      y += 18;
+      const per = Math.min(3, cups.length);
+      const cw = (W - 2 * M - 14 * (per - 1)) / per;
+      cups.forEach((c, i) => {
+        const cx = M + (i % per) * (cw + 14);
+        const cy = y + Math.floor(i / per) * 112;
+        const color = c.status === 'won' ? C.green : c.status === 'out' ? C.red : C.orangeDark;
+        roundRect(ctx, cx, cy, cw, 98, 4, '#FFFFFF');
+        roundRect(ctx, cx, cy, 6, 98, 0, color);
+        ctx.font = font(900, 13);
+        ctx.fillStyle = C.grey;
+        ctx.fillText(`${c.kind === 'europe' ? '🌍' : '🏆'} ${caps(wrap(ctx, c.competition, cw - 40, 1)[0]!)}`, cx + 20, cy + 26);
+        const status = t(`gazette.page.cup.${c.status}`, { opponent: c.outBy?.opponent ?? '?', count: c.ties.length });
+        ctx.font = font(900, 22, SERIF);
+        ctx.fillStyle = color;
+        ctx.fillText(wrap(ctx, status, cw - 36, 1)[0]!, cx + 20, cy + 56);
+        ctx.font = font(700, 14);
+        ctx.fillStyle = C.grey;
+        ctx.fillText(t('gazette.page.cup.line', { record: `${c.wins}-${c.draws}-${c.losses}`, count: c.ties.length }), cx + 20, cy + 82);
+      });
+      y += Math.ceil(cups.length / per) * 112 - 14;
+    }
   }
 
   // Prochain rendez-vous : encadré sombre, les deux logos face à face.
