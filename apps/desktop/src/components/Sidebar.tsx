@@ -7,6 +7,7 @@ import { shownGameDate, useCareer, useCareerStore } from '../lib/career';
 import { CLUB_PAGES, pageOf, type ClubPage } from '../lib/club-nav';
 import { coachPhotoSource, type CoachPhotoCrop } from '../lib/coach-photo';
 import { fmData } from '../lib/data';
+import { useGameStatus } from '../lib/game';
 import { useFacesDirs, useFacesUpdate } from '../lib/faces';
 import { CoachPhotoEditor, type CoachPhotoResult } from './CoachPhotoEditor';
 
@@ -65,14 +66,10 @@ function Item({ to, icon, label, active, end, badge }: { to: string; icon: strin
 
 const Count = ({ n, label }: { n: number; label: string }) =>
   n > 0 ? (
-    <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-orange-fonce px-1.5 text-xs font-extrabold tabular-nums text-white" aria-label={label} title={label}>
+    <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-white/15 px-1.5 text-xs font-extrabold tabular-nums text-white" aria-label={label} title={label}>
       {n}
     </span>
   ) : null;
-
-const Soft = ({ children }: { children: ReactNode }) => (
-  <span className="rounded bg-white/10 px-1.5 py-0.5 text-[0.6875rem] font-bold uppercase tracking-wide text-white/70">{children}</span>
-);
 
 /**
  * Barre latérale unique : la carrière suivie en haut (photo du coach, club, date, lecture du plugin), puis un lien
@@ -118,11 +115,15 @@ export function Sidebar() {
           to="/visages"
           icon="faces"
           label={t('layout.nav.faces')}
-          badge={facesOffer ? <span className="h-2 w-2 rounded-full bg-orange" aria-label={t('faces.update.badge')} /> : null}
+          badge={facesOffer ? <span className="h-2 w-2 rounded-full bg-white/70" aria-label={t('faces.update.badge')} /> : null}
         />
         <Item to="/reglages" icon="settings" label={t('layout.nav.settings')} badge={bridgeOk === false ? <span className="h-2 w-2 rounded-full bg-ambre" aria-label={t('layout.bridgeAction')} /> : null} />
-        <Item to="/monde" icon="world" label={t('modes.world.title')} badge={<Soft>{t('modes.soon')}</Soft>} />
       </nav>
+
+      {/* Fonctions pas encore utilisables : une ligne discrète, pas une destination de plus. */}
+      <Link to="/monde" className="mx-3 mt-4 text-xs text-white/45 hover:text-white/80">
+        {t('layout.dev', { name: t('modes.world.title') })}
+      </Link>
 
       <div className="mt-auto flex items-center justify-between px-3 pt-6 text-xs font-bold text-white/60">
         <button type="button" className="hover:text-white" onClick={() => i18n.changeLanguage(otherLang)}>
@@ -217,6 +218,7 @@ function CareerCard() {
           <p className="line-clamp-2 break-words text-sm font-extrabold leading-snug" title={save?.name}>{save?.name}</p>
           <p className="truncate text-xs text-white/70">{free ? t('layout.career.free') : (snapshot?.club ?? t('layout.career.noData'))}</p>
           {snapshot && gameDate && <p className="truncate text-xs text-white/70">{dateFmt.format(new Date(gameDate))}</p>}
+          {snapshot && <LastRead importedAt={snapshot.importedAt} />}
         </div>
       </div>
       {(photo.isError || readError) && <p className="mt-2 text-xs font-bold text-white">{t('layout.career.photoError')}</p>}
@@ -226,7 +228,7 @@ function CareerCard() {
             {t('layout.career.switch')} ▾
           </button>
         )}
-        <button type="button" className="text-orange hover:text-white" onClick={editPhoto}>
+        <button type="button" className="hover:text-white" onClick={editPhoto}>
           {t(settings?.coachPhoto ? 'layout.career.adjustPhoto' : 'layout.career.addPhoto')}
         </button>
         {settings?.coachPhoto && (
@@ -279,5 +281,21 @@ function SearchButton() {
       <span>{t('search.button')}</span>
       <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-sans text-xs">Ctrl K</kbd>
     </button>
+  );
+}
+
+/**
+ * Dernière lecture du plugin. FM27 fermé, l'appli montre la dernière situation connue : la date de lecture le dit
+ * clairement. Jeu ouvert, elle reste discrète.
+ */
+function LastRead({ importedAt }: { importedAt: string }) {
+  const { t, i18n } = useTranslation();
+  const { status } = useGameStatus();
+  const fmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const closed = status?.gameFound && !status.running;
+  return (
+    <p className={`truncate text-xs ${closed ? 'font-bold text-ambre' : 'text-white/50'}`} title={t('layout.career.lastReadHelp')}>
+      {t(closed ? 'layout.career.lastReadClosed' : 'layout.career.lastRead', { date: fmt.format(new Date(importedAt)) })}
+    </p>
   );
 }

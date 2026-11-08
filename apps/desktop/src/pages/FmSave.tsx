@@ -454,8 +454,12 @@ function SettingsPage({
     onSuccess: () => qc.invalidateQueries({ queryKey: [...key, 'settings'] }),
   });
 
+  // Connecter FM27 : une seule prochaine étape, dans l'ordre où elles se font.
+  const bridgeOk = useCareerStore((s) => s.sync.bridgeOk);
+  const next = bridgeOk === false ? 'plugin' : !linked ? 'save' : !club ? 'read' : 'done';
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <header>
         <h1 className="text-3xl font-semibold">{t('layout.nav.settings')}</h1>
         <p className="mt-1 max-w-3xl text-brun">
@@ -465,7 +469,32 @@ function SettingsPage({
           </Link>
         </p>
       </header>
-      <div className="card space-y-3 p-4">
+
+      <section className="card space-y-4 p-5" aria-labelledby="connect-fm">
+        <h2 id="connect-fm" className="text-lg">{t('layout.connect.title')}</h2>
+        <NextStep step={next} club={club} />
+        <FmBridge dataFolder={folder} onHealth={onHealth} />
+        <label className="block text-sm font-bold text-canard">
+          {t('fm.saveFile.label')}
+          <select
+            className="input mt-1 block max-w-[20rem] py-1.5 font-normal"
+            value={linked}
+            disabled={link.isPending}
+            onChange={(e) => link.mutate(e.target.value)}
+            title={t('fm.saveFile.help')}
+          >
+            <option value="">{t('fm.saveFile.none')}</option>
+            {linked && !linkedFile && <option value={linked}>{t('fm.saveFile.missing', { name: linked })}</option>}
+            {saveFiles?.map((f) => (
+              <option key={f.name} value={f.name}>
+                {f.name.replace(/\.fm$/i, '')}
+              </option>
+            ))}
+          </select>
+          <span className="mt-1 block text-xs font-normal text-brun">
+            {linkedFile?.modifiedMs != null ? t('fm.saveFile.saved', { date: stampFmt.format(new Date(linkedFile.modifiedMs)) }) : t('fm.saveFile.help')}
+          </span>
+        </label>
         <form
           className="flex flex-wrap items-end gap-x-5 gap-y-3"
           onSubmit={(e) => {
@@ -478,54 +507,50 @@ function SettingsPage({
             <input className="input mt-1 w-full font-normal" required value={input} onChange={(e) => setInput(e.target.value)} />
             <span className="mt-1 block text-xs font-normal text-brun">{t('fm.folderHelp')}</span>
           </label>
-          <label className="block text-sm font-bold text-canard">
-            {t('fm.saveFile.label')}
-            <select
-              className="input mt-1 block max-w-[16rem] py-1.5 font-normal"
-              value={linked}
-              disabled={link.isPending}
-              onChange={(e) => link.mutate(e.target.value)}
-              title={t('fm.saveFile.help')}
-            >
-              <option value="">{t('fm.saveFile.none')}</option>
-              {linked && !linkedFile && <option value={linked}>{t('fm.saveFile.missing', { name: linked })}</option>}
-              {saveFiles?.map((f) => (
-                <option key={f.name} value={f.name}>
-                  {f.name.replace(/\.fm$/i, '')}
-                </option>
-              ))}
-            </select>
-            {linkedFile?.modifiedMs != null && (
-              <span className="mt-1 block text-xs font-normal text-brun">{t('fm.saveFile.saved', { date: stampFmt.format(new Date(linkedFile.modifiedMs)) })}</span>
-            )}
-          </label>
-          <div className="space-y-1.5">
-            <label className="flex items-center gap-1.5 text-sm text-canard" title={t('fm.abilities.help')}>
-              <input
-                type="checkbox"
-                checked={!!settings?.fmReadAbilities}
-                onChange={async (e) => {
-                  await fmData.updateSettings(saveId, { fmReadAbilities: e.target.checked });
-                  qc.invalidateQueries({ queryKey: [...key, 'settings'] });
-                }}
-              />
-              {t('fm.abilities.toggle')}
-            </label>
-            <div className="flex items-center gap-3">
-              <button className="btn-primary px-4 py-1.5 text-sm" disabled={importing || !input}>
-                {t('fm.import')}
-              </button>
-              <span className="text-xs text-brun">{t('fm.autoImport')}</span>
-            </div>
+          <div className="flex items-center gap-3">
+            <button className="btn-primary px-4 py-1.5 text-sm" disabled={importing || !input}>
+              {t('fm.import')}
+            </button>
+            <span className="text-xs text-brun">{t('fm.autoImport')}</span>
           </div>
         </form>
-        <FmHistoryImport saveId={saveId} folder={folder} club={club} />
-        <FmBridge dataFolder={folder} onHealth={onHealth} />
+      </section>
+
+      <section className="space-y-4" aria-labelledby="advanced">
+        <h2 id="advanced" className="text-lg">{t('layout.connect.advanced')}</h2>
+        <div className="card space-y-3 p-4">
+          <label className="flex items-center gap-1.5 text-sm text-canard" title={t('fm.abilities.help')}>
+            <input
+              type="checkbox"
+              checked={!!settings?.fmReadAbilities}
+              onChange={async (e) => {
+                await fmData.updateSettings(saveId, { fmReadAbilities: e.target.checked });
+                qc.invalidateQueries({ queryKey: [...key, 'settings'] });
+              }}
+            />
+            {t('fm.abilities.toggle')}
+          </label>
+          <FmHistoryImport saveId={saveId} folder={folder} club={club} />
+          <FmMemory />
+        </div>
         <FmBridgeOptions />
-        <FmMemory />
-      </div>
-      <AiSettingsCard />
+        <AiSettingsCard />
+      </section>
     </div>
+  );
+}
+
+/** Prochaine étape pour relier FM27 : installer le plugin, choisir la sauvegarde, lancer la première lecture. */
+export function NextStep({ step, club }: { step: 'career' | 'plugin' | 'save' | 'read' | 'done'; club?: string | null }) {
+  const { t } = useTranslation();
+  const done = step === 'done';
+  return (
+    <p className={`flex items-start gap-2 rounded-lg px-3 py-2 text-sm ${done ? 'bg-eau/15' : 'bg-orange-clair'}`} role="status">
+      <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${done ? 'bg-eau-fonce' : 'bg-orange-fonce'}`} aria-hidden />
+      <span>
+        <b>{t(done ? 'layout.connect.ready' : 'layout.connect.next')}</b> {t(`layout.connect.step.${step}`, { club: club ?? '' })}
+      </span>
+    </p>
   );
 }
 
@@ -961,5 +986,36 @@ function ControlBoard({ saveId, go }: { saveId: string; go: (v: string) => void 
         () => navigate('/reglages'),
       )}
     </nav>
+  );
+}
+
+/**
+ * « Plugin et réglages » sans carrière : la première étape est de créer sa carrière, mais le plugin peut déjà être
+ * installé (il écrit dans le dossier par défaut de FM27).
+ */
+export function SettingsWithoutCareer() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const setCreateSaveOpen = useUi((s) => s.setCreateSaveOpen);
+  const { data: folder } = useQuery({ queryKey: ['fm', 'default-folder'], queryFn: () => invoke<string | null>('fm_default_folder') });
+  return (
+    <div className="mx-auto w-full max-w-[96rem] space-y-6 px-6 py-5 xl:px-10">
+      <h1 className="text-3xl font-semibold">{t('layout.nav.settings')}</h1>
+      <section className="card space-y-4 p-5" aria-labelledby="connect-fm">
+        <h2 id="connect-fm" className="text-lg">{t('layout.connect.title')}</h2>
+        <NextStep step="career" />
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={() => {
+            setCreateSaveOpen(true);
+            navigate('/parties');
+          }}
+        >
+          {t('layout.connect.createCareer')}
+        </button>
+        {folder && <FmBridge dataFolder={folder} />}
+      </section>
+    </div>
   );
 }
