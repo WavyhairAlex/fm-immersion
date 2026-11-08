@@ -3088,7 +3088,13 @@
       "finalL_2": "Pas de points cette fois, {{club}} s'incline {{score}}.",
       "final_0": "Fin du match : {{home}} {{score}} {{away}}.",
       "final_1": "Coup de sifflet final, {{score}}.",
-      "final_2": "C'est terminé : {{home}} {{score}} {{away}}."
+      "final_2": "C'est terminé : {{home}} {{score}} {{away}}.",
+      "for_ownGoal_0": "Cadeau ! {{scorer}} trompe son propre gardien ({{minute}}) et {{team}} en profite : {{score}}.",
+      "for_ownGoal_1": "Un coup de pouce du destin : {{scorer}} marque contre son camp ({{minute}}). {{team}} ne dira pas non, {{score}}.",
+      "for_ownGoal_2": "Malheur pour {{scorer}}, qui dévie dans ses propres filets ({{minute}}). {{score}}, et {{team}} remercie.",
+      "against_ownGoal_0": "Coup du sort : {{scorer}} marque contre son camp ({{minute}}), et c'est {{team}} qui en profite. {{score}}.",
+      "against_ownGoal_1": "Quelle malchance ! {{scorer}} trompe son propre gardien ({{minute}}) : but pour {{team}}, {{score}}.",
+      "against_ownGoal_2": "Le but le plus cruel : {{scorer}} dévie dans ses propres filets ({{minute}}). {{team}} n'en demandait pas tant, {{score}}."
     },
     "fact": {
       "hattrick": "Triplé pour {{scorer}} !",
@@ -3141,7 +3147,9 @@
       "yellowFor": "Carton jaune pour {{player}} ({{team}}, {{minute}}e)",
       "yellowAgainst": "Carton jaune côté {{team}} : {{player}} ({{minute}}e)",
       "redFor": "CARTON ROUGE ! {{player}} est expulsé ({{team}}, {{minute}}e)",
-      "redAgainst": "Carton rouge pour {{team}} : {{player}} expulsé ({{minute}}e)"
+      "redAgainst": "Carton rouge pour {{team}} : {{player}} expulsé ({{minute}}e)",
+      "ownGoalFor": "Contre son camp ! {{player}} offre le but à {{team}} ({{minute}})",
+      "ownGoalAgainst": "Contre son camp… {{player}} trompe son propre gardien, but pour {{team}} ({{minute}})"
     },
     "cards": "Cartons"
   },
