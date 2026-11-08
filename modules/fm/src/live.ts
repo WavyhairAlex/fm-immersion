@@ -5,16 +5,24 @@ import { z } from 'zod';
  * Lu dans le jeu sur le match du manager humain : score, minute affichée (« 19 min. », « FDM » à la fin),
  * buteurs en texte du jeu (« L. Carrero pen 36', M. Fábry 11', 90+1' »), fin du match.
  */
-/** Événement du match tel que le jeu le liste (`HomeEventInfos`) : type 0 but, 2 penalty ; temps affiché (« pen 36' »). */
-export const fmLiveEventSchema = z.object({ type: z.number().nullish(), time: z.string().nullish(), slice: z.number().nullish() }).passthrough();
+/**
+ * Événement du match tel que le jeu le liste (`HomeEventInfos`) : type 0 but, 2 penalty ; temps affiché (« pen 36' »).
+ * En fin de match (plugin 0.5.4, rapport du match), `player` = buteur et `assist` = passeur décisif (null sans passe).
+ */
+export const fmLiveEventSchema = z
+  .object({ type: z.number().nullish(), time: z.string().nullish(), slice: z.number().nullish(), player: z.string().nullish(), assist: z.string().nullish() })
+  .passthrough();
+export type FmLiveEvent = z.infer<typeof fmLiveEventSchema>;
 
 /**
- * Joueur de la feuille de match (plugin 0.5.2, `HomeLineup`/`AwayLineup`) : buts, passes décisives et cartons dans ce
- * match. C'est de là que viennent les passeurs et les cartons du direct.
+ * Joueur de la feuille de match (`HomeLineup`/`AwayLineup`), connue en fin de match (plugin 0.5.4) : note et événements
+ * bruts du jeu (`events`). Les compteurs `goals`/`assists`/`yellow`/`red` sont prévus pour quand le plugin saura les lire.
  */
 export const fmLivePlayerSchema = z
   .object({
     name: z.string(),
+    rating: z.number().nullish(),
+    events: z.array(z.unknown()).nullish(),
     goals: z.number().nullish(),
     assists: z.number().nullish(),
     yellow: z.boolean().nullish(),
@@ -47,6 +55,25 @@ export type FmLivePlayer = z.infer<typeof fmLivePlayerSchema>;
 
 /** But sur penalty : le jeu préfixe la minute (« pen 36' »). */
 export const isPenalty = (time: string | null | undefined) => /^pen/i.test(time ?? '');
+
+/** Passe décisive connue du rapport de match : passeur, buteur, minute, côté. */
+export interface LiveAssist {
+  side: 'home' | 'away';
+  assist: string;
+  player: string | null;
+  time: string | null;
+}
+
+/** Passes décisives du relevé (événements avec `assist`, dans l'ordre du jeu) : vide tant que le rapport n'est pas lu. */
+export function liveAssists(l: FmLive): LiveAssist[] {
+  const out: LiveAssist[] = [];
+  for (const side of ['home', 'away'] as const) {
+    for (const e of (side === 'home' ? l.homeEvents : l.awayEvents) ?? []) {
+      if (e.assist) out.push({ side, assist: e.assist, player: e.player ?? null, time: e.time ?? null });
+    }
+  }
+  return out;
+}
 
 /** Un but du texte des buteurs : nom et minute telle que le jeu l'affiche (« pen 36' », « 90+1' »). */
 export interface LiveGoal {
@@ -149,6 +176,11 @@ export function liveNews(prev: FmLive | null, cur: FmLive): LiveNews[] {
     if (before && after) {
       const passers = increased(before, after, 'assists').filter((n) => n !== g.scorer!.name);
       if (passers.length === 1) g.assist = passers[0]!;
+    }
+    // Rapport de match déjà là (but dans les dernières minutes) : le passeur est sur l'événement du but.
+    if (!g.assist) {
+      const ev = liveAssists(cur).find((a) => a.side === g.side && a.time === g.scorer!.time);
+      if (ev) g.assist = ev.assist;
     }
   }
   news.push(...liveCards(prev, cur));

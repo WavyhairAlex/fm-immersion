@@ -1,4 +1,4 @@
-import { type FmLive, fmLiveSchema, gameLastMatch, isFriendly, isPenalty, liveCardList, type LiveCardNews, type LiveGoalNews, liveIsFresh, liveKey, liveNews, parseScorers } from '@fm-immersion/module-fm';
+import { type FmLive, fmLiveSchema, gameLastMatch, isFriendly, isPenalty, liveAssists, liveCardList, type LiveCardNews, type LiveGoalNews, liveIsFresh, liveKey, liveNews, parseScorers } from '@fm-immersion/module-fm';
 import { invoke } from '@tauri-apps/api/core';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
@@ -280,6 +280,9 @@ export function matchFigures(t: TFunction, l: FmLive): string | null {
   const lines = [t('live.figures.halves', { first: half(true), second: half(false) }), t('live.figures.first', { scorer: first.name, minute: first.time })];
   const pens = tl.filter((g) => /^pen/i.test(g.time)).length;
   if (pens) lines.push(t('live.figures.penalties', { count: pens }));
+  // Passeurs décisifs du rapport de match (plugin 0.5.4, connus à la fin) : « 🅰️ A. Mojžiš → M. Fábry (37') ».
+  const assists = liveAssists(l).map((a) => `${a.assist}${a.player ? ` → ${a.player}` : ''}${a.time ? ` (${a.time})` : ''}`);
+  if (assists.length) lines.push(`🅰️ ${t('live.figures.assists', { names: assists.join(', ') })}`);
   return [...game, ...lines].join('\n');
 }
 
@@ -662,8 +665,8 @@ export async function liveStep(
   if (state.done) return state;
   const changed =
     liveNews(state.last, l).length > 0 ||
-    JSON.stringify([state.last.minute, state.last.homeScore, state.last.awayScore, state.last.scorers, state.last.final, liveCardList(state.last)]) !==
-      JSON.stringify([l.minute, l.homeScore, l.awayScore, l.scorers, l.final, liveCardList(l)]);
+    JSON.stringify([state.last.minute, state.last.homeScore, state.last.awayScore, state.last.scorers, state.last.final, liveCardList(state.last), liveAssists(state.last)]) !==
+      JSON.stringify([l.minute, l.homeScore, l.awayScore, l.scorers, l.final, liveCardList(l), liveAssists(l)]);
   let messageId = state.messageId;
   if (changed) {
     try {

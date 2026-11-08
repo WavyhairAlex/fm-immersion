@@ -2978,7 +2978,7 @@
     "intro": "During your FM27 matches, one card is posted to your channel and updated every 15 seconds (scoreboard image, minute, goal timeline, commentator line), and every key moment (goal, half-time, final whistle) arrives as its own message, like a live match feed.",
     "enable": "Tell my matches live on Discord",
     "needWebhook": "First link a channel with the webhook link above.",
-    "plugin": "Requires the FM27 plugin 0.5.0 or later, and FM Immersion open during the match. Sent: score, scorers, converted penalties, half-time and full-time; with plugin 0.5.2, assists and cards too.",
+    "plugin": "Requires the FM27 plugin 0.5.0 or later, and FM Immersion open during the match. Sent: score, scorers, converted penalties, half-time and full-time; with plugin 0.5.4, assists in the full-time summary.",
     "liveTag": "🔴 LIVE",
     "finalTag": "🏁 FULL TIME",
     "kickoff": "Kick-off",
@@ -3102,7 +3102,8 @@
       "shots": "Shots: {{home}} ({{homeOn}} on target) · {{away}} ({{awayOn}} on target)",
       "xg": "xG: {{home}} · {{away}}",
       "motm": "Player of the match: {{name}} ({{rating}})",
-      "motmNoRating": "Player of the match: {{name}}"
+      "motmNoRating": "Player of the match: {{name}}",
+      "assists": "Assists: {{names}}"
     },
     "prematch": {
       "title": "Pre-match",
