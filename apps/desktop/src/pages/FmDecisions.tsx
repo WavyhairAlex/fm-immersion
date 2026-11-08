@@ -1,4 +1,4 @@
-import { POS_LABEL, decisions, styleOfGameTactic, type Basis, type Decision, type FmPlayer, type FmSnapshot, type SquadAt } from '@fm-immersion/module-fm';
+import { POS_LABEL, decisions, formationOfSlots, knownFormation, styleOfGameTactic, tacticSlots, type Basis, type Decision, type FmPlayer, type FmSnapshot, type SquadAt } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticChoice } from './FmTactic';
@@ -17,7 +17,8 @@ export function useDecisions(snap: FmSnapshot, players: FmPlayer[], folder: stri
   const gameTactic = typeof snap.tactic?.name === 'string' ? snap.tactic.name : null;
   const base = useMemo(() => styleOfGameTactic(gameTactic, engine.ref.styles), [gameTactic, engine]);
   const { ids: leavingIds } = useLeaving();
-  return useMemo(() => decisions(engine, players, snap.gameDate, coach, history, base, leavingIds), [engine, players, snap.gameDate, coach, history, base, leavingIds]);
+  const baseForm = useMemo(() => knownFormation(gameTactic) ?? formationOfSlots(tacticSlots(snap.tactic)), [gameTactic, snap.tactic]);
+  return useMemo(() => decisions(engine, players, snap.gameDate, coach, history, base, leavingIds, baseForm), [engine, players, snap.gameDate, coach, history, base, leavingIds, baseForm]);
 }
 
 /** Valeurs des textes d'une décision (noms, poste, styles traduits). */

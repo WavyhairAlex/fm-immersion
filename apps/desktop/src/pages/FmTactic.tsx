@@ -98,10 +98,11 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
   // Sans choix du joueur : la meilleure tactique applicable, ou le projet dès qu'il devient le meilleur.
   // Tactique de base : celle jouée dans FM27 (d'après son nom), gardée tant qu'une autre ne gagne pas nettement.
   const base = useMemo(() => styleOfGameTactic(gameTactic, engine.ref.styles), [gameTactic, engine]);
-  const pick = useMemo(() => bestTactic(engine, avail, coach, ranked, base), [engine, avail, coach, ranked, base]);
+  const gameForm0 = knownFormation(gameFormation);
+  const pick = useMemo(() => bestTactic(engine, avail, coach, ranked, base, gameForm0), [engine, avail, coach, ranked, base, gameForm0]);
   const auto = !prefs.style;
   const style = (auto ? pick?.style : ranked.find((r) => r.style.id === prefs.style)?.style) ?? ranked[0]?.style;
-  const gameForm = knownFormation(gameFormation);
+  const gameForm = gameForm0;
   const natural = (style && STYLE_FORMS[style.id]?.filter((f) => FORMATIONS[f])) || ['4-3-3'];
   const form = prefs.form && FORMATIONS[prefs.form] ? prefs.form : auto && pick ? pick.form : (gameForm ?? natural[0] ?? '4-3-3');
   const plans = useMemo(() => ranked.find((r) => r.style.id === style?.id)?.plans ?? [], [ranked, style]);

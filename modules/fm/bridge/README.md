@@ -24,7 +24,7 @@ le club et le prochain match via le système de bindings de l'interface du jeu, 
 `BepInEx\config\fr.archivix.bridge.cfg`, clé `Dossier` : dossier où écrire les instantanés.
 Par défaut `Documents\Sports Interactive\Football Manager 27\archivix`. FM Immersion le renseigne à l'installation.
 
-Autres clés : `LireTactique` (non par défaut), `LireEfficacite` (non par défaut, expérimental),
+Autres clés : `LireTactique` (non par défaut), `LireEfficacite` (oui par défaut depuis 0.5.5),
 `LireCompo` (non par défaut, expérimental : joueur à chaque poste), `LireJoueursEtendus` (non par défaut, expérimental : moral, hiérarchie, étoiles du staff), `LireCibles` (non par défaut, expérimental : cibles du mercato), `Decouverte` (oui par défaut : rapport
 `archivix\config\decouverte.json`), `ServeurLocal` (non par défaut depuis 0.4.5 : serveur `http://localhost:8727`, sans
 en-tête CORS, inutile pour FM Immersion ; un port déjà pris n'empêche plus le plugin de démarrer), `RelectureSecondes` (300 par défaut, 60 au minimum : relecture complète même sans
@@ -80,6 +80,9 @@ des tables statiques de l'interface (aucune requête au jeu).
   happinessManagement, happinessPlayingTime, happinessTraining, hierarchy, currentStars, potentialStars, personality,
   mediaHandling, currentAbility, potentialAbility }` (champs absents si le jeu ne répond pas).
 - Efficacité tactique (si `LireEfficacite`) : désormais lue avec son contexte `{human}`.
+- 0.5.5 : la tactique (bloc `tactic`, section `tactique` de `chemins.json`, efficacité) est celle que renvoie l'équipe,
+  `GameCurrentManagerClubTeam/Tactic{Boolean=true}`. La référence construite à la main tombait sur un « 4-4-2 » par
+  défaut, sans efficacité ; avec la bonne, le jeu répond (08/11/2026 : « 4-1-5 MD 2MO… », efficacité 43 %).
 - `collecte` : `{ "tactique" | "efficacite" | "compo": "lue" | "désactivée (réglage)" | "sautée : …" | "erreur : …" }`.
 
 ## Cibles du mercato (0.4.0, réglage `LireCibles`)
