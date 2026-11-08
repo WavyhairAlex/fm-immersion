@@ -11,7 +11,8 @@ import { fmData } from '../lib/data';
 import { getWebhook, isWebhook } from '../lib/discord';
 import { markGazetteSent, markSeasonSent, sendGazette, sendSeason } from '../lib/gazette-auto';
 import { articleText, editorialText, paperName, storyText, weekLabel } from '../lib/gazette-text';
-import { drawUne, recentForm } from '../lib/gazette-une';
+import { drawPage } from '../lib/gazette-page';
+import { recentForm } from '../lib/gazette-une';
 import { loadFace } from '../lib/player-face';
 import { drawSeason } from '../lib/season-une';
 
@@ -147,9 +148,9 @@ function UnePreview({ issues, index, figures, looks }: { issues: GazetteIssue[];
   const { data: url } = useQuery({
     queryKey: ['gazette', 'une', issue.club, issue.weekStart, issue.date, lang, index, issues.length, figures?.end, figures?.played, looks],
     queryFn: async () =>
-      (await drawUne(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures })).toDataURL('image/png'),
+      (await drawPage(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures })).toDataURL('image/png'),
   });
-  if (!url) return <div className="aspect-video w-full animate-pulse rounded-xl bg-canard/5" />;
+  if (!url) return <div className="aspect-[3/4] w-full animate-pulse rounded-xl bg-canard/5" />;
   return <img src={url} alt={t('gazette.preview')} className="w-full rounded-xl shadow-sm ring-1 ring-canard/10" />;
 }
 

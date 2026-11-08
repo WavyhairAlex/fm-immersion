@@ -2908,6 +2908,9 @@
       "board_quiet_0": "La direction travaille en coulisses.",
       "board_quiet_1": "Rien ne filtre des bureaux cette semaine.",
       "board_quiet_2": "La direction prépare les prochaines échéances."
+    },
+    "page": {
+      "story": "Le récit du match"
     }
   },
   "discord": {

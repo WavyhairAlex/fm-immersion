@@ -2908,6 +2908,9 @@
       "board_quiet_0": "The board is working behind the scenes.",
       "board_quiet_1": "Nothing leaks from the offices this week.",
       "board_quiet_2": "The board is preparing the next deadlines."
+    },
+    "page": {
+      "story": "Match report"
     }
   },
   "discord": {
