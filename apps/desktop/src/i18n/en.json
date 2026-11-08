@@ -3610,6 +3610,13 @@
       "open": "FM27 open",
       "closed": "FM27 closed",
       "plugin": "Plugin needs attention"
+    },
+    "board": {
+      "label": "Dashboard",
+      "calm": "Nothing to do here.",
+      "open": "Open",
+      "more": "{{text}} (+{{count}})",
+      "game": "Game and plugin"
     }
   },
   "ai": {
