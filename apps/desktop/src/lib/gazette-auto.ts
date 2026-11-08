@@ -26,7 +26,7 @@ export async function sendGazette(
 ) {
   const issue = issues[index]!;
   // Tout le journal sur une seule image (page complète), avec un court encart : pas de long texte dans le salon.
-  const png = await canvasPng(await drawPage(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures }));
+  const png = await canvasPng(await drawPage(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures, faceFor: loadFace }));
   return sendDiscordImage(discordPagePayload(t, issue, lang), png, webhook);
 }
 
