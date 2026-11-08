@@ -12,3 +12,5 @@ target/
 modules/fm/bridge/bin/
 modules/fm/bridge/obj/
 modules/fm/bridge/dist/
+modules/fm/coach-photo/bin/
+modules/fm/coach-photo/obj/

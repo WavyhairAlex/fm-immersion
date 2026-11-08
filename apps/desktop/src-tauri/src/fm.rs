@@ -2,7 +2,8 @@
 //!
 //! Le plugin (lecture seule dans le jeu) dépose `archivix-snapshot.json` dans un
 //! dossier `archivix` à côté des sauvegardes. Ce module se contente de lire ce fichier,
-//! jamais la sauvegarde, et n'écrit rien dans ce dossier. La lecture directe de la base
+//! jamais la sauvegarde. Seule écriture dans ce dossier : `photo-coach.png`, la photo du coach choisie
+//! par le joueur, que le plugin CoachPhoto affiche dans FM27 à la place du portrait 3D. La lecture directe de la base
 //! du jeu en mémoire (à la demande du joueur, lecture seule) est dans `fm_memory.rs`.
 
 use serde::{Serialize, Serializer};
@@ -27,6 +28,8 @@ pub enum FmError {
     NotFound,
     #[error("fichier trop volumineux")]
     TooLarge,
+    #[error("ce n'est pas une image PNG")]
+    NotPng,
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }
@@ -87,6 +90,46 @@ pub fn fm_read_live(folder: String) -> Result<Option<String>, FmError> {
         Err(FmError::NotFound) => Ok(None),
         Err(e) => Err(e),
     }
+}
+
+/// Photo du coach pour le plugin CoachPhoto : nom fixe, la commande ne peut écrire aucun autre fichier.
+pub const COACH_PHOTO_FILE: &str = "photo-coach.png";
+/// La photo est recadrée en PNG de quelques dizaines de Ko par l'interface ; au-delà, ce n'est pas elle.
+const MAX_PHOTO_BYTES: usize = 2 * 1024 * 1024;
+
+pub fn write_coach_photo(folder: &Path, png: Option<&[u8]>) -> Result<(), FmError> {
+    if !folder.is_absolute() || !folder.is_dir() {
+        return Err(FmError::InvalidFolder);
+    }
+    let path = folder.join(COACH_PHOTO_FILE);
+    match png {
+        None => match std::fs::remove_file(&path) {
+            Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e.into()),
+            _ => Ok(()),
+        },
+        Some(bytes) => {
+            if bytes.len() > MAX_PHOTO_BYTES {
+                return Err(FmError::TooLarge);
+            }
+            if !bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
+                return Err(FmError::NotPng);
+            }
+            if std::fs::read(&path).map(|old| old == bytes).unwrap_or(false) {
+                return Ok(()); // déjà à jour : le plugin ne recharge pas la photo pour rien
+            }
+            // Écriture atomique : le plugin ne lit jamais une image à moitié écrite.
+            let tmp = folder.join(format!("{COACH_PHOTO_FILE}.tmp"));
+            std::fs::write(&tmp, bytes)?;
+            std::fs::rename(&tmp, &path)?;
+            Ok(())
+        }
+    }
+}
+
+/// Écrit (ou retire, `png` vide) la photo du coach dans le dossier du plugin.
+#[tauri::command]
+pub fn fm_write_coach_photo(folder: String, png: Option<Vec<u8>>) -> Result<(), FmError> {
+    write_coach_photo(Path::new(&folder), png.as_deref())
 }
 
 /// Instantané daté gardé par le plugin (`archivix-AAAA-MM-JJ.json`, un par jour de jeu) : date, club, taille.
@@ -236,6 +279,21 @@ pub fn fm_list_saves(folder: String) -> Vec<FmSaveFile> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ecrit_et_retire_la_photo_du_coach() {
+        let dir = std::env::temp_dir().join(format!("fmi-photo-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let png = b"\x89PNG\r\n\x1a\nreste";
+        write_coach_photo(&dir, Some(png)).unwrap();
+        assert_eq!(std::fs::read(dir.join(COACH_PHOTO_FILE)).unwrap(), png);
+        assert!(matches!(write_coach_photo(&dir, Some(b"GIF89a")), Err(FmError::NotPng)));
+        assert!(matches!(write_coach_photo(Path::new("relatif"), Some(png)), Err(FmError::InvalidFolder)));
+        write_coach_photo(&dir, None).unwrap();
+        assert!(!dir.join(COACH_PHOTO_FILE).exists());
+        write_coach_photo(&dir, None).unwrap(); // déjà retirée : pas d'erreur
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
 
     #[test]
     fn lit_le_fichier_du_plugin() {
