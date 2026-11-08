@@ -16,7 +16,8 @@ extraite avec son historique ; Simloom garde Planet Zoo 2 et Transport Fever 3.
   « v2-progression » de FM27-Photorealistic-Faces, puis le zip du pack V2 sur clic du joueur (`src-tauri/src/faces_remote.rs`,
   SHA-256 + CRC vérifiés).
   Exception choisie par le joueur : le **Live Discord** envoie une gazette à son salon par le lien webhook qu'il a
-  collé (`src-tauri/src/discord.rs`, seulement vers `discord.com/api/webhooks/`, seulement sur son clic), et un certificat de
+  collé (`src-tauri/src/discord.rs`, seulement vers `discord.com/api/webhooks/`, seulement ce qu'il a choisi : gazette sur son clic ou chaque semaine s'il a coché l'envoi automatique,
+  direct de ses matchs s'il l'a activé), et un certificat de
   défi joint (`modules/fm/src/challenges.ts`, mode Défis) quand il clique sur « Partager sur Discord ».
   Autre exception choisie par le joueur : la **rédaction par IA** (`src-tauri/src/ai.rs`, `src/lib/ai.ts`), coupée par
   défaut : Ollama local (`127.0.0.1:11434`) ou sa clé API (Mistral, Anthropic, Google, adresses fixes ; clé dans le

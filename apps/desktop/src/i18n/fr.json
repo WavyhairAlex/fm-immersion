@@ -3291,8 +3291,21 @@
         "xg": "xG"
       },
       "board": "Direction",
-      "vs": "vs"
-    }
+      "vs": "vs",
+      "keyFigure": "Le chiffre",
+      "stampUp_one": "+{{count}} place",
+      "stampUp_other": "+{{count}} places",
+      "stampDown_one": "-{{count}} place",
+      "stampDown_other": "-{{count}} places",
+      "figure": {
+        "shots": "tirs, contre {{them}} pour {{opponent}} : un match à sens unique.",
+        "shotsAgainst": "tirs subis, pour {{us}} tentés : l’adversaire a fait le siège.",
+        "possession": "de possession sur l’ensemble du match.",
+        "xg": "xG produits, contre {{them}} pour {{opponent}}."
+      }
+    },
+    "actions": "Réécrire et partager",
+    "emptyHow": "FM Immersion lit ta partie à chaque jour de jeu grâce au plugin FM27 ; la gazette s’écrit à partir de ces lectures, une par semaine."
   },
   "discord": {
     "autoTitle": "Gazette automatique",
@@ -3316,14 +3329,13 @@
     "privacy": "Le lien reste sur ton PC. FM Immersion n'envoie rien à Discord sans ton clic, et seulement vers l'adresse des webhooks de Discord.",
     "status": {
       "title": "Ce qui est branché",
-      "channel": "Salon",
-      "live": "Direct",
-      "auto": "Gazette auto",
-      "ai": "IA",
-      "linked": "Relié",
-      "notLinked": "Pas relié",
-      "on": "Activé",
-      "off": "Coupé"
+      "none": "Aucun salon relié : rien ne part sur Discord.",
+      "liveOn": "Direct des matchs activé",
+      "liveOff": "Direct des matchs désactivé",
+      "autoOn": "Gazette automatique activée",
+      "autoOff": "Gazette automatique désactivée",
+      "aiOn": "Textes rédigés par l’IA ({{model}}).",
+      "aiOff": "Textes tout faits (rédaction par IA coupée)."
     },
     "change": "Changer de salon",
     "sendTitle": "Ce qui part dans ton salon",
@@ -3331,7 +3343,14 @@
     "livePlugin": "Plugin FM27 0.5.0 ou plus, FM Immersion ouvert pendant le match.",
     "autoShort": "La gazette de la semaine part toute seule dès qu'une semaine de jeu est finie. FM Immersion doit être ouvert.",
     "manualTitle": "Envoyer une gazette à la main",
-    "manualShort": "Depuis la Gazette, bouton « Envoyer sur Discord », pour n'importe quel numéro."
+    "manualShort": "Depuis la Gazette, bouton « Envoyer sur Discord », pour n'importe quel numéro.",
+    "preview": {
+      "title": "Voir ce que recevront tes amis",
+      "help": "Exemple de l’encart du direct juste après un but. Le même message est modifié à chaque temps fort, il n’y en a qu’un par match.",
+      "club": "Ton club",
+      "opponent": "L’adversaire",
+      "scorer": "L. Martin"
+    }
   },
   "live": {
     "title": "Match en direct",
