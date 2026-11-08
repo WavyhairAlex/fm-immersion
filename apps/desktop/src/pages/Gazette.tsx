@@ -1,7 +1,9 @@
 import { gazetteIssues, seasonReviews, seasonSoFar, visibleOn, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
 import { SeasonCard } from '../components/SeasonCard';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { aiFor, getAiSettings } from '../lib/ai';
+import { useGazetteWriting, writeGazette } from '../lib/ai-gazette';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -10,7 +12,7 @@ import { clubLogoUrl, clubLook, rememberClubLooks } from '../lib/club-look';
 import { fmData } from '../lib/data';
 import { getWebhook, isWebhook } from '../lib/discord';
 import { markGazetteSent, markSeasonSent, sendGazette, sendSeason } from '../lib/gazette-auto';
-import { articleText, editorialText, paperName, storyText, weekLabel } from '../lib/gazette-text';
+import { articleText, editorialText, headlineText, paperName, storyText, weekLabel } from '../lib/gazette-text';
 import { drawPage } from '../lib/gazette-page';
 import { recentForm } from '../lib/gazette-une';
 import { loadFace } from '../lib/player-face';
@@ -38,7 +40,11 @@ export function Gazette() {
   }, [history, reviews]);
   const [index, setIndex] = useState(0);
   useEffect(() => setIndex(0), [saveId]);
-  const issue = issues[index];
+  const raw = issues[index];
+  // Texte de l'IA du joueur (si elle est branchée), demandé en arrière-plan : la gazette s'affiche d'abord sans lui.
+  const writing = useGazetteWriting(saveId, raw);
+  const issue = raw && writing.data ? { ...raw, written: writing.data } : raw;
+  const shown = useMemo(() => (issue ? issues.map((x, i) => (i === index ? issue : x)) : issues), [issues, issue, index]);
   const figures = useMemo(() => (issue ? seasonSoFar(history, issue.date) : null), [history, issue]);
 
   return (
@@ -61,11 +67,12 @@ export function Gazette() {
       {issue && (
         <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
           <div className="min-w-0 space-y-6">
-            <UnePreview issues={issues} index={index} figures={figures} looks={looksReady} />
+            <AiStatus saveId={saveId} issue={raw!} state={writing} />
+            <UnePreview issues={shown} index={index} figures={figures} looks={looksReady} />
             <Paper issue={issue} />
           </div>
           <aside className="flex flex-col gap-2">
-            <SendButton saveId={saveId} issues={issues} index={index} figures={figures} />
+            <SendButton saveId={saveId} issues={shown} index={index} figures={figures} />
             <h2 className="mt-4 text-xs font-bold uppercase tracking-wide text-brun">{t('gazette.archives')}</h2>
             <ul className="flex max-h-[60vh] flex-col gap-1 overflow-auto">
               {issues.map((x, i) => (
@@ -86,7 +93,7 @@ export function Gazette() {
 
 export function Paper({ issue }: { issue: GazetteIssue }) {
   const { t, i18n } = useTranslation();
-  const head = storyText(t, issue.club, issue.headline);
+  const head = headlineText(t, issue, i18n.resolvedLanguage);
   const article = articleText(t, issue, i18n.resolvedLanguage) ?? head.body;
   const edito = editorialText(t, issue, i18n.resolvedLanguage);
   // Aux couleurs du club : liseré du titre dans sa couleur qui se voit sur le fond clair, logo du pack de logos.
@@ -140,13 +147,41 @@ export function Paper({ issue }: { issue: GazetteIssue }) {
   );
 }
 
+/** Où en est la rédaction par l'IA : en cours, faite (avec « Réécrire »), ou en panne (les phrases toutes faites restent). */
+function AiStatus({ saveId, issue, state }: { saveId: string; issue: GazetteIssue; state: ReturnType<typeof useGazetteWriting> }) {
+  const { t, i18n } = useTranslation();
+  const qc = useQueryClient();
+  const settings = getAiSettings();
+  const ai = aiFor('gazette', settings);
+  const rewrite = useMutation({
+    mutationFn: () => writeGazette(t, issue, i18n.resolvedLanguage, saveId, { force: true }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['gazette', 'ia', saveId, issue.weekStart] }),
+  });
+  if (!ai) return null;
+  const busy = state.isFetching || rewrite.isPending;
+  const failed = state.isError || rewrite.isError || (state.isSuccess && !state.data && !busy);
+  return (
+    <div className="flex flex-wrap items-center gap-3 text-sm">
+      <span className={`font-bold ${failed ? 'text-corail' : busy ? 'text-brun' : 'text-eau-fonce'}`}>
+        {busy ? t('ai.gazette.writing', { model: ai.model }) : failed ? t('ai.gazette.failed') : t('ai.gazette.written', { model: ai.model })}
+      </span>
+      {!busy && (
+        <button type="button" className="btn-secondary text-xs" onClick={() => rewrite.mutate()}>
+          {t('ai.gazette.rewrite')}
+        </button>
+      )}
+      {(state.error || rewrite.error) && <span className="text-xs text-brun">{String(state.error ?? rewrite.error)}</span>}
+    </div>
+  );
+}
+
 /** Une en image, telle qu'elle part sur Discord. */
 function UnePreview({ issues, index, figures, looks }: { issues: GazetteIssue[]; index: number; figures: SeasonReview | null; looks: number }) {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage;
   const issue = issues[index]!;
   const { data: url } = useQuery({
-    queryKey: ['gazette', 'une', issue.club, issue.weekStart, issue.date, lang, index, issues.length, figures?.end, figures?.played, looks],
+    queryKey: ['gazette', 'une', issue.club, issue.weekStart, issue.date, lang, index, issues.length, figures?.end, figures?.played, looks, issue.written?.title, issue.written?.article],
     queryFn: async () =>
       (await drawPage(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures })).toDataURL('image/png'),
   });

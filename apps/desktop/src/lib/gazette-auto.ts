@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/core';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { withWriting } from './ai-gazette';
 import { CAREER_KEY } from './career';
 import { rememberClubLooks } from './club-look';
 import { fmData, savesData } from './data';
@@ -139,6 +140,8 @@ export function useGazetteAuto() {
         const issues = gazetteIssues(history);
         const index = gazetteToSend(issues, saveId, read(SENT_KEY));
         if (index != null) {
+          // Rédigée par l'IA du joueur quand elle est branchée (sinon, ou si elle échoue, avec les phrases toutes faites).
+          issues[index] = await withWriting(t, issues[index]!, i18n.resolvedLanguage, saveId);
           await sendGazette(t, i18n.resolvedLanguage, issues, index, seasonSoFar(history, issues[index]!.date));
           markGazetteSent(saveId, issues[index]!.weekStart);
         }

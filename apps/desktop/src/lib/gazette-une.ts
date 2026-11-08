@@ -1,7 +1,7 @@
 import { contrast, inkOn, type GazetteIssue, type GazetteStory, type SeasonReview } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
 import { clubArt, drawCrest, type ClubArt } from './club-look';
-import { articleText, figuresLine, paperName, storyText, weekLabel } from './gazette-text';
+import { articleText, headlineText, figuresLine, paperName, storyText, weekLabel } from './gazette-text';
 
 /**
  * Une de la gazette en image (1200 × 675), dessinée sur le PC dans un canvas, pour l'envoi sur Discord.
@@ -163,7 +163,7 @@ export async function drawUne(
   }
 
   const head = issue.headline;
-  const headText = storyText(t, issue.club, head, lang);
+  const headText = headlineText(t, issue, lang);
   const all = [head, ...issue.stories];
   const next = all.find((s) => s.kind === 'nextMatch');
   // Bandeau : compétition du match à la une, sinon celle du prochain match.

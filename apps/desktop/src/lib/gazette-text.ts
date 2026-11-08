@@ -103,6 +103,12 @@ export function storyText(t: TFunction, club: string, s: GazetteStory, lang?: st
   }
 }
 
+/** La une mise en mots : le gros titre écrit par l'IA quand la gazette a été rédigée par elle, sinon celui des phrases toutes faites. */
+export function headlineText(t: TFunction, issue: GazetteIssue, lang?: string): StoryText {
+  const base = storyText(t, issue.club, issue.headline, lang);
+  return issue.written?.title ? { ...base, title: issue.written.title } : base;
+}
+
 /** Semaine de jeu en toutes lettres (« Semaine du 19 oct. au 25 oct. 2026 »), dans la langue de l'interface. */
 export function weekLabel(t: TFunction, lang: string | undefined, from: string, to: string) {
   const d = (iso: string, year: boolean) =>
@@ -128,6 +134,7 @@ const ARTICLE_VARIANTS = 3;
  * varient d'une semaine à l'autre. Null quand la une n'est pas un match (le corps de la brève suffit).
  */
 export function articleText(t: TFunction, issue: GazetteIssue, lang?: string): string | null {
+  if (issue.written?.article) return issue.written.article;
   const head = issue.headline;
   if (head.kind !== 'result' || !head.params.outcome) return null;
   const p = head.params;
@@ -203,6 +210,7 @@ const lower = (s: string, lang?: string) => (s.length ? s[0]!.toLocaleLowerCase(
  * quand le plugin les lit ; sinon le ton suit la semaine (série, dernier résultat).
  */
 export function editorialText(t: TFunction, issue: GazetteIssue, lang?: string): { title: string; body: string; fans: string; board: string } | null {
+  if (issue.written?.editorial) return { title: t('gazette.editorial.title'), body: issue.written.editorial, fans: issue.written.fans, board: issue.written.board };
   const climate = climateOf(issue);
   if (climate === 'quiet' && issue.headline.kind === 'quiet') return null;
   const all = [issue.headline, ...issue.stories];
@@ -266,7 +274,7 @@ const cut = (text: string, max: number) => (text.length > max ? `${text.slice(0,
  * le message ne donne que le nom du journal, le numéro et le gros titre.
  */
 export function discordPagePayload(t: TFunction, issue: GazetteIssue, lang?: string) {
-  const head = storyText(t, issue.club, issue.headline, lang);
+  const head = headlineText(t, issue, lang);
   return {
     username: paperName(t, issue.club).slice(0, 80),
     embeds: [
@@ -287,7 +295,7 @@ export function discordPagePayload(t: TFunction, issue: GazetteIssue, lang?: str
  * (pictogramme, titre, chapeau en citation), puis les brèves une par une et le prochain match en dernier.
  */
 export function discordPayload(t: TFunction, issue: GazetteIssue, lang?: string, figures?: SeasonReview | null) {
-  const head = storyText(t, issue.club, issue.headline, lang);
+  const head = headlineText(t, issue, lang);
   const all = issue.stories.slice(0, 12);
   const lead = (() => {
     if (issue.headline.kind !== 'result') return head.body ? `> ${head.body}` : '';

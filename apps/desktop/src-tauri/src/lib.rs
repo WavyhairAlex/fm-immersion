@@ -1,3 +1,4 @@
+mod ai;
 mod club_logo;
 mod db;
 mod discord;
@@ -53,6 +54,10 @@ pub fn run() {
             faces::faces_default_workshop,
             faces::faces_ageswap_status,
             faces::faces_ageswap_set,
+            ai::ai_key_set,
+            ai::ai_key_status,
+            ai::ai_complete,
+            ai::ai_ollama_models,
             discord::discord_send,
             discord::discord_send_image,
             discord::discord_send_certificate,

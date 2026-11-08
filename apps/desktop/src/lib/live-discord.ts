@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { aiLiveComment, type LiveMoment } from './ai';
 import { rememberClubLooks } from './club-look';
 import { editDiscord, getLiveEnabled, getWebhook, isWebhook, postDiscord, sendDiscord, sendDiscordImage } from './discord';
 import { facePng } from './player-face';
@@ -400,7 +401,8 @@ export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, 
  */
 export type Moment = LiveGoalNews | LiveCardNews | { kind: 'half' } | { kind: 'final' };
 
-export function momentPayload(t: TFunction, l: FmLive, club: string | null, m: Moment) {
+/** `said` : phrase du commentateur écrite par l'IA (sinon la phrase toute faite). */
+export function momentPayload(t: TFunction, l: FmLive, club: string | null, m: Moment, said: string | null = null) {
   const side = mySide(l, club);
   const tl = timeline(l) ?? [];
   const title = `${l.home}  ${score(l)}  ${l.away}`;
@@ -408,7 +410,7 @@ export function momentPayload(t: TFunction, l: FmLive, club: string | null, m: M
     const team = m.side === 'home' ? l.home : l.away;
     const goal = (m.scorer && tl.find((g) => g.name === m.scorer!.name && g.time === m.scorer!.time)) ?? null;
     const mine = side ? m.side === side : true;
-    const said = goal ? commentary(t, l, club, goal) : t(mine ? 'live.moment.goalUnknownFor' : 'live.moment.goalUnknownAgainst', { team, score: score(l) });
+    const line = said ?? (goal ? commentary(t, l, club, goal) : t(mine ? 'live.moment.goalUnknownFor' : 'live.moment.goalUnknownAgainst', { team, score: score(l) }));
     const penalty = m.penalty || isPenalty(goal?.time);
     const minute = (goal?.time ?? l.minute ?? '').replace(/^pen\.?\s*/i, '');
     const assist = m.assist ? `\n🅰️ ${t('live.moment.assist', { name: m.assist })}` : '';
@@ -417,7 +419,7 @@ export function momentPayload(t: TFunction, l: FmLive, club: string | null, m: M
       embeds: [
         {
           title: `${mine ? '⚽' : '😬'}  ${t(penalty ? (mine ? 'live.moment.penaltyFor' : 'live.moment.penaltyAgainst') : mine ? 'live.moment.goalFor' : 'live.moment.goalAgainst', { team, minute })}`,
-          description: `**${title}**\n🎙️ *${said}*${assist}`,
+          description: `**${title}**\n🎙️ *${line}*${assist}`,
           color: side ? (mine ? GOOD : LIVE_RED) : ORANGE,
         },
       ],
@@ -435,17 +437,17 @@ export function momentPayload(t: TFunction, l: FmLive, club: string | null, m: M
   }
   if (m.kind === 'half') {
     // Phrase de la mi-temps : le commentateur parle du score à la pause (minute forcée à 45 pour la phase).
-    const said = commentary(t, { ...l, minute: '45 min.' }, club, lastOf(tl));
-    return { username: 'FM Immersion', embeds: [{ title: `⏸️  ${t('live.moment.half')}`, description: `**${title}**\n🎙️ *${said}*`, color: ORANGE }] };
+    const line = said ?? commentary(t, { ...l, minute: '45 min.' }, club, lastOf(tl));
+    return { username: 'FM Immersion', embeds: [{ title: `⏸️  ${t('live.moment.half')}`, description: `**${title}**\n🎙️ *${line}*`, color: ORANGE }] };
   }
   const mine = side ? ((side === 'home' ? l.homeScore : l.awayScore) ?? 0) : null;
   const theirs = side ? ((side === 'home' ? l.awayScore : l.homeScore) ?? 0) : null;
   const color = mine == null ? ORANGE : mine > theirs! ? GOOD : mine < theirs! ? LIVE_RED : ORANGE;
-  const said = commentary(t, { ...l, final: true }, club, lastOf(tl));
+  const line = said ?? commentary(t, { ...l, final: true }, club, lastOf(tl));
   const figures = matchFigures(t, { ...l, final: true });
   return {
     username: 'FM Immersion',
-    embeds: [{ title: `🏁  ${t('live.moment.final')}`, description: [`**${title}**`, `🎙️ *${said}*`, figures ?? ''].filter(Boolean).join('\n'), color }],
+    embeds: [{ title: `🏁  ${t('live.moment.final')}`, description: [`**${title}**`, `🎙️ *${line}*`, figures ?? ''].filter(Boolean).join('\n'), color }],
   };
 }
 
@@ -466,10 +468,12 @@ export function momentsBetween(prev: FmLive, cur: FmLive): Moment[] {
  * Poste les temps forts, sans jamais bloquer l'encart (un envoi raté est perdu, le tableau reste juste).
  * Un but de chez nous part avec la photo du buteur en vignette quand elle existe sur ce PC (facepack ou portrait).
  */
-async function postMoments(t: TFunction, l: FmLive, club: string | null, moments: Moment[]) {
+async function postMoments(t: TFunction, l: FmLive, club: string | null, moments: Moment[], lang?: string) {
   const side = mySide(l, club);
   for (const m of moments) {
-    const payload = momentPayload(t, l, club, m);
+    // Buts, mi-temps et fin : commentés par l'IA du joueur quand elle est branchée (phrase toute faite sinon).
+    const said = m.kind === 'card' ? null : await aiLiveComment(liveMoment(t, l, club, m), lang);
+    const payload = momentPayload(t, l, club, m, said);
     const id = m.kind === 'goal' && m.scorer && side === m.side ? personIdFor(contextOf(l), m.scorer.name) : null;
     const png = id ? await facePng(id).catch(() => null) : null;
     if (png) {
@@ -479,6 +483,53 @@ async function postMoments(t: TFunction, l: FmLive, club: string | null, moments
       await sendDiscord(payload).catch(() => undefined);
     }
   }
+}
+
+/**
+ * Ce que l'IA reçoit pour un temps fort : le fait déjà établi par l'appli (buteur, minute, score), la phrase toute
+ * faite du commentateur, le déroulé et le contexte d'avant-match. Rien d'autre.
+ */
+export function liveMoment(t: TFunction, l: FmLive, club: string | null, m: Moment): LiveMoment {
+  const tl = timeline(l) ?? [];
+  const sideName = (s: 'home' | 'away') => (s === 'home' ? l.home : l.away);
+  let fact: string;
+  if (m.kind === 'goal') {
+    const goal = (m.scorer && tl.find((g) => g.name === m.scorer!.name && g.time === m.scorer!.time)) ?? null;
+    const mine = club ? sideName(m.side) === club : null;
+    fact = [
+      `But${m.penalty || isPenalty(goal?.time) ? ' sur penalty' : ''} pour ${sideName(m.side)}`,
+      goal ? ` : ${goal.name} (${goal.time})` : '',
+      m.assist ? `, passe décisive de ${m.assist}` : '',
+      `. Score : ${score(l)}.`,
+      mine == null ? '' : mine ? ` C'est un but POUR ${club}.` : ` C'est un but CONTRE ${club}.`,
+    ].join('');
+  } else if (m.kind === 'half') fact = `Mi-temps, score ${score(l)}.`;
+  else fact = `Coup de sifflet final, score final ${score(l)}.${matchFigures(t, { ...l, final: true }) ? ` Chiffres : ${matchFigures(t, { ...l, final: true })}` : ''}`;
+  const said = m.kind === 'goal' ? commentary(t, l, club, lastOf(tl)) : commentary(t, m.kind === 'half' ? { ...l, minute: '45 min.' } : { ...l, final: true }, club, lastOf(tl));
+  const ctx = contextOf(l);
+  const context = ctx
+    ? [
+        ctx.position && club && !ctx.friendly ? `${club} est ${ctx.position}e du championnat` : '',
+        ctx.topScorer ? `meilleur buteur de ${club ?? 'l\'équipe'} : ${ctx.topScorer.name} (${ctx.topScorer.goals} buts)` : '',
+        ctx.threat ?? '',
+        ctx.friendly ? 'match amical' : '',
+      ].filter(Boolean)
+    : [];
+  return {
+    home: l.home,
+    away: l.away,
+    score: score(l),
+    minute: l.minute ?? null,
+    club,
+    competition: competitionOf(l),
+    fact,
+    said,
+    timeline: [
+      ...tl.map((g) => `${g.time} but ${g.name} (${sideName(g.side)})`),
+      ...liveCardList(l).map((c) => `carton ${c.card === 'red' ? 'rouge' : 'jaune'} ${c.player} (${sideName(c.side)})`),
+    ],
+    context,
+  };
 }
 
 /** Image du tableau de score (PNG), dessinée par l'interface ; absente dans les tests. */
@@ -573,6 +624,7 @@ export async function liveStep(
   now = Date.now(),
   render?: LiveRender,
   ended: MatchEnded | null = null,
+  lang?: string,
 ): Promise<LiveState | null> {
   const key = liveKey(l);
   // Après le match : les chiffres du jeu arrivent avec l'instantané suivant (jusqu'à quelques minutes plus tard,
@@ -592,7 +644,7 @@ export async function liveStep(
       const closed: FmLive = { ...state.last, ...l, final: true, inMatch: false, minute: 'FDM', ...(ended.score ? { homeScore: ended.score[0], awayScore: ended.score[1] } : {}) };
       try {
         await publish(t, closed, club, state.messageId, render);
-        await postMoments(t, closed, club, [...momentsBetween(state.last, closed).filter((m) => m.kind === 'goal' || m.kind === 'card'), { kind: 'final' }]);
+        await postMoments(t, closed, club, [...momentsBetween(state.last, closed).filter((m) => m.kind === 'goal' || m.kind === 'card'), { kind: 'final' }], lang);
         return { key, messageId: state.messageId, last: closed, done: true };
       } catch {
         return state;
@@ -621,7 +673,7 @@ export async function liveStep(
       // Encart effacé du salon (ou jamais envoyé) : on en poste un nouveau plutôt que de rester bloqué.
       messageId = await publish(t, l, club, null, render).catch(() => null);
     }
-    await postMoments(t, l, club, momentsBetween(state.last, l));
+    await postMoments(t, l, club, momentsBetween(state.last, l), lang);
   }
   return { key, messageId, last: l, done: !!l.final };
 }
@@ -676,7 +728,7 @@ export function useLiveDiscord() {
           const snapRaw = await invoke<string | null>('fm_read_snapshot', { folder }).catch(() => null);
           stats = snapRaw ? lastMatchStats(JSON.parse(snapRaw), live.data) : null;
         }
-        const next = await liveStep(t, { ...live.data, competition: comp.context?.competition ?? null, context: comp.context, stats } as FmLive, club, state, Date.now(), render, ended);
+        const next = await liveStep(t, { ...live.data, competition: comp.context?.competition ?? null, context: comp.context, stats } as FmLive, club, state, Date.now(), render, ended, i18n.resolvedLanguage);
         if (next && next !== state) {
           state = next;
           saveState(next);

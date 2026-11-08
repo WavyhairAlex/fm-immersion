@@ -61,6 +61,20 @@ export interface GazetteIssue {
   stories: GazetteStory[];
   /** Objectif de la saison fixé par la direction (vision du club lue par le plugin), pour le billet. */
   board: string | null;
+  /** Textes rédigés par l'IA choisie par le joueur (appli), à la place des phrases toutes faites ; absent sinon. */
+  written?: GazetteWriting | null;
+}
+
+/**
+ * Une gazette rédigée par l'IA : gros titre, récit de la une, billet de la rédaction, tribunes et direction.
+ * Écrite à partir des mêmes brèves (l'IA ne reçoit que ces faits), vérifiée par l'appli avant d'être gardée.
+ */
+export interface GazetteWriting {
+  title: string;
+  article: string;
+  editorial: string;
+  fans: string;
+  board: string;
 }
 
 type Entry = { gameDate: string; data: FmSnapshot };

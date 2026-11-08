@@ -20,6 +20,17 @@ describe('instantanés Football Manager', () => {
     fm = fmRepo(db);
   });
 
+  it('garde la gazette rédigée par l’IA tant que ses faits ne changent pas', async () => {
+    const save = await saves.create({ gameId: 'fm', name: 'Malženice' });
+    const w = { title: 'T', article: 'A', editorial: 'E', fans: 'F', board: 'B' };
+    expect(await fm.writing(save.id, '2027-09-27', 'abc')).toBeNull();
+    await fm.saveWriting(save.id, '2027-09-27', 'abc', w, 'ollama/gemma3:12b');
+    expect(await fm.writing(save.id, '2027-09-27', 'abc')).toEqual(w);
+    expect(await fm.writing(save.id, '2027-09-27', 'def')).toBeNull();
+    await fm.saveWriting(save.id, '2027-09-27', 'def', { ...w, title: 'T2' }, 'ollama/gemma3:12b');
+    expect((await fm.writing(save.id, '2027-09-27', 'def'))?.title).toBe('T2');
+  });
+
   it('joint le CA/PA lus en mémoire à l’instantané de la date et les garde quand le plugin le réécrit', async () => {
     const save = await saves.create({ gameId: 'fm', name: 'Malženice' });
     await fm.importSnapshot(save.id, snap('2027-02-14', ['A', 'B']));

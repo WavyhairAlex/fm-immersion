@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { AiSettingsCard } from '../components/AiSettingsCard';
 import { getGazetteAuto, setGazetteAuto } from '../lib/gazette-auto';
 import { getLiveEnabled, getWebhook, isWebhook, sendDiscord, setLiveEnabled, setWebhook } from '../lib/discord';
 
@@ -83,6 +84,8 @@ export function Discord() {
         {!saved && <p className="mt-2 text-xs text-brun">{t('live.needWebhook')}</p>}
         <p className="mt-3 text-xs text-brun">{t('live.plugin')}</p>
       </section>
+
+      <AiSettingsCard />
 
       <section className="card mt-6 max-w-3xl">
         <h2 className="text-xl font-semibold">{t('discord.autoTitle')}</h2>

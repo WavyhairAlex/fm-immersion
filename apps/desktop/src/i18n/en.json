@@ -28,7 +28,7 @@
   },
   "footer": {
     "disclaimer": "FM Immersion is an independent project, not affiliated with Sports Interactive or SEGA. Football Manager and FM are trademarks of their respective owners.",
-    "privacy": "Your data stays on your PC. FM Immersion collects no personal data; it contacts GitHub to check for updates and, when you ask, to download the FM27 plugin, and Discord only when you send a gazette to your channel."
+    "privacy": "Your data stays on your PC. FM Immersion collects no personal data; it contacts GitHub to check for updates and, when you ask, to download the FM27 plugin, Discord only when you send a gazette to your channel, and your chosen AI provider (Mistral, Anthropic or Google) only if you turn on AI writing with your key."
   },
   "fm": {
     "back": "My saves",
@@ -3418,6 +3418,61 @@
         "results": "Nothing worrying in the results: keep it up.",
         "mercato": "No transfer or finance decision to make this week."
       }
+    }
+  },
+  "ai": {
+    "title": "AI writing",
+    "intro": "An AI can write your gazette and commentate the live highlights in a real newspaper tone, aware of what is at stake (a cup exit is not a friendly). It only gets the facts FM Immersion has already worked out (scores, scorers, the week's news), never your save files. Off by default.",
+    "provider": "AI used",
+    "off": "No AI",
+    "providers": {
+      "ollama": {
+        "name": "Ollama (on this PC)",
+        "help": "Free, nothing leaves your computer. Install Ollama (ollama.com), then a model, for example “ollama pull gemma3:12b” (about 8 GB, comfortable with a 12 GB graphics card or more). A gazette takes a few seconds."
+      },
+      "mistral": {
+        "name": "Mistral (API key)",
+        "help": "French AI. Create a key at console.mistral.ai (a limited free tier exists). The week's facts are sent to Mistral each time it writes."
+      },
+      "anthropic": {
+        "name": "Claude (API key)",
+        "help": "Create a key at console.anthropic.com (pay as you go, around a cent per gazette). The week's facts are sent to Anthropic each time it writes."
+      },
+      "gemini": {
+        "name": "Gemini (API key)",
+        "help": "Create a key at aistudio.google.com (a limited free tier exists). The week's facts are sent to Google each time it writes."
+      }
+    },
+    "ollamaDown": "Ollama is not answering on this PC: check it is installed and running.",
+    "ollamaEmpty": "Ollama is running but no model is installed. In a terminal: ollama pull {{model}}",
+    "ollamaRefresh": "Reload installed models",
+    "model": "Model",
+    "key": "API key",
+    "keyPlaceholder": "Paste your key here",
+    "keySaved": "Key saved",
+    "keySave": "Save key",
+    "keyRemove": "Delete key",
+    "keyPrivacy": "The key is stored in the Windows vault (Credential Manager), not in the FM Immersion database. It is only sent to the chosen provider.",
+    "tone": "Newspaper tone",
+    "tones": {
+      "classic": "Sports daily",
+      "regional": "Passionate local paper",
+      "tabloid": "Tabloid"
+    },
+    "useGazette": "Write the gazette with the AI",
+    "useLive": "Commentate goals, half-time and full-time with the AI",
+    "test": "Test",
+    "testing": "Testing…",
+    "testOk": "The AI says:",
+    "testAnswer": "“{{text}}”",
+    "testSystem": "You are a football commentator. Answer in one short sentence, in English.",
+    "testPrompt": "Announce the kick-off of a Football Manager match.",
+    "fallback": "If the AI does not answer, is too slow or changes a score or a number, FM Immersion keeps its usual sentences.",
+    "gazette": {
+      "writing": "AI writing ({{model}})…",
+      "written": "Written by the AI ({{model}})",
+      "failed": "The AI could not write this gazette: usual sentences.",
+      "rewrite": "Rewrite"
     }
   }
 }

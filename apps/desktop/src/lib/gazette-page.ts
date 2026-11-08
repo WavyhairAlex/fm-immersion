@@ -1,7 +1,7 @@
 import { contrast, inkOn, type GazetteIssue, type GazetteStory, type SeasonReview } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
 import { clubArt, drawCrest } from './club-look';
-import { articleText, editorialText, figuresLine, paperName, storyText, weekLabel } from './gazette-text';
+import { articleText, headlineText, editorialText, figuresLine, paperName, storyText, weekLabel } from './gazette-text';
 import { drawFace, figureTiles, fit, roundRect, streak, wrap, type Outcome } from './gazette-une';
 
 /**
@@ -137,7 +137,7 @@ export async function drawPage(
 
   // La une, sur toute la largeur.
   let y = 206;
-  const headText = storyText(t, issue.club, head, lang);
+  const headText = headlineText(t, issue, lang);
   const kicker = isResult
     ? `${t(`gazette.une.kicker_${p.cup === 'out' ? 'cupOut' : p.cup === 'through' ? 'cupThrough' : p.outcome}`)}${p.home == null ? '' : ` ${t(p.home ? 'gazette.une.atHome' : 'gazette.une.away')}`}`
     : t(`gazette.une.section.${head.kind}`, { defaultValue: t('gazette.une.section.default') });
