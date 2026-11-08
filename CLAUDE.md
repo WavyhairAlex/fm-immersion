@@ -22,7 +22,7 @@ extraite avec son historique ; Simloom garde Planet Zoo 2 et Transport Fever 3.
   Autre exception choisie par le joueur : la **rédaction par IA** (`src-tauri/src/ai.rs`, `src/lib/ai.ts`), coupée par
   défaut : Ollama local (`127.0.0.1:11434`) ou sa clé API (Mistral, Anthropic, Google, adresses fixes ; clé dans le
   coffre Windows via `keyring`). L'IA ne reçoit que les faits déjà calculés et l'appli vérifie sa réponse (chiffres,
-  scores) ; sinon les phrases toutes faites restent. Textes gardés dans `fm_gazette_writing`.
+  scores) ; sinon les phrases toutes faites restent. À la fermeture, l'appli décharge le modèle Ollama (`keep_alive: 0`). Textes gardés dans `fm_gazette_writing`.
 - **Mises à jour automatiques** au lancement (`UpdateGate`) via `tauri-plugin-updater`. Les fichiers de mise à
   jour sont signés avec une clé minisign (secret GitHub `TAURI_SIGNING_PRIVATE_KEY`, clé publique dans
   `tauri.conf.json`). **Perdre cette clé = plus aucune mise à jour possible pour les installations existantes.**
