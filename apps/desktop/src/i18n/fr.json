@@ -3399,7 +3399,9 @@
       "club": "Ton club",
       "opponent": "L’adversaire",
       "scorer": "L. Martin"
-    }
+    },
+    "breakingEnable": "Envoyer les dépêches automatiquement",
+    "breakingShort": "Recrue, départ d'un titulaire, blessure longue : la dépêche part dans le salon le jour où le plugin la voit."
   },
   "live": {
     "title": "Match en direct",
@@ -4134,5 +4136,38 @@
     "discordIntro": "⚡ **Flash spécial** : {{title}}",
     "deck_one": "Arrivé le {{start}}, parti le {{end}} : {{count}} match officiel, bilan {{wins}}-{{draws}}-{{losses}} (victoires, nuls, défaites).",
     "deck_other": "Arrivé le {{start}}, parti le {{end}} : {{count}} matchs officiels, bilan {{wins}}-{{draws}}-{{losses}} (victoires, nuls, défaites)."
+  },
+  "breaking": {
+    "kind": "Dépêche",
+    "recent": "Dépêches récentes",
+    "recentHelp": "Recrue, départ d'un joueur du onze, blessure de quatre semaines ou plus : une dépêche en image, le jour où le plugin la voit.",
+    "send": "Envoyer la dépêche",
+    "sent": "Dépêche envoyée sur Discord.",
+    "age_one": "{{count}} an",
+    "age_other": "{{count}} ans",
+    "injuryUnknown": "blessure",
+    "tag": {
+      "signing": "Officiel",
+      "exit": "Départ",
+      "injury": "Flash infirmerie"
+    },
+    "title": {
+      "signing": "{{name}} s'engage avec {{club}}",
+      "exit": "{{name}} quitte {{club}}",
+      "injury": "Coup dur pour {{club}} : {{name}} à l'infirmerie"
+    },
+    "body": {
+      "signing": "C'est officiel : {{name}} rejoint l'effectif de {{club}}. Les supporters attendent de voir la recrue à l'œuvre.",
+      "exit": "{{name}} ne fait plus partie de l'effectif de {{club}}. Un départ qui laisse une place à prendre dans le onze.",
+      "injury": "Diagnostic : {{injury}}. {{name}} manquera environ {{days}} jours de compétition, le temps de se soigner."
+    },
+    "weight": {
+      "top_signing": "Recrue de premier plan : parmi les trois meilleurs joueurs de l'effectif.",
+      "starter_signing": "Une recrue pour le onze : {{rank}}ᵉ niveau de l'effectif.",
+      "top_exit": "Une perte majeure : l'un des trois meilleurs joueurs de l'effectif s'en va.",
+      "starter_exit": "Un titulaire en moins : {{rank}}ᵉ niveau de l'effectif.",
+      "top_injury": "Coup dur : l'un des trois meilleurs joueurs de l'effectif.",
+      "starter_injury": "Un cadre en moins : {{rank}}ᵉ niveau de l'effectif."
+    }
   }
 }

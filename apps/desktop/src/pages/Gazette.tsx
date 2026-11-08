@@ -1,5 +1,5 @@
 import { AiLink } from '../components/AiSettingsCard';
-import { coachExits, gazetteIssues, seasonReviews, seasonSoFar, visibleOn, type CoachExit, type ExitReason, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
+import { breakingNews, coachExits, gazetteIssues, seasonReviews, seasonSoFar, visibleOn, type BreakingNews, type CoachExit, type ExitReason, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
 import { SeasonCard } from '../components/SeasonCard';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -12,7 +12,8 @@ import { useCareer } from '../lib/career';
 import { clubLook, rememberClubLooks } from '../lib/club-look';
 import { useHistory } from '../lib/fm-cache';
 import { getWebhook, isWebhook } from '../lib/discord';
-import { exitReason, loadCoachPhoto, markFarewellSent, markGazetteSent, markSeasonSent, sendFarewell, sendGazette, sendSeason, setExitReason } from '../lib/gazette-auto';
+import { exitReason, loadCoachPhoto, markBreakingSent, markFarewellSent, markGazetteSent, markSeasonSent, sendBreaking, sendFarewell, sendGazette, sendSeason, setExitReason } from '../lib/gazette-auto';
+import { drawBreaking } from '../lib/breaking-page';
 import { drawFarewell } from '../lib/farewell-page';
 import { fmData } from '../lib/data';
 import { articleText, editorialText, headlineText, paperName, storyText, weekLabel } from '../lib/gazette-text';
@@ -47,6 +48,11 @@ export function Gazette() {
   // Hors-série en tête tant que le départ est récent (45 jours de jeu), sinon en bas avec les bilans de saison.
   const lastDate = history.reduce((a, e) => (e.gameDate > a ? e.gameDate : a), '');
   const exitFresh = !!exits[0] && (Date.parse(lastDate.slice(0, 10) || exits[0].end) - Date.parse(exits[0].end.slice(0, 10))) / 86_400_000 <= 45;
+  // Dépêches des 30 derniers jours de jeu (recrue, départ, blessure longue).
+  const breaking = useMemo(
+    () => breakingNews(history).filter((n) => (Date.parse(lastDate.slice(0, 10)) - Date.parse(n.date.slice(0, 10))) / 86_400_000 <= 30),
+    [history, lastDate],
+  );
   const [index, setIndex] = useState(0);
   useEffect(() => setIndex(0), [saveId]);
   const raw = issues[index];
@@ -77,6 +83,7 @@ export function Gazette() {
       )}
 
       {exitFresh && <FarewellSection saveId={saveId} exits={exits} looks={looksReady} />}
+      {breaking.length > 0 && <BreakingSection saveId={saveId} news={breaking} looks={looksReady} />}
 
       {issue && (
         <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
@@ -357,6 +364,62 @@ function FarewellSection({ saveId, exits, looks }: { saveId: string; exits: Coac
           </Link>
         )}
         {send.isSuccess && <p className="text-xs font-bold text-eau-fonce">{t('farewell.sent')}</p>}
+        {send.isError && <p className="text-xs font-bold text-corail">{String(send.error)}</p>}
+      </aside>
+    </section>
+  );
+}
+
+/** Dépêches récentes : une image par nouvelle (recrue, départ, blessure longue), à envoyer sur Discord. */
+function BreakingSection({ saveId, news, looks }: { saveId: string; news: BreakingNews[]; looks: number }) {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage;
+  const [at, setAt] = useState(0);
+  useEffect(() => setAt(0), [saveId]);
+  const n = news[Math.min(at, news.length - 1)]!;
+  const { data: url } = useQuery({
+    queryKey: ['gazette', 'breaking', saveId, n.kind, n.id, n.date, lang, looks],
+    queryFn: async () => (await drawBreaking(t, n, { lang, face: await loadFace(n.id) })).toDataURL('image/png'),
+  });
+  const send = useMutation({
+    mutationFn: async () => {
+      await sendBreaking(t, n, lang);
+      markBreakingSent(saveId, n);
+    },
+  });
+  useEffect(() => send.reset(), [n]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
+      <div className="min-w-0">
+        <h2 className="text-xs font-bold uppercase tracking-wide text-brun">{t('breaking.recent')}</h2>
+        {url ? (
+          <img src={url} alt={t(`breaking.tag.${n.kind}`)} className="mt-3 w-full rounded-xl shadow-sm ring-1 ring-canard/10" />
+        ) : (
+          <div className="mt-3 aspect-[16/9] w-full animate-pulse rounded-xl bg-canard/5" />
+        )}
+      </div>
+      <aside className="flex flex-col gap-2 xl:pt-7">
+        <p className="text-xs text-brun">{t('breaking.recentHelp')}</p>
+        <ul className="flex max-h-72 flex-col gap-1 overflow-auto">
+          {news.map((x, i) => (
+            <li key={`${x.kind}|${x.id}|${x.date}`}>
+              <button type="button" className={`chip w-full justify-between ${i === at ? 'chip-on' : ''}`} onClick={() => setAt(i)}>
+                <span className="truncate">{t(`breaking.tag.${x.kind}`)} · {x.name}</span>
+                <span className="text-xs opacity-70">{x.date.slice(5, 10)}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+        {isWebhook(getWebhook()) ? (
+          <button type="button" className="btn-primary mt-2 text-sm" disabled={send.isPending} onClick={() => send.mutate()}>
+            {t('breaking.send')}
+          </button>
+        ) : (
+          <Link to="/discord" className="btn-secondary mt-2 text-sm">
+            {t('gazette.setupDiscord')}
+          </Link>
+        )}
+        {send.isSuccess && <p className="text-xs font-bold text-eau-fonce">{t('breaking.sent')}</p>}
         {send.isError && <p className="text-xs font-bold text-corail">{String(send.error)}</p>}
       </aside>
     </section>

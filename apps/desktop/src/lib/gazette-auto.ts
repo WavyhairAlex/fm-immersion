@@ -1,4 +1,4 @@
-import { coachExits, gazetteIssues, seasonReviews, seasonSoFar, type CoachExit, type ExitReason, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
+import { breakingNews, coachExits, gazetteIssues, seasonReviews, seasonSoFar, type BreakingNews, type CoachExit, type ExitReason, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { withWriting } from './ai-gazette';
 import { CAREER_KEY } from './career';
 import { rememberClubLooks } from './club-look';
+import { breakingPayload, drawBreaking } from './breaking-page';
 import { fmData, savesData } from './data';
 import { getWebhook, isWebhook, sendDiscordImage } from './discord';
 import { fetchHistory } from './fm-cache';
@@ -97,6 +98,40 @@ export function seasonToSend(reviews: SeasonReview[], lastDate: string | undefin
   return days <= 60 ? r : null;
 }
 
+/** Dépêche (recrue, départ, blessure) : image et court encart, avec le visage du joueur. */
+export async function sendBreaking(t: TFunction, n: BreakingNews, lang?: string, webhook = getWebhook()) {
+  const png = await canvasPng(await drawBreaking(t, n, { lang, face: await loadFace(n.id) }));
+  return sendDiscordImage(breakingPayload(t, n, lang), png, webhook);
+}
+
+/** Dépêches déjà envoyées (aussi à la main), pour que l'envoi automatique ne les renvoie pas. */
+const BREAKING_SENT_KEY = 'fmi.discord.breakingSent';
+const breakingId = (saveId: string, n: BreakingNews) => `${saveId}|${n.kind}|${n.id}|${n.date.slice(0, 10)}`;
+export const isBreakingSent = (saveId: string, n: BreakingNews) => (read(BREAKING_SENT_KEY) ?? '').split('\n').includes(breakingId(saveId, n));
+export const markBreakingSent = (saveId: string, n: BreakingNews) =>
+  write(BREAKING_SENT_KEY, [...(read(BREAKING_SENT_KEY) ?? '').split('\n').filter(Boolean), breakingId(saveId, n)].slice(-60).join('\n'));
+
+/** Envoi automatique des dépêches : par défaut comme celui de la gazette, sinon le choix du joueur (gardé sur ce PC). */
+const BREAKING_AUTO_KEY = 'fmi.discord.breakingAuto';
+export const getBreakingAuto = () => {
+  const v = read(BREAKING_AUTO_KEY);
+  return v == null ? getGazetteAuto() : v === '1';
+};
+export const setBreakingAuto = (on: boolean) => write(BREAKING_AUTO_KEY, on ? '1' : '0');
+
+/**
+ * Dépêches à envoyer : celles pas encore parties, vues dans les trois derniers jours de jeu (pas celles d'il y a des
+ * mois à l'activation), trois au plus, de la plus ancienne à la plus récente.
+ */
+export function breakingToSend(news: BreakingNews[], lastDate: string | undefined, sent: (n: BreakingNews) => boolean): BreakingNews[] {
+  if (!lastDate) return [];
+  const last = Date.parse(lastDate.slice(0, 10));
+  return news
+    .filter((n) => !sent(n) && (last - Date.parse(n.date.slice(0, 10))) / 86_400_000 <= 3)
+    .slice(0, 3)
+    .reverse();
+}
+
 /** Envoi automatique de la gazette chaque semaine de jeu, activé par le joueur (gardé sur ce PC). */
 const AUTO_KEY = 'fmi.discord.gazetteAuto';
 /** Dernière gazette envoyée automatiquement : partie et lundi de la semaine. */
@@ -152,7 +187,9 @@ export function useGazetteAuto() {
   const busy = useRef(false);
   useEffect(() => {
     const tick = async () => {
-      if (busy.current || !getGazetteAuto() || !isWebhook(getWebhook())) return;
+      const gazetteOn = getGazetteAuto();
+      const breakingOn = getBreakingAuto();
+      if (busy.current || (!gazetteOn && !breakingOn) || !isWebhook(getWebhook())) return;
       busy.current = true;
       try {
         const fmSaves = (await savesData.list()).filter((s) => s.gameId === 'fm');
@@ -162,6 +199,18 @@ export function useGazetteAuto() {
         // toute l'appli) : ici, on lit seulement l'historique, dans le cache tenu à jour par celle-ci.
         const history = await fetchHistory(qc, saveId);
         rememberClubLooks(history.map((h) => h.data));
+        const lastDate = history
+          .map((h) => h.gameDate)
+          .sort()
+          .at(-1);
+        // Dépêches d'abord : elles n'attendent pas la gazette de la semaine.
+        if (breakingOn) {
+          for (const n of breakingToSend(breakingNews(history), lastDate, (x) => isBreakingSent(saveId, x))) {
+            await sendBreaking(t, n, i18n.resolvedLanguage);
+            markBreakingSent(saveId, n);
+          }
+        }
+        if (!gazetteOn) return;
         const issues = gazetteIssues(history);
         const index = gazetteToSend(issues, saveId, read(SENT_KEY));
         if (index != null) {
@@ -171,10 +220,6 @@ export function useGazetteAuto() {
           markGazetteSent(saveId, issues[index]!.weekStart);
         }
         // Fin du championnat : numéro spécial, après la gazette de la semaine.
-        const lastDate = history
-          .map((h) => h.gameDate)
-          .sort()
-          .at(-1);
         const season = seasonToSend(seasonReviews(history), lastDate, (r) => isSeasonSent(saveId, r));
         if (season) {
           await sendSeason(t, season, i18n.resolvedLanguage);
