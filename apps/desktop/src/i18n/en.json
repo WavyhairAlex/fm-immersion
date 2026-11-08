@@ -317,7 +317,7 @@
         "replaces": "instead of \"{{label}}\"",
         "markingTitle": "Marking",
         "marking": {
-          "creator": "{{target}} ({{positions}}) makes the team play: tighter marking and harder tackles for {{player}}.",
+          "creator": "{{target}}, {{positions}}, makes the team play: tighter marking and harder tackles for {{player}}.",
           "creatorNoSlot": "{{target}} makes the team play: tighter marking for the player facing him.",
           "scorer": "{{target}} is their scorer: {{player}} stays on him in the box (tighter marking).",
           "scorerNoSlot": "{{target}} is their scorer: tighter marking for the defender facing him."

@@ -317,7 +317,7 @@
         "replaces": "à la place de « {{label}} »",
         "markingTitle": "Marquage",
         "marking": {
-          "creator": "{{target}} ({{positions}}) fait jouer l'équipe : marquage plus serré et tacles engagés pour {{player}}.",
+          "creator": "{{target}}, {{positions}}, fait jouer l'équipe : marquage plus serré et tacles engagés pour {{player}}.",
           "creatorNoSlot": "{{target}} fait jouer l'équipe : marquage plus serré pour le joueur en face de lui.",
           "scorer": "{{target}} est leur buteur : {{player}} ne le lâche pas dans la surface (marquage plus serré).",
           "scorerNoSlot": "{{target}} est leur buteur : marquage plus serré pour le défenseur en face de lui."
