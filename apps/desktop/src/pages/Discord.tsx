@@ -1,15 +1,20 @@
-import { useMutation } from '@tanstack/react-query';
-import { useState, type ReactNode } from 'react';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { AiLink } from '../components/AiSettingsCard';
+import { DiscordEmbed } from '../components/DiscordEmbed';
 import { aiFor } from '../lib/ai';
 import { getLiveEnabled, getWebhook, isWebhook, sendDiscord, setLiveEnabled, setWebhook } from '../lib/discord';
 import { getGazetteAuto, setGazetteAuto } from '../lib/gazette-auto';
+import { useCareer } from '../lib/career';
+import { fmData } from '../lib/data';
+import { livePreviewPayload } from '../lib/live-discord';
 
 /**
- * Live Discord (solo) : en haut, ce qui est branché d'un coup d'œil (salon, direct, gazette automatique, IA) ;
- * puis le salon à relier (replié une fois relié) et ce qui part dans le salon, en interrupteurs.
+ * Live Discord (solo) : en haut, ce qui est branché en une phrase (direct, gazette automatique, IA) ;
+ * puis le salon à relier (replié une fois relié) et ce qui part dans le salon, en interrupteurs, avec un exemple
+ * de l'encart du direct pour voir ce que recevront les amis avant de l'activer.
  */
 export function Discord() {
   const { t } = useTranslation();
@@ -20,6 +25,13 @@ export function Discord() {
   const [live, setLive] = useState(getLiveEnabled());
   const [auto, setAuto] = useState(getGazetteAuto());
   const ai = aiFor('gazette') ?? aiFor('live');
+  // Exemple d'encart du direct, au nom du club de la carrière suivie quand on le connaît.
+  const { saveId } = useCareer();
+  const { data: snapshot } = useQuery({ queryKey: ['fm', saveId, 'latest'], queryFn: () => fmData.latest(saveId), enabled: !!saveId });
+  const preview = useMemo(
+    () => livePreviewPayload(t, snapshot?.club || t('discord.preview.club'), t('discord.preview.opponent')),
+    [t, snapshot?.club],
+  );
 
   const test = useMutation({
     mutationFn: () => sendDiscord({ username: 'FM Immersion', content: t('discord.testMessage') }, url),
@@ -29,12 +41,16 @@ export function Discord() {
     <div className="w-full max-w-3xl">
       <p className="text-brun">{t('discord.intro')}</p>
 
-      <ul className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4" aria-label={t('discord.status.title')}>
-        <Status label={t('discord.status.channel')} on={saved} value={saved ? t('discord.status.linked') : t('discord.status.notLinked')} />
-        <Status label={t('discord.status.live')} on={saved && live} value={saved && live ? t('discord.status.on') : t('discord.status.off')} />
-        <Status label={t('discord.status.auto')} on={saved && auto} value={saved && auto ? t('discord.status.on') : t('discord.status.off')} />
-        <Status label={t('discord.status.ai')} on={!!ai} value={ai ? ai.model : t('discord.status.off')} />
-      </ul>
+      {/* État du salon en une phrase : ce qui part vraiment, et vers où. */}
+      <section className={`mt-5 rounded-xl border px-4 py-3 ${saved ? 'border-eau-soutenu bg-eau/15' : 'border-canard/10 bg-white'}`} aria-label={t('discord.status.title')}>
+        <p className="text-xs font-bold uppercase tracking-wide text-brun">{t('discord.status.title')}</p>
+        <p className={`mt-1 font-extrabold ${saved ? 'text-eau-fonce' : 'text-canard/70'}`}>
+          {saved
+            ? [t(live ? 'discord.status.liveOn' : 'discord.status.liveOff'), t(auto ? 'discord.status.autoOn' : 'discord.status.autoOff')].join(' · ')
+            : t('discord.status.none')}
+        </p>
+        <p className="mt-1 text-sm text-brun">{ai ? t('discord.status.aiOn', { model: ai.model }) : t('discord.status.aiOff')}</p>
+      </section>
 
       <section className="card mt-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -121,6 +137,13 @@ export function Discord() {
               setLive(v);
             }}
           />
+          <details className="pb-3" open={!live}>
+            <summary className="cursor-pointer text-sm font-bold text-orange-fonce">{t('discord.preview.title')}</summary>
+            <p className="mt-1 text-sm text-brun">{t('discord.preview.help')}</p>
+            <div className="mt-2">
+              <DiscordEmbed embed={preview.embeds[0]!} label={t('discord.preview.title')} />
+            </div>
+          </details>
           <Toggle
             on={auto}
             disabled={!saved}
@@ -153,19 +176,6 @@ export function Discord() {
 const Step = ({ n }: { n: number }) => (
   <span className="mr-2 inline-flex h-7 w-7 items-center justify-center rounded-full bg-canard align-[2px] text-sm font-extrabold text-white">{n}</span>
 );
-
-/** Une case d'état en haut de page : vert quand c'est branché, gris sinon. */
-function Status({ label, value, on }: { label: string; value: string; on: boolean }) {
-  return (
-    <li className={`rounded-xl border px-3 py-2 ${on ? 'border-eau-soutenu bg-eau/15' : 'border-canard/10 bg-white'}`}>
-      <p className="text-xs font-bold uppercase tracking-wide text-brun">{label}</p>
-      <p className={`mt-0.5 truncate text-sm font-extrabold ${on ? 'text-eau-fonce' : 'text-canard/60'}`} title={value}>
-        {on ? '● ' : '○ '}
-        {value}
-      </p>
-    </li>
-  );
-}
 
 /** Interrupteur d'un envoi : titre, explication courte, case à droite. */
 function Toggle({ on, disabled, title, help, onChange }: { on: boolean; disabled: boolean; title: string; help: ReactNode; onChange: (v: boolean) => void }) {

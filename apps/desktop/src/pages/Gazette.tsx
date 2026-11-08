@@ -9,7 +9,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useCareer } from '../lib/career';
-import { clubLogoUrl, clubLook, rememberClubLooks } from '../lib/club-look';
+import { clubLook, rememberClubLooks } from '../lib/club-look';
 import { useHistory } from '../lib/fm-cache';
 import { getWebhook, isWebhook } from '../lib/discord';
 import { markGazetteSent, markSeasonSent, sendGazette, sendSeason } from '../lib/gazette-auto';
@@ -50,7 +50,7 @@ export function Gazette() {
 
   return (
     <div className="w-full">
-      <p className="max-w-3xl text-brun">{t('modes.gazette.details')}</p>
+      {!issue && <p className="max-w-3xl text-brun">{t('modes.gazette.details')}</p>}
 
       {!fmSaves.length && (
         <div className="card mt-6 max-w-3xl">
@@ -60,21 +60,33 @@ export function Gazette() {
           </Link>
         </div>
       )}
-      {!!fmSaves.length && !isLoading && !issues.length && <p className="card mt-6 max-w-3xl text-brun">{t('gazette.empty')}</p>}
-
-      {cards.length > 0 && <SeasonCard saveId={saveId} seasons={cards} />}
-      {season && <SeasonSection saveId={saveId} review={season} />}
+      {!!fmSaves.length && !isLoading && !issues.length && (
+        <div className="card mt-6 max-w-3xl">
+          <p className="font-display text-xl font-semibold">{t('layout.today.noGazette')}</p>
+          <p className="mt-2 text-brun">{t('gazette.emptyHow')}</p>
+          <p className="mt-2 text-sm text-brun">{t('gazette.empty')}</p>
+        </div>
+      )}
 
       {issue && (
-        <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
+        <div className="grid gap-6 xl:grid-cols-[1fr_16rem]">
           <div className="min-w-0 space-y-6">
-            <AiStatus saveId={saveId} issue={raw!} state={writing} />
+            <Une issue={issue} />
             <UnePreview issues={shown} index={index} figures={figures} looks={looksReady} />
             <Paper issue={issue} />
+            {/* Les commandes viennent après la lecture : réécrire avec l'IA, envoyer sur Discord. */}
+            <section className="card">
+              <h2 className="text-xs font-bold uppercase tracking-wide text-brun">{t('gazette.actions')}</h2>
+              <div className="mt-3 flex flex-wrap items-start gap-3">
+                <SendButton saveId={saveId} issues={shown} index={index} figures={figures} />
+              </div>
+              <div className="mt-3">
+                <AiStatus saveId={saveId} issue={raw!} state={writing} />
+              </div>
+            </section>
           </div>
           <aside className="flex flex-col gap-2">
-            <SendButton saveId={saveId} issues={shown} index={index} figures={figures} />
-            <h2 className="mt-4 text-xs font-bold uppercase tracking-wide text-brun">{t('gazette.archives')}</h2>
+            <h2 className="text-xs font-bold uppercase tracking-wide text-brun">{t('gazette.archives')}</h2>
             <ul className="flex max-h-[60vh] flex-col gap-1 overflow-auto">
               {issues.map((x, i) => (
                 <li key={x.weekStart}>
@@ -88,38 +100,44 @@ export function Gazette() {
           </aside>
         </div>
       )}
+
+      {cards.length > 0 && <SeasonCard saveId={saveId} seasons={cards} />}
+      {season && <SeasonSection saveId={saveId} review={season} />}
     </div>
   );
 }
 
+/** La une en tête d'écran : le journal du club, le numéro et la semaine, puis le fait marquant en gros titre. */
+function Une({ issue }: { issue: GazetteIssue }) {
+  const { t, i18n } = useTranslation();
+  const head = headlineText(t, issue, i18n.resolvedLanguage);
+  const look = clubLook(issue.club);
+  const accent = look ? visibleOn(look.colors, '#FFFFFF', '#F26B1D') : null;
+  return (
+    <header className="border-b-4 border-orange pb-4" style={accent ? { borderBottomColor: accent } : undefined}>
+      <p className="text-xs font-bold uppercase tracking-wide text-brun">
+        {paperName(t, issue.club)} · {t('gazette.issue', { number: issue.number })} · {weekLabel(t, i18n.resolvedLanguage, issue.weekStart, issue.weekEnd)}
+      </p>
+      <h1 className="mt-2 font-display text-4xl font-semibold leading-tight">{head.title}</h1>
+    </header>
+  );
+}
+
+/** Version texte du numéro (le récit, le billet, les brèves), sous l'image de la une. */
 export function Paper({ issue }: { issue: GazetteIssue }) {
   const { t, i18n } = useTranslation();
   const head = headlineText(t, issue, i18n.resolvedLanguage);
   const article = articleText(t, issue, i18n.resolvedLanguage) ?? head.body;
   const edito = editorialText(t, issue, i18n.resolvedLanguage);
-  // Aux couleurs du club : liseré du titre dans sa couleur qui se voit sur le fond clair, logo du pack de logos.
-  const look = clubLook(issue.club);
-  const accent = look ? visibleOn(look.colors, '#FFFFFF', '#F26B1D') : null;
-  const { data: logo } = useQuery({ queryKey: ['club-logo', issue.club, look?.id ?? null], queryFn: () => clubLogoUrl(issue.club) });
   return (
     <article className="card rounded-xl p-0">
-      <header className="flex items-center gap-4 border-b-4 border-orange px-6 py-4" style={accent ? { borderBottomColor: accent } : undefined}>
-        {logo && <img src={logo} alt="" className="h-14 w-14 shrink-0 object-contain" />}
-        <div className="min-w-0">
-          <p className="font-display text-3xl font-semibold">{paperName(t, issue.club)}</p>
-          <p className="mt-1 text-xs font-bold uppercase tracking-wide text-brun">
-            {t('gazette.issue', { number: issue.number })} · {weekLabel(t, i18n.resolvedLanguage, issue.weekStart, issue.weekEnd)}
-          </p>
-        </div>
-      </header>
       <section className="border-b border-canard/10 px-6 py-5">
         <div className="flex items-start gap-4">
           {(issue.headline.params.bestId ?? issue.headline.params.id) != null && (
             <Face id={(issue.headline.params.bestId ?? issue.headline.params.id) as string | number} name={String(issue.headline.params.best ?? issue.headline.params.name ?? '')} size={64} className="mt-1 ring-2 ring-orange" />
           )}
-          <h2 className="font-display text-2xl font-semibold leading-tight">{head.title}</h2>
+          {article && <p className="text-brun">{article}</p>}
         </div>
-        {article && <p className="mt-2 text-brun">{article}</p>}
       </section>
       {edito && (
         <section className="border-b border-canard/10 bg-orange-clair/40 px-6 py-4">

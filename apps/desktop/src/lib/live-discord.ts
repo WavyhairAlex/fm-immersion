@@ -755,3 +755,17 @@ export function useLiveDiscord() {
     return () => window.clearInterval(id);
   }, [t, i18n]);
 }
+
+/**
+ * Exemple d'encart pour l'écran Discord, avant d'activer le direct : notre club mène 2-0 à l'heure de jeu, juste
+ * après un but, tel que les amis du joueur le verront (même fonction que le vrai direct, sans IA).
+ */
+export function livePreviewPayload(t: TFunction, club: string, opponent: string) {
+  const scorer = t('discord.preview.scorer');
+  const base = { schema: 'archivix-live/1', updatedAt: '', gameDate: null, home: club, away: opponent, final: false, inMatch: true } as FmLive;
+  const prev = { ...base, homeScore: 1, awayScore: 0, minute: '55 min.', scorers: `${scorer} 23'` } as FmLive;
+  const cur = { ...prev, homeScore: 2, minute: '58 min.', scorers: `${scorer} 23', 57'` } as FmLive;
+  const m = momentsBetween(prev, cur).find((x) => x.kind === 'goal');
+  const moment: LiveHighlight | null = m ? { line: momentLine(t, cur, club, m), said: null, minute: 57, score: score(cur), final: false } : null;
+  return scoreboardPayload(t, cur, club, { moment });
+}

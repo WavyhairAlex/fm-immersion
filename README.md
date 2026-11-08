@@ -14,7 +14,7 @@ et outils pour rendre ta carrière plus vivante. Application Windows gratuite et
 | **Plugin en jeu** (Archivix Bridge, BepInEx) : installation et mise à jour | disponible |
 | **Visages photoréalistes** : installation en un clic, réinstallation après une mise à jour Steam | à venir |
 | **Gazette** de la semaine : résultats, classement, blessures, transferts, centre de formation | disponible |
-| **Live Discord** : envoi de la gazette dans ton salon (webhook) | disponible (solo) |
+| **Live Discord** : direct de tes matchs et gazette (à la main ou automatique) dans ton salon (webhook) | disponible (solo) |
 | **Défis** : De zéro à héros, Invincibles, Génération U19, Que des locaux, Ancienne Génération, Vikings, Sir Alex Ferguson, Économiste, Dunkerque… vérifiés par ta partie, certificat à partager | disponible |
 | **Monde partagé** (multijoueur asynchrone) | à venir |
 
@@ -39,7 +39,7 @@ pour chercher ses mises à jour au démarrage et, seulement si tu le demandes, p
 L'écran Visages lit aussi le petit manifeste des packs de visages publiés au fil de la génération
 (`github.com/amnesix-nt/FM27-Photorealistic-Faces/releases`, release « v2-progression ») ; le pack lui-même (~500 Mo)
 n'est téléchargé que si tu cliques sur « Télécharger et installer », vérifié par SHA-256 avant l'installation.
-Si tu relies un salon Discord, la gazette n'y part que quand tu cliques sur « Envoyer sur Discord », et un certificat de défi (pseudo choisi, clubs, résultats des matchs, âges et nationalités des joueurs alignés) seulement quand tu cliques sur « Partager sur Discord ».
+Si tu relies un salon Discord (lien webhook, écran Live Discord), seul ce salon reçoit des messages, et seulement ce que tu as choisi : la gazette quand tu cliques sur « Envoyer sur Discord » ou, si tu coches « Envoyer ma gazette automatiquement chaque semaine », dès qu'une semaine de jeu est finie ; le direct de tes matchs (un encart modifié à chaque temps fort) si tu coches « Raconter mes matchs en direct sur Discord » ; un certificat de défi (pseudo choisi, clubs, résultats des matchs, âges et nationalités des joueurs alignés) seulement quand tu cliques sur « Partager sur Discord ».
 GitHub voit alors ton adresse IP, comme pour toute visite de son site.
 
 **Rédaction par IA (désactivée par défaut).** Si tu l'actives (écran Plugin et réglages), la gazette et les commentaires du

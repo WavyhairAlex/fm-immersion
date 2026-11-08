@@ -3274,8 +3274,21 @@
         "xg": "xG"
       },
       "board": "Board",
-      "vs": "vs"
-    }
+      "vs": "vs",
+      "keyFigure": "The number",
+      "stampUp_one": "+{{count}} place",
+      "stampUp_other": "+{{count}} places",
+      "stampDown_one": "-{{count}} place",
+      "stampDown_other": "-{{count}} places",
+      "figure": {
+        "shots": "shots, against {{them}} for {{opponent}}: one-way traffic.",
+        "shotsAgainst": "shots faced, with {{us}} attempted: the opponent laid siege.",
+        "possession": "possession over the whole match.",
+        "xg": "xG created, against {{them}} for {{opponent}}."
+      }
+    },
+    "actions": "Rewrite and share",
+    "emptyHow": "FM Immersion reads your save on each game day through the FM27 plugin; the gazette is written from those readings, one per week."
   },
   "discord": {
     "autoTitle": "Automatic gazette",
@@ -3299,14 +3312,13 @@
     "privacy": "The link stays on your PC. FM Immersion sends nothing to Discord without your click, and only to Discord's webhook address.",
     "status": {
       "title": "What is connected",
-      "channel": "Channel",
-      "live": "Live",
-      "auto": "Auto gazette",
-      "ai": "AI",
-      "linked": "Linked",
-      "notLinked": "Not linked",
-      "on": "On",
-      "off": "Off"
+      "none": "No channel linked: nothing is sent to Discord.",
+      "liveOn": "Live matches on",
+      "liveOff": "Live matches off",
+      "autoOn": "Automatic gazette on",
+      "autoOff": "Automatic gazette off",
+      "aiOn": "Texts written by AI ({{model}}).",
+      "aiOff": "Ready-made texts (AI writing off)."
     },
     "change": "Change channel",
     "sendTitle": "What goes to your channel",
@@ -3314,7 +3326,14 @@
     "livePlugin": "FM27 plugin 0.5.0 or newer, FM Immersion open during the match.",
     "autoShort": "The week's gazette goes out on its own as soon as a game week ends. FM Immersion must be open.",
     "manualTitle": "Send a gazette by hand",
-    "manualShort": "From the Gazette, “Send to Discord” button, for any issue."
+    "manualShort": "From the Gazette, “Send to Discord” button, for any issue.",
+    "preview": {
+      "title": "See what your friends will get",
+      "help": "Example of the live box right after a goal. The same message is edited at each key moment, there is only one per match.",
+      "club": "Your club",
+      "opponent": "The opponent",
+      "scorer": "L. Martin"
+    }
   },
   "live": {
     "title": "Live match",
