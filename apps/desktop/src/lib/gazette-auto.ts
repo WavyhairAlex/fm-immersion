@@ -9,8 +9,9 @@ import { rememberClubLooks } from './club-look';
 import { fmData, savesData } from './data';
 import { getWebhook, isWebhook, sendDiscordImage } from './discord';
 import { importMissingHistory } from './fm-history';
-import { discordPayload } from './gazette-text';
-import { canvasPng, drawUne, recentForm } from './gazette-une';
+import { drawPage } from './gazette-page';
+import { discordPagePayload } from './gazette-text';
+import { canvasPng, recentForm } from './gazette-une';
 import { loadFace } from './player-face';
 import { drawSeason, seasonPayload } from './season-une';
 
@@ -24,10 +25,9 @@ export async function sendGazette(
   webhook = getWebhook(),
 ) {
   const issue = issues[index]!;
-  const png = await canvasPng(await drawUne(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures }));
-  const payload = discordPayload(t, issue, lang, figures);
-  const embed = { ...payload.embeds[0]!, image: { url: 'attachment://une.png' } };
-  return sendDiscordImage({ ...payload, embeds: [embed], attachments: [{ id: 0, filename: 'une.png' }] }, png, webhook);
+  // Tout le journal sur une seule image (page complète), avec un court encart : pas de long texte dans le salon.
+  const png = await canvasPng(await drawPage(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures }));
+  return sendDiscordImage(discordPagePayload(t, issue, lang), png, webhook);
 }
 
 /** Envoie le numéro spécial « Bilan de la saison » (une en image + encart). */

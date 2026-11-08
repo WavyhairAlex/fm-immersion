@@ -246,6 +246,27 @@ function accent(s: GazetteStory) {
 const cut = (text: string, max: number) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);
 
 /**
+ * Court encart Discord au-dessus de la page complète en image (`gazette-page.ts`) : le journal se lit sur l'image,
+ * le message ne donne que le nom du journal, le numéro et le gros titre.
+ */
+export function discordPagePayload(t: TFunction, issue: GazetteIssue, lang?: string) {
+  const head = storyText(t, issue.club, issue.headline, lang);
+  return {
+    username: paperName(t, issue.club).slice(0, 80),
+    embeds: [
+      {
+        author: { name: cut(`📰  ${paperName(t, issue.club).toUpperCase()}  ·  ${t('gazette.issue', { number: issue.number })}`, 256) },
+        title: cut(`${ICON[issue.headline.kind]}  ${head.title}`, 256),
+        color: accent(issue.headline),
+        image: { url: 'attachment://une.png' },
+        footer: { text: `${weekLabel(t, lang, issue.weekStart, issue.weekEnd)}  ·  FM Immersion` },
+      },
+    ],
+    attachments: [{ id: 0, filename: 'une.png' }],
+  };
+}
+
+/**
  * Message Discord (webhook) pour une gazette, façon journal : bandeau du titre et du numéro, la une en grand
  * (pictogramme, titre, chapeau en citation), puis les brèves une par une et le prochain match en dernier.
  */
