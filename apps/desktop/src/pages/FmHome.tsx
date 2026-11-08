@@ -130,21 +130,32 @@ export function FmHome({
 
   return (
     <div className="space-y-4">
-      <FmBriefing
-        key={snap.gameDate}
+      <FmMatchCenter
         snap={snap}
         players={players}
-        starters={starters}
-        decisions={decisionList}
-        playtime={playtime}
-        setupsToChange={toChange.length}
-        offseason={offseasonDue(snap, coach.seasonStart ?? 8)}
+        folder={folder}
+        gameFormation={gameFormation}
+        lineup={lineup}
+        gameTactic={gameTactic}
         go={go}
-        onTodo={onTodo}
-        tactic={tactic}
+        aside={
+          <FmBriefing
+            key={snap.gameDate}
+            snap={snap}
+            players={players}
+            starters={starters}
+            decisions={decisionList}
+            playtime={playtime}
+            setupsToChange={toChange.length}
+            offseason={offseasonDue(snap, coach.seasonStart ?? 8)}
+            go={go}
+            onTodo={onTodo}
+            tactic={tactic}
+            hideMatch
+          />
+        }
       />
       <FmOffseason snap={snap} players={players} list={decisionList} go={go} />
-      <FmMatchCenter snap={snap} players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameTactic={gameTactic} go={go} />
       <button type="button" className="chip" aria-expanded={detail} onClick={toggleDetail}>
         {t(detail ? 'fm.brief.detailHide' : 'fm.brief.detail')}
       </button>

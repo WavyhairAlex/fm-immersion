@@ -2015,7 +2015,12 @@
       "suspended": "suspendus",
       "rating": "note moy.",
       "topScorer": "Meilleur buteur :",
-      "backForMatch": "Rétabli pour le match (blessé encore {{days}} j)"
+      "backForMatch": "Rétabli pour le match (blessé encore {{days}} j)",
+      "tomorrow": "Demain",
+      "inDaysLong": "Dans {{count}} jours",
+      "prepareMatch": "Préparer le match",
+      "seeOpponent": "Voir l'adversaire",
+      "fit": "Note du onze"
     },
     "matchSheet": {
       "title": "Feuille de match",
@@ -2533,7 +2538,25 @@
       "tacticRethink_one": "Tu perds aux xG ({{xg}} par match sur le dernier match) et l'efficacité tactique stagne à {{te}} % : ce schéma ne marche pas. Essaie un autre schéma avec les consignes par défaut, puis ajuste peu à peu, sans toucher aux rôles.",
       "tacticRethink_other": "Tu perds aux xG ({{xg}} par match sur {{count}} matchs) et l'efficacité tactique stagne à {{te}} % : ce schéma ne marche pas. Essaie un autre schéma avec les consignes par défaut, puis ajuste peu à peu, sans toucher aux rôles.",
       "tacticPatience_one": "Ta tactique est en rodage (1 match) : son efficacité monte (+{{gain}}, {{te}} %). Garde-la, une tactique chargée peut mettre 20 matchs à donner sa mesure.",
-      "tacticPatience_other": "Ta tactique est en rodage ({{count}} matchs) : son efficacité monte (+{{gain}}, {{te}} %). Garde-la, une tactique chargée peut mettre 20 matchs à donner sa mesure."
+      "tacticPatience_other": "Ta tactique est en rodage ({{count}} matchs) : son efficacité monte (+{{gain}}, {{te}} %). Garde-la, une tactique chargée peut mettre 20 matchs à donner sa mesure.",
+      "word": "Le mot de ton adjoint",
+      "week": "À suivre cette semaine",
+      "progressShort": "{{done}} sur {{count}} réglés",
+      "nothingElse": "Rien d'autre cette semaine.",
+      "cat": {
+        "tactic": "Composition",
+        "opponent": "Adversaire",
+        "depth": "Rotation",
+        "targets": "Recrutement",
+        "finances": "Finances",
+        "contracts": "Contrats",
+        "playtime": "Temps de jeu",
+        "dressing": "Vestiaire",
+        "effectiveness": "Tactique",
+        "training": "Entraînement",
+        "mercato": "Mercato",
+        "home": "Adjoint"
+      }
     }
   },
   "modes": {
@@ -3436,7 +3459,7 @@
     "clubParam": "Club du défi : {{club}} (ton club actuel)"
   },
   "layout": {
-    "readNow": "Lire la partie maintenant",
+    "readNow": "Actualiser la partie",
     "openSettings": "Ouvrir Plugin et réglages",
     "more": "Plus",
     "bridgeAction": "Le plugin demande une action",

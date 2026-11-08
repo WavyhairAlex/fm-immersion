@@ -274,6 +274,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
   };
   const sync = useCareerStore((s) => s.sync);
   const dateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' });
+  const longDateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const stampFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'short', timeStyle: 'short' });
   const freeSince = sync.free ? (settings?.fmFreeSince ?? sync.free) : null;
 
@@ -324,7 +325,10 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
               {t('fm.sync', { time: stampFmt.format(new Date(snapshot.importedAt)) })}
             </span>
           )}
-          <button type="button" className="btn-secondary px-3 py-1 text-sm" disabled={importSnap.isPending || !folder} onClick={() => importSnap.mutate({})}>
+          <button type="button" className="btn-secondary inline-flex items-center gap-1.5 px-3 py-1 text-sm" disabled={importSnap.isPending || !folder} onClick={() => importSnap.mutate({})}>
+            <svg viewBox="0 0 24 24" className={`h-4 w-4 fill-none stroke-current ${importSnap.isPending ? 'animate-spin motion-reduce:animate-none' : ''}`} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M20 11a8 8 0 00-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0014.3 4.9L20 16M20 20v-4h-4" />
+            </svg>
             {t('layout.readNow')}
           </button>
         </div>
@@ -371,7 +375,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
                       <>
                         <header className="mb-4">
                           <h1 className="text-3xl font-semibold">{t('layout.today.title')}</h1>
-                          <p className="mt-1 text-brun">{t('layout.today.intro')}</p>
+                          <p className="mt-1 text-brun first-letter:uppercase">{longDateFmt.format(new Date(shownGameDate(snapshot, sync.now) ?? snapshot.gameDate))}</p>
                         </header>
                         {part('home')}
                         <TodayCards saveId={saveId} />
