@@ -214,6 +214,11 @@ describe('groupes d’encadrement', () => {
     expect(personalityTone('Peu professionnel')).toBe('bad');
     expect(personalityTone('Très professionnel')).toBe('good');
     expect(personalityTone('Équilibré')).toBe('neutral');
+    // Libellés français relevés dans une vraie partie FM27.
+    expect(personalityTone('Faible détermination')).toBe('bad');
+    expect(personalityTone('Sans ambition')).toBe('bad');
+    expect(personalityTone('Faible confiance en soi')).toBe('bad');
+    expect(personalityTone('Assez déterminé')).toBe('good');
   });
 });
 
