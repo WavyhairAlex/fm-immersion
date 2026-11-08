@@ -471,5 +471,11 @@ describe('programme FM Immersion (méthode par défaut)', () => {
     expect(coachFocus({ age: 19, positions: ['MC'] }, [{ key: 'passing' }], null)).toBe('quickness');
     expect(coachFocus({ age: 19, positions: ['MC'] }, [{ key: 'passing' }], 'passing')).toBe('passing');
     expect(coachFocus({ age: 29, positions: ['MC'] }, [{ key: 'passing' }], null)).toBe(individualFocus([{ key: 'passing' }], false));
+    // Jeune déjà rapide : son point faible du rôle passe avant Vitesse.
+    expect(coachFocus({ age: 19, positions: ['DC'], attributes: { Pace: 13, Acceleration: 13 } }, [{ key: 'Composure' }], null)).toBe('containment');
+    // Jeune lent (accélération 11) : Vitesse.
+    expect(coachFocus({ age: 19, positions: ['DC'], attributes: { Pace: 14, Acceleration: 11 } }, [{ key: 'Composure' }], null)).toBe('quickness');
+    // Jeune rapide sans point faible reconnu : Vitesse quand même.
+    expect(coachFocus({ age: 19, positions: ['DC'], attributes: { Pace: 15, Acceleration: 15 } }, [], null)).toBe('quickness');
   });
 });
