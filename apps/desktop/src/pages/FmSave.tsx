@@ -32,6 +32,7 @@ import { TodayCards } from '../components/TodayCards';
 import { shownGameDate, useCareer, useCareerStore } from '../lib/career';
 import { clubPath, pageOf, PARTS, VISIBLE_PARTS, type ClubPage } from '../lib/club-nav';
 import { fmData } from '../lib/data';
+import { useHistory } from '../lib/fm-cache';
 import { importMissingHistory, type FmHistoryFile } from '../lib/fm-history';
 import { useFmFolder } from '../lib/fm-sync';
 import { FmOtherSaveError, type FmSaveFile } from '../lib/fm';
@@ -97,11 +98,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
     queryFn: () => fmData.latest(saveId),
     enabled: !!saveId,
   });
-  const { data: all } = useQuery({
-    queryKey: [...key, 'all'],
-    queryFn: () => fmData.all(saveId),
-    enabled: !!saveId,
-  });
+  const { data: all } = useHistory(saveId);
   const { data: settings } = useQuery({
     queryKey: [...key, 'settings'],
     queryFn: () => fmData.settings(saveId),

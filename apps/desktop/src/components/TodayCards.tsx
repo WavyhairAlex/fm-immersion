@@ -5,7 +5,8 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { factsFor } from '../lib/challenges';
-import { challengesData, fmData } from '../lib/data';
+import { challengesData } from '../lib/data';
+import { useHistory } from '../lib/fm-cache';
 import { storyText } from '../lib/gazette-text';
 
 type FacesStatus = { state: 'noGame' | 'missing' | 'original' | 'photorealV1' | 'photorealCustom' | 'unknown' };
@@ -44,7 +45,7 @@ function Card({ label, to, action, children }: { label: string; to: string; acti
 
 function GazetteCard({ saveId }: { saveId: string }) {
   const { t } = useTranslation();
-  const { data: history = [] } = useQuery({ queryKey: ['fm', saveId, 'all'], queryFn: () => fmData.all(saveId) });
+  const { data: history = [] } = useHistory(saveId);
   const issue = useMemo(() => gazetteIssues(history)[0] ?? null, [history]);
   return (
     <Card label={issue ? `${t('modes.gazette.title')} · ${t('gazette.issue', { number: issue.number })}` : t('modes.gazette.title')} to="/gazette" action={t('layout.today.read')}>
@@ -59,7 +60,7 @@ function GazetteCard({ saveId }: { saveId: string }) {
 
 function ChallengeCard({ saveId }: { saveId: string }) {
   const { t } = useTranslation();
-  const { data: history = [] } = useQuery({ queryKey: ['fm', saveId, 'all'], queryFn: () => fmData.all(saveId) });
+  const { data: history = [] } = useHistory(saveId);
   const { data: enrolled = [] } = useQuery({ queryKey: ['challenges', saveId], queryFn: () => challengesData.list(saveId) });
   const row = enrolled.find((c) => !c.abandoned) ?? null;
   const result = useMemo(

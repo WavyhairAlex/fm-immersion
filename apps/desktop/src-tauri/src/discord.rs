@@ -44,8 +44,7 @@ pub fn valid_webhook(url: &str) -> bool {
 }
 
 /// Envoie un message (JSON du webhook Discord : `content`, `embeds`…).
-#[tauri::command]
-pub fn discord_send(webhook: String, payload: serde_json::Value) -> Result<(), DiscordError> {
+fn discord_send_now(webhook: String, payload: serde_json::Value) -> Result<(), DiscordError> {
     let webhook = webhook.trim();
     if !valid_webhook(webhook) {
         return Err(DiscordError::BadUrl);
@@ -54,7 +53,7 @@ pub fn discord_send(webhook: String, payload: serde_json::Value) -> Result<(), D
     if body.len() > 20_000 {
         return Err(DiscordError::TooLong);
     }
-    match ureq::post(webhook)
+    match agent().post(webhook)
         .set("Content-Type", "application/json")
         .set("User-Agent", "FM-Immersion")
         .send_string(&body)
@@ -92,11 +91,10 @@ pub fn message_id(answer: &str) -> Option<String> {
 }
 
 /// Envoie un message et renvoie son identifiant, pour le modifier ensuite (tableau de score du match en direct).
-#[tauri::command]
-pub fn discord_post(webhook: String, payload: serde_json::Value) -> Result<String, DiscordError> {
+fn discord_post_now(webhook: String, payload: serde_json::Value) -> Result<String, DiscordError> {
     let webhook = webhook.trim();
     let body = checked(webhook, &payload)?;
-    match ureq::post(&format!("{webhook}?wait=true"))
+    match agent().post(&format!("{webhook}?wait=true"))
         .set("Content-Type", "application/json")
         .set("User-Agent", "FM-Immersion")
         .send_string(&body)
@@ -108,14 +106,13 @@ pub fn discord_post(webhook: String, payload: serde_json::Value) -> Result<Strin
 }
 
 /// Modifie un message envoyé par ce même webhook (seulement les siens : Discord refuse les autres).
-#[tauri::command]
-pub fn discord_edit(webhook: String, message_id: String, payload: serde_json::Value) -> Result<(), DiscordError> {
+fn discord_edit_now(webhook: String, message_id: String, payload: serde_json::Value) -> Result<(), DiscordError> {
     let webhook = webhook.trim();
     let body = checked(webhook, &payload)?;
     if message_id.is_empty() || message_id.len() > 25 || !message_id.chars().all(|c| c.is_ascii_digit()) {
         return Err(DiscordError::BadUrl);
     }
-    match ureq::request("PATCH", &format!("{webhook}/messages/{message_id}"))
+    match agent().request("PATCH", &format!("{webhook}/messages/{message_id}"))
         .set("Content-Type", "application/json")
         .set("User-Agent", "FM-Immersion")
         .send_string(&body)
@@ -150,8 +147,7 @@ pub fn multipart_typed(boundary: &str, payload: &str, name: &str, content_type: 
 const PNG_MAGIC: [u8; 8] = [0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A];
 
 /// Envoie un message avec une image PNG dessinée par l'appli (la une de la gazette), au plus 8 Mo.
-#[tauri::command]
-pub fn discord_send_image(webhook: String, payload: serde_json::Value, png: Vec<u8>) -> Result<(), DiscordError> {
+fn discord_send_image_now(webhook: String, payload: serde_json::Value, png: Vec<u8>) -> Result<(), DiscordError> {
     let webhook = webhook.trim();
     if !valid_webhook(webhook) {
         return Err(DiscordError::BadUrl);
@@ -162,7 +158,7 @@ pub fn discord_send_image(webhook: String, payload: serde_json::Value, png: Vec<
     }
     let boundary = format!("fmimmersion{:x}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0));
     let data = multipart(&boundary, &body, "une.png", &png);
-    match ureq::post(webhook)
+    match agent().post(webhook)
         .set("Content-Type", &format!("multipart/form-data; boundary={boundary}"))
         .set("User-Agent", "FM-Immersion")
         .send_bytes(&data)
@@ -185,8 +181,7 @@ pub fn valid_certificate_name(name: &str) -> bool {
 
 /// Envoie un message avec le certificat d'un défi joint (`defi-….json`, au plus 8 Mo), pour que les autres joueurs du
 /// salon le téléchargent et le vérifient dans leur FM Immersion. Seul un certificat FM Immersion est accepté.
-#[tauri::command]
-pub fn discord_send_certificate(webhook: String, payload: serde_json::Value, name: String, certificate: String) -> Result<(), DiscordError> {
+fn discord_send_certificate_now(webhook: String, payload: serde_json::Value, name: String, certificate: String) -> Result<(), DiscordError> {
     let webhook = webhook.trim();
     if !valid_webhook(webhook) {
         return Err(DiscordError::BadUrl);
@@ -199,7 +194,7 @@ pub fn discord_send_certificate(webhook: String, payload: serde_json::Value, nam
     }
     let boundary = format!("fmimmersion{:x}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0));
     let data = multipart_typed(&boundary, &body, &name, "application/json", certificate.as_bytes());
-    match ureq::post(webhook)
+    match agent().post(webhook)
         .set("Content-Type", &format!("multipart/form-data; boundary={boundary}"))
         .set("User-Agent", "FM-Immersion")
         .send_bytes(&data)
@@ -215,8 +210,7 @@ pub fn discord_send_certificate(webhook: String, payload: serde_json::Value, nam
 
 /// Tableau de score du direct avec son image (`direct.png`) : envoi (`message_id` absent, renvoie l'identifiant) ou
 /// modification du même message (image remplacée : le JSON doit lister `attachments: [{id: 0, filename: "direct.png"}]`).
-#[tauri::command]
-pub fn discord_live_image(webhook: String, message_id: Option<String>, payload: serde_json::Value, png: Vec<u8>) -> Result<String, DiscordError> {
+fn discord_live_image_now(webhook: String, message_id: Option<String>, payload: serde_json::Value, png: Vec<u8>) -> Result<String, DiscordError> {
     let webhook = webhook.trim();
     let body = checked(webhook, &payload)?;
     if png.len() > 8 * 1024 * 1024 || !png.starts_with(&PNG_MAGIC) {
@@ -230,8 +224,8 @@ pub fn discord_live_image(webhook: String, message_id: Option<String>, payload: 
     let boundary = format!("fmimmersion{:x}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_nanos()).unwrap_or(0));
     let data = multipart(&boundary, &body, "direct.png", &png);
     let req = match &message_id {
-        Some(id) => ureq::request("PATCH", &format!("{webhook}/messages/{id}")),
-        None => ureq::post(&format!("{webhook}?wait=true")),
+        Some(id) => agent().request("PATCH", &format!("{webhook}/messages/{id}")),
+        None => agent().post(&format!("{webhook}?wait=true")),
     };
     match req
         .set("Content-Type", &format!("multipart/form-data; boundary={boundary}"))
@@ -244,6 +238,51 @@ pub fn discord_live_image(webhook: String, message_id: Option<String>, payload: 
         Err(ureq::Error::Status(code, resp)) => Err(refused(code, resp)),
         Err(e) => Err(DiscordError::Network(e.to_string())),
     }
+}
+
+
+/// Délais des envois : une connexion qui traîne ne bloque jamais le direct plus de 30 secondes.
+fn agent() -> ureq::Agent {
+    ureq::AgentBuilder::new()
+        .timeout_connect(std::time::Duration::from_secs(10))
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+}
+
+/// Les envois tournent hors du fil principal : la fenêtre ne se fige plus pendant un envoi à Discord.
+async fn background<T: Send + 'static>(f: impl FnOnce() -> Result<T, DiscordError> + Send + 'static) -> Result<T, DiscordError> {
+    tauri::async_runtime::spawn_blocking(f).await.map_err(|e| DiscordError::Network(e.to_string()))?
+}
+
+// Commandes appelées par l'interface (asynchrones) ; les fonctions `_now` font l'envoi.
+#[tauri::command]
+pub async fn discord_send(webhook: String, payload: serde_json::Value) -> Result<(), DiscordError> {
+    background(move || discord_send_now(webhook, payload)).await
+}
+
+#[tauri::command]
+pub async fn discord_post(webhook: String, payload: serde_json::Value) -> Result<String, DiscordError> {
+    background(move || discord_post_now(webhook, payload)).await
+}
+
+#[tauri::command]
+pub async fn discord_edit(webhook: String, message_id: String, payload: serde_json::Value) -> Result<(), DiscordError> {
+    background(move || discord_edit_now(webhook, message_id, payload)).await
+}
+
+#[tauri::command]
+pub async fn discord_send_image(webhook: String, payload: serde_json::Value, png: Vec<u8>) -> Result<(), DiscordError> {
+    background(move || discord_send_image_now(webhook, payload, png)).await
+}
+
+#[tauri::command]
+pub async fn discord_send_certificate(webhook: String, payload: serde_json::Value, name: String, certificate: String) -> Result<(), DiscordError> {
+    background(move || discord_send_certificate_now(webhook, payload, name, certificate)).await
+}
+
+#[tauri::command]
+pub async fn discord_live_image(webhook: String, message_id: Option<String>, payload: serde_json::Value, png: Vec<u8>) -> Result<String, DiscordError> {
+    background(move || discord_live_image_now(webhook, message_id, payload, png)).await
 }
 
 #[cfg(test)]
@@ -263,7 +302,7 @@ mod tests {
 
     #[test]
     fn refuse_un_lien_invalide_sans_reseau() {
-        let err = discord_send("https://example.com/hook".into(), serde_json::json!({ "content": "x" })).unwrap_err();
+        let err = discord_send_now("https://example.com/hook".into(), serde_json::json!({ "content": "x" })).unwrap_err();
         assert!(matches!(err, DiscordError::BadUrl));
     }
 
@@ -273,13 +312,13 @@ mod tests {
         assert_eq!(message_id(r#"{"id":"../x"}"#), None);
         assert_eq!(message_id("pas du json"), None);
         assert!(matches!(
-            discord_edit("https://discord.com/api/webhooks/1/x".into(), "12/../3".into(), serde_json::json!({})),
+            discord_edit_now("https://discord.com/api/webhooks/1/x".into(), "12/../3".into(), serde_json::json!({})),
             Err(DiscordError::BadUrl)
         ));
-        assert!(matches!(discord_post("https://evil.io/x".into(), serde_json::json!({})), Err(DiscordError::BadUrl)));
+        assert!(matches!(discord_post_now("https://evil.io/x".into(), serde_json::json!({})), Err(DiscordError::BadUrl)));
         let png = vec![0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A];
         assert!(matches!(
-            discord_live_image("https://discord.com/api/webhooks/1/x".into(), Some("1/../2".into()), serde_json::json!({}), png),
+            discord_live_image_now("https://discord.com/api/webhooks/1/x".into(), Some("1/../2".into()), serde_json::json!({}), png),
             Err(DiscordError::BadUrl)
         ));
     }
@@ -293,12 +332,12 @@ mod tests {
         let body = multipart_typed("b", "{}", "defi-x.json", "application/json", b"{\"format\":1}");
         assert!(String::from_utf8_lossy(&body).contains("filename=\"defi-x.json\"\r\nContent-Type: application/json"));
         let hook = "https://discord.com/api/webhooks/1/x".to_string();
-        assert!(matches!(discord_send_certificate(hook.clone(), serde_json::json!({}), "defi-x.json".into(), "{\"format\":\"autre\"}".into()), Err(DiscordError::TooLong)));
+        assert!(matches!(discord_send_certificate_now(hook.clone(), serde_json::json!({}), "defi-x.json".into(), "{\"format\":\"autre\"}".into()), Err(DiscordError::TooLong)));
         assert!(matches!(
-            discord_send_certificate(hook, serde_json::json!({}), "x.json".into(), "{\"format\":\"fm-immersion-defi/1\"}".into()),
+            discord_send_certificate_now(hook, serde_json::json!({}), "x.json".into(), "{\"format\":\"fm-immersion-defi/1\"}".into()),
             Err(DiscordError::TooLong)
         ));
-        assert!(matches!(discord_send_certificate("https://evil.io".into(), serde_json::json!({}), "defi-x.json".into(), String::new()), Err(DiscordError::BadUrl)));
+        assert!(matches!(discord_send_certificate_now("https://evil.io".into(), serde_json::json!({}), "defi-x.json".into(), String::new()), Err(DiscordError::BadUrl)));
     }
 
     #[test]
@@ -311,9 +350,9 @@ mod tests {
         assert!(text.contains("name=\"files[0]\"; filename=\"une.png\"\r\nContent-Type: image/png\r\n\r\n"));
         assert!(body.ends_with(b"\x01\x02\r\n--b--\r\n"));
         assert!(matches!(
-            discord_send_image("https://discord.com/api/webhooks/1/x".into(), serde_json::json!({}), vec![1, 2, 3]),
+            discord_send_image_now("https://discord.com/api/webhooks/1/x".into(), serde_json::json!({}), vec![1, 2, 3]),
             Err(DiscordError::TooLong)
         ));
-        assert!(matches!(discord_send_image("https://evil.io".into(), serde_json::json!({}), png.to_vec()), Err(DiscordError::BadUrl)));
+        assert!(matches!(discord_send_image_now("https://evil.io".into(), serde_json::json!({}), png.to_vec()), Err(DiscordError::BadUrl)));
     }
 }

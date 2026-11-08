@@ -19,6 +19,7 @@ import { factsFor } from '../lib/challenges';
 import { issueText, saveCertificate, sendCertificate, stepText } from '../lib/challenge-share';
 import { useCareer } from '../lib/career';
 import { challengesData, fmData } from '../lib/data';
+import { useHistory } from '../lib/fm-cache';
 import { getWebhook, isWebhook } from '../lib/discord';
 
 const COACH_KEY = 'fmi.challenges.coach';
@@ -57,8 +58,8 @@ export function Challenges() {
   const { saveId, fmSaves } = useCareer();
   const [coach, setCoach] = useState(read(COACH_KEY));
 
-  const { data: history = [] } = useQuery({ queryKey: ['fm', 'all', saveId], queryFn: () => fmData.all(saveId), enabled: !!saveId });
-  const { data: settings } = useQuery({ queryKey: ['fm', 'settings', saveId], queryFn: () => fmData.settings(saveId), enabled: !!saveId });
+  const { data: history = [] } = useHistory(saveId);
+  const { data: settings } = useQuery({ queryKey: ['fm', saveId, 'settings'], queryFn: () => fmData.settings(saveId), enabled: !!saveId });
   const { data: enrolled = [] } = useQuery({ queryKey: ['challenges', saveId], queryFn: () => challengesData.list(saveId), enabled: !!saveId });
   const active = enrolled.filter((c) => !c.abandoned);
 

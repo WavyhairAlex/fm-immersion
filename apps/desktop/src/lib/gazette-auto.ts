@@ -1,15 +1,14 @@
 import { gazetteIssues, seasonReviews, seasonSoFar, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { useQueryClient } from '@tanstack/react-query';
-import { invoke } from '@tauri-apps/api/core';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { withWriting } from './ai-gazette';
 import { CAREER_KEY } from './career';
 import { rememberClubLooks } from './club-look';
-import { fmData, savesData } from './data';
+import { savesData } from './data';
 import { getWebhook, isWebhook, sendDiscordImage } from './discord';
-import { importMissingHistory } from './fm-history';
+import { fetchHistory } from './fm-cache';
 import { drawPage } from './gazette-page';
 import { discordPagePayload } from './gazette-text';
 import { canvasPng, recentForm } from './gazette-une';
@@ -104,7 +103,6 @@ export function useGazetteAuto() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const busy = useRef(false);
-  const lastText = useRef<string | null>(null);
   useEffect(() => {
     const tick = async () => {
       if (busy.current || !getGazetteAuto() || !isWebhook(getWebhook())) return;
@@ -113,29 +111,9 @@ export function useGazetteAuto() {
         const fmSaves = (await savesData.list()).filter((s) => s.gameId === 'fm');
         const saveId = fmSaves.find((s) => s.id === read(GAZETTE_SAVE_KEY))?.id ?? fmSaves[0]?.id;
         if (!saveId) return;
-        // Instantané du jour : importé ici aussi, pour que la gazette parte même si FM Coach n'est pas ouvert.
-        try {
-          const folder = (await fmData.settings(saveId)).fmFolder ?? (await invoke<string | null>('fm_default_folder'));
-          const text = folder ? await invoke<string>('fm_read_snapshot', { folder }) : null;
-          if (text && text !== lastText.current) {
-            lastText.current = text;
-            await fmData.importSnapshot(saveId, JSON.parse(text));
-            qc.invalidateQueries({ queryKey: ['fm'] });
-          }
-        } catch {
-          /* fichier absent, en cours d'écriture, ou autre partie chargée */
-        }
-        // Jours de jeu passés sans l'appli (fichiers datés du plugin) : rattrapés pour que chaque match ait sa brève.
-        try {
-          const folder = (await fmData.settings(saveId)).fmFolder ?? (await invoke<string | null>('fm_default_folder'));
-          if (folder) {
-            const n = await importMissingHistory(saveId, folder, (await fmData.settings(saveId)).fmClub ?? (await fmData.latest(saveId))?.club ?? null);
-            if (n) qc.invalidateQueries({ queryKey: ['fm'] });
-          }
-        } catch {
-          /* dossier illisible */
-        }
-        const history = await fmData.all(saveId);
+        // L'instantané du jour et les jours rattrapés sont importés par la lecture du plugin (`useFmSync`, active dans
+        // toute l'appli) : ici, on lit seulement l'historique, dans le cache tenu à jour par celle-ci.
+        const history = await fetchHistory(qc, saveId);
         rememberClubLooks(history.map((h) => h.data));
         const issues = gazetteIssues(history);
         const index = gazetteToSend(issues, saveId, read(SENT_KEY));

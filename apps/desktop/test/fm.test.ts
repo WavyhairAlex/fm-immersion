@@ -43,6 +43,26 @@ describe('instantanés Football Manager', () => {
     expect((await fm.latest(save.id))?.data.abilities).toBeUndefined();
   });
 
+  it('n’enregistre jamais deux fois la même date, même avec deux imports simultanés', async () => {
+    const save = await saves.create({ gameId: 'fm', name: 'Malženice' });
+    await Promise.all([fm.importSnapshot(save.id, snap('2027-03-01', ['A'])), fm.importSnapshot(save.id, snap('2027-03-01', ['A', 'B']))]);
+    expect((await fm.history(save.id)).map((h) => h.gameDate)).toEqual(['2027-03-01']);
+  });
+
+  it('ne perd aucune modification des réglages faite en même temps', async () => {
+    const save = await saves.create({ gameId: 'fm', name: 'Malženice' });
+    await Promise.all([
+      fm.setLeaving(save.id, '1', { reason: 'sell', since: '2027-01-01' } as never),
+      fm.setLeaving(save.id, '2', { reason: 'sell', since: '2027-01-01' } as never),
+      fm.updateSettings(save.id, { fmReadAbilities: true }),
+      fm.updateSettings(save.id, { coachPhoto: 'data:image/png;base64,AA==' }),
+    ]);
+    const s = await fm.settings(save.id);
+    expect(Object.keys(s.fmLeaving ?? {}).sort()).toEqual(['1', '2']);
+    expect(s.fmReadAbilities).toBe(true);
+    expect(s.coachPhoto).toBe('data:image/png;base64,AA==');
+  });
+
   it("garde un instantané par date de jeu et renvoie le plus récent", async () => {
     const save = await saves.create({ gameId: 'fm', name: 'Vänersborg' });
     await fm.importSnapshot(save.id, snap('2026-08-29', ['A']));
