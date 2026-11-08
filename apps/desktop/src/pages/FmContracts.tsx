@@ -51,7 +51,7 @@ export function FmContracts({ players, gameDate }: { players: FmPlayer[]; gameDa
           soon.map(({ player: p, months }) => (
             <Row key={p.id}>
               <div>
-                <div><PlayerLink player={p} /></div>
+                <div><PlayerLink player={p} focus="contract" /></div>
                 <div className="flex flex-wrap items-center gap-1 text-xs text-brun">
                   {[p.age != null ? t('fm.contracts.age', { count: p.age }) : null, p.positionsLabel, f.money(p.wage)].filter(Boolean).join(' · ')} <Level value={p.level} />
                 </div>

@@ -1,6 +1,8 @@
 import { analyzeResults, competitionKind, figuresForResultIn, type CompetitionKind, type FmPlayer, type FmSnapshot, type Insight, type MatchResult, type Outcome } from '@fm-immersion/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { clubPath } from '../lib/club-nav';
 import { Empty, Kpi, More, Panel, PlayerLink, Tag, type Tone } from './FmUi';
 
 const TONE: Record<Outcome, Tone> = { W: 'good', D: 'info', L: 'bad' };
@@ -17,8 +19,14 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
   const [open, setOpen] = useState<string | null>(null);
   // Filtre par nature de compétition : la liste des matchs et un bilan réduit (le bilan global ignore déjà les amicaux).
   const [kind, setKind] = useState<CompetitionKind | 'all'>('all');
+  // Preuve d'une conclusion : la liste des matchs réduite à ceux qui la justifient.
+  const [proof, setProof] = useState<Insight | null>(null);
+  const navigate = useNavigate();
   const kinds = useMemo(() => KINDS.filter((k) => an.results.some((r) => competitionKind(r.competition) === k)), [an]);
-  const listed = useMemo(() => (kind === 'all' ? an.results : an.results.filter((r) => competitionKind(r.competition) === kind)), [an, kind]);
+  const listed = useMemo(() => {
+    const byKind = kind === 'all' ? an.results : an.results.filter((r) => competitionKind(r.competition) === kind);
+    return proof ? byKind.filter((r) => backs(proof, r)) : byKind;
+  }, [an, kind, proof]);
   const sub = useMemo(() => {
     if (kind === 'all') return null;
     const w = listed.reduce((n, r) => n + r.wins, 0);
@@ -37,10 +45,8 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
   const date = (d: string) => new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(d));
   const letter = (o: Outcome) => t(`fm.results.outcome.${o}`);
   const score = (r: MatchResult) => (r.goalsFor == null || r.goalsAgainst == null ? '–' : `${r.goalsFor} - ${r.goalsAgainst}`);
-  const insight = (i: Insight) => {
-    const p = Object.fromEntries(Object.entries(i.params).map(([k, v]) => [k, typeof v === 'number' && !Number.isInteger(v) ? num(v, 2) : v]));
-    return t(`fm.results.insight.${i.kind}`, p);
-  };
+  const params = (i: Insight) => Object.fromEntries(Object.entries(i.params).map(([k, v]) => [k, typeof v === 'number' && !Number.isInteger(v) ? num(v, 2) : v]));
+  const insight = (i: Insight) => t(`fm.results.insight.${i.kind}`, params(i));
 
   if (!an.results.length)
     return (
@@ -51,8 +57,29 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
     );
 
   const rec = an.record;
+  const showProof = (i: Insight) => {
+    setProof(i);
+    setKind('all');
+    requestAnimationFrame(() => document.getElementById('res-matches')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
+  // Que puis-je ajuster ? Chaque conclusion parlante devient une piste, avec l'écran où agir.
+  const moves = an.insights.flatMap((i) => {
+    const to = MOVE_VIEW[i.kind];
+    return to ? [{ i, to }] : [];
+  });
+  const q = (id: string, key: string) => (
+    <a href={`#${id}`} onClick={(e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="card flex-1 p-3 text-sm font-bold hover:ring-orange/40">
+      {t(`fm.results.q.${key}`)} <span className="text-orange-fonce">↓</span>
+    </a>
+  );
   return (
     <div className="space-y-4">
+      <nav className="flex flex-col gap-2 sm:flex-row" aria-label={t('fm.results.q.label')}>
+        {q('res-what', 'what')}
+        {q('res-repeat', 'repeat')}
+        {q('res-adjust', 'adjust')}
+      </nav>
+      <h2 id="res-what" className="scroll-mt-28 text-xl font-semibold">{t('fm.results.q.what')}</h2>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <Kpi label={t('fm.results.kpi.matches')} value={rec.matches} sub={t('fm.results.kpi.matchesSub')} />
         <Kpi label={t('fm.results.kpi.record')} value={`${rec.wins}-${rec.draws}-${rec.losses}`} sub={t('fm.results.kpi.recordSub')} />
@@ -68,13 +95,19 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
         />
       </div>
 
+      <h2 id="res-repeat" className="scroll-mt-28 pt-2 text-xl font-semibold">{t('fm.results.q.repeat')}</h2>
       <Panel title={t('fm.results.works')}>
         {an.insights.length ? (
           <ul className="space-y-1.5 text-sm">
             {an.insights.map((i, k) => (
-              <li key={k} className="flex gap-2">
+              <li key={k} className="flex flex-wrap items-baseline gap-2">
                 <span aria-hidden className={i.kind === 'merged' ? 'text-brun' : /Best|Plus|lucky/.test(i.kind) ? 'text-eau-fonce' : 'text-corail'}>●</span>
-                <span>{insight(i)}</span>
+                <span className="flex-1">{insight(i)}</span>
+                {i.kind !== 'merged' && (
+                  <button type="button" className="shrink-0 text-xs font-bold text-orange-fonce hover:underline" onClick={() => showProof(i)}>
+                    {t('fm.results.q.proof', { count: an.results.filter((r) => backs(i, r)).length })} →
+                  </button>
+                )}
               </li>
             ))}
           </ul>
@@ -82,6 +115,27 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
           <Empty>{t('fm.results.fewMatches', { min: 3 })}</Empty>
         )}
         <More>{t('fm.results.how')}</More>
+      </Panel>
+
+      <h2 id="res-adjust" className="scroll-mt-28 pt-2 text-xl font-semibold">{t('fm.results.q.adjust')}</h2>
+      <Panel title={t('fm.results.q.adjustTitle')}>
+        {moves.length ? (
+          <ul className="space-y-2 text-sm">
+            {moves.map(({ i, to }, k) => (
+              <li key={k} className="flex flex-wrap items-baseline gap-2">
+                <span className="flex-1">{t(`fm.results.move.${i.kind}`, params(i))}</span>
+                <button type="button" className="shrink-0 text-xs font-bold text-brun hover:underline" onClick={() => showProof(i)}>
+                  {t('fm.results.q.proof', { count: an.results.filter((r) => backs(i, r)).length })}
+                </button>
+                <button type="button" className="shrink-0 text-xs font-bold text-orange-fonce hover:underline" onClick={() => navigate(clubPath(to))}>
+                  {t(`fm.views.${to}`)} →
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <Empty>{t('fm.results.q.nothing')}</Empty>
+        )}
       </Panel>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -144,7 +198,16 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
         </Panel>
       </div>
 
+      <div id="res-matches" className="scroll-mt-28">
       <Panel title={t('fm.results.list')}>
+        {proof && (
+          <p className="mb-2 flex flex-wrap items-center gap-2 rounded-lg bg-orange-clair/60 px-3 py-2 text-sm">
+            <span className="font-bold">{t('fm.results.q.proofOf')}</span> <span className="flex-1">{insight(proof)}</span>
+            <button type="button" className="text-xs font-bold text-orange-fonce hover:underline" onClick={() => setProof(null)}>
+              {t('fm.results.q.all')}
+            </button>
+          </p>
+        )}
         {kinds.length > 1 && (
           <div className="mb-2 flex flex-wrap items-center gap-2 text-sm">
             <label htmlFor="fm-results-kind" className="text-brun">
@@ -237,6 +300,39 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
           })}
         </ul>
       </Panel>
+      </div>
     </div>
   );
+}
+
+/** Écran où agir sur une conclusion des résultats. */
+const MOVE_VIEW: Partial<Record<Insight['kind'], string>> = {
+  tacticBest: 'tactic',
+  tacticWorst: 'tactic',
+  playerPlus: 'tactic',
+  playerMinus: 'tactic',
+  wasteful: 'training',
+  leaky: 'instructions',
+};
+
+/** Le match (ou la période) appuie-t-il la conclusion ? Sert à montrer la preuve dans la liste. */
+function backs(i: Insight, r: MatchResult): boolean {
+  if (r.friendly) return false;
+  const name = String(i.params.name ?? '');
+  switch (i.kind) {
+    case 'tacticBest':
+      return (r.tactic ?? '?') === name || (r.tactic ?? '?') === String(i.params.other ?? '');
+    case 'tacticWorst':
+      return (r.tactic ?? '?') === name;
+    case 'playerPlus':
+    case 'playerMinus':
+      return r.matches === 1 && r.players.some((p) => p.name === name && p.started);
+    case 'wasteful':
+    case 'lucky':
+      return r.xg != null;
+    case 'leaky':
+      return (r.goalsAgainst ?? 0) >= 2;
+    default:
+      return true;
+  }
 }

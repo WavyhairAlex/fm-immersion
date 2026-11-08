@@ -65,3 +65,11 @@ export function useFacesUpdate(gameDir: string, workshop: string) {
 
 /** Nombre de portraits V2 d'un pack (base qualité + autres lots). */
 export const v2Count = (m: PackManifest) => (m.a2b ?? 0) + (m.d2 ?? 0);
+
+/** État du pack sur le PC du joueur, en une étiquette : rien d'installé, à jour, mise à jour disponible… */
+export function pcState(state: string, offer: boolean): 'noGame' | 'none' | 'upToDate' | 'update' | 'unknown' {
+  if (state === 'noGame') return 'noGame';
+  if (state === 'photorealV1' || state === 'photorealCustom') return offer ? 'update' : 'upToDate';
+  if (state === 'unknown') return 'unknown';
+  return offer ? 'update' : 'none';
+}

@@ -37,7 +37,7 @@ export function FmCalendar({ snap, players }: { snap: FmSnapshot; players: FmPla
           tired.map((p) => (
             <Row key={p.id}>
               <span className="flex items-center gap-2">
-                <PlayerLink player={p} /> <Pos player={p} />
+                <PlayerLink player={p} focus="form" /> <Pos player={p} />
               </span>
               <Tag tone={p.condition! < 80 ? 'bad' : 'warn'}>{pct(p.condition!)}</Tag>
             </Row>
@@ -50,7 +50,7 @@ export function FmCalendar({ snap, players }: { snap: FmSnapshot; players: FmPla
           rusty.map((p) => (
             <Row key={p.id}>
               <span className="flex items-center gap-2">
-                <PlayerLink player={p} /> <Pos player={p} /> <Level value={p.level} />
+                <PlayerLink player={p} focus="form" /> <Pos player={p} /> <Level value={p.level} />
               </span>
               <span className="flex items-center gap-1 text-xs text-brun">
                 {t('fm.cal.sharpness')} <Tag tone="warn">{pct(p.sharpness!)}</Tag>

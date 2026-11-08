@@ -373,7 +373,7 @@ export function FmMatchCenter({
                         <input type="checkbox" className="h-4 w-4 accent-[#C2410C]" checked={subState[i] === 'done'} onChange={() => toggleDone(c.slot)} aria-label={t('fm.matchSheet.live.done')} />
                       ) : null}
                       <span className="w-10 shrink-0 font-bold tabular-nums text-eau-fonce">{c.minute}'</span>
-                      <PlayerLink player={c.out} />
+                      <PlayerLink player={c.out} focus="form" />
                       <span className="text-brun" aria-hidden>
                         →
                       </span>

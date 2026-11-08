@@ -78,12 +78,14 @@ export function Level({ value }: { value: number | null | undefined }) {
   return <span className={`num-pill ${cls}`}>{new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value)}</span>;
 }
 
+/** Section de la fiche à montrer d'abord, selon la raison de l'ouverture (alerte de fatigue, échéance de contrat). */
+export type SheetFocus = 'form' | 'contract';
 /** Ouvre la fiche d'un joueur (fournie par la page de la partie) ; absente, les noms restent du texte. */
-export const PlayerSheetContext = createContext<((id: string) => void) | null>(null);
+export const PlayerSheetContext = createContext<((id: string, focus?: SheetFocus) => void) | null>(null);
 
 /** Nom de joueur cliquable : ouvre sa fiche. */
 /** Nom d'un joueur avec son médaillon (photo du facepack ou initiales), cliquable vers sa fiche quand c'est possible. */
-export function PlayerLink({ player, className = 'font-bold', face = true }: { player: FmPlayer; className?: string; face?: boolean }) {
+export function PlayerLink({ player, className = 'font-bold', face = true, focus }: { player: FmPlayer; className?: string; face?: boolean; focus?: SheetFocus }) {
   const { t } = useTranslation();
   const open = useContext(PlayerSheetContext);
   const inner = (
@@ -94,16 +96,16 @@ export function PlayerLink({ player, className = 'font-bold', face = true }: { p
   );
   if (!open) return <span className={`${className} inline-flex items-center`}>{inner}</span>;
   return (
-    <button type="button" className={`${className} inline-flex items-center text-left hover:text-orange-fonce hover:underline`} title={t('fm.sheet.open', { name: player.name })} onClick={() => open(player.id)}>
+    <button type="button" className={`${className} inline-flex items-center text-left hover:text-orange-fonce hover:underline`} title={t('fm.sheet.open', { name: player.name })} onClick={() => open(player.id, focus)}>
       {inner}
     </button>
   );
 }
 
-export function PlayerName({ player }: { player: FmPlayer }) {
+export function PlayerName({ player, focus }: { player: FmPlayer; focus?: SheetFocus }) {
   return (
     <span className="font-bold">
-      <PlayerLink player={player} />
+      <PlayerLink player={player} focus={focus} />
       {player.team && (
         <span className="ml-2">
           <Tag>{player.team}</Tag>
