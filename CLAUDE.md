@@ -12,7 +12,9 @@ extraite avec son historique ; Simloom garde Planet Zoo 2 et Transport Fever 3.
 - **Tout est local** : pas de compte, pas de connexion, aucune donnée envoyée. Les parties sont dans une base
   SQLite sur le PC (`%APPDATA%\app.fmimmersion.desktop\fm-immersion.db`). Les seules requêtes réseau vont vers GitHub
   Releases : la recherche de mise à jour au démarrage, et, à la demande du joueur, le téléchargement du plugin FM27
-  (`modules/fm/bridge`, vérifié par SHA-256, voir son README).
+  (`modules/fm/bridge`, vérifié par SHA-256, voir son README), et pour les visages le manifeste de la release
+  « v2-progression » de FM27-Photorealistic-Faces, puis le zip du pack V2 sur clic du joueur (`src-tauri/src/faces_remote.rs`,
+  SHA-256 + CRC vérifiés).
   Exception choisie par le joueur : le **Live Discord** envoie une gazette à son salon par le lien webhook qu'il a
   collé (`src-tauri/src/discord.rs`, seulement vers `discord.com/api/webhooks/`, seulement sur son clic), et un certificat de
   défi joint (`modules/fm/src/challenges.ts`, mode Défis) quand il clique sur « Partager sur Discord ».

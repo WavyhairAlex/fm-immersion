@@ -5,6 +5,7 @@ mod discord;
 mod faces;
 mod faces_pack;
 mod faces_progress;
+mod faces_remote;
 mod facepack;
 mod fm;
 mod fm_bridge;
@@ -56,6 +57,8 @@ pub fn run() {
             faces::faces_default_workshop,
             faces::faces_ageswap_status,
             faces::faces_ageswap_set,
+            faces_remote::faces_remote_check,
+            faces_remote::faces_remote_download,
             ai::ai_key_set,
             ai::ai_key_status,
             ai::ai_complete,

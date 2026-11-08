@@ -7,6 +7,7 @@ import { shownGameDate, useCareer, useCareerStore } from '../lib/career';
 import { CLUB_PAGES, pageOf, type ClubPage } from '../lib/club-nav';
 import { coachPhotoSource, type CoachPhotoCrop } from '../lib/coach-photo';
 import { fmData } from '../lib/data';
+import { useFacesDirs, useFacesUpdate } from '../lib/faces';
 import { CoachPhotoEditor, type CoachPhotoResult } from './CoachPhotoEditor';
 
 /** Icônes au trait (24×24), dessinées ici : aucun visuel du jeu. */
@@ -84,6 +85,8 @@ export function Sidebar() {
   const { saveId } = useCareer();
   const todo = useCareerStore((s) => s.todo);
   const bridgeOk = useCareerStore((s) => s.sync.bridgeOk);
+  const facesDirs = useFacesDirs();
+  const facesOffer = useFacesUpdate(facesDirs.gameDir, facesDirs.workshop).data?.offer;
   // Pastilles du briefing : valables pour la carrière suivie (remises à jour à chaque nouvelle date par l'accueil).
   const todoViews = saveId && todo.at.startsWith(`${saveId}|`) ? todo.views : [];
   const count = (p: ClubPage) => todoViews.filter((v) => pageOf(v) === p).length;
@@ -111,7 +114,12 @@ export function Sidebar() {
         <Item to="/gazette" icon="gazette" label={t('layout.nav.story')} active={pathname === '/gazette' || pathname === '/discord'} />
         <Item to="/defis" icon="challenges" label={t('modes.challenges.title')} />
         <p className="nav-group">{t('layout.groups.game')}</p>
-        <Item to="/visages" icon="faces" label={t('layout.nav.faces')} />
+        <Item
+          to="/visages"
+          icon="faces"
+          label={t('layout.nav.faces')}
+          badge={facesOffer ? <span className="h-2 w-2 rounded-full bg-orange" aria-label={t('faces.update.badge')} /> : null}
+        />
         <Item to="/reglages" icon="settings" label={t('layout.nav.settings')} badge={bridgeOk === false ? <span className="h-2 w-2 rounded-full bg-ambre" aria-label={t('layout.bridgeAction')} /> : null} />
         <Item to="/monde" icon="world" label={t('modes.world.title')} badge={<Soft>{t('modes.soon')}</Soft>} />
       </nav>
