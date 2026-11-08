@@ -3411,7 +3411,7 @@
       "scorer": "L. Martin"
     },
     "breakingEnable": "Send breaking news automatically",
-    "breakingShort": "New signing, departure of a starter, long injury, big match poster: the card goes to the channel on the day the plugin sees it."
+    "breakingShort": "New signing, departure of a starter, long injury, big match poster, feats (hat-trick, winning run, big win): the card goes to the channel on the day the plugin sees it."
   },
   "live": {
     "title": "Live match",
@@ -4261,5 +4261,40 @@
     "sectionHelp": "Cup tie, top of the table clash or head-to-head: the poster goes out a few days before the match.",
     "send": "Send the poster",
     "sent": "Poster sent to Discord."
+  },
+  "records": {
+    "kind": "Record edition",
+    "section": "Record edition",
+    "sectionHelp": "Hat-trick, winning run (5, 7, 10…), biggest win of the season, end of a bad run: a front page in picture on the day it happens.",
+    "send": "Send the record edition",
+    "sent": "Record edition sent to Discord.",
+    "opponentUnknown": "the opponent",
+    "home": "at home",
+    "away": "away",
+    "tag": {
+      "hatTrick": "Hat-trick",
+      "streak": "Winning run",
+      "bigWin": "Big win",
+      "runEnded": "Drought over"
+    },
+    "title": {
+      "hatTrick": "{{name}} hits a hat-trick against {{opponent}}",
+      "many": "{{name}} scores {{goals}} against {{opponent}}",
+      "streak": "{{club}} make it {{count}} wins in a row",
+      "bigWin": "{{club}} thrash {{opponent}} {{score}}",
+      "runEnded": "{{club}} finally win again"
+    },
+    "body": {
+      "hatTrick": "{{goals}} goals in one competitive match: a night {{club}} fans will talk about for a long time.",
+      "streak": "{{count}} competitive matches, {{count}} wins. The latest: {{score}} against {{opponent}}. How far can the run go?",
+      "bigWin": "Biggest win of the season for {{club}}: a {{margin}}-goal margin against {{opponent}}.",
+      "runEnded": "{{count}} matches without a win, it's over: {{club}} beat {{opponent}} {{score}}. The dressing room can breathe."
+    },
+    "caption": {
+      "hatTrick": "goals",
+      "streak": "wins in a row",
+      "bigWin": "biggest win of the season",
+      "runEnded": "matches without a win, it's over"
+    }
   }
 }

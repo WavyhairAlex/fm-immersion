@@ -1,4 +1,4 @@
-import type { BigMatch, BreakingNews, CoachExit, GazetteIssue, SeasonReview } from '@fm-immersion/module-fm';
+import type { BigMatch, BreakingNews, CoachExit, GazetteIssue, RecordNews, SeasonReview } from '@fm-immersion/module-fm';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@tauri-apps/api/core', () => ({ invoke: vi.fn() }));
@@ -9,7 +9,7 @@ vi.stubGlobal('localStorage', {
   setItem: (k: string, v: string) => void store.set(k, v),
   removeItem: (k: string) => void store.delete(k),
 });
-const { breakingToSend, farewellToSend, isBigMatchSent, markBigMatchSent, gazetteToSend, seasonToSend } = await import('../src/lib/gazette-auto');
+const { breakingToSend, farewellToSend, isBigMatchSent, isRecordSent, markBigMatchSent, markRecordSent, gazetteToSend, seasonToSend } = await import('../src/lib/gazette-auto');
 
 const issue = (weekStart: string) => ({ weekStart }) as GazetteIssue;
 
@@ -56,5 +56,15 @@ describe('gazette automatique', () => {
     expect(isBigMatchSent('s', { ...m, date: '2027-08-31' })).toBe(true);
     expect(isBigMatchSent('s', { ...m, date: '2028-03-01' })).toBe(false);
     expect(isBigMatchSent('autre', m)).toBe(false);
+  });
+
+  it("n'envoie un exploit qu'une fois, un triplé par joueur", () => {
+    const match = { opponent: 'Nitra', goalsFor: 3, goalsAgainst: 0, competition: null, home: true };
+    const a = { kind: 'hatTrick', date: '2027-08-22', club: 'Malženice', id: 'a', name: 'A', goals: 3, match } as RecordNews;
+    expect(isRecordSent('s', a)).toBe(false);
+    markRecordSent('s', a);
+    expect(isRecordSent('s', a)).toBe(true);
+    expect(isRecordSent('s', { ...a, id: 'b' } as RecordNews)).toBe(false);
+    expect(isRecordSent('s', { kind: 'bigWin', date: '2027-08-22', club: 'Malženice', match })).toBe(false);
   });
 });

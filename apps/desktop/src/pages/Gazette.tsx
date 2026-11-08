@@ -1,5 +1,5 @@
 import { AiLink } from '../components/AiSettingsCard';
-import { bigMatchNow, breakingNews, coachExits, gazetteIssues, seasonReviews, seasonSoFar, visibleOn, type BigMatch, type BreakingNews, type CoachExit, type ExitReason, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
+import { bigMatchNow, breakingNews, coachExits, recordKey, recordNews, gazetteIssues, seasonReviews, seasonSoFar, visibleOn, type BigMatch, type BreakingNews, type CoachExit, type ExitReason, type GazetteIssue, type RecordNews, type SeasonReview } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
 import { SeasonCard } from '../components/SeasonCard';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -12,10 +12,11 @@ import { useCareer } from '../lib/career';
 import { clubLook, rememberClubLooks } from '../lib/club-look';
 import { useHistory } from '../lib/fm-cache';
 import { getWebhook, isWebhook } from '../lib/discord';
-import { exitReason, loadCoachPhoto, markBigMatchSent, markBreakingSent, markFarewellSent, markGazetteSent, markSeasonSent, sendBigMatch, sendBreaking, sendFarewell, sendGazette, sendSeason, setExitReason } from '../lib/gazette-auto';
+import { exitReason, loadCoachPhoto, markBigMatchSent, markBreakingSent, markFarewellSent, markGazetteSent, markRecordSent, markSeasonSent, sendBigMatch, sendBreaking, sendRecord, sendFarewell, sendGazette, sendSeason, setExitReason } from '../lib/gazette-auto';
 import { drawBigMatch } from '../lib/bigmatch-page';
 import { drawBreaking } from '../lib/breaking-page';
 import { drawFarewell } from '../lib/farewell-page';
+import { drawRecord, recordText } from '../lib/records-page';
 import { fmData } from '../lib/data';
 import { articleText, editorialText, headlineText, paperName, storyText, weekLabel } from '../lib/gazette-text';
 import { drawPage } from '../lib/gazette-page';
@@ -54,6 +55,11 @@ export function Gazette() {
     () => breakingNews(history).filter((n) => (Date.parse(lastDate.slice(0, 10)) - Date.parse(n.date.slice(0, 10))) / 86_400_000 <= 30),
     [history, lastDate],
   );
+  // Exploits des 30 derniers jours de jeu (triplé, série de victoires, plus large victoire, fin de disette).
+  const records = useMemo(
+    () => recordNews(history).filter((n) => (Date.parse(lastDate.slice(0, 10)) - Date.parse(n.date.slice(0, 10))) / 86_400_000 <= 30),
+    [history, lastDate],
+  );
   // Affiche du choc : le prochain match, s'il compte (coupe, choc au sommet, duel direct) et tombe dans les 5 jours.
   const big = useMemo(() => bigMatchNow(history), [history]);
   const [index, setIndex] = useState(0);
@@ -87,6 +93,7 @@ export function Gazette() {
 
       {exitFresh && <FarewellSection saveId={saveId} exits={exits} looks={looksReady} />}
       {big && <BigMatchSection saveId={saveId} match={big} looks={looksReady} />}
+      {records.length > 0 && <RecordSection saveId={saveId} news={records} looks={looksReady} />}
       {breaking.length > 0 && <BreakingSection saveId={saveId} news={breaking} looks={looksReady} />}
 
       {issue && (
@@ -466,6 +473,64 @@ function BigMatchSection({ saveId, match, looks }: { saveId: string; match: BigM
           </Link>
         )}
         {send.isSuccess && <p className="text-xs font-bold text-eau-fonce">{t('bigmatch.sent')}</p>}
+        {send.isError && <p className="text-xs font-bold text-corail">{String(send.error)}</p>}
+      </aside>
+    </section>
+  );
+}
+
+/** Édition record : les exploits récents en image (triplé, série, large victoire, fin de disette), à envoyer sur Discord. */
+function RecordSection({ saveId, news, looks }: { saveId: string; news: RecordNews[]; looks: number }) {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.resolvedLanguage;
+  const [at, setAt] = useState(0);
+  useEffect(() => setAt(0), [saveId]);
+  const n = news[Math.min(at, news.length - 1)]!;
+  const { data: url } = useQuery({
+    queryKey: ['gazette', 'record', saveId, recordKey(n), lang, looks],
+    queryFn: async () => (await drawRecord(t, n, { lang, face: n.kind === 'hatTrick' ? await loadFace(n.id) : null })).toDataURL('image/png'),
+  });
+  const send = useMutation({
+    mutationFn: async () => {
+      await sendRecord(t, n, lang);
+      markRecordSent(saveId, n);
+    },
+  });
+  useEffect(() => send.reset(), [n]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
+      <div className="min-w-0">
+        <h2 className="text-xs font-bold uppercase tracking-wide text-orange-fonce">🏆 {t('records.section')}</h2>
+        {url ? (
+          <img src={url} alt={recordText(t, n, lang).title} className="mt-3 w-full rounded-xl shadow-sm ring-1 ring-canard/10" />
+        ) : (
+          <div className="mt-3 aspect-[16/9] w-full animate-pulse rounded-xl bg-canard/5" />
+        )}
+      </div>
+      <aside className="flex flex-col gap-2 xl:pt-7">
+        <p className="text-xs text-brun">{t('records.sectionHelp')}</p>
+        {news.length > 1 && (
+          <ul className="flex max-h-72 flex-col gap-1 overflow-auto">
+            {news.map((x, i) => (
+              <li key={recordKey(x)}>
+                <button type="button" className={`chip w-full justify-between ${i === at ? 'chip-on' : ''}`} onClick={() => setAt(i)}>
+                  <span className="truncate">{t(`records.tag.${x.kind}`)}{x.kind === 'hatTrick' ? ` · ${x.name}` : ''}</span>
+                  <span className="text-xs opacity-70">{x.date.slice(5, 10)}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {isWebhook(getWebhook()) ? (
+          <button type="button" className="btn-primary mt-2 text-sm" disabled={send.isPending} onClick={() => send.mutate()}>
+            {t('records.send')}
+          </button>
+        ) : (
+          <Link to="/discord" className="btn-secondary mt-2 text-sm">
+            {t('gazette.setupDiscord')}
+          </Link>
+        )}
+        {send.isSuccess && <p className="text-xs font-bold text-eau-fonce">{t('records.sent')}</p>}
         {send.isError && <p className="text-xs font-bold text-corail">{String(send.error)}</p>}
       </aside>
     </section>
