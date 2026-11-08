@@ -71,8 +71,11 @@ function count(form: string, ...codes: PosCode[]) {
   return (FORMATIONS[form] ?? []).filter(([p]) => codes.includes(p)).length;
 }
 
-/** Qui, chez nous, doit s'occuper d'un joueur adverse d'après ses postes (« M (DG), MO (DGC) », « BT (C) »). */
-function markerFor(plan: FormationPlan | null | undefined, positions: string | null): { slot: number; player: string } | null {
+/**
+ * Qui, chez nous, doit s'occuper d'un joueur adverse d'après ses postes (« M (DG), MO (DGC) », « BT (C) »). Un joueur
+ * déjà chargé d'un autre adversaire (`taken`) n'est pas repris : on ne demande jamais à un seul homme d'en marquer deux.
+ */
+function markerFor(plan: FormationPlan | null | undefined, positions: string | null, taken: ReadonlySet<number> = new Set()): { slot: number; player: string } | null {
   if (!plan || !positions) return null;
   const parts = positions.split(',').map((s) => s.trim());
   let ours: PosCode[] = [];
@@ -89,7 +92,7 @@ function markerFor(plan: FormationPlan | null | undefined, positions: string | n
   if (!ours.length) return null;
   let best: { slot: number; player: string; v: number } | null = null;
   for (const [i, sl] of plan.slots.entries()) {
-    if (!sl.player || !ours.includes(sl.pos)) continue;
+    if (!sl.player || !ours.includes(sl.pos) || taken.has(i)) continue;
     const v = ((attrOf(sl.player, 'Marking') ?? 10) + (attrOf(sl.player, 'Tackling') ?? 10) + (attrOf(sl.player, 'Pace') ?? 10)) / 3;
     if (!best || v > best.v) best = { slot: i, player: sl.player.name, v };
   }
@@ -170,20 +173,19 @@ export function matchPlan(style: StyleRef, opp: OpponentReport, plan?: Formation
   }
   const mentality: MentalityAdjustment | null = to !== from && reason ? { from: MENTALITIES_FM27[from]!, to: MENTALITIES_FM27[to]!, reason } : null;
 
-  // Marquage : le créateur d'abord, puis le buteur s'il est un autre joueur.
+  // Marquage : le créateur d'abord, puis le buteur s'il est un autre joueur, chacun avec son propre marqueur.
   const marking: MarkingAdjustment[] = [];
+  const taken = new Set<number>();
   const posOf = (name: string) => opp.squad.find((p) => p.name === name)?.positions ?? null;
+  const assign = (target: string, reason: MarkingAdjustment['reason']) => {
+    const positions = posOf(target);
+    const who = markerFor(plan, positions, taken);
+    if (who) taken.add(who.slot);
+    marking.push({ target, positions, reason, slot: who?.slot ?? null, player: who?.player ?? null });
+  };
   const creator = opp.assister?.name ?? opp.rated?.name ?? null;
-  if (creator) {
-    const positions = posOf(creator);
-    const who = markerFor(plan, positions);
-    marking.push({ target: creator, positions, reason: 'creator', slot: who?.slot ?? null, player: who?.player ?? null });
-  }
-  if (opp.scorer && opp.scorer.name !== creator) {
-    const positions = posOf(opp.scorer.name);
-    const who = markerFor(plan, positions);
-    marking.push({ target: opp.scorer.name, positions, reason: 'scorer', slot: who?.slot ?? null, player: who?.player ?? null });
-  }
+  if (creator) assign(creator, 'creator');
+  if (opp.scorer && opp.scorer.name !== creator) assign(opp.scorer.name, 'scorer');
 
   return { mentality, team: team.slice(0, MAX_TEAM_ADJUSTMENTS), marking };
 }

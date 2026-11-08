@@ -317,7 +317,7 @@
         "replaces": "instead of \"{{label}}\"",
         "markingTitle": "Marking",
         "marking": {
-          "creator": "{{target}} ({{positions}}) makes the team play: tighter marking and harder tackles for {{player}}.",
+          "creator": "{{target}}, {{positions}}, makes the team play: tighter marking and harder tackles for {{player}}.",
           "creatorNoSlot": "{{target}} makes the team play: tighter marking for the player facing him.",
           "scorer": "{{target}} is their scorer: {{player}} stays on him in the box (tighter marking).",
           "scorerNoSlot": "{{target}} is their scorer: tighter marking for the defender facing him."
@@ -2936,7 +2936,7 @@
     "intro": "During your FM27 matches, one card is posted to your channel and updated every 15 seconds (scoreboard image, minute, goal timeline, commentator line), and every key moment (goal, half-time, final whistle) arrives as its own message, like a live match feed.",
     "enable": "Tell my matches live on Discord",
     "needWebhook": "First link a channel with the webhook link above.",
-    "plugin": "Requires the FM27 plugin 0.5.0 or later, and FM Immersion open during the match. Only the score and scorers are sent.",
+    "plugin": "Requires the FM27 plugin 0.5.0 or later, and FM Immersion open during the match. Sent: score, scorers, converted penalties, half-time and full-time; with plugin 0.5.2, assists and cards too.",
     "liveTag": "🔴 LIVE",
     "finalTag": "🏁 FULL TIME",
     "kickoff": "Kick-off",
@@ -3083,8 +3083,16 @@
       "goalUnknownFor": "{{team}} find the net! {{score}}.",
       "goalUnknownAgainst": "{{team}} have just scored, {{score}}.",
       "half": "Half-time",
-      "final": "Full-time whistle"
-    }
+      "final": "Full-time whistle",
+      "penaltyFor": "PENALTY scored for {{team}}! ({{minute}})",
+      "penaltyAgainst": "Penalty conceded… {{team}} convert ({{minute}})",
+      "assist": "Assist by {{name}}",
+      "yellowFor": "Yellow card for {{player}} ({{team}}, {{minute}}')",
+      "yellowAgainst": "Yellow card for {{team}}: {{player}} ({{minute}}')",
+      "redFor": "RED CARD! {{player}} is sent off ({{team}}, {{minute}}')",
+      "redAgainst": "Red card for {{team}}: {{player}} sent off ({{minute}}')"
+    },
+    "cards": "Cards"
   },
   "season": {
     "title": "Season review {{season}}",

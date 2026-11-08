@@ -317,7 +317,7 @@
         "replaces": "à la place de « {{label}} »",
         "markingTitle": "Marquage",
         "marking": {
-          "creator": "{{target}} ({{positions}}) fait jouer l'équipe : marquage plus serré et tacles engagés pour {{player}}.",
+          "creator": "{{target}}, {{positions}}, fait jouer l'équipe : marquage plus serré et tacles engagés pour {{player}}.",
           "creatorNoSlot": "{{target}} fait jouer l'équipe : marquage plus serré pour le joueur en face de lui.",
           "scorer": "{{target}} est leur buteur : {{player}} ne le lâche pas dans la surface (marquage plus serré).",
           "scorerNoSlot": "{{target}} est leur buteur : marquage plus serré pour le défenseur en face de lui."
@@ -2936,7 +2936,7 @@
     "intro": "Pendant tes matchs dans FM27, un encart est posté dans ton salon puis mis à jour toutes les 15 secondes (image du tableau de score, minute, déroulé des buts, phrase du commentateur), et chaque temps fort (but, mi-temps, coup de sifflet final) arrive en message à part, comme un fil de match.",
     "enable": "Raconter mes matchs en direct sur Discord",
     "needWebhook": "Relie d'abord un salon avec le lien webhook ci-dessus.",
-    "plugin": "Il faut le plugin FM27 0.5.0 ou plus récent, et FM Immersion ouvert pendant le match. Seuls le score et les buteurs sont envoyés.",
+    "plugin": "Il faut le plugin FM27 0.5.0 ou plus récent, et FM Immersion ouvert pendant le match. Sont envoyés : score, buteurs, penaltys transformés, mi-temps et fin de match ; avec le plugin 0.5.2, aussi les passeurs décisifs et les cartons.",
     "liveTag": "🔴 EN DIRECT",
     "finalTag": "🏁 SCORE FINAL",
     "kickoff": "Coup d'envoi",
@@ -3083,8 +3083,16 @@
       "goalUnknownFor": "Ça fait mouche pour {{team}} ! {{score}}.",
       "goalUnknownAgainst": "{{team}} vient de marquer, {{score}}.",
       "half": "Mi-temps",
-      "final": "Coup de sifflet final"
-    }
+      "final": "Coup de sifflet final",
+      "penaltyFor": "PENALTY transformé pour {{team}} ! ({{minute}})",
+      "penaltyAgainst": "Penalty encaissé… {{team}} transforme ({{minute}})",
+      "assist": "Passe décisive de {{name}}",
+      "yellowFor": "Carton jaune pour {{player}} ({{team}}, {{minute}}e)",
+      "yellowAgainst": "Carton jaune côté {{team}} : {{player}} ({{minute}}e)",
+      "redFor": "CARTON ROUGE ! {{player}} est expulsé ({{team}}, {{minute}}e)",
+      "redAgainst": "Carton rouge pour {{team}} : {{player}} expulsé ({{minute}}e)"
+    },
+    "cards": "Cartons"
   },
   "season": {
     "title": "Bilan de la saison {{season}}",
