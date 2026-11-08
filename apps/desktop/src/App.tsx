@@ -5,6 +5,7 @@ import { Sidebar } from './components/Sidebar';
 import { UpdateGate } from './components/UpdateGate';
 import { useCareer, useCareerStore } from './lib/career';
 import { useFmSync } from './lib/fm-sync';
+import { useAutoBackups } from './lib/save-backup';
 import { useGazetteAuto } from './lib/gazette-auto';
 import { useLiveDiscord } from './lib/live-discord';
 import { Challenges } from './pages/Challenges';
@@ -20,6 +21,7 @@ export function App() {
   useLiveDiscord();
   useGazetteAuto();
   useFmSync();
+  useAutoBackups();
   return (
     <UpdateGate>
       <div className="flex min-h-screen">
