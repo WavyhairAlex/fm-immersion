@@ -665,7 +665,7 @@ public class FmBindingReader : IGameReader
         };
     }
 
-    // Efficacité tactique : désactivée par défaut (réglage LireEfficacite), le jeu ne répond pas encore à ces lectures.
+    // Efficacité tactique (réglage LireEfficacite) : répond depuis 0.5.5, lue sur la tactique renvoyée par l'équipe.
     Dictionary<string, object?>? ReadEffectiveness()
     {
         var reqs = new List<Req>();
@@ -734,7 +734,12 @@ public class FmBindingReader : IGameReader
 
         var reqs = new List<Req>(); var keys = new List<(string Section, string Key, int? Item)>();
         foreach (var (section, prefix) in prefixes)
-            foreach (var (key, path) in section == "tactique" && !_tacticsAllowed ? new() : Section(section)) { reqs.Add(new Req(null, prefix + path, deep.Contains(key))); keys.Add((section, key, null)); }
+            foreach (var (key, path) in section == "tactique" && !_tacticsAllowed ? new() : Section(section))
+            {
+                // 0.5.5 : un chemin d'une autre section qui passe par une tactique (« Tactic{…} ») suit la même prudence.
+                if (!_tacticsAllowed && path.Contains("Tactic{", StringComparison.Ordinal)) continue;
+                reqs.Add(new Req(null, prefix + path, deep.Contains(key))); keys.Add((section, key, null));
+            }
         var perPlayer = Section("joueur");
         if (perPlayer.Count > 0) perPlayer.TryAdd("id", "UniqueId");   // pour relier chaque ligne au joueur (players[].id)
         for (int i = 0; i < squadCount; i++)
@@ -918,7 +923,7 @@ public class FmBindingReader : IGameReader
         public static object?[] Run(IReadOnlyList<Req> reqs, int timeoutMs)
         {
             var states = reqs.Select(r => new State { Deep = r.Deep }).ToArray();
-            TypedValue? squad = null, team = null;
+            TypedValue? squad = null, team = null, tactic = null;
             bool needSquad = reqs.Any(r => (r.Item != null && r.List == null) || r.Path.StartsWith(Squad));
             bool needTactic = reqs.Any(r => r.Path.StartsWith(Tactic)) || reqs.Any(r => r.Path.Contains("@team") || (r.List?.Contains("@team") ?? false));
             TypedValue? human = null;
@@ -940,6 +945,15 @@ public class FmBindingReader : IGameReader
                 var t = new State { Segs = new[] { "GameCurrentManagerClubTeam" } };
                 Resolve(new[] { t }, () => Root(), timeoutMs);
                 team = t.Cur;
+                // 0.5.5 : la tactique du joueur est celle que l'équipe renvoie (Tactic{Boolean=true}) : nom, créneaux et
+                // efficacité tactique réels (« 4-1-5 … », 43 %). La référence construite à la main (TacticRoot) tombait
+                // sur une tactique « 4-4-2 » par défaut, sans efficacité ; elle ne sert plus que de secours.
+                if (team != null && reqs.Any(r => r.Path.StartsWith(Tactic)))
+                {
+                    var tt = new State { Segs = new[] { "GameCurrentManagerClubTeam", "Tactic{Boolean=true}" } };
+                    Resolve(new[] { tt }, () => Root(), timeoutMs);
+                    tactic = tt.Failed ? null : tt.Cur;
+                }
             }
             // Autres listes de joueurs (liste de suivi, cibles…) : résolues une fois, puis réduites aux joueurs qu'elles contiennent.
             var lists = new Dictionary<string, List<TypedValue>>();
@@ -970,7 +984,7 @@ public class FmBindingReader : IGameReader
                     }
                     else if (r.Path.StartsWith(Tactic))
                     {
-                        var tr = TacticRoot(team);
+                        var tr = tactic != null ? TypedValue.CreateCopyFrom(tactic) : TacticRoot(team);
                         if (tr == null) { st.Failed = true; continue; }
                         st.Cur = tr;
                         st.Segs = r.Path.Substring(Tactic.Length).Split('/');

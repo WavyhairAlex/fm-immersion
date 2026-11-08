@@ -18,7 +18,7 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.5.4";
+    public const string Version = "0.5.5";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que FM Immersion renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
@@ -45,8 +45,8 @@ public class Plugin : BasePlugin
         // (31/10/2026, erreur TacticalPlannerTool « Out of bounds index: -1 »).
         ReadTactic = Config.Bind("Archivix", "LireTactique", false,
             "Lire la tactique active (nom, mentalité, postes, consignes). Risqué : peut figer FM27 si l'écran Tactique est ouvert.").Value;
-        ReadEffectiveness = Config.Bind("Archivix", "LireEfficacite", false,
-            "Lire l'efficacité tactique FM27 (expérimental : le jeu ne répond pas encore à ces lectures).").Value;
+        ReadEffectiveness = Config.Bind("Archivix", "LireEfficacite", true,
+            "Lire l'efficacité tactique FM27 (note, 4 piliers, complexité, adhésion, conseils), jamais pendant que l'écran Tactique est ouvert.").Value;
         ReadLineup = Config.Bind("Archivix", "LireCompo", false,
             "Lire la compo (joueur à chaque poste) et les rôles personnalisés. Expérimental ; jamais pendant que l'écran Tactique est ouvert.").Value;
         ReadExtended = Config.Bind("Archivix", "LireJoueursEtendus", false,
