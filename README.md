@@ -36,6 +36,9 @@ Tes données sont dans `%APPDATA%\app.fmimmersion.desktop\fm-immersion.db` : sup
 FM Immersion ne collecte, ne stocke à distance ni n'envoie aucune donnée personnelle. Tes parties restent dans
 une base SQLite sur ton PC. FM Immersion ne se connecte qu'à GitHub (`github.com/amnesix-nt/fm-immersion/releases`) :
 pour chercher ses mises à jour au démarrage et, seulement si tu le demandes, pour télécharger le plugin FM27.
+L'écran Visages lit aussi le petit manifeste des packs de visages publiés au fil de la génération
+(`github.com/amnesix-nt/FM27-Photorealistic-Faces/releases`, release « v2-progression ») ; le pack lui-même (~500 Mo)
+n'est téléchargé que si tu cliques sur « Télécharger et installer », vérifié par SHA-256 avant l'installation.
 Si tu relies un salon Discord, la gazette n'y part que quand tu cliques sur « Envoyer sur Discord », et un certificat de défi (pseudo choisi, clubs, résultats des matchs, âges et nationalités des joueurs alignés) seulement quand tu cliques sur « Partager sur Discord ».
 GitHub voit alors ton adresse IP, comme pour toute visite de son site.
 

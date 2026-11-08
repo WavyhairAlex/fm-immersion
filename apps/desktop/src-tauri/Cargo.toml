@@ -1,6 +1,6 @@
 [package]
 name = "fm-immersion"
-version = "0.1.87"
+version = "0.1.88"
 description = "FM Immersion — le compagnon de tes parties de Football Manager 27"
 authors = ["FM Immersion"]
 license = "MIT"
@@ -26,6 +26,8 @@ thiserror = "2"
 # Plugin FM27 : téléchargement depuis GitHub Releases (sur demande) et vérification SHA-256
 ureq = "2"
 sha2 = "0.10"
+# Visages : extraction du pack V2 téléchargé (zip de la release GitHub)
+zip = { version = "2", default-features = false, features = ["deflate"] }
 # Rédaction par IA : clé API du joueur rangée dans le coffre de Windows (Gestionnaire d'identification)
 keyring = { version = "3", features = ["windows-native"] }
 

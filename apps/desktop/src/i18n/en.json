@@ -2677,7 +2677,7 @@
       "original": "Original game portraits: the pack is not installed.",
       "photorealV1": "Photorealistic pack v1.0 installed.",
       "photorealCustom": "Workshop photorealistic pack installed.",
-      "unknown": "Portrait file modified or updated by Steam: reinstall the pack."
+      "unknown": "Unrecognised portrait pack (installed by another tool, or game updated by Steam)."
     },
     "running": "FM27 is open: close it to install or uninstall.",
     "installTitle": "Install the pack",
@@ -2706,6 +2706,7 @@
     "lot": {
       "none": "Batch not started yet.",
       "running": "Batch running (last activity on {{date}}).",
+      "paused": "Batch paused (last activity on {{date}}). It resumes once the pause is lifted.",
       "stopped": "Batch stopped since {{date}}. It resumes where it stopped.",
       "finished": "Batch finished."
     },
@@ -2725,7 +2726,20 @@
     "ageswapEnable": "Turn ages on",
     "ageswapDisable": "Turn ages off",
     "ageswapNextLaunch": "Applied on the next FM27 launch.",
-    "ageswapRestart": "FM27 is open: restart it to apply."
+    "ageswapRestart": "FM27 is open: restart it to apply.",
+    "update": {
+      "title_one": "New faces pack available: {{count}} V2 portrait",
+      "title_other": "New faces pack available: {{count}} V2 portraits",
+      "remote": "Version of {{version}}, published as generation goes on ({{mb}} MB to download, checked before installing). FM27 must be closed.",
+      "local": "Workshop pack of {{version}}, already on this PC ({{mb}} MB). FM27 must be closed.",
+      "current": "Pack in place: version of {{version}}.",
+      "install": "Download and install",
+      "installLocal": "Install this pack",
+      "downloading": "Downloading… {{pct}} %",
+      "downloadingMb": "Downloading… {{mb}} MB",
+      "checking": "Checking the pack…",
+      "badge": "New faces pack"
+    }
   },
   "gazette": {
     "paper": "The {{club}} Gazette",
@@ -3586,7 +3600,8 @@
       "pickChallenge": "Pick a challenge",
       "noChallenge": "No challenge running.",
       "steps": "{{done}} of {{total}} steps",
-      "facesProgress": "Portrait generation: {{pct}}%"
+      "facesProgress": "Portrait generation: {{pct}}%",
+      "facesUpdate": "New faces pack: {{count}} V2 portraits"
     },
     "career": {
       "create": "Create my career",

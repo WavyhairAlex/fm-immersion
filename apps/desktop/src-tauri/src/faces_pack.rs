@@ -39,12 +39,14 @@ pub enum PackError {
     NoPack(String),
     #[error("ce fichier n'est pas un bundle de portraits valide ({0}). Rien n'a été modifié.")]
     BadPack(String),
-    #[error("version du jeu non reconnue (le catalogue ne correspond ni à l'original connu ni à un pack installé). Rien n'a été modifié. Si un autre mod de visages est en place : Steam > Vérifier l'intégrité des fichiers.")]
+    #[error("pack en place non reconnu : le catalogue du jeu ne correspond ni à l'original, ni à la v1.0, ni à un pack installé par FM Immersion ou par l'atelier. Rien n'a été modifié.")]
     UnknownGame,
     #[error("sauvegarde introuvable ou invalide dans {0}. Rien n'a été modifié. Pour revenir aux visages d'origine : Steam > Vérifier l'intégrité des fichiers.")]
     NoBackup(String),
     #[error("vérification après copie échouée : {0}")]
     Check(String),
+    #[error("réseau : {0}")]
+    Network(String),
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }
@@ -314,6 +316,9 @@ pub struct Installed {
     pub source: String,
     /// Date d'installation (ISO 8601).
     pub at: String,
+    /// Version du pack (date-heure de construction), quand elle est connue.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
 }
 
 pub fn read_installs(backup: &Path) -> Vec<Installed> {
@@ -325,6 +330,98 @@ fn write_installs(backup: &Path, list: &[Installed]) -> std::io::Result<()> {
     let tmp = backup.join(format!("{INSTALLS}.tmp"));
     std::fs::write(&tmp, serde_json::to_vec_pretty(list).unwrap_or_default())?;
     std::fs::rename(tmp, backup.join(INSTALLS))
+}
+
+/// « 0xfb0c25a5 », « fb0c25a5 » ou un nombre décimal.
+fn parse_crc(v: &serde_json::Value) -> Option<u32> {
+    match v {
+        serde_json::Value::Number(n) => n.as_u64().and_then(|n| u32::try_from(n).ok()),
+        serde_json::Value::String(s) => {
+            let s = s.trim();
+            let hex = s.strip_prefix("0x").or_else(|| s.strip_prefix("0X"));
+            match hex {
+                Some(h) => u32::from_str_radix(h, 16).ok(),
+                None => s.parse().ok(),
+            }
+        }
+        _ => None,
+    }
+}
+
+/// Manifeste d'un pack V2. Même format pour le pack de l'atelier (`v2\pack\pack.json` ou `manifest.json`)
+/// et pour la release « v2-progression » publiée sur GitHub :
+/// ```json
+/// { "version": "2026-11-08 15:04:50", "nb_a2b": 2668, "nb_d2": 1054, "nb_v1": 10278,
+///   "crc32": "0xfb0c25a5", "taille": 535426723,
+///   "sha256": "<empreinte du zip>", "url": "https://github.com/amnesix-nt/FM27-Photorealistic-Faces/releases/download/v2-progression/FM27-Photoreal-Faces-v2-progression.zip" }
+/// ```
+/// Obligatoires : `crc32` (ou `crc`, hexadécimal « 0x… » ou décimal) et `taille` (ou `size`, octets du bundle).
+/// `version` (ou `date`) sert à savoir si un pack est plus récent ; `sha256` et `url` au téléchargement.
+/// Les noms courts (`a2b`, `d2`, `v1`) sont acceptés aussi.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct PackManifest {
+    pub version: Option<String>,
+    pub a2b: Option<u32>,
+    pub d2: Option<u32>,
+    pub v1: Option<u32>,
+    pub crc: u32,
+    pub size: u32,
+    pub sha256: Option<String>,
+    pub url: Option<String>,
+}
+
+pub fn parse_manifest(text: &str) -> Option<PackManifest> {
+    let v: serde_json::Value = serde_json::from_str(text.trim_start_matches('\u{feff}')).ok()?;
+    let any = |keys: &[&str]| keys.iter().find_map(|k| v.get(*k)).filter(|x| !x.is_null());
+    let num = |keys: &[&str]| any(keys).and_then(|x| x.as_u64()).and_then(|n| u32::try_from(n).ok());
+    let text = |keys: &[&str]| any(keys).and_then(|x| x.as_str()).map(|s| s.trim().to_owned()).filter(|s| !s.is_empty());
+    Some(PackManifest {
+        version: text(&["version", "date"]),
+        a2b: num(&["nb_a2b", "a2b"]),
+        d2: num(&["nb_d2", "d2"]),
+        v1: num(&["nb_v1", "v1"]),
+        crc: parse_crc(any(&["crc32", "crc"])?)?,
+        size: num(&["taille", "size"])?,
+        sha256: text(&["sha256", "sha256_zip"]).map(|s| s.to_ascii_lowercase()),
+        url: text(&["url", "url_zip"]),
+    })
+}
+
+impl PackManifest {
+    pub fn as_installed(&self, source: &str) -> Installed {
+        Installed { crc: self.crc, size: self.size, source: source.to_owned(), at: String::new(), version: self.version.clone() }
+    }
+}
+
+/// Manifestes des packs de l'atelier : `v2\pack` (dernier pack) et `v2\bascule_precedent` (le précédent).
+pub fn workshop_manifests(workshop: &Path) -> Vec<(PathBuf, PackManifest)> {
+    let mut out = Vec::new();
+    for dir in ["pack", "bascule_precedent"] {
+        for name in ["manifest.json", "pack.json"] {
+            let p = workshop.join("v2").join(dir).join(name);
+            if let Some(m) = std::fs::read_to_string(&p).ok().and_then(|t| parse_manifest(&t)) {
+                out.push((p, m));
+                break;
+            }
+        }
+    }
+    out
+}
+
+/// Packs construits par l'atelier, reconnus même s'ils ont été installés sans l'app (bascule automatique V2).
+pub fn workshop_packs(workshop: &Path) -> Vec<Installed> {
+    workshop_manifests(workshop).iter().map(|(p, m)| m.as_installed(&p.display().to_string())).collect()
+}
+
+/// Version du pack actuellement en place, si on le connaît.
+pub fn installed_version(p: &Paths, crc: u32, size: u32) -> Option<String> {
+    p.all_known().into_iter().filter(|i| i.crc == crc && i.size == size).find_map(|i| i.version)
+}
+
+/// Entrée du catalogue du jeu (CRC et taille du bundle des portraits attendus par le jeu).
+pub fn current_entry(p: &Paths) -> Option<Entry> {
+    read_entry(&std::fs::read(&p.catalog).ok()?)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
@@ -358,12 +455,25 @@ pub struct Paths {
     pub catalog_hash: PathBuf,
     pub cache: PathBuf,
     pub backup: PathBuf,
+    /// Packs reconnus en plus de ceux de `fm-immersion-installs.json` : packs installés par l'atelier
+    /// lui-même (bascule automatique de la V2, voir `workshop_packs`).
+    pub known: Vec<Installed>,
 }
 
 impl Paths {
     pub fn new(game: &Path, cache: PathBuf, backup: PathBuf) -> Self {
         let addr = game.join("fm_Data").join("StreamingAssets").join("AddrData");
-        Paths { bundle: addr.join(BUNDLE), catalog: addr.join(CATALOG), catalog_hash: addr.join(CATALOG_HASH), cache, backup }
+        Paths { bundle: addr.join(BUNDLE), catalog: addr.join(CATALOG), catalog_hash: addr.join(CATALOG_HASH), cache, backup, known: Vec::new() }
+    }
+    pub fn with_known(mut self, known: Vec<Installed>) -> Self {
+        self.known = known;
+        self
+    }
+    /// Tous les packs connus : installés par FM Immersion, plus ceux de l'atelier.
+    fn all_known(&self) -> Vec<Installed> {
+        let mut v = read_installs(&self.backup);
+        v.extend(self.known.iter().cloned());
+        v
     }
     fn game_ok(&self) -> bool {
         self.bundle.is_file() && self.catalog.is_file()
@@ -471,7 +581,7 @@ pub struct InstallReport {
     pub already: bool,
 }
 
-pub fn install(p: &Paths, pack: &Path, now: &str) -> Result<InstallReport, PackError> {
+pub fn install(p: &Paths, pack: &Path, now: &str, version: Option<&str>) -> Result<InstallReport, PackError> {
     if !p.game_ok() {
         return Err(PackError::NoGame);
     }
@@ -484,7 +594,7 @@ pub fn install(p: &Paths, pack: &Path, now: &str) -> Result<InstallReport, PackE
     let catalog = std::fs::read(&p.catalog)?;
     let entry = read_entry(&catalog).ok_or(PackError::UnknownGame)?;
     let mut installs = read_installs(&p.backup);
-    let state = classify(&entry, &installs);
+    let state = classify(&entry, &p.all_known());
     let game_size = std::fs::metadata(&p.bundle)?.len();
     if state == CatalogState::Unknown || game_size != entry.size as u64 {
         return Err(PackError::UnknownGame);
@@ -497,7 +607,8 @@ pub fn install(p: &Paths, pack: &Path, now: &str) -> Result<InstallReport, PackE
     backup(p, &catalog, state, &cached)?;
     // Noté avant la copie : si elle échoue en route, le catalogue reste reconnu pour réinstaller ou désinstaller.
     if crc != V1_CRC && !installs.iter().any(|i| i.crc == crc && i.size == size) {
-        installs.push(Installed { crc, size, source: pack.display().to_string(), at: now.to_owned() });
+        let version = version.map(str::to_owned).or_else(|| installed_version(p, crc, size));
+        installs.push(Installed { crc, size, source: pack.display().to_string(), at: now.to_owned(), version });
         write_installs(&p.backup, &installs)?;
     }
 
@@ -523,9 +634,8 @@ pub fn uninstall(p: &Paths) -> Result<bool, PackError> {
     if !p.game_ok() {
         return Err(PackError::NoGame);
     }
-    let installs = read_installs(&p.backup);
     let entry = read_entry(&std::fs::read(&p.catalog)?).ok_or(PackError::UnknownGame)?;
-    let state = classify(&entry, &installs);
+    let state = classify(&entry, &p.all_known());
     if state == CatalogState::Unknown {
         return Err(PackError::UnknownGame);
     }
@@ -589,11 +699,11 @@ pub fn uninstall(p: &Paths) -> Result<bool, PackError> {
 /// État du catalogue du jeu (pour l'écran Visages).
 pub fn catalog_state(p: &Paths) -> Option<CatalogState> {
     let entry = read_entry(&std::fs::read(&p.catalog).ok()?)?;
-    Some(classify(&entry, &read_installs(&p.backup)))
+    Some(classify(&entry, &p.all_known()))
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
 
     /// Petit bundle UnityFS (version 8, table des blocs non compressée en tête, un bloc LZ4) pour les tests.
@@ -693,7 +803,7 @@ mod tests {
         let e2 = read_entry(&p).unwrap();
         assert_eq!((e2.crc, e2.size), (42, 43));
         assert_eq!(classify(&e2, &[]), CatalogState::Unknown);
-        let known = [Installed { crc: 42, size: 43, source: "x".into(), at: "t".into() }];
+        let known = [Installed { crc: 42, size: 43, source: "x".into(), at: "t".into(), version: None }];
         assert_eq!(classify(&e2, &known), CatalogState::Custom);
         assert_eq!(p.len(), c.len());
         // Deux occurrences du nom : on ne touche à rien.
@@ -723,7 +833,7 @@ mod tests {
 
         let pack = root.join("pack.bundle");
         std::fs::write(&pack, fake_bundle(b"portraits photoreal partiels")).unwrap();
-        let r = install(&p, &pack, "2026-11-07T20:00:00Z").unwrap();
+        let r = install(&p, &pack, "2026-11-07T20:00:00Z", None).unwrap();
         assert!(!r.already);
         assert_eq!(std::fs::read(&p.bundle).unwrap(), std::fs::read(&pack).unwrap());
         assert_eq!(catalog_state(&p), Some(CatalogState::Custom));
@@ -732,12 +842,12 @@ mod tests {
         assert!(p.backup.join(BUNDLE).is_file());
         assert!(latest_set(&p.backup).is_some());
         // Même pack : rien à faire.
-        assert!(install(&p, &pack, "t").unwrap().already);
+        assert!(install(&p, &pack, "t", None).unwrap().already);
 
         // Un pack plus avancé remplace le premier, la sauvegarde d'origine reste.
         let pack2 = root.join("pack2.bundle");
         std::fs::write(&pack2, fake_bundle(b"portraits photoreal un peu plus avances")).unwrap();
-        let r2 = install(&p, &pack2, "t2").unwrap();
+        let r2 = install(&p, &pack2, "t2", Some("2026-11-08 15:04:50")).unwrap();
         assert_ne!(r2.crc, r.crc);
         assert_eq!(read_installs(&p.backup).len(), 2);
         assert_eq!(std::fs::metadata(p.backup.join(BUNDLE)).unwrap().len(), ORIG_SIZE as u64);
@@ -753,6 +863,33 @@ mod tests {
     }
 
     #[test]
+    fn reconnait_le_pack_de_la_bascule_v2() {
+        let json = "{\n \"date\": \"2026-11-08 15:04:50\",\n \"a2b\": 2668,\n \"crc\": \"0xfb0c25a5\",\n \"taille\": 535426723,\n \"taille_mo\": 535.4\n}";
+        let m = parse_manifest(json).unwrap();
+        assert_eq!((m.crc, m.size, m.a2b), (0xfb0c_25a5, 535_426_723, Some(2668)));
+        assert_eq!(m.version.as_deref(), Some("2026-11-08 15:04:50"));
+        let release = r#"{"version":"2026-11-08 18:00","nb_a2b":3700,"nb_d2":1054,"nb_v1":9246,"crc32":4211877285,"taille":7,"sha256":"ABC","url":"https://x"}"#;
+        let r = parse_manifest(release).unwrap();
+        assert_eq!((r.crc, r.size, r.a2b, r.v1), (4_211_877_285, 7, Some(3700), Some(9246)));
+        assert_eq!(r.sha256.as_deref(), Some("abc"));
+        assert!(parse_manifest(r#"{"crc": "zz", "taille": 7}"#).is_none());
+        assert!(parse_manifest(r#"{"crc": 1}"#).is_none());
+
+        let root = std::env::temp_dir().join(format!("fmi-pack-bascule-{}", std::process::id()));
+        std::fs::remove_dir_all(&root).ok();
+        std::fs::create_dir_all(root.join("v2/pack")).unwrap();
+        std::fs::write(root.join("v2/pack/pack.json"), json).unwrap();
+        let known = workshop_packs(&root);
+        assert_eq!(known.len(), 1);
+        let p = Paths::new(&root.join("game"), root.join("cache"), root.join("backup")).with_known(known);
+        std::fs::create_dir_all(p.catalog.parent().unwrap()).unwrap();
+        std::fs::write(&p.catalog, fake_catalog(0xfb0c_25a5, 535_426_723)).unwrap();
+        assert_eq!(catalog_state(&p), Some(CatalogState::Custom));
+        assert_eq!(installed_version(&p, 0xfb0c_25a5, 535_426_723).as_deref(), Some("2026-11-08 15:04:50"));
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
     fn refuse_un_catalogue_inconnu() {
         let root = std::env::temp_dir().join(format!("fmi-pack-inconnu-{}", std::process::id()));
         std::fs::remove_dir_all(&root).ok();
@@ -762,7 +899,7 @@ mod tests {
         std::fs::write(&p.catalog, fake_catalog(1, 1)).unwrap();
         let pack = root.join("pack.bundle");
         std::fs::write(&pack, fake_bundle(b"abc")).unwrap();
-        assert!(matches!(install(&p, &pack, "t"), Err(PackError::UnknownGame)));
+        assert!(matches!(install(&p, &pack, "t", None), Err(PackError::UnknownGame)));
         assert_eq!(read_entry(&std::fs::read(&p.catalog).unwrap()).unwrap().crc, 1);
         assert!(matches!(uninstall(&p), Err(PackError::UnknownGame)));
         std::fs::remove_dir_all(&root).ok();

@@ -9,13 +9,11 @@
 use serde::Serialize;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
-use std::time::{Duration, SystemTime};
+use std::time::SystemTime;
 
 /// Nombre de portraits du catalogue NewGenPortraitsCatalog de FM27.
 pub const TOTAL: u32 = 14_000;
 pub const AGES: [u32; 6] = [15, 20, 25, 30, 35, 40];
-/// Un lot dont le journal n'a pas bougé depuis ce délai est considéré à l'arrêt.
-const RUNNING_WINDOW: Duration = Duration::from_secs(10 * 60);
 
 #[derive(Debug, Clone, Copy, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -23,7 +21,9 @@ pub enum LotState {
     /// Pas encore commencé.
     None,
     Running,
-    /// Arrêté ou en pause.
+    /// En pause (`PAUSE.txt`) : le lot reprend seul quand le fichier disparaît.
+    Paused,
+    /// Arrêté : il faut le relancer.
     Stopped,
     Finished,
 }
@@ -100,34 +100,49 @@ pub fn parse_eta(progress: &str) -> Option<String> {
     (eta.len() == 16 && eta.as_bytes()[4] == b'-').then_some(eta)
 }
 
-/// État d'un lot. `marker` : contenu d'ETAT.txt s'il est plus récent que le journal (sinon un ancien « FIN »
-/// resterait affiché après une reprise) ; `recent` : journal modifié il y a moins de dix minutes.
-pub fn lot_state(marker: Option<&str>, done: u32, recent: bool) -> LotState {
+/// État d'un lot. `marker` : contenu d'ETAT.txt ; `alive` : le processus de veille du lot tourne
+/// (`veille.pid` pointe vers un processus vivant) ; `paused` : `PAUSE.txt` présent.
+/// « En cours » seulement si la veille tourne : un journal récent ne suffit pas.
+pub fn lot_state(marker: Option<&str>, done: u32, alive: bool, paused: bool) -> LotState {
     let marker = marker.unwrap_or("").to_uppercase();
     if done >= TOTAL || marker.contains("FINI OK") || marker.contains("COMPLETE") {
         LotState::Finished
-    } else if marker.contains("FIN ") {
-        LotState::Stopped
-    } else if recent {
+    } else if alive && paused {
+        LotState::Paused
+    } else if alive {
         LotState::Running
-    } else if done == 0 {
+    } else if done == 0 && marker.is_empty() {
         LotState::None
     } else {
         LotState::Stopped
     }
 }
 
-fn lot_stage(out: &Path, lot: &Path, now: SystemTime) -> Stage {
+/// Le processus `pid` existe-t-il ? (liste des processus Windows, sans fenêtre de console)
+#[cfg(windows)]
+fn pid_alive(pid: u32) -> bool {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+    std::process::Command::new("tasklist")
+        .args(["/FI", &format!("PID eq {pid}"), "/NH", "/FO", "CSV"])
+        .creation_flags(CREATE_NO_WINDOW)
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).contains(&format!("\"{pid}\"")))
+        .unwrap_or(false)
+}
+
+#[cfg(not(windows))]
+fn pid_alive(_pid: u32) -> bool {
+    false
+}
+
+fn lot_stage(out: &Path, lot: &Path) -> Stage {
     let done = count_portraits(out).min(TOTAL);
-    let log_ms = [lot.join("run.log"), lot.join("progress.txt")].iter().filter_map(|p| mtime_ms(p)).max();
-    let etat_path = lot.join("ETAT.txt");
-    let etat_ms = mtime_ms(&etat_path);
-    let updated_ms = log_ms.max(etat_ms);
-    let now_ms = now.duration_since(SystemTime::UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0);
-    let recent = log_ms.is_some_and(|u| now_ms.saturating_sub(u) < RUNNING_WINDOW.as_millis() as u64);
-    // ETAT.txt n'est pris en compte que s'il a été écrit après la dernière ligne du journal (à 2 s près).
-    let etat = std::fs::read_to_string(&etat_path).ok().filter(|_| etat_ms.unwrap_or(0) + 2000 >= log_ms.unwrap_or(0));
-    let state = lot_state(etat.as_deref(), done, recent);
+    let updated_ms = [lot.join("run.log"), lot.join("progress.txt"), lot.join("ETAT.txt")].iter().filter_map(|p| mtime_ms(p)).max();
+    let alive = std::fs::read_to_string(lot.join("veille.pid")).ok().and_then(|t| t.trim().parse().ok()).is_some_and(pid_alive);
+    let paused = lot.join("PAUSE.txt").is_file();
+    let etat = std::fs::read_to_string(lot.join("ETAT.txt")).ok();
+    let state = lot_state(etat.as_deref(), done, alive, paused);
     let eta = match state {
         LotState::Running => std::fs::read_to_string(lot.join("progress.txt")).ok().and_then(|t| parse_eta(&t)),
         _ => None,
@@ -135,7 +150,7 @@ fn lot_stage(out: &Path, lot: &Path, now: SystemTime) -> Stage {
     Stage { done, state, eta, updated_ms }
 }
 
-pub fn read(workshop: &Path, now: SystemTime) -> Progress {
+pub fn read(workshop: &Path) -> Progress {
     let found = workshop.is_absolute() && workshop.join("out_full").is_dir();
     let v1_done = count_portraits(&workshop.join("out_full")).min(TOTAL);
     let v1 = Stage {
@@ -144,16 +159,22 @@ pub fn read(workshop: &Path, now: SystemTime) -> Progress {
         eta: None,
         updated_ms: None,
     };
-    let v2 = lot_stage(&workshop.join("v2").join("out_A2b"), &workshop.join("v2").join("lot_A2b"), now);
+    let v2 = lot_stage(&workshop.join("v2").join("out_A2b"), &workshop.join("v2").join("lot_A2b"));
     let ages: Vec<AgeStage> = AGES
         .iter()
         .map(|&age| AgeStage { age, done: count_portraits(&workshop.join("age_variants").join(age.to_string())).min(TOTAL) })
         .collect();
     let other: u32 = ages.iter().filter(|a| a.age != 25).map(|a| a.done).sum();
     let complete_permille = ((v2.done + other) as u64 * 1000 / (TOTAL as u64 * AGES.len() as u64)) as u32;
-    let built: PathBuf = workshop.join("build").join(crate::faces_pack::BUNDLE);
-    let built_pack = built.is_file().then(|| built.display().to_string());
-    Progress { found, total: TOTAL, v1, v2, ages, complete_permille, built_ms: mtime_ms(&built), built_pack }
+    // Pack proposé : le plus récent de l'atelier (V2 de la bascule automatique, sinon pack V1 de `build`).
+    let built: Option<(PathBuf, u64)> = [workshop.join("v2").join("pack"), workshop.join("build")]
+        .into_iter()
+        .map(|d| d.join(crate::faces_pack::BUNDLE))
+        .filter_map(|p| mtime_ms(&p).map(|m| (p, m)))
+        .max_by_key(|(_, m)| *m);
+    let built_pack = built.as_ref().map(|(p, _)| p.display().to_string());
+    let built_ms = built.map(|(_, m)| m);
+    Progress { found, total: TOTAL, v1, v2, ages, complete_permille, built_ms, built_pack }
 }
 
 /// Dossier de l'atelier par défaut : `X:\FM27-PhotoReal` sur le premier disque où il existe.
@@ -184,12 +205,14 @@ mod tests {
         let p = "2026-11-06 16:42:09 en cours\ntermines 900/14000 (6.4 %)\nfin estimee: 2026-11-10 00:03 (~79.4 h de GPU)\n";
         assert_eq!(parse_eta(p).as_deref(), Some("2026-11-10 00:03"));
         assert_eq!(parse_eta("rien"), None);
-        assert_eq!(lot_state(Some("2026-11-06 17:00:22 FIN ARRETE, 900 portraits"), 900, false), LotState::Stopped);
-        assert_eq!(lot_state(Some("2026-11-05 21:31:15 FINI OK"), 200, false), LotState::Finished);
-        assert_eq!(lot_state(None, 120, true), LotState::Running);
-        assert_eq!(lot_state(None, 0, false), LotState::None);
-        assert_eq!(lot_state(Some("FIN ARRETE"), 900, true), LotState::Stopped);
-        assert_eq!(lot_state(None, TOTAL, false), LotState::Finished);
+        assert_eq!(lot_state(Some("2026-11-06 17:00:22 FIN ARRETE, 900 portraits"), 900, false, false), LotState::Stopped);
+        assert_eq!(lot_state(Some("2026-11-05 21:31:15 FINI OK"), 200, false, false), LotState::Finished);
+        assert_eq!(lot_state(None, 120, true, false), LotState::Running);
+        assert_eq!(lot_state(None, 120, true, true), LotState::Paused);
+        // Journal récent mais veille arrêtée : pas « en cours ».
+        assert_eq!(lot_state(None, 120, false, true), LotState::Stopped);
+        assert_eq!(lot_state(None, 0, false, false), LotState::None);
+        assert_eq!(lot_state(None, TOTAL, false, false), LotState::Finished);
     }
 
     #[test]
@@ -212,7 +235,9 @@ mod tests {
         }
         touch("age_variants/40/portrait_male-1-2-3-4-0.png");
         touch("age_variants/40/portrait_female-1-2-3-4-1.png");
-        let p = read(&root, SystemTime::now() + Duration::from_secs(3600));
+        // Veille déclarée mais processus introuvable : le lot est arrêté.
+        std::fs::write(root.join("v2/lot_A2b/veille.pid"), "4000000000").unwrap();
+        let p = read(&root);
         assert!(p.found);
         assert_eq!(p.v1.done, 2);
         assert_eq!(p.v2.done, 1);
@@ -221,6 +246,13 @@ mod tests {
         // (1 base V2 + 1 + 2) / 84 000 = 0,0476 ‰ → 0
         assert_eq!(p.complete_permille, 0);
         assert!(p.built_pack.is_none());
+        // Pack proposé : le plus récent entre build\ (V1) et v2\pack\ (bascule V2).
+        touch("build/portraits_assets_all.bundle");
+        touch("v2/pack/portraits_assets_all.bundle");
+        let old = SystemTime::now() - std::time::Duration::from_secs(86_400);
+        std::fs::File::options().write(true).open(root.join("build/portraits_assets_all.bundle")).unwrap().set_modified(old).unwrap();
+        let p = read(&root);
+        assert!(p.built_pack.unwrap().contains("pack"));
         std::fs::remove_dir_all(&root).ok();
     }
 }

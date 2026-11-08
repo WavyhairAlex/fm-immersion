@@ -83,17 +83,19 @@ pub fn status(game: &Path) -> FacesStatus {
 
 /// Chemins du jeu, du cache Addressables (`LocalLow`) et de la sauvegarde (`Documents\FM27-Photoreal-Backup`,
 /// le même dossier que les .bat du pack).
-fn paths(app: &tauri::AppHandle, game: &Path) -> Option<Paths> {
+/// Les packs construits dans l'atelier (`workshop`) sont reconnus même installés sans l'app (bascule V2).
+pub(crate) fn paths(app: &tauri::AppHandle, game: &Path, workshop: Option<&str>) -> Option<Paths> {
     let home = app.path().home_dir().ok()?;
     let docs = app.path().document_dir().unwrap_or_else(|_| home.join("Documents"));
     let cache = home.join("AppData").join("LocalLow").join("Sports Interactive").join("Football Manager 27").join("com.unity.addressables");
-    Some(Paths::new(game, cache, docs.join("FM27-Photoreal-Backup")))
+    let known = workshop.filter(|w| !w.trim().is_empty()).map(|w| faces_pack::workshop_packs(Path::new(w.trim()))).unwrap_or_default();
+    Some(Paths::new(game, cache, docs.join("FM27-Photoreal-Backup")).with_known(known))
 }
 
 #[tauri::command]
-pub fn faces_status(app: tauri::AppHandle, game_dir: String) -> FacesStatus {
+pub fn faces_status(app: tauri::AppHandle, game_dir: String, workshop_dir: Option<String>) -> FacesStatus {
     let game = PathBuf::from(&game_dir);
-    status_with(&game, paths(&app, &game).as_ref())
+    status_with(&game, paths(&app, &game, workshop_dir.as_deref()).as_ref())
 }
 
 fn now_iso() -> String {
@@ -112,7 +114,7 @@ fn now_iso() -> String {
     format!("{y:04}-{m:02}-{d:02}T{:02}:{:02}:{:02}Z", rem / 3600, rem % 3600 / 60, rem % 60)
 }
 
-fn checked_paths(app: &tauri::AppHandle, game_dir: &str) -> Result<(PathBuf, Paths), PackError> {
+fn checked_paths(app: &tauri::AppHandle, game_dir: &str, workshop: Option<&str>) -> Result<(PathBuf, Paths), PackError> {
     let game = PathBuf::from(game_dir);
     if !game_found(&game) {
         return Err(PackError::NoGame);
@@ -120,16 +122,22 @@ fn checked_paths(app: &tauri::AppHandle, game_dir: &str) -> Result<(PathBuf, Pat
     if crate::fm_bridge::game_running(&game) {
         return Err(PackError::GameRunning);
     }
-    let p = paths(app, &game).ok_or(PackError::NoGame)?;
+    let p = paths(app, &game, workshop).ok_or(PackError::NoGame)?;
     Ok((game, p))
 }
 
 /// Installe le pack (bundle choisi par le joueur : v1.0 décompressée ou pack de l'atelier). FM27 doit être fermé.
 #[tauri::command]
-pub async fn faces_install(app: tauri::AppHandle, game_dir: String, pack: String) -> Result<faces_pack::InstallReport, PackError> {
+pub async fn faces_install(
+    app: tauri::AppHandle,
+    game_dir: String,
+    pack: String,
+    workshop_dir: Option<String>,
+    version: Option<String>,
+) -> Result<faces_pack::InstallReport, PackError> {
     tauri::async_runtime::spawn_blocking(move || {
-        let (_, p) = checked_paths(&app, &game_dir)?;
-        faces_pack::install(&p, Path::new(pack.trim().trim_matches('"')), &now_iso())
+        let (_, p) = checked_paths(&app, &game_dir, workshop_dir.as_deref())?;
+        faces_pack::install(&p, Path::new(pack.trim().trim_matches('"')), &now_iso(), version.as_deref())
     })
     .await
     .map_err(|e| PackError::Check(e.to_string()))?
@@ -137,9 +145,9 @@ pub async fn faces_install(app: tauri::AppHandle, game_dir: String, pack: String
 
 /// Remet les portraits d'origine. FM27 doit être fermé.
 #[tauri::command]
-pub async fn faces_uninstall(app: tauri::AppHandle, game_dir: String) -> Result<bool, PackError> {
+pub async fn faces_uninstall(app: tauri::AppHandle, game_dir: String, workshop_dir: Option<String>) -> Result<bool, PackError> {
     tauri::async_runtime::spawn_blocking(move || {
-        let (_, p) = checked_paths(&app, &game_dir)?;
+        let (_, p) = checked_paths(&app, &game_dir, workshop_dir.as_deref())?;
         faces_pack::uninstall(&p)
     })
     .await
@@ -148,7 +156,7 @@ pub async fn faces_uninstall(app: tauri::AppHandle, game_dir: String) -> Result<
 
 #[tauri::command]
 pub fn faces_progress(workshop_dir: String) -> faces_progress::Progress {
-    faces_progress::read(Path::new(&workshop_dir), std::time::SystemTime::now())
+    faces_progress::read(Path::new(&workshop_dir))
 }
 
 #[tauri::command]

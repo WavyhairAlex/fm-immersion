@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useFacesUpdate, v2Count, type PackOffer } from '../lib/faces';
 
 type FacesState = 'noGame' | 'missing' | 'original' | 'photorealV1' | 'photorealCustom' | 'unknown';
 type FacesStatus = { state: FacesState; size: number | null; running: boolean; backup: boolean };
-type LotState = 'none' | 'running' | 'stopped' | 'finished';
+type LotState = 'none' | 'running' | 'paused' | 'stopped' | 'finished';
 type Stage = { done: number; state: LotState; eta: string | null; updatedMs: number | null };
 type Progress = {
   found: boolean;
@@ -73,7 +75,13 @@ export function Faces() {
   const qc = useQueryClient();
   const [gameDir, setGameDir] = useState(read(GAME_DIR_KEY) ?? '');
   const [workshop, setWorkshop] = useState(read(WORKSHOP_KEY) ?? '');
-  const [pack, setPack] = useState(read(PACK_KEY) ?? '');
+  // Pack choisi à la main (gardé) ; sinon on suit le plus récent de l'atelier.
+  const [customPack, setCustomPack] = useState(() => {
+    const v = read(PACK_KEY) ?? '';
+    // Ancien réglage par défaut (pack V1 de l'atelier) : on suit désormais le pack le plus récent.
+    return /[\\/]build[\\/]portraits_assets_all\.bundle$/i.test(v) ? '' : v;
+  });
+  const [download, setDownload] = useState<{ received: number; total: number; step: string } | null>(null);
 
   const num = (n: number) => n.toLocaleString(i18n.language);
   const pct = (done: number, total: number) =>
@@ -91,7 +99,7 @@ export function Faces() {
 
   const { data: status } = useQuery({
     queryKey: ['faces', 'status', gameDir],
-    queryFn: () => invoke<FacesStatus>('faces_status', { gameDir }),
+    queryFn: () => invoke<FacesStatus>('faces_status', { gameDir, workshopDir: workshop || null }),
     enabled: !!gameDir,
     refetchInterval: 5000,
   });
@@ -108,10 +116,21 @@ export function Faces() {
   useEffect(() => {
     if (progress?.found && workshop) write(WORKSHOP_KEY, workshop);
   }, [progress?.found, workshop]);
-  // Par défaut, le dernier pack construit dans l'atelier.
+  // Par défaut, le pack le plus récent de l'atelier (V2 de la bascule plutôt que l'ancien pack V1).
+  const pack = customPack || progress?.builtPack || '';
+  const setPack = (v: string) => {
+    setCustomPack(v === progress?.builtPack ? '' : v);
+    write(PACK_KEY, v === progress?.builtPack ? '' : v);
+  };
+
+  const update = useFacesUpdate(gameDir, workshop);
+  const offer = update.data?.offer ?? null;
   useEffect(() => {
-    if (!pack && progress?.builtPack) setPack(progress.builtPack);
-  }, [progress?.builtPack, pack]);
+    const off = listen<{ received: number; total: number; step: string }>('faces-download', (e) => setDownload(e.payload));
+    return () => {
+      off.then((f) => f()).catch(() => undefined);
+    };
+  }, []);
 
   const { data: ageswap } = useQuery({
     queryKey: ['faces', 'ageswap', gameDir],
@@ -122,13 +141,20 @@ export function Faces() {
 
   const refresh = () => qc.invalidateQueries({ queryKey: ['faces'] });
   const install = useMutation({
-    mutationFn: () => invoke<InstallReport>('faces_install', { gameDir, pack }),
-    onSuccess: () => {
-      write(PACK_KEY, pack);
-      refresh();
-    },
+    mutationFn: () => invoke<InstallReport>('faces_install', { gameDir, pack, workshopDir: workshop || null, version: null }),
+    onSuccess: refresh,
   });
-  const uninstall = useMutation({ mutationFn: () => invoke<boolean>('faces_uninstall', { gameDir }), onSuccess: refresh });
+  const uninstall = useMutation({ mutationFn: () => invoke<boolean>('faces_uninstall', { gameDir, workshopDir: workshop || null }), onSuccess: refresh });
+  // Nouveau pack V2 : téléchargement vérifié (pack publié) puis installation, FM27 fermé.
+  const installOffer = useMutation({
+    mutationFn: async (o: PackOffer) => {
+      setDownload(null);
+      const path = o.source === 'local' && o.path ? o.path : await invoke<string>('faces_remote_download');
+      return invoke<InstallReport>('faces_install', { gameDir, pack: path, workshopDir: workshop || null, version: o.manifest.version });
+    },
+    onSettled: () => setDownload(null),
+    onSuccess: refresh,
+  });
   const toggleAges = useMutation({
     mutationFn: (enabled: boolean) => invoke<AgeSwapStatus>('faces_ageswap_set', { gameDir, enabled }),
     onSuccess: refresh,
@@ -137,7 +163,7 @@ export function Faces() {
   const state: FacesState = status?.state ?? 'noGame';
   const running = !!status?.running;
   const installed = state === 'photorealV1' || state === 'photorealCustom';
-  const busy = install.isPending || uninstall.isPending;
+  const busy = install.isPending || uninstall.isPending || installOffer.isPending;
   const error = (e: unknown) => String((e as { message?: string })?.message ?? e);
   const v2 = progress?.v2;
   const total = progress?.total ?? 14_000;
@@ -147,6 +173,40 @@ export function Faces() {
     <div className="w-full px-6 py-6 xl:px-10">
       <h1 className="text-3xl font-semibold">{t('modes.faces.title')}</h1>
       <p className="mt-2 max-w-3xl text-brun">{t('faces.intro')}</p>
+
+      {offer && (
+        <section className="card mt-6 max-w-6xl ring-2 ring-orange">
+          <h2 className="text-xl font-semibold">{t('faces.update.title', { count: v2Count(offer.manifest) })}</h2>
+          <p className="mt-1 text-sm text-brun">
+            {t(offer.source === 'local' ? 'faces.update.local' : 'faces.update.remote', {
+              version: offer.manifest.version ?? '?',
+              mb: Math.round(offer.manifest.size / 1_000_000),
+            })}
+            {update.data?.installedVersion && ` ${t('faces.update.current', { version: update.data.installedVersion })}`}
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button type="button" className="btn-primary" disabled={running || busy || state === 'noGame'} onClick={() => installOffer.mutate(offer)}>
+              {installOffer.isPending
+                ? download?.step === 'download' && download.total
+                  ? t('faces.update.downloading', { pct: Math.floor((download.received / download.total) * 100) })
+                  : download?.step === 'download'
+                    ? t('faces.update.downloadingMb', { mb: Math.round(download.received / 1_000_000) })
+                    : download?.step === 'extract' || download?.step === 'check'
+                      ? t('faces.update.checking')
+                      : t('faces.installing')
+                : offer.source === 'local'
+                  ? t('faces.update.installLocal')
+                  : t('faces.update.install')}
+            </button>
+            {running && <span className="text-sm font-bold text-canard">{t('faces.running')}</span>}
+          </div>
+          {installOffer.isSuccess && <p className="mt-3 text-sm text-canard">{t('faces.installed')}</p>}
+          {installOffer.isError && <p className="mt-3 text-sm text-corail">{error(installOffer.error)}</p>}
+        </section>
+      )}
+      {!offer && installOffer.isSuccess && (
+        <p className="card mt-6 max-w-6xl text-sm text-canard">{t('faces.installed')}</p>
+      )}
 
       <div className="mt-6 grid max-w-6xl gap-6 lg:grid-cols-2">
         {/* État dans le jeu + installation en un clic */}

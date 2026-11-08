@@ -2677,7 +2677,7 @@
       "original": "Portraits d'origine du jeu : le pack n'est pas installé.",
       "photorealV1": "Pack photoréaliste v1.0 installé.",
       "photorealCustom": "Pack photoréaliste de l'atelier installé.",
-      "unknown": "Fichier des portraits modifié ou mis à jour par Steam : réinstalle le pack."
+      "unknown": "Pack de portraits non reconnu (installé par un autre outil, ou jeu mis à jour par Steam)."
     },
     "running": "FM27 est ouvert : ferme-le pour installer ou désinstaller.",
     "installTitle": "Installer le pack",
@@ -2706,6 +2706,7 @@
     "lot": {
       "none": "Lot pas encore lancé.",
       "running": "Lot en cours (dernière activité le {{date}}).",
+      "paused": "Lot en pause (dernière activité le {{date}}). Il reprend dès que la pause est levée.",
       "stopped": "Lot à l'arrêt depuis le {{date}}. Il reprend où il s'était arrêté.",
       "finished": "Lot terminé."
     },
@@ -2725,7 +2726,20 @@
     "ageswapEnable": "Activer les âges",
     "ageswapDisable": "Couper les âges",
     "ageswapNextLaunch": "Pris en compte au prochain lancement de FM27.",
-    "ageswapRestart": "FM27 est ouvert : relance-le pour appliquer."
+    "ageswapRestart": "FM27 est ouvert : relance-le pour appliquer.",
+    "update": {
+      "title_one": "Nouveau pack de visages disponible : {{count}} portrait V2",
+      "title_other": "Nouveau pack de visages disponible : {{count}} portraits V2",
+      "remote": "Version du {{version}}, publiée au fil de la génération ({{mb}} Mo à télécharger, vérifiés avant l'installation). FM27 doit être fermé.",
+      "local": "Pack de l'atelier du {{version}}, déjà sur ce PC ({{mb}} Mo). FM27 doit être fermé.",
+      "current": "Pack en place : version du {{version}}.",
+      "install": "Télécharger et installer",
+      "installLocal": "Installer ce pack",
+      "downloading": "Téléchargement… {{pct}} %",
+      "downloadingMb": "Téléchargement… {{mb}} Mo",
+      "checking": "Vérification du pack…",
+      "badge": "Nouveau pack de visages"
+    }
   },
   "gazette": {
     "paper": "La Gazette de {{club}}",
@@ -3586,7 +3600,8 @@
       "pickChallenge": "Choisir un défi",
       "noChallenge": "Aucun défi en cours.",
       "steps": "Étapes franchies : {{done}} sur {{total}}",
-      "facesProgress": "Génération des portraits : {{pct}} %"
+      "facesProgress": "Génération des portraits : {{pct}} %",
+      "facesUpdate": "Nouveau pack de visages : {{count}} portraits V2"
     },
     "career": {
       "create": "Créer ma carrière",
