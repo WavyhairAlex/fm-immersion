@@ -3677,10 +3677,17 @@
   "search": {
     "label": "Quick search",
     "button": "Search",
-    "placeholder": "A player or a screen…",
+    "placeholder": "A player, a screen or an action…",
     "player": "Player",
     "screen": "Screen",
     "none": "No match.",
-    "keys": "↑ ↓ to choose · Enter to open · Esc to close"
+    "keys": "↑ ↓ to choose · Enter to open · Esc to close",
+    "actions": {
+      "read": "Refresh the career",
+      "readSub": "re-read the plugin's latest snapshot",
+      "careers": "Manage careers",
+      "lang": "Switch to French"
+    },
+    "action": "Action"
   }
 }
