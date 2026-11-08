@@ -2015,7 +2015,12 @@
       "suspended": "suspended",
       "rating": "avg rating",
       "topScorer": "Top scorer:",
-      "backForMatch": "Fit for the match (injured for {{days}} more days)"
+      "backForMatch": "Fit for the match (injured for {{days}} more days)",
+      "tomorrow": "Tomorrow",
+      "inDaysLong": "In {{count}} days",
+      "prepareMatch": "Prepare the match",
+      "seeOpponent": "See the opponent",
+      "fit": "XI rating"
     },
     "matchSheet": {
       "title": "Match sheet",
@@ -2533,7 +2538,25 @@
       "tacticRethink_one": "You are losing on xG ({{xg}} per match in the last match) and tactical effectiveness is stuck at {{te}}%: this formation isn't working. Try another formation with default instructions, then tweak slowly without changing roles.",
       "tacticRethink_other": "You are losing on xG ({{xg}} per match over {{count}} matches) and tactical effectiveness is stuck at {{te}}%: this formation isn't working. Try another formation with default instructions, then tweak slowly without changing roles.",
       "tacticPatience_one": "Your tactic is still bedding in (1 match): its effectiveness is rising (+{{gain}}, {{te}}%). Keep it; a complex tactic can take 20 matches to show its worth.",
-      "tacticPatience_other": "Your tactic is still bedding in ({{count}} matches): its effectiveness is rising (+{{gain}}, {{te}}%). Keep it; a complex tactic can take 20 matches to show its worth."
+      "tacticPatience_other": "Your tactic is still bedding in ({{count}} matches): its effectiveness is rising (+{{gain}}, {{te}}%). Keep it; a complex tactic can take 20 matches to show its worth.",
+      "word": "A word from your assistant",
+      "week": "To follow this week",
+      "progressShort": "{{done}} of {{count}} sorted",
+      "nothingElse": "Nothing else this week.",
+      "cat": {
+        "tactic": "Line-up",
+        "opponent": "Opponent",
+        "depth": "Rotation",
+        "targets": "Recruitment",
+        "finances": "Finances",
+        "contracts": "Contracts",
+        "playtime": "Playing time",
+        "dressing": "Dressing room",
+        "effectiveness": "Tactics",
+        "training": "Training",
+        "mercato": "Transfers",
+        "home": "Assistant"
+      }
     }
   },
   "modes": {
@@ -3436,7 +3459,7 @@
     "clubParam": "Challenge club: {{club}} (your current club)"
   },
   "layout": {
-    "readNow": "Read the game now",
+    "readNow": "Refresh the game",
     "openSettings": "Open Plugin & settings",
     "more": "More",
     "bridgeAction": "The plugin needs an action",

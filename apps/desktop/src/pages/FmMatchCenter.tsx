@@ -22,7 +22,7 @@ import {
 } from '@fm-immersion/module-fm';
 import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Avatar, Gauge, LINE_COLOR, Pitch } from './FmFoot';
 import { useTacticChoice } from './FmTactic';
@@ -43,6 +43,7 @@ export function FmMatchCenter({
   lineup,
   gameTactic,
   go,
+  aside,
 }: {
   snap: FmSnapshot;
   players: FmPlayer[];
@@ -51,6 +52,8 @@ export function FmMatchCenter({
   lineup: GameSlot[] | null;
   gameTactic: string | null;
   go: (view: string) => void;
+  /** Colonne de gauche, à côté du onze probable (le briefing de l'adjoint). */
+  aside?: ReactNode;
 }) {
   const { t, i18n } = useTranslation();
   const names = useNames();
@@ -128,126 +131,137 @@ export function FmMatchCenter({
       ).map(([x, y]) => [Math.min(86, Math.max(14, x)), Math.min(90, Math.max(8, y))] as const)
     : [];
 
+  const when = nm?.inDays == null ? null : nm.inDays === 0 ? t('fm.mc.today') : nm.inDays === 1 ? t('fm.mc.tomorrow') : t('fm.mc.inDaysLong', { count: nm.inDays });
+  const sides = nm ? (nm.home === false ? [nm.opponent, snap.club] : [snap.club, nm.opponent]) : [];
+  const absent = [...injured, ...suspended, ...back];
+
   return (
-    <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,19rem)_minmax(0,1fr)]">
+    <section className="space-y-4">
       {/* Prochain match : bandeau sombre, l'information qu'on cherche en premier. */}
-      <div className="flex flex-col rounded-xl bg-canard p-5 text-white">
-        <p className="text-xs font-bold uppercase tracking-widest text-eau">{t('fm.mc.next')}</p>
-        {nm ? (
-          <>
-            <p className="mt-2 font-display text-3xl font-semibold leading-tight">{nm.opponent}</p>
-            <div className="mt-2 flex flex-wrap gap-2 text-xs font-bold">
-              {nm.competition && <span className="rounded-full bg-white/10 px-2.5 py-1">{nm.competition}</span>}
-              {nm.home != null && <span className="rounded-full bg-white/10 px-2.5 py-1">{t(nm.home ? 'fm.mc.home' : 'fm.mc.away')}</span>}
+      <div className="relative overflow-hidden rounded-2xl bg-canard text-white">
+        <Stadium className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-[55%] md:block" />
+        <div className="relative max-w-xl p-6 md:p-7">
+          {nm ? (
+            <>
+              <p className="text-xs font-bold uppercase tracking-widest text-orange">
+                {[when, nm.home != null && t(nm.home ? 'fm.mc.home' : 'fm.mc.away')].filter(Boolean).join(' · ') || t('fm.mc.next')}
+              </p>
+              <p className="mt-2 font-display text-3xl font-semibold leading-tight md:text-4xl">
+                {sides[0]} <span className="text-white/50">–</span> {sides[1]}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+                {nm.competition && <span className="rounded-full bg-white/10 px-2.5 py-1">{nm.competition}</span>}
+                {nm.inDays != null && nm.inDays > 1 && <span className="rounded-full bg-white/10 px-2.5 py-1 tabular-nums">J-{nm.inDays}</span>}
+              </div>
+              {nm.staffView && <p className="mt-3 max-w-md text-sm italic text-white/75">« {nm.staffView} »</p>}
+            </>
+          ) : (
+            <>
+              <p className="text-xs font-bold uppercase tracking-widest text-orange">{t('fm.mc.next')}</p>
+              <p className="mt-2 text-white/70">{t('fm.sum.noMatch')}</p>
+            </>
+          )}
+          <div className="mt-5 flex flex-wrap gap-2">
+            <button type="button" className="rounded-lg bg-orange-fonce px-4 py-2 text-sm font-bold text-white hover:bg-orange-fonce/90" onClick={() => go('tactic')}>
+              {t('fm.mc.prepareMatch')} →
+            </button>
+            {nm && (
+              <button type="button" className="rounded-lg bg-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white/20" onClick={() => go('opponent')}>
+                {t('fm.mc.seeOpponent')}
+              </button>
+            )}
+            <button type="button" className="rounded-lg px-3 py-2 text-sm font-bold text-white/80 hover:bg-white/10 hover:text-white" onClick={() => go('calendar')}>
+              {t('fm.mc.calendar')}
+            </button>
+          </div>
+          {fixtures.length > 1 && (
+            <p className="mt-4 text-xs text-white/60">
+              <b className="text-white/80">{t('fm.mc.then')}</b>{' '}
+              {fixtures
+                .slice(1, 4)
+                .map((f) => `${f.opponent ?? '–'}${f.home != null ? ` (${t(f.home ? 'fm.mc.homeShort' : 'fm.mc.awayShort')})` : ''} ${day.format(new Date(f.date))}`)
+                .join(' · ')}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="min-w-0">{aside}</div>
+
+        {/* Onze probable sur le terrain, et l'état de l'équipe juste dessous. */}
+        <div className="card p-4">
+          <div className="mb-1 flex items-baseline justify-between gap-2">
+            <h2 className="text-lg">{t('fm.mc.xi')}</h2>
+            {plan && (
+              <span className="text-sm font-bold tabular-nums text-eau-fonce" title={t('fm.mc.fit')}>
+                {fitPct(plan.score)}
+              </span>
+            )}
+          </div>
+          <p className="mb-3 text-xs text-brun">{[plan?.form, style && names.style(style)].filter(Boolean).join(' · ')}</p>
+          <Pitch className="mx-auto w-full max-w-[17rem]">
+            {plan?.slots.map((sl, i) => {
+              const [x, y] = xy[i]!;
+              return (
+                <span key={i} className="absolute flex w-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center" style={{ left: `${x}%`, top: `${y}%` }}>
+                  {sl.player ? <Avatar player={sl.player} size="sm" /> : <span className="h-7 w-7 rounded-full border-2 border-dashed border-white/70" aria-hidden />}
+                  <span className="mt-0.5 max-w-full truncate rounded bg-canard/85 px-1 text-[0.65rem] font-bold leading-4 text-white">{sl.player ? last(sl.player.name) : t('fm.tac.nobody')}</span>
+                </span>
+              );
+            })}
+          </Pitch>
+          {plan && plan.subs.some((l) => l.length) && (
+            <p className="mt-3 text-xs text-brun">
+              <b className="text-canard">{t('fm.mc.bench')}</b>{' '}
+              {[...new Map(plan.subs.flatMap((l) => l.slice(0, 1)).map((p) => [p.id, p])).values()]
+                .slice(0, 7)
+                .map((p) => last(p.name))
+                .join(', ')}
+            </p>
+          )}
+          <div className="mt-4 space-y-3 border-t border-canard/10 pt-4">
+            <Gauge value={s.condition} label={t('fm.sum.condition')} />
+            <Gauge value={s.sharpness} label={t('fm.sum.sharpness')} />
+            <div className="grid grid-cols-3 gap-2 text-center">
+              {(
+                [
+                  [t('fm.mc.injured'), injured.length, injured.length ? 'text-corail' : ''],
+                  [t('fm.mc.suspended'), suspended.length, suspended.length ? 'text-corail' : ''],
+                  [t('fm.mc.rating'), s.rating == null ? '–' : rating.format(s.rating), ''],
+                ] as const
+              ).map(([label, value, tone]) => (
+                <div key={label} className="rounded-lg bg-canard/5 p-2">
+                  <p className={`font-display text-xl font-semibold tabular-nums ${tone}`}>{value}</p>
+                  <p className="text-xs text-brun">{label}</p>
+                </div>
+              ))}
             </div>
-            {nm.inDays != null && (
-              <p className="mt-4 flex items-baseline gap-2">
-                <span className="font-display text-5xl font-semibold tabular-nums text-eau">{nm.inDays === 0 ? t('fm.mc.today') : `J-${nm.inDays}`}</span>
-                {nm.inDays > 0 && <span className="text-sm text-white/70">{t('fm.sum.inDays', { count: nm.inDays })}</span>}
+            {absent.length > 0 && (
+              <ul className="space-y-1 text-sm">
+                {absent.slice(0, 6).map((p) => (
+                  <li key={p.id + (p.injury ? 'i' : 's')} className="flex items-center gap-2">
+                    <span className={`h-2 w-2 shrink-0 rounded-full ${backForMatch(p) ? 'bg-eau-fonce' : p.injury ? 'bg-corail' : LINE_COLOR.GB.bg}`} aria-hidden />
+                    <PlayerLink player={p} />
+                    <span className="truncate text-xs text-brun">
+                      {backForMatch(p) ? t('fm.mc.backForMatch', { days: p.injuryDays }) : p.injury ? p.injury + (p.injuryDays ? ` (${p.injuryDays} j)` : '') : p.suspension}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {s.topScorer && (
+              <p className="text-sm text-brun">
+                {t('fm.mc.topScorer')} <b className="text-canard">{s.topScorer.name}</b> ({s.topScorer.goals})
               </p>
             )}
-            {nm.staffView && <p className="mt-3 rounded-lg bg-white/5 p-2.5 text-sm text-white/80">« {nm.staffView} »</p>}
-          </>
-        ) : (
-          <p className="mt-2 text-white/70">{t('fm.sum.noMatch')}</p>
-        )}
-        {fixtures.length > 1 && (
-          <div className="mt-4 border-t border-white/10 pt-3">
-            <p className="text-xs font-bold uppercase tracking-wide text-white/60">{t('fm.mc.then')}</p>
-            <ul className="mt-1 space-y-1 text-sm">
-              {fixtures.slice(1, 5).map((f, i) => (
-                <li key={i} className="flex items-center justify-between gap-2">
-                  <span className="truncate">{f.opponent ?? '–'}</span>
-                  <span className="shrink-0 text-xs tabular-nums text-white/60">
-                    {f.home != null && `${t(f.home ? 'fm.mc.homeShort' : 'fm.mc.awayShort')} · `}
-                    {day.format(new Date(f.date))}
-                  </span>
-                </li>
-              ))}
-            </ul>
           </div>
-        )}
-        <div className="mt-auto flex flex-wrap gap-2 pt-4">
-          <button type="button" className="rounded-lg bg-eau px-3 py-1.5 text-sm font-bold text-canard hover:bg-eau/90" onClick={() => go('tactic')}>
-            {t('fm.mc.prepare')}
-          </button>
-          <button type="button" className="rounded-lg bg-white/10 px-3 py-1.5 text-sm font-bold text-white hover:bg-white/20" onClick={() => go('calendar')}>
-            {t('fm.mc.calendar')}
-          </button>
         </div>
-      </div>
-
-      {/* Onze probable sur le terrain. */}
-      <div className="card p-4">
-        <div className="mb-2 flex items-baseline justify-between gap-2">
-          <h2>{t('fm.mc.xi')}</h2>
-          {plan && <span className="text-sm font-bold tabular-nums text-eau-fonce">{fitPct(plan.score)}</span>}
-        </div>
-        <p className="mb-3 text-xs text-brun">{[plan?.form, style && names.style(style)].filter(Boolean).join(' · ')}</p>
-        <Pitch className="mx-auto w-full max-w-[17rem]">
-          {plan?.slots.map((sl, i) => {
-            const [x, y] = xy[i]!;
-            return (
-              <span key={i} className="absolute flex w-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center" style={{ left: `${x}%`, top: `${y}%` }}>
-                {sl.player ? <Avatar player={sl.player} size="sm" /> : <span className="h-7 w-7 rounded-full border-2 border-dashed border-white/70" aria-hidden />}
-                <span className="mt-0.5 max-w-full truncate rounded bg-canard/85 px-1 text-[0.65rem] font-bold leading-4 text-white">{sl.player ? last(sl.player.name) : t('fm.tac.nobody')}</span>
-              </span>
-            );
-          })}
-        </Pitch>
-        {plan && plan.subs.some((l) => l.length) && (
-          <p className="mt-3 text-xs text-brun">
-            <b className="text-canard">{t('fm.mc.bench')}</b>{' '}
-            {[...new Map(plan.subs.flatMap((l) => l.slice(0, 1)).map((p) => [p.id, p])).values()]
-              .slice(0, 7)
-              .map((p) => last(p.name))
-              .join(', ')}
-          </p>
-        )}
-      </div>
-
-      {/* État de l'équipe. */}
-      <div className="card space-y-4 p-4">
-        <h2>{t('fm.mc.state')}</h2>
-        <Gauge value={s.condition} label={t('fm.sum.condition')} />
-        <Gauge value={s.sharpness} label={t('fm.sum.sharpness')} />
-        <div className="grid grid-cols-3 gap-2 text-center">
-          {(
-            [
-              [t('fm.mc.injured'), injured.length, injured.length ? 'text-corail' : ''],
-              [t('fm.mc.suspended'), suspended.length, suspended.length ? 'text-corail' : ''],
-              [t('fm.mc.rating'), s.rating == null ? '–' : rating.format(s.rating), ''],
-            ] as const
-          ).map(([label, value, tone]) => (
-            <div key={label} className="rounded-lg bg-canard/5 p-2">
-              <p className={`font-display text-xl font-semibold tabular-nums ${tone}`}>{value}</p>
-              <p className="text-xs text-brun">{label}</p>
-            </div>
-          ))}
-        </div>
-        {[...injured, ...suspended, ...back].length > 0 && (
-          <ul className="space-y-1 text-sm">
-            {[...injured, ...suspended, ...back].slice(0, 6).map((p) => (
-              <li key={p.id + (p.injury ? 'i' : 's')} className="flex items-center gap-2">
-                <span className={`h-2 w-2 shrink-0 rounded-full ${backForMatch(p) ? 'bg-eau-fonce' : p.injury ? 'bg-corail' : LINE_COLOR.GB.bg}`} aria-hidden />
-                <PlayerLink player={p} />
-                <span className="truncate text-xs text-brun">
-                  {backForMatch(p) ? t('fm.mc.backForMatch', { days: p.injuryDays }) : p.injury ? p.injury + (p.injuryDays ? ` (${p.injuryDays} j)` : '') : p.suspension}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-        {s.topScorer && (
-          <p className="text-sm text-brun">
-            {t('fm.mc.topScorer')} <b className="text-canard">{s.topScorer.name}</b> ({s.topScorer.goals})
-          </p>
-        )}
       </div>
 
       {/* Feuille de match : remplacements prévus et ajustements selon le score. */}
       {plan && (
-        <div className="card p-4 lg:col-span-3">
+        <div className="card p-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2>{t('fm.matchSheet.title')}</h2>
             <button type="button" className={chip(live)} aria-pressed={live} onClick={() => setLive((v) => !v)}>
@@ -374,5 +388,61 @@ export function FmMatchCenter({
         </div>
       )}
     </section>
+  );
+}
+
+/**
+ * Stade au coucher du soleil, dessiné ici (aucun visuel du jeu) : ciel orangé, tribunes, projecteurs et pelouse,
+ * fondu vers l'anthracite du bandeau à gauche pour que le texte reste lisible.
+ */
+function Stadium({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 600 260" preserveAspectRatio="xMaxYMid slice" className={className} aria-hidden>
+      <defs>
+        <linearGradient id="fmi-sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#4A3340" />
+          <stop offset="0.45" stopColor="#C2410C" />
+          <stop offset="0.8" stopColor="#F26B1D" />
+          <stop offset="1" stopColor="#FFB27A" />
+        </linearGradient>
+        <linearGradient id="fmi-fade" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#25282D" />
+          <stop offset="0.08" stopColor="#25282D" stopOpacity="0.85" />
+          <stop offset="0.3" stopColor="#25282D" stopOpacity="0.35" />
+          <stop offset="1" stopColor="#25282D" stopOpacity="0" />
+        </linearGradient>
+        <radialGradient id="fmi-sun" cx="0.7" cy="0.72" r="0.25">
+          <stop offset="0" stopColor="#FFE4D3" stopOpacity="0.95" />
+          <stop offset="1" stopColor="#FFE4D3" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="600" height="260" fill="url(#fmi-sky)" />
+      <rect width="600" height="260" fill="url(#fmi-sun)" />
+      {/* Projecteurs */}
+      {[150, 560].map((x) => (
+        <g key={x} fill="#1B1D21">
+          <rect x={x - 2} y="40" width="4" height="150" />
+          <rect x={x - 18} y="30" width="36" height="14" rx="2" />
+          <g fill="#FFE4D3" opacity="0.9">
+            {[-12, -4, 4, 12].map((d) => (
+              <circle key={d} cx={x + d} cy="37" r="2.6" />
+            ))}
+          </g>
+        </g>
+      ))}
+      {/* Tribunes */}
+      <path d="M0 170 L80 120 Q300 92 520 120 L600 160 L600 205 L0 205 Z" fill="#1B1D21" />
+      <path d="M40 176 L110 136 Q300 112 500 136 L570 172 Z" fill="#2B2F35" />
+      <g stroke="#3A3F46" strokeWidth="1.5">
+        {[150, 160, 170].map((y) => (
+          <path key={y} d={`M${70 + (y - 150)} ${y} Q300 ${y - 34} ${530 - (y - 150)} ${y}`} fill="none" />
+        ))}
+      </g>
+      {/* Pelouse */}
+      <path d="M0 205 L600 205 L600 260 L0 260 Z" fill="#1F4D3A" />
+      <path d="M0 205 L600 205 L600 214 L0 214 Z" fill="#2A6149" />
+      <path d="M150 260 L240 210 L460 210 L560 260" fill="none" stroke="#FFFFFF" strokeOpacity="0.35" strokeWidth="2" />
+      <rect width="600" height="260" fill="url(#fmi-fade)" />
+    </svg>
   );
 }
