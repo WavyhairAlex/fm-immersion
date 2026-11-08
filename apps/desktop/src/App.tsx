@@ -12,6 +12,7 @@ import { Faces } from './pages/Faces';
 import { FmSave, SettingsWithoutCareer } from './pages/FmSave';
 import { Home } from './pages/Home';
 import { Overview } from './pages/Overview';
+import { Saves } from './pages/Saves';
 import { Soon } from './pages/Soon';
 import { Story } from './pages/Story';
 
@@ -31,6 +32,7 @@ export function App() {
             <Route path="/reglages" element={<Settings />} />
             <Route path="/parties" element={<Home />} />
             <Route path="/visages" element={<Faces />} />
+            <Route path="/sauvegardes" element={<Saves />} />
             <Route path="/gazette" element={<Story tab="gazette" />} />
             <Route path="/discord" element={<Story tab="discord" />} />
             <Route path="/defis" element={<Challenges />} />
