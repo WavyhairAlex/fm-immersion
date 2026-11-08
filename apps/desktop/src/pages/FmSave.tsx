@@ -376,6 +376,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
                     ) : (
                       <>
                         <ViewHeader view={view} part={PARTS[view].includes(current) ? current : view} />
+                        <AssistantSays page={view} saveId={saveId} go={go} />
                         <PageParts page={view} current={current} go={go} render={part} />
                       </>
                     )}
@@ -562,6 +563,48 @@ function PageParts({ page, current, go, render }: { page: ClubPage; current: str
         {render(active)}
       </section>
     </>
+  );
+}
+
+/**
+ * L'adjoint parle en tête de chaque écran du club : les messages encore ouverts du briefing qui concernent cet
+ * écran, chacun avec son bouton ; sinon une phrase pour dire que rien ne presse ici.
+ */
+function AssistantSays({ page, saveId, go }: { page: ClubPage; saveId: string; go: (v: string) => void }) {
+  const { t } = useTranslation();
+  const brief = useCareerStore((s) => s.brief);
+  if (!brief.at.startsWith(`${saveId}|`)) return null;
+  const lines = brief.items.filter((x) => pageOf(x.view) === page);
+  const others = brief.items.length - lines.length;
+  return (
+    <aside className="mb-5 flex gap-4 rounded-xl border-l-4 border-orange bg-white p-4 ring-1 ring-canard/10" aria-label={t('layout.assistant.label')}>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-canard font-extrabold text-white" aria-hidden>
+        {t('layout.assistant.initial')}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="font-extrabold">{t('layout.assistant.label')}</p>
+        {lines.length ? (
+          <ul className="mt-1 space-y-2">
+            {lines.map((x, i) => (
+              <li key={x.key} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span className={`h-2 w-2 shrink-0 rounded-full ${x.tone === 'bad' ? 'bg-corail' : x.tone === 'warn' ? 'bg-ambre' : 'bg-eau'}`} aria-hidden />
+                <span className="min-w-0 flex-1 text-[0.95rem]">{x.text}</span>
+                <button type="button" className={i === 0 ? 'btn-primary px-3 py-1 text-sm' : 'btn-secondary px-3 py-1 text-sm'} onClick={() => go(x.view)}>
+                  {x.action}
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-1 text-[0.95rem] text-brun">{t(`layout.assistant.calm.${page}`)}</p>
+        )}
+        {others > 0 && (
+          <Link to="/" className="mt-2 inline-block text-sm font-bold text-orange-fonce hover:underline">
+            {t('layout.assistant.elsewhere', { count: others })}
+          </Link>
+        )}
+      </div>
+    </aside>
   );
 }
 

@@ -3343,6 +3343,18 @@
       "switch": "Switch career",
       "manage": "Manage",
       "removePhoto": "Remove photo"
+    },
+    "assistant": {
+      "label": "Your assistant",
+      "initial": "A",
+      "elsewhere_one": "{{count}} more item is waiting elsewhere: see the briefing",
+      "elsewhere_other": "{{count}} more items are waiting elsewhere: see the briefing",
+      "calm": {
+        "tactic": "Nothing urgent on tactics and training this week: the XI holds, stay the course.",
+        "squad": "The squad is fine this week: nobody to calm down or reassure.",
+        "results": "Nothing worrying in the results: keep it up.",
+        "mercato": "No transfer or finance decision to make this week."
+      }
     }
   }
 }
