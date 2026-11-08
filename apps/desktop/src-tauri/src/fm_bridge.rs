@@ -339,9 +339,117 @@ pub fn fm_bridge_default_game_dir() -> Option<String> {
     find_game_dir().map(|p| p.to_string_lossy().into_owned())
 }
 
+/* ---------- Lectures du plugin réglées depuis l'appli ---------- */
+
+/// Lectures du plugin que le joueur peut activer depuis FM Immersion, avec leur valeur par défaut dans le plugin.
+/// `LireTactique` n'y est pas : elle a déjà figé FM27 (voir Plugin.cs).
+pub const OPTIONS: [(&str, bool); 5] = [("LireCompo", false), ("LireCibles", false), ("LireJoueursEtendus", false), ("LireEfficacite", true), ("LireMatchDirect", true)];
+
+fn option_line(line: &str, key: &str) -> Option<String> {
+    let rest = line.trim().strip_prefix(key)?.trim_start();
+    rest.strip_prefix('=').map(|v| v.trim().to_lowercase())
+}
+
+/// Valeur d'un réglage `Clé = true|false` du fichier de configuration BepInEx (None si absent).
+pub fn option_value(cfg: &str, key: &str) -> Option<bool> {
+    cfg.lines().find_map(|l| option_line(l, key)).and_then(|v| match v.as_str() {
+        "true" => Some(true),
+        "false" => Some(false),
+        _ => None,
+    })
+}
+
+/// Le fichier avec ce réglage changé ; ajouté sous `[Archivix]` s'il n'y est pas encore. Le reste est gardé tel quel.
+pub fn with_option(cfg: &str, key: &str, value: bool) -> String {
+    let line = format!("{key} = {value}");
+    let mut found = false;
+    let mut out: Vec<String> = cfg
+        .lines()
+        .map(|l| {
+            if option_line(l, key).is_some() {
+                found = true;
+                line.clone()
+            } else {
+                l.to_owned()
+            }
+        })
+        .collect();
+    if !found {
+        match out.iter().position(|l| l.trim() == "[Archivix]") {
+            Some(i) => out.insert(i + 1, line),
+            None => {
+                out.push("[Archivix]".to_owned());
+                out.push(line);
+            }
+        }
+    }
+    let mut text = out.join("\n");
+    text.push('\n');
+    text
+}
+
+#[derive(Debug, Serialize)]
+pub struct BridgeOption {
+    pub key: &'static str,
+    pub value: bool,
+}
+
+fn config_path(game: &Path) -> PathBuf {
+    game.join("BepInEx").join("config").join("fr.archivix.bridge.cfg")
+}
+
+fn options_of(cfg: &str) -> Vec<BridgeOption> {
+    OPTIONS.iter().map(|(key, def)| BridgeOption { key, value: option_value(cfg, key).unwrap_or(*def) }).collect()
+}
+
+/// Lectures du plugin, telles que réglées dans son fichier de configuration (valeurs par défaut s'il n'existe pas).
+#[tauri::command]
+pub fn fm_bridge_options(game_dir: String) -> Result<Vec<BridgeOption>, BridgeError> {
+    let game = Path::new(&game_dir);
+    if !status(game).game_found {
+        return Err(BridgeError::NoGame);
+    }
+    Ok(options_of(&std::fs::read_to_string(config_path(game)).unwrap_or_default()))
+}
+
+/// Active ou coupe une lecture du plugin. Le plugin lit ses réglages au lancement de FM27 : la modification vaut
+/// pour la prochaine partie lancée.
+#[tauri::command]
+pub fn fm_bridge_set_option(game_dir: String, key: String, value: bool) -> Result<Vec<BridgeOption>, BridgeError> {
+    let game = Path::new(&game_dir);
+    if !status(game).game_found {
+        return Err(BridgeError::NoGame);
+    }
+    if !game.join("BepInEx").join("core").is_dir() {
+        return Err(BridgeError::NoBepInEx);
+    }
+    let Some((k, _)) = OPTIONS.iter().find(|(k, _)| *k == key) else {
+        return Err(BridgeError::BadManifest(format!("réglage inconnu : {key}")));
+    };
+    let path = config_path(game);
+    let cfg = std::fs::read_to_string(&path).unwrap_or_default();
+    let next = with_option(&cfg, k, value);
+    write_atomic(&path, next.as_bytes())?;
+    Ok(options_of(&next))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn reglages_du_plugin() {
+        let cfg = "[Archivix]\n\n## Lire la compo\n# Setting type: Boolean\nLireCompo = false\nLireCompoX = true\nDossier = C:\\x\n";
+        assert_eq!(option_value(cfg, "LireCompo"), Some(false));
+        assert_eq!(option_value(cfg, "LireCibles"), None);
+        let on = with_option(cfg, "LireCompo", true);
+        assert_eq!(option_value(&on, "LireCompo"), Some(true));
+        assert!(on.contains("LireCompoX = true") && on.contains("Dossier = C:\\x") && on.contains("## Lire la compo"));
+        let added = with_option(cfg, "LireCibles", true);
+        assert!(added.starts_with("[Archivix]\nLireCibles = true\n"));
+        assert_eq!(option_value(&with_option("", "LireCompo", true), "LireCompo"), Some(true));
+        assert!(options_of("").iter().any(|o| o.key == "LireEfficacite" && o.value));
+    }
 
     #[test]
     fn compare_les_versions() {

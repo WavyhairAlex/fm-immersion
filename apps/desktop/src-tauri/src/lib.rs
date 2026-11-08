@@ -41,6 +41,8 @@ pub fn run() {
             fm_bridge::fm_bridge_latest,
             fm_bridge::fm_bridge_install,
             fm_bridge::fm_bridge_default_game_dir,
+            fm_bridge::fm_bridge_options,
+            fm_bridge::fm_bridge_set_option,
             fm_memory::fm_memory_probe,
             fm_memory::fm_memory_find,
             fm_memory::fm_memory_search,

@@ -3,9 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-type BridgeStatus = { gameFound: boolean; bepinex: boolean; running: boolean; installedVersion: string | null };
-
-const GAME_DIR_KEY = 'fmi.gameDir';
+import { GAME_DIR_KEY, useGameStatus, type BridgeStatus } from '../lib/game';
 const read = (k: string) => {
   try {
     return localStorage.getItem(k);
@@ -143,6 +141,57 @@ export function FmBridge({ dataFolder, onHealth }: { dataFolder: string; onHealt
         {install.isSuccess && <p className="text-sm text-canard">{t('fm.bridge.done')}</p>}
         {install.isError && <p className="text-sm text-corail">{t('fm.bridge.error', { reason: String(install.error?.message ?? install.error) })}</p>}
       </div>
+    </section>
+  );
+}
+
+type BridgeOption = { key: string; value: boolean };
+
+/**
+ * Ce que le plugin lit dans FM27, réglé depuis l'appli : FM Immersion modifie le fichier de configuration du plugin
+ * (BepInEx), plus besoin de l'ouvrir à la main. Le plugin relit ses réglages au lancement du jeu.
+ */
+export function FmBridgeOptions() {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const { gameDir, status } = useGameStatus();
+  const ready = !!status?.gameFound && status.bepinex && !!status.installedVersion;
+  const key = ['fm', 'bridge', 'options', gameDir];
+  const options = useQuery({ queryKey: key, queryFn: () => invoke<BridgeOption[]>('fm_bridge_options', { gameDir }), enabled: ready });
+  const [changed, setChanged] = useState(false);
+  const set = useMutation({
+    mutationFn: (o: BridgeOption) => invoke<BridgeOption[]>('fm_bridge_set_option', { gameDir, key: o.key, value: o.value }),
+    onSuccess: (list) => {
+      qc.setQueryData(key, list);
+      setChanged(true);
+    },
+  });
+  if (!ready || !options.data) return null;
+  return (
+    <section className="rounded-xl bg-white p-4 ring-1 ring-canard/10">
+      <h2 className="font-display text-lg font-semibold">{t('fm.bridge.options.title')}</h2>
+      <p className="mt-1 text-sm text-brun">{t('fm.bridge.options.intro')}</p>
+      <ul className="mt-3 divide-y divide-canard/10">
+        {options.data.map((o) => (
+          <li key={o.key}>
+            <label className="flex cursor-pointer items-start gap-3 py-2.5">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 shrink-0 cursor-pointer accent-orange-fonce"
+                checked={o.value}
+                disabled={set.isPending}
+                onChange={(e) => set.mutate({ key: o.key, value: e.target.checked })}
+              />
+              <span>
+                <span className="block font-bold">{t(`fm.bridge.options.${o.key}.label`)}</span>
+                <span className="block text-sm text-brun">{t(`fm.bridge.options.${o.key}.help`)}</span>
+              </span>
+            </label>
+          </li>
+        ))}
+      </ul>
+      {changed && <p className="mt-2 text-sm font-bold text-canard">{t(status?.running ? 'fm.bridge.options.restart' : 'fm.bridge.options.next')}</p>}
+      {set.isError && <p className="mt-2 text-sm text-corail">{t('fm.bridge.options.error', { reason: String(set.error?.message ?? set.error) })}</p>}
     </section>
   );
 }
