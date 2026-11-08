@@ -46,11 +46,15 @@ describe('plan de match (réglages contre l’adversaire)', () => {
     expect(new Set(p.team.map((a) => a.title)).size).toBe(p.team.length);
     // Pas de mentalité changée : leur défense ne concède pas souvent (57 min) et la menace n'est pas connue.
     expect(p.mentality).toBeNull();
-    // Le créateur (passeur) est pris par notre meilleur marqueur de l'axe ; le buteur par un central.
+    // Le créateur (passeur) est pris par notre meilleur marqueur de l'axe ; le buteur (M/MO (C), même règle) par le
+    // suivant : jamais le même homme sur deux adversaires.
     expect(p.marking.map((x) => [x.target, x.player])).toEqual([
       ['Jonathan Stato', 'Bene'],
-      ['Michal Klec', 'Bene'], // M/MO (C) : même règle, le meilleur marqueur de l'axe.
+      ['Michal Klec', 'Rossi'],
     ]);
+    // Un seul joueur de l'axe : le second adversaire reste sans marqueur nommé plutôt que de doubler.
+    const solo = matchPlan(possession, nitra, plan('4-3-3', [['MDF', player('Bene', { Marking: 16 })], ['DC', player('Horvath', { Marking: 15 })]]));
+    expect(solo.marking.map((x) => x.player)).toEqual(['Bene', null]);
   });
 
   it('pressing haut adverse : contourner, plus direct, dans les espaces ; jamais une consigne que le style règle pareil', () => {

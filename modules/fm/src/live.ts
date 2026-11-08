@@ -5,6 +5,23 @@ import { z } from 'zod';
  * Lu dans le jeu sur le match du manager humain : score, minute affichée (« 19 min. », « FDM » à la fin),
  * buteurs en texte du jeu (« L. Carrero pen 36', M. Fábry 11', 90+1' »), fin du match.
  */
+/** Événement du match tel que le jeu le liste (`HomeEventInfos`) : type 0 but, 2 penalty ; temps affiché (« pen 36' »). */
+export const fmLiveEventSchema = z.object({ type: z.number().nullish(), time: z.string().nullish(), slice: z.number().nullish() }).passthrough();
+
+/**
+ * Joueur de la feuille de match (plugin 0.5.2, `HomeLineup`/`AwayLineup`) : buts, passes décisives et cartons dans ce
+ * match. C'est de là que viennent les passeurs et les cartons du direct.
+ */
+export const fmLivePlayerSchema = z
+  .object({
+    name: z.string(),
+    goals: z.number().nullish(),
+    assists: z.number().nullish(),
+    yellow: z.boolean().nullish(),
+    red: z.boolean().nullish(),
+  })
+  .passthrough();
+
 export const fmLiveSchema = z
   .object({
     schema: z.literal('archivix-live/1'),
@@ -18,10 +35,18 @@ export const fmLiveSchema = z
     minute: z.string().nullish(),
     final: z.boolean().nullish(),
     scorers: z.string().nullish(),
+    homeEvents: z.array(fmLiveEventSchema).nullish(),
+    awayEvents: z.array(fmLiveEventSchema).nullish(),
+    homeLineup: z.array(fmLivePlayerSchema).nullish(),
+    awayLineup: z.array(fmLivePlayerSchema).nullish(),
   })
   .passthrough();
 
 export type FmLive = z.infer<typeof fmLiveSchema>;
+export type FmLivePlayer = z.infer<typeof fmLivePlayerSchema>;
+
+/** But sur penalty : le jeu préfixe la minute (« pen 36' »). */
+export const isPenalty = (time: string | null | undefined) => /^pen/i.test(time ?? '');
 
 /** Un but du texte des buteurs : nom et minute telle que le jeu l'affiche (« pen 36' », « 90+1' »). */
 export interface LiveGoal {
@@ -56,14 +81,52 @@ export function parseScorers(text: string | null | undefined): LiveGoal[] {
 /** Même match d'un relevé à l'autre : date de jeu et équipes. */
 export const liveKey = (l: FmLive) => `${l.gameDate ?? ''}|${l.home}|${l.away}`;
 
-/** Ce qu'il faut annoncer entre deux relevés du même match (le premier relevé connu : rien que le tableau). */
-export type LiveNews = { kind: 'goal'; side: 'home' | 'away'; scorer: LiveGoal | null } | { kind: 'final' };
+/**
+ * Ce qu'il faut annoncer entre deux relevés du même match (le premier relevé connu : rien que le tableau).
+ * But : côté, buteur, penalty, passeur décisif (quand la feuille de match le donne). Carton : joueur et couleur.
+ */
+export type LiveNews =
+  | { kind: 'goal'; side: 'home' | 'away'; scorer: LiveGoal | null; penalty: boolean; assist: string | null }
+  | { kind: 'card'; side: 'home' | 'away'; player: string; card: 'yellow' | 'red' }
+  | { kind: 'final' };
+
+export type LiveGoalNews = Extract<LiveNews, { kind: 'goal' }>;
+export type LiveCardNews = Extract<LiveNews, { kind: 'card' }>;
 
 const goalId = (g: LiveGoal) => `${g.name}|${g.time}`;
 
+const lineupOf = (l: FmLive, side: 'home' | 'away') => (side === 'home' ? l.homeLineup : l.awayLineup) ?? null;
+
+/** Joueurs d'une équipe dont le compteur (`assists`, `goals`) a augmenté entre deux feuilles de match. */
+function increased(prev: FmLivePlayer[], cur: FmLivePlayer[], key: 'assists' | 'goals'): string[] {
+  const before = new Map(prev.map((p) => [p.name, p[key] ?? 0]));
+  return cur.filter((p) => (p[key] ?? 0) > (before.get(p.name) ?? 0)).map((p) => p.name);
+}
+
 /**
- * Buts marqués et fin du match depuis le relevé précédent. Le côté du but vient du score qui a augmenté ;
- * le buteur, du nouveau nom apparu dans le texte des buteurs (null si le jeu ne l'a pas encore écrit).
+ * Cartons apparus entre deux feuilles de match. Un joueur dont le rouge apparaît (second jaune compris) n'est annoncé
+ * que pour le rouge. Sans feuille de match au relevé précédent, rien : on ne rejoue pas les cartons déjà pris.
+ */
+export function liveCards(prev: FmLive, cur: FmLive): LiveCardNews[] {
+  const out: LiveCardNews[] = [];
+  for (const side of ['home', 'away'] as const) {
+    const before = lineupOf(prev, side);
+    const after = lineupOf(cur, side);
+    if (!before || !after) continue;
+    const was = new Map(before.map((p) => [p.name, p]));
+    for (const p of after) {
+      const w = was.get(p.name);
+      if (p.red && !w?.red) out.push({ kind: 'card', side, player: p.name, card: 'red' });
+      else if (p.yellow && !w?.yellow) out.push({ kind: 'card', side, player: p.name, card: 'yellow' });
+    }
+  }
+  return out;
+}
+
+/**
+ * Buts marqués, cartons et fin du match depuis le relevé précédent. Le côté du but vient du score qui a augmenté ;
+ * le buteur, du nouveau nom apparu dans le texte des buteurs (null si le jeu ne l'a pas encore écrit) ; le penalty,
+ * du préfixe « pen » de sa minute ; le passeur, du seul joueur de l'équipe dont les passes décisives ont augmenté.
  */
 export function liveNews(prev: FmLive | null, cur: FmLive): LiveNews[] {
   if (!prev || liveKey(prev) !== liveKey(cur)) return [];
@@ -73,13 +136,36 @@ export function liveNews(prev: FmLive | null, cur: FmLive): LiveNews[] {
   for (const side of ['home', 'away'] as const) {
     const before = (side === 'home' ? prev.homeScore : prev.awayScore) ?? 0;
     const after = (side === 'home' ? cur.homeScore : cur.awayScore) ?? 0;
-    for (let i = before; i < after; i++) news.push({ kind: 'goal', side, scorer: null });
+    for (let i = before; i < after; i++) news.push({ kind: 'goal', side, scorer: null, penalty: false, assist: null });
   }
-  const goals = news.filter((n): n is Extract<LiveNews, { kind: 'goal' }> => n.kind === 'goal');
+  const goals = news.filter((n): n is LiveGoalNews => n.kind === 'goal');
   // Un seul but : le nouveau nom est forcément le sien. Plusieurs buts d'un coup : on ne devine pas.
-  if (goals.length === 1 && fresh.length === 1) goals[0]!.scorer = fresh[0]!;
+  if (goals.length === 1 && fresh.length === 1) {
+    const g = goals[0]!;
+    g.scorer = fresh[0]!;
+    g.penalty = isPenalty(g.scorer.time);
+    const before = lineupOf(prev, g.side);
+    const after = lineupOf(cur, g.side);
+    if (before && after) {
+      const passers = increased(before, after, 'assists').filter((n) => n !== g.scorer!.name);
+      if (passers.length === 1) g.assist = passers[0]!;
+    }
+  }
+  news.push(...liveCards(prev, cur));
   if (cur.final && !prev.final) news.push({ kind: 'final' });
   return news;
+}
+
+/** Cartons de la feuille de match (jaunes puis rouges, chaque équipe), pour l'encart : vide sans feuille de match. */
+export function liveCardList(l: FmLive): { side: 'home' | 'away'; player: string; card: 'yellow' | 'red' }[] {
+  const out: { side: 'home' | 'away'; player: string; card: 'yellow' | 'red' }[] = [];
+  for (const side of ['home', 'away'] as const) {
+    for (const p of lineupOf(l, side) ?? []) {
+      if (p.red) out.push({ side, player: p.name, card: 'red' });
+      else if (p.yellow) out.push({ side, player: p.name, card: 'yellow' });
+    }
+  }
+  return out;
 }
 
 /** Relevé encore frais : le plugin réécrit le fichier toutes les 15 s pendant le match. */

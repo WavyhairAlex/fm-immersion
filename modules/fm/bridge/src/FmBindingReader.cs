@@ -144,11 +144,21 @@ public class FmBindingReader : IGameReader
         ("homeEvents", "HomeEventInfos", true), ("awayEvents", "AwayEventInfos", true),
     };
 
+    // Feuille de match (0.5.2) : par joueur de HomeLineup/AwayLineup (MatchPlayerReference, propriétés relevées par la
+    // sonde Carnet le 07/11/2026), nom et compteurs du match : buts, passes décisives, carton jaune, carton rouge.
+    // 2 × 20 × 5 lectures simples ; Plugin.LiveLoop ne les demande qu'un relevé sur deux (toutes les 30 s).
+    const int LineupMax = 20;
+    static readonly (string Key, string Path)[] LineupFields =
+    {
+        ("name", "Player/Name"), ("goals", "Goals"), ("assists", "Assists"),
+        ("yellow", "YellowCardedInMatch"), ("red", "RedCardedInMatch"),
+    };
+
     // Match du manager humain en cours (chemins validés en jeu le 07/11/2026 avec la sonde Carnet : 15 lectures en
     // 15-20 s sans gêne). Format archivix-live/1 : home, away, homeScore, awayScore, result ("2 - 5"), minute ("19 min.",
-    // "FDM" à la fin), final, scorers (texte du jeu), homeEvents/awayEvents [{type: 0 but, 2 penalty, time: "11', 90+1'"}].
-    // null si aucun match n'est lisible.
-    public static Dictionary<string, object?>? ReadLive()
+    // "FDM" à la fin), final, scorers (texte du jeu), homeEvents/awayEvents [{type: 0 but, 2 penalty, time: "11', 90+1'"}],
+    // et, si `lineups`, homeLineup/awayLineup [{name, goals, assists, yellow, red}] (0.5.2). null si aucun match n'est lisible.
+    public static Dictionary<string, object?>? ReadLive(bool lineups = false)
     {
         var res = Batch.Run(LiveFields.Select(f => new Req(null, LiveFixture + f.Path, f.Deep)).ToArray(), 4000);
         var d = new Dictionary<string, object?>();
@@ -159,11 +169,57 @@ public class FmBindingReader : IGameReader
         var score = Regex.Match(d["result"] as string ?? "", @"^\s*(\d+)\s*-\s*(\d+)");
         d["homeScore"] = score.Success ? int.Parse(score.Groups[1].Value) : null;
         d["awayScore"] = score.Success ? int.Parse(score.Groups[2].Value) : null;
-        d["final"] = d["final"] switch { double x => x != 0, string s => s.Equals("true", StringComparison.OrdinalIgnoreCase), _ => false };
+        d["final"] = Flag(d["final"]);
         d["homeEvents"] = LiveEvents(d["homeEvents"]);
         d["awayEvents"] = LiveEvents(d["awayEvents"]);
+        if (lineups)
+        {
+            d["homeLineup"] = ReadLineup("HomeLineup");
+            d["awayLineup"] = ReadLineup("AwayLineup");
+        }
         return d;
     }
+
+    // Les deux feuilles de match en une seule salve de lectures : un joueur sans nom lisible (place vide du banc,
+    // chemin refusé) est ignoré. Liste vide si le jeu n'expose pas la compo : FM Immersion s'en passe alors.
+    static List<Dictionary<string, object?>> ReadLineup(string list)
+    {
+        var reqs = new List<Req>();
+        for (int i = 0; i < LineupMax; i++)
+            foreach (var f in LineupFields) reqs.Add(new Req(null, $"{LiveFixture}{list}/#{i}/{f.Path}"));
+        var res = Batch.Run(reqs.ToArray(), 4000);
+        var players = new List<Dictionary<string, object?>>();
+        for (int i = 0; i < LineupMax; i++)
+        {
+            int at = i * LineupFields.Length;
+            var name = CleanName(res[at] as string);
+            if (string.IsNullOrWhiteSpace(name)) continue;
+            players.Add(new Dictionary<string, object?>
+            {
+                ["name"] = name,
+                ["goals"] = Num(res[at + 1]),
+                ["assists"] = Num(res[at + 2]),
+                ["yellow"] = Flag(res[at + 3]),
+                ["red"] = Flag(res[at + 4]),
+            });
+        }
+        return players;
+    }
+
+    static bool Flag(object? v) => v switch
+    {
+        bool b => b,
+        double x => x != 0,
+        string s => s.Equals("true", StringComparison.OrdinalIgnoreCase) || s == "1",
+        _ => false,
+    };
+
+    static int? Num(object? v) => v switch
+    {
+        double x => (int)Math.Round(x),
+        string s when int.TryParse(s, out var n) => n,
+        _ => null,
+    };
 
     // Garde de chaque événement le type et le temps affiché (le joueur est une référence que l'on ne résout pas).
     static List<Dictionary<string, object?>> LiveEvents(object? raw) =>

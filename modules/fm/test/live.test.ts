@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fmLiveSchema, liveCoachState, liveIsFresh, liveMinute, liveNews, parseScorers, type FmLive } from '../src/live';
+import { fmLiveSchema, liveCardList, liveCoachState, liveIsFresh, liveMinute, liveNews, parseScorers, type FmLive } from '../src/live';
 
 const base: FmLive = {
   schema: 'archivix-live/1',
@@ -39,6 +39,8 @@ describe('match en direct', () => {
         kind: 'goal',
         side: 'away',
         scorer: { name: 'M. Henyig', time: "59'" },
+        penalty: false,
+        assist: null,
       },
     ]);
     const end = { ...goal, minute: 'FDM', final: true };
@@ -59,8 +61,50 @@ describe('match en direct', () => {
       scorers: base.scorers + ", M. Kušnír 61', M. Henyig 59'",
     };
     expect(liveNews(base, two)).toEqual([
-      { kind: 'goal', side: 'home', scorer: null },
-      { kind: 'goal', side: 'away', scorer: null },
+      { kind: 'goal', side: 'home', scorer: null, penalty: false, assist: null },
+      { kind: 'goal', side: 'away', scorer: null, penalty: false, assist: null },
+    ]);
+  });
+
+  it('penalty transformé et passeur décisif lus dans la feuille de match', () => {
+    const before = {
+      ...base,
+      homeLineup: [{ name: 'L. Carrero', goals: 1, assists: 0 }, { name: 'J. Novák', goals: 0, assists: 0 }],
+      awayLineup: [{ name: 'M. Fábry', goals: 1, assists: 0 }, { name: 'A. Mojžiš', goals: 1, assists: 1 }],
+    };
+    const pen = {
+      ...before,
+      homeScore: 2,
+      minute: '70 min.',
+      scorers: before.scorers + ", J. Novák pen 70'",
+      homeLineup: [{ name: 'L. Carrero', goals: 1, assists: 0 }, { name: 'J. Novák', goals: 1, assists: 0 }],
+    };
+    expect(liveNews(before, pen)).toEqual([{ kind: 'goal', side: 'home', scorer: { name: 'J. Novák', time: "pen 70'" }, penalty: true, assist: null }]);
+    const assisted = {
+      ...pen,
+      awayScore: 3,
+      minute: '80 min.',
+      scorers: pen.scorers + ", M. Fábry 80'",
+      awayLineup: [{ name: 'M. Fábry', goals: 2, assists: 0 }, { name: 'A. Mojžiš', goals: 1, assists: 2 }],
+    };
+    expect(liveNews(pen, assisted)).toEqual([{ kind: 'goal', side: 'away', scorer: { name: 'M. Fábry', time: "80'" }, penalty: false, assist: 'A. Mojžiš' }]);
+  });
+
+  it('cartons : jaune, puis rouge (second jaune annoncé une fois, en rouge)', () => {
+    const clean = { ...base, homeLineup: [{ name: 'J. Novák', yellow: false, red: false }], awayLineup: [{ name: 'M. Fábry' }] };
+    const yellow = { ...clean, minute: '50 min.', homeLineup: [{ name: 'J. Novák', yellow: true, red: false }], awayLineup: [{ name: 'M. Fábry', yellow: true }] };
+    expect(liveNews(clean, yellow)).toEqual([
+      { kind: 'card', side: 'home', player: 'J. Novák', card: 'yellow' },
+      { kind: 'card', side: 'away', player: 'M. Fábry', card: 'yellow' },
+    ]);
+    const red = { ...yellow, minute: '77 min.', homeLineup: [{ name: 'J. Novák', yellow: true, red: true }] };
+    expect(liveNews(yellow, red)).toEqual([{ kind: 'card', side: 'home', player: 'J. Novák', card: 'red' }]);
+    expect(liveNews(red, red)).toEqual([]);
+    // Pas de feuille de match au relevé précédent : rien à rejouer.
+    expect(liveNews(base, yellow)).toEqual([]);
+    expect(liveCardList(red)).toEqual([
+      { side: 'home', player: 'J. Novák', card: 'red' },
+      { side: 'away', player: 'M. Fábry', card: 'yellow' },
     ]);
   });
 
