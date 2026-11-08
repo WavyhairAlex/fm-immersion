@@ -2639,7 +2639,7 @@
       "defaultName": "Mon {{form}}",
       "copyName": "{{name}} (copie)",
       "saved": "Tactiques retenues",
-      "name": "Nom de la tactique",
+      "name": "Nom",
       "duplicate": "Dupliquer",
       "delete": "Supprimer",
       "deleteConfirm": "Supprimer la tactique « {{name}} » ?",
@@ -2719,7 +2719,7 @@
         "flankOpen": "Personne ne défend le flanc {{side}} sans ballon.",
         "flankExposed": "Couloir {{side}} exposé en transition : le latéral monte et l'ailier reste devant pour contrer.",
         "flankThin": "Côté {{side}}, le latéral monte sans ailier qui se replie : à surveiller contre un ailier rapide.",
-        "flankDoubled": "Flanc {{side}} doublé sans ballon : un ailier qui se replie aide le latéral.",
+        "flankDoubled": "Flanc {{side}} doublé sans ballon : l'ailier redescend au milieu ou se replie pour aider le latéral.",
         "restSolid": "Défense restante solide quand tu attaques : {{count}} joueurs restent derrière, dont un devant la défense.",
         "restThin": "Défense restante juste : {{count}} joueurs restent derrière quand tu attaques.",
         "restWeak": "Défense restante faible : seulement {{count}} joueur(s) derrière quand tu attaques, gros risque en contre.",
@@ -2760,7 +2760,7 @@
         "mentalityRisk": "Mentalité {{mentality}} avec une défense restante courte : prévoir des contres encaissés.",
         "mentalityTimid": "Mentalité {{mentality}} avec beaucoup de rôles qui montent : les deux se contredisent.",
         "instructionCondition": "« {{label}} » ne s'applique qu'avec « {{other}} ».",
-        "complex": "{{count}} consignes changées : la tactique mettra des matchs à être assimilée.",
+        "complex": "Tactique chargée ({{count}} consignes d'équipe, {{pi}} individuelles) : elle mettra des matchs à être assimilée.",
         "simple": "Tactique épurée, peu de consignes changées : vite assimilée par l'équipe.",
         "squadHoles": "{{count}} poste(s) que personne dans l'effectif ne peut tenir.",
         "squadWeak": "Maillons faibles pour ces rôles : {{names}}.",
@@ -2780,8 +2780,26 @@
         "pair_bothForward": "{{zone}} : les deux milieux montent, personne ne reste derrière le ballon.",
         "pair_twoPlaymakers": "{{zone}} : deux meneurs côte à côte se disputent le ballon.",
         "pair_bothDrop": "{{zone}} : les deux attaquants décrochent, personne ne reste dans la surface.",
-        "pair_sameRole": "{{zone}} : deux attaquants au même rôle se marchent dessus."
-      }
+        "pair_sameRole": "{{zone}} : deux attaquants au même rôle se marchent dessus.",
+        "piHeavy": "{{count}} joueur(s) avec plus de 3 consignes individuelles : longues à assimiler.",
+        "piStale": "{{count}} joueur(s) gardent des consignes que leur nouveau rôle ne permet plus."
+      },
+      "dragHint": "Glisse pour changer de poste",
+      "dragHelp": {
+        "ip": "Glisse un joueur sur le terrain pour changer son poste avec ballon.",
+        "oop": "Glisse un joueur sur le terrain pour changer son poste sans ballon (un ailier peut redescendre au niveau du milieu)."
+      },
+      "pi": "Consignes individuelles",
+      "piCount_zero": "Aucune",
+      "piCount_one": "{{count}} consigne",
+      "piCount_other": "{{count}} consignes",
+      "piImposed": "Déjà imposée par le rôle",
+      "piNone": "Le rôle ne laisse rien à régler ici.",
+      "piStaleHelp": "Plus possibles avec ce rôle ou ce poste :",
+      "piRemove": "Retirer",
+      "piHelp": "Seules les consignes que le rôle permet à ce poste sont proposées ; une seule par groupe (choisir « Dribbler plus » retire « Dribbler moins »). Au-delà de 3 par joueur, la tactique devient longue à assimiler.",
+      "savedAuto": "Enregistrée",
+      "savedHelp": "Chaque changement est enregistré sur ce PC, pour cette partie. Retrouve la tactique par son nom dans la liste."
     }
   },
   "modes": {
