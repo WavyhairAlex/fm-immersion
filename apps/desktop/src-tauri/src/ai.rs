@@ -241,6 +241,9 @@ fn complete(provider: String, model: String, system: String, prompt: String, jso
         return Err(AiError::TooLong);
     }
     let key = if p == Provider::Ollama { None } else { Some(read_key(p)?) };
+    if p == Provider::Ollama {
+        remember_loaded(&model);
+    }
     let req = build_request(p, &model, &system, &prompt, json, key.as_deref());
     // Ollama charge le modèle en mémoire à la première demande : plus de patience.
     let mut call = agent(if p == Provider::Ollama { 180 } else { 60 })
@@ -267,6 +270,32 @@ pub async fn ai_complete(provider: String, model: String, system: String, prompt
     tauri::async_runtime::spawn_blocking(move || complete(provider, model, system, prompt, json))
         .await
         .map_err(|e| AiError::Network(e.to_string()))?
+}
+
+/// Modèles qu'FM Immersion a fait charger dans Ollama depuis son ouverture.
+static LOADED: std::sync::Mutex<Vec<String>> = std::sync::Mutex::new(Vec::new());
+
+fn remember_loaded(model: &str) {
+    if let Ok(mut l) = LOADED.lock() {
+        if !l.iter().any(|m| m == model) {
+            l.push(model.to_string());
+        }
+    }
+}
+
+/// Demande à Ollama de décharger tout de suite un modèle (`keep_alive: 0`) : la mémoire vidéo est libérée.
+pub fn unload_request(model: &str) -> Request {
+    Request { url: format!("{OLLAMA}/api/generate"), headers: vec![], body: serde_json::json!({ "model": model, "keep_alive": 0 }) }
+}
+
+/// À la fermeture de l'appli : décharge les modèles qu'elle a utilisés, pour rendre la carte graphique aux autres
+/// logiciels (ComfyUI, le jeu). Ollama reste installé et lancé ; seul le modèle quitte la mémoire.
+pub fn unload_all() {
+    let models = LOADED.lock().map(|mut l| std::mem::take(&mut *l)).unwrap_or_default();
+    for m in models {
+        let req = unload_request(&m);
+        let _ = agent(3).post(&req.url).set("Content-Type", "application/json").send_string(&req.body.to_string());
+    }
 }
 
 /// Modèles installés dans Ollama sur ce PC (vide si Ollama n'est pas lancé).
@@ -341,6 +370,16 @@ mod tests {
         assert_eq!(parse_answer(Provider::Mistral, r#"{"choices":[]}"#), None);
         assert_eq!(parse_answer(Provider::Ollama, r#"{"message":{"content":"  "}}"#), None);
         assert_eq!(parse_answer(Provider::Ollama, "pas du json"), None);
+    }
+
+    #[test]
+    fn dechargement_du_modele() {
+        let r = unload_request("gemma3:12b");
+        assert_eq!(r.url, "http://127.0.0.1:11434/api/generate");
+        assert_eq!(r.body, serde_json::json!({ "model": "gemma3:12b", "keep_alive": 0 }));
+        remember_loaded("gemma3:12b");
+        remember_loaded("gemma3:12b");
+        assert_eq!(LOADED.lock().unwrap().len(), 1);
     }
 
     #[test]
