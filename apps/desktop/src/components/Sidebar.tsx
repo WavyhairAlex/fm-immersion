@@ -29,6 +29,12 @@ const ICONS: Record<string, ReactNode> = {
   ),
   results: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
   mercato: <path d="M4 7h13l-3-3M20 17H7l3 3" />,
+  career: (
+    <>
+      <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0113 0c0 5.4-6.5 11-6.5 11z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </>
+  ),
   gazette: <path d="M4 4h13v16H6a2 2 0 01-2-2zM17 8h3v10a2 2 0 01-2 2M7 8h7M7 12h7M7 16h4" />,
   discord: <path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z" />,
   challenges: <path d="M7 4h10v5a5 5 0 01-10 0zM4 5h3M17 5h3M12 14v4M8 21h8" />,
@@ -116,6 +122,7 @@ export function Sidebar() {
           <Item key={p} to={`/club/${p}`} icon={p} label={t(`layout.nav.${p}`)} active={clubOpen === p} badge={<Count n={count(p)} label={t('fm.brief.tabBadge', { count: count(p) })} />} />
         ))}
         <p className="nav-group">{t('layout.groups.story')}</p>
+        <Item to="/carriere" icon="career" label={t('careerPage.title')} />
         <Item to="/gazette" icon="gazette" label={t('layout.nav.story')} active={pathname === '/gazette' || pathname === '/discord'} />
         <Item to="/defis" icon="challenges" label={t('modes.challenges.title')} />
         <p className="nav-group">{t('layout.groups.game')}</p>

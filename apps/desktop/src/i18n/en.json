@@ -4327,5 +4327,75 @@
       "bigWin": "biggest win of the season",
       "runEnded": "matches without a win, it's over"
     }
+  },
+  "careerPage": {
+    "title": "My career",
+    "intro": "Your managerial journey in this save: every club you've managed, your seasons, your trophies and a map of where you've been. Everything comes from the plugin reads already made.",
+    "noSave": "Create your career first to follow your journey.",
+    "emptyTitle": "Your journey will be written here",
+    "empty": "As soon as the plugin has read your save, your clubs, matches and trophies will show up here, along with your world map.",
+    "summary": "{{coach}}: managing since {{since}}, {{clubs}} in {{countries}}.",
+    "nClubs_one": "{{count}} club",
+    "nClubs_other": "{{count}} clubs",
+    "nCountries_one": "{{count}} country",
+    "nCountries_other": "{{count}} countries",
+    "tile": {
+      "seasons_one": "Season",
+      "seasons_other": "Seasons",
+      "played_one": "Match",
+      "played_other": "Matches",
+      "record": "W-D-L",
+      "winRate": "Wins",
+      "goals": "Goals for-against",
+      "ppg": "Points per game (league)",
+      "trophies_one": "Trophy",
+      "trophies_other": "Trophies",
+      "best": "Best finish"
+    },
+    "honours": "Honours",
+    "noTrophy": "No trophy yet. The first one will come.",
+    "records": "Records",
+    "biggestWin": "Biggest win: {{score}} against {{opponent}} ({{club}})",
+    "unknownOpponent": "an unknown opponent",
+    "unbeaten_one": "Longest unbeaten run: {{count}} match",
+    "unbeaten_other": "Longest unbeaten run: {{count}} matches",
+    "cleanSheets_one": "{{count}} clean sheet",
+    "cleanSheets_other": "{{count}} clean sheets",
+    "days_one": "{{count}} day of career tracked",
+    "days_other": "{{count}} days of career tracked",
+    "clubs": "Clubs managed",
+    "now": "today",
+    "current": "In charge",
+    "ongoing": "ongoing",
+    "exit": {
+      "left": "Left",
+      "sacked": "Sacked"
+    },
+    "topScorer": "Top scorer",
+    "col": {
+      "season": "Season",
+      "position": "Finish",
+      "played": "Matches",
+      "record": "W-D-L",
+      "goals": "Goals",
+      "cups": "Cups won"
+    },
+    "countryPick": "Change the club's country",
+    "countryAuto": "Automatic ({{name}})",
+    "countryNone": "Automatic (unknown)",
+    "countryUnknown": "Unknown country: pick one",
+    "map": "My career map",
+    "mapZoom": "My countries",
+    "mapWorld": "Whole world",
+    "mapLabel": "World map of the clubs managed: {{clubs}}",
+    "mapMissing": "Not on the map yet (unknown country): {{clubs}}. Pick their country below.",
+    "source": "Each club's country is guessed from its squad's nationalities or the league name; click it to correct it. The reason for leaving is guessed from job security at the last read.",
+    "nations": {
+      "GB-ENG": "England",
+      "GB-SCT": "Scotland",
+      "GB-WLS": "Wales",
+      "GB-NIR": "Northern Ireland"
+    },
+    "leftMidSeason": "left mid-season"
   }
 }

@@ -40,12 +40,21 @@ export interface CoachExit {
 const equipe = (s: FmSnapshot): Record<string, unknown> => (s as { custom?: { equipe?: Record<string, unknown> } }).custom?.equipe ?? {};
 const INSECURE = /insécur|danger|menac|precarious|insecure|under threat/i;
 
+/** Un passage du coach dans un club : ses instantanés, et s'il l'a quitté (raison devinée, club suivant). */
+export interface CoachSpell {
+  club: string;
+  entries: Entry[];
+  left: boolean;
+  next: string | null;
+  reason: ExitReason;
+}
+
 /**
- * Départs du coach dans l'historique, du plus récent au plus ancien : chaque changement de club en clôt un, et le
+ * Passages du coach dans l'historique, du plus ancien au plus récent : chaque changement de club en clôt un, et le
  * dernier club aussi quand le coach est sans club depuis (`freeSince`, lu en direct par le plugin). Le licenciement
  * est supposé quand la sécurité de l'emploi était menacée au dernier relevé ; sinon c'est un départ.
  */
-export function coachExits(history: Entry[], opts: { freeSince?: string | null } = {}): CoachExit[] {
+export function coachSpells(history: Entry[], opts: { freeSince?: string | null } = {}): CoachSpell[] {
   const sorted = [...history].sort((a, b) => a.gameDate.localeCompare(b.gameDate));
   const spells: Entry[][] = [];
   for (const e of sorted) {
@@ -53,12 +62,27 @@ export function coachExits(history: Entry[], opts: { freeSince?: string | null }
     if (cur && cur[0]!.data.club === e.data.club) cur.push(e);
     else spells.push([e]);
   }
-  const out: CoachExit[] = [];
-  spells.forEach((spell, i) => {
+  return spells.map((spell, i) => {
     const next = spells[i + 1]?.[0]!.data.club ?? null;
     const last = spell.at(-1)!;
-    if (!next && !(opts.freeSince && opts.freeSince >= last.gameDate)) return;
     const job = equipe(last.data).securiteEmploi;
+    return {
+      club: spell[0]!.data.club,
+      entries: spell,
+      left: !!next || !!(opts.freeSince && opts.freeSince >= last.gameDate),
+      next,
+      reason: typeof job === 'string' && INSECURE.test(job) ? 'sacked' : 'left',
+    };
+  });
+}
+
+/** Départs du coach dans l'historique (passages quittés, voir `coachSpells`), du plus récent au plus ancien. */
+export function coachExits(history: Entry[], opts: { freeSince?: string | null } = {}): CoachExit[] {
+  const out: CoachExit[] = [];
+  for (const sp of coachSpells(history, opts)) {
+    if (!sp.left) continue;
+    const spell = sp.entries;
+    const last = spell.at(-1)!;
     const segs = seasonSegments(spell);
     const seasons = segs.map((s) => {
       const r = reviewOf(s.entries, !s.ended);
@@ -70,16 +94,16 @@ export function coachExits(history: Entry[], opts: { freeSince?: string | null }
     ];
     const finished = seasons.filter((s) => s.ended && s.position != null).map((s) => s.position!);
     out.push({
-      club: spell[0]!.data.club,
+      club: sp.club,
       start: spell[0]!.gameDate,
       end: last.gameDate,
-      next,
-      reason: typeof job === 'string' && INSECURE.test(job) ? 'sacked' : 'left',
+      next: sp.next,
+      reason: sp.reason,
       seasons: seasons.map(({ cups: _c, ...s }) => s),
       total: reviewOf(spell, false),
       trophies,
       bestFinish: finished.length ? Math.min(...finished) : null,
     });
-  });
+  }
   return out.reverse();
 }

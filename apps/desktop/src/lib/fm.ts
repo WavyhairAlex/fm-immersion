@@ -29,6 +29,8 @@ export interface FmSaveSettings {
   /** Image d'origine réduite (JPEG, ou PNG pour garder la transparence, en data URL) et recadrage choisi, pour pouvoir recadrer la photo plus tard. */
   coachPhotoSource?: string;
   coachPhotoCrop?: { zoom: number; x: number; y: number };
+  /** Pays des clubs entraînés corrigés à la main dans « Ma carrière » (nom du club → code de `countries.ts`). */
+  careerCountries?: Record<string, string>;
 }
 
 /** Fichier .fm listé par Rust (métadonnées seulement). */

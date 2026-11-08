@@ -4327,5 +4327,75 @@
       "bigWin": "plus large victoire de la saison",
       "runEnded": "matchs sans victoire, c'est fini"
     }
+  },
+  "careerPage": {
+    "title": "Ma carrière",
+    "intro": "Ton parcours de coach dans cette partie : chaque club entraîné, tes saisons, tes titres et la carte de tes destinations. Tout vient des lectures du plugin déjà faites.",
+    "noSave": "Crée d'abord ta carrière pour suivre ton parcours.",
+    "emptyTitle": "Ton parcours s'écrira ici",
+    "empty": "Dès que le plugin aura lu ta partie, tes clubs, tes matchs et tes titres apparaîtront ici, avec ta carte du monde.",
+    "summary": "{{coach}} : en poste depuis le {{since}}, {{clubs}} dans {{countries}}.",
+    "nClubs_one": "{{count}} club",
+    "nClubs_other": "{{count}} clubs",
+    "nCountries_one": "{{count}} pays",
+    "nCountries_other": "{{count}} pays",
+    "tile": {
+      "seasons_one": "Saison",
+      "seasons_other": "Saisons",
+      "played_one": "Match",
+      "played_other": "Matchs",
+      "record": "V-N-D",
+      "winRate": "Victoires",
+      "goals": "Buts pour-contre",
+      "ppg": "Points par match (champ.)",
+      "trophies_one": "Titre",
+      "trophies_other": "Titres",
+      "best": "Meilleure place"
+    },
+    "honours": "Palmarès",
+    "noTrophy": "Pas encore de titre. Le premier viendra.",
+    "records": "Records",
+    "biggestWin": "Plus large victoire : {{score}} contre {{opponent}} ({{club}})",
+    "unknownOpponent": "un adversaire inconnu",
+    "unbeaten_one": "Plus longue série sans défaite : {{count}} match",
+    "unbeaten_other": "Plus longue série sans défaite : {{count}} matchs",
+    "cleanSheets_one": "{{count}} match sans encaisser de but",
+    "cleanSheets_other": "{{count}} matchs sans encaisser de but",
+    "days_one": "{{count}} jour de carrière suivi",
+    "days_other": "{{count}} jours de carrière suivis",
+    "clubs": "Clubs entraînés",
+    "now": "aujourd'hui",
+    "current": "En poste",
+    "ongoing": "en cours",
+    "exit": {
+      "left": "Parti",
+      "sacked": "Limogé"
+    },
+    "topScorer": "Meilleur buteur",
+    "col": {
+      "season": "Saison",
+      "position": "Place",
+      "played": "Matchs",
+      "record": "V-N-D",
+      "goals": "Buts",
+      "cups": "Coupes gagnées"
+    },
+    "countryPick": "Changer le pays du club",
+    "countryAuto": "Automatique ({{name}})",
+    "countryNone": "Automatique (inconnu)",
+    "countryUnknown": "Pays inconnu : choisir",
+    "map": "Carte de ma carrière",
+    "mapZoom": "Mes pays",
+    "mapWorld": "Monde entier",
+    "mapLabel": "Carte du monde des clubs entraînés : {{clubs}}",
+    "mapMissing": "Pas encore placés sur la carte (pays inconnu) : {{clubs}}. Choisis leur pays plus bas.",
+    "source": "Le pays de chaque club est deviné d'après la nationalité de son effectif ou le nom du championnat ; clique dessus pour le corriger. Le motif d'un départ est deviné d'après la sécurité de l'emploi au dernier relevé.",
+    "nations": {
+      "GB-ENG": "Angleterre",
+      "GB-SCT": "Écosse",
+      "GB-WLS": "Pays de Galles",
+      "GB-NIR": "Irlande du Nord"
+    },
+    "leftMidSeason": "départ en cours de saison"
   }
 }
