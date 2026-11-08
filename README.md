@@ -18,6 +18,10 @@ et outils pour rendre ta carrière plus vivante. Application Windows gratuite et
 | **Défis** : De zéro à héros, Invincibles, Génération U19, Que des locaux, Ancienne Génération, Vikings, Sir Alex Ferguson, Économiste, Dunkerque… vérifiés par ta partie, certificat à partager | disponible |
 | **Monde partagé** (multijoueur asynchrone) | à venir |
 
+## Site
+
+Le site de présentation est dans [`site/`](./site) (HTML et CSS statiques, sans script ni cookie), publié sur GitHub Pages.
+
 ## Installer
 
 Télécharge le dernier `FM.Immersion_x.y.z_x64-setup.exe` dans les [releases](https://github.com/amnesix-nt/fm-immersion/releases/latest).

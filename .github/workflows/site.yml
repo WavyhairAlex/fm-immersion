@@ -1,0 +1,34 @@
+name: Site
+
+# Publie le site vitrine (dossier site/) sur GitHub Pages à chaque fusion sur main qui le modifie.
+# À faire une seule fois : Settings › Pages › Build and deployment › Source = « GitHub Actions ».
+# Nom de domaine : quand il est choisi, ajouter site/CNAME (une ligne, le domaine) et le régler dans Settings › Pages.
+on:
+  push:
+    branches: [main]
+    paths: ['site/**', '.github/workflows/site.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publier:
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploiement
+        uses: actions/deploy-pages@v4
