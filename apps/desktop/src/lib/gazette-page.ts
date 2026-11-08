@@ -108,6 +108,22 @@ function solid(art: ClubArt | null, fallback: string): string {
   return colors.find((c) => contrast(c, '#FFFFFF') >= 2.2 || contrast(c, C.ink) >= 6) ?? colors[0] ?? fallback;
 }
 
+/** Statistique la plus parlante du match pour l'encadré « Le chiffre » : tirs écrasants, possession nette, sinon xG. */
+function keyFigure(t: TFunction, p: GazetteStory['params'], lang?: string): { value: string; label: string } | null {
+  const opponent = String(p.opponent ?? t('gazette.opponentUnknown'));
+  const shots = p.shots != null ? Number(p.shots) : null;
+  const shotsOpp = p.shotsOpp != null ? Number(p.shotsOpp) : null;
+  if (shots != null && shotsOpp != null && shots >= 2 * shotsOpp + 3) return { value: String(shots), label: t('gazette.page.figure.shots', { them: shotsOpp, opponent }) };
+  if (shots != null && shotsOpp != null && shotsOpp >= 2 * shots + 3) return { value: String(shotsOpp), label: t('gazette.page.figure.shotsAgainst', { us: shots, opponent }) };
+  const poss = p.possession != null ? Math.round(Number(p.possession)) : null;
+  if (poss != null && (poss >= 60 || poss <= 40)) return { value: `${poss} %`, label: t('gazette.page.figure.possession') };
+  if (p.xg != null && p.xgOpp != null) {
+    const dec = (v: unknown) => new Intl.NumberFormat(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v));
+    return { value: dec(p.xg), label: t('gazette.page.figure.xg', { them: dec(p.xgOpp), opponent }) };
+  }
+  return null;
+}
+
 export async function drawPage(
   t: TFunction,
   issue: GazetteIssue,
@@ -249,6 +265,13 @@ export async function drawPage(
   const PANEL = motm ? 300 : 0;
   const HERO = W - 2 * M - (motm ? PANEL + 36 : 0);
   const heroTop = y;
+  // Filigrane : le logo du club (s'il est dans le pack de logos) en très grand, à peine visible, derrière le titre.
+  if (club?.logo) {
+    ctx.save();
+    ctx.globalAlpha = 0.07;
+    drawCrest(ctx, club, M + HERO - 150, heroTop + 170, 300, { ring: C.paper });
+    ctx.restore();
+  }
   const kicker = isResult
     ? `${t(`gazette.une.kicker_${p.cup === 'out' ? 'cupOut' : p.cup === 'through' ? 'cupThrough' : p.outcome}`)}${p.home == null ? '' : ` ${t(p.home ? 'gazette.une.atHome' : 'gazette.une.away')}`}`
     : t(`gazette.une.section.${head.kind}`, { defaultValue: t('gazette.une.section.default') });
@@ -283,55 +306,115 @@ export async function drawPage(
   }
   y += 12;
   if (motm) {
-    // Portrait sur fond aux couleurs du club, note dans une pastille.
-    const panelH = Math.max(y - heroTop, 300);
+    // Portrait en couverture de magazine : photo pleine largeur sur trame de points aux couleurs du club, nom en
+    // grand dessous, note dans une grosse pastille.
+    const panelH = Math.max(y - heroTop, 410);
     const px = W - M - PANEL;
     const bg = solid(club, C.ink);
     const ink = inkOn(bg);
     roundRect(ctx, px, heroTop, PANEL, panelH, 4, bg);
-    if (stripe && stripe !== bg) roundRect(ctx, px, heroTop + panelH - 8, PANEL, 8, 0, stripe);
-    ctx.textAlign = 'center';
-    ctx.font = font(900, 13);
-    ctx.fillStyle = ink;
-    ctx.fillText(caps(t('gazette.une.motm')), px + PANEL / 2, heroTop + 34);
-    const r = 82;
-    const cy = heroTop + 54 + r;
-    const note = p.rating == null ? null : new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Number(p.rating));
-    if (opts.face) {
-      ctx.beginPath();
-      ctx.arc(px + PANEL / 2, cy, r + 6, 0, Math.PI * 2);
-      ctx.fillStyle = ink;
-      ctx.fill();
-      drawFace(ctx, opts.face, px + PANEL / 2, cy, r);
-    } else {
-      ctx.beginPath();
-      ctx.arc(px + PANEL / 2, cy, r, 0, Math.PI * 2);
-      ctx.strokeStyle = ink;
-      ctx.lineWidth = 3;
-      ctx.stroke();
-      const initials = String(p.best).split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join('');
-      ctx.font = font(900, 64, SERIF);
-      ctx.fillStyle = ink;
-      ctx.fillText(initials, px + PANEL / 2, cy + 22);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(px, heroTop, PANEL, panelH);
+    ctx.clip();
+    // Trame d'imprimerie : points qui grossissent vers le bas.
+    ctx.fillStyle = ink === '#FFFFFF' ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.10)';
+    for (let gy = heroTop + 6; gy < heroTop + panelH; gy += 9) {
+      const rr = 0.6 + ((gy - heroTop) / panelH) * 2.6;
+      for (let gx = px + ((gy / 9) % 2 ? 4.5 : 0); gx < px + PANEL; gx += 9) {
+        ctx.beginPath();
+        ctx.arc(gx, gy, rr, 0, Math.PI * 2);
+        ctx.fill();
+      }
     }
+    const photoH = 300;
+    if (opts.face) {
+      const fw = Number((opts.face as { width?: number }).width) || 1;
+      const fh = Number((opts.face as { height?: number }).height) || 1;
+      const side = Math.min(fw, fh);
+      ctx.drawImage(opts.face, (fw - side) / 2, 0, side, side, px, heroTop, PANEL, photoH);
+      // Fondu du bas de la photo vers la couleur du club.
+      const g = ctx.createLinearGradient(0, heroTop + photoH * 0.55, 0, heroTop + photoH);
+      g.addColorStop(0, `${bg}00`);
+      g.addColorStop(1, bg);
+      ctx.fillStyle = g;
+      ctx.fillRect(px, heroTop + photoH * 0.55, PANEL, photoH * 0.45 + 1);
+    } else {
+      const initials = String(p.best).split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join('');
+      ctx.font = font(900, 150, SERIF);
+      ctx.fillStyle = ink;
+      ctx.globalAlpha = 0.9;
+      ctx.textAlign = 'center';
+      ctx.fillText(initials, px + PANEL / 2, heroTop + 210);
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+    // Bandeau « Homme du match » en haut à gauche de la photo.
+    ctx.font = font(900, 13);
+    const tag = caps(t('gazette.une.motm'));
+    roundRect(ctx, px, heroTop + 16, ctx.measureText(tag).width + 28, 28, 0, C.orange);
+    ctx.fillStyle = C.ink;
+    ctx.textAlign = 'left';
+    ctx.fillText(tag, px + 14, heroTop + 35);
+    const note = p.rating == null ? null : new Intl.NumberFormat(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Number(p.rating));
+    ctx.textAlign = 'center';
     if (note) {
-      const bx = px + PANEL / 2 + r * 0.72;
-      const by = cy + r * 0.72;
+      const bx = px + PANEL - 52;
+      const by = heroTop + photoH - 34;
       ctx.beginPath();
-      ctx.arc(bx, by, 32, 0, Math.PI * 2);
+      ctx.arc(bx, by, 40, 0, Math.PI * 2);
       ctx.fillStyle = C.orangeDark;
       ctx.fill();
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 5;
       ctx.strokeStyle = '#FFFFFF';
       ctx.stroke();
-      ctx.font = font(900, note.length > 3 ? 20 : 24, SERIF);
+      ctx.font = font(900, note.length > 3 ? 24 : 30, SERIF);
       ctx.fillStyle = '#FFFFFF';
-      ctx.fillText(note, bx, by + 8);
+      ctx.fillText(note, bx, by + 11);
     }
-    ctx.font = font(900, 26, SERIF);
+    // Nom : prénom en petit, nom de famille en très grand.
+    const parts = String(p.best).trim().split(/\s+/);
+    const last = parts.length > 1 ? parts.slice(1).join(' ') : parts[0]!;
+    const first = parts.length > 1 ? parts[0]! : '';
+    ctx.textAlign = 'left';
+    let ny = heroTop + photoH + 22;
+    if (first) {
+      ctx.font = font(800, 18);
+      ctx.fillStyle = ink;
+      ctx.fillText(caps(first), px + 20, ny);
+    }
+    const ls = fit(ctx, caps(last), 900, 44, 22, PANEL - 40, SERIF);
+    ny += ls * 0.95 + 4;
     ctx.fillStyle = ink;
-    const nameLines = wrap(ctx, String(p.best), PANEL - 32, 2);
-    nameLines.forEach((l, i) => ctx.fillText(l, px + PANEL / 2, cy + r + 46 + i * 30));
+    ctx.fillText(caps(last), px + 20, ny);
+    if (stripe && stripe !== bg) roundRect(ctx, px, heroTop + panelH - 8, PANEL, 8, 0, stripe);
+    // Tampon du classement quand le club a bougé : « 4e », « +3 places », penché comme un coup de tampon.
+    const move = issue.stories.find((x) => x.kind === 'position');
+    const from = Number(move?.params.from);
+    const to = Number(move?.params.to);
+    if (move && from > 0 && to > 0 && from !== to) {
+      const up = to < from;
+      ctx.save();
+      ctx.translate(px + PANEL - 58, heroTop + 76);
+      ctx.rotate(-0.2);
+      ctx.beginPath();
+      ctx.arc(0, 0, 50, 0, Math.PI * 2);
+      ctx.fillStyle = up ? C.green : C.red;
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.arc(0, 0, 44, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FFFFFF';
+      const rank = t(`season.ordinal${to <= 3 ? to : ''}`, { n: to });
+      fit(ctx, rank, 900, 34, 18, 72, SERIF);
+      ctx.fillText(rank, 0, 6);
+      ctx.font = font(900, 11);
+      ctx.fillText(caps(t(up ? 'gazette.page.stampUp' : 'gazette.page.stampDown', { count: Math.abs(from - to) })), 0, 26);
+      ctx.restore();
+    }
     ctx.textAlign = 'left';
     y = Math.max(y, heroTop + panelH);
   }
@@ -485,6 +568,25 @@ export async function drawPage(
       justified(ctx, l, lx, ly, lw, i === linesOut.length - 1);
     });
     ly = Math.max(ly, top + 50 + LH * 3) + 30;
+  }
+  // « Le chiffre » : la statistique la plus parlante du match, en très grand.
+  const big = isResult ? keyFigure(t, p, lang) : null;
+  if (big) {
+    ly += 4;
+    roundRect(ctx, M, ly, MAIN, 112, 4, '#FFFFFF');
+    roundRect(ctx, M, ly, 8, 112, 0, C.orange);
+    ctx.font = font(900, 13);
+    ctx.fillStyle = C.orangeDark;
+    ctx.fillText(caps(t('gazette.page.keyFigure')), M + 28, ly + 30);
+    const vs = fit(ctx, big.value, 900, 64, 30, 220, SERIF);
+    ctx.fillStyle = C.ink;
+    ctx.fillText(big.value, M + 28, ly + 30 + vs * 0.95);
+    const vw = ctx.measureText(big.value).width;
+    ctx.font = font(700, 19);
+    ctx.fillStyle = C.grey;
+    const bl = wrap(ctx, big.label, MAIN - vw - 76, 3);
+    bl.forEach((l, i) => ctx.fillText(l, M + 28 + vw + 24, ly + 66 - (bl.length - 1) * 12 + i * 25));
+    ly += 112 + 26;
   }
   const edito = editorialText(t, issue, lang);
   if (edito) {

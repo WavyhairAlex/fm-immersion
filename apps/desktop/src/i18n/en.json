@@ -3256,7 +3256,18 @@
         "xg": "xG"
       },
       "board": "Board",
-      "vs": "vs"
+      "vs": "vs",
+      "keyFigure": "The number",
+      "stampUp_one": "+{{count}} place",
+      "stampUp_other": "+{{count}} places",
+      "stampDown_one": "-{{count}} place",
+      "stampDown_other": "-{{count}} places",
+      "figure": {
+        "shots": "shots, against {{them}} for {{opponent}}: one-way traffic.",
+        "shotsAgainst": "shots faced, with {{us}} attempted: the opponent laid siege.",
+        "possession": "possession over the whole match.",
+        "xg": "xG created, against {{them}} for {{opponent}}."
+      }
     },
     "actions": "Rewrite and share",
     "emptyHow": "FM Immersion reads your save on each game day through the FM27 plugin; the gazette is written from those readings, one per week."

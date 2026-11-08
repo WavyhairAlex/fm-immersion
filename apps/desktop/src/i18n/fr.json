@@ -3256,7 +3256,18 @@
         "xg": "xG"
       },
       "board": "Direction",
-      "vs": "vs"
+      "vs": "vs",
+      "keyFigure": "Le chiffre",
+      "stampUp_one": "+{{count}} place",
+      "stampUp_other": "+{{count}} places",
+      "stampDown_one": "-{{count}} place",
+      "stampDown_other": "-{{count}} places",
+      "figure": {
+        "shots": "tirs, contre {{them}} pour {{opponent}} : un match à sens unique.",
+        "shotsAgainst": "tirs subis, pour {{us}} tentés : l’adversaire a fait le siège.",
+        "possession": "de possession sur l’ensemble du match.",
+        "xg": "xG produits, contre {{them}} pour {{opponent}}."
+      }
     },
     "actions": "Réécrire et partager",
     "emptyHow": "FM Immersion lit ta partie à chaque jour de jeu grâce au plugin FM27 ; la gazette s’écrit à partir de ces lectures, une par semaine."
