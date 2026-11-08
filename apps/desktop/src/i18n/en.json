@@ -3080,7 +3080,13 @@
       "finalL_2": "No points this time, {{club}} go down {{score}}.",
       "final_0": "Full time: {{home}} {{score}} {{away}}.",
       "final_1": "Final whistle, {{score}}.",
-      "final_2": "It's over: {{home}} {{score}} {{away}}."
+      "final_2": "It's over: {{home}} {{score}} {{away}}.",
+      "for_ownGoal_0": "A gift! {{scorer}} beats his own keeper on {{minute}} and {{team}} take it: {{score}}.",
+      "for_ownGoal_1": "A helping hand from fate: {{scorer}} puts it into his own net ({{minute}}). {{team}} won't complain, {{score}}.",
+      "for_ownGoal_2": "Misery for {{scorer}}, who turns it into his own net ({{minute}}). {{score}}, and {{team}} say thank you.",
+      "against_ownGoal_0": "Cruel luck: {{scorer}} scores an own goal ({{minute}}) and {{team}} benefit. {{score}}.",
+      "against_ownGoal_1": "What bad luck! {{scorer}} beats his own keeper ({{minute}}): goal for {{team}}, {{score}}.",
+      "against_ownGoal_2": "The cruellest goal: {{scorer}} turns it into his own net ({{minute}}). {{team}} didn't need to ask, {{score}}."
     },
     "fact": {
       "hattrick": "Hat-trick for {{scorer}}!",
@@ -3133,7 +3139,9 @@
       "yellowFor": "Yellow card for {{player}} ({{team}}, {{minute}}')",
       "yellowAgainst": "Yellow card for {{team}}: {{player}} ({{minute}}')",
       "redFor": "RED CARD! {{player}} is sent off ({{team}}, {{minute}}')",
-      "redAgainst": "Red card for {{team}}: {{player}} sent off ({{minute}}')"
+      "redAgainst": "Red card for {{team}}: {{player}} sent off ({{minute}}')",
+      "ownGoalFor": "Own goal! {{player}} gifts {{team}} a goal ({{minute}})",
+      "ownGoalAgainst": "Own goal… {{player}} beats his own keeper, goal for {{team}} ({{minute}})"
     },
     "cards": "Cards"
   },

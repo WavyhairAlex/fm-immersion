@@ -1,17 +1,15 @@
-import { type FmLive, fmLiveSchema, gameLastMatch, isFriendly, isPenalty, liveAssists, liveCardList, type LiveCardNews, type LiveGoalNews, liveIsFresh, liveKey, liveNews, parseScorers } from '@fm-immersion/module-fm';
+import { type FmLive, fmLiveSchema, gameLastMatch, isFriendly, isOwnGoal, isPenalty, liveAssists, liveCardList, type LiveCardNews, type LiveGoalNews, liveIsFresh, liveKey, liveNews, parseScorers } from '@fm-immersion/module-fm';
 import { invoke } from '@tauri-apps/api/core';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { aiLiveComment, type LiveMoment } from './ai';
 import { rememberClubLooks } from './club-look';
-import { editDiscord, getLiveEnabled, getWebhook, isWebhook, postDiscord, sendDiscord, sendDiscordImage } from './discord';
-import { facePng } from './player-face';
+import { editDiscord, getLiveEnabled, getWebhook, isWebhook, postDiscord } from './discord';
 
 const LIVE_RED = 0xd93c3c;
 const GOOD = 0x2e9e5b;
 const ORANGE = 0xf26b1d;
-const AMBER = 0xf5b700;
 
 const score = (l: FmLive) => `${l.homeScore ?? 0} - ${l.awayScore ?? 0}`;
 
@@ -33,6 +31,8 @@ export interface TimelineGoal {
   side: 'home' | 'away';
   name: string;
   time: string;
+  /** But contre son camp : `name` est le joueur fautif, `side` l'équipe qui en profite. */
+  own: boolean;
 }
 
 /**
@@ -44,7 +44,7 @@ export function timeline(l: FmLive): TimelineGoal[] | null {
   const h = l.homeScore ?? 0;
   if (goals.length !== h + (l.awayScore ?? 0)) return null;
   return goals
-    .map((g, i) => ({ minute: minuteOf(g.time) ?? 0, side: i < h ? ('home' as const) : ('away' as const), name: g.name, time: g.time }))
+    .map((g, i) => ({ minute: minuteOf(g.time) ?? 0, side: i < h ? ('home' as const) : ('away' as const), name: g.name, time: g.time, own: isOwnGoal(g.time) }))
     .sort((a, b) => a.minute - b.minute);
 }
 
@@ -156,13 +156,14 @@ export function liveContext(snap: unknown): LiveContext {
 }
 
 /**
- * Message d'avant-match, posté une fois quand le direct découvre un nouveau match : affiche, compétition, classement
- * des deux équipes, hommes en forme, l'entraîneur adverse et son schéma, l'avis du jeu, et la compo si le plugin la lit.
+ * Avant-match, dans l'encart tant qu'aucun but n'est tombé : compétition, classement des deux équipes, hommes en forme,
+ * l'entraîneur adverse et son schéma, l'avis du jeu, et la compo si le plugin la lit.
  */
-export function prematchPayload(t: TFunction, l: FmLive, club: string | null, ctx: LiveContext | null) {
+export function prematchLines(t: TFunction, l: FmLive, club: string | null, ctx: LiveContext | null): { lines: string[]; lineup: string | null } {
   const side = mySide(l, club);
   const opponentName = side === 'home' ? l.away : side === 'away' ? l.home : null;
   const lines: string[] = [];
+  if (ctx?.competition) lines.push(`🏆 ${ctx.competition}`);
   if (ctx && !ctx.friendly && club && (ctx.position || ctx.opponent?.position)) {
     const ours = ctx.position ? t('live.prematch.ourPosition', { club, position: ctx.position }) : '';
     const theirs = ctx.opponent?.position && opponentName ? t('live.prematch.theirPosition', { club: opponentName, position: ctx.opponent.position }) : '';
@@ -178,17 +179,7 @@ export function prematchPayload(t: TFunction, l: FmLive, club: string | null, ct
     lines.push(`🧠 ${t(ctx.opponent.formation ? 'live.prematch.managerFormation' : 'live.prematch.manager', { club: opponentName, manager: ctx.opponent.manager, formation: ctx.opponent.formation })}`);
   }
   if (ctx?.threat) lines.push(`💬 ${ctx.threat}`);
-  return {
-    username: 'FM Immersion',
-    embeds: [
-      {
-        title: `🎙️  ${t('live.prematch.kickoff')}  ·  ${l.home} – ${l.away}`,
-        description: [ctx?.competition ? `🏆 ${ctx.competition}` : '', ...lines].filter(Boolean).join('\n') || t('live.prematch.soon'),
-        color: ORANGE,
-        ...(ctx?.lineup ? { fields: [{ name: t('live.prematch.lineup'), value: ctx.lineup.join(' · ').slice(0, 1024) }] } : {}),
-      },
-    ],
-  };
+  return { lines, lineup: ctx?.lineup ? ctx.lineup.join(' · ') : null };
 }
 
 /** Relevé du direct complété par l'appli (compétition, contexte et, après le match, ses chiffres lus dans l'instantané). */
@@ -247,6 +238,7 @@ export function commentaryFact(t: TFunction, l: FmLive, club: string | null, goa
   const tl = timeline(l);
   const minute = minuteOf(l.minute);
   if (goal && fresh) {
+    if (goal.own) return '';
     const n = goalsInMatch(tl, goal);
     if (n >= 3) return t('live.fact.hattrick', { scorer: goal.name });
     if (n === 2) return t('live.fact.brace', { scorer: goal.name });
@@ -320,6 +312,8 @@ function baseCommentary(t: TFunction, l: FmLive, club: string | null, goal: Time
     const f = (goal.side === 'home' ? l.homeScore : l.awayScore) ?? 0;
     const a = (goal.side === 'home' ? l.awayScore : l.homeScore) ?? 0;
     const who = side && side !== goal.side ? 'against' : 'for';
+    // Contre son camp : le nom est celui du fautif, pas d'un buteur de l'équipe qui en profite.
+    if (goal.own) return t(`live.say.${who}_ownGoal_${k}`, { ...vars, team, scorer: goal.name, minute: goal.time.replace(/^\S+\s*/, '') });
     return t(`live.say.${who}_${goalSituation(f, a)}_${k}`, { ...vars, team, scorer: goal.name, minute: goal.time });
   }
   const phase = matchPhase(minute);
@@ -343,7 +337,7 @@ const competitionOf = (l: FmLive) => {
 };
 
 /** Encart du direct, modifié à chaque relevé. `club` = club du joueur (couleur et ton du commentaire). */
-export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, opts: { image?: boolean } = {}) {
+export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, opts: { image?: boolean; moment?: LiveHighlight | null } = {}) {
   const tl = timeline(l);
   const side = mySide(l, club);
   let color = LIVE_RED;
@@ -362,20 +356,16 @@ export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, 
   // Cartons de la feuille de match (plugin 0.5.2) : « 🟨 M. Fábry · Malženice ».
   const cards = liveCardList(l).map((c) => `${c.card === 'red' ? '🟥' : '🟨'} **${c.player}** · ${c.side === 'home' ? l.home : l.away}`);
   // Avant-match : seulement au début (ensuite le déroulé et les chiffres prennent la place).
-  const ctx = contextOf(l);
-  const prematch =
-    ctx && !tl?.length && !l.final
-      ? [ctx.position && !ctx.friendly && club ? t(ctx.position === 1 ? 'live.fact.leader' : 'live.fact.position', { club, position: ctx.position }) : '', ctx.topScorer && !ctx.friendly ? t('live.prematch.top', { name: ctx.topScorer.name, count: ctx.topScorer.goals }) : '']
-          .filter(Boolean)
-          .join('\n')
-      : '';
+  const pre = !tl?.length && !l.final ? prematchLines(t, l, club, contextOf(l)) : null;
+  // Temps fort du moment (but, carton, mi-temps, fin) en tête de l'encart, avec la phrase du commentateur (IA comprise).
+  const moment = opts.moment && highlightIsFresh(opts.moment, l) ? opts.moment : null;
   return {
     username: 'FM Immersion',
     embeds: [
       {
         author: { name: [l.final ? t('live.finalTag') : t('live.liveTag'), competitionOf(l)?.toUpperCase()].filter(Boolean).join('  ·  ') },
         title: `${l.home}  ${score(l)}  ${l.away}`,
-        description: [clock, `🎙️ *${commentary(t, l, club, lastOf(tl))}*`].join('\n\n'),
+        description: [clock, moment?.line ?? '', `🎙️ *${moment?.said ?? commentary(t, l, club, lastOf(tl))}*`].filter(Boolean).join('\n\n'),
         color,
         fields: [
           ...(lines.length
@@ -385,7 +375,8 @@ export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, 
               : []),
           ...(cards.length ? [{ name: t('live.cards'), value: cards.join('\n').slice(0, 1000) }] : []),
           ...(figures ? [{ name: t('live.figures.title'), value: figures.slice(0, 1000) }] : []),
-          ...(prematch ? [{ name: t('live.prematch.title'), value: prematch.slice(0, 1000) }] : []),
+          ...(pre?.lines.length ? [{ name: t('live.prematch.title'), value: pre.lines.join('\n').slice(0, 1000) }] : []),
+          ...(pre?.lineup ? [{ name: t('live.prematch.lineup'), value: pre.lineup.slice(0, 1000) }] : []),
         ],
         ...(opts.image ? { image: { url: 'attachment://direct.png' } } : {}),
         footer: {
@@ -397,61 +388,66 @@ export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, 
   };
 }
 
-/**
- * Temps fort du match : un message à part dans le salon (donc une notification), en plus de l'encart modifié en
- * silence. But (pour ou contre, penalty, passeur), carton, mi-temps, coup de sifflet final : c'est ce qui fait vivre
- * le match dans le fil.
- */
+/** Temps fort du match : but (pour ou contre, penalty, contre son camp, passeur), carton, mi-temps, coup de sifflet final. */
 export type Moment = LiveGoalNews | LiveCardNews | { kind: 'half' } | { kind: 'final' };
 
-/** `said` : phrase du commentateur écrite par l'IA (sinon la phrase toute faite). */
-export function momentPayload(t: TFunction, l: FmLive, club: string | null, m: Moment, said: string | null = null) {
+/**
+ * Temps fort mis en avant dans l'encart (un seul message, modifié) : sa ligne de titre, la phrase du commentateur
+ * (IA ou toute faite), et de quoi savoir quand il n'est plus l'actualité (minute et score du moment).
+ */
+export interface LiveHighlight {
+  line: string;
+  said: string | null;
+  minute: number | null;
+  score: string;
+  final: boolean;
+}
+
+/** Le temps fort reste en tête tant que le score n'a pas bougé, quelques minutes de jeu (toujours, une fois le match fini). */
+export function highlightIsFresh(h: LiveHighlight, l: FmLive): boolean {
+  if (h.score !== score(l)) return false;
+  if (l.final) return h.final;
+  const m = minuteOf(l.minute);
+  return h.minute == null || m == null || m - h.minute <= GOAL_NEWS_MINUTES;
+}
+
+/** Minute affichée d'un but sans son préfixe (« pen 36' » → « 36' », « c.s.c. 26' » → « 26' »). */
+const bareTime = (time: string) => (isPenalty(time) || isOwnGoal(time) ? time.replace(/^\S+\s*/, '') : time);
+
+/** Ligne de titre d'un temps fort, en gras dans l'encart : « ⚽ **BUUUT pour Malženice ! (11')** ». */
+export function momentLine(t: TFunction, l: FmLive, club: string | null, m: Moment): string {
   const side = mySide(l, club);
   const tl = timeline(l) ?? [];
-  const title = `${l.home}  ${score(l)}  ${l.away}`;
   if (m.kind === 'goal') {
     const team = m.side === 'home' ? l.home : l.away;
     const goal = (m.scorer && tl.find((g) => g.name === m.scorer!.name && g.time === m.scorer!.time)) ?? null;
     const mine = side ? m.side === side : true;
-    const line = said ?? (goal ? commentary(t, l, club, goal) : t(mine ? 'live.moment.goalUnknownFor' : 'live.moment.goalUnknownAgainst', { team, score: score(l) }));
+    const own = !!goal?.own || isOwnGoal(m.scorer?.time);
     const penalty = m.penalty || isPenalty(goal?.time);
-    const minute = (goal?.time ?? l.minute ?? '').replace(/^pen\.?\s*/i, '');
-    const assist = m.assist ? `\n🅰️ ${t('live.moment.assist', { name: m.assist })}` : '';
-    return {
-      username: 'FM Immersion',
-      embeds: [
-        {
-          title: `${mine ? '⚽' : '😬'}  ${t(penalty ? (mine ? 'live.moment.penaltyFor' : 'live.moment.penaltyAgainst') : mine ? 'live.moment.goalFor' : 'live.moment.goalAgainst', { team, minute })}`,
-          description: `**${title}**\n🎙️ *${line}*${assist}`,
-          color: side ? (mine ? GOOD : LIVE_RED) : ORANGE,
-        },
-      ],
-    };
+    const minute = bareTime(goal?.time ?? m.scorer?.time ?? l.minute ?? '');
+    const key = own
+      ? mine
+        ? 'live.moment.ownGoalFor'
+        : 'live.moment.ownGoalAgainst'
+      : penalty
+        ? mine
+          ? 'live.moment.penaltyFor'
+          : 'live.moment.penaltyAgainst'
+        : mine
+          ? 'live.moment.goalFor'
+          : 'live.moment.goalAgainst';
+    const assist = m.assist && !own ? `\n🅰️ ${t('live.moment.assist', { name: m.assist })}` : '';
+    return `${mine ? '⚽' : '😬'} **${t(key, { team, minute, player: m.scorer?.name ?? '' })}**${assist}`;
   }
   if (m.kind === 'card') {
     const team = m.side === 'home' ? l.home : l.away;
     const mine = side ? m.side === side : true;
     const red = m.card === 'red';
     const key = red ? (mine ? 'live.moment.redFor' : 'live.moment.redAgainst') : mine ? 'live.moment.yellowFor' : 'live.moment.yellowAgainst';
-    return {
-      username: 'FM Immersion',
-      embeds: [{ title: `${red ? '🟥' : '🟨'}  ${t(key, { player: m.player, team, minute: minuteOf(l.minute) ?? '' })}`, description: `**${title}**`, color: red ? LIVE_RED : AMBER }],
-    };
+    return `${red ? '🟥' : '🟨'} **${t(key, { player: m.player, team, minute: minuteOf(l.minute) ?? '' })}**`;
   }
-  if (m.kind === 'half') {
-    // Phrase de la mi-temps : le commentateur parle du score à la pause (minute forcée à 45 pour la phase).
-    const line = said ?? commentary(t, { ...l, minute: '45 min.' }, club, lastOf(tl));
-    return { username: 'FM Immersion', embeds: [{ title: `⏸️  ${t('live.moment.half')}`, description: `**${title}**\n🎙️ *${line}*`, color: ORANGE }] };
-  }
-  const mine = side ? ((side === 'home' ? l.homeScore : l.awayScore) ?? 0) : null;
-  const theirs = side ? ((side === 'home' ? l.awayScore : l.homeScore) ?? 0) : null;
-  const color = mine == null ? ORANGE : mine > theirs! ? GOOD : mine < theirs! ? LIVE_RED : ORANGE;
-  const line = said ?? commentary(t, { ...l, final: true }, club, lastOf(tl));
-  const figures = matchFigures(t, { ...l, final: true });
-  return {
-    username: 'FM Immersion',
-    embeds: [{ title: `🏁  ${t('live.moment.final')}`, description: [`**${title}**`, `🎙️ *${line}*`, figures ?? ''].filter(Boolean).join('\n'), color }],
-  };
+  if (m.kind === 'half') return `⏸️ **${t('live.moment.half')}**`;
+  return `🏁 **${t('live.moment.final')}**`;
 }
 
 /** Temps forts entre deux relevés du même match : buts, cartons, passage à la mi-temps, fin. */
@@ -467,25 +463,26 @@ export function momentsBetween(prev: FmLive, cur: FmLive): Moment[] {
   return out;
 }
 
+/** Ordre d'importance des temps forts arrivés entre deux relevés : on met en avant le plus marquant. */
+const RANK: Record<Moment['kind'], number> = { final: 4, goal: 3, card: 2, half: 1 };
+
 /**
- * Poste les temps forts, sans jamais bloquer l'encart (un envoi raté est perdu, le tableau reste juste).
- * Un but de chez nous part avec la photo du buteur en vignette quand elle existe sur ce PC (facepack ou portrait).
+ * Temps fort à mettre en tête de l'encart parmi ceux du relevé (le plus marquant, le dernier but s'il y en a
+ * plusieurs), avec la phrase de l'IA du joueur quand elle est branchée (but, mi-temps, fin). Null s'il n'y en a pas.
  */
-async function postMoments(t: TFunction, l: FmLive, club: string | null, moments: Moment[], lang?: string) {
-  const side = mySide(l, club);
-  for (const m of moments) {
-    // Buts, mi-temps et fin : commentés par l'IA du joueur quand elle est branchée (phrase toute faite sinon).
-    const said = m.kind === 'card' ? null : await aiLiveComment(liveMoment(t, l, club, m), lang);
-    const payload = momentPayload(t, l, club, m, said);
-    const id = m.kind === 'goal' && m.scorer && side === m.side ? personIdFor(contextOf(l), m.scorer.name) : null;
-    const png = id ? await facePng(id).catch(() => null) : null;
-    if (png) {
-      const embed = { ...payload.embeds[0]!, thumbnail: { url: 'attachment://une.png' } };
-      await sendDiscordImage({ ...payload, embeds: [embed] }, png).catch(() => sendDiscord(payload).catch(() => undefined));
-    } else {
-      await sendDiscord(payload).catch(() => undefined);
-    }
-  }
+async function highlightOf(t: TFunction, l: FmLive, club: string | null, moments: Moment[], lang?: string): Promise<LiveHighlight | null> {
+  if (!moments.length) return null;
+  const m = moments.reduce((best, x) => (RANK[x.kind] >= RANK[best.kind] ? x : best));
+  const said = m.kind === 'card' ? null : await aiLiveComment(liveMoment(t, l, club, m), lang).catch(() => null);
+  const tl = timeline(l) ?? [];
+  const goal = m.kind === 'goal' && m.scorer ? tl.find((g) => g.name === m.scorer!.name && g.time === m.scorer!.time) : null;
+  return {
+    line: momentLine(t, l, club, m),
+    said: said ?? (m.kind === 'half' ? commentary(t, { ...l, minute: '45 min.' }, club, lastOf(tl)) : null),
+    minute: m.kind === 'half' ? 45 : (goal?.minute ?? minuteOf(l.minute)),
+    score: score(l),
+    final: m.kind === 'final',
+  };
 }
 
 /**
@@ -501,7 +498,7 @@ export function liveMoment(t: TFunction, l: FmLive, club: string | null, m: Mome
     const mine = club ? sideName(m.side) === club : null;
     fact = [
       `But${m.penalty || isPenalty(goal?.time) ? ' sur penalty' : ''} pour ${sideName(m.side)}`,
-      goal ? ` : ${goal.name} (${goal.time})` : '',
+      goal?.own ? ` : contre son camp de ${goal.name}, joueur de ${sideName(m.side === 'home' ? 'away' : 'home')} (${bareTime(goal.time)})` : goal ? ` : ${goal.name} (${goal.time})` : '',
       m.assist ? `, passe décisive de ${m.assist}` : '',
       `. Score : ${score(l)}.`,
       mine == null ? '' : mine ? ` C'est un but POUR ${club}.` : ` C'est un but CONTRE ${club}.`,
@@ -546,6 +543,8 @@ interface LiveState {
   done: boolean;
   /** Chiffres du jeu ajoutés à l'encart après le match (une seule fois). */
   stats?: boolean;
+  /** Dernier temps fort mis en tête de l'encart. */
+  highlight?: LiveHighlight | null;
 }
 
 const STATE_KEY = 'fmi.discord.liveState';
@@ -568,17 +567,18 @@ function saveState(s: LiveState) {
 }
 
 /** Envoie (sans identifiant) ou modifie l'encart, avec son image quand on sait la dessiner. Renvoie l'identifiant du message. */
-async function publish(t: TFunction, l: FmLive, club: string | null, messageId: string | null, render?: LiveRender): Promise<string | null> {
-  const png = render ? await render(l, club, commentary(t, l, club, lastOf(timeline(l)))).catch(() => null) : null;
+async function publish(t: TFunction, l: FmLive, club: string | null, messageId: string | null, render?: LiveRender, highlight: LiveHighlight | null = null): Promise<string | null> {
+  const fresh = highlight && highlightIsFresh(highlight, l) ? highlight : null;
+  const png = render ? await render(l, club, fresh?.said ?? commentary(t, l, club, lastOf(timeline(l)))).catch(() => null) : null;
   if (png) {
     return invoke<string>('discord_live_image', {
       webhook: getWebhook(),
       messageId,
-      payload: scoreboardPayload(t, l, club, { image: true }),
+      payload: scoreboardPayload(t, l, club, { image: true, moment: fresh }),
       png: Array.from(png),
     });
   }
-  const board = scoreboardPayload(t, l, club);
+  const board = scoreboardPayload(t, l, club, { moment: fresh });
   if (!messageId) return postDiscord(board);
   await editDiscord(messageId, board);
   return messageId;
@@ -634,7 +634,7 @@ export async function liveStep(
   // le relevé n'est alors plus « frais ») ; on complète l'encart une seule fois.
   if (state?.done && !state.stats && state.key === key && state.messageId && statsOf(l)) {
     try {
-      await publish(t, l, club, state.messageId, render);
+      await publish(t, l, club, state.messageId, render, state.highlight ?? null);
       return { ...state, last: l, stats: true };
     } catch {
       return state;
@@ -646,9 +646,9 @@ export async function liveStep(
     if (ended && state && state.key === key && !state.done && state.messageId) {
       const closed: FmLive = { ...state.last, ...l, final: true, inMatch: false, minute: 'FDM', ...(ended.score ? { homeScore: ended.score[0], awayScore: ended.score[1] } : {}) };
       try {
-        await publish(t, closed, club, state.messageId, render);
-        await postMoments(t, closed, club, [...momentsBetween(state.last, closed).filter((m) => m.kind === 'goal' || m.kind === 'card'), { kind: 'final' }], lang);
-        return { key, messageId: state.messageId, last: closed, done: true };
+        const highlight = await highlightOf(t, closed, club, [{ kind: 'final' }], lang);
+        await publish(t, closed, club, state.messageId, render, highlight);
+        return { key, messageId: state.messageId, last: closed, done: true, highlight };
       } catch {
         return state;
       }
@@ -657,9 +657,8 @@ export async function liveStep(
   }
   if (!state || state.key !== key) {
     if (l.final) return { key, messageId: null, last: l, done: true }; // match déjà fini quand l'appli l'a vu
+    // Un seul message par match : l'avant-match y figure jusqu'au premier but.
     const messageId = await publish(t, l, club, null, render);
-    // Avant-match en message à part : l'affiche et les enjeux, une fois par match.
-    await sendDiscord(prematchPayload(t, l, club, contextOf(l))).catch(() => undefined);
     return { key, messageId, last: l, done: false };
   }
   if (state.done) return state;
@@ -668,17 +667,19 @@ export async function liveStep(
     JSON.stringify([state.last.minute, state.last.homeScore, state.last.awayScore, state.last.scorers, state.last.final, liveCardList(state.last), liveAssists(state.last)]) !==
       JSON.stringify([l.minute, l.homeScore, l.awayScore, l.scorers, l.final, liveCardList(l), liveAssists(l)]);
   let messageId = state.messageId;
+  let highlight = state.highlight ?? null;
   if (changed) {
+    // Pas de nouveau message pour un temps fort : il passe en tête de l'encart, qui est modifié.
+    highlight = (await highlightOf(t, l, club, momentsBetween(state.last, l), lang)) ?? highlight;
     try {
       if (!messageId) throw new Error('aucun tableau');
-      messageId = await publish(t, l, club, messageId, render);
+      messageId = await publish(t, l, club, messageId, render, highlight);
     } catch {
       // Encart effacé du salon (ou jamais envoyé) : on en poste un nouveau plutôt que de rester bloqué.
-      messageId = await publish(t, l, club, null, render).catch(() => null);
+      messageId = await publish(t, l, club, null, render, highlight).catch(() => null);
     }
-    await postMoments(t, l, club, momentsBetween(state.last, l), lang);
   }
-  return { key, messageId, last: l, done: !!l.final };
+  return { key, messageId, last: l, done: !!l.final, highlight };
 }
 
 /**
