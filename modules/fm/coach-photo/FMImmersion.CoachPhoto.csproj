@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Plugin BepInEx 6 (IL2CPP) pour Football Manager 27 : affiche la photo du coach choisie dans FM Immersion
+    à la place du portrait 3D du manager humain. Aucun patch Harmony, aucune écriture dans la sauvegarde.
+    Se compile contre les DLL d'interop générées par BepInEx dans le dossier du jeu (jamais versionnées) :
+      dotnet build -c Release -p:FMDir="G:\Steam\steamapps\common\Football Manager 27"
+  -->
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>FMImmersion.CoachPhoto</AssemblyName>
+    <RootNamespace>FMImmersion</RootNamespace>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <Version>0.1.0</Version>
+    <FMDir Condition="'$(FMDir)' == ''">$(FM27_DIR)</FMDir>
+    <FMDir Condition="'$(FMDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Football Manager 27</FMDir>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="src\*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="$(FMDir)\BepInEx\core\BepInEx.Core.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\core\BepInEx.Unity.IL2CPP.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\core\Il2CppInterop.Runtime.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\UnityEngine.CoreModule.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\UnityEngine.ImageConversionModule.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\Il2Cppmscorlib.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\Unity.ResourceManager.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\Unity.Addressables.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\SI.Core.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\SI.UI.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\FM.UI.dll" Private="false" />
+  </ItemGroup>
+</Project>

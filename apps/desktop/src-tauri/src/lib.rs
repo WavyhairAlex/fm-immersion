@@ -60,6 +60,7 @@ pub fn run() {
             discord::discord_edit,
             discord::discord_live_image,
             fm::fm_read_live,
+            fm::fm_write_coach_photo,
             facepack::fm_face,
             club_logo::fm_club_logo,
             images::image_save,
