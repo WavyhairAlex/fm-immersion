@@ -234,3 +234,10 @@ details p { margin-top: 10px; }
 section.suite { padding-top: 0; }
 #fonctionnement { margin-top: 64px; }
 .fabrication .garanties { margin-top: 40px; }
+/* Photo du coach */
+.v-bloc.coach { margin-top: 28px; display: grid; gap: 24px; align-items: center; }
+.carte-coach { background: var(--anth); border-radius: 16px; padding: 20px; display: flex; gap: 18px; align-items: center; }
+.carte-coach img { width: 96px; height: 96px; border-radius: 50%; box-shadow: 0 0 0 4px var(--or); flex: none; }
+.carte-coach b { display: block; font-size: 24px; }
+.carte-coach span { display: block; color: var(--gris-clair); }
+@media (min-width: 720px) { .v-bloc.coach { grid-template-columns: 340px 1fr; } }
