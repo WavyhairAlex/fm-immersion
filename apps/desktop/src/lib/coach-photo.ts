@@ -3,8 +3,12 @@
  * coach est enregistrée à cette taille pour être nette dans le jeu.
  */
 export const COACH_PHOTO_SIZE = 256;
-/** Image d'origine gardée pour pouvoir recadrer plus tard : plus grand côté réduit à cette taille, en JPEG. */
+/**
+ * Image d'origine gardée pour pouvoir recadrer plus tard : plus grand côté réduit à cette taille. JPEG pour une
+ * photo, PNG (plus petit côté réduit) pour une image qui peut être transparente, afin de garder sa transparence.
+ */
 const SOURCE_MAX = 768;
+const SOURCE_MAX_TRANSPARENT = 640;
 
 /**
  * Part de la largeur du carré que FM27 montre sur le profil du manager : le cadre est un peu plus haut que large,
@@ -39,16 +43,17 @@ export async function coachPhotoSource(file: File): Promise<string> {
   const url = URL.createObjectURL(file);
   try {
     const img = await loadImage(url);
-    const scale = Math.min(1, SOURCE_MAX / Math.max(img.naturalWidth, img.naturalHeight));
+    // PNG, WebP, GIF : l'image peut avoir un fond transparent (détourage), qu'on garde jusque dans FM27.
+    const transparent = file.type !== 'image/jpeg';
+    const max = transparent ? SOURCE_MAX_TRANSPARENT : SOURCE_MAX;
+    const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
     const canvas = document.createElement('canvas');
     canvas.width = Math.round(img.naturalWidth * scale);
     canvas.height = Math.round(img.naturalHeight * scale);
     const ctx = canvas.getContext('2d')!;
     ctx.imageSmoothingQuality = 'high';
-    ctx.fillStyle = '#ffffff'; // JPEG : la transparence devient du blanc
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/jpeg', 0.9);
+    return transparent ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.9);
   } finally {
     URL.revokeObjectURL(url);
   }

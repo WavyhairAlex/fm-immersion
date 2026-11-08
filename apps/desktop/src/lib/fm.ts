@@ -20,7 +20,7 @@ export interface FmSaveSettings {
   fmLeaving?: LeavingMarks;
   /** Photo du coach choisie par le joueur : PNG carré de 256 px (gros plan du manager dans FM27), en data URL. */
   coachPhoto?: string;
-  /** Image d'origine réduite (JPEG en data URL) et recadrage choisi, pour pouvoir recadrer la photo plus tard. */
+  /** Image d'origine réduite (JPEG, ou PNG pour garder la transparence, en data URL) et recadrage choisi, pour pouvoir recadrer la photo plus tard. */
   coachPhotoSource?: string;
   coachPhotoCrop?: { zoom: number; x: number; y: number };
 }
