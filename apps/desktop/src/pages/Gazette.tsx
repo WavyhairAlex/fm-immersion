@@ -1,3 +1,4 @@
+import { AiLink } from '../components/AiSettingsCard';
 import { gazetteIssues, seasonReviews, seasonSoFar, visibleOn, type GazetteIssue, type SeasonReview } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
 import { SeasonCard } from '../components/SeasonCard';
@@ -157,7 +158,7 @@ function AiStatus({ saveId, issue, state }: { saveId: string; issue: GazetteIssu
     mutationFn: () => writeGazette(t, issue, i18n.resolvedLanguage, saveId, { force: true }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['gazette', 'ia', saveId, issue.weekStart] }),
   });
-  if (!ai) return null;
+  if (!ai) return <AiLink />;
   const busy = state.isFetching || rewrite.isPending;
   const failed = state.isError || rewrite.isError || (state.isSuccess && !state.data && !busy);
   return (

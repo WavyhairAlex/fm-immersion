@@ -1,3 +1,4 @@
+import { AiSettingsCard } from '../components/AiSettingsCard';
 import {
   buildProject,
   isUnwanted,
@@ -520,6 +521,7 @@ function SettingsPage({
         <FmBridgeOptions />
         <FmMemory />
       </div>
+      <AiSettingsCard />
     </div>
   );
 }
