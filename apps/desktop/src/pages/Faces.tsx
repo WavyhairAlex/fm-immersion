@@ -3,12 +3,22 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useFacesUpdate, v2Count, type PackOffer, pcState } from '../lib/faces';
+import { packDate, useFacesUpdate, v2Count, type PackManifest, type PackOffer, pcState } from '../lib/faces';
 
 type FacesState = 'noGame' | 'missing' | 'original' | 'photorealV1' | 'photorealCustom' | 'unknown';
-type FacesStatus = { state: FacesState; size: number | null; running: boolean; backup: boolean };
+type FacesStatus = {
+  state: FacesState;
+  size: number | null;
+  running: boolean;
+  backup: boolean;
+};
 type LotState = 'none' | 'running' | 'paused' | 'stopped' | 'finished';
-type Stage = { done: number; state: LotState; eta: string | null; updatedMs: number | null };
+type Stage = {
+  done: number;
+  state: LotState;
+  eta: string | null;
+  updatedMs: number | null;
+};
 type Progress = {
   found: boolean;
   total: number;
@@ -33,6 +43,8 @@ type AgeSwapStatus = {
 const GAME_DIR_KEY = 'fmi.gameDir';
 const WORKSHOP_KEY = 'fmi.faces.workshop';
 const PACK_KEY = 'fmi.faces.pack';
+/** Mode atelier : « 1 » coché, « 0 » décoché, absent = automatique (atelier trouvé sur ce PC). */
+const ATELIER_KEY = 'fmi.faces.atelier';
 const read = (k: string) => {
   try {
     return localStorage.getItem(k);
@@ -81,25 +93,49 @@ export function Faces() {
     // Ancien réglage par défaut (pack V1 de l'atelier) : on suit désormais le pack le plus récent.
     return /[\\/]build[\\/]portraits_assets_all\.bundle$/i.test(v) ? '' : v;
   });
-  const [download, setDownload] = useState<{ received: number; total: number; step: string } | null>(null);
+  const [download, setDownload] = useState<{
+    received: number;
+    total: number;
+    step: string;
+  } | null>(null);
+  const [atelierPref, setAtelierPref] = useState(read(ATELIER_KEY));
 
   const num = (n: number) => n.toLocaleString(i18n.language);
   const pct = (done: number, total: number) =>
-    (total ? (done / total) * 100 : 0).toLocaleString(i18n.language, { maximumFractionDigits: 1, minimumFractionDigits: done > 0 && done < total ? 1 : 0 });
-  const when = (ms: number) => new Date(ms).toLocaleString(i18n.language, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+    (total ? (done / total) * 100 : 0).toLocaleString(i18n.language, {
+      maximumFractionDigits: 1,
+      minimumFractionDigits: done > 0 && done < total ? 1 : 0,
+    });
+  const when = (ms: number) =>
+    new Date(ms).toLocaleString(i18n.language, {
+      day: 'numeric',
+      month: 'long',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
-  const { data: defaultDir } = useQuery({ queryKey: ['fm', 'bridge', 'default-dir'], queryFn: () => invoke<string | null>('fm_bridge_default_game_dir') });
+  const { data: defaultDir } = useQuery({
+    queryKey: ['fm', 'bridge', 'default-dir'],
+    queryFn: () => invoke<string | null>('fm_bridge_default_game_dir'),
+  });
   useEffect(() => {
     if (!gameDir && defaultDir) setGameDir(defaultDir);
   }, [defaultDir, gameDir]);
-  const { data: defaultWorkshop } = useQuery({ queryKey: ['faces', 'workshop-default'], queryFn: () => invoke<string | null>('faces_default_workshop') });
+  const { data: defaultWorkshop } = useQuery({
+    queryKey: ['faces', 'workshop-default'],
+    queryFn: () => invoke<string | null>('faces_default_workshop'),
+  });
   useEffect(() => {
     if (!workshop && defaultWorkshop) setWorkshop(defaultWorkshop);
   }, [defaultWorkshop, workshop]);
 
   const { data: status } = useQuery({
     queryKey: ['faces', 'status', gameDir],
-    queryFn: () => invoke<FacesStatus>('faces_status', { gameDir, workshopDir: workshop || null }),
+    queryFn: () =>
+      invoke<FacesStatus>('faces_status', {
+        gameDir,
+        workshopDir: workshop || null,
+      }),
     enabled: !!gameDir,
     refetchInterval: 5000,
   });
@@ -141,16 +177,34 @@ export function Faces() {
 
   const refresh = () => qc.invalidateQueries({ queryKey: ['faces'] });
   const install = useMutation({
-    mutationFn: () => invoke<InstallReport>('faces_install', { gameDir, pack, workshopDir: workshop || null, version: null }),
+    mutationFn: () =>
+      invoke<InstallReport>('faces_install', {
+        gameDir,
+        pack,
+        workshopDir: workshop || null,
+        version: null,
+      }),
     onSuccess: refresh,
   });
-  const uninstall = useMutation({ mutationFn: () => invoke<boolean>('faces_uninstall', { gameDir, workshopDir: workshop || null }), onSuccess: refresh });
+  const uninstall = useMutation({
+    mutationFn: () =>
+      invoke<boolean>('faces_uninstall', {
+        gameDir,
+        workshopDir: workshop || null,
+      }),
+    onSuccess: refresh,
+  });
   // Nouveau pack V2 : téléchargement vérifié (pack publié) puis installation, FM27 fermé.
   const installOffer = useMutation({
     mutationFn: async (o: PackOffer) => {
       setDownload(null);
       const path = o.source === 'local' && o.path ? o.path : await invoke<string>('faces_remote_download');
-      return invoke<InstallReport>('faces_install', { gameDir, pack: path, workshopDir: workshop || null, version: o.manifest.version });
+      return invoke<InstallReport>('faces_install', {
+        gameDir,
+        pack: path,
+        workshopDir: workshop || null,
+        version: o.manifest.version,
+      });
     },
     onSettled: () => setDownload(null),
     onSuccess: refresh,
@@ -168,6 +222,31 @@ export function Faces() {
   const v2 = progress?.v2;
   const total = progress?.total ?? 14_000;
   const agesReady = progress?.ages.filter((a) => a.done > 0).length ?? 0;
+  // Écran d'atelier seulement chez qui génère les portraits ; les autres joueurs voient l'écran simple.
+  const atelier = atelierPref === '1' || (atelierPref !== '0' && !!progress?.found);
+  const setAtelier = (on: boolean) => {
+    setAtelierPref(on ? '1' : '0');
+    write(ATELIER_KEY, on ? '1' : '0');
+  };
+  const remote = update.data?.remote ?? null;
+  // Pack en place, retrouvé par son CRC parmi les manifestes connus (publié ou atelier).
+  const installedManifest: PackManifest | null = [remote, update.data?.local ?? null].find((m) => m != null && m.crc === update.data?.installedCrc) ?? null;
+  const date = (v: string | null | undefined) => packDate(v, i18n.language);
+  const playerState = (() => {
+    if (state === 'photorealV1') return t('faces.player.v1', { n: num(total) });
+    if (state === 'photorealCustom') {
+      const version = installedManifest?.version ?? update.data?.installedVersion ?? null;
+      if (installedManifest && v2Count(installedManifest) > 0)
+        return t('faces.player.v2', {
+          count: v2Count(installedManifest),
+          n: num(v2Count(installedManifest)),
+          date: date(version),
+        });
+      return version ? t('faces.player.v2NoCount', { date: date(version) }) : t('faces.player.custom');
+    }
+    if (state === 'original') return t('faces.player.original');
+    return t(`faces.state.${state}`);
+  })();
 
   return (
     <div className="w-full px-6 py-6 xl:px-10">
@@ -194,15 +273,21 @@ export function Faces() {
             <button type="button" className="btn-primary" disabled={running || busy || state === 'noGame'} onClick={() => installOffer.mutate(offer)}>
               {installOffer.isPending
                 ? download?.step === 'download' && download.total
-                  ? t('faces.update.downloading', { pct: Math.floor((download.received / download.total) * 100) })
+                  ? t('faces.update.downloading', {
+                      pct: Math.floor((download.received / download.total) * 100),
+                    })
                   : download?.step === 'download'
-                    ? t('faces.update.downloadingMb', { mb: Math.round(download.received / 1_000_000) })
+                    ? t('faces.update.downloadingMb', {
+                        mb: Math.round(download.received / 1_000_000),
+                      })
                     : download?.step === 'extract' || download?.step === 'check'
                       ? t('faces.update.checking')
                       : t('faces.installing')
                 : offer.source === 'local'
                   ? t('faces.update.installLocal')
-                  : t('faces.update.install')}
+                  : installed
+                    ? t('faces.update.install')
+                    : t('faces.update.installFirst')}
             </button>
             {running && <span className="text-sm font-bold text-canard">{t('faces.running')}</span>}
           </div>
@@ -210,140 +295,224 @@ export function Faces() {
           {installOffer.isError && <p className="mt-3 text-sm text-corail">{error(installOffer.error)}</p>}
         </section>
       )}
-      {!offer && installOffer.isSuccess && (
-        <p className="card mt-6 max-w-6xl text-sm text-canard">{t('faces.installed')}</p>
-      )}
+      {!offer && installOffer.isSuccess && <p className="card mt-6 max-w-6xl text-sm text-canard">{t('faces.installed')}</p>}
 
       <div className="mt-6 grid max-w-6xl gap-6 lg:grid-cols-2">
-        {/* État dans le jeu + installation en un clic */}
-        <section className="card">
-          <h2 className="text-xl font-semibold">{t('faces.statusTitle')}</h2>
-          <label className="mt-4 block text-sm font-bold">
-            {t('faces.gameDir')}
-            <input className="input mt-1 font-normal" value={gameDir} onChange={(e) => setGameDir(e.target.value)} spellCheck={false} />
-          </label>
-          <p className="mt-4 flex items-start gap-3">
-            <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${DOT[state]}`} aria-hidden />
-            <span>
-              <span className="font-bold">{t(`faces.state.${state}`)}</span>
-              {status?.size != null && <span className="ml-2 text-sm text-brun">{t('faces.size', { mb: Math.round(status.size / 1_000_000) })}</span>}
-            </span>
-          </p>
-          {running && <p className="mt-2 text-sm font-bold text-canard">{t('faces.running')}</p>}
-
-          <h3 className="mt-6 font-bold">{t('faces.installTitle')}</h3>
-          <label className="mt-2 block text-sm font-bold">
-            {t('faces.packFile')}
-            <input
-              className="input mt-1 font-normal"
-              value={pack}
-              onChange={(e) => setPack(e.target.value)}
-              placeholder={t('faces.packPlaceholder')}
-              spellCheck={false}
-            />
-          </label>
-          {progress?.builtPack && pack === progress.builtPack && progress.builtMs != null && (
-            <p className="mt-1 text-xs text-brun">{t('faces.packBuilt', { date: when(progress.builtMs) })}</p>
-          )}
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              className="btn-primary"
-              disabled={!pack || running || busy || state === 'noGame' || state === 'missing'}
-              onClick={() => install.mutate()}
-            >
-              {install.isPending ? t('faces.installing') : installed ? t('faces.reinstall') : t('faces.install')}
-            </button>
-            {(installed || state === 'unknown') && (
-              <button type="button" className="btn-secondary" disabled={running || busy || !status?.backup} onClick={() => uninstall.mutate()}>
-                {uninstall.isPending ? t('faces.uninstalling') : t('faces.uninstall')}
-              </button>
-            )}
-          </div>
-          {install.isSuccess && (
-            <p className="mt-3 text-sm text-canard">{install.data.already ? t('faces.alreadyInstalled') : t('faces.installed')}</p>
-          )}
-          {uninstall.isSuccess && <p className="mt-3 text-sm text-canard">{uninstall.data ? t('faces.uninstalled') : t('faces.nothingToRemove')}</p>}
-          {install.isError && <p className="mt-3 text-sm text-corail">{error(install.error)}</p>}
-          {uninstall.isError && <p className="mt-3 text-sm text-corail">{error(uninstall.error)}</p>}
-          <p className="mt-4 text-xs text-brun">{t('faces.lastStep')}</p>
-          {!progress?.builtPack && (
-            <>
-              <p className="mt-3 text-xs text-brun">{t('faces.download')}</p>
-              <p className="mt-1 select-all break-all rounded-lg bg-creme px-3 py-2 font-mono text-xs">{RELEASE_URL}</p>
-            </>
-          )}
-        </section>
-
-        {/* Avancement de la génération (atelier) */}
-        <section className="card">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="text-xl font-semibold">{t('faces.progressTitle')}</h2>
-            {progress?.found && (
-              <span className="font-display text-3xl font-semibold text-orange-fonce">
-                {(progress.completePermille / 10).toLocaleString(i18n.language, { maximumFractionDigits: 1 })} %
-              </span>
-            )}
-          </div>
-          <p className="mt-1 text-xs font-bold text-brun">{t('faces.projectNote')}</p>
-          <p className="mt-1 text-sm text-brun">{progress?.found ? t('faces.completeHelp') : t('faces.workshopHelp')}</p>
-          <label className="mt-4 block text-sm font-bold">
-            {t('faces.workshop')}
-            <input className="input mt-1 font-normal" value={workshop} onChange={(e) => setWorkshop(e.target.value)} spellCheck={false} />
-          </label>
-          {workshop && progress && !progress.found && <p className="mt-2 text-sm text-corail">{t('faces.workshopMissing')}</p>}
-
-          {progress?.found && (
-            <ul className="mt-5 space-y-4 text-sm">
-              <li>
-                <div className="flex justify-between gap-3">
-                  <span className="font-bold">{t('faces.v1')}</span>
-                  <span className="text-brun">
-                    {num(progress.v1.done)} / {num(total)} · {pct(progress.v1.done, total)} %
-                  </span>
-                </div>
-                <div className="mt-1.5">
-                  <Bar done={progress.v1.done} total={total} />
-                </div>
-                <p className="mt-1 text-xs text-brun">{t('faces.v1Help')}</p>
-              </li>
-              {v2 && (
-                <li>
-                  <div className="flex justify-between gap-3">
-                    <span className="font-bold">{t('faces.v2')}</span>
-                    <span className="text-brun">
-                      {num(v2.done)} / {num(total)} · {pct(v2.done, total)} %
-                    </span>
-                  </div>
-                  <div className="mt-1.5">
-                    <Bar done={v2.done} total={total} />
-                  </div>
-                  <p className="mt-1 text-xs text-brun">
-                    {t(`faces.lot.${v2.state}`, { date: v2.updatedMs != null ? when(v2.updatedMs) : '' })}
-                    {v2.eta && ` ${t('faces.eta', { eta: v2.eta })}`}
-                  </p>
-                </li>
+        {!atelier && (
+          <>
+            {/* Mode joueur : l'état du jeu en une phrase, sans chemin ni fichier à choisir. */}
+            <section className="card">
+              <h2 className="text-xl font-semibold">{t('faces.statusTitle')}</h2>
+              <p className="mt-4 flex items-start gap-3">
+                <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${DOT[state]}`} aria-hidden />
+                <span className="font-bold">{playerState}</span>
+              </p>
+              {running && <p className="mt-2 text-sm font-bold text-canard">{t('faces.running')}</p>}
+              {(state === 'noGame' || state === 'missing') && (
+                <label className="mt-4 block text-sm font-bold">
+                  {t('faces.gameDir')}
+                  <input className="input mt-1 font-normal" value={gameDir} onChange={(e) => setGameDir(e.target.value)} spellCheck={false} />
+                </label>
               )}
-              <li>
-                <span className="font-bold">{t('faces.ages')}</span>
-                <div className="mt-2 grid grid-cols-3 gap-x-4 gap-y-3 sm:grid-cols-6">
-                  {progress.ages.map((a) => (
-                    <div key={a.age}>
-                      <div className="flex justify-between text-xs">
-                        <span className="font-bold">{t('faces.ageLabel', { age: a.age })}</span>
-                        <span className="text-brun">{num(a.done)}</span>
-                      </div>
-                      <div className="mt-1">
-                        <Bar done={a.done} total={total} thin />
-                      </div>
-                    </div>
-                  ))}
+              {!offer && state !== 'noGame' && state !== 'missing' && (
+                <p className="mt-3 text-sm text-brun">
+                  {remote ? t('faces.player.upToDate') : update.isFetching ? t('faces.player.checking') : t('faces.player.offline')}
+                </p>
+              )}
+              {(installed || state === 'unknown') && (
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <button type="button" className="btn-secondary" disabled={running || busy || !status?.backup} onClick={() => uninstall.mutate()}>
+                    {uninstall.isPending ? t('faces.uninstalling') : t('faces.uninstall')}
+                  </button>
                 </div>
-                <p className="mt-2 text-xs text-brun">{t('faces.agesHelp')}</p>
-              </li>
-            </ul>
-          )}
-        </section>
+              )}
+              {uninstall.isSuccess && <p className="mt-3 text-sm text-canard">{uninstall.data ? t('faces.uninstalled') : t('faces.nothingToRemove')}</p>}
+              {uninstall.isError && <p className="mt-3 text-sm text-corail">{error(uninstall.error)}</p>}
+              <p className="mt-4 text-xs text-brun">{t('faces.lastStep')}</p>
+            </section>
+
+            {/* Avancement publié sur GitHub (manifeste « v2-progression »), le même pour tous les joueurs. */}
+            <section className="card">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="text-xl font-semibold">{t('faces.progressTitle')}</h2>
+                {remote && <span className="font-display text-3xl font-semibold text-orange-fonce">{pct(v2Count(remote), total)} %</span>}
+              </div>
+              <p className="mt-1 text-sm text-brun">{t('faces.player.progressHelp')}</p>
+              {remote ? (
+                <ul className="mt-5 space-y-4 text-sm">
+                  <li>
+                    <div className="flex justify-between gap-3">
+                      <span className="font-bold">{t('faces.player.v2Line')}</span>
+                      <span className="text-brun">
+                        {num(v2Count(remote))} / {num(total)} · {pct(v2Count(remote), total)} %
+                      </span>
+                    </div>
+                    <div className="mt-1.5">
+                      <Bar done={v2Count(remote)} total={total} />
+                    </div>
+                    <p className="mt-1 text-xs text-brun">
+                      {t('faces.player.published', {
+                        date: date(remote.version),
+                        mb: Math.round(remote.size / 1_000_000),
+                      })}
+                    </p>
+                  </li>
+                  {remote.v1 != null && (
+                    <li>
+                      <div className="flex justify-between gap-3">
+                        <span className="font-bold">{t('faces.player.v1Line')}</span>
+                        <span className="text-brun">{num(remote.v1)}</span>
+                      </div>
+                      <p className="mt-1 text-xs text-brun">{t('faces.player.v1Help')}</p>
+                    </li>
+                  )}
+                </ul>
+              ) : (
+                <p className="mt-4 text-sm text-brun">{update.isFetching ? t('faces.player.checking') : t('faces.player.offline')}</p>
+              )}
+            </section>
+          </>
+        )}
+
+        {atelier && (
+          <>
+            {/* État dans le jeu + installation en un clic */}
+            <section className="card">
+              <h2 className="text-xl font-semibold">{t('faces.statusTitle')}</h2>
+              <label className="mt-4 block text-sm font-bold">
+                {t('faces.gameDir')}
+                <input className="input mt-1 font-normal" value={gameDir} onChange={(e) => setGameDir(e.target.value)} spellCheck={false} />
+              </label>
+              <p className="mt-4 flex items-start gap-3">
+                <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${DOT[state]}`} aria-hidden />
+                <span>
+                  <span className="font-bold">{t(`faces.state.${state}`)}</span>
+                  {status?.size != null && (
+                    <span className="ml-2 text-sm text-brun">
+                      {t('faces.size', {
+                        mb: Math.round(status.size / 1_000_000),
+                      })}
+                    </span>
+                  )}
+                </span>
+              </p>
+              {running && <p className="mt-2 text-sm font-bold text-canard">{t('faces.running')}</p>}
+
+              <h3 className="mt-6 font-bold">{t('faces.installTitle')}</h3>
+              <label className="mt-2 block text-sm font-bold">
+                {t('faces.packFile')}
+                <input
+                  className="input mt-1 font-normal"
+                  value={pack}
+                  onChange={(e) => setPack(e.target.value)}
+                  placeholder={t('faces.packPlaceholder')}
+                  spellCheck={false}
+                />
+              </label>
+              {progress?.builtPack && pack === progress.builtPack && progress.builtMs != null && (
+                <p className="mt-1 text-xs text-brun">{t('faces.packBuilt', { date: when(progress.builtMs) })}</p>
+              )}
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  className="btn-primary"
+                  disabled={!pack || running || busy || state === 'noGame' || state === 'missing'}
+                  onClick={() => install.mutate()}
+                >
+                  {install.isPending ? t('faces.installing') : installed ? t('faces.reinstall') : t('faces.install')}
+                </button>
+                {(installed || state === 'unknown') && (
+                  <button type="button" className="btn-secondary" disabled={running || busy || !status?.backup} onClick={() => uninstall.mutate()}>
+                    {uninstall.isPending ? t('faces.uninstalling') : t('faces.uninstall')}
+                  </button>
+                )}
+              </div>
+              {install.isSuccess && <p className="mt-3 text-sm text-canard">{install.data.already ? t('faces.alreadyInstalled') : t('faces.installed')}</p>}
+              {uninstall.isSuccess && <p className="mt-3 text-sm text-canard">{uninstall.data ? t('faces.uninstalled') : t('faces.nothingToRemove')}</p>}
+              {install.isError && <p className="mt-3 text-sm text-corail">{error(install.error)}</p>}
+              {uninstall.isError && <p className="mt-3 text-sm text-corail">{error(uninstall.error)}</p>}
+              <p className="mt-4 text-xs text-brun">{t('faces.lastStep')}</p>
+              {!progress?.builtPack && (
+                <>
+                  <p className="mt-3 text-xs text-brun">{t('faces.download')}</p>
+                  <p className="mt-1 select-all break-all rounded-lg bg-creme px-3 py-2 font-mono text-xs">{RELEASE_URL}</p>
+                </>
+              )}
+            </section>
+
+            {/* Avancement de la génération (atelier) */}
+            <section className="card">
+              <div className="flex items-baseline justify-between gap-3">
+                <h2 className="text-xl font-semibold">{t('faces.progressTitle')}</h2>
+                {progress?.found && (
+                  <span className="font-display text-3xl font-semibold text-orange-fonce">
+                    {(progress.completePermille / 10).toLocaleString(i18n.language, { maximumFractionDigits: 1 })} %
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-xs font-bold text-brun">{t('faces.projectNote')}</p>
+              <p className="mt-1 text-sm text-brun">{progress?.found ? t('faces.completeHelp') : t('faces.workshopHelp')}</p>
+              <label className="mt-4 block text-sm font-bold">
+                {t('faces.workshop')}
+                <input className="input mt-1 font-normal" value={workshop} onChange={(e) => setWorkshop(e.target.value)} spellCheck={false} />
+              </label>
+              {workshop && progress && !progress.found && <p className="mt-2 text-sm text-corail">{t('faces.workshopMissing')}</p>}
+
+              {progress?.found && (
+                <ul className="mt-5 space-y-4 text-sm">
+                  <li>
+                    <div className="flex justify-between gap-3">
+                      <span className="font-bold">{t('faces.v1')}</span>
+                      <span className="text-brun">
+                        {num(progress.v1.done)} / {num(total)} · {pct(progress.v1.done, total)} %
+                      </span>
+                    </div>
+                    <div className="mt-1.5">
+                      <Bar done={progress.v1.done} total={total} />
+                    </div>
+                    <p className="mt-1 text-xs text-brun">{t('faces.v1Help')}</p>
+                  </li>
+                  {v2 && (
+                    <li>
+                      <div className="flex justify-between gap-3">
+                        <span className="font-bold">{t('faces.v2')}</span>
+                        <span className="text-brun">
+                          {num(v2.done)} / {num(total)} · {pct(v2.done, total)} %
+                        </span>
+                      </div>
+                      <div className="mt-1.5">
+                        <Bar done={v2.done} total={total} />
+                      </div>
+                      <p className="mt-1 text-xs text-brun">
+                        {t(`faces.lot.${v2.state}`, {
+                          date: v2.updatedMs != null ? when(v2.updatedMs) : '',
+                        })}
+                        {v2.eta && ` ${t('faces.eta', { eta: v2.eta })}`}
+                      </p>
+                    </li>
+                  )}
+                  <li>
+                    <span className="font-bold">{t('faces.ages')}</span>
+                    <div className="mt-2 grid grid-cols-3 gap-x-4 gap-y-3 sm:grid-cols-6">
+                      {progress.ages.map((a) => (
+                        <div key={a.age}>
+                          <div className="flex justify-between text-xs">
+                            <span className="font-bold">{t('faces.ageLabel', { age: a.age })}</span>
+                            <span className="text-brun">{num(a.done)}</span>
+                          </div>
+                          <div className="mt-1">
+                            <Bar done={a.done} total={total} thin />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-xs text-brun">{t('faces.agesHelp')}</p>
+                  </li>
+                </ul>
+              )}
+            </section>
+          </>
+        )}
 
         {/* Portraits selon l'âge (plugin AgeSwap) */}
         <section className="card lg:col-span-2">
@@ -362,14 +531,23 @@ export function Faces() {
                     : !ageswap.installed
                       ? t('faces.ageswapMissing')
                       : ageswap.enabled === false
-                        ? t('faces.ageswapOff', { version: ageswap.version ?? '?' })
+                        ? t('faces.ageswapOff', {
+                            version: ageswap.version ?? '?',
+                          })
                         : ageswap.enabled
-                          ? t('faces.ageswapOn', { version: ageswap.version ?? '?' })
+                          ? t('faces.ageswapOn', {
+                              version: ageswap.version ?? '?',
+                            })
                           : t('faces.ageswapNew')}
                 </span>
               </p>
               {ageswap.installed && progress?.found && (
-                <p className="mt-2 text-sm text-brun">{t('faces.ageswapReady', { count: progress.ages.reduce((m, a) => Math.max(m, a.done), 0), brackets: agesReady })}</p>
+                <p className="mt-2 text-sm text-brun">
+                  {t('faces.ageswapReady', {
+                    count: progress.ages.reduce((m, a) => Math.max(m, a.done), 0),
+                    brackets: agesReady,
+                  })}
+                </p>
               )}
               {ageswap.installed && (
                 <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -390,7 +568,12 @@ export function Faces() {
           )}
         </section>
       </div>
+
+      {/* Réglage discret : seul qui génère les portraits a besoin des chemins et de l'avancement du lot. */}
+      <label className="mt-6 flex max-w-6xl items-center gap-2 text-sm text-brun">
+        <input type="checkbox" checked={atelier} onChange={(e) => setAtelier(e.target.checked)} />
+        {t('faces.atelierToggle')}
+      </label>
     </div>
   );
 }
-

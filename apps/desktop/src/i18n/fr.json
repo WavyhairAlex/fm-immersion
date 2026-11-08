@@ -2982,12 +2982,13 @@
       "remote": "Version du {{version}}, publiée au fil de la génération ({{mb}} Mo à télécharger, vérifiés avant l'installation). FM27 doit être fermé.",
       "local": "Pack de l'atelier du {{version}}, déjà sur ce PC ({{mb}} Mo). FM27 doit être fermé.",
       "current": "Pack en place : version du {{version}}.",
-      "install": "Télécharger et installer",
+      "install": "Mettre à jour les visages",
       "installLocal": "Installer ce pack",
       "downloading": "Téléchargement… {{pct}} %",
       "downloadingMb": "Téléchargement… {{mb}} Mo",
       "checking": "Vérification du pack…",
-      "badge": "Nouveau pack de visages"
+      "badge": "Nouveau pack de visages",
+      "installFirst": "Installer les visages"
     },
     "pc": {
       "label": "Sur ton PC :",
@@ -2997,7 +2998,24 @@
       "update": "Mise à jour disponible",
       "unknown": "Pack non reconnu"
     },
-    "projectNote": "Génération des portraits par FM Immersion, pour tous les joueurs : ce n'est pas ton installation."
+    "projectNote": "Génération des portraits par FM Immersion, pour tous les joueurs : ce n'est pas ton installation.",
+    "player": {
+      "v1": "Visages V1 installés : {{n}} portraits photoréalistes.",
+      "v2_one": "Visages V2 installés : {{n}} portrait V2 (pack du {{date}}).",
+      "v2_other": "Visages V2 installés : {{n}} portraits V2 (pack du {{date}}).",
+      "v2NoCount": "Visages V2 installés (pack du {{date}}).",
+      "custom": "Visages photoréalistes installés.",
+      "original": "Visages d'origine du jeu : aucun pack installé.",
+      "upToDate": "Tu as le dernier pack publié.",
+      "checking": "Recherche du dernier pack publié…",
+      "offline": "Impossible de joindre GitHub pour l'instant : nouvel essai dans une heure.",
+      "progressHelp": "Les portraits V2 sont générés par lots et publiés au fur et à mesure. Chaque nouveau pack te sera proposé ici.",
+      "v2Line": "V2 · portraits publiés",
+      "v1Line": "V1 · portraits photoréalistes du pack",
+      "v1Help": "Les portraits pas encore refaits en V2 restent ceux de la V1.",
+      "published": "Dernier pack publié le {{date}} ({{mb}} Mo)."
+    },
+    "atelierToggle": "Je génère les portraits (mode atelier : chemins, avancement du lot, pack local)"
   },
   "gazette": {
     "paper": "La Gazette de {{club}}",
