@@ -3149,12 +3149,13 @@
       "next": "Next match",
       "figures": "Season {{season}} in numbers",
       "figPosition": "League position",
-      "figRecord_one": "W-D-L ({{count}} match)",
-      "figRecord_other": "W-D-L ({{count}} matches)",
+      "figRecord_one": "League W-D-L ({{count}} match)",
+      "figRecord_other": "League W-D-L ({{count}} matches)",
       "figScorer_one": "goal, {{name}}",
       "figScorer_other": "goals, {{name}}",
       "kicker_cupOut": "Knocked out",
-      "kicker_cupThrough": "Through"
+      "kicker_cupThrough": "Through",
+      "figGoals": "Goals for – against (league)"
     },
     "preview": "Preview of the front page sent to Discord",
     "inCompetition": "in the {{competition}}",
@@ -3340,6 +3341,16 @@
         "shotsAgainst": "shots faced, with {{us}} attempted: the opponent laid siege.",
         "possession": "possession over the whole match.",
         "xg": "xG created, against {{them}} for {{opponent}}."
+      },
+      "league": "League",
+      "cup": {
+        "alive": "Still in",
+        "through": "Through",
+        "out": "Knocked out by {{opponent}}",
+        "won": "Winners!",
+        "unknown": "Still in",
+        "line_one": "W-D-L {{record}} · {{count}} round played",
+        "line_other": "W-D-L {{record}} · {{count}} rounds played"
       }
     },
     "actions": "Rewrite and share",
@@ -4039,5 +4050,89 @@
       "lang": "Switch to French"
     },
     "action": "Action"
+  },
+  "farewell": {
+    "flash": "Breaking news",
+    "special": "Special edition",
+    "kicker": {
+      "sacked": "Sacked",
+      "left": "Departure"
+    },
+    "title": {
+      "sacked": "{{club}} sack their manager",
+      "left": "The manager leaves {{club}}",
+      "leftNext": "The manager leaves {{club}} for {{next}}"
+    },
+    "stamp": {
+      "sacked": "Sacked",
+      "left": "Gone"
+    },
+    "deckNone": "Arrived on {{start}}, left on {{end}}.",
+    "record": "The record",
+    "seasons": "Season by season",
+    "interview": "The interview",
+    "trophies": "Honours",
+    "noTrophy": "No trophy",
+    "league": "League",
+    "tile": {
+      "played": "matches",
+      "record": "W-D-L",
+      "goals": "goals for – against",
+      "winRate": "won",
+      "best": "best finish",
+      "trophies_one": "trophy",
+      "trophies_other": "trophies"
+    },
+    "line": {
+      "topScorer": "Top scorer: {{name}} ({{count}} goals)",
+      "biggestWin": "Biggest win: {{score}} against {{opponent}}",
+      "potm": "Most player of the match awards: {{name}} ({{count}})"
+    },
+    "seasonRow": "{{season}} · {{position}} · {{record}}",
+    "seasonOngoing": "(ongoing at departure)",
+    "coach": "The manager",
+    "reasonLabel": "Reason for leaving",
+    "reasonHint": "Guessed from your job security at the last reading: correct it if needed.",
+    "send": "Send the special edition to Discord",
+    "sent": "Special edition sent.",
+    "q": {
+      "feel": "How do you feel about leaving?",
+      "memory": "What memory will you take with you?",
+      "player": "Did one player stand out?",
+      "whySacked": "What went wrong?",
+      "whyLeft": "Why leave now?",
+      "fans": "A last word for the fans?"
+    },
+    "a": {
+      "feel_sacked_0": "It is a blow, I will not hide it. The board made its choice; I respect it, even if I do not share it.",
+      "feel_sacked_1": "In this job you know it can happen. But when it does, it hurts. I still had so much to build here.",
+      "feel_sacked_2": "I found out in the chairman’s office, in a few minutes. Football moves fast, sometimes too fast.",
+      "feel_left_0": "With a lot of emotion. You do not leave {{club}} like any other club.",
+      "feel_left_1": "It was a considered decision, not a whim. But on my last day at the training ground, I had a lump in my throat.",
+      "feel_left_2": "Calmly. I leave with my head held high and the feeling of a job well done.",
+      "memory_trophy_0": "The title in {{season}} ({{trophy}}). Seeing that dressing room lift the trophy is why we do this job.",
+      "memory_trophy_1": "{{trophy}} in {{season}}, of course. Nobody expected us there, and we did it together.",
+      "memory_win_0": "The {{score}} against {{opponent}}. That day, everything we worked on during the week came off.",
+      "memory_win_1": "The {{score}} win over {{opponent}}. The ground was still singing an hour after the final whistle.",
+      "memory_none_0": "The people. The players, the staff, the club employees. They are what {{club}} is.",
+      "memory_none_1": "The mornings at the training ground before anyone else arrived. I will not forget that calm.",
+      "player_0": "{{name}}. {{count}} goals with me, always at training before everyone else. A big future ahead.",
+      "player_1": "I think of {{name}}: {{count}} goals and a perfect attitude. The kind of player every manager dreams of.",
+      "player_none_0": "I do not want to single anyone out: it is the whole squad that stood out.",
+      "why_sacked_good_0": "Honestly, I do not know. The results were there, {{wins}} wins in {{played}} matches. You will have to ask the board.",
+      "why_sacked_good_1": "The numbers speak for me. But in football you are not always judged on numbers.",
+      "why_sacked_bad_0": "The results did not come, {{losses}} defeats, I own that. We lacked consistency and I am the first one responsible.",
+      "why_sacked_bad_1": "We dropped too many silly points. The squad had the quality; I did not find the right balance in time.",
+      "why_left_next_0": "The {{next}} project convinced me. It is a new challenge and I could not let it pass.",
+      "why_left_next_1": "When {{next}} called, I felt it was the moment. The cycle here had run its course.",
+      "why_left_none_0": "I felt I had given everything. It was time to make way for someone with fresh energy.",
+      "why_left_none_1": "I will take a step back, watch matches, learn. Then I will go again.",
+      "fans_0": "Thank you. For every away trip, every song, every rainy night. I will always support {{club}}.",
+      "fans_1": "Keep pushing behind the team. The club is bigger than any manager.",
+      "fans_2": "Simply thank you. You made me feel at home from day one."
+    },
+    "discordIntro": "⚡ **Breaking news**: {{title}}",
+    "deck_one": "Arrived on {{start}}, left on {{end}}: {{count}} competitive match, record {{wins}}-{{draws}}-{{losses}} (won, drawn, lost).",
+    "deck_other": "Arrived on {{start}}, left on {{end}}: {{count}} competitive matches, record {{wins}}-{{draws}}-{{losses}} (won, drawn, lost)."
   }
 }

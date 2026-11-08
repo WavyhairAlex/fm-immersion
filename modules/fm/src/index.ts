@@ -56,6 +56,7 @@ export * from './lastmatch';
 export * from './gazette';
 export * from './live';
 export * from './season';
+export * from './farewell';
 export * from './offseason';
 export * from './playtime';
 export * from './pricing';
