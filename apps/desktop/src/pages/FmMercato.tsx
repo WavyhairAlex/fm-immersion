@@ -172,14 +172,14 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
   const { engine } = useTacticEngine(folder, players);
   const [coach] = useCoach();
   // Partants signalés : le mercato planifie sans eux ; un signalement lance la recherche de son remplaçant.
-  const { ids: leavingIds, marks } = useLeaving();
+  const { ids: leavingIds, loanIds, marks } = useLeaving();
   const [justMarked, setJustMarked] = useState<string | null>(null);
-  const r = useMemo(() => mercatoAdvice(engine, players, gameDate, coach, history, leavingIds), [engine, players, gameDate, coach, history, leavingIds]);
+  const r = useMemo(() => mercatoAdvice(engine, players, gameDate, coach, history, leavingIds, loanIds), [engine, players, gameDate, coach, history, leavingIds, loanIds]);
   // Onze cible, comme pour les cibles du mercato : sert au remplaçant d'un partant et au niveau de la division.
   const own = useMemo(() => players.filter((p) => !p.injury && Object.keys(p.attributes).length), [players]);
   const pr = useMemo(() => buildProject(engine, own, coach), [engine, own, coach]);
   // Liste de courses : partants sans remplaçant, trous du projet, titulaires à remplacer, successions, banc.
-  const needs = useMemo(() => recruitmentNeeds(engine, players, gameDate, coach, history, leavingIds), [engine, players, gameDate, coach, history, leavingIds]);
+  const needs = useMemo(() => recruitmentNeeds(engine, players, gameDate, coach, history, leavingIds, loanIds), [engine, players, gameDate, coach, history, leavingIds, loanIds]);
   const [replacing, setReplacing] = useState<string | null>(null);
   // Finances serrées : le mercato commence par les départs ; les recrues se cherchent libres ou en prêt.
   const tight = useMemo(() => {

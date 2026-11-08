@@ -1577,7 +1577,8 @@
         "overtakes_other": "at {{starter}}'s level in {{count}} seasons",
         "decline": "{{age}}, declining",
         "youthTeam": "develops with the youth team",
-        "offProject": "profile off the game plan"
+        "offProject": "profile off the game plan",
+        "loanIn": "on loan with us: counts this season, no sale or extension"
       },
       "stayNoYouth": "Players aged 21 or under are in their own panel above."
     },
@@ -2309,7 +2310,7 @@
     "leave": {
       "title_one": "Announced departures · {{count}}",
       "title_other": "Announced departures · {{count}}",
-      "help": "Players you flagged as leaving. FM Immersion plans the squad without them (starters, backups, contracts, youngsters) and looks for their replacement at the same position of the project eleven: first among your followed targets and the squad, then in the game database (run straight away when you flag them). Cancel the flag if they end up staying. Players loaned to your club are listed automatically (read from the game): they go back at the end of the loan, so the transfer screen never suggests selling or extending them.",
+      "help": "Players you flagged as leaving. FM Immersion plans the squad without them (starters, backups, contracts, youth) and looks for their replacement in the same slot of the target XI: first among your tracked targets and the squad, then in the game database (started automatically when you flag them). Cancel the flag if they end up staying. Players on loan at your club are listed too (read from the game): they count in the squad and this season's plans, but the transfer window never suggests selling or extending them, and the off-season counts them as gone home.",
       "mark": "Leaving…",
       "cancel": "Cancel",
       "close": "Close",
@@ -3294,7 +3295,24 @@
       "localsSeason": "A full season with only “{{value}}” players ({{detail}})",
       "localsUsed": "Players fielded: {{value}}, no foreigner",
       "pentagonSoon": "The 5 continental Champions Leagues: trophy reading to come",
-      "localsForeign": "Foreigners fielded: {{detail}}"
+      "localsForeign": "Foreigners fielded: {{detail}}",
+      "oldGuardSeason": "A full season with only players aged 33 and over {{detail}}",
+      "oldGuardTitle": "Champions with them {{detail}}",
+      "oldGuardYoung": "Too young players fielded: {{detail}}",
+      "vikingsSeason": "A full season with only Nordic players or -sen / -sson surnames ({{detail}})",
+      "vikingsUsed": "Players fielded: {{value}}, all Vikings",
+      "noSigningsUntil": "No signing until {{value}}",
+      "noSigningsCount": "Signings: {{value}} {{detail}}",
+      "fergieLoyal": "Still at {{value}} {{detail}}",
+      "fergieWindows": "Signings in the busiest window: {{value}} / {{target}} max {{detail}}",
+      "economistStart": "Balance at the start: {{value}} ({{detail}})",
+      "economistNow": "Current balance: {{value}} ({{detail}})",
+      "economistSeason": "A season ending in the black {{detail}}",
+      "clubTitles": "Titles with {{value}}: {{detail}}",
+      "worldTourLeagues": "Different leagues won: {{value}} / {{target}} {{detail}}",
+      "dunkirkSeason": "Season at 0.8 goals conceded per match or fewer (best: {{value}}, {{detail}})",
+      "dunkirkCurrent": "Current season: {{value}} goals conceded per match in {{detail}} matches",
+      "promotionsCount": "Promotions: {{value}} / {{target}} {{detail}}"
     },
     "issue": {
       "editor": "In-game editor used (reported by FM27 on {{date}}): challenge disqualified.",
@@ -3304,7 +3322,10 @@
       "notUnemployed": "The career did not start without a club.",
       "untracked": "Season {{season}} not tracked from start to finish ({{tracked}} of {{expected}} matches tracked): it does not count.",
       "unknownLoss": "Defeat in {{matches}} grouped matches before {{date}}: competition unknown, season not proven. Keep FM Immersion open or re-read after each match.",
-      "nationalityUnknown": "Nationality unknown for {{count}} player(s): the plugin must read “nationalites”."
+      "nationalityUnknown": "Nationality unknown for {{count}} player(s): the plugin must read “nationalites”.",
+      "notInDebt": "The club was not in the red at sign-up: the challenge needs a club in debt.",
+      "balanceUnknown": "The club balance is not read yet: open the save in FM Coach.",
+      "promotionGuess": "{{count}} promotion(s) guessed from the final position: the plugin must read the division reputation to prove them."
     },
     "def": {
       "zero-to-hero": {
@@ -3331,6 +3352,51 @@
         "name": "Pentagon",
         "rules": "Unemployed at the start, win all five continental Champions Leagues (Europe, South America, Asia, Africa, North America) in the same career.",
         "checked": "unemployed start; the final win needs the trophy cabinet read from the game (to come)."
+      },
+      "old-guard": {
+        "name": "The Old Guard",
+        "rules": "A whole season with only players aged 33 and over fielded in competitive matches, and the league title at the end.",
+        "checked": "age of every player who played, final position."
+      },
+      "vikings": {
+        "name": "Vikings",
+        "rules": "A whole season with only Nordic players (Norway, Sweden, Denmark, Iceland, Finland) or players whose surname ends in -sen or -sson.",
+        "checked": "nationalities and names of the players who played."
+      },
+      "no-signings": {
+        "name": "On a Leash",
+        "rules": "No signing until the chosen date, like a club under a transfer ban. Academy graduates do not count.",
+        "checked": "every new player in the squad (a loan return is not one)."
+      },
+      "fergie": {
+        "name": "The Sir Alex Ferguson challenge",
+        "rules": "Never leave your club, no more than 8 signings per window, and a top-flight league title. The €70M per window cap stays on your honour.",
+        "checked": "club managed, new players per window, final positions."
+      },
+      "economist": {
+        "name": "Economist",
+        "rules": "Take over a club in the red and finish a season with the books in the black.",
+        "checked": "club balance read from the game, every month."
+      },
+      "chosen-club": {
+        "name": "Sleeping Giant",
+        "rules": "Bring your current club back to a top-flight title: a sleeping giant, a forgotten pioneer or an outsider dethroning the king.",
+        "checked": "club, league name and final position every season."
+      },
+      "world-tour": {
+        "name": "Around the World",
+        "rules": "Win the title in 3 different leagues, like the British Isles or round-the-world challenges from FM Europe.",
+        "checked": "league name and final position every season."
+      },
+      "dunkirk": {
+        "name": "Dunkirk",
+        "rules": "A league season at 0.8 goals conceded per match or fewer.",
+        "checked": "goals conceded every match, season tracked from start to finish."
+      },
+      "promotions": {
+        "name": "King of Promotions",
+        "rules": "Beat Vítor Oliveira's record: 12 promotions in the same career.",
+        "checked": "league and division reputation from one season to the next."
       }
     },
     "discord": {
@@ -3364,7 +3430,10 @@
       "ages": "players getting younger"
     },
     "limit": "Everything happens on your PC and the code is open: a certificate proves the save is consistent and tracked from start to finish, not that a whole fake season cannot be made up. Independent project, not affiliated with Sports Interactive or SEGA.",
-    "saved": "Certificate saved: {{path}}"
+    "saved": "Certificate saved: {{path}}",
+    "until": "No signing until (game date)",
+    "untilShort": "until {{date}}",
+    "clubParam": "Challenge club: {{club}} (your current club)"
   },
   "layout": {
     "readNow": "Read the game now",

@@ -51,10 +51,11 @@ export function recruitmentNeeds(
   coach: CoachPrefs = {},
   history: SquadAt[] = [],
   leavingIds: ReadonlySet<string> = new Set(),
+  loanIds: ReadonlySet<string> = new Set(),
 ): NeedsReport | null {
   const all = players.filter((p) => Object.keys(p.attributes).length);
   const list = all.filter((p) => !leavingIds.has(p.id));
-  const report = mercatoAdvice(engine, all, gameDate, coach, history, leavingIds);
+  const report = mercatoAdvice(engine, all, gameDate, coach, history, leavingIds, loanIds);
   if (!report) return null;
   const project = buildProject(engine, list, coach);
   const threshold = project?.threshold ?? null;

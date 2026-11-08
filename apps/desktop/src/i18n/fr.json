@@ -1577,7 +1577,8 @@
         "overtakes_other": "au niveau de {{starter}} dans {{count}} saisons",
         "decline": "{{age}} ans, en déclin",
         "youthTeam": "progresse avec les jeunes",
-        "offProject": "profil hors projet de jeu"
+        "offProject": "profil hors projet de jeu",
+        "loanIn": "prêté chez nous : il compte cette saison, ni vente ni prolongation"
       },
       "stayNoYouth": "Les jeunes de 21 ans ou moins sont dans leur cadre plus haut."
     },
@@ -2309,7 +2310,7 @@
     "leave": {
       "title_one": "Départs annoncés · {{count}}",
       "title_other": "Départs annoncés · {{count}}",
-      "help": "Les joueurs que tu as signalés partants. FM Immersion planifie l'effectif sans eux (titulaires, doublures, contrats, jeunes) et cherche leur remplaçant au même poste du onze cible : d'abord parmi tes cibles suivies et dans l'effectif, puis dans la base du jeu (lancée d'office au moment du signalement). Annule le signalement s'il reste finalement. Les joueurs prêtés à ton club y figurent d'office (lus dans le jeu) : ils rentrent chez eux à la fin du prêt, le mercato ne propose ni de les vendre ni de les prolonger.",
+      "help": "Les joueurs que tu as signalés partants. FM Immersion planifie l'effectif sans eux (titulaires, doublures, contrats, jeunes) et cherche leur remplaçant au même poste du onze cible : d'abord parmi tes cibles suivies et dans l'effectif, puis dans la base du jeu (lancée d'office au moment du signalement). Annule le signalement s'il reste finalement. Les joueurs prêtés à ton club y figurent aussi (lus dans le jeu) : ils comptent dans l'effectif et les plans de la saison, mais le mercato ne propose ni de les vendre ni de les prolonger, et l'intersaison les compte rentrés chez eux.",
       "mark": "Il part…",
       "cancel": "Annuler",
       "close": "Fermer",
@@ -3294,7 +3295,24 @@
       "localsSeason": "Une saison complète avec seulement des joueurs « {{value}} » ({{detail}})",
       "localsUsed": "Joueurs alignés : {{value}}, aucun étranger",
       "pentagonSoon": "Les 5 Ligues des champions continentales : lecture du palmarès à venir",
-      "localsForeign": "Étrangers alignés : {{detail}}"
+      "localsForeign": "Étrangers alignés : {{detail}}",
+      "oldGuardSeason": "Une saison complète avec seulement des joueurs de 33 ans et plus {{detail}}",
+      "oldGuardTitle": "Champion avec eux {{detail}}",
+      "oldGuardYoung": "Trop jeunes alignés : {{detail}}",
+      "vikingsSeason": "Une saison complète avec seulement des nordiques ou des noms en -sen / -sson ({{detail}})",
+      "vikingsUsed": "Joueurs alignés : {{value}}, tous vikings",
+      "noSigningsUntil": "Aucune recrue jusqu'au {{value}}",
+      "noSigningsCount": "Recrues : {{value}} {{detail}}",
+      "fergieLoyal": "Toujours à {{value}} {{detail}}",
+      "fergieWindows": "Recrues sur le plus gros mercato : {{value}} / {{target}} au plus {{detail}}",
+      "economistStart": "Solde au départ : {{value}} ({{detail}})",
+      "economistNow": "Solde actuel : {{value}} ({{detail}})",
+      "economistSeason": "Une fin de saison dans le vert {{detail}}",
+      "clubTitles": "Titres avec {{value}} : {{detail}}",
+      "worldTourLeagues": "Championnats différents gagnés : {{value}} / {{target}} {{detail}}",
+      "dunkirkSeason": "Saison à 0,8 but encaissé par match ou moins (meilleure : {{value}}, {{detail}})",
+      "dunkirkCurrent": "Saison en cours : {{value}} but encaissé par match en {{detail}} matchs",
+      "promotionsCount": "Montées : {{value}} / {{target}} {{detail}}"
     },
     "issue": {
       "editor": "Éditeur en jeu utilisé (signalé par FM27 le {{date}}) : défi éliminé.",
@@ -3304,7 +3322,10 @@
       "notUnemployed": "La carrière n'a pas commencé sans club.",
       "untracked": "Saison {{season}} pas suivie de bout en bout ({{tracked}} matchs suivis sur {{expected}}) : ne compte pas.",
       "unknownLoss": "Défaite dans {{matches}} matchs regroupés avant le {{date}} : compétition inconnue, saison non prouvée. Laisse FM Immersion ouvert ou relis après chaque match.",
-      "nationalityUnknown": "Nationalité inconnue pour {{count}} joueur(s) : le plugin doit lire « nationalites »."
+      "nationalityUnknown": "Nationalité inconnue pour {{count}} joueur(s) : le plugin doit lire « nationalites ».",
+      "notInDebt": "Le club n'était pas dans le rouge à l'inscription : le défi demande un club endetté.",
+      "balanceUnknown": "Le solde du club n'est pas encore lu : ouvre la partie dans FM Coach.",
+      "promotionGuess": "{{count}} montée(s) devinée(s) d'après la place finale : le plugin doit lire la réputation de la division pour les prouver."
     },
     "def": {
       "zero-to-hero": {
@@ -3331,6 +3352,51 @@
         "name": "Pentagone",
         "rules": "Sans club au départ, gagne les cinq Ligues des champions continentales (Europe, Amérique du Sud, Asie, Afrique, Amérique du Nord) dans la même carrière.",
         "checked": "départ sans club ; la victoire finale demande la lecture du palmarès dans le jeu (à venir)."
+      },
+      "old-guard": {
+        "name": "L'Ancienne Génération",
+        "rules": "Une saison entière avec seulement des joueurs de 33 ans et plus alignés en match officiel, et le titre de champion au bout.",
+        "checked": "âge de chaque joueur entré en jeu, place finale."
+      },
+      "vikings": {
+        "name": "Vikings",
+        "rules": "Une saison entière avec seulement des joueurs nordiques (Norvège, Suède, Danemark, Islande, Finlande) ou dont le nom finit en -sen ou -sson.",
+        "checked": "nationalités et noms des joueurs entrés en jeu."
+      },
+      "no-signings": {
+        "name": "Tenu en laisse",
+        "rules": "Aucune recrue jusqu'à la date choisie, comme un club interdit de recrutement. Les jeunes formés au club ne comptent pas.",
+        "checked": "chaque nouveau joueur dans l'effectif (un retour de prêt n'en est pas un)."
+      },
+      "fergie": {
+        "name": "Le défi Sir Alex Ferguson",
+        "rules": "Ne jamais quitter ton club, pas plus de 8 recrues par mercato, et le titre de champion de 1re division. Le plafond de 70 M€ par mercato reste sur l'honneur.",
+        "checked": "club suivi, nouveaux joueurs par mercato, places finales."
+      },
+      "economist": {
+        "name": "Économiste",
+        "rules": "Reprends un club dans le rouge et termine une saison avec des comptes dans le vert.",
+        "checked": "solde du club lu dans le jeu, chaque mois."
+      },
+      "chosen-club": {
+        "name": "Géant endormi",
+        "rules": "Ramène ton club actuel au titre de champion de 1re division : géant endormi, pionnier oublié ou outsider qui détrône le roi.",
+        "checked": "club, nom du championnat et place finale de chaque saison."
+      },
+      "world-tour": {
+        "name": "Autour du monde",
+        "rules": "Champion dans 3 championnats différents, comme le tour des îles britanniques ou le tour du monde de FM Europe.",
+        "checked": "nom du championnat et place finale de chaque saison."
+      },
+      "dunkirk": {
+        "name": "Dunkerque",
+        "rules": "Une saison de championnat à 0,8 but encaissé par match ou moins.",
+        "checked": "buts encaissés à chaque match, saison suivie de bout en bout."
+      },
+      "promotions": {
+        "name": "Le roi de la montée",
+        "rules": "Bats le record de Vítor Oliveira : 12 montées dans la même carrière.",
+        "checked": "championnat et réputation de la division d'une saison à l'autre."
       }
     },
     "discord": {
@@ -3364,7 +3430,10 @@
       "ages": "des joueurs rajeunissent"
     },
     "limit": "Tout se passe sur ton PC et le code est ouvert : un certificat prouve que la partie est cohérente et suivie de bout en bout, pas qu'il est impossible de fabriquer une fausse saison entière. Projet indépendant, sans lien avec Sports Interactive ni SEGA.",
-    "saved": "Certificat enregistré : {{path}}"
+    "saved": "Certificat enregistré : {{path}}",
+    "until": "Pas de recrue jusqu'au (date de jeu)",
+    "untilShort": "jusqu'au {{date}}",
+    "clubParam": "Club du défi : {{club}} (ton club actuel)"
   },
   "layout": {
     "readNow": "Lire la partie maintenant",

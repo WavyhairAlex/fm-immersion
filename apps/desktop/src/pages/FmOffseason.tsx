@@ -14,7 +14,8 @@ export function FmOffseason({ snap, players, list, go }: { snap: FmSnapshot; pla
   const f = useFormat();
   const vals = useDecisionVals();
   const [coach] = useCoach();
-  const { ids: leavingIds } = useLeaving();
+  // Intersaison : les prêtés chez nous rentrent chez eux à la fin du prêt, ils comptent parmi les départs.
+  const { nextSeasonIds: leavingIds } = useLeaving();
   const seasonStart = coach.seasonStart ?? 8;
   const s = useMemo(() => summarize(snap, players), [snap, players]);
   const plan = useMemo(

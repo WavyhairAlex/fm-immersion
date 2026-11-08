@@ -15,14 +15,37 @@ import type { FmSnapshot } from './snapshot';
  * Le certificat partagé contient les faits ; FM Immersion chez l'autre joueur relance l'étage 2 et compare.
  */
 
-export type ChallengeId = 'zero-to-hero' | 'invincibles' | 'u19' | 'locals' | 'pentagon';
+export type ChallengeId =
+  | 'zero-to-hero'
+  | 'invincibles'
+  | 'u19'
+  | 'locals'
+  | 'pentagon'
+  | 'old-guard'
+  | 'vikings'
+  | 'no-signings'
+  | 'fergie'
+  | 'economist'
+  | 'chosen-club'
+  | 'world-tour'
+  | 'dunkirk'
+  | 'promotions';
+
+/** Paramètres choisis à l'inscription. */
+export interface ChallengeParams {
+  nationality?: string;
+  /** Club du défi (club suivi au moment de l'inscription). */
+  club?: string;
+  /** Date de jeu (ISO) jusqu'à laquelle aucune recrue n'est permise. */
+  until?: string;
+}
 
 export interface ChallengeDef {
   id: ChallengeId;
   /** Le défi se joue depuis une carrière commencée sans club (inscription seulement si le manager est sans club). */
   unemployedStart: boolean;
   /** Paramètre à choisir à l'inscription. */
-  param?: 'nationality';
+  param?: 'nationality' | 'club' | 'until';
   /** Faux : la règle demande une donnée que le plugin ne lit pas encore (le défi est montré, pas jouable). */
   available: boolean;
 }
@@ -32,8 +55,28 @@ export const CHALLENGES: ChallengeDef[] = [
   { id: 'invincibles', unemployedStart: false, available: true },
   { id: 'u19', unemployedStart: false, available: true },
   { id: 'locals', unemployedStart: false, param: 'nationality', available: true },
+  { id: 'old-guard', unemployedStart: false, available: true },
+  { id: 'vikings', unemployedStart: false, available: true },
+  { id: 'no-signings', unemployedStart: false, param: 'until', available: true },
+  { id: 'fergie', unemployedStart: false, param: 'club', available: true },
+  { id: 'economist', unemployedStart: false, param: 'club', available: true },
+  { id: 'chosen-club', unemployedStart: false, param: 'club', available: true },
+  { id: 'world-tour', unemployedStart: false, available: true },
+  { id: 'dunkirk', unemployedStart: false, available: true },
+  { id: 'promotions', unemployedStart: false, available: true },
   { id: 'pentagon', unemployedStart: true, available: false },
 ];
+
+/** Ancienne Génération : âge minimal de tous les joueurs alignés. */
+export const OLD_GUARD_AGE = 33;
+/** Sir Alex Ferguson : recrues au plus par mercato. */
+export const FERGIE_SIGNINGS = 8;
+/** Autour du monde : titres dans autant de championnats différents. */
+export const WORLD_TOUR_LEAGUES = 3;
+/** Dunkerque : buts encaissés par match de championnat, au plus, sur une saison complète. */
+export const DUNKIRK_RATE = 0.8;
+/** Roi de la montée : battre les 11 montées de Vítor Oliveira. */
+export const PROMOTIONS_TARGET = 12;
 
 export const challengeDef = (id: string) => CHALLENGES.find((c) => c.id === id) ?? null;
 
@@ -136,6 +179,19 @@ export interface FactSeason {
    * zéro), ou juste après la fin de la saison précédente du même club.
    */
   fromStart: boolean;
+  /** Réputation de la division (DivisionReputation, chemins.json), pour reconnaître une montée. */
+  divisionReputation?: number | null;
+}
+
+/** Joueur arrivé dans l'effectif (jamais vu avant dans la carrière : un retour de prêt n'en est pas un). */
+export interface FactArrival {
+  date: string;
+  club: string;
+  id: string;
+  name: string;
+  age: number | null;
+  /** Formé au club d'après le jeu (jeune promu du centre de formation), null si inconnu. */
+  academy: boolean | null;
 }
 
 export interface ChallengeFacts {
@@ -152,6 +208,10 @@ export interface ChallengeFacts {
   matches: FactMatch[];
   seasons: FactSeason[];
   rewinds: Rewind[];
+  /** Absents des certificats d'avant la 0.1.69 : lus avec `?? []`. */
+  arrivals?: FactArrival[];
+  /** Solde du club, un relevé par mois et à chaque fin de saison. */
+  finances?: { date: string; club: string; balance: number }[];
 }
 
 const custom = (s: FmSnapshot) => (s as { custom?: Record<string, unknown> }).custom ?? {};
@@ -169,6 +229,26 @@ const position = (s: FmSnapshot) => {
   return n != null && n > 0 && n < 100 ? Math.round(n) : null;
 };
 
+/** Texte « formé au pays / au club » par id de joueur (custom.joueurs[].formeAuPays). */
+function trainedAt(s: FmSnapshot): Map<string, boolean | null> {
+  const out = new Map<string, boolean | null>();
+  const rows = custom(s).joueurs as Record<string, Record<string, unknown>> | undefined;
+  for (const row of Object.values(rows ?? {}) as Record<string, unknown>[]) {
+    if (!row || typeof row !== 'object' || row.id == null) continue;
+    const t = row.formeAuPays;
+    if (typeof t !== 'string' || !t.trim()) continue;
+    const low = t.toLowerCase();
+    out.set(String(row.id), /club/.test(low) && !/^(non|not|pas|aucun|none|no\b)|non form|not .*club|ni au club/.test(low));
+  }
+  return out;
+}
+
+const balanceOf = (s: FmSnapshot) => toNumber(((s as { clubInfo?: Record<string, unknown> }).clubInfo ?? {}).balance as never);
+const divisionReputationOf = (s: FmSnapshot) => {
+  const n = toNumber(section(s, 'club').reputationDivision as never);
+  return n != null && n > 0 ? n : null;
+};
+
 /** Nationalités par id de joueur (custom.joueurs[].nationalites). */
 function nationalities(s: FmSnapshot): Map<string, string> {
   const out = new Map<string, string>();
@@ -177,6 +257,42 @@ function nationalities(s: FmSnapshot): Map<string, string> {
     if (!row || typeof row !== 'object') continue;
     const n = row.nationalites;
     if (row.id != null && typeof n === 'string' && n.trim()) out.set(String(row.id), n.trim());
+  }
+  return out;
+}
+
+/**
+ * Arrivées dans l'effectif après l'inscription : joueurs jamais vus dans la carrière avant ce jour (instantanés
+ * d'avant l'inscription compris), pour qu'un retour de prêt ou un jeune déjà vu ne compte pas.
+ */
+function arrivalsOf(sorted: Entry[], all: Entry[]): FactArrival[] {
+  const seen = new Set<string>();
+  const start = sorted[0]?.gameDate;
+  for (const e of all) if (start && e.gameDate < start) for (const p of e.data.players) seen.add(String(p.id));
+  const out: FactArrival[] = [];
+  sorted.forEach((e, i) => {
+    const trained = trainedAt(e.data);
+    for (const p of e.data.players) {
+      const id = String(p.id);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      // Le premier instantané suivi donne l'effectif de départ, pas des recrues.
+      if (i === 0) continue;
+      out.push({ date: e.gameDate, club: e.data.club, id, name: p.name, age: normalizePlayer(p).age, academy: trained.get(id) ?? null });
+    }
+  });
+  return out;
+}
+
+/** Solde du club : le premier relevé de chaque mois, et chaque fin de saison. */
+function financesOf(sorted: Entry[], seasonEnds: string[]) {
+  const out: { date: string; club: string; balance: number }[] = [];
+  const ends = new Set(seasonEnds);
+  for (const e of sorted) {
+    const b = balanceOf(e.data);
+    if (b == null) continue;
+    const last = out.at(-1);
+    if (!last || last.date.slice(0, 7) !== e.gameDate.slice(0, 7) || ends.has(e.gameDate) || last.club !== e.data.club) out.push({ date: e.gameDate, club: e.data.club, balance: b });
   }
   return out;
 }
@@ -233,6 +349,7 @@ export function challengeFacts(history: Entry[], opts: { start: string; unemploy
       position: position(last),
       fixturesAtStart: leagueFixturesLeft(first),
       fromStart: Math.round(starts / 11) === 0 || (!!prev?.ended && prev.entries[0]!.data.club === first.club),
+      divisionReputation: divisionReputationOf(last) ?? divisionReputationOf(first),
     };
   });
 
@@ -246,6 +363,8 @@ export function challengeFacts(history: Entry[], opts: { start: string; unemploy
     matches,
     seasons,
     rewinds: opts.rewinds ?? [],
+    arrivals: arrivalsOf(sorted, history),
+    finances: financesOf(sorted, segs.filter((x) => x.ended).map((x) => x.entries.at(-1)!.gameDate)),
   };
 }
 
@@ -261,7 +380,10 @@ export type ChallengeIssue =
   | { kind: 'notUnemployed' }
   | { kind: 'untracked'; season: string; tracked: number; expected: number }
   | { kind: 'unknownLoss'; date: string; matches: number }
-  | { kind: 'nationalityUnknown'; count: number };
+  | { kind: 'nationalityUnknown'; count: number }
+  | { kind: 'notInDebt' }
+  | { kind: 'balanceUnknown' }
+  | { kind: 'promotionGuess'; count: number };
 
 /** Une étape du défi, à traduire dans l'interface (`challenges.step.<key>`). */
 export interface ChallengeStep {
@@ -474,8 +596,289 @@ function locals(f: ChallengeFacts, nationality: string): ChallengeResult {
   return { id: 'locals', status, steps, issues, headline: status === 'success' ? `${nationality} — ${label(target)}` : null };
 }
 
+/* ---------- Défis ajoutés en 0.1.69 (idées de FM Europe) ---------- */
+
+type Rule = (f: ChallengeFacts, params: ChallengeParams) => ChallengeResult;
+
+/** Joueurs entrés en jeu en match officiel pendant la saison, par id. */
+function usedIn(f: ChallengeFacts, s: FactSeason): FactPlayer[] {
+  const used = new Map<string, FactPlayer>();
+  for (const m of f.matches.filter((x) => inSeason(x, s))) for (const p of m.players) if (p.minutes > 0) used.set(p.id, p);
+  return [...used.values()];
+}
+
+/**
+ * Défi « effectif d'une saison » : tous les joueurs alignés respectent `ok` (null = inconnu). Saison visée = la
+ * première saison complète, sinon la saison en cours.
+ */
+function squadSeason(f: ChallengeFacts, ok: (p: FactPlayer) => boolean | null) {
+  const full = fullSeasons(f);
+  const results = full.map((s) => {
+    const used = usedIn(f, s);
+    return { season: s, used, bad: used.filter((p) => ok(p) === false), unknown: used.filter((p) => ok(p) == null) };
+  });
+  const current = f.seasons.find((x) => !x.ended);
+  const cur = current ? { season: current, used: usedIn(f, current), bad: [] as FactPlayer[], unknown: [] as FactPlayer[] } : null;
+  if (cur) {
+    cur.bad = cur.used.filter((p) => ok(p) === false);
+    cur.unknown = cur.used.filter((p) => ok(p) == null);
+  }
+  const untracked: ChallengeIssue[] = f.seasons
+    .filter((x) => x.ended && !leagueCoverage(f, x).complete)
+    .map((x) => {
+      const cov = leagueCoverage(f, x);
+      return { kind: 'untracked', season: label(x), tracked: cov.league + cov.merged, expected: cov.expected ?? 0 };
+    });
+  return { results, cur, untracked };
+}
+
+const names = (ps: FactPlayer[], more: (p: FactPlayer) => string = () => '') => ps.slice(0, 6).map((p) => `${p.name}${more(p)}`).join(', ') + (ps.length > 6 ? '…' : '');
+
+const oldGuard: Rule = (f) => {
+  const { results, cur, untracked } = squadSeason(f, (p) => (p.age == null ? null : p.age >= OLD_GUARD_AGE));
+  const clean = results.filter((r) => !r.bad.length && !r.unknown.length);
+  const champion = clean.find((r) => r.season.position === 1);
+  const shown = cur ?? results.at(-1) ?? null;
+  return {
+    id: 'old-guard',
+    status: champion ? 'success' : 'running',
+    steps: [
+      { key: 'oldGuardSeason', done: clean.length > 0, detail: clean[0] ? label(clean[0].season) : null },
+      { key: 'oldGuardTitle', done: !!champion, detail: champion ? `${champion.season.league ?? ''} (${label(champion.season)})` : null },
+      ...(shown?.bad.length ? [{ key: 'oldGuardYoung', done: false, detail: names(shown.bad, (p) => ` (${p.age})`) }] : []),
+    ],
+    issues: untracked,
+    headline: champion ? `${champion.season.league ?? champion.season.club} — ${label(champion.season)}` : null,
+  };
+};
+
+const NORDIC = ['norvege', 'norway', 'suede', 'sweden', 'danemark', 'denmark', 'islande', 'iceland', 'finlande', 'finland', 'iles feroe', 'faroe islands'];
+
+/** Vikings : nationalité nordique, ou nom de famille en -sen / -sson. */
+export function isViking(p: { name: string; nat: string | null }): boolean | null {
+  const surname = fold(p.name).split(/\s+/).at(-1) ?? '';
+  if (/(sen|sson)$/.test(surname)) return true;
+  if (!p.nat) return null;
+  const nats = fold(p.nat).split(/[,/()|;]+/).map((x) => x.trim());
+  return nats.some((n) => NORDIC.includes(n));
+}
+
+const vikings: Rule = (f) => {
+  const { results, cur, untracked } = squadSeason(f, isViking);
+  const target = results[0] ?? cur;
+  const issues = [...untracked];
+  if (!target) return { id: 'vikings', status: 'running', steps: [{ key: 'vikingsSeason', done: false }], issues, headline: null };
+  if (target.unknown.length) issues.push({ kind: 'nationalityUnknown', count: target.unknown.length });
+  const done = !!results[0] && !target.bad.length && !target.unknown.length;
+  return {
+    id: 'vikings',
+    status: target.bad.length ? 'failed' : target.unknown.length ? 'unproven' : done ? 'success' : 'running',
+    steps: [
+      { key: 'vikingsSeason', done, detail: label(target.season) },
+      target.bad.length
+        ? { key: 'localsForeign', done: false, detail: names(target.bad, (p) => ` (${p.nat ?? '?'})`) }
+        : { key: 'vikingsUsed', done: true, value: target.used.length },
+    ],
+    issues,
+    headline: done ? label(target.season) : null,
+  };
+};
+
+/** Recrue : arrivée qui n'est pas un jeune formé au club. */
+const signings = (f: ChallengeFacts) => (f.arrivals ?? []).filter((a) => a.academy !== true);
+
+const noSignings: Rule = (f, params) => {
+  const until = params.until ?? '';
+  const signed = signings(f).filter((a) => !until || a.date <= until);
+  const reached = !!until && !!f.end && f.end >= until;
+  return {
+    id: 'no-signings',
+    status: signed.length ? 'failed' : reached ? 'success' : 'running',
+    steps: [
+      { key: 'noSigningsUntil', done: reached && !signed.length, value: until },
+      { key: 'noSigningsCount', done: !signed.length, value: signed.length, detail: signed.slice(0, 6).map((a) => `${a.name} (${a.date})`).join(', ') || null },
+    ],
+    issues: [],
+    headline: reached && !signed.length ? until : null,
+  };
+};
+
+/** Mercato d'une date : hiver (décembre à février, rattaché à l'année de janvier) ou été (le reste). */
+export function transferWindow(date: string): string {
+  const y = Number(date.slice(0, 4));
+  const m = Number(date.slice(5, 7));
+  return m === 12 ? `H${y + 1}` : m <= 2 ? `H${y}` : `E${y}`;
+}
+
+const topTitleWith = (f: ChallengeFacts, club: string) => f.seasons.find((s) => s.ended && s.position === 1 && s.club === club && isTopFlight(s.league)) ?? null;
+
+const fergie: Rule = (f, params) => {
+  const club = params.club ?? f.clubs[0] ?? '';
+  const left = f.clubs.filter((c) => c !== club);
+  const byWindow = new Map<string, number>();
+  for (const a of signings(f).filter((x) => x.club === club)) byWindow.set(transferWindow(a.date), (byWindow.get(transferWindow(a.date)) ?? 0) + 1);
+  const worst = Math.max(0, ...byWindow.values());
+  const over = [...byWindow].filter(([, n]) => n > FERGIE_SIGNINGS).map(([w]) => w);
+  const title = topTitleWith(f, club);
+  return {
+    id: 'fergie',
+    status: left.length || over.length ? 'failed' : title ? 'success' : 'running',
+    steps: [
+      { key: 'fergieLoyal', done: !left.length, value: club, detail: left.join(', ') || null },
+      { key: 'fergieWindows', done: !over.length, value: worst, target: FERGIE_SIGNINGS, detail: over.join(', ') || null },
+      { key: 'topTitle', done: !!title, detail: title ? `${title.league} (${label(title)})` : null },
+    ],
+    issues: [],
+    headline: title ? `${title.league} — ${club}` : null,
+  };
+};
+
+/** Montant court, sans unité (la monnaie dépend des réglages du jeu) : « -12,5 M », « 850 k ». */
+export function shortMoney(n: number): string {
+  const a = Math.abs(n);
+  const v = a >= 1e6 ? `${(a / 1e6).toFixed(1).replace(/\.0$/, '')} M` : a >= 1e3 ? `${Math.round(a / 1e3)} k` : String(Math.round(a));
+  return `${n < 0 ? '-' : ''}${v}`.replace('.', ',');
+}
+
+const economist: Rule = (f, params) => {
+  const club = params.club ?? f.clubs[0] ?? '';
+  const fin = (f.finances ?? []).filter((x) => x.club === club);
+  const first = fin[0];
+  const last = fin.at(-1);
+  const ends = new Set(f.seasons.filter((s) => s.ended && s.club === club).map((s) => s.end));
+  const green = fin.find((x) => ends.has(x.date) && x.balance > 0 && first && first.balance < 0);
+  const issues: ChallengeIssue[] = [];
+  if (first && first.balance >= 0) issues.push({ kind: 'notInDebt' });
+  if (!first && f.end) issues.push({ kind: 'balanceUnknown' });
+  return {
+    id: 'economist',
+    status: green ? 'success' : first && first.balance >= 0 ? 'failed' : 'running',
+    steps: [
+      { key: 'economistStart', done: !!first && first.balance < 0, value: first ? shortMoney(first.balance) : '?', detail: first?.date ?? null },
+      { key: 'economistNow', done: !!last && last.balance > 0, value: last ? shortMoney(last.balance) : '?', detail: last?.date ?? null },
+      { key: 'economistSeason', done: !!green, detail: green?.date ?? null },
+    ],
+    issues,
+    headline: green ? `${club} — ${shortMoney(green.balance)}` : null,
+  };
+};
+
+const chosenClub: Rule = (f, params) => {
+  const club = params.club ?? f.clubs[0] ?? '';
+  const titles = f.seasons.filter((s) => s.ended && s.position === 1 && s.club === club);
+  const top = titles.find((s) => isTopFlight(s.league));
+  return {
+    id: 'chosen-club',
+    status: top ? 'success' : 'running',
+    steps: [
+      { key: 'clubTitles', done: titles.length > 0, value: club, detail: titles.map((s) => `${s.league ?? '?'} (${label(s)})`).join(', ') || null },
+      { key: 'topTitle', done: !!top, detail: top ? `${top.league} (${label(top)})` : null },
+    ],
+    issues: [],
+    headline: top ? `${top.league} — ${club}` : null,
+  };
+};
+
+const worldTour: Rule = (f) => {
+  const won = new Map<string, FactSeason>();
+  for (const s of f.seasons) if (s.ended && s.position === 1 && s.league && !won.has(fold(s.league))) won.set(fold(s.league), s);
+  const list = [...won.values()];
+  const done = list.length >= WORLD_TOUR_LEAGUES;
+  return {
+    id: 'world-tour',
+    status: done ? 'success' : 'running',
+    steps: [{ key: 'worldTourLeagues', done, value: Math.min(list.length, WORLD_TOUR_LEAGUES), target: WORLD_TOUR_LEAGUES, detail: list.map((s) => `${s.league} (${s.club})`).join(', ') || null }],
+    issues: [],
+    headline: done ? list.map((s) => s.league).join(' · ') : null,
+  };
+};
+
+/** Buts encaissés par match de championnat (périodes regroupées comptées : prudent, elles peuvent inclure une coupe). */
+function concededRate(f: ChallengeFacts, s: FactSeason) {
+  const cov = leagueCoverage(f, s);
+  const ms = cov.ms.filter((m) => m.league || m.n > 1);
+  const n = ms.reduce((a, m) => a + m.n, 0);
+  const ga = ms.reduce((a, m) => a + (m.ga ?? 0), 0);
+  const known = ms.every((m) => m.ga != null);
+  return { n, ga, rate: n ? ga / n : null, known, complete: cov.complete };
+}
+
+const dunkirk: Rule = (f) => {
+  const rated = f.seasons.filter((s) => s.ended).map((s) => ({ s, ...concededRate(f, s) }));
+  const ok = rated.filter((r) => r.complete && r.known && r.rate != null && r.rate <= DUNKIRK_RATE);
+  const best = [...rated].filter((r) => r.complete && r.rate != null).sort((a, b) => a.rate! - b.rate!)[0];
+  const current = f.seasons.find((s) => !s.ended);
+  const cur = current ? concededRate(f, current) : null;
+  const fmt = (x: number) => x.toFixed(2).replace('.', ',');
+  return {
+    id: 'dunkirk',
+    status: ok.length ? 'success' : 'running',
+    steps: [
+      { key: 'dunkirkSeason', done: ok.length > 0, value: best?.rate != null ? fmt(best.rate) : '–', detail: best ? label(best.s) : null },
+      ...(cur?.rate != null ? [{ key: 'dunkirkCurrent', done: cur.rate <= DUNKIRK_RATE, value: fmt(cur.rate), detail: String(cur.n) }] : []),
+    ],
+    issues: rated.filter((r) => !r.complete).map((r) => {
+      const cov = leagueCoverage(f, r.s);
+      return { kind: 'untracked', season: label(r.s), tracked: cov.league + cov.merged, expected: cov.expected ?? 0 } as ChallengeIssue;
+    }),
+    headline: ok[0] ? `${fmt(ok[0].rate!)} — ${label(ok[0].s)}` : null,
+  };
+};
+
+/**
+ * Montées : deux saisons terminées qui se suivent avec le même club, un championnat qui change de nom et une division
+ * de meilleure réputation. Sans réputation lue, une fin de saison dans les 3 premiers est comptée comme montée
+ * probable, et signalée.
+ */
+export function promotionsOf(f: ChallengeFacts): { from: FactSeason; to: FactSeason; sure: boolean }[] {
+  const out: { from: FactSeason; to: FactSeason; sure: boolean }[] = [];
+  for (let i = 0; i + 1 < f.seasons.length; i++) {
+    const a = f.seasons[i]!;
+    const b = f.seasons[i + 1]!;
+    if (!a.ended || a.club !== b.club || !a.league || !b.league || fold(a.league) === fold(b.league)) continue;
+    const ra = a.divisionReputation ?? null;
+    const rb = b.divisionReputation ?? null;
+    if (ra != null && rb != null) {
+      if (rb > ra) out.push({ from: a, to: b, sure: true });
+    } else if (a.position != null && a.position <= 3) out.push({ from: a, to: b, sure: false });
+  }
+  return out;
+}
+
+const promotions: Rule = (f) => {
+  const ups = promotionsOf(f);
+  const done = ups.length >= PROMOTIONS_TARGET;
+  return {
+    id: 'promotions',
+    status: done && ups.every((u) => u.sure) ? 'success' : done ? 'unproven' : 'running',
+    steps: [
+      {
+        key: 'promotionsCount',
+        done,
+        value: Math.min(ups.length, PROMOTIONS_TARGET),
+        target: PROMOTIONS_TARGET,
+        detail: ups.slice(-4).map((u) => `${u.from.club} : ${u.from.league} → ${u.to.league}`).join(', ') || null,
+      },
+    ],
+    issues: ups.some((u) => !u.sure) ? [{ kind: 'promotionGuess', count: ups.filter((u) => !u.sure).length }] : [],
+    headline: done ? `${ups.length}` : null,
+  };
+};
+
+const EXTRA: Record<Exclude<ChallengeId, 'zero-to-hero' | 'invincibles' | 'u19' | 'locals' | 'pentagon'>, Rule> = {
+  'old-guard': oldGuard,
+  vikings,
+  'no-signings': noSignings,
+  fergie,
+  economist,
+  'chosen-club': chosenClub,
+  'world-tour': worldTour,
+  dunkirk,
+  promotions,
+};
+
 /** Applique les règles du défi aux faits. Les contrôles d'intégrité passent avant le résultat. */
-export function evaluateChallenge(id: ChallengeId, f: ChallengeFacts, params: { nationality?: string } = {}): ChallengeResult {
+export function evaluateChallenge(id: ChallengeId, f: ChallengeFacts, params: ChallengeParams = {}): ChallengeResult {
   const def = challengeDef(id);
   if (!def?.available)
     return { id, status: 'unavailable', steps: [{ key: 'unemployed', done: f.unemployedStart }, { key: 'pentagonSoon', done: false }], issues: [], headline: null };
@@ -486,7 +889,9 @@ export function evaluateChallenge(id: ChallengeId, f: ChallengeFacts, params: { 
         ? invincibles(f)
         : id === 'u19'
           ? u19(f)
-          : locals(f, params.nationality ?? '');
+          : id === 'locals'
+            ? locals(f, params.nationality ?? '')
+            : EXTRA[id as keyof typeof EXTRA](f, params);
   const { fatal, notes } = integrity(f);
   return {
     ...base,
@@ -503,7 +908,7 @@ export const CERTIFICATE_FORMAT = 'fm-immersion-defi/1';
 export interface ChallengeCertificate {
   format: typeof CERTIFICATE_FORMAT;
   challenge: ChallengeId;
-  params: { nationality?: string };
+  params: ChallengeParams;
   /** Pseudo choisi par le joueur (rien d'autre sur lui). */
   coach: string;
   appVersion: string;

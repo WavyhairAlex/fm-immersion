@@ -47,7 +47,9 @@ export type MercatoReason =
   | { id: 'decline'; age: number }
   | { id: 'youthTeam' }
   /** Profil qui ne colle pas au projet de jeu : ne pas y investir de temps. */
-  | { id: 'offProject' };
+  | { id: 'offProject' }
+  /** Prêté chez nous : il compte cette saison, mais ni vente, ni prolongation, ni prêt ailleurs. */
+  | { id: 'loanIn' };
 
 export interface MercatoAdvice {
   player: FmPlayer;
@@ -176,8 +178,10 @@ export function mercatoAdvice(
   coach: CoachPrefs = {},
   history: SquadAt[] = [],
   leavingIds: ReadonlySet<string> = new Set(),
+  loanIds: ReadonlySet<string> = new Set(),
 ): MercatoReport | null {
   // Les partants signalés ne comptent plus : l'effectif se planifie sans eux (titulaires, doublures, contrats).
+  // Les prêtés chez nous (`loanIds`) comptent, eux : ils jouent la saison ; seul leur avenir au club n'est pas à décider.
   const leaving = players.filter((p) => leavingIds.has(p.id));
   const list = players.filter((p) => Object.keys(p.attributes).length && !leavingIds.has(p.id));
   if (!list.length) return null;
@@ -268,6 +272,11 @@ export function mercatoAdvice(
     }
     // Statut « indésirable » donné en jeu : il part, sauf s'il est titulaire (le statut est alors à revoir).
     if (isUnwanted(p.squadStatus) && tier > 0 && verdict !== 'release') verdict = 'sell';
+    // Prêté chez nous : titulaire ou doublure pour la saison, rien à vendre, prolonger ni prêter ; son contrat n'est pas le nôtre.
+    if (loanIds.has(p.id)) {
+      verdict = tier === 0 ? 'core' : 'backup';
+      return { player: p, verdict, reasons: [...reasons.filter((r) => r.id !== 'contract'), { id: 'loanIn' }], now, project: proj, months: null, proj: levels, young, prospect: false, overtakes, compat };
+    }
     return { player: p, verdict, reasons, now, project: proj, months, proj: levels, young, prospect, overtakes, compat };
   });
 
