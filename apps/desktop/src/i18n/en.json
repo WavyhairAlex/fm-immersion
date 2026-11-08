@@ -3634,5 +3634,14 @@
       "failed": "The AI could not write this gazette: usual sentences.",
       "rewrite": "Rewrite"
     }
+  },
+  "search": {
+    "label": "Quick search",
+    "button": "Search",
+    "placeholder": "A player or a screen…",
+    "player": "Player",
+    "screen": "Screen",
+    "none": "No match.",
+    "keys": "↑ ↓ to choose · Enter to open · Esc to close"
   }
 }

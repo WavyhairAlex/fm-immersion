@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, NavLink, useLocation } from 'react-router-dom';
+import { useUi } from '../lib/ui-store';
 import { shownGameDate, useCareer, useCareerStore } from '../lib/career';
 import { CLUB_PAGES, pageOf, type ClubPage } from '../lib/club-nav';
 import { coachPhotoSource, type CoachPhotoCrop } from '../lib/coach-photo';
@@ -97,6 +98,8 @@ export function Sidebar() {
       </Link>
 
       <CareerCard />
+
+      <SearchButton />
 
       <nav className="mt-2 flex flex-col gap-0.5" aria-label={t('nav.modes')}>
         <Item to="/" end icon="today" label={t('layout.nav.today')} badge={<Count n={todoViews.length} label={t('fm.brief.tabBadge', { count: todoViews.length })} />} />
@@ -256,5 +259,17 @@ function CareerCard() {
         </ul>
       )}
     </div>
+  );
+}
+
+/** Ouvre la recherche rapide (aussi au clavier : Ctrl+K). */
+function SearchButton() {
+  const { t } = useTranslation();
+  const setOpen = useUi((s) => s.setSearchOpen);
+  return (
+    <button type="button" onClick={() => setOpen(true)} className="mx-1 mt-3 flex items-center justify-between rounded-lg bg-white/[0.07] px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white">
+      <span>{t('search.button')}</span>
+      <kbd className="rounded bg-white/10 px-1.5 py-0.5 font-sans text-xs">Ctrl K</kbd>
+    </button>
   );
 }

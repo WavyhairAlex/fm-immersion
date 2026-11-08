@@ -3634,5 +3634,14 @@
       "failed": "L'IA n'a pas pu rédiger cette gazette : phrases habituelles.",
       "rewrite": "Réécrire"
     }
+  },
+  "search": {
+    "label": "Recherche rapide",
+    "button": "Rechercher",
+    "placeholder": "Un joueur ou un écran…",
+    "player": "Joueur",
+    "screen": "Écran",
+    "none": "Rien ne correspond.",
+    "keys": "↑ ↓ pour choisir · Entrée pour ouvrir · Échap pour fermer"
   }
 }
