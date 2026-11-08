@@ -9,6 +9,7 @@ import { coachPhotoSource, type CoachPhotoCrop } from '../lib/coach-photo';
 import { fmData } from '../lib/data';
 import { useGameStatus } from '../lib/game';
 import { useFacesDirs, useFacesUpdate } from '../lib/faces';
+import { useSaveStatus } from '../lib/save-files';
 import { CoachPhotoEditor, type CoachPhotoResult } from './CoachPhotoEditor';
 
 /** Icônes au trait (24×24), dessinées ici : aucun visuel du jeu. */
@@ -38,6 +39,12 @@ const ICONS: Record<string, ReactNode> = {
     </>
   ),
   settings: <path d="M9 2v5M15 2v5M6 7h12v4a6 6 0 01-12 0zM12 17v5" />,
+  saves: (
+    <>
+      <path d="M5 3h11l3 3v15H5z" />
+      <path d="M8 3v5h7V3M8 21v-7h8v7" />
+    </>
+  ),
   world: (
     <>
       <circle cx="12" cy="12" r="9" />
@@ -88,6 +95,7 @@ export function Sidebar() {
   const todoViews = saveId && todo.at.startsWith(`${saveId}|`) ? todo.views : [];
   const count = (p: ClubPage) => todoViews.filter((v) => pageOf(v) === p).length;
   const clubOpen = pathname.startsWith('/club/') ? pageOf(pathname.slice('/club/'.length)) : null;
+  const saveAlert = useSaveStatus(saveId).alert;
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col overflow-y-auto bg-canard px-3 py-5 text-white">
@@ -116,6 +124,12 @@ export function Sidebar() {
           icon="faces"
           label={t('layout.nav.faces')}
           badge={facesOffer ? <span className="h-2 w-2 rounded-full bg-white/70" aria-label={t('faces.update.badge')} /> : null}
+        />
+        <Item
+          to="/sauvegardes"
+          icon="saves"
+          label={t('layout.nav.saves')}
+          badge={saveAlert ? <span className="h-2 w-2 rounded-full bg-ambre" aria-label={t('saveFiles.navBadge')} /> : null}
         />
         <Item to="/reglages" icon="settings" label={t('layout.nav.settings')} badge={bridgeOk === false ? <span className="h-2 w-2 rounded-full bg-ambre" aria-label={t('layout.bridgeAction')} /> : null} />
       </nav>
@@ -221,6 +235,7 @@ function CareerCard() {
           {snapshot && <LastRead importedAt={snapshot.importedAt} />}
         </div>
       </div>
+      <SaveAlertLine saveId={saveId} />
       {(photo.isError || readError) && <p className="mt-2 text-xs font-bold text-white">{t('layout.career.photoError')}</p>}
       <div className="mt-2 flex items-center gap-3 text-xs font-bold text-white/60">
         {fmSaves.length > 1 && (
@@ -297,5 +312,20 @@ function LastRead({ importedAt }: { importedAt: string }) {
     <p className={`truncate text-xs ${closed ? 'font-bold text-ambre' : 'text-white/50'}`} title={t('layout.career.lastReadHelp')}>
       {t(closed ? 'layout.career.lastReadClosed' : 'layout.career.lastRead', { date: fmt.format(new Date(importedAt)) })}
     </p>
+  );
+}
+
+/**
+ * Alerte de la sauvegarde liée, sous la carrière : fichier introuvable, ou plusieurs jours de jeu sans sauvegarde.
+ * Mène à l'écran des sauvegardes. Rien quand tout va bien.
+ */
+function SaveAlertLine({ saveId }: { saveId: string }) {
+  const { t } = useTranslation();
+  const { alert } = useSaveStatus(saveId);
+  if (!alert) return null;
+  return (
+    <Link to="/sauvegardes" className="mt-2 block rounded-lg bg-ambre/15 px-2 py-1.5 text-xs font-bold text-ambre hover:bg-ambre/25">
+      {alert.kind === 'missing' ? t('saveFiles.alertMissing', { name: alert.file.replace(/\.fm$/i, '') }) : t('saveFiles.alertUnsaved', { count: alert.days })}
+    </Link>
   );
 }

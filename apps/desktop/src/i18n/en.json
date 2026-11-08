@@ -3921,7 +3921,8 @@
       "mercato": "Transfers & finances",
       "faces": "Faces",
       "settings": "Plugin & settings",
-      "story": "Gazette & Discord"
+      "story": "Gazette & Discord",
+      "saves": "Saves"
     },
     "today": {
       "title": "Today",
@@ -4194,5 +4195,39 @@
       "top_injury": "A real blow: one of the three best players in the squad.",
       "starter_injury": "A key player missing: ranked {{rank}} in the squad by ability."
     }
+  },
+  "saveFiles": {
+    "title": "My saves",
+    "intro": "Your FM27 .fm files, the career each one follows and the in-game date of your last save. After {{days}} in-game days without saving, your career card warns you. FM Immersion only reads the files' name, size and date: it never opens or changes them.",
+    "noFolder": "The plugin folder isn't known yet: saves are looked for in the games folder right next to it.",
+    "toSettings": "Open Plugin and settings",
+    "folder": "Folder: {{folder}}",
+    "loading": "Reading the folder…",
+    "empty": "No .fm save in this folder.",
+    "cols": {
+      "file": "Save",
+      "written": "Written",
+      "size": "Size",
+      "career": "Career",
+      "club": "Club",
+      "status": "Status"
+    },
+    "none": "not linked",
+    "followed": "followed",
+    "statusUnknown": "not read yet",
+    "upToDate": "up to date",
+    "unsaved_one": "{{count}} in-game day unsaved",
+    "unsaved_other": "{{count}} in-game days unsaved",
+    "savedAt": "saved on {{date}}",
+    "linkError": "Couldn't save the link.",
+    "missingTitle": "Saves not found",
+    "missingFile": "{{name}} is no longer in the folder",
+    "missingHelp": "The file may have been renamed (\"Save as\" in FM27): pick the new one in the table, or unlink the career.",
+    "unlink": "Unlink",
+    "unlinked": "Careers with no linked save: {{names}}. Pick their file in the Career column.",
+    "navBadge": "A save needs your attention",
+    "alertMissing": "Save \"{{name}}\" not found",
+    "alertUnsaved_one": "{{count}} in-game day unsaved",
+    "alertUnsaved_other": "{{count}} in-game days unsaved"
   }
 }

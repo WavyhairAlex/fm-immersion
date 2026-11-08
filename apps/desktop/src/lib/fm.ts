@@ -1,7 +1,7 @@
 import { saves } from '@fm-immersion/db';
 import { addBaseTarget, carryRoleStars, fmSnapshotSchema, fmStatusSchema, type DbPlayer, type FmStatus, type GazetteWriting, type LeavingMark, type LeavingMarks, mergeTargets, type FmSnapshot, type TargetRecord } from '@fm-immersion/module-fm';
 import { fmGazetteWriting, fmSnapshots, fmTargets } from '@fm-immersion/module-fm/schema';
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, lte } from 'drizzle-orm';
 import { challengesRepo } from './challenges';
 import type { Db } from './db';
 
@@ -240,9 +240,32 @@ export function fmRepo(db: Db) {
       });
     },
 
-    /** Lie la partie à une sauvegarde FM27 (ou défait le lien avec `null`). */
-    linkSave(saveId: string, fmSaveFile: string | null) {
+    /**
+     * Lie la partie à une sauvegarde FM27 (ou défait le lien avec `null`). Un fichier .fm ne suit qu'une partie :
+     * une autre partie liée au même fichier perd son lien.
+     */
+    async linkSave(saveId: string, fmSaveFile: string | null) {
+      if (fmSaveFile) {
+        const rows = await db.select({ id: saves.id, extra: saves.extra }).from(saves).where(eq(saves.gameId, 'fm'));
+        for (const r of rows)
+          if (r.id !== saveId && (r.extra as FmSaveSettings | null)?.fmSaveFile === fmSaveFile) await this.updateSettings(r.id, { fmSaveFile: undefined });
+      }
       return this.updateSettings(saveId, { fmSaveFile: fmSaveFile ?? undefined });
+    },
+
+    /**
+     * Date de jeu au moment où la sauvegarde a été écrite : celle du dernier instantané importé avant `at` (ISO).
+     * Le plugin réécrit l'instantané du jour toutes les 5 minutes, donc le résultat peut avoir un jour de retard :
+     * jamais d'avance, l'alerte « pas sauvegardé » ne se déclenche pas à tort.
+     */
+    async gameDateAt(saveId: string, at: string): Promise<string | null> {
+      const [row] = await db
+        .select({ gameDate: fmSnapshots.gameDate })
+        .from(fmSnapshots)
+        .where(and(eq(fmSnapshots.saveId, saveId), lte(fmSnapshots.importedAt, at)))
+        .orderBy(desc(fmSnapshots.gameDate))
+        .limit(1);
+      return row?.gameDate ?? null;
     },
   };
 }

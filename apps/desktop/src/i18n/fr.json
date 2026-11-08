@@ -3921,7 +3921,8 @@
       "mercato": "Mercato et finances",
       "faces": "Visages",
       "settings": "Plugin et réglages",
-      "story": "Gazette et Discord"
+      "story": "Gazette et Discord",
+      "saves": "Sauvegardes"
     },
     "today": {
       "title": "Aujourd'hui",
@@ -4194,5 +4195,39 @@
       "top_injury": "Coup dur : l'un des trois meilleurs joueurs de l'effectif.",
       "starter_injury": "Un cadre en moins : {{rank}}ᵉ niveau de l'effectif."
     }
+  },
+  "saveFiles": {
+    "title": "Mes sauvegardes",
+    "intro": "Tes fichiers .fm de FM27, la carrière que chacun suit et la date de jeu de ta dernière sauvegarde. Au-delà de {{days}} jours de jeu sans sauvegarde, la carte de ta carrière te prévient. FM Immersion lit seulement le nom, la taille et la date des fichiers : il ne les ouvre pas et ne les modifie jamais.",
+    "noFolder": "Le dossier du plugin n'est pas encore connu : les sauvegardes sont cherchées dans le dossier games, juste à côté.",
+    "toSettings": "Ouvrir Plugin et réglages",
+    "folder": "Dossier : {{folder}}",
+    "loading": "Lecture du dossier…",
+    "empty": "Aucune sauvegarde .fm dans ce dossier.",
+    "cols": {
+      "file": "Sauvegarde",
+      "written": "Écrite",
+      "size": "Taille",
+      "career": "Carrière",
+      "club": "Club",
+      "status": "État"
+    },
+    "none": "non liée",
+    "followed": "suivie",
+    "statusUnknown": "pas encore de lecture",
+    "upToDate": "à jour",
+    "unsaved_one": "{{count}} jour de jeu sans sauvegarde",
+    "unsaved_other": "{{count}} jours de jeu sans sauvegarde",
+    "savedAt": "sauvegardée au {{date}}",
+    "linkError": "Impossible d'enregistrer le lien.",
+    "missingTitle": "Sauvegardes introuvables",
+    "missingFile": "{{name}} n'est plus dans le dossier",
+    "missingHelp": "Le fichier a peut-être été renommé (« Enregistrer sous » dans FM27) : choisis le nouveau dans le tableau, ou délie la carrière.",
+    "unlink": "Délier",
+    "unlinked": "Carrières sans sauvegarde liée : {{names}}. Choisis leur fichier dans la colonne Carrière.",
+    "navBadge": "Une sauvegarde demande ton attention",
+    "alertMissing": "Sauvegarde « {{name}} » introuvable",
+    "alertUnsaved_one": "{{count}} jour de jeu sans sauvegarde",
+    "alertUnsaved_other": "{{count}} jours de jeu sans sauvegarde"
   }
 }
