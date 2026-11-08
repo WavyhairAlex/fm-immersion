@@ -16,8 +16,8 @@ export function useDecisions(snap: FmSnapshot, players: FmPlayer[], folder: stri
   const [coach] = useCoach();
   const gameTactic = typeof snap.tactic?.name === 'string' ? snap.tactic.name : null;
   const base = useMemo(() => styleOfGameTactic(gameTactic, engine.ref.styles), [gameTactic, engine]);
-  const { ids: leavingIds } = useLeaving();
-  return useMemo(() => decisions(engine, players, snap.gameDate, coach, history, base, leavingIds), [engine, players, snap.gameDate, coach, history, base, leavingIds]);
+  const { ids: leavingIds, loanIds } = useLeaving();
+  return useMemo(() => decisions(engine, players, snap.gameDate, coach, history, base, leavingIds, loanIds), [engine, players, snap.gameDate, coach, history, base, leavingIds, loanIds]);
 }
 
 /** Valeurs des textes d'une décision (noms, poste, styles traduits). */

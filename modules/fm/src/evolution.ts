@@ -100,12 +100,16 @@ export function evolutionPlan(
   base?: StyleRef | null,
   count = 4,
   leavingIds: ReadonlySet<string> = new Set(),
+  loanUntil: ReadonlyMap<string, string | null> = new Map(),
 ): EvolutionPlan | null {
   const list = players.filter((p) => Object.keys(p.attributes).length);
   if (!list.length) return null;
-  const report = mercatoAdvice(engine, list, gameDate, coach, history, leavingIds);
+  const report = mercatoAdvice(engine, list, gameDate, coach, history, leavingIds, new Set(loanUntil.keys()));
   const windows = nextWindows(gameDate, coach.seasonStart ?? 8, count);
   const until = new Map((report?.advice ?? []).map((a) => [a.player.id, stayUntil(a, windows.map((w) => w.date))]));
+  // Prêtés chez nous : dans l'effectif jusqu'à la fin du prêt (à défaut, jusqu'à la prochaine intersaison).
+  const summer = windows.find((w) => w.kind === 'summer')?.date ?? null;
+  for (const [id, end] of loanUntil) if (until.has(id)) until.set(id, end ?? summer);
   // Partants signalés : encore là aujourd'hui, partis à la première fenêtre (ou à la fin de leur contrat si elle tombe avant).
   for (const p of report?.leaving ?? []) {
     const end = p.contractEnd?.slice(0, 10) ?? null;

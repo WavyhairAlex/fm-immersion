@@ -1577,7 +1577,8 @@
         "overtakes_other": "au niveau de {{starter}} dans {{count}} saisons",
         "decline": "{{age}} ans, en déclin",
         "youthTeam": "progresse avec les jeunes",
-        "offProject": "profil hors projet de jeu"
+        "offProject": "profil hors projet de jeu",
+        "loanIn": "prêté chez nous : il compte cette saison, ni vente ni prolongation"
       },
       "stayNoYouth": "Les jeunes de 21 ans ou moins sont dans leur cadre plus haut."
     },
@@ -2309,7 +2310,7 @@
     "leave": {
       "title_one": "Départs annoncés · {{count}}",
       "title_other": "Départs annoncés · {{count}}",
-      "help": "Les joueurs que tu as signalés partants. FM Immersion planifie l'effectif sans eux (titulaires, doublures, contrats, jeunes) et cherche leur remplaçant au même poste du onze cible : d'abord parmi tes cibles suivies et dans l'effectif, puis dans la base du jeu (lancée d'office au moment du signalement). Annule le signalement s'il reste finalement. Les joueurs prêtés à ton club y figurent d'office (lus dans le jeu) : ils rentrent chez eux à la fin du prêt, le mercato ne propose ni de les vendre ni de les prolonger.",
+      "help": "Les joueurs que tu as signalés partants. FM Immersion planifie l'effectif sans eux (titulaires, doublures, contrats, jeunes) et cherche leur remplaçant au même poste du onze cible : d'abord parmi tes cibles suivies et dans l'effectif, puis dans la base du jeu (lancée d'office au moment du signalement). Annule le signalement s'il reste finalement. Les joueurs prêtés à ton club y figurent aussi (lus dans le jeu) : ils comptent dans l'effectif et les plans de la saison, mais le mercato ne propose ni de les vendre ni de les prolonger, et l'intersaison les compte rentrés chez eux.",
       "mark": "Il part…",
       "cancel": "Annuler",
       "close": "Fermer",

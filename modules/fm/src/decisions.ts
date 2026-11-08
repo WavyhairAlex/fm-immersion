@@ -59,6 +59,7 @@ export function decisions(
   history: SquadAt[] = [],
   base?: StyleRef | null,
   leavingIds: ReadonlySet<string> = new Set(),
+  loanIds: ReadonlySet<string> = new Set(),
 ): Decision[] {
   const all = players.filter((p) => Object.keys(p.attributes).length);
   // Partants signalés : hors recrutement et départs conseillés (on planifie sans eux), mais leur remplacement est une décision.
@@ -66,7 +67,7 @@ export function decisions(
   if (!list.length) return [];
   const out: Decision[] = [];
   const window = nextWindows(gameDate, coach.seasonStart ?? 8, 1)[0]?.date ?? null;
-  const report = mercatoAdvice(engine, all, gameDate, coach, history, leavingIds);
+  const report = mercatoAdvice(engine, all, gameDate, coach, history, leavingIds, loanIds);
 
   // 1. Contrats : ce que FM27 demande de trancher (six mois ou moins).
   if (report)

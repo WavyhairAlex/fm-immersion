@@ -82,10 +82,10 @@ export function FmPlayerSheet({
     const full = matchStatsFull(snap);
     return statsBoard(players, new Map([...full].map(([k, m]) => [k, m.stats]))).players.find((r) => r.player.id === id) ?? null;
   }, [snap, players, id]);
-  const { ids: leavingIds } = useLeaving();
+  const { ids: leavingIds, loanIds } = useLeaving();
   const advice = useMemo(
-    () => mercatoAdvice(engine, players, gameDate, coach, history, leavingIds)?.advice.find((a) => a.player.id === id) ?? null,
-    [engine, players, gameDate, coach, history, id, leavingIds],
+    () => mercatoAdvice(engine, players, gameDate, coach, history, leavingIds, loanIds)?.advice.find((a) => a.player.id === id) ?? null,
+    [engine, players, gameDate, coach, history, id, leavingIds, loanIds],
   );
   const series = useMemo(() => levelSeries(history, id), [history, id]);
   if (!p) return null;
