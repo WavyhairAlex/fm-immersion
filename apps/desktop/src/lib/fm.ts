@@ -1,6 +1,6 @@
 import { saves } from '@fm-immersion/db';
-import { addBaseTarget, carryRoleStars, fmSnapshotSchema, fmStatusSchema, type DbPlayer, type FmStatus, type LeavingMark, type LeavingMarks, mergeTargets, type FmSnapshot, type TargetRecord } from '@fm-immersion/module-fm';
-import { fmSnapshots, fmTargets } from '@fm-immersion/module-fm/schema';
+import { addBaseTarget, carryRoleStars, fmSnapshotSchema, fmStatusSchema, type DbPlayer, type FmStatus, type GazetteWriting, type LeavingMark, type LeavingMarks, mergeTargets, type FmSnapshot, type TargetRecord } from '@fm-immersion/module-fm';
+import { fmGazetteWriting, fmSnapshots, fmTargets } from '@fm-immersion/module-fm/schema';
 import { and, asc, desc, eq } from 'drizzle-orm';
 import { challengesRepo } from './challenges';
 import type { Db } from './db';
@@ -162,6 +162,24 @@ export function fmRepo(db: Db) {
           target: [fmTargets.saveId, fmTargets.playerId],
           set: { name: row.name, club: row.club, firstSeen: row.firstSeen, lastSeen: row.lastSeen, inList: true, dismissed: false, data: row.data, updatedAt: now },
         });
+    },
+
+    /** Gazette déjà rédigée par l'IA pour cette semaine, si les faits n'ont pas changé depuis. */
+    async writing(saveId: string, weekStart: string, facts: string): Promise<GazetteWriting | null> {
+      const [row] = await db
+        .select()
+        .from(fmGazetteWriting)
+        .where(and(eq(fmGazetteWriting.saveId, saveId), eq(fmGazetteWriting.weekStart, weekStart)));
+      return row && row.facts === facts ? row.content : null;
+    },
+
+    /** Garde la gazette rédigée par l'IA (remplace celle de la même semaine). */
+    async saveWriting(saveId: string, weekStart: string, facts: string, content: GazetteWriting, model: string) {
+      const writtenAt = new Date().toISOString();
+      await db
+        .insert(fmGazetteWriting)
+        .values({ saveId, weekStart, facts, content, model, writtenAt })
+        .onConflictDoUpdate({ target: [fmGazetteWriting.saveId, fmGazetteWriting.weekStart], set: { facts, content, model, writtenAt } });
     },
 
     /** Écarte une cible (ou la remet) dans FM Immersion, sans rien changer dans le jeu. */

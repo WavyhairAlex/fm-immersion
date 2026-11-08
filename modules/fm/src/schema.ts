@@ -1,6 +1,7 @@
 import { saves } from '@fm-immersion/db';
 import { index, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import type { ChallengeCertificate, Rewind } from './challenges';
+import type { GazetteWriting } from './gazette';
 import type { FmSnapshot } from './snapshot';
 
 /**
@@ -108,3 +109,28 @@ export const fmChallengeCerts = sqliteTable('fm_challenge_certs', {
 });
 
 export type FmChallengeCertRow = typeof fmChallengeCerts.$inferSelect;
+
+/**
+ * Gazettes rédigées par l'IA (une par partie et par semaine de jeu). `facts` est l'empreinte des faits envoyés à
+ * l'IA : tant qu'ils ne changent pas, la gazette garde le même texte d'une ouverture à l'autre ; une semaine qui
+ * s'enrichit (nouvel instantané) est réécrite.
+ */
+export const fmGazetteWriting = sqliteTable(
+  'fm_gazette_writing',
+  {
+    saveId: text('save_id')
+      .notNull()
+      .references(() => saves.id, { onDelete: 'cascade' }),
+    weekStart: text('week_start').notNull(),
+    facts: text('facts').notNull(),
+    content: text('content', { mode: 'json' }).$type<GazetteWriting>().notNull(),
+    /** Fournisseur et modèle qui l'ont écrite (« ollama/gemma3:12b »). */
+    model: text('model').notNull(),
+    writtenAt: text('written_at')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+  },
+  (t) => [primaryKey({ columns: [t.saveId, t.weekStart] })],
+);
+
+export type FmGazetteWritingRow = typeof fmGazetteWriting.$inferSelect;

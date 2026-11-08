@@ -35,6 +35,15 @@ pour chercher ses mises à jour au démarrage et, seulement si tu le demandes, p
 Si tu relies un salon Discord, la gazette n'y part que quand tu cliques sur « Envoyer sur Discord », et un certificat de défi (pseudo choisi, clubs, résultats des matchs, âges et nationalités des joueurs alignés) seulement quand tu cliques sur « Partager sur Discord ».
 GitHub voit alors ton adresse IP, comme pour toute visite de son site.
 
+**Rédaction par IA (désactivée par défaut).** Si tu l'actives (écran Live Discord), la gazette et les commentaires du
+direct sont écrits par l'IA que tu choisis :
+- **Ollama**, installé sur ton PC : la demande va à `http://127.0.0.1:11434` et ne quitte pas ton ordinateur ;
+- ou un fournisseur avec **ta propre clé API** (Mistral `api.mistral.ai`, Anthropic `api.anthropic.com` ou Google
+  `generativelanguage.googleapis.com`) : les faits de la semaine ou du match (noms des clubs et des joueurs, scores,
+  brèves calculées par l'appli) lui sont envoyés à chaque rédaction, jamais tes fichiers de sauvegarde. Ta clé est
+  rangée dans le coffre de Windows (Gestionnaire d'identification) et n'est envoyée qu'à ce fournisseur, dont la
+  politique de confidentialité s'applique.
+
 ## Politique de signature du code
 
 Les versions publiées seront signées gratuitement grâce à SignPath, une fois le projet accepté par

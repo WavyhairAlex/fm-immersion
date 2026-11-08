@@ -43,6 +43,13 @@
       "when": 1794083655313,
       "tag": "0005_good_warpath",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1794128674684,
+      "tag": "0006_ia_gazette",
+      "breakpoints": true
     }
   ]
 }

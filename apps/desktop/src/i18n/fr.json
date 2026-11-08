@@ -28,7 +28,7 @@
   },
   "footer": {
     "disclaimer": "FM Immersion est un projet indépendant, sans lien avec Sports Interactive ni SEGA. Football Manager et FM sont des marques de leurs propriétaires.",
-    "privacy": "Tes données restent sur ton PC. FM Immersion ne collecte aucune donnée personnelle ; il contacte GitHub pour chercher ses mises à jour et, si tu le demandes, pour télécharger le plugin FM27, et Discord seulement quand tu envoies une gazette sur ton salon."
+    "privacy": "Tes données restent sur ton PC. FM Immersion ne collecte aucune donnée personnelle ; il contacte GitHub pour chercher ses mises à jour et, si tu le demandes, pour télécharger le plugin FM27, Discord seulement quand tu envoies une gazette sur ton salon, et le fournisseur d'IA choisi (Mistral, Anthropic ou Google) seulement si tu actives la rédaction par IA avec ta clé."
   },
   "fm": {
     "back": "Mes parties",
@@ -3418,6 +3418,61 @@
         "results": "Rien d'inquiétant dans les résultats : continue comme ça.",
         "mercato": "Pas de décision de mercato ni de finances à prendre cette semaine."
       }
+    }
+  },
+  "ai": {
+    "title": "Rédaction par IA",
+    "intro": "Une IA peut écrire ta gazette et commenter les temps forts du direct avec un vrai ton de journal, en tenant compte de l'enjeu (une élimination en coupe n'est pas un match amical). Elle ne reçoit que les faits déjà calculés par FM Immersion (scores, buteurs, brèves de la semaine), jamais tes fichiers de sauvegarde. Désactivée par défaut.",
+    "provider": "IA utilisée",
+    "off": "Sans IA",
+    "providers": {
+      "ollama": {
+        "name": "Ollama (sur ce PC)",
+        "help": "Gratuit, rien ne sort de ton ordinateur. Installe Ollama (ollama.com), puis un modèle, par exemple « ollama pull gemma3:12b » (environ 8 Go, à l'aise avec une carte graphique de 12 Go ou plus). Une gazette prend quelques secondes."
+      },
+      "mistral": {
+        "name": "Mistral (clé API)",
+        "help": "IA française. Crée une clé sur console.mistral.ai (une offre gratuite limitée existe). Les faits de la semaine partent chez Mistral à chaque rédaction."
+      },
+      "anthropic": {
+        "name": "Claude (clé API)",
+        "help": "Crée une clé sur console.anthropic.com (payant à l'usage, de l'ordre du centime par gazette). Les faits de la semaine partent chez Anthropic à chaque rédaction."
+      },
+      "gemini": {
+        "name": "Gemini (clé API)",
+        "help": "Crée une clé sur aistudio.google.com (une offre gratuite limitée existe). Les faits de la semaine partent chez Google à chaque rédaction."
+      }
+    },
+    "ollamaDown": "Ollama ne répond pas sur ce PC : vérifie qu'il est installé et lancé.",
+    "ollamaEmpty": "Ollama est lancé mais aucun modèle n'est installé. Dans un terminal : ollama pull {{model}}",
+    "ollamaRefresh": "Relire les modèles installés",
+    "model": "Modèle",
+    "key": "Clé API",
+    "keyPlaceholder": "Colle ta clé ici",
+    "keySaved": "Clé enregistrée",
+    "keySave": "Enregistrer la clé",
+    "keyRemove": "Effacer la clé",
+    "keyPrivacy": "La clé est rangée dans le coffre de Windows (Gestionnaire d'identification), pas dans la base de FM Immersion. Elle n'est envoyée qu'au fournisseur choisi.",
+    "tone": "Ton du journal",
+    "tones": {
+      "classic": "Quotidien sportif",
+      "regional": "Quotidien régional passionné",
+      "tabloid": "Tabloïd"
+    },
+    "useGazette": "Rédiger la gazette avec l'IA",
+    "useLive": "Commenter les buts, la mi-temps et la fin du direct avec l'IA",
+    "test": "Tester",
+    "testing": "Test en cours…",
+    "testOk": "L'IA répond :",
+    "testAnswer": "« {{text}} »",
+    "testSystem": "Tu es commentateur de football. Réponds en une phrase courte, en français.",
+    "testPrompt": "Annonce le coup d'envoi d'un match de Football Manager.",
+    "fallback": "Si l'IA ne répond pas, est trop lente ou change un score ou un chiffre, FM Immersion garde ses phrases habituelles.",
+    "gazette": {
+      "writing": "Rédaction par l'IA ({{model}})…",
+      "written": "Rédigée par l'IA ({{model}})",
+      "failed": "L'IA n'a pas pu rédiger cette gazette : phrases habituelles.",
+      "rewrite": "Réécrire"
     }
   }
 }
