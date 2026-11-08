@@ -36,7 +36,7 @@ import { createContext, useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
-import { fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach } from './FmUi';
+import { fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach, SectionTabs } from './FmUi';
 
 // v2 : le choix automatique (meilleure tactique applicable) devient la valeur par défaut.
 const PREFS_KEY = 'fmi.tactic.v2';
@@ -227,333 +227,358 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
       
 
       {showLineup && (
-      <>
-      {opp && best && !fromGame && (
-        <section className="card">
-          <h2 className="text-xl font-semibold">{t('fm.tac.matchTitle', { name: opp.name ?? t('fm.opp.club') })}</h2>
-          {pick && `${best.style.id}|${best.form}` === baseKey ? (
-            <p className="mt-1 text-sm">{t('fm.tac.matchSame', { form: pick.form, style: styleName(pick.style) })}</p>
-          ) : (
-            <p className="mt-1 text-sm">
-              {t('fm.tac.matchBest', { form: best.form, style: styleName(best.style), base: pick ? `${pick.form} ${styleName(pick.style)}` : '–' })}
-            </p>
-          )}
-          <p className="mt-1 text-xs text-brun">
-            {t('fm.tac.matchScore', { base: note(best.base), bonus: (best.bonus >= 0 ? '+' : '') + nf1.format(best.bonus) })}
-          </p>
-          {best.reasons.length > 0 && (
-            <ul className="mt-2 space-y-1 text-sm">
-              {best.reasons.map((r) => (
-                <li key={r.id}>• {t(`fm.tac.why.${r.id}`, { every: r.every, minutes: r.minutes })}</li>
-              ))}
-            </ul>
-          )}
-          <div className="mt-3 flex flex-wrap gap-2">
-            {(prefs.style !== best.style.id || form !== best.form) && (
-              <button type="button" className="btn-primary px-3 py-1.5 text-sm" onClick={() => update({ style: best.style.id, form: best.form, source: 'simloom' })}>
-                {t('fm.tac.matchShow')}
-              </button>
-            )}
-            {!auto && (
-              <button type="button" className="btn-secondary px-3 py-1.5 text-sm" onClick={() => update({ style: undefined, form: undefined })}>
-                {t('fm.tac.matchBase')}
-              </button>
-            )}
-          </div>
-          <More>{t(opp.formations.faced?.length ? 'fm.tac.matchHelpMeasured' : 'fm.tac.matchHelp')}</More>
-        </section>
-      )}
-
-      {opp && adjust && !fromGame && (
-        <section className="card">
-          <h2 className="text-xl font-semibold">{t('fm.tac.adjust.title', { name: opp.name ?? t('fm.opp.club') })}</h2>
-          <p className="mt-1 text-sm text-brun">{t('fm.tac.adjust.intro')}</p>
-          {!adjust.mentality && !adjust.team.length && !adjust.marking.length ? (
-            <p className="mt-2 text-sm">{t('fm.tac.adjust.none')}</p>
-          ) : (
-            <div className="mt-3 grid gap-4 lg:grid-cols-2">
-              <div>
-                {adjust.mentality && (
-                  <p className="mb-2 text-sm">
-                    <b>{t('fm.tac.adjust.mentality', { to: adjust.mentality.to, from: adjust.mentality.from })}</b>
-                    <span className="ml-1 text-xs text-brun">{t(`fm.tac.adjust.reason.${adjust.mentality.reason}`)}</span>
+      <SectionTabs
+        id="tactic"
+        sections={[
+          {
+            id: 'xi',
+            label: t('fm.tac.sections.xi'),
+            node: (
+              <>
+              {/* Le onze : terrain compact à gauche, liste prête à appliquer dans FM27 à droite. Survoler l'un met l'autre en évidence. */}
+              <section className="card">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="text-xl font-semibold">
+                      {team === 'B' ? plan.form : form} · {styleName(style)} <span className="text-sm font-normal text-brun">{t('fm.tac.fit', { value: note(plan.score) })}</span>
+                    </h2>
+                    <div className="flex gap-1" role="tablist" aria-label={t('fm.tac.team.label')}>
+                      {(['A', 'B'] as const).map((k) => (
+                        <button
+                          key={k}
+                          type="button"
+                          role="tab"
+                          aria-selected={team === k}
+                          onClick={() => setTeam(k)}
+                          className={`chip ${team === k ? 'chip-on' : ''}`}
+                        >
+                          {t(`fm.tac.team.${k}`)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {team === 'B' && planB && planA && (
+                    <p className="mt-1 text-sm text-brun">{t('fm.tac.team.help', { a: note(planA.score), b: note(planB.score) })}</p>
+                  )}
+                  <p className="mt-1 text-sm text-brun">
+                    <span className="mr-2 rounded-md bg-eau/20 px-1.5 py-0.5 text-xs font-bold text-canard">{t(fromGame ? 'fm.tac.fromGame' : 'fm.tac.suggested')}</span>
+                    {t(fromGame ? 'fm.tac.fromGameHelp' : gamePlan ? 'fm.tac.suggestedHelpGame' : 'fm.tac.suggestedHelp')}
                   </p>
-                )}
-                {adjust.team.length > 0 && (
-                  <>
-                    <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.tac.adjust.teamTitle')}</p>
-                    <ul className="mt-1 space-y-1.5 text-sm">
-                      {/* Une carte par raison : les consignes qu'elle justifie, listées dessous, sans répéter la phrase. */}
-                      {[...new Set(adjust.team.map((a) => a.reason))].map((reason) => (
-                        <li key={reason} className="rounded-xl bg-creme/50 px-3 py-2">
-                          <p className="text-xs text-brun first-letter:uppercase">{t(`fm.tac.adjust.reason.${reason}`)}</p>
-                          {adjust.team
-                            .filter((a) => a.reason === reason)
-                            .map((a) => (
-                              <p key={a.title} className="mt-1">
-                                <span className="mr-2 rounded-md bg-eau/20 px-1.5 py-0.5 text-xs font-bold text-canard">{t(`fm.style.${a.phase}`)}</span>
-                                <span className="text-brun">{a.title} :</span> <b>{a.label}</b>
-                                {a.replaces && <span className="ml-1 text-xs text-brun">{t('fm.tac.adjust.replaces', { label: a.replaces })}</span>}
-                              </p>
-                            ))}
-                        </li>
+                  {!gamePlan && lineupStatus && lineupStatus !== 'lue' && <p className="mt-1 text-xs text-brun">{t('fm.tac.lineupStatus', { status: lineupStatus })}</p>}
+
+                <div className="mt-4 grid gap-6 xl:grid-cols-[minmax(18rem,26rem)_minmax(0,1fr)]">
+                  <div>
+                    <div className="relative mx-auto aspect-[3/4] w-full max-w-[26rem] overflow-hidden rounded-2xl bg-eau-fonce/90">
+                      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden>
+                        <g fill="none" stroke="white" strokeOpacity="0.35" strokeWidth="0.4">
+                          <rect x="3" y="2" width="94" height="96" />
+                          <line x1="3" y1="50" x2="97" y2="50" />
+                          <circle cx="50" cy="50" r="9" />
+                          <rect x="25" y="2" width="50" height="15" />
+                          <rect x="25" y="83" width="50" height="15" />
+                        </g>
+                        <g stroke="white" strokeOpacity="0.6" strokeWidth="0.35" strokeDasharray="1 1">
+                          {plan.slots.map((sl, i) => {
+                            const [x1, y1] = phaseXY(sl, other, block);
+                            const [x2, y2] = shown[i] ?? [x1, y1];
+                            return Math.hypot(x1 - x2, y1 - y2) > 2 ? <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} /> : null;
+                          })}
+                        </g>
+                      </svg>
+                      {plan.slots.map((sl, i) => {
+                        const [x, y] = shown[i] ?? [sl.x, sl.y];
+                        const code = phase === 'ip' ? sl.ip : sl.oop;
+                        const fit = sl.player ? engine.roleFit(sl.player, code, phase, sl.pos) : null;
+                        const off = !!sl.player && !sl.player.positions.includes(sl.pos);
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            title={`${roleName(code, phase)}${off ? ` · ${t('fm.tac.offPos')}` : ''}`}
+                            onMouseEnter={() => setHover(i)}
+                            onMouseLeave={() => setHover(null)}
+                            onFocus={() => setHover(i)}
+                            onBlur={() => setHover(null)}
+                            className="absolute flex w-[23%] -translate-x-1/2 -translate-y-1/2 flex-col items-center transition-all duration-500"
+                            style={{ left: `${x}%`, top: `${y}%` }}
+                          >
+                            <span
+                              className={`whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-xs font-bold text-canard shadow ring-2 ${hover === i ? 'ring-ambre' : off ? 'ring-corail' : 'ring-white/0'}`}
+                            >
+                              {/* Le poste FM27 du créneau : le rôle déplace la pastille sur le terrain, jamais le poste. */}
+                              {POS_LABEL[sl.pos]}
+                            </span>
+                            <span className="mt-0.5 max-w-full truncate rounded bg-canard/85 px-1.5 text-xs font-bold text-white">{sl.player ? shortName(sl.player.name) : t('fm.tac.nobody')}</span>
+                            {fit != null && <span className="text-xs font-bold text-white/90">{note(fit)}</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-3 flex flex-wrap justify-center gap-2" role="tablist">
+                      {(['ip', 'oop'] as const).map((ph) => (
+                        <button
+                          key={ph}
+                          type="button"
+                          role="tab"
+                          aria-selected={phase === ph}
+                          onClick={() => update({ phase: ph })}
+                          className={`chip ${phase === ph ? 'chip-on' : ''}`}
+                        >
+                          {t(`fm.tac.phase.${ph}`)} {shape(ph)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="min-w-0">
+                    <h3 className="font-semibold">{t('fm.tac.xi.title')}</h3>
+                    <div className="mt-2 overflow-x-auto">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>{t('fm.tac.xi.pos')}</th>
+                            <th>{t('fm.tac.xi.player')}</th>
+                            <th>{t('fm.tac.phase.ip')}</th>
+                            <th>{t('fm.tac.phase.oop')}</th>
+                            <th>{t('fm.tac.xi.backup')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {plan.slots.map((sl, i) => {
+                            const p = sl.player;
+                            const fitOf = (ph: Phase) => (p ? engine.roleFit(p, ph === 'ip' ? sl.ip : sl.oop, ph, sl.pos) : null);
+                            return (
+                              <tr key={i} className={hover === i ? 'bg-creme/70' : ''} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
+                                <td>
+                                  <PosBadge pos={sl.pos} />
+                                </td>
+                                <td className="font-bold text-canard">
+                                  {p ? <PlayerLink player={p} /> : <span className="text-corail">{t('fm.tac.nobody')}</span>}
+                                  {p?.team && <span className="ml-2 text-xs font-normal text-orange-fonce">{t('fm.tac.fromTeam', { team: p.team })}</span>}
+                                  {p && !p.positions.includes(sl.pos) && <span className="ml-2 text-xs font-normal text-brun">{t('fm.tac.offPos')}</span>}
+                                </td>
+                                {(['ip', 'oop'] as const).map((ph) => (
+                                  <td key={ph}>
+                                    <span className="text-canard">{roleName(ph === 'ip' ? sl.ip : sl.oop, ph)}</span>
+                                    {p && <span className="ml-2 text-xs font-bold text-brun">{note(fitOf(ph))}</span>}
+                                  </td>
+                                ))}
+                                <td className="text-brun">
+                                  {(plan.subs[i] ?? [])[0]?.name ?? '–'}
+                                  {(plan.subs[i] ?? [])[0]?.team && <span className="ml-1 text-xs text-orange-fonce">{t('fm.tac.fromTeam', { team: (plan.subs[i] ?? [])[0]!.team })}</span>}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                    <More>{t(fromGame ? 'fm.tac.pitchHelpGame' : 'fm.tac.pitchHelp')}</More>
+                  </div>
+                </div>
+              </section>
+              </>
+            ),
+          },
+          {
+            id: 'match',
+            label: t('fm.tac.sections.match', { name: opp?.name ?? t('fm.opp.club') }),
+            node:
+              opp && !fromGame ? (
+                <>
+              {opp && best && !fromGame && (
+                <section className="card">
+                  <h2 className="text-xl font-semibold">{t('fm.tac.matchTitle', { name: opp.name ?? t('fm.opp.club') })}</h2>
+                  {pick && `${best.style.id}|${best.form}` === baseKey ? (
+                    <p className="mt-1 text-sm">{t('fm.tac.matchSame', { form: pick.form, style: styleName(pick.style) })}</p>
+                  ) : (
+                    <p className="mt-1 text-sm">
+                      {t('fm.tac.matchBest', { form: best.form, style: styleName(best.style), base: pick ? `${pick.form} ${styleName(pick.style)}` : '–' })}
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-brun">
+                    {t('fm.tac.matchScore', { base: note(best.base), bonus: (best.bonus >= 0 ? '+' : '') + nf1.format(best.bonus) })}
+                  </p>
+                  {best.reasons.length > 0 && (
+                    <ul className="mt-2 space-y-1 text-sm">
+                      {best.reasons.map((r) => (
+                        <li key={r.id}>• {t(`fm.tac.why.${r.id}`, { every: r.every, minutes: r.minutes })}</li>
                       ))}
                     </ul>
-                  </>
-                )}
-              </div>
-              {adjust.marking.length > 0 && (
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.tac.adjust.markingTitle')}</p>
-                  <ul className="mt-1 space-y-1.5 text-sm">
-                    {adjust.marking.map((mk) => (
-                      <li key={mk.target} className="rounded-xl bg-creme/50 px-3 py-2">
-                        {t(`fm.tac.adjust.marking.${mk.reason}${mk.player ? '' : 'NoSlot'}`, { target: mk.target, positions: mk.positions ?? '', player: mk.player ?? '' })}
+                  )}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {(prefs.style !== best.style.id || form !== best.form) && (
+                      <button type="button" className="btn-primary px-3 py-1.5 text-sm" onClick={() => update({ style: best.style.id, form: best.form, source: 'simloom' })}>
+                        {t('fm.tac.matchShow')}
+                      </button>
+                    )}
+                    {!auto && (
+                      <button type="button" className="btn-secondary px-3 py-1.5 text-sm" onClick={() => update({ style: undefined, form: undefined })}>
+                        {t('fm.tac.matchBase')}
+                      </button>
+                    )}
+                  </div>
+                  <More>{t(opp.formations.faced?.length ? 'fm.tac.matchHelpMeasured' : 'fm.tac.matchHelp')}</More>
+                </section>
+              )}
+
+              {opp && adjust && !fromGame && (
+                <section className="card">
+                  <h2 className="text-xl font-semibold">{t('fm.tac.adjust.title', { name: opp.name ?? t('fm.opp.club') })}</h2>
+                  <p className="mt-1 text-sm text-brun">{t('fm.tac.adjust.intro')}</p>
+                  {!adjust.mentality && !adjust.team.length && !adjust.marking.length ? (
+                    <p className="mt-2 text-sm">{t('fm.tac.adjust.none')}</p>
+                  ) : (
+                    <div className="mt-3 grid gap-4 lg:grid-cols-2">
+                      <div>
+                        {adjust.mentality && (
+                          <p className="mb-2 text-sm">
+                            <b>{t('fm.tac.adjust.mentality', { to: adjust.mentality.to, from: adjust.mentality.from })}</b>
+                            <span className="ml-1 text-xs text-brun">{t(`fm.tac.adjust.reason.${adjust.mentality.reason}`)}</span>
+                          </p>
+                        )}
+                        {adjust.team.length > 0 && (
+                          <>
+                            <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.tac.adjust.teamTitle')}</p>
+                            <ul className="mt-1 space-y-1.5 text-sm">
+                              {/* Une carte par raison : les consignes qu'elle justifie, listées dessous, sans répéter la phrase. */}
+                              {[...new Set(adjust.team.map((a) => a.reason))].map((reason) => (
+                                <li key={reason} className="rounded-xl bg-creme/50 px-3 py-2">
+                                  <p className="text-xs text-brun first-letter:uppercase">{t(`fm.tac.adjust.reason.${reason}`)}</p>
+                                  {adjust.team
+                                    .filter((a) => a.reason === reason)
+                                    .map((a) => (
+                                      <p key={a.title} className="mt-1">
+                                        <span className="mr-2 rounded-md bg-eau/20 px-1.5 py-0.5 text-xs font-bold text-canard">{t(`fm.style.${a.phase}`)}</span>
+                                        <span className="text-brun">{a.title} :</span> <b>{a.label}</b>
+                                        {a.replaces && <span className="ml-1 text-xs text-brun">{t('fm.tac.adjust.replaces', { label: a.replaces })}</span>}
+                                      </p>
+                                    ))}
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
+                      </div>
+                      {adjust.marking.length > 0 && (
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('fm.tac.adjust.markingTitle')}</p>
+                          <ul className="mt-1 space-y-1.5 text-sm">
+                            {adjust.marking.map((mk) => (
+                              <li key={mk.target} className="rounded-xl bg-creme/50 px-3 py-2">
+                                {t(`fm.tac.adjust.marking.${mk.reason}${mk.player ? '' : 'NoSlot'}`, { target: mk.target, positions: mk.positions ?? '', player: mk.player ?? '' })}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <More>{t('fm.tac.adjust.help')}</More>
+                </section>
+              )}
+
+              {opp && !fromGame && (
+                <section className="card">
+                  <h2 className="text-xl font-semibold">{t('fm.tac.oppScreen.title', { name: opp.name ?? t('fm.opp.club') })}</h2>
+                  <p className="mt-1 text-sm text-brun">{t('fm.tac.oppScreen.intro')}</p>
+                  {oppRows.length ? (
+                    <div className="mt-3 table-scroll">
+                      <table className="data-table">
+                        <thead className="text-left text-canard/70">
+                          <tr>
+                            <th className="px-2 py-1">{t('fm.tac.oppScreen.player')}</th>
+                            <th className="px-2 py-1">{t('fm.tac.oppScreen.positions')}</th>
+                            <th className="px-2 py-1">{t('fm.tac.oppScreen.marking')}</th>
+                            <th className="px-2 py-1">{t('fm.tac.oppScreen.pressing')}</th>
+                            <th className="px-2 py-1">{t('fm.tac.oppScreen.tackling')}</th>
+                            <th className="px-2 py-1">{t('fm.tac.oppScreen.foot')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {oppRows.map((r) => (
+                            <tr key={r.name} className="border-t border-canard/5">
+                              <td className="px-2 py-1.5">
+                                <b>{r.name}</b>
+                                <span className="block text-xs text-brun">{r.reasons.map((x) => t(`fm.tac.oppScreen.reason.${x}`)).join(' · ')}</span>
+                              </td>
+                              <td className="px-2 py-1.5 text-brun">{r.positions ?? '–'}</td>
+                              <td className="px-2 py-1.5">{r.marking ? <b>{t('fm.tac.oppScreen.always')}</b> : '–'}</td>
+                              <td className="px-2 py-1.5">{r.pressing ? <b>{t(`fm.tac.oppScreen.${r.pressing}`)}</b> : '–'}</td>
+                              <td className="px-2 py-1.5">{r.tackling ? <b>{t(`fm.tac.oppScreen.${r.tackling}`)}</b> : '–'}</td>
+                              <td className="px-2 py-1.5">{r.weakFoot ? <b>{t(`fm.tac.oppScreen.${r.weakFoot}`)}</b> : '–'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-sm">{t('fm.tac.oppScreen.none')}</p>
+                  )}
+                  {!footRead && <p className="mt-2 text-xs text-brun">{t('fm.tac.oppScreen.footHint')}</p>}
+                  <More>{t('fm.tac.oppScreen.help')}</More>
+                </section>
+              )}
+                </>
+              ) : null,
+          },
+          {
+            id: 'balance',
+            label: t('fm.tac.sections.balance'),
+            node: (
+              <>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <section className="card">
+                  <h2 className="text-xl font-semibold">{t('fm.tac.balance')}</h2>
+                  <ul className="mt-3 space-y-3">
+                    {engine.balance(plan, style).map((c) => (
+                      <li key={c.id} className="flex gap-3">
+                        <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${DOT[c.status]}`} aria-hidden />
+                        <div className="text-sm">
+                          <b className="text-canard">{t(`fm.tac.check.${c.id}.title`)}</b>{' '}
+                          <span className="text-brun">{checkText(t, c, (x) => nf1.format(x))}</span>
+                          {c.status !== 'good' && t(`fm.tac.check.${c.id}.tip`, { defaultValue: '' }) && (
+                            <div className="mt-0.5 text-canard">→ {t(`fm.tac.check.${c.id}.tip`)}</div>
+                          )}
+                        </div>
                       </li>
                     ))}
                   </ul>
-                </div>
-              )}
-            </div>
-          )}
-          <More>{t('fm.tac.adjust.help')}</More>
-        </section>
-      )}
+                  <More>{t('fm.tac.balanceHelp')}</More>
 
-      {opp && !fromGame && (
-        <section className="card">
-          <h2 className="text-xl font-semibold">{t('fm.tac.oppScreen.title', { name: opp.name ?? t('fm.opp.club') })}</h2>
-          <p className="mt-1 text-sm text-brun">{t('fm.tac.oppScreen.intro')}</p>
-          {oppRows.length ? (
-            <div className="mt-3 table-scroll">
-              <table className="data-table">
-                <thead className="text-left text-canard/70">
-                  <tr>
-                    <th className="px-2 py-1">{t('fm.tac.oppScreen.player')}</th>
-                    <th className="px-2 py-1">{t('fm.tac.oppScreen.positions')}</th>
-                    <th className="px-2 py-1">{t('fm.tac.oppScreen.marking')}</th>
-                    <th className="px-2 py-1">{t('fm.tac.oppScreen.pressing')}</th>
-                    <th className="px-2 py-1">{t('fm.tac.oppScreen.tackling')}</th>
-                    <th className="px-2 py-1">{t('fm.tac.oppScreen.foot')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {oppRows.map((r) => (
-                    <tr key={r.name} className="border-t border-canard/5">
-                      <td className="px-2 py-1.5">
-                        <b>{r.name}</b>
-                        <span className="block text-xs text-brun">{r.reasons.map((x) => t(`fm.tac.oppScreen.reason.${x}`)).join(' · ')}</span>
-                      </td>
-                      <td className="px-2 py-1.5 text-brun">{r.positions ?? '–'}</td>
-                      <td className="px-2 py-1.5">{r.marking ? <b>{t('fm.tac.oppScreen.always')}</b> : '–'}</td>
-                      <td className="px-2 py-1.5">{r.pressing ? <b>{t(`fm.tac.oppScreen.${r.pressing}`)}</b> : '–'}</td>
-                      <td className="px-2 py-1.5">{r.tackling ? <b>{t(`fm.tac.oppScreen.${r.tackling}`)}</b> : '–'}</td>
-                      <td className="px-2 py-1.5">{r.weakFoot ? <b>{t(`fm.tac.oppScreen.${r.weakFoot}`)}</b> : '–'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="mt-2 text-sm">{t('fm.tac.oppScreen.none')}</p>
-          )}
-          {!footRead && <p className="mt-2 text-xs text-brun">{t('fm.tac.oppScreen.footHint')}</p>}
-          <More>{t('fm.tac.oppScreen.help')}</More>
-        </section>
-      )}
-
-      {/* Le onze : terrain compact à gauche, liste prête à appliquer dans FM27 à droite. Survoler l'un met l'autre en évidence. */}
-      <section className="card">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold">
-              {team === 'B' ? plan.form : form} · {styleName(style)} <span className="text-sm font-normal text-brun">{t('fm.tac.fit', { value: note(plan.score) })}</span>
-            </h2>
-            <div className="flex gap-1" role="tablist" aria-label={t('fm.tac.team.label')}>
-              {(['A', 'B'] as const).map((k) => (
-                <button
-                  key={k}
-                  type="button"
-                  role="tab"
-                  aria-selected={team === k}
-                  onClick={() => setTeam(k)}
-                  className={`chip ${team === k ? 'chip-on' : ''}`}
-                >
-                  {t(`fm.tac.team.${k}`)}
-                </button>
-              ))}
-            </div>
-          </div>
-          {team === 'B' && planB && planA && (
-            <p className="mt-1 text-sm text-brun">{t('fm.tac.team.help', { a: note(planA.score), b: note(planB.score) })}</p>
-          )}
-          <p className="mt-1 text-sm text-brun">
-            <span className="mr-2 rounded-md bg-eau/20 px-1.5 py-0.5 text-xs font-bold text-canard">{t(fromGame ? 'fm.tac.fromGame' : 'fm.tac.suggested')}</span>
-            {t(fromGame ? 'fm.tac.fromGameHelp' : gamePlan ? 'fm.tac.suggestedHelpGame' : 'fm.tac.suggestedHelp')}
-          </p>
-          {!gamePlan && lineupStatus && lineupStatus !== 'lue' && <p className="mt-1 text-xs text-brun">{t('fm.tac.lineupStatus', { status: lineupStatus })}</p>}
-
-        <div className="mt-4 grid gap-6 xl:grid-cols-[minmax(18rem,26rem)_minmax(0,1fr)]">
-          <div>
-            <div className="relative mx-auto aspect-[3/4] w-full max-w-[26rem] overflow-hidden rounded-2xl bg-eau-fonce/90">
-              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden>
-                <g fill="none" stroke="white" strokeOpacity="0.35" strokeWidth="0.4">
-                  <rect x="3" y="2" width="94" height="96" />
-                  <line x1="3" y1="50" x2="97" y2="50" />
-                  <circle cx="50" cy="50" r="9" />
-                  <rect x="25" y="2" width="50" height="15" />
-                  <rect x="25" y="83" width="50" height="15" />
-                </g>
-                <g stroke="white" strokeOpacity="0.6" strokeWidth="0.35" strokeDasharray="1 1">
-                  {plan.slots.map((sl, i) => {
-                    const [x1, y1] = phaseXY(sl, other, block);
-                    const [x2, y2] = shown[i] ?? [x1, y1];
-                    return Math.hypot(x1 - x2, y1 - y2) > 2 ? <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} /> : null;
-                  })}
-                </g>
-              </svg>
-              {plan.slots.map((sl, i) => {
-                const [x, y] = shown[i] ?? [sl.x, sl.y];
-                const code = phase === 'ip' ? sl.ip : sl.oop;
-                const fit = sl.player ? engine.roleFit(sl.player, code, phase, sl.pos) : null;
-                const off = !!sl.player && !sl.player.positions.includes(sl.pos);
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    title={`${roleName(code, phase)}${off ? ` · ${t('fm.tac.offPos')}` : ''}`}
-                    onMouseEnter={() => setHover(i)}
-                    onMouseLeave={() => setHover(null)}
-                    onFocus={() => setHover(i)}
-                    onBlur={() => setHover(null)}
-                    className="absolute flex w-[23%] -translate-x-1/2 -translate-y-1/2 flex-col items-center transition-all duration-500"
-                    style={{ left: `${x}%`, top: `${y}%` }}
-                  >
-                    <span
-                      className={`whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-xs font-bold text-canard shadow ring-2 ${hover === i ? 'ring-ambre' : off ? 'ring-corail' : 'ring-white/0'}`}
-                    >
-                      {/* Le poste FM27 du créneau : le rôle déplace la pastille sur le terrain, jamais le poste. */}
-                      {POS_LABEL[sl.pos]}
-                    </span>
-                    <span className="mt-0.5 max-w-full truncate rounded bg-canard/85 px-1.5 text-xs font-bold text-white">{sl.player ? shortName(sl.player.name) : t('fm.tac.nobody')}</span>
-                    {fit != null && <span className="text-xs font-bold text-white/90">{note(fit)}</span>}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="mt-3 flex flex-wrap justify-center gap-2" role="tablist">
-              {(['ip', 'oop'] as const).map((ph) => (
-                <button
-                  key={ph}
-                  type="button"
-                  role="tab"
-                  aria-selected={phase === ph}
-                  onClick={() => update({ phase: ph })}
-                  className={`chip ${phase === ph ? 'chip-on' : ''}`}
-                >
-                  {t(`fm.tac.phase.${ph}`)} {shape(ph)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="min-w-0">
-            <h3 className="font-semibold">{t('fm.tac.xi.title')}</h3>
-            <div className="mt-2 overflow-x-auto">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>{t('fm.tac.xi.pos')}</th>
-                    <th>{t('fm.tac.xi.player')}</th>
-                    <th>{t('fm.tac.phase.ip')}</th>
-                    <th>{t('fm.tac.phase.oop')}</th>
-                    <th>{t('fm.tac.xi.backup')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {plan.slots.map((sl, i) => {
-                    const p = sl.player;
-                    const fitOf = (ph: Phase) => (p ? engine.roleFit(p, ph === 'ip' ? sl.ip : sl.oop, ph, sl.pos) : null);
-                    return (
-                      <tr key={i} className={hover === i ? 'bg-creme/70' : ''} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
-                        <td>
-                          <PosBadge pos={sl.pos} />
-                        </td>
-                        <td className="font-bold text-canard">
-                          {p ? <PlayerLink player={p} /> : <span className="text-corail">{t('fm.tac.nobody')}</span>}
-                          {p?.team && <span className="ml-2 text-xs font-normal text-orange-fonce">{t('fm.tac.fromTeam', { team: p.team })}</span>}
-                          {p && !p.positions.includes(sl.pos) && <span className="ml-2 text-xs font-normal text-brun">{t('fm.tac.offPos')}</span>}
-                        </td>
-                        {(['ip', 'oop'] as const).map((ph) => (
-                          <td key={ph}>
-                            <span className="text-canard">{roleName(ph === 'ip' ? sl.ip : sl.oop, ph)}</span>
-                            {p && <span className="ml-2 text-xs font-bold text-brun">{note(fitOf(ph))}</span>}
-                          </td>
-                        ))}
-                        <td className="text-brun">
-                          {(plan.subs[i] ?? [])[0]?.name ?? '–'}
-                          {(plan.subs[i] ?? [])[0]?.team && <span className="ml-1 text-xs text-orange-fonce">{t('fm.tac.fromTeam', { team: (plan.subs[i] ?? [])[0]!.team })}</span>}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            <More>{t(fromGame ? 'fm.tac.pitchHelpGame' : 'fm.tac.pitchHelp')}</More>
-          </div>
-        </div>
-      </section>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <section className="card">
-          <h2 className="text-xl font-semibold">{t('fm.tac.balance')}</h2>
-          <ul className="mt-3 space-y-3">
-            {engine.balance(plan, style).map((c) => (
-              <li key={c.id} className="flex gap-3">
-                <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${DOT[c.status]}`} aria-hidden />
-                <div className="text-sm">
-                  <b className="text-canard">{t(`fm.tac.check.${c.id}.title`)}</b>{' '}
-                  <span className="text-brun">{checkText(t, c, (x) => nf1.format(x))}</span>
-                  {c.status !== 'good' && t(`fm.tac.check.${c.id}.tip`, { defaultValue: '' }) && (
-                    <div className="mt-0.5 text-canard">→ {t(`fm.tac.check.${c.id}.tip`)}</div>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
-          <More>{t('fm.tac.balanceHelp')}</More>
-
-          <h3 className="mt-6 font-semibold">{t('fm.tac.forms')}</h3>
-          <ol className="mt-2 space-y-1 text-sm">
-            {plans.slice(0, 6).map((p) => (
-              <li key={p.form}>
-                <button
-                  type="button"
-                  onClick={() => update({ form: p.form, source: 'simloom' })}
-                  className={`flex w-full items-center justify-between rounded-lg px-2 py-1 text-left ${p.form === form ? 'bg-eau/20' : 'hover:bg-creme'}`}
-                >
-                  <span className="font-bold text-canard">
-                    {p.form}
-                    {natural.includes(p.form) && <span className="ml-2 text-xs font-normal text-eau-fonce">{t('fm.tac.natural')}</span>}
-                    {p.holes > 0 && <span className="ml-2 text-xs font-normal text-corail">{t('fm.tac.holes', { count: p.holes })}</span>}
-                  </span>
-                  <span className="text-brun">{note(p.score)}</span>
-                </button>
-              </li>
-            ))}
-          </ol>
-        </section>
-        <section className="card">
-          <h2 className="text-xl font-semibold">{t('fm.tac.teamTitle', { style: styleName(style) })}</h2>
-          {style.mentality && <p className="mt-1 text-sm">{t('fm.style.mentality', { value: style.mentality })}</p>}
-          <div className="mt-3">
-            <TeamCards inPossession={style.inPossession} outOfPossession={style.outOfPossession} />
-          </div>
-          <p className="mt-3 text-xs text-brun">{t('fm.tac.teamHelp')}</p>
-        </section>
-      </div>
-
-      </>
+                  <h3 className="mt-6 font-semibold">{t('fm.tac.forms')}</h3>
+                  <ol className="mt-2 space-y-1 text-sm">
+                    {plans.slice(0, 6).map((p) => (
+                      <li key={p.form}>
+                        <button
+                          type="button"
+                          onClick={() => update({ form: p.form, source: 'simloom' })}
+                          className={`flex w-full items-center justify-between rounded-lg px-2 py-1 text-left ${p.form === form ? 'bg-eau/20' : 'hover:bg-creme'}`}
+                        >
+                          <span className="font-bold text-canard">
+                            {p.form}
+                            {natural.includes(p.form) && <span className="ml-2 text-xs font-normal text-eau-fonce">{t('fm.tac.natural')}</span>}
+                            {p.holes > 0 && <span className="ml-2 text-xs font-normal text-corail">{t('fm.tac.holes', { count: p.holes })}</span>}
+                          </span>
+                          <span className="text-brun">{note(p.score)}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+                <section className="card">
+                  <h2 className="text-xl font-semibold">{t('fm.tac.teamTitle', { style: styleName(style) })}</h2>
+                  {style.mentality && <p className="mt-1 text-sm">{t('fm.style.mentality', { value: style.mentality })}</p>}
+                  <div className="mt-3">
+                    <TeamCards inPossession={style.inPossession} outOfPossession={style.outOfPossession} />
+                  </div>
+                  <p className="mt-3 text-xs text-brun">{t('fm.tac.teamHelp')}</p>
+                </section>
+              </div>
+              </>
+            ),
+          },
+        ]}
+      />
       )}
 
       {showPi && (

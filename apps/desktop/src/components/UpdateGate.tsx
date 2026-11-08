@@ -7,12 +7,13 @@ import { useTranslation } from 'react-i18next';
 type State =
   | { step: 'checking' }
   | { step: 'installing'; version: string; progress: number | null }
-  | { step: 'ready' };
+  | { step: 'ready'; error?: string };
 
 /**
  * Au démarrage : s'il existe une nouvelle version, on la télécharge, on l'installe
  * et on relance l'appli. Sans réseau ou en cas d'erreur (y compris pendant le
- * téléchargement), on démarre normalement.
+ * téléchargement), on démarre normalement, avec un bandeau qui donne la raison :
+ * une mise à jour ratée ne doit plus passer inaperçue (joueurs restés en 0.1.58).
  */
 export function UpdateGate({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
@@ -26,7 +27,7 @@ export function UpdateGate({ children }: { children: ReactNode }) {
 
     (async () => {
       try {
-        const update = await check({ timeout: 8000 });
+        const update = await check({ timeout: 20000 });
         if (!update || cancelled) return setState({ step: 'ready' });
 
         let total = 0;
@@ -42,7 +43,7 @@ export function UpdateGate({ children }: { children: ReactNode }) {
         await relaunch();
       } catch (e) {
         console.warn('Mise à jour impossible, démarrage normal', e);
-        if (!cancelled) setState({ step: 'ready' });
+        if (!cancelled) setState({ step: 'ready', error: e instanceof Error ? e.message : String(e) });
       }
     })();
 
@@ -52,7 +53,22 @@ export function UpdateGate({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (state.step === 'ready') return <>{children}</>;
+  if (state.step === 'ready')
+    return (
+      <>
+        {children}
+        {state.error && (
+          <div role="alert" className="fixed bottom-4 right-4 z-[60] max-w-sm rounded-xl bg-white p-4 text-sm text-canard shadow-xl ring-1 ring-corail/40">
+            <p className="font-bold">{t('update.failed')}</p>
+            <p className="mt-1 break-words text-xs text-brun">{state.error}</p>
+            <p className="mt-2 text-xs text-brun">{t('update.manual')}</p>
+            <button type="button" className="mt-2 text-xs font-bold text-orange-fonce hover:underline" onClick={() => setState({ step: 'ready' })}>
+              {t('update.dismiss')}
+            </button>
+          </div>
+        )}
+      </>
+    );
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">

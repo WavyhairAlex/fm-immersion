@@ -240,3 +240,47 @@ export function More({ children }: { children: ReactNode }) {
     </details>
   );
 }
+
+/**
+ * Sections d'un long onglet, montrées une à la fois derrière une rangée de pastilles : moins de défilement, et le
+ * choix est retenu (par onglet) d'une visite à l'autre.
+ */
+export function SectionTabs({ id, sections }: { id: string; sections: { id: string; label: string; badge?: ReactNode; node: ReactNode }[] }) {
+  const { t } = useTranslation();
+  const key = `fmi.section.${id}`;
+  const [cur, setCur] = useState(() => {
+    try {
+      return localStorage.getItem(key) ?? '';
+    } catch {
+      return '';
+    }
+  });
+  const list = sections.filter((s) => s.node);
+  const active = list.find((s) => s.id === cur) ?? list[0];
+  const pick = (v: string) => {
+    setCur(v);
+    try {
+      localStorage.setItem(key, v);
+    } catch {
+      /* stockage indisponible */
+    }
+  };
+  if (!active) return null;
+  return (
+    <div className="space-y-4">
+      {list.length > 1 && (
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label={t('fm.onThisPage')}>
+          {list.map((s) => (
+            <button key={s.id} type="button" role="tab" aria-selected={s === active} className={`chip inline-flex items-center gap-1.5 ${s === active ? 'chip-on' : ''}`} onClick={() => pick(s.id)}>
+              {s.label}
+              {s.badge}
+            </button>
+          ))}
+        </div>
+      )}
+      <div role="tabpanel" className="space-y-4">
+        {active.node}
+      </div>
+    </div>
+  );
+}
