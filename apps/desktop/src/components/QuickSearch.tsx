@@ -79,6 +79,7 @@ export function QuickSearch() {
       { key: 's:gazette', label: t('layout.nav.story'), sub: '', kind: 'screen', run: go('/gazette') },
       { key: 's:defis', label: t('modes.challenges.title'), sub: '', kind: 'screen', run: go('/defis') },
       { key: 's:faces', label: t('layout.nav.faces'), sub: '', kind: 'screen', run: go('/visages') },
+      { key: 's:saves', label: t('layout.nav.saves'), sub: '', kind: 'screen', run: go('/sauvegardes') },
     );
     if (saveId) screens.push({ key: 's:settings', label: t('layout.nav.settings'), sub: '', kind: 'screen', run: go('/reglages') });
     const people: Hit[] = players.map((p) => ({
