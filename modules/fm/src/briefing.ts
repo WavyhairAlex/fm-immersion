@@ -3,6 +3,7 @@ import { moraleLevel } from './club';
 import { competitionWeight, isFriendly } from './rules';
 import type { FmPlayer } from './player';
 import type { PlaytimeRow } from './playtime';
+import type { TacticAdvice } from './tactic-advice';
 
 /*
  * Briefing de l'adjoint : ce que FM Coach dirait au coach en arrivant au bureau. Quelques phrases triées par
@@ -26,6 +27,10 @@ export type BriefKind =
   | 'training'
   | 'mercato'
   | 'finances'
+  | 'tacticRoles'
+  | 'tacticSwitches'
+  | 'tacticRethink'
+  | 'tacticPatience'
   | 'allGood';
 export type BriefTone = 'bad' | 'warn' | 'info' | 'good';
 
@@ -57,6 +62,8 @@ export interface BriefingInput {
   congested?: boolean;
   /** Finances serrées (voir `financeState`) : `detail` est déjà formulé (« budget salarial dépassé de 7,5 K€ »). */
   finances?: { signals: string[]; detail: string } | null;
+  /** Garder ou changer la tactique jouée (voir `tacticAdvice`). */
+  tactic?: TacticAdvice | null;
 }
 
 /** Nombre de messages au plus : un briefing se lit en quelques secondes. */
@@ -130,6 +137,7 @@ export function briefing(input: BriefingInput): BriefItem[] {
     return l != null && l <= 1;
   });
   if (unhappy.length) item('unhappy', 'warn', 'dressing', unhappy);
+  if (input.tactic) out.push({ kind: input.tactic.kind, tone: input.tactic.tone, view: 'effectiveness', players: [], values: { count: 0, ...input.tactic.values } });
   const over = playtime.filter((r) => r.verdict === 'over').map((r) => r.player);
   if (over.length) item('playtimeOver', 'info', 'playtime', over);
   if (input.setupsToChange) out.push({ kind: 'training', tone: 'info', view: 'training', players: [], values: { count: input.setupsToChange } });

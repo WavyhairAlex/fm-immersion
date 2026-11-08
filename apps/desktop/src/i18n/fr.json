@@ -2524,7 +2524,15 @@
       "rotation_one": "{{competition}} : match secondaire, fais tourner. {{names}} manque de temps de jeu ou de fraîcheur, garde la colonne vertébrale.",
       "rotation_other": "{{competition}} : match secondaire, fais tourner. {{names}} manquent de temps de jeu ou de fraîcheur, garde la colonne vertébrale.",
       "congested_one": "Calendrier chargé (deux matchs à 3 jours ou moins) : prévois une rotation, {{names}} est le premier concerné.",
-      "congested_other": "Calendrier chargé (deux matchs à 3 jours ou moins) : prévois une rotation, {{names}} en premier."
+      "congested_other": "Calendrier chargé (deux matchs à 3 jours ou moins) : prévois une rotation, {{names}} en premier.",
+      "tacticRoles_one": "Tu as changé le rôle d'1 joueur dans ta tactique : sa familiarité repart de zéro. Si ce n'était pas voulu, remets son ancien rôle ; sinon garde-le et ne touche plus aux rôles.",
+      "tacticRoles_other": "Tu as changé {{count}} rôles dans ta tactique : la familiarité de ces joueurs repart de zéro. Ajuste plutôt les consignes, et garde les rôles fixes.",
+      "tacticSwitches_one": "1 changement de tactique ces derniers mois : chaque changement fait repartir la compréhension de bas.",
+      "tacticSwitches_other": "{{count}} changements de tactique ces derniers mois : c'est ce qui coûte le plus. Choisis-en une et garde-la, quitte à ajuster les consignes.",
+      "tacticRethink_one": "Tu perds aux xG ({{xg}} par match sur le dernier match) et l'efficacité tactique stagne à {{te}} % : ce schéma ne marche pas. Essaie un autre schéma avec les consignes par défaut, puis ajuste peu à peu, sans toucher aux rôles.",
+      "tacticRethink_other": "Tu perds aux xG ({{xg}} par match sur {{count}} matchs) et l'efficacité tactique stagne à {{te}} % : ce schéma ne marche pas. Essaie un autre schéma avec les consignes par défaut, puis ajuste peu à peu, sans toucher aux rôles.",
+      "tacticPatience_one": "Ta tactique est en rodage (1 match) : son efficacité monte (+{{gain}}, {{te}} %). Garde-la, une tactique chargée peut mettre 20 matchs à donner sa mesure.",
+      "tacticPatience_other": "Ta tactique est en rodage ({{count}} matchs) : son efficacité monte (+{{gain}}, {{te}} %). Garde-la, une tactique chargée peut mettre 20 matchs à donner sa mesure."
     }
   },
   "modes": {

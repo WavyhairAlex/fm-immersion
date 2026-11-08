@@ -12,6 +12,7 @@ import {
   type FmSnapshot,
   type GameSlot,
   type SquadAt,
+  tacticAdvice,
 } from '@fm-immersion/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -68,6 +69,7 @@ export function FmHome({
   const { plan } = useTacticChoice(players, folder, gameFormation, lineup, gameTactic);
   const starters = useMemo(() => new Set(plan?.slots.flatMap((sl) => (sl.player ? [sl.player.id] : [])) ?? []), [plan]);
   const playtime = useMemo(() => playingTime(players, entries ?? []).rows, [players, entries]);
+  const tactic = useMemo(() => tacticAdvice(entries ?? []), [entries]);
   // Le détail (chiffres, tableaux) est replié : le briefing et la feuille de match suffisent au quotidien.
   const [detail, setDetail] = useState(() => {
     try {
@@ -139,6 +141,7 @@ export function FmHome({
         offseason={offseasonDue(snap, coach.seasonStart ?? 8)}
         go={go}
         onTodo={onTodo}
+        tactic={tactic}
       />
       <FmOffseason snap={snap} players={players} list={decisionList} go={go} />
       <FmMatchCenter snap={snap} players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameTactic={gameTactic} go={go} />

@@ -72,6 +72,14 @@ export function rawText(v: unknown): string {
   return String(v);
 }
 
+/** Texte du jeu sans ses liens internes : « l’équipe \u0001…\u0002du Slovan\u0001 » → « l’équipe du Slovan ». */
+export const gameText = (s: string) =>
+  s
+    .replace(/\u0001[^\u0001\u0002]*\u0002/g, '')
+    .replace(/[\u0001\u0002]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
 export interface Effectiveness {
   overall: Range | null;
   complexity: Range | null;
@@ -104,8 +112,15 @@ export function effectiveness(snap: FmSnapshot): Effectiveness | null {
   const flags = Object.entries((e.statusFlags ?? {}) as Record<string, unknown>)
     .filter(([, v]) => v === true)
     .map(([k]) => k);
+  // Le plugin livre un conseil par pilier (objet { Text, IsPro: "True" }) ou une liste ; les noms d'équipe y sont
+  // des liens du jeu (\u0001code\u0002texte\u0001) dont on ne garde que le texte.
   const advice = Object.entries((e.advice ?? {}) as Record<string, unknown>).flatMap(([group, xs]) =>
-    (Array.isArray(xs) ? xs : []).map((a) => ({ group, text: rawText(a), pro: typeof (a as { IsPro?: unknown })?.IsPro === 'boolean' ? (a as { IsPro: boolean }).IsPro : null })),
+    (Array.isArray(xs) ? xs : xs != null ? [xs] : []).flatMap((a) => {
+      const text = gameText(rawText(a));
+      const raw = (a as { IsPro?: unknown } | null)?.IsPro;
+      const pro = typeof raw === 'boolean' ? raw : raw === 'True' ? true : raw === 'False' ? false : null;
+      return text && text !== '–' ? [{ group, text, pro }] : [];
+    }),
   );
   return {
     overall: range(e.overall),
@@ -347,7 +362,7 @@ export function rankTactics(engine: TacticEngine, list: FmPlayer[], reserve: FmP
  * note d'équipe. Le projet du coach sert à orienter l'entraînement et le mercato ; dès que son onze
  * vaut le meilleur (à TACTIC_TIE près), il devient automatiquement la tactique conseillée.
  */
-export function bestTactic(engine: TacticEngine, list: FmPlayer[], coach: CoachPrefs = {}, ranked = rankTactics(engine, list), base?: StyleRef | null): TacticPick | null {
+export function bestTactic(engine: TacticEngine, list: FmPlayer[], coach: CoachPrefs = {}, ranked = rankTactics(engine, list), base?: StyleRef | null, baseForm?: string | null): TacticPick | null {
   const top = ranked[0];
   if (!top) return null;
   let best: TacticPick = { style: top.style, form: top.form, plan: top.plan, project: false };
@@ -360,8 +375,14 @@ export function bestTactic(engine: TacticEngine, list: FmPlayer[], coach: CoachP
     bestFit = projPlan.score - mine.complexity;
   }
   // Une base, des ajustements : on garde la tactique jouée tant qu'une autre ne gagne pas SWITCH_POINTS.
-  const kept = base && best.style.id !== base.id ? ranked.find((r) => r.style.id === base.id) : null;
-  if (kept && bestFit - kept.fit < SWITCH_POINTS)
+  // La base, c'est le style ET le schéma joués (0.1.65) : changer de schéma ou de rôles fait repartir de bas la
+  // familiarité des joueurs (tests de Stybb Gaming sur FM27, 11/2026 : changer de schéma tous les 10 matchs coûte
+  // nettement plus qu'en garder un seul ; changer les rôles remet la familiarité à zéro). Avec le schéma joué connu,
+  // la base compare donc son onze dans CE schéma, pas le meilleur schéma du style.
+  const baseRow = base ? ranked.find((r) => r.style.id === base.id) : null;
+  const basePlan = baseRow && baseForm ? baseRow.plans.find((p) => p.form === baseForm) : null;
+  const kept = baseRow && basePlan ? { ...baseRow, form: basePlan.form, plan: basePlan, fit: basePlan.score - baseRow.complexity } : baseRow;
+  if (kept && (best.style.id !== kept.style.id || best.form !== kept.form) && bestFit - kept.fit < SWITCH_POINTS)
     return { style: kept.style, form: kept.form, plan: kept.plan, project: coach.style === kept.style.id, kept: { style: best.style, form: best.form, gain: bestFit - kept.fit } };
   return best;
 }
