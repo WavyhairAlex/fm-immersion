@@ -1,6 +1,7 @@
 import { POS_LABEL, teamInstructionCards, teamInstructionOf, type CoachPrefs, type FmPlayer, type ProjectCompat } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
@@ -26,7 +27,7 @@ export function Panel({ title, action, children, className = '' }: { title: stri
         <h2>{title}</h2>
         {action}
       </div>
-      {children}
+      <PanelTitle.Provider value={title}>{children}</PanelTitle.Provider>
     </section>
   );
 }
@@ -230,9 +231,54 @@ export function TeamCards({ inPossession, outOfPossession, wide = false }: { inP
   );
 }
 
+/** Titre du cadre en cours : l'aide de la page range chaque explication sous le nom de son cadre. */
+const PanelTitle = createContext<string | null>(null);
+
+/** Hôte de l'aide d'une page : les explications des cadres y sont regroupées au lieu d'un lien par cadre. */
+const HelpSlot = createContext<{ el: HTMLElement | null; add: (n: number) => void } | null>(null);
+
+/**
+ * Une seule aide « Comment c'est calculé » par page, repliée en bas de l'écran : chaque `More` des cadres y envoie
+ * son texte (portail React), sous le titre de son cadre. Rien ne s'affiche si la page n'a aucune explication.
+ */
+export function HelpHost({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
+  const [el, setEl] = useState<HTMLElement | null>(null);
+  const [count, setCount] = useState(0);
+  const add = useCallback((n: number) => setCount((c) => c + n), []);
+  const slot = useMemo(() => ({ el, add }), [el, add]);
+  return (
+    <HelpSlot.Provider value={slot}>
+      {children}
+      <details className={`card mt-6 p-4 text-sm text-brun ${count ? '' : 'hidden'}`}>
+        <summary className="w-fit cursor-pointer select-none font-bold text-canard/70 hover:text-canard">{t('fm.howItWorks')}</summary>
+        <dl ref={setEl} className="mt-3 max-w-4xl space-y-3" />
+      </details>
+    </HelpSlot.Provider>
+  );
+}
+
 /** Explication repliée (« Comment c'est calculé ») : l'écran montre le résultat, le détail reste à un clic. */
 export function More({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
+  const slot = useContext(HelpSlot);
+  const title = useContext(PanelTitle);
+  const add = slot?.add;
+  useEffect(() => {
+    if (!add) return;
+    add(1);
+    return () => add(-1);
+  }, [add]);
+  if (slot) {
+    if (!slot.el) return null;
+    return createPortal(
+      <div>
+        {title && <dt className="font-bold text-canard">{title}</dt>}
+        <dd>{children}</dd>
+      </div>,
+      slot.el,
+    );
+  }
   return (
     <details className="mt-2 max-w-3xl text-xs text-brun">
       <summary className="w-fit cursor-pointer select-none font-bold text-canard/60 hover:text-canard">{t('fm.howItWorks')}</summary>

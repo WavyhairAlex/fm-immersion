@@ -66,7 +66,7 @@ import { FmTactic, ReserveContext, useTacticEngine } from './FmTactic';
 import { FmTargets } from './FmTargets';
 import { FmTraining } from './FmTraining';
 import { FmWages } from './FmWages';
-import { CompatTag, PlayerLink, PlayerSheetContext, useCoach } from './FmUi';
+import { CompatTag, HelpHost, PlayerLink, PlayerSheetContext, useCoach } from './FmUi';
 import { FmPlayerSheet } from './FmPlayerSheet';
 
 const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
@@ -543,7 +543,7 @@ function PageParts({ page, current, go, render }: { page: ClubPage; current: str
         </div>
       )}
       <section key={active} role={tabs.length > 1 ? 'tabpanel' : undefined}>
-        {render(active)}
+        <HelpHost>{render(active)}</HelpHost>
       </section>
     </>
   );
