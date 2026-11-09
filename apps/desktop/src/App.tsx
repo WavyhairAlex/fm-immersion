@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { QuickSearch } from './components/QuickSearch';
 import { Sidebar } from './components/Sidebar';
 import { UpdateGate } from './components/UpdateGate';
+import { WhatsNew } from './components/WhatsNew';
 import { useCareer, useCareerStore } from './lib/career';
 import { useFmSync } from './lib/fm-sync';
 import { useAutoBackups } from './lib/save-backup';
@@ -17,6 +18,7 @@ import { Overview } from './pages/Overview';
 import { Saves } from './pages/Saves';
 import { Soon } from './pages/Soon';
 import { Story } from './pages/Story';
+import { WhatsNewPage } from './pages/WhatsNewPage';
 
 export function App() {
   useLiveDiscord();
@@ -28,6 +30,7 @@ export function App() {
       <div className="flex min-h-screen">
         <Sidebar />
         <QuickSearch />
+        <WhatsNew />
         <main className="min-w-0 flex-1">
           <Routes>
             <Route path="/" element={<Today />} />
@@ -41,6 +44,7 @@ export function App() {
             <Route path="/discord" element={<Story tab="discord" />} />
             <Route path="/defis" element={<Challenges />} />
             <Route path="/monde" element={<Soon mode="world" />} />
+            <Route path="/nouveautes" element={<WhatsNewPage />} />
             {/* Anciennes adresses (avant la barre latérale unique). */}
             <Route path="/coach" element={<Navigate to="/" replace />} />
             <Route path="/fm/:saveId" element={<OpenCareer />} />

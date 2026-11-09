@@ -1,0 +1,158 @@
+[
+  {
+    "version": "0.1.114",
+    "date": "2026-11-09",
+    "fr": [
+      "Nouveau : après chaque mise à jour, cette fenêtre « Quoi de neuf » te dit ce qui a changé.",
+      "Tu retrouves tout l'historique des nouveautés en cliquant sur le numéro de version, en bas de la barre latérale."
+    ],
+    "en": [
+      "New: after every update, this \"What's new\" window tells you what changed.",
+      "You can find the full history by clicking the version number at the bottom of the sidebar."
+    ]
+  },
+  {
+    "version": "0.1.113",
+    "date": "2026-11-09",
+    "fr": [
+      "Ma carrière : le bilan victoires, nuls et défaites compte aussi les matchs joués avant que l'appli lise les scores."
+    ],
+    "en": [
+      "My career: the win, draw and loss record now also counts matches played before the app started reading scores."
+    ]
+  },
+  {
+    "version": "0.1.112",
+    "date": "2026-11-09",
+    "fr": [
+      "Discord : les dépêches et le direct de tes matchs ont une nouvelle présentation.",
+      "Le direct passe en format large et montre les cartons et les passeurs décisifs."
+    ],
+    "en": [
+      "Discord: news flashes and your live match updates have a new look.",
+      "The live update now uses a wide format and shows cards and assists."
+    ]
+  },
+  {
+    "version": "0.1.111",
+    "date": "2026-11-09",
+    "fr": [
+      "Ma carrière : les matchs joués avant la lecture des scores sont comptés grâce aux apparitions des joueurs."
+    ],
+    "en": [
+      "My career: matches played before scores were read are now counted from player appearances."
+    ]
+  },
+  {
+    "version": "0.1.110",
+    "date": "2026-11-09",
+    "fr": [
+      "Ma carrière : tu peux écarter un club qui vient d'une autre partie.",
+      "Les clubs que tu as entraînés avant d'installer l'appli sont retrouvés."
+    ],
+    "en": [
+      "My career: you can remove a club that came from another save.",
+      "Clubs you managed before installing the app are now found."
+    ]
+  },
+  {
+    "version": "0.1.109",
+    "date": "2026-11-08",
+    "fr": [
+      "Nouvel écran « Ma carrière » : tes statistiques de coach, les clubs que tu as entraînés et une carte du monde de ton parcours."
+    ],
+    "en": [
+      "New \"My career\" screen: your manager stats, the clubs you have managed and a world map of your journey."
+    ]
+  },
+  {
+    "version": "0.1.108",
+    "date": "2026-11-08",
+    "fr": [
+      "Visages : l'écran est plus simple. Il montre seulement ce qu'il faut pour installer le pack ; les outils de génération sont rangés dans un « mode atelier »."
+    ],
+    "en": [
+      "Faces: the screen is simpler. It only shows what you need to install the pack; the generation tools are tucked away in a \"workshop mode\"."
+    ]
+  },
+  {
+    "version": "0.1.107",
+    "date": "2026-11-08",
+    "fr": [
+      "Gazette : une « édition record » sort quand un joueur marque un triplé, quand tu enchaînes les victoires, signes ta plus large victoire ou mets fin à une longue disette."
+    ],
+    "en": [
+      "Gazette: a \"record edition\" comes out for a hat-trick, a winning streak, your biggest win or the end of a long drought."
+    ]
+  },
+  {
+    "version": "0.1.106",
+    "date": "2026-11-08",
+    "fr": [
+      "Sauvegardes : l'appli peut faire des copies de secours de ta partie FM27 (option à cocher, coupée par défaut). Tes fichiers de jeu ne sont jamais modifiés."
+    ],
+    "en": [
+      "Saves: the app can make backup copies of your FM27 save (an option to tick, off by default). Your game files are never changed."
+    ]
+  },
+  {
+    "version": "0.1.105",
+    "date": "2026-11-08",
+    "fr": [
+      "Discord : une « affiche du choc » en image annonce les grands matchs (coupe, choc au sommet, duel direct) quelques jours avant."
+    ],
+    "en": [
+      "Discord: a \"big match poster\" image announces key games (cup, top-of-the-table clash, direct rival) a few days ahead."
+    ]
+  },
+  {
+    "version": "0.1.104",
+    "date": "2026-11-08",
+    "fr": [
+      "Nouvel écran « Mes sauvegardes » : tes fichiers de partie FM27, leur taille et leur date, avec une alerte sur la carte de carrière si quelque chose cloche."
+    ],
+    "en": [
+      "New \"My saves\" screen: your FM27 save files, their size and date, with a warning on the career card if something looks wrong."
+    ]
+  },
+  {
+    "version": "0.1.103",
+    "date": "2026-11-08",
+    "fr": [
+      "Rédaction par IA : quand tu fermes l'appli, le modèle Ollama est arrêté et libère la mémoire de ton PC."
+    ],
+    "en": [
+      "AI writing: when you close the app, the Ollama model is stopped and frees your PC's memory."
+    ]
+  },
+  {
+    "version": "0.1.102",
+    "date": "2026-11-08",
+    "fr": [
+      "Direct Discord : les expulsions et les buts refusés apparaissent, et l'image passe au format paysage."
+    ],
+    "en": [
+      "Discord live: red cards and disallowed goals now appear, and the image uses a landscape format."
+    ]
+  },
+  {
+    "version": "0.1.101",
+    "date": "2026-11-08",
+    "fr": [
+      "Construire une tactique : les missions des rôles de FM27 sont gardées et quelques fautes de pluriel corrigées."
+    ],
+    "en": [
+      "Tactic builder: FM27 role duties are kept and a few plural typos are fixed."
+    ]
+  },
+  {
+    "version": "0.1.100",
+    "date": "2026-11-08",
+    "fr": [
+      "Discord : des dépêches en image pour une recrue, le départ d'un titulaire ou un flash infirmerie."
+    ],
+    "en": [
+      "Discord: news flash images for a new signing, a starter leaving or an injury update."
+    ]
+  }
+]
