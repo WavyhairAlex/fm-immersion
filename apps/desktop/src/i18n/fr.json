@@ -1193,11 +1193,6 @@
         "Sam",
         "Dim"
       ],
-      "slot": [
-        "Séance 1",
-        "Séance 2",
-        "Extra"
-      ],
       "title": "Semaine d'entraînement",
       "which": "Semaine",
       "thisWeek": "Cette semaine",
@@ -1235,7 +1230,6 @@
       "metaHelp": "Méthode d'AlexJeuVideal (pack « ENTRAÎNEMENT FM 27 META EFFICACITÉ 1.1 ») : un bloc Piège du pressing, Hauteur du pressing, Construction ; un bloc Piège du pressing, Création d'occasions, Organisation avec le ballon ; la veille du match Progression du ballon, Bloc défensif, Condition physique. Tout le reste au repos. Charge le fichier .fmf indiqué dans l'écran Entraînement.",
       "congested": "trois matchs ou plus : semaine entière de repos entre les matchs (les résultats priment sur la progression)",
       "priorities": "Zones du style visé travaillées en priorité : {{list}}.",
-      "load": "Dans la semaine",
       "rules": "Les règles",
       "rule1": "Lendemain de match : Repos puis Récupération. Veille : une seule séance de préparation. Un jour de repos complet dès qu'il y a de la place.",
       "rule2": "Regroupe les séances de progression sur un ou deux jours : même progression, beaucoup moins de blessures. Quatre séances différentes suffisent.",
@@ -1297,8 +1291,6 @@
       "avoid": "À tenir à l'écart des jeunes",
       "unassigned": "Sans tuteur disponible : {{list}}.",
       "mentoringHelp": "Dans le jeu : Entraînement, Encadrement, Créer un groupe d'encadrement. La personnalité et la détermination des joueurs influents déteignent sur les jeunes du groupe, en bien comme en mal. Un groupe compte 3 joueurs au plus : le tuteur et 2 jeunes, du même secteur de jeu quand c'est possible.",
-      "roleIp": "Rôle ALB",
-      "roleOop": "Rôle SLB",
       "focusCol": "Priorité de l'entraînement",
       "focus": {
         "gkShotStopping": "Arrêts du gardien",
@@ -1320,16 +1312,11 @@
         "endurance": "Endurance",
         "resistance": "Résistance"
       },
-      "inGame": "En jeu",
       "markAll": "Tout est réglé en jeu",
       "setupDone": "{{done}} / {{total}} joueurs réglés en jeu",
       "setupChanges_one": "{{count}} changement à faire",
       "setupChanges_other": "{{count}} changements à faire",
       "setupHelp": "Coche un joueur une fois son entraînement individuel réglé dans le jeu. Dès que le conseil change (forme, blessure, semaine chargée, onze cible), la case se décoche et la ligne passe en tête avec l'ancien réglage barré.",
-      "setupStatus": {
-        "todo": "à régler",
-        "change": "À changer"
-      },
       "winterBreak": "Trêve hivernale",
       "winterFrom": "Début de la trêve",
       "winterTo": "Reprise du championnat",
@@ -1383,12 +1370,6 @@
         "season_other": "{{count}} matchs : {{tactical}} séances tactiques ({{zones}}) et {{grow}} séances de progression. Veille de match : une seule séance de préparation, lendemain : Repos puis Récupération.",
         "noMatch": "Aucun match : {{tactical}} séances tactiques ({{zones}}), {{grow}} séances de progression et Développement individuel le dernier jour.",
         "congested": "{{matches}} matchs en sept jours : semaine entière de repos entre les matchs, les résultats priment.",
-        "inGame": "Dans le jeu : charge le programme « {{preset}} », charge de travail {{workload}}, puis recopie les séances ci-dessous.",
-        "inGameRest": "Dans le jeu : charge le programme « {{preset}} ».",
-        "intensity": "Intensité de l'équipe : double pour les joueurs en bonne et très bonne forme, moitié pour les fatigués, rien pour les épuisés.",
-        "setups_one": "{{count}} réglage individuel à changer dans le jeu (section Individuel).",
-        "setups_other": "{{count}} réglages individuels à changer dans le jeu (section Individuel).",
-        "setupsOk": "Les réglages individuels sont tous à jour dans le jeu.",
         "yieldTitle": "Ce que ça donne vraiment",
         "yieldDetail": "Voir les chiffres",
         "yield": "Du {{from}} au {{to}} ({{days}} jours, {{players}} joueurs comparés) : {{delta}} point d'attribut par joueur, soit {{month}} par mois ; la courbe d'âge en laissait attendre {{expected}}.",
@@ -1592,6 +1573,33 @@
         "indiv5": "À 28 ans et plus, la priorité ne fait plus grandir un joueur : un attribut mental du rôle peut encore monter, le reste s'entretient.",
         "sourcesTitle": "D'où viennent ces repères",
         "sources": "Bancs d'essai de harvestgreen22 (FM-Arena, 50 programmes, une saison de 100 matchs chacun), de jamiebolden (fm-scoring, efficacité tactique sur FM27, avec un test sur le code d'entraînement du jeu) et d'AlexJeuVideal (efficacité tactique), plus les guides de FM Dossier et Passion4FM sur la personnalité et le temps de jeu. Sports Interactive ne publie aucune formule."
+      },
+      "dayByDay": "Ta semaine, jour par jour",
+      "steps": {
+        "title": "Dans le jeu, dans cet ordre",
+        "preset": "Charge le programme « {{preset}} » et mets la charge de travail sur {{workload}}.",
+        "presetRest": "Charge le programme « {{preset}} ».",
+        "copy": "Recopie les séances de chaque jour ci-dessous, dans l'ordre (séance 1 puis séance 2).",
+        "intensity": "Intensité de l'équipe : double pour les joueurs en forme, moitié pour les fatigués, rien pour les épuisés (tableau plus bas).",
+        "setups_one": "Change {{count}} réglage individuel (onglet Individuel).",
+        "setups_other": "Change les réglages de {{count}} joueurs (onglet Individuel).",
+        "setupsOk": "Les réglages individuels sont déjà à jour."
+      },
+      "indiv": {
+        "lead": "Pour chaque joueur : ses rôles, sa priorité et son intensité, avec la raison de chaque choix. Coche « Réglé en jeu » une fois fait.",
+        "done": "Réglé en jeu",
+        "roles": "Rôles à travailler",
+        "ip": "Avec ballon :",
+        "oop": "Sans ballon :",
+        "weak": "Points faibles du rôle : {{list}}.",
+        "group": {
+          "change_one": "À changer dans le jeu ({{count}} joueur)",
+          "change_other": "À changer dans le jeu ({{count}} joueurs)",
+          "todo_one": "À régler ({{count}} joueur)",
+          "todo_other": "À régler ({{count}} joueurs)",
+          "ok_one": "Déjà réglé ({{count}} joueur)",
+          "ok_other": "Déjà réglés ({{count}} joueurs)"
+        }
       }
     },
     "intro": {

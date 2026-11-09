@@ -1193,11 +1193,6 @@
         "Sat",
         "Sun"
       ],
-      "slot": [
-        "Session 1",
-        "Session 2",
-        "Extra"
-      ],
       "title": "Training week",
       "which": "Week",
       "thisWeek": "This week",
@@ -1235,7 +1230,6 @@
       "metaHelp": "AlexJeuVideal's method (\"ENTRAINEMENT FM 27 META EFFICACITÉ 1.1\" pack): one block Pressing Trap, Line of Engagement, Build-Up; one block Pressing Trap, Chance Creation, In-Possession Shape; the day before the match Ball Progression, Defensive Block, Conditioning. Everything else is rest. Load the .fmf file shown in the Training screen.",
       "congested": "three or more matches: full rest between matches (results come before development)",
       "priorities": "Areas of your target style worked first: {{list}}.",
-      "load": "This week",
       "rules": "The rules",
       "rule1": "Day after a match: Rest then Recovery. Day before: one preparation session. A full rest day whenever there is room.",
       "rule2": "Group development sessions on one or two days: same development, far fewer injuries. Four different sessions are enough.",
@@ -1297,8 +1291,6 @@
       "avoid": "Keep away from youngsters",
       "unassigned": "No mentor available: {{list}}.",
       "mentoringHelp": "In the game: Training, Mentoring, Create Mentoring Group. The personality and determination of influential players rub off on the youngsters in the group, for better or worse. A group has at most 3 players: the mentor and 2 youngsters, from the same area of the pitch when possible.",
-      "roleIp": "IP role",
-      "roleOop": "OOP role",
       "focusCol": "Training focus",
       "focus": {
         "gkShotStopping": "GK Shot Stopping",
@@ -1320,16 +1312,11 @@
         "endurance": "Endurance",
         "resistance": "Resistance"
       },
-      "inGame": "In game",
       "markAll": "All set in game",
       "setupDone": "{{done}} / {{total}} players set in game",
       "setupChanges_one": "{{count}} change to make",
       "setupChanges_other": "{{count}} changes to make",
       "setupHelp": "Tick a player once their individual training is set in the game. As soon as the advice changes (condition, injury, busy week, target XI), the box unticks and the row moves to the top with the old setting struck through.",
-      "setupStatus": {
-        "todo": "to set",
-        "change": "To change"
-      },
       "winterBreak": "Winter break",
       "winterFrom": "Break starts",
       "winterTo": "League restarts",
@@ -1383,12 +1370,6 @@
         "season_other": "{{count}} matches: {{tactical}} tactical sessions ({{zones}}) and {{grow}} development sessions. Match eve: a single preparation session, the day after: Rest then Recovery.",
         "noMatch": "No match: {{tactical}} tactical sessions ({{zones}}), {{grow}} development sessions and Individual Development on the last day.",
         "congested": "{{matches}} matches in seven days: full week of rest between matches, results come first.",
-        "inGame": "In the game: load the \"{{preset}}\" schedule, workload {{workload}}, then copy the sessions below.",
-        "inGameRest": "In the game: load the \"{{preset}}\" schedule.",
-        "intensity": "Team intensity: double for players in good and excellent condition, half for tired ones, nothing for exhausted ones.",
-        "setups_one": "{{count}} individual setting to change in the game (Individual section).",
-        "setups_other": "{{count}} individual settings to change in the game (Individual section).",
-        "setupsOk": "All individual settings are up to date in the game.",
         "yieldTitle": "What it really yields",
         "yieldDetail": "See the figures",
         "yield": "From {{from}} to {{to}} ({{days}} days, {{players}} players compared): {{delta}} attribute point per player, i.e. {{month}} per month; the age curve suggested {{expected}}.",
@@ -1592,6 +1573,33 @@
         "indiv5": "From 28, the focus no longer makes a player grow: a mental attribute of the role can still rise, the rest is maintained.",
         "sourcesTitle": "Where these benchmarks come from",
         "sources": "Tests by harvestgreen22 (FM-Arena, 50 schedules, one 100-match season each), jamiebolden (fm-scoring, tactical effectiveness on FM27, with a test on the game's training code) and AlexJeuVideal (tactical effectiveness), plus FM Dossier and Passion4FM guides on personality and playing time. Sports Interactive publishes no formula."
+      },
+      "dayByDay": "Your week, day by day",
+      "steps": {
+        "title": "In the game, in this order",
+        "preset": "Load the “{{preset}}” schedule and set the workload to {{workload}}.",
+        "presetRest": "Load the “{{preset}}” schedule.",
+        "copy": "Copy each day's sessions below, in order (session 1 then session 2).",
+        "intensity": "Team intensity: double for players in good shape, half for tired ones, none for exhausted ones (table below).",
+        "setups_one": "Change {{count}} individual setting (Individual tab).",
+        "setups_other": "Change the settings of {{count}} players (Individual tab).",
+        "setupsOk": "Individual settings are already up to date."
+      },
+      "indiv": {
+        "lead": "For each player: roles, focus and intensity, with the reason for each choice. Tick “Set in game” once done.",
+        "done": "Set in game",
+        "roles": "Roles to train",
+        "ip": "In possession:",
+        "oop": "Out of possession:",
+        "weak": "Role weak points: {{list}}.",
+        "group": {
+          "change_one": "To change in the game ({{count}} player)",
+          "change_other": "To change in the game ({{count}} players)",
+          "todo_one": "To set ({{count}} player)",
+          "todo_other": "To set ({{count}} players)",
+          "ok_one": "Already set ({{count}} player)",
+          "ok_other": "Already set ({{count}} players)"
+        }
       }
     },
     "intro": {
