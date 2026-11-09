@@ -2769,7 +2769,9 @@
       }
     },
     "squadTable": {
-      "watch": "To watch"
+      "watch": "To watch",
+      "byGrade": "Project grade:",
+      "contractSoon": "Contract ending within six months"
     },
     "brief": {
       "title": "Your week, from your assistant",

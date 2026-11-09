@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.122",
+    "date": "2026-11-09",
+    "fr": [
+      "Le tableau de l'« Effectif » se lit plus vite : la note de projet est une lettre en couleur juste après le niveau, tu peux trier par cette note et filtrer d'un clic les joueurs A, B, C, D ou E.",
+      "Les blessures passent sous le nom du joueur, les lignes sont plus compactes, et une fin de contrat proche ou une condition basse ressort en couleur."
+    ],
+    "en": [
+      "The “Squad” table reads faster: the project grade is a coloured letter right after the level, you can sort by it and filter A, B, C, D or E players in one click.",
+      "Injuries now sit under the player's name, rows are more compact, and a contract ending soon or low condition stands out in colour."
+    ]
+  },
+  {
     "version": "0.1.121",
     "date": "2026-11-09",
     "fr": [

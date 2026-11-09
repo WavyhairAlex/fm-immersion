@@ -55,14 +55,14 @@ export function Empty({ children }: { children: ReactNode }) {
 const LETTER_TONE: Record<PlanLetter, Tone> = { A: 'good', B: 'good', C: 'info', D: 'warn', E: 'bad' };
 const LETTER_CLASS: Record<PlanLetter, string> = {
   A: 'bg-eau-soutenu text-canard',
-  B: 'bg-eau/40 text-canard',
+  B: 'bg-eau/45 text-canard',
   C: 'bg-canard/10 text-canard',
   D: 'bg-ambre/40 text-canard',
   E: 'bg-corail text-white',
 };
 
 /** Pastille de la note de projet (A à E), avec en infobulle le détail des critères. */
-export function CompatTag({ c }: { c: ProjectCompat | null | undefined }) {
+export function CompatTag({ c, compact = false }: { c: ProjectCompat | null | undefined; compact?: boolean }) {
   const { t } = useTranslation();
   if (!c) return <span className="text-canard/40">–</span>;
   const g = c.grade;
@@ -74,6 +74,12 @@ export function CompatTag({ c }: { c: ProjectCompat | null | undefined }) {
   ]
     .filter(Boolean)
     .join('\n');
+  if (compact)
+    return (
+      <span title={title} aria-label={t('fm.grade.badge', { letter: g.letter })}>
+        <GradeLetter letter={g.letter} />
+      </span>
+    );
   return (
     <span title={title}>
       <Tag tone={LETTER_TONE[g.letter]}>{t('fm.grade.badge', { letter: g.letter })}</Tag>

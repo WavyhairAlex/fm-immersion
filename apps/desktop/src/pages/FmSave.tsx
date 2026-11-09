@@ -5,6 +5,8 @@ import {
   monthsBetween,
   moraleLevel,
   compatMap,
+  PLAN_LETTERS,
+  type PlanLetter,
   gameFormationOf,
   gameLineup,
   forNextMatch,
@@ -70,7 +72,7 @@ import { FmTactic, ReserveContext, useTacticEngine } from './FmTactic';
 import { FmTargets } from './FmTargets';
 import { FmTraining } from './FmTraining';
 import { FmWages } from './FmWages';
-import { CompatTag, HelpHost, PlayerLink, PlayerSheetContext, useCoach, type SheetFocus } from './FmUi';
+import { CompatTag, GradeLetter, HelpHost, PlayerLink, PlayerSheetContext, useCoach, type SheetFocus } from './FmUi';
 import { FmPlayerSheet } from './FmPlayerSheet';
 
 const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
@@ -713,7 +715,7 @@ function SquadViews({ players, folder, gameDate }: { players: FmPlayer[]; folder
   );
 }
 
-type SortKey = 'name' | 'age' | 'level' | 'condition' | 'contractEnd' | 'wage' | 'apps' | 'goals' | 'avgRating';
+type SortKey = 'name' | 'age' | 'level' | 'grade' | 'condition' | 'contractEnd' | 'wage' | 'apps' | 'goals' | 'avgRating';
 
 function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder: string; gameDate: string }) {
   const { t, i18n } = useTranslation();
@@ -725,6 +727,8 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
     return compatMap(engine, buildProject(engine, list, coach), list);
   }, [engine, players, coach]);
   const [line, setLine] = useState<Line | null>(null);
+  // Filtre par note de projet (A à E) : une lettre à la fois, un second clic l'enlève.
+  const [letter, setLetter] = useState<PlanLetter | null>(null);
   const [sort, setSort] = useState<{ key: SortKey; desc: boolean }>({
     key: 'level',
     desc: true,
@@ -749,8 +753,9 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
 
   const rows = useMemo(() => {
     const byLine = line ? players.filter((p) => p.line === line) : players;
-    const list = watch ? byLine.filter(watched) : byLine;
-    const val = (p: FmPlayer) => p[sort.key];
+    const byLetter = letter ? byLine.filter((p) => compat.get(p.id)?.grade.letter === letter) : byLine;
+    const list = watch ? byLetter.filter(watched) : byLetter;
+    const val = (p: FmPlayer) => (sort.key === 'grade' ? (compat.get(p.id)?.grade.score ?? null) : p[sort.key]);
     return [...list].sort((a, b) => {
       const x = val(a);
       const y = val(b);
@@ -759,10 +764,10 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
       const c = typeof x === 'string' ? x.localeCompare(String(y)) : x - (y as number);
       return sort.desc ? -c : c;
     });
-  }, [players, line, sort, watch, gameDate]);
+  }, [players, line, sort, watch, gameDate, letter, compat]);
 
-  const head = (key: SortKey, label: string) => (
-    <th className="px-3 py-2 text-left">
+  const head = (key: SortKey, label: string, help?: string) => (
+    <th className="whitespace-nowrap px-3 py-2 text-left" title={help}>
       <button
         type="button"
         className="font-bold hover:text-canard"
@@ -797,6 +802,26 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
             {t('fm.squadTable.watch')} · {players.filter(watched).length}
           </button>
         </div>
+        {compat.size > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5" title={t('fm.compat.help')}>
+            <span className="text-xs font-bold text-canard/60">{t('fm.squadTable.byGrade')}</span>
+            {PLAN_LETTERS.map((l) => {
+              const n = players.filter((p) => compat.get(p.id)?.grade.letter === l).length;
+              return (
+                <button
+                  key={l}
+                  type="button"
+                  aria-pressed={letter === l}
+                  disabled={!n}
+                  onClick={() => setLetter((x) => (x === l ? null : l))}
+                  className={`flex items-center gap-1 rounded-lg px-1 py-0.5 text-xs font-bold disabled:opacity-40 ${letter === l ? 'ring-2 ring-orange' : ''}`}
+                >
+                  <GradeLetter letter={l} /> {n}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
       <div className="card mt-4 overflow-x-auto p-0">
         <table className="data-table">
@@ -806,6 +831,7 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
               <th className="px-3 py-2 text-left font-bold">{t('fm.col.positions')}</th>
               {head('age', t('fm.col.age'))}
               {head('level', t('fm.col.level'))}
+              {head('grade', t('fm.col.compat'), t('fm.compat.help'))}
               {head('condition', t('fm.col.condition'))}
               {head('apps', t('fm.col.apps'))}
               {head('goals', t('fm.col.goals'))}
@@ -813,54 +839,58 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
               {head('contractEnd', t('fm.col.contract'))}
               {head('wage', t('fm.col.wage'))}
               <th className="px-3 py-2 text-left font-bold">{t('fm.col.status')}</th>
-              <th className="px-3 py-2 text-left font-bold" title={t('fm.compat.help')}>
-                {t('fm.col.compat')}
-              </th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((p) => (
-              <tr key={p.id} className="border-b border-canard/5 odd:bg-creme/40">
-                <td className="px-3 py-2 font-bold">
-                  <PlayerLink player={p} />
-                  {p.injury && <span className="ml-2 rounded-md bg-corail/15 px-1.5 py-0.5 text-xs text-canard">{p.injury}</span>}
-                  {p.suspension && (
-                    <span className="ml-2 rounded-md bg-corail/15 px-1.5 py-0.5 text-xs text-canard">
-                      {p.suspension === 'Suspendu' ? t('fm.home.kind.suspended') : `${t('fm.home.kind.suspended')} : ${p.suspension}`}
+            {rows.map((p) => {
+              const soon = p.contractEnd != null && monthsBetween(gameDate, p.contractEnd) <= 6;
+              const absent = p.injury ?? (p.suspension ? (p.suspension === 'Suspendu' ? t('fm.home.kind.suspended') : `${t('fm.home.kind.suspended')} : ${p.suspension}`) : null);
+              return (
+                <tr key={p.id} className="border-b border-canard/5 odd:bg-creme/40">
+                  <td className="max-w-[16rem] px-3 py-1.5 font-bold">
+                    <span className="block whitespace-nowrap">
+                      <PlayerLink player={p} />
                     </span>
-                  )}
-                </td>
-                <td className="px-3 py-2">
-                  <span className="flex flex-wrap gap-1">
-                    {p.positionsLabel.split(', ').map((pos) => (
-                      <span key={pos} className="pill">
-                        {pos}
+                    {absent && (
+                      <span className="mt-0.5 block truncate text-xs font-normal text-corail" title={absent}>
+                        ✚ {absent}
                       </span>
-                    ))}
-                  </span>
-                </td>
-                <td className="px-3 py-2">{p.age ?? '–'}</td>
-                <td className="px-3 py-2 font-bold">
-                  {p.level != null ? nf1.format(p.level) : '–'}
-                  {p.stars?.current != null && (
-                    <span className="ml-2 text-xs font-normal text-brun" title={t('fm.col.starsHelp')}>
-                      ★ {p.stars.current}
-                      {p.stars.potential != null ? ` / ${p.stars.potential}` : ''}
+                    )}
+                  </td>
+                  <td className="px-3 py-1.5">
+                    <span className="flex flex-wrap gap-1">
+                      {p.positionsLabel.split(', ').map((pos) => (
+                        <span key={pos} className="pill whitespace-nowrap">
+                          {pos}
+                        </span>
+                      ))}
                     </span>
-                  )}
-                </td>
-                <td className="px-3 py-2">{p.condition != null ? `${Math.round(p.condition)} %` : '–'}</td>
-                <td className="px-3 py-2 tabular-nums">{p.apps ?? '–'}</td>
-                <td className="px-3 py-2 tabular-nums">{p.goals ?? '–'}</td>
-                <td className="px-3 py-2 tabular-nums">{p.avgRating != null && p.avgRating > 0 ? nf2.format(p.avgRating) : '–'}</td>
-                <td className="px-3 py-2">{p.contractEnd ? date.format(new Date(p.contractEnd)) : '–'}</td>
-                <td className="px-3 py-2">{p.wage != null ? money.format(p.wage) : '–'}</td>
-                <td className="px-3 py-2 text-brun">{p.squadStatus ?? '–'}</td>
-                <td className="px-3 py-2">
-                  <CompatTag c={compat.get(p.id)} />
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-3 py-1.5 tabular-nums">{p.age ?? '–'}</td>
+                  <td className="whitespace-nowrap px-3 py-1.5 font-bold tabular-nums">
+                    {p.level != null ? nf1.format(p.level) : '–'}
+                    {p.stars?.current != null && (
+                      <span className="ml-2 text-xs font-normal text-brun" title={t('fm.col.starsHelp')}>
+                        ★ {p.stars.current}
+                        {p.stars.potential != null ? ` / ${p.stars.potential}` : ''}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-1.5 text-center">
+                    <CompatTag c={compat.get(p.id)} compact />
+                  </td>
+                  <td className={`px-3 py-1.5 tabular-nums ${p.condition != null && p.condition < 85 ? 'font-bold text-corail' : ''}`}>{p.condition != null ? `${Math.round(p.condition)} %` : '–'}</td>
+                  <td className="px-3 py-1.5 tabular-nums">{p.apps ?? '–'}</td>
+                  <td className="px-3 py-1.5 tabular-nums">{p.goals ?? '–'}</td>
+                  <td className="px-3 py-1.5 tabular-nums">{p.avgRating != null && p.avgRating > 0 ? nf2.format(p.avgRating) : '–'}</td>
+                  <td className={`whitespace-nowrap px-3 py-1.5 ${soon ? 'font-bold text-orange-fonce' : ''}`} title={soon ? t('fm.squadTable.contractSoon') : undefined}>
+                    {p.contractEnd ? date.format(new Date(p.contractEnd)) : '–'}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-1.5 tabular-nums">{p.wage != null ? money.format(p.wage) : '–'}</td>
+                  <td className="px-3 py-1.5 text-xs leading-tight text-brun">{p.squadStatus ?? '–'}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
