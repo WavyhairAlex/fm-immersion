@@ -2769,7 +2769,9 @@
       }
     },
     "squadTable": {
-      "watch": "À surveiller"
+      "watch": "À surveiller",
+      "byGrade": "Note de projet :",
+      "contractSoon": "Contrat qui finit dans six mois ou moins"
     },
     "brief": {
       "title": "Ta semaine, par ton adjoint",
