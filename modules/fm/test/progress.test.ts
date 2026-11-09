@@ -80,6 +80,23 @@ describe('progression et profondeur', () => {
     expect(rows[0]!.series).toEqual([10, 11.2]);
   });
 
+  it('compte les points d’attributs depuis la première apparition du joueur', () => {
+    const at = (gameDate: string, pass: number, pace: number) => ({ gameDate, players: [p(1, 'MC', 10, { attributes: { Passing: pass, Pace: pace, Stamina: 12 } })] });
+    const rows = progression([
+      { gameDate: '2026-01-01', players: [] },
+      at('2026-03-01', 10, 14),
+      at('2026-08-01', 12, 13),
+      at('2026-10-01', 13, 13),
+    ]);
+    const r = rows[0]!;
+    expect(r.since).toBe('2026-03-01');
+    expect(r.points).toBe(2);
+    expect(r.ups).toEqual([{ key: 'Passing', diff: 3 }]);
+    expect(r.downs).toEqual([{ key: 'Pace', diff: -1 }]);
+    // Il y a 90 jours ou plus : l'instantané du 1er mars (celui d'août est trop récent).
+    expect(r.recent).toBe(2);
+  });
+
   it('liste les prochains matchs avec l’écart entre eux, et la rotation', () => {
     const snap = {
       gameDate: '2026-09-01',

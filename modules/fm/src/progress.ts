@@ -204,16 +204,72 @@ export function rotation(players: FmPlayer[]) {
 
 /* ---------- Progression ---------- */
 
-export function progression(history: SquadAt[]) {
+/** Fenêtre de la colonne « récent » de la progression, en jours de jeu. */
+export const RECENT_DAYS = 90;
+
+export interface AttrMove {
+  key: string;
+  diff: number;
+}
+
+export interface ProgressRow {
+  player: FmPlayer;
+  series: (number | null)[];
+  /** Niveau gagné ou perdu depuis sa première apparition, sur 20 (arrondi au dixième). */
+  delta: number;
+  /** Points d'attributs gagnés ou perdus depuis sa première apparition (somme des écarts). */
+  points: number;
+  /** Idem sur les {@link RECENT_DAYS} derniers jours (null : pas d'instantané assez ancien). */
+  recent: number | null;
+  /** Date de sa première apparition. */
+  since: string;
+  /** Attributs qui ont le plus monté puis le plus baissé (deux au plus chacun). */
+  ups: AttrMove[];
+  downs: AttrMove[];
+}
+
+/** Somme des écarts d'attributs entre deux versions d'un joueur (attributs connus des deux côtés). */
+function attrMoves(from: FmPlayer, to: FmPlayer): AttrMove[] {
+  const out: AttrMove[] = [];
+  for (const [k, v] of Object.entries(to.attributes)) {
+    const a = from.attributes[k];
+    if (a == null) continue;
+    const diff = Math.round(v - a);
+    if (diff) out.push({ key: k, diff });
+  }
+  return out;
+}
+
+const DAY_MS = 864e5;
+
+/**
+ * Progression de chaque joueur de l'effectif actuel depuis sa première apparition dans les instantanés : niveau
+ * (moyenne des attributs, sur 20) et surtout points d'attributs gagnés ou perdus, plus parlants qu'un dixième de niveau.
+ */
+export function progression(history: SquadAt[]): ProgressRow[] {
   const last = history.at(-1);
   if (!last) return [];
-  const first = new Map(history[0]!.players.map((p) => [p.id, p.level]));
+  const now = new Date(last.gameDate).getTime();
   return last.players
     .map((p) => {
-      const f = first.get(p.id);
-      return { player: p, series: levelSeries(history, p.id), delta: p.level != null && f != null ? Math.round((p.level - f) * 10) / 10 : 0 };
+      const firstAt = history.find((h) => h.players.some((x) => x.id === p.id))!;
+      const first = firstAt.players.find((x) => x.id === p.id)!;
+      const moves = attrMoves(first, p);
+      const recentAt = [...history].reverse().find((h) => now - new Date(h.gameDate).getTime() >= RECENT_DAYS * DAY_MS);
+      const old = recentAt?.players.find((x) => x.id === p.id);
+      const sum = (xs: AttrMove[]) => xs.reduce((a, x) => a + x.diff, 0);
+      return {
+        player: p,
+        series: levelSeries(history, p.id),
+        delta: p.level != null && first.level != null ? Math.round((p.level - first.level) * 10) / 10 : 0,
+        points: sum(moves),
+        recent: old ? sum(attrMoves(old, p)) : null,
+        since: firstAt.gameDate,
+        ups: moves.filter((x) => x.diff > 0).sort((a, b) => b.diff - a.diff).slice(0, 2),
+        downs: moves.filter((x) => x.diff < 0).sort((a, b) => a.diff - b.diff).slice(0, 2),
+      };
     })
-    .sort((a, b) => b.delta - a.delta);
+    .sort((a, b) => b.points - a.points || b.delta - a.delta);
 }
 
 /* ---------- Comparateur ---------- */
