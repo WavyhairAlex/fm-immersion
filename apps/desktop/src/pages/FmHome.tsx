@@ -312,7 +312,7 @@ function DayThread({ snap, entries, go }: { snap: FmSnapshot; entries: { gameDat
   const days = Number(nm?.inDays);
   const where = (h: boolean | null) => (h == null ? '' : ` (${t(h ? 'fm.mc.homeShort' : 'fm.mc.awayShort')})`);
   const arrow = (
-    <span aria-hidden className="hidden self-center text-xl text-orange md:block">
+    <span aria-hidden className="hidden self-center text-xl text-orange-fonce md:block">
       →
     </span>
   );

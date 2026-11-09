@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.115",
+    "date": "2026-11-09",
+    "fr": [
+      "Nouveau logo : un maillot de foot ambre, avec « Immersion » en nom et « FM » en numéro.",
+      "L'appli passe aux couleurs du maillot, bleu nuit et ambre, jusqu'aux images de la gazette et du direct sur Discord."
+    ],
+    "en": [
+      "New logo: an amber football shirt with \"Immersion\" as the name and \"FM\" as the number.",
+      "The app now wears the shirt's colours, night blue and amber, right down to the gazette and live match images on Discord."
+    ]
+  },
+  {
     "version": "0.1.114",
     "date": "2026-11-09",
     "fr": [

@@ -101,7 +101,7 @@ export function drawCrest(ctx: CanvasRenderingContext2D, art: ClubArt, cx: numbe
     ctx.drawImage(img, cx - (w * k) / 2, cy - (h * k) / 2, w * k, h * k);
     return;
   }
-  const [c1 = '#25282D', c2 = '#F26B1D'] = art.look?.colors ?? [];
+  const [c1 = '#0F1B2D', c2 = '#FFB547'] = art.look?.colors ?? [];
   const r = size / 2;
   ctx.save();
   ctx.beginPath();

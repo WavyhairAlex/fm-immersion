@@ -23,7 +23,7 @@ export function certificatePayload(t: TFunction, c: ChallengeCertificate, r: Cha
       {
         title: t('challenges.discord.title', { coach: c.coach, challenge: t(`challenges.def.${c.challenge}.name`) }),
         description: [t(`challenges.status.${c.status}`), '', ...lines, ...(issues.length ? ['', ...issues] : [])].join('\n').slice(0, 4000),
-        color: c.status === 'success' ? 0x2e8b57 : c.status === 'failed' ? 0xd93c3c : 0xf26b1d,
+        color: c.status === 'success' ? 0x2e8b57 : c.status === 'failed' ? 0xd93c3c : 0xffb547,
         footer: { text: t('challenges.discord.footer', { digest: shortDigest(c.digest), version: c.appVersion }) },
       },
     ],

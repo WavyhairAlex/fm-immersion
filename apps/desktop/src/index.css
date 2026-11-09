@@ -9,8 +9,8 @@
 
 @layer components {
   .btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 font-bold transition disabled:opacity-50; }
-  /* Bouton principal : orange foncé + texte blanc (contraste 5,2). Secondaire : orange clair + texte anthracite (13). */
-  .btn-primary { @apply btn bg-orange-fonce text-white hover:brightness-110; }
+  /* Bouton principal : ambre + texte bleu nuit (contraste 9,8), comme le maillot du logo. Secondaire : ambre clair + texte bleu nuit (16). */
+  .btn-primary { @apply btn bg-orange text-canard hover:brightness-105; }
   .btn-secondary { @apply btn bg-orange-clair text-canard hover:brightness-95; }
   .input { @apply w-full rounded-xl border border-canard/20 bg-white px-4 py-2.5 text-canard outline-none focus:border-orange focus:ring-2 focus:ring-orange/30; }
   /* Pastille de poste ou d'information, la même partout. */
@@ -37,7 +37,7 @@
   /* Chiffre dans une pastille (niveau, adéquation, stat) : même forme partout, la couleur suit la valeur. */
   .num-pill { @apply inline-block min-w-[2.75rem] rounded-md px-1.5 py-0.5 text-center text-xs font-bold tabular-nums; }
   .card { @apply rounded-3xl bg-white p-6 shadow-sm ring-1 ring-canard/5; }
-  /* Barre latérale des modes (fond anthracite) : le mode ouvert est souligné d'orange. */
+  /* Barre latérale des modes (fond bleu nuit) : le mode ouvert est souligné d'ambre. */
   .nav-link { @apply flex items-center gap-2.5 rounded-lg border-l-4 border-transparent px-3 py-2 text-sm font-bold text-white/75 transition hover:bg-white/5 hover:text-white; }
   .nav-link.active { @apply border-orange bg-white/10 text-white; }
   /* Titre de groupe de la barre latérale (Mon club, Ma carrière racontée, Le jeu). */

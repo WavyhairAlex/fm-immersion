@@ -11,7 +11,7 @@ import { editDiscord, getLiveEnabled, getWebhook, isWebhook, postDiscord } from 
 
 const LIVE_RED = 0xd93c3c;
 const GOOD = 0x2e9e5b;
-const ORANGE = 0xf26b1d;
+const ORANGE = 0xffb547;
 
 const score = (l: FmLive) => `${l.homeScore ?? 0} - ${l.awayScore ?? 0}`;
 

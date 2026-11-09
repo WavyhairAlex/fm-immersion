@@ -17,14 +17,14 @@ const W = 1200;
 const H = 600;
 const M = 44;
 const C = {
-  bg: '#25282D',
+  bg: '#0F1B2D',
   panel: '#30343A',
   ink: '#FFFFFF',
   soft: '#B9BCC2',
-  orange: '#F26B1D',
-  orangeDark: '#C2410C',
+  orange: '#FFB547',
+  orangeDark: '#8F5400',
   cream: '#F2F2F0',
-  dark: '#25282D',
+  dark: '#0F1B2D',
   green: '#2E9E5B',
   red: '#D93C3C',
   track: '#4A4F57',
