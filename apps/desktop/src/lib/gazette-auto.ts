@@ -213,6 +213,63 @@ export function gazetteToSend(issues: GazetteIssue[], saveId: string, sent: stri
   return 1;
 }
 
+/** Dernière gazette partie toute seule et dernier envoi automatique raté, montrés au joueur (gardés sur ce PC). */
+const AUTO_SENT_KEY = 'fmi.discord.autoLastSent';
+const AUTO_ERROR_KEY = 'fmi.discord.autoLastError';
+export interface AutoSent {
+  number: number;
+  weekStart: string;
+  at: string;
+}
+export interface AutoError {
+  what: string;
+  error: string;
+  at: string;
+  /** L'envoi a échoué trois fois de suite : il est abandonné pour ne pas bloquer les suivants. */
+  dropped: boolean;
+}
+const readJson = <T>(k: string): T | null => {
+  try {
+    return JSON.parse(read(k) ?? 'null') as T | null;
+  } catch {
+    return null;
+  }
+};
+export const autoLastSent = () => readJson<AutoSent>(AUTO_SENT_KEY);
+export const autoLastError = () => readJson<AutoError>(AUTO_ERROR_KEY);
+
+/** Essais ratés par envoi (en mémoire) : au troisième, on le note comme parti pour passer aux suivants. */
+export const MAX_TRIES = 3;
+const failures = new Map<string, number>();
+
+/**
+ * Fait un envoi automatique sans jamais bloquer les autres : une dépêche refusée par Discord n'empêche plus la gazette
+ * de partir. Un envoi raté est retenté à la minute suivante, puis abandonné après `maxTries` échecs (la gazette, elle,
+ * est retentée tant qu'elle n'est pas partie).
+ * Renvoie vrai si l'envoi est parti.
+ */
+export async function attempt(what: string, key: string, send: () => Promise<unknown>, done: () => void, maxTries = MAX_TRIES): Promise<boolean> {
+  try {
+    await send();
+    done();
+    failures.delete(key);
+    return true;
+  } catch (e) {
+    const n = (failures.get(key) ?? 0) + 1;
+    const dropped = n >= maxTries;
+    if (dropped) {
+      failures.delete(key);
+      done();
+    } else failures.set(key, n);
+    console.warn(`Envoi automatique (${what}) :`, e);
+    write(AUTO_ERROR_KEY, JSON.stringify({ what, error: String(e).slice(0, 300), at: new Date().toISOString(), dropped } satisfies AutoError));
+    return false;
+  }
+}
+
+/** Petite pause entre deux envois : Discord refuse les rafales sur un même webhook. */
+const pause = () => new Promise((r) => window.setTimeout(r, 1500));
+
 /**
  * Monté une fois pour toute l'appli : chaque minute, si le joueur l'a activé et relié un salon, relit l'instantané
  * du plugin (comme FM Coach) puis envoie la gazette dès qu'une semaine de jeu est terminée, le bilan de la saison
@@ -240,45 +297,59 @@ export function useGazetteAuto() {
           .map((h) => h.gameDate)
           .sort()
           .at(-1);
-        // Dépêches d'abord : elles n'attendent pas la gazette de la semaine.
+        const lang = i18n.resolvedLanguage;
+        // Chaque envoi est isolé (`attempt`) : un envoi refusé ne bloque plus les autres, la gazette d'abord.
+        if (gazetteOn) {
+          const issues = gazetteIssues(history);
+          const index = gazetteToSend(issues, saveId, read(SENT_KEY));
+          if (index != null) {
+            const week = issues[index]!;
+            await attempt(
+              'gazette',
+              `gazette|${saveId}|${week.weekStart}`,
+              async () => {
+                // Rédigée par l'IA du joueur quand elle est branchée (sinon, ou si elle échoue, avec les phrases toutes faites).
+                issues[index] = await withWriting(t, week, lang, saveId);
+                await sendGazette(t, lang, issues, index, seasonSoFar(history, week.date));
+              },
+              () => {
+                markGazetteSent(saveId, week.weekStart);
+                write(AUTO_SENT_KEY, JSON.stringify({ number: week.number, weekStart: week.weekStart, at: new Date().toISOString() } satisfies AutoSent));
+              },
+              Infinity,
+            );
+            await pause();
+          }
+          // Fin du championnat : numéro spécial, après la gazette de la semaine.
+          const season = seasonToSend(seasonReviews(history), lastDate, (r) => isSeasonSent(saveId, r));
+          if (season) {
+            await attempt('season', `season|${seasonSentKey(saveId, season)}`, () => sendSeason(t, season, lang), () => markSeasonSent(saveId, season));
+            await pause();
+          }
+          // Le coach a quitté son club (autre club, ou sans club d'après le plugin) : hors-série « Flash spécial ».
+          const freeSince = (await fmData.settings(saveId)).fmFreeSince ?? null;
+          const exit = farewellToSend(coachExits(history, { freeSince }), lastDate, (x) => isFarewellSent(saveId, x));
+          if (exit) {
+            await attempt('farewell', `farewell|${farewellId(saveId, exit)}`, () => sendFarewell(t, saveId, exit, lang), () => markFarewellSent(saveId, exit));
+            await pause();
+          }
+        }
+        // Dépêches, exploits et affiche du choc : elles n'attendent pas la gazette de la semaine.
         if (breakingOn) {
           for (const n of breakingToSend(breakingNews(history), lastDate, (x) => isBreakingSent(saveId, x))) {
-            await sendBreaking(t, n, i18n.resolvedLanguage);
-            markBreakingSent(saveId, n);
+            await attempt('breaking', `breaking|${breakingId(saveId, n)}`, () => sendBreaking(t, n, lang), () => markBreakingSent(saveId, n));
+            await pause();
           }
           // Exploits du jour (triplé, série, large victoire, fin de disette), avec les mêmes règles que les dépêches.
           for (const n of breakingToSend(recordNews(history), lastDate, (x) => isRecordSent(saveId, x))) {
-            await sendRecord(t, n, i18n.resolvedLanguage);
-            markRecordSent(saveId, n);
+            await attempt('record', `record|${recordId(saveId, n)}`, () => sendRecord(t, n, lang), () => markRecordSent(saveId, n));
+            await pause();
           }
           // Affiche du choc, quelques jours avant un match qui compte (une fois par match).
           const big = bigMatchNow(history);
           if (big && !isBigMatchSent(saveId, big)) {
-            await sendBigMatch(t, big, i18n.resolvedLanguage);
-            markBigMatchSent(saveId, big);
+            await attempt('bigMatch', `bigMatch|${bigMatchId(saveId, big)}|${big.date}`, () => sendBigMatch(t, big, lang), () => markBigMatchSent(saveId, big));
           }
-        }
-        if (!gazetteOn) return;
-        const issues = gazetteIssues(history);
-        const index = gazetteToSend(issues, saveId, read(SENT_KEY));
-        if (index != null) {
-          // Rédigée par l'IA du joueur quand elle est branchée (sinon, ou si elle échoue, avec les phrases toutes faites).
-          issues[index] = await withWriting(t, issues[index]!, i18n.resolvedLanguage, saveId);
-          await sendGazette(t, i18n.resolvedLanguage, issues, index, seasonSoFar(history, issues[index]!.date));
-          markGazetteSent(saveId, issues[index]!.weekStart);
-        }
-        // Fin du championnat : numéro spécial, après la gazette de la semaine.
-        const season = seasonToSend(seasonReviews(history), lastDate, (r) => isSeasonSent(saveId, r));
-        if (season) {
-          await sendSeason(t, season, i18n.resolvedLanguage);
-          markSeasonSent(saveId, season);
-        }
-        // Le coach a quitté son club (autre club, ou sans club d'après le plugin) : hors-série « Flash spécial ».
-        const freeSince = (await fmData.settings(saveId)).fmFreeSince ?? null;
-        const exit = farewellToSend(coachExits(history, { freeSince }), lastDate, (x) => isFarewellSent(saveId, x));
-        if (exit) {
-          await sendFarewell(t, saveId, exit, i18n.resolvedLanguage);
-          markFarewellSent(saveId, exit);
         }
       } catch (e) {
         console.warn('Gazette automatique :', e);

@@ -9,7 +9,7 @@ vi.stubGlobal('localStorage', {
   setItem: (k: string, v: string) => void store.set(k, v),
   removeItem: (k: string) => void store.delete(k),
 });
-const { breakingToSend, farewellToSend, isBigMatchSent, isRecordSent, markBigMatchSent, markRecordSent, gazetteToSend, seasonToSend } = await import('../src/lib/gazette-auto');
+const { attempt, autoLastError, breakingToSend, farewellToSend, isBigMatchSent, isRecordSent, markBigMatchSent, markRecordSent, gazetteToSend, seasonToSend } = await import('../src/lib/gazette-auto');
 
 const issue = (weekStart: string) => ({ weekStart }) as GazetteIssue;
 
@@ -66,5 +66,23 @@ describe('gazette automatique', () => {
     expect(isRecordSent('s', a)).toBe(true);
     expect(isRecordSent('s', { ...a, id: 'b' } as RecordNews)).toBe(false);
     expect(isRecordSent('s', { kind: 'bigWin', date: '2027-08-22', club: 'Malženice', match })).toBe(false);
+  });
+
+  it('un envoi raté ne bloque pas les suivants et est abandonné après trois essais (sauf la gazette)', async () => {
+    vi.stubGlobal('window', globalThis);
+    const done = vi.fn();
+    const fail = () => Promise.reject(new Error('400 Bad Request'));
+    expect(await attempt('breaking', 'b1', fail, done)).toBe(false);
+    expect(await attempt('breaking', 'b1', fail, done)).toBe(false);
+    expect(done).not.toHaveBeenCalled();
+    expect(autoLastError()).toMatchObject({ what: 'breaking', dropped: false });
+    expect(await attempt('breaking', 'b1', fail, done)).toBe(false);
+    expect(done).toHaveBeenCalledTimes(1); // noté comme parti : on passe aux suivants
+    expect(autoLastError()).toMatchObject({ what: 'breaking', dropped: true, error: 'Error: 400 Bad Request' });
+    const gazette = vi.fn();
+    for (let i = 0; i < 5; i++) await attempt('gazette', 'g1', fail, gazette, Infinity);
+    expect(gazette).not.toHaveBeenCalled();
+    expect(await attempt('gazette', 'g1', () => Promise.resolve(), gazette, Infinity)).toBe(true);
+    expect(gazette).toHaveBeenCalledTimes(1);
   });
 });

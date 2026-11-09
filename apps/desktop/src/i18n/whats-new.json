@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.121",
+    "date": "2026-11-09",
+    "fr": [
+      "La gazette automatique ne reste plus bloquée quand une dépêche ou une affiche n'arrive pas à partir : chaque envoi est fait à part, et la gazette passe en premier.",
+      "Dans « Live Discord », tu vois la dernière gazette partie toute seule et, s'il y en a un, le dernier envoi raté avec sa raison."
+    ],
+    "en": [
+      "The automatic gazette no longer gets stuck when a news flash or poster fails to go out: each send is done on its own, and the gazette goes first.",
+      "In \"Live Discord\", you can see the last gazette sent on its own and, if any, the last failed send with its reason."
+    ]
+  },
+  {
     "version": "0.1.120",
     "date": "2026-11-09",
     "fr": [

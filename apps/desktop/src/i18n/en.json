@@ -3611,7 +3611,19 @@
       "autoOn": "Automatic gazette on",
       "autoOff": "Automatic gazette off",
       "aiOn": "Texts written by AI ({{model}}).",
-      "aiOff": "Ready-made texts (AI writing off)."
+      "aiOff": "Ready-made texts (AI writing off).",
+      "lastSent": "Last gazette sent on its own: No. {{number}}, on {{date}}.",
+      "noneSent": "No gazette has been sent on its own yet. It goes out when a game week is over, with FM Immersion open.",
+      "lastError": "Last failed send ({{what}}), on {{date}}: {{error}}",
+      "dropped": "Given up after 3 tries, the next sends carry on.",
+      "what": {
+        "gazette": "gazette",
+        "season": "season review",
+        "farewell": "special edition",
+        "breaking": "news flash",
+        "record": "record",
+        "bigMatch": "big match poster"
+      }
     },
     "change": "Change channel",
     "sendTitle": "What goes to your channel",
