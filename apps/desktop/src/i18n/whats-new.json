@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.119",
+    "date": "2026-11-09",
+    "fr": [
+      "La gazette envoyée sur Discord passe en paysage : le journal tient en trois colonnes et se lit enfin dans le salon, sans devoir l'ouvrir en grand."
+    ],
+    "en": [
+      "The gazette sent to Discord is now in landscape: the paper fits in three columns and can finally be read right in the channel, without opening it full size."
+    ]
+  },
+  {
     "version": "0.1.118",
     "date": "2026-11-09",
     "fr": [

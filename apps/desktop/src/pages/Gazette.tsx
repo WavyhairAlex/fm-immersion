@@ -237,7 +237,7 @@ function UnePreview({ issues, index, figures, looks }: { issues: GazetteIssue[];
     queryFn: async () =>
       (await drawPage(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures, faceFor: loadFace })).toDataURL('image/png'),
   });
-  if (!url) return <div className="aspect-[3/4] w-full animate-pulse rounded-xl bg-canard/5" />;
+  if (!url) return <div className="aspect-[8/5] w-full animate-pulse rounded-xl bg-canard/5" />;
   return <img src={url} alt={t('gazette.preview')} className="w-full rounded-xl shadow-sm ring-1 ring-canard/10" />;
 }
 
@@ -335,7 +335,7 @@ function FarewellSection({ saveId, exits, looks }: { saveId: string; exits: Coac
         {url ? (
           <img src={url} alt={t('farewell.special')} className="mt-3 w-full rounded-xl shadow-sm ring-1 ring-canard/10" />
         ) : (
-          <div className="mt-3 aspect-[3/4] w-full animate-pulse rounded-xl bg-canard/5" />
+          <div className="mt-3 aspect-[8/5] w-full animate-pulse rounded-xl bg-canard/5" />
         )}
       </div>
       <aside className="flex flex-col gap-2 xl:pt-7">
