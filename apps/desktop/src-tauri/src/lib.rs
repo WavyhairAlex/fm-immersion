@@ -12,7 +12,9 @@ mod fm_bridge;
 mod fm_memory;
 mod images;
 mod photos_engine;
+mod photos_pipeline;
 mod photos_remote;
+mod photos_scenes;
 mod save_backup;
 
 use std::sync::Mutex;
@@ -74,6 +76,11 @@ pub fn run() {
             photos_engine::photos_engine_start,
             photos_engine::photos_engine_stop,
             photos_engine::photos_engine_test,
+            photos_pipeline::photos_scenes,
+            photos_pipeline::photos_generate,
+            photos_pipeline::photos_library,
+            photos_pipeline::photos_library_read,
+            photos_pipeline::photos_library_delete,
             ai::ai_key_set,
             ai::ai_key_status,
             ai::ai_complete,
