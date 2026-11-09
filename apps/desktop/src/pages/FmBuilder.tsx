@@ -11,6 +11,7 @@ import {
   piKeyGroup,
   zonePos,
   builtFromGame,
+  gameInstructions,
   FORMATIONS,
   MENTALITIES_FM27,
   newBuiltTactic,
@@ -105,7 +106,8 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
 
   const create = () => put(newBuiltTactic(engine, form, newId(), t('fm.builder.defaultName', { form })));
   const fromGame = () => {
-    const x = game && builtFromGame(engine, game, newId(), gameName ?? t('fm.builder.gameName'));
+    const mentality = typeof snap?.tactic?.mentality === 'string' ? snap.tactic.mentality : null;
+    const x = game && builtFromGame(engine, game, newId(), gameName ?? t('fm.builder.gameName'), gameInstructions(snap), mentality);
     if (x) put(x);
   };
 

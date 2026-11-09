@@ -1,4 +1,4 @@
-import { POS_LABEL, teamInstructionCards, teamInstructionOf, type CoachPrefs, type FmPlayer, type ProjectCompat } from '@fm-immersion/module-fm';
+import { POS_LABEL, teamInstructionCards, teamInstructionOf, type CoachPrefs, type FmPlayer, type PlanLetter, type Project, type ProjectCompat, type TacticEngine } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
@@ -52,16 +52,121 @@ export function Empty({ children }: { children: ReactNode }) {
   return <p className="text-sm text-brun">{children}</p>;
 }
 
-/** Pastille « compatible avec le projet de jeu », avec en infobulle la note au rôle du projet et la meilleure note possible. */
-export function CompatTag({ c }: { c: ProjectCompat | null | undefined }) {
+const LETTER_TONE: Record<PlanLetter, Tone> = { A: 'good', B: 'good', C: 'info', D: 'warn', E: 'bad' };
+const LETTER_CLASS: Record<PlanLetter, string> = {
+  A: 'bg-eau-soutenu text-canard',
+  B: 'bg-eau/45 text-canard',
+  C: 'bg-canard/10 text-canard',
+  D: 'bg-ambre/40 text-canard',
+  E: 'bg-corail text-white',
+};
+
+/** Pastille de la note de projet (A à E), avec en infobulle le détail des critères. */
+export function CompatTag({ c, compact = false }: { c: ProjectCompat | null | undefined; compact?: boolean }) {
   const { t } = useTranslation();
   if (!c) return <span className="text-canard/40">–</span>;
-  const tone: Tone = c.compat === 'yes' ? 'good' : c.compat === 'partial' ? 'warn' : 'bad';
-  const title = c.noPosition ? t('fm.compat.noPosition') : t('fm.compat.title', { fit: fitPct(c.fit), best: fitPct(c.best) });
+  const g = c.grade;
+  const parts = g.parts.map((x) => `${t(`fm.grade.${x.id}`)} ${x.score}`).join(' · ');
+  const title = [
+    c.noPosition ? t('fm.compat.noPosition') : t('fm.grade.title', { letter: g.letter, score: g.score, parts }),
+    !c.noPosition && t('fm.compat.title', { fit: fitPct(c.fit), best: fitPct(c.best) }),
+    g.capped && t('fm.grade.titleCapped', { letter: g.letter }),
+  ]
+    .filter(Boolean)
+    .join('\n');
+  if (compact)
+    return (
+      <span title={title} aria-label={t('fm.grade.badge', { letter: g.letter })}>
+        <GradeLetter letter={g.letter} />
+      </span>
+    );
   return (
     <span title={title}>
-      <Tag tone={tone}>{t(`fm.compat.${c.compat}`)}</Tag>
+      <Tag tone={LETTER_TONE[g.letter]}>{t('fm.grade.badge', { letter: g.letter })}</Tag>
     </span>
+  );
+}
+
+/** Grande lettre de la note de projet. */
+export function GradeLetter({ letter, size = 'md' }: { letter: PlanLetter; size?: 'md' | 'lg' }) {
+  const box = size === 'lg' ? 'h-12 w-12 text-2xl' : 'h-7 w-7 text-sm';
+  return <span className={`inline-flex shrink-0 items-center justify-center rounded-lg font-display font-bold ${box} ${LETTER_CLASS[letter]}`}>{letter}</span>;
+}
+
+/**
+ * Explication pédagogique de la note de projet : chaque critère, son poids, sa note et pourquoi,
+ * puis ce que chaque consigne d'équipe du style demande au joueur.
+ */
+export function PlanGradeCard({ c, project, engine }: { c: ProjectCompat; project: Project; engine: TacticEngine }) {
+  const { t } = useTranslation();
+  const names = useNames();
+  const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
+  const g = c.grade;
+  const fmt = (n: number) => n.toLocaleString(undefined, { maximumFractionDigits: 1 });
+  const slot = c.slot;
+  const why = (id: string, vals: Record<string, number | string>): string => {
+    switch (id) {
+      case 'role':
+        if (!slot) return t('fm.grade.noRole');
+        return t(Number(vals.stars) === 0 ? 'fm.grade.why.roleZero' : 'fm.grade.why.role', {
+          role: `${names.role(engine.roles.get(slot.ip))} / ${names.role(engine.roles.get(slot.oop))}`,
+          slot: POS_LABEL[slot.pos],
+          stars: fmt(Number(vals.stars)),
+        });
+      case 'position': {
+        const pos = POS_LABEL[vals.pos as keyof typeof POS_LABEL] ?? String(vals.pos);
+        if (vals.natural) return t('fm.grade.why.positionNatural', { pos });
+        return vals.fam === '–' ? t('fm.grade.why.positionUnknown', { pos }) : t('fm.grade.why.position', { pos, fam: vals.fam });
+      }
+      case 'demands':
+        return t('fm.grade.why.demands');
+      case 'reading':
+        return t('fm.grade.why.reading', { value: fmt(Number(vals.value)), need: fmt(Number(vals.need)) });
+      case 'mind':
+        return t(vals.tone === 'good' ? 'fm.grade.why.mindGood' : vals.tone === 'bad' ? 'fm.grade.why.mindBad' : 'fm.grade.why.mindNeutral', { personality: vals.personality });
+      default:
+        return '';
+    }
+  };
+  const bar = (score: number) => (score >= 65 ? 'bg-eau-soutenu' : score >= 50 ? 'bg-canard/40' : score >= 35 ? 'bg-ambre' : 'bg-corail');
+  return (
+    <div className="space-y-3">
+      <div className="flex items-start gap-3">
+        <GradeLetter letter={g.letter} size="lg" />
+        <div>
+          <p className="text-sm">{t('fm.grade.intro', { style: names.style(project.style), form: project.form })}</p>
+          <p className="mt-1 text-xs text-brun">{t('fm.grade.scale')}</p>
+        </div>
+      </div>
+      <ul className="space-y-2.5">
+        {g.parts.map((x) => (
+          <li key={x.id}>
+            <div className="flex items-center gap-2 text-sm">
+              <b>{t(`fm.grade.${x.id}`)}</b>
+              <span className="text-xs text-brun">{t('fm.grade.weight', { weight: x.weight })}</span>
+              <span className="ml-auto font-bold tabular-nums">{t('fm.grade.score', { score: x.score })}</span>
+            </div>
+            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-canard/10">
+              <div className={`h-full ${bar(x.score)}`} style={{ width: `${x.score}%` }} />
+            </div>
+            <p className="mt-1 text-xs leading-snug text-brun">{why(x.id, x.vals)}</p>
+            {x.id === 'demands' && (
+              <ul className="mt-1.5 space-y-1">
+                {g.demands.map((d) => (
+                  <li key={d.id} className="flex flex-wrap items-baseline gap-x-2 text-xs" title={t('fm.grade.from', { instruction: d.instruction })}>
+                    <Tag tone={d.edge >= 1 ? 'good' : d.edge <= -1 ? 'bad' : 'info'}>{t(d.edge >= 1 ? 'fm.grade.edgeUp' : d.edge <= -1 ? 'fm.grade.edgeDown' : 'fm.grade.edgeEven')}</Tag>
+                    <b>{t(`fm.grade.demand.${d.id}`)}</b>
+                    <span className="text-brun">{d.attrs.map((a) => `${attr(a.key)} ${Math.round(a.value)}`).join(', ')}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+      {!g.parts.some((x) => x.id === 'demands') && !c.noPosition && <p className="text-xs text-brun">{t('fm.grade.why.noDemands')}</p>}
+      {g.capped && <p className="text-xs font-bold text-orange-fonce">{t('fm.grade.why.capped', { letter: g.letter })}</p>}
+    </div>
   );
 }
 

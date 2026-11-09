@@ -1,5 +1,6 @@
 import type { FmPlayer } from './player';
 import { POS_ORDER, type PosCode } from './positions';
+import { planGrade, styleTeamInstructions, type PlanGrade } from './plan-grade';
 import type { Project } from './project';
 import type { Slot, TacticEngine } from './tactic';
 
@@ -26,6 +27,8 @@ export interface ProjectCompat {
   slot: Slot | null;
   /** Aucun poste du schéma du projet n'est dans ses cordes. */
   noPosition: boolean;
+  /** Note de projet A à E (rôle, poste, consignes d'équipe, lecture du jeu, état d'esprit), voir plan-grade.ts. */
+  grade: PlanGrade;
 }
 
 /** Écarts (sur 20, 1 point = une demi-étoile) jusqu'où le profil est jugé compatible, puis en partie. */
@@ -45,7 +48,10 @@ function bestAt(engine: TacticEngine, p: FmPlayer, pos: PosCode): number | null 
   return a == null || b == null ? null : (a + b) / 2;
 }
 
-export function projectCompat(engine: TacticEngine, project: Project, p: FmPlayer): ProjectCompat {
+/**
+ * `ti` : consignes d'équipe de la tactique (identifiant du jeu → option) ; par défaut, celles du style du projet.
+ */
+export function projectCompat(engine: TacticEngine, project: Project, p: FmPlayer, ti: Record<string, number> = styleTeamInstructions(project.style)): ProjectCompat {
   // Postes « à lui » : ses postes naturels, ou ceux où le jeu le juge apte.
   const mine = POS_ORDER.filter((pos) => p.positions.includes(pos) || engine.canPlay(p, pos));
   let fit: number | null = null;
@@ -63,15 +69,21 @@ export function projectCompat(engine: TacticEngine, project: Project, p: FmPlaye
     const b = bestAt(engine, p, pos);
     if (b != null && (best == null || b > best)) best = b;
   }
-  if (fit == null) return { compat: 'no', fit: null, best, gap: null, slot: null, noPosition: true };
+  if (fit == null || !slot) {
+    const grade = planGrade(p, { gap: null, compat: 'no', pos: null, style: project.style, ti });
+    return { compat: 'no', fit: null, best, gap: null, slot: null, noPosition: true, grade };
+  }
   const gap = Math.max(0, (best ?? fit) - fit);
-  return { compat: gap <= COMPAT_YES ? 'yes' : gap <= COMPAT_PARTIAL ? 'partial' : 'no', fit, best, gap, slot, noPosition: false };
+  const compat: Compat = gap <= COMPAT_YES ? 'yes' : gap <= COMPAT_PARTIAL ? 'partial' : 'no';
+  const grade = planGrade(p, { gap, compat, pos: slot.pos, style: project.style, ti });
+  return { compat, fit, best, gap, slot, noPosition: false, grade };
 }
 
 /** Compatibilité de chaque joueur d'une liste, par identifiant. */
 export function compatMap(engine: TacticEngine, project: Project | null, list: FmPlayer[]): Map<string, ProjectCompat> {
   const out = new Map<string, ProjectCompat>();
   if (!project) return out;
-  for (const p of list) if (Object.keys(p.attributes).length) out.set(p.id, projectCompat(engine, project, p));
+  const ti = styleTeamInstructions(project.style);
+  for (const p of list) if (Object.keys(p.attributes).length) out.set(p.id, projectCompat(engine, project, p, ti));
   return out;
 }

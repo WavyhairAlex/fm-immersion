@@ -90,7 +90,8 @@ export type CycleWeek = 1 | 2 | 3 | 4;
 /** Thème de chaque semaine du cycle (1 à 4). */
 export const WEEK_THEMES = ['buildUp', 'pressing', 'attack', 'balance'] as const;
 export type WeekTheme = (typeof WEEK_THEMES)[number];
-export type DayKind = 'match' | 'recovery' | 'prep' | 'dev' | 'off';
+/** « rest » : jour de repos complet (aucun contrôle de blessure à l'entraînement ce jour-là). */
+export type DayKind = 'match' | 'recovery' | 'prep' | 'dev' | 'off' | 'rest';
 /** Statut du club : un club semi-professionnel ou amateur ne s'entraîne que certains jours. */
 export const CLUB_STATUSES = ['pro', 'semi', 'amateur'] as const;
 export type ClubStatus = (typeof CLUB_STATUSES)[number];
@@ -110,7 +111,7 @@ export interface TrainingDay {
 }
 
 /** Raisons d'une séance du programme FM Immersion. */
-export type WhyId = 'press' | 'weak' | 'top' | 'grow' | 'noCondition' | 'indiv' | 'prep' | 'recover' | 'congested' | 'restDay';
+export type WhyId = 'press' | 'weak' | 'top' | 'rotate' | 'grow' | 'devBlock' | 'noCondition' | 'indiv' | 'prep' | 'recover' | 'fullRest' | 'congested' | 'restDay';
 
 export interface TrainingWeek {
   /** Code de la méthode : P1, T3, A2-1… */
@@ -125,6 +126,10 @@ export interface TrainingWeek {
   days: TrainingDay[];
   /** Méthode Méta adaptée : séances du fichier d'AlexJeuVideal à remplacer (avant, après) après chargement. */
   swaps?: [SessionId, SessionId][];
+  /** Programme FM Immersion : régime tactique de la semaine (d'après l'efficacité tactique). */
+  mode?: TacticalMode;
+  /** Programme FM Immersion : pourquoi la semaine est construite ainsi, dans l'ordre de lecture. */
+  lessons?: WeekLesson[];
 }
 
 export interface TrainingInput {
@@ -152,8 +157,12 @@ export interface TrainingInput {
   method?: TrainingMethod;
   /** Zones les moins comprises d'après les jauges d'efficacité du jeu (programme FM Immersion). */
   weakAreas?: EffArea[];
-  /** Les jauges du jeu sont lues : sans zone faible, le programme réduit les séances tactiques au profit de la progression. */
+  /** Les jauges du jeu sont lues (conservé pour les autres méthodes). */
   gaugesKnown?: boolean;
+  /** Efficacité tactique globale lue dans le jeu (0-100) : règle le nombre de séances tactiques (`tacticalMode`). */
+  teOverall?: number | null;
+  /** Équipe de jeunes : le but est la progression, deux séances tactiques par semaine au plus. */
+  youth?: boolean;
 }
 
 /** Méthodes de planning de saison. La présaison, le bloc tactique et la trêve restent ceux de la méthode Freedom. */
@@ -550,28 +559,69 @@ function isSlow(a: Record<string, number> | undefined): boolean {
 
 /* ---------- Programme FM Immersion (toutes sources réunies) ---------- */
 
-/** Séances tactiques par semaine du programme : 2 pièges du pressing, plus les zones faibles (2 par défaut). */
-const COACH_TACTICAL_MAX = 4;
+/**
+ * Régime tactique de la semaine, d'après l'efficacité tactique lue dans le jeu (0-100) :
+ * - « learn » sous 60 : la tactique n'est pas encore comprise, les séances tactiques passent en premier ;
+ * - « build » de 60 à 79 : on continue de construire, en gardant la progression ;
+ * - « keep » à 80 et plus : on entretient (ce qui est appris s'efface), la progression reprend la main ;
+ * - « unknown » : jauge non lue, compromis de 4 séances.
+ * Repère (test sur le code d'entraînement de FM27, publié avec le banc d'essai de jamiebolden) : il faut environ 7
+ * séances tactiques par semaine, en rotation, pour garder toutes les zones au-dessus de 80 ; passer l'efficacité de 50
+ * à 100 rapporte environ +0,15 point par match.
+ */
+export type TacticalMode = 'learn' | 'build' | 'keep' | 'unknown';
+export const TE_LEARN_BELOW = 60;
+export const TE_KEEP_FROM = 80;
+export function tacticalMode(te: number | null | undefined): TacticalMode {
+  if (te == null || !Number.isFinite(te)) return 'unknown';
+  return te < TE_LEARN_BELOW ? 'learn' : te < TE_KEEP_FROM ? 'build' : 'keep';
+}
+/** Séances tactiques visées par semaine selon le régime (la place disponible peut en laisser moins). */
+export const TACTICAL_TARGET: Record<TacticalMode, number> = { learn: 7, build: 5, keep: 3, unknown: 4 };
+/** Équipes de jeunes : la progression d'abord. */
+export const YOUTH_TACTICAL = 2;
+/**
+ * Séances de développement utiles par semaine : les quatre séances différentes de la meilleure semaine mesurée par
+ * harvestgreen22 (33,3 de CA sur la saison) ; au-delà, l'écart entre deux bons programmes reste sous 5 %.
+ */
+export const DEV_TARGET = 4;
+/** Jours de repos complet visés : un jour de repos complet saute le contrôle de blessure à l'entraînement. */
+export const FULL_REST_MIN_FREE_DAYS = 3;
+
+/** Une explication de la semaine, libellée dans fm.train.lesson.<id>. */
+export interface WeekLesson {
+  id: 'mode' | 'modeUnknown' | 'fullRest' | 'devBlock' | 'devShort' | 'tacticalShort' | 'rotation' | 'pressTrap' | 'prep' | 'recover' | 'congested' | 'noMatch' | 'partTime';
+  params?: Record<string, string | number>;
+}
+
+/** Zones tactiques travaillées les semaines précédentes en rotation : l'ordre de toutes les zones, décalé chaque semaine. */
+function rotationAreas(week: number): EffArea[] {
+  const order: EffArea[] = ['buildUpStrategy', 'outOfPossessionShape', 'chanceCreation', 'lineOfEngagement', 'inPossessionShape', 'pressingIntensity', 'passingStyle'];
+  const k = (week - 1) % order.length;
+  return [...order.slice(k), ...order.slice(0, k)];
+}
 
 /**
- * Semaine de saison du programme FM Immersion, une seule proposition, qui réunit ce que les trois sources ont montré :
- * - progression des attributs (harvestgreen22, FM Arena, mesuré) : une séance de développement chaque jour de travail,
- *   dans l'ordre Condition physique, Ballon offensif du style, Ballon défensif, Condition physique légère ; jamais de
- *   condition physique l'avant-veille d'un match ; semaine sans match : Développement individuel le dernier jour ;
- * - efficacité tactique (AlexJeuVideal, banc d'essai) : deux Pièges du pressing par semaine, puis les zones les moins
- *   comprises d'après les jauges du jeu (à défaut, les zones prioritaires du style), quatre séances tactiques au plus ;
- *   quand le jeu dit que tout est compris, seules les deux séances de pressing restent ;
- * - calendrier (Freedom, FM Scout) : la veille du match une seule séance de préparation (Progression du ballon et Bloc
- *   défensif en alternance, Bloc défensif puis coups de pied arrêtés en fin de saison), le lendemain Repos puis
- *   Récupération ; semaine à 3 matchs ou plus : repos complet ; club à temps partiel : la dernière séance avant le
- *   match sert de préparation. Chaque séance porte sa raison (`why`).
+ * Semaine de saison du programme FM Immersion, une seule proposition, construite d'après ce que les tests montrent :
+ * - les lendemains de match : Repos puis Récupération ; la veille : une seule séance de préparation ;
+ * - un jour de repos complet dès qu'il reste au moins trois jours de travail (deux sans match) : le jeu ne fait pas de
+ *   contrôle de blessure à l'entraînement ce jour-là ;
+ * - le développement regroupé sur les premiers jours de travail (Condition physique, Ballon offensif, Ballon défensif,
+ *   Condition physique légère, au plus quatre : au-delà rien ne s'ajoute) : regrouper les mêmes séances fait passer
+ *   le risque de blessure à l'entraînement de 13,8 % à 4,0 % pour une progression presque identique ;
+ * - les séances tactiques sur les jours les plus proches du match (ce qui est appris s'efface), leur nombre suivant
+ *   l'efficacité tactique (`tacticalMode`) : 2 Pièges du pressing, puis les zones les moins comprises, la zone n° 1 du
+ *   style, et une rotation des autres zones d'une semaine à l'autre ;
+ * - semaine à 3 matchs ou plus : repos complet. Chaque séance porte sa raison (`why`), la semaine ses explications.
  */
 function buildCoachWeek(input: TrainingInput): TrainingWeek {
   const { phase, week, monday } = input;
   const matchDays = new Set(input.matchDays.filter((d) => d >= 0 && d <= 6));
   const variant = Math.min(2, matchDays.size) as 0 | 1 | 2;
   const congested = matchDays.size >= CONGESTED_MATCHES;
+  const mode = tacticalMode(input.teOverall);
   const training = input.trainingDays ? new Set(input.trainingDays) : null;
+  const lessons: WeekLesson[] = [];
   const kindOf = (d: number): DayKind => {
     if (matchDays.has(d)) return 'match';
     if (training && !training.has(d)) return 'off';
@@ -581,6 +631,7 @@ function buildCoachWeek(input: TrainingInput): TrainingWeek {
     return 'dev';
   };
   const kinds = Array.from({ length: 7 }, (_, d) => kindOf(d));
+  // Club à temps partiel : la dernière séance avant un match sert de préparation.
   if (training) {
     for (const m of matchDays) {
       for (const d of [m - 1, m - 2]) {
@@ -592,70 +643,114 @@ function buildCoachWeek(input: TrainingInput): TrainingWeek {
         }
       }
     }
+    lessons.push({ id: 'partTime', params: { count: input.trainingDays!.length } });
   }
+  if (congested) {
+    lessons.push({ id: 'congested', params: { count: matchDays.size } });
+    const days: TrainingDay[] = kinds.map((kind, d) => ({
+      date: addDays(monday, d),
+      weekday: d,
+      kind,
+      sessions: kind === 'match' ? ['match', null, null] : kind === 'off' ? [null, null, null] : ['rest', 'rest', null],
+      why: kind === 'match' || kind === 'off' ? [null, null, null] : ['congested', 'congested', null],
+    }));
+    return { code: `${phase}${week}-${variant}`, phase, week, variant, theme: null, congested, days, mode, lessons };
+  }
+
+  // Jours de repos complet : le premier jour de travail (juste après la récupération), deux sans aucun match.
+  const free = kinds.flatMap((k, d) => (k === 'dev' ? [d] : []));
+  const restCount = free.length >= 6 ? 2 : free.length >= FULL_REST_MIN_FREE_DAYS ? 1 : 0;
+  const restDays = new Set<number>();
+  if (restCount) {
+    restDays.add(free[0]!);
+    // Sans match : le second au milieu de la semaine, pour couper le travail en deux blocs.
+    if (restCount === 2) restDays.add(free[Math.floor(free.length / 2) + 1] ?? free.at(-1)!);
+    for (const d of restDays) kinds[d] = 'rest';
+    lessons.push({ id: 'fullRest', params: { count: restDays.size } });
+  }
+  const work = kinds.flatMap((k, d) => (k === 'dev' ? [d] : []));
+  const slots = work.length * 2;
+
+  // Combien de séances tactiques et de développement : on garde toujours un peu de progression.
+  const minDev = slots >= 4 ? 2 : slots >= 2 ? 1 : 0;
+  const target = input.youth ? YOUTH_TACTICAL : TACTICAL_TARGET[mode];
+  const tacticalCount = Math.max(0, Math.min(target, slots - minDev));
+  const devCount = Math.min(DEV_TARGET + (matchDays.size === 0 ? 1 : 0), slots - tacticalCount);
+
+  // Séances tactiques : 2 Pièges du pressing, zones faibles du jeu, zone n° 1 du style, puis la rotation de la semaine.
+  const weak = input.weakAreas ?? [];
   const priorities = input.priorities ?? [];
   const top = priorities[0] ?? null;
-  // Séances tactiques de la semaine : 2 pièges, puis les zones faibles (jauges) ou prioritaires, parmi celles jugées utiles.
-  const weak = (input.weakAreas ?? []).filter((a) => META_POOL.includes(a));
-  const wanted = input.gaugesKnown ? weak.length : Math.max(weak.length, COACH_TACTICAL_MAX - PRESSING_TRAP_SESSIONS);
-  const zones = [...new Set<EffArea>([...weak, ...priorities.filter((a) => META_POOL.includes(a)), ...META_POOL])].slice(0, Math.min(wanted, COACH_TACTICAL_MAX - PRESSING_TRAP_SESSIONS));
-  const tactical: { s: SessionId; why: WhyId }[] = [
-    ...Array.from({ length: PRESSING_TRAP_SESSIONS }, () => ({ s: 'pressingTrap' as SessionId, why: 'press' as WhyId })),
-    ...zones.map((a) => ({ s: a as SessionId, why: (weak.includes(a) ? 'weak' : 'top') as WhyId })),
-  ];
+  const tactical: { s: SessionId; why: WhyId }[] = [];
+  const used = new Set<EffArea>();
+  const add = (a: EffArea, why: WhyId) => {
+    if (tactical.length >= tacticalCount || used.has(a)) return;
+    used.add(a);
+    tactical.push({ s: a, why });
+  };
+  for (let i = 0; i < Math.min(PRESSING_TRAP_SESSIONS, tacticalCount - (top && tacticalCount <= 2 ? 1 : 0)); i++) tactical.push({ s: 'pressingTrap', why: 'press' });
+  used.add('pressingTrap');
+  for (const a of weak) add(a, 'weak');
+  if (top) add(top, 'top');
+  for (const a of priorities) add(a, 'top');
+  for (const a of rotationAreas(week)) add(a, 'rotate');
+  // Les deux Pièges du pressing sur deux jours différents : on intercale une autre zone entre eux.
+  if (tactical.length >= 3 && tactical[1]!.s === 'pressingTrap') tactical.splice(1, 0, tactical.splice(2, 1)[0]!);
+
+  // Développement : physique d'abord (loin du match), ballon ensuite ; semaine sans match : Développement individuel.
   const att = ATTACK_BY_STYLE[input.style ?? ''] ?? 'attackingBalanced';
   const def = DEFENCE_BY_STYLE[input.style ?? ''] ?? 'defendingBalanced';
-  const grow: SessionId[] = ['conditioning', att, def, 'lightConditioning'];
-  const devDays = kinds.flatMap((k, d) => (k === 'dev' ? [d] : []));
-  const lastDev = devDays.at(-1);
-  // Les pièges sur les deux premiers jours de travail, les autres zones ensuite ; une séance tactique par jour au plus.
-  let t = 0;
-  let g = 0;
+  const growList: SessionId[] = ['conditioning', att, def, 'lightConditioning', 'individualDevelopment'];
+  const dev: { s: SessionId; why: WhyId }[] = growList.slice(0, devCount).map((s) => ({ s, why: s === 'individualDevelopment' ? 'indiv' : 'devBlock' }));
+
+  // Le développement remplit les premiers jours de travail (regroupé), le tactique les jours proches du match.
+  const queue = [...dev, ...tactical];
   const days: TrainingDay[] = kinds.map((kind, d) => {
     let sessions: TrainingDay['sessions'] = [null, null, null];
     let why: NonNullable<TrainingDay['why']> = [null, null, null];
     if (kind === 'match') sessions = ['match', null, null];
     else if (kind === 'recovery') {
-      sessions = congested ? ['rest', 'rest', null] : ['rest', 'recovery', null];
-      why = congested ? ['congested', 'congested', null] : ['recover', 'recover', null];
+      sessions = ['rest', 'recovery', null];
+      why = ['recover', 'recover', null];
+    } else if (kind === 'rest') {
+      sessions = ['rest', 'rest', null];
+      why = ['fullRest', 'fullRest', null];
     } else if (kind === 'prep') {
       const prep: SessionId = phase === 'C' ? (week % 2 ? 'defensiveBlock' : 'setPiecesDelivery') : week % 2 ? 'ballProgression' : 'defensiveBlock';
       sessions = [prep, 'rest', null];
       why = ['prep', 'restDay', null];
     } else if (kind === 'dev') {
-      let pick = grow[g % grow.length]!;
-      let growWhy: WhyId = 'grow';
-      if (matchDays.has(d + 2) && (pick === 'conditioning' || pick === 'heavyConditioning')) {
-        pick = grow[(g + 1) % grow.length]!;
-        growWhy = 'noCondition';
-      }
-      g++;
-      if (variant === 0 && d === lastDev) {
-        pick = 'individualDevelopment';
-        growWhy = 'indiv';
-      }
-      const tac = tactical[t++];
-      sessions = tac ? [tac.s, pick, null] : [pick, 'rest', null];
-      why = tac ? [tac.why, growWhy, null] : [growWhy, 'restDay', null];
+      const a = queue.shift();
+      const b = queue.shift();
+      sessions = [a?.s ?? 'rest', b?.s ?? 'rest', null];
+      why = [a?.why ?? 'restDay', b?.why ?? 'restDay', null];
     }
     return { date: addDays(monday, d), weekday: d, kind, sessions, why };
   });
-  // La zone n° 1 du style est travaillée chaque semaine : elle remplace la dernière zone tactique si elle manque.
-  if (top && !congested && !days.some((x) => x.sessions.includes(top))) {
-    const slot = [...days].reverse().find((x) => x.kind === 'dev' && x.sessions[0] && SESSIONS[x.sessions[0]] === 'tactical' && x.sessions[0] !== 'pressingTrap');
-    if (slot) {
-      slot.sessions[0] = top;
-      slot.why![0] = 'top';
-    } else {
-      // Aucune zone tactique cette semaine (tout est compris) : la zone n° 1 s'ajoute à un jour de progression.
-      const free = days.find((x) => x.kind === 'dev' && x.sessions[1] === 'rest');
-      if (free) {
-        free.sessions = [top, free.sessions[0], null];
-        free.why = ['top', free.why![0], null];
-      }
-    }
+
+  // Jamais de condition physique à deux jours d'un match : échange avec une séance avec ballon de la semaine.
+  const heavy = (s: SessionId | null) => s === 'conditioning' || s === 'heavyConditioning';
+  for (const day of days) {
+    if (day.kind !== 'dev' || !(matchDays.has(day.weekday + 1) || matchDays.has(day.weekday + 2))) continue;
+    day.sessions.forEach((s, i) => {
+      if (!heavy(s)) return;
+      day.sessions[i] = s === 'conditioning' && !days.some((x) => x.sessions.includes('lightConditioning')) ? 'lightConditioning' : 'possessionBallWork';
+      day.why![i] = 'noCondition';
+    });
   }
-  return { code: `${phase}${week}-${variant}`, phase, week, variant, theme: null, congested, days };
+
+  // Explications de la semaine, dans l'ordre où le joueur les lit.
+  const te = input.teOverall;
+  lessons.unshift(mode === 'unknown' ? { id: 'modeUnknown', params: { count: tacticalCount } } : { id: 'mode', params: { te: Math.round(te!), mode, count: tacticalCount } });
+  if (matchDays.size === 0) lessons.push({ id: 'noMatch' });
+  if (devCount >= 2) lessons.push({ id: 'devBlock', params: { count: devCount } });
+  else lessons.push({ id: 'devShort', params: { count: devCount } });
+  if (tacticalCount < target) lessons.push({ id: 'tacticalShort', params: { count: tacticalCount, target } });
+  if (tactical.some((x) => x.s === 'pressingTrap')) lessons.push({ id: 'pressTrap' });
+  if (tactical.some((x) => x.why === 'rotate')) lessons.push({ id: 'rotation' });
+  if (kinds.includes('prep')) lessons.push({ id: 'prep' });
+  if (kinds.includes('recovery')) lessons.push({ id: 'recover' });
+  return { code: `${phase}${week}-${variant}`, phase, week, variant, theme: null, congested, days, mode, lessons };
 }
 
 /**
@@ -925,6 +1020,8 @@ export interface IndividualSetup {
   oop: string | null;
   focus: string | null;
   intensity: IndividualIntensity;
+  /** Date de jeu où la priorité actuelle a été réglée en jeu (pour la revoir au bout de trois mois). */
+  since?: string;
 }
 export const SETUP_FIELDS = ['ip', 'oop', 'focus', 'intensity'] as const;
 export type SetupField = (typeof SETUP_FIELDS)[number];
@@ -1031,6 +1128,8 @@ export function currentTrainingWeek(o: {
   method?: TrainingMethod;
   weakAreas?: EffArea[];
   gaugesKnown?: boolean;
+  teOverall?: number | null;
+  youth?: boolean;
   /** Le calendrier couvre toute la saison (lu match par match) : une semaine sans match connu n'a pas de match. */
   calendarComplete?: boolean;
 }): TrainingWeek {
@@ -1048,7 +1147,7 @@ export function trainingWeekAt(monday: string, o: WeekOptions): TrainingWeek {
   const cal = weekMatches(o.fixtures, monday);
   const seasonal = phase === 'A' || phase === 'B' || phase === 'C';
   const matchDays = hasCalendar ? cal.days : defaultMatchDays(phase, week, seasonal ? 1 : 0);
-  return buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: hasCalendar && cal.before, trainingDays: o.trainingDays, priorities: o.priorities, style: o.style, method: o.method, weakAreas: o.weakAreas, gaugesKnown: o.gaugesKnown });
+  return buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: hasCalendar && cal.before, trainingDays: o.trainingDays, priorities: o.priorities, style: o.style, method: o.method, weakAreas: o.weakAreas, gaugesKnown: o.gaugesKnown, teOverall: o.teOverall, youth: o.youth });
 }
 
 /** Ce qui demande une action côté entraînement : joueurs en manque de rythme (l'intensité, le jeu la règle). */

@@ -13,7 +13,7 @@ import { fit, roundRect, wrap } from './gazette-une';
 const W = 1200;
 const H = 675;
 const M = 48;
-const C = { paper: '#F4F1EA', ink: '#25282D', grey: '#5C6067', orange: '#F26B1D', orangeDark: '#C2410C' };
+const C = { paper: '#F4F1EA', ink: '#0F1B2D', grey: '#56607A', orange: '#FFB547', orangeDark: '#8F5400' };
 const SERIF = '"Fraunces Variable", Georgia, serif';
 const SANS = '"Nunito Variable", system-ui, sans-serif';
 const font = (weight: number, size: number, family = SANS) => `${weight} ${size}px ${family}`;
@@ -220,7 +220,7 @@ export function bigMatchPayload(t: TFunction, m: BigMatch, lang?: string) {
         author: { name: `🔥  ${tx.tag.toUpperCase()}` },
         title: tx.title.slice(0, 256),
         description: [tx.when, m.competition ?? '', m.threat ? `*« ${m.threat} »*` : ''].filter(Boolean).join('\n').slice(0, 4000),
-        color: 0xf26b1d,
+        color: 0xffb547,
         image: { url: 'attachment://une.png' },
         footer: { text: `${paperName(t, m.club)}  ·  FM Immersion` },
       },

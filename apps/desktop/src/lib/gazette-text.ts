@@ -264,7 +264,7 @@ function accent(s: GazetteStory) {
   if (s.kind === 'result' && s.params.outcome === 'L') return 0xd93c3c;
   if (s.kind === 'position' && Number(s.params.to) < Number(s.params.from)) return 0x2e9e5b;
   if (s.kind === 'streak') return s.params.outcome === 'W' || s.params.outcome === 'unbeaten' ? 0x2e9e5b : 0xd93c3c;
-  return 0xf26b1d;
+  return 0xffb547;
 }
 
 const cut = (text: string, max: number) => (text.length > max ? `${text.slice(0, max - 1)}…` : text);

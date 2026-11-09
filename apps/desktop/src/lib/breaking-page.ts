@@ -13,7 +13,7 @@ import { fit, roundRect, wrap } from './gazette-une';
 const W = 1200;
 const H = 675;
 const M = 48;
-const C = { paper: '#F4F1EA', ink: '#25282D', grey: '#5C6067', green: '#2E9E5B', red: '#D93C3C', orange: '#F26B1D', orangeDark: '#C2410C' };
+const C = { paper: '#F4F1EA', ink: '#0F1B2D', grey: '#56607A', green: '#2E9E5B', red: '#D93C3C', orange: '#FFB547', orangeDark: '#8F5400' };
 const SERIF = '"Fraunces Variable", Georgia, serif';
 const SANS = '"Nunito Variable", system-ui, sans-serif';
 const font = (weight: number, size: number, family = SANS) => `${weight} ${size}px ${family}`;
@@ -175,7 +175,7 @@ export async function drawBreaking(t: TFunction, n: BreakingNews, opts: { lang?:
   }
   ctx.font = font(900, size, SERIF);
   const lh = Math.round(size * 1.02);
-  const nl = richTitle(ctx, tx.headline, tx.highlight, X, y + size * 0.86, TW, lh, [C.ink, C.orange]);
+  const nl = richTitle(ctx, tx.headline, tx.highlight, X, y + size * 0.86, TW, lh, [C.ink, C.orangeDark]);
   y += size * 0.86 + (nl - 1) * lh + 22;
   ctx.fillStyle = color === C.ink ? C.orange : color;
   ctx.fillRect(X, y, TW, 4);
@@ -190,7 +190,7 @@ export async function drawBreaking(t: TFunction, n: BreakingNews, opts: { lang?:
     ctx.fillText(wrap(ctx, tx.id, TW, 1)[0]!, X, y);
   }
   y += 20;
-  ctx.fillStyle = 'rgba(37,40,45,0.18)';
+  ctx.fillStyle = 'rgba(15,27,45,0.18)';
   ctx.fillRect(X, y, TW, 1.5);
   ctx.font = `italic ${font(400, 21, SERIF)}`;
   ctx.fillStyle = C.ink;
@@ -221,7 +221,7 @@ export function breakingPayload(t: TFunction, n: BreakingNews, lang?: string) {
         author: { name: `${tx.icon}  ${tx.tag.toUpperCase()}  ·  ${t('breaking.kind').toUpperCase()}` },
         title: tx.title.slice(0, 256),
         description: [tx.body, tx.weight].join('\n').slice(0, 4000),
-        color: n.kind === 'signing' ? 0x2e9e5b : n.kind === 'injury' ? 0xd93c3c : 0x25282d,
+        color: n.kind === 'signing' ? 0x2e9e5b : n.kind === 'injury' ? 0xd93c3c : 0x0f1b2d,
         image: { url: 'attachment://une.png' },
         footer: { text: `${paperName(t, n.club)}  ·  FM Immersion` },
       },

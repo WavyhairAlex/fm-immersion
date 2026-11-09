@@ -79,8 +79,22 @@ describe('Ma carrière', () => {
         custom: { equipe: {} },
       }) as unknown as FmSnapshot;
     const c = careerOf(e([day('2026-08-29', 10, []), day('2026-08-30', 11, [1]), day('2026-09-05', 11, [1]), day('2026-09-13', 13, [2, 1])]));
-    expect(c.spells[0]!.untracked).toEqual({ matches: 3, goalsFor: 3 });
+    expect(c.spells[0]!.untracked).toMatchObject({ matches: 3, goalsFor: 3, record: null });
+    expect(c.spells[0]!.untracked.scorers[0]).toEqual({ name: 'J0', goals: 2 });
     expect(c.spells[0]!.total.played).toBe(0);
+    expect(c.spells[0]!.total.topScorer).toMatchObject({ name: 'J0', value: 2 });
+
+    // Le plugin se met à lire les stats de saison : le gardien arrivé avec le coach a joué ces 3 matchs en entier.
+    const last = day('2026-09-14', 13, [2, 1]) as unknown as { custom: Record<string, unknown>; players: { id: number; apps: number }[] };
+    last.players[13]!.apps = 3;
+    last.custom.joueurs = {
+      g: { id: 13, stat_Minutes: 270, stat_StartingAppearances: 3, stat_SubAppearances: 0, stat_GamesWon: 1, stat_GamesLost: 1, stat_TeamGoals: 3, stat_TeamConceded: 4 },
+      a: { id: 0, stat_Minutes: 900, stat_StartingAppearances: 10, stat_SubAppearances: 0, stat_GamesWon: 5, stat_GamesLost: 2, stat_TeamGoals: 9, stat_TeamConceded: 0 },
+    };
+    const c2 = careerOf(e([day('2026-08-29', 10, []), day('2026-08-30', 11, [1]), day('2026-09-05', 11, [1]), day('2026-09-13', 13, [2, 1]), last as unknown as FmSnapshot]));
+    expect(c2.spells[0]!.untracked.record).toEqual({ wins: 1, draws: 1, losses: 1, goalsFor: 3, goalsAgainst: 4, witness: 'J13' });
+    expect(c2.spells[0]!.total).toMatchObject({ played: 3, wins: 1, draws: 1, losses: 1, goalsFor: 3, goalsAgainst: 4 });
+    expect(c2.totals).toMatchObject({ played: 3, wins: 1 });
   });
 
   it('historique vide', () => {

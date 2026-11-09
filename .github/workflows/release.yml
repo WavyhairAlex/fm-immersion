@@ -87,6 +87,26 @@ jobs:
           Copy-Item "$v/nsis_tauri_utils.dll" $add
           Get-ChildItem (Join-Path $tools 'NSIS') | Select-Object -ExpandProperty Name
 
+      # Texte de la release : les nouveautés de cette version, écrites pour les joueurs (src/i18n/whats-new.json,
+      # les mêmes que la fenêtre « Quoi de neuf » de l'appli).
+      - name: Notes de version pour les joueurs
+        id: notes
+        if: steps.version.outputs.skip != 'true'
+        shell: bash
+        run: |
+          {
+            echo 'body<<FIN_DES_NOTES'
+            node -e '
+              const v = require("./apps/desktop/package.json").version;
+              const n = require("./apps/desktop/src/i18n/whats-new.json").find((e) => e.version === v);
+              console.log("## Quoi de neuf\n");
+              console.log(n ? n.fr.map((l) => "- " + l).join("\n") : "- Corrections et améliorations.");
+              if (n) console.log("\n## What\x27s new\n\n" + n.en.map((l) => "- " + l).join("\n"));
+              console.log("\nMise à jour installée automatiquement au prochain démarrage de l\x27appli.");
+            '
+            echo 'FIN_DES_NOTES'
+          } >> "$GITHUB_OUTPUT"
+
       # Signature Windows (Authenticode) : à brancher ici avec SignPath une fois le projet accepté.
       # Les fichiers de mise à jour, eux, sont déjà signés avec la clé TAURI_SIGNING_PRIVATE_KEY.
       - if: steps.version.outputs.skip != 'true'
@@ -102,7 +122,7 @@ jobs:
           tagName: ${{ steps.version.outputs.tag }}
           releaseCommitish: ${{ github.sha }}
           releaseName: FM Immersion ${{ steps.version.outputs.tag }}
-          releaseBody: FM Immersion ${{ steps.version.outputs.tag }}. Mise à jour installée automatiquement au prochain démarrage de l'appli.
+          releaseBody: ${{ steps.notes.outputs.body }}
           # Brouillon pendant l'envoi des fichiers ; publié à l'étape suivante.
           releaseDraft: true
           prerelease: false

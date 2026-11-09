@@ -13,7 +13,7 @@ import { fit, roundRect, wrap } from './gazette-une';
 const W = 1200;
 const H = 675;
 const M = 48;
-const C = { paper: '#F4F1EA', ink: '#25282D', grey: '#5C6067', gold: '#B8860B', orangeDark: '#C2410C' };
+const C = { paper: '#F4F1EA', ink: '#0F1B2D', grey: '#56607A', gold: '#B8860B', orangeDark: '#8F5400' };
 const SERIF = '"Fraunces Variable", Georgia, serif';
 const SANS = '"Nunito Variable", system-ui, sans-serif';
 const font = (weight: number, size: number, family = SANS) => `${weight} ${size}px ${family}`;

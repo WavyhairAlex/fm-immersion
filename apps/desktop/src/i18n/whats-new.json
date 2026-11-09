@@ -1,0 +1,254 @@
+[
+  {
+    "version": "0.1.122",
+    "date": "2026-11-09",
+    "fr": [
+      "Le tableau de l'« Effectif » se lit plus vite : la note de projet est une lettre en couleur juste après le niveau, tu peux trier par cette note et filtrer d'un clic les joueurs A, B, C, D ou E.",
+      "Les blessures passent sous le nom du joueur, les lignes sont plus compactes, et une fin de contrat proche ou une condition basse ressort en couleur."
+    ],
+    "en": [
+      "The “Squad” table reads faster: the project grade is a coloured letter right after the level, you can sort by it and filter A, B, C, D or E players in one click.",
+      "Injuries now sit under the player's name, rows are more compact, and a contract ending soon or low condition stands out in colour."
+    ]
+  },
+  {
+    "version": "0.1.121",
+    "date": "2026-11-09",
+    "fr": [
+      "La gazette automatique ne reste plus bloquée quand une dépêche ou une affiche n'arrive pas à partir : chaque envoi est fait à part, et la gazette passe en premier.",
+      "Dans « Live Discord », tu vois la dernière gazette partie toute seule et, s'il y en a un, le dernier envoi raté avec sa raison."
+    ],
+    "en": [
+      "The automatic gazette no longer gets stuck when a news flash or poster fails to go out: each send is done on its own, and the gazette goes first.",
+      "In \"Live Discord\", you can see the last gazette sent on its own and, if any, the last failed send with its reason."
+    ]
+  },
+  {
+    "version": "0.1.120",
+    "date": "2026-11-09",
+    "fr": [
+      "Nouvelle note de projet, de A à E, pour savoir si un joueur est fait pour ta façon de jouer : elle regarde son rôle, son poste, ce que les consignes d'équipe de ton style lui demandent, sa lecture du jeu et son état d'esprit.",
+      "Tu la vois dans « Effectif », dans l'entraînement individuel de « Tactique et entraînement » et dans « Mercato et club », recrues comprises. Sur la fiche du joueur, la partie « Fait pour notre jeu ? » t'explique sa note critère par critère, avec ses points forts et ses points faibles."
+    ],
+    "en": [
+      "New project grade, from A to E, to know whether a player is made for the way you play: it looks at their role, position, what your style's team instructions ask of them, their reading of the game and their mindset.",
+      "You'll see it in “Squad”, in individual training under “Tactics & training” and in “Transfers & club”, scouting targets included. On the player sheet, the “Made for our game?” part explains the grade criterion by criterion, with strengths and weaknesses."
+    ]
+  },
+  {
+    "version": "0.1.119",
+    "date": "2026-11-09",
+    "fr": [
+      "La gazette envoyée sur Discord passe en paysage : le journal tient en trois colonnes et se lit enfin dans le salon, sans devoir l'ouvrir en grand."
+    ],
+    "en": [
+      "The gazette sent to Discord is now in landscape: the paper fits in three columns and can finally be read right in the channel, without opening it full size."
+    ]
+  },
+  {
+    "version": "0.1.118",
+    "date": "2026-11-09",
+    "fr": [
+      "Tes consignes d'équipe et individuelles sont maintenant lues dans FM27 : « Partir de ma tactique du jeu » dans Construire reprend tout, et l'analyse en tient compte.",
+      "Nouveau signal : un pressing haut avec une défense qui recule laisse un trou entre les lignes."
+    ],
+    "en": [
+      "Your team and player instructions are now read from FM27: \"Start from my in-game tactic\" in Build brings them all in, and the analysis uses them.",
+      "New warning: a high press with a defence that drops off leaves a gap between the lines."
+    ]
+  },
+  {
+    "version": "0.1.117",
+    "date": "2026-11-09",
+    "fr": [
+      "Entraînement individuel : plus besoin de tout refaire chaque semaine. Une fois réglée, la priorité d'un joueur est gardée trois mois, le temps de voir si elle donne quelque chose, sauf si elle ne colle plus à son rôle. Chaque fiche dit depuis combien de jours elle est en place."
+    ],
+    "en": [
+      "Individual training: no need to redo everything each week. Once set, a player's focus is kept for three months, long enough to see whether it works, unless it no longer fits the role. Each card shows how many days it has been in place."
+    ]
+  },
+  {
+    "version": "0.1.116",
+    "date": "2026-11-09",
+    "fr": [
+      "Entraînement repensé : la semaine suit ton efficacité tactique (plus de séances tactiques tant que ta tactique n'est pas comprise, moins une fois qu'elle l'est), regroupe les séances de progression et garde de vrais jours de repos complet pour limiter les blessures.",
+      "Chaque semaine t'explique ses choix dans « Pourquoi cette semaine », et chaque réglage individuel dit pourquoi il est conseillé.",
+      "Nouvel onglet « Comprendre » dans Entraînement : ce qui fait vraiment progresser un joueur, ce que peut encore gagner chacun de tes joueurs, et les jeunes à qui il faut des minutes.",
+      "Écran Entraînement plus lisible : les gestes à faire dans le jeu sont numérotés, la semaine montre seulement les séances à recopier, et l'onglet Individuel présente une fiche par joueur, rangée par ce qu'il reste à régler."
+    ],
+    "en": [
+      "Training rethought: the week follows your tactical effectiveness (more tactical sessions while your tactic isn't understood, fewer once it is), groups development sessions and keeps real full rest days to limit injuries.",
+      "Each week explains its choices in \"Why this week\", and each individual setting says why it is advised.",
+      "New \"Understand\" tab in Training: what really makes a player develop, what each of your players can still gain, and the youngsters who need minutes.",
+      "Clearer Training screen: the steps to do in the game are numbered, the week only shows the sessions to copy, and the Individual tab shows one card per player, sorted by what is left to set."
+    ]
+  },
+  {
+    "version": "0.1.115",
+    "date": "2026-11-09",
+    "fr": [
+      "Nouveau logo : un maillot de foot ambre, avec « Immersion » en nom et « FM » en numéro.",
+      "L'appli passe aux couleurs du maillot, bleu nuit et ambre, jusqu'aux images de la gazette et du direct sur Discord."
+    ],
+    "en": [
+      "New logo: an amber football shirt with \"Immersion\" as the name and \"FM\" as the number.",
+      "The app now wears the shirt's colours, night blue and amber, right down to the gazette and live match images on Discord."
+    ]
+  },
+  {
+    "version": "0.1.114",
+    "date": "2026-11-09",
+    "fr": [
+      "Nouveau : après chaque mise à jour, cette fenêtre « Quoi de neuf » te dit ce qui a changé.",
+      "Tu retrouves tout l'historique des nouveautés en cliquant sur le numéro de version, en bas de la barre latérale."
+    ],
+    "en": [
+      "New: after every update, this \"What's new\" window tells you what changed.",
+      "You can find the full history by clicking the version number at the bottom of the sidebar."
+    ]
+  },
+  {
+    "version": "0.1.113",
+    "date": "2026-11-09",
+    "fr": [
+      "Ma carrière : le bilan victoires, nuls et défaites compte aussi les matchs joués avant que l'appli lise les scores."
+    ],
+    "en": [
+      "My career: the win, draw and loss record now also counts matches played before the app started reading scores."
+    ]
+  },
+  {
+    "version": "0.1.112",
+    "date": "2026-11-09",
+    "fr": [
+      "Discord : les dépêches et le direct de tes matchs ont une nouvelle présentation.",
+      "Le direct passe en format large et montre les cartons et les passeurs décisifs."
+    ],
+    "en": [
+      "Discord: news flashes and your live match updates have a new look.",
+      "The live update now uses a wide format and shows cards and assists."
+    ]
+  },
+  {
+    "version": "0.1.111",
+    "date": "2026-11-09",
+    "fr": [
+      "Ma carrière : les matchs joués avant la lecture des scores sont comptés grâce aux apparitions des joueurs."
+    ],
+    "en": [
+      "My career: matches played before scores were read are now counted from player appearances."
+    ]
+  },
+  {
+    "version": "0.1.110",
+    "date": "2026-11-09",
+    "fr": [
+      "Ma carrière : tu peux écarter un club qui vient d'une autre partie.",
+      "Les clubs que tu as entraînés avant d'installer l'appli sont retrouvés."
+    ],
+    "en": [
+      "My career: you can remove a club that came from another save.",
+      "Clubs you managed before installing the app are now found."
+    ]
+  },
+  {
+    "version": "0.1.109",
+    "date": "2026-11-08",
+    "fr": [
+      "Nouvel écran « Ma carrière » : tes statistiques de coach, les clubs que tu as entraînés et une carte du monde de ton parcours."
+    ],
+    "en": [
+      "New \"My career\" screen: your manager stats, the clubs you have managed and a world map of your journey."
+    ]
+  },
+  {
+    "version": "0.1.108",
+    "date": "2026-11-08",
+    "fr": [
+      "Visages : l'écran est plus simple. Il montre seulement ce qu'il faut pour installer le pack ; les outils de génération sont rangés dans un « mode atelier »."
+    ],
+    "en": [
+      "Faces: the screen is simpler. It only shows what you need to install the pack; the generation tools are tucked away in a \"workshop mode\"."
+    ]
+  },
+  {
+    "version": "0.1.107",
+    "date": "2026-11-08",
+    "fr": [
+      "Gazette : une « édition record » sort quand un joueur marque un triplé, quand tu enchaînes les victoires, signes ta plus large victoire ou mets fin à une longue disette."
+    ],
+    "en": [
+      "Gazette: a \"record edition\" comes out for a hat-trick, a winning streak, your biggest win or the end of a long drought."
+    ]
+  },
+  {
+    "version": "0.1.106",
+    "date": "2026-11-08",
+    "fr": [
+      "Sauvegardes : l'appli peut faire des copies de secours de ta partie FM27 (option à cocher, coupée par défaut). Tes fichiers de jeu ne sont jamais modifiés."
+    ],
+    "en": [
+      "Saves: the app can make backup copies of your FM27 save (an option to tick, off by default). Your game files are never changed."
+    ]
+  },
+  {
+    "version": "0.1.105",
+    "date": "2026-11-08",
+    "fr": [
+      "Discord : une « affiche du choc » en image annonce les grands matchs (coupe, choc au sommet, duel direct) quelques jours avant."
+    ],
+    "en": [
+      "Discord: a \"big match poster\" image announces key games (cup, top-of-the-table clash, direct rival) a few days ahead."
+    ]
+  },
+  {
+    "version": "0.1.104",
+    "date": "2026-11-08",
+    "fr": [
+      "Nouvel écran « Mes sauvegardes » : tes fichiers de partie FM27, leur taille et leur date, avec une alerte sur la carte de carrière si quelque chose cloche."
+    ],
+    "en": [
+      "New \"My saves\" screen: your FM27 save files, their size and date, with a warning on the career card if something looks wrong."
+    ]
+  },
+  {
+    "version": "0.1.103",
+    "date": "2026-11-08",
+    "fr": [
+      "Rédaction par IA : quand tu fermes l'appli, le modèle Ollama est arrêté et libère la mémoire de ton PC."
+    ],
+    "en": [
+      "AI writing: when you close the app, the Ollama model is stopped and frees your PC's memory."
+    ]
+  },
+  {
+    "version": "0.1.102",
+    "date": "2026-11-08",
+    "fr": [
+      "Direct Discord : les expulsions et les buts refusés apparaissent, et l'image passe au format paysage."
+    ],
+    "en": [
+      "Discord live: red cards and disallowed goals now appear, and the image uses a landscape format."
+    ]
+  },
+  {
+    "version": "0.1.101",
+    "date": "2026-11-08",
+    "fr": [
+      "Construire une tactique : les missions des rôles de FM27 sont gardées et quelques fautes de pluriel corrigées."
+    ],
+    "en": [
+      "Tactic builder: FM27 role duties are kept and a few plural typos are fixed."
+    ]
+  },
+  {
+    "version": "0.1.100",
+    "date": "2026-11-08",
+    "fr": [
+      "Discord : des dépêches en image pour une recrue, le départ d'un titulaire ou un flash infirmerie."
+    ],
+    "en": [
+      "Discord: news flash images for a new signing, a starter leaving or an injury update."
+    ]
+  }
+]

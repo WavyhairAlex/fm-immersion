@@ -91,7 +91,7 @@ export function contrast(a: string, b: string): number {
 }
 
 /** Texte lisible sur ce fond : blanc ou anthracite, celui qui contraste le plus. */
-export const inkOn = (bg: string, light = '#FFFFFF', dark = '#25282D') => (contrast(bg, light) >= contrast(bg, dark) ? light : dark);
+export const inkOn = (bg: string, light = '#FFFFFF', dark = '#0F1B2D') => (contrast(bg, light) >= contrast(bg, dark) ? light : dark);
 
 /**
  * Couleur du club qui se voit sur ce fond (contraste ≥ `min`), de la principale à la troisième ; sinon `fallback`.
