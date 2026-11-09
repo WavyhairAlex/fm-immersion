@@ -1,5 +1,5 @@
 import { ATTR_GROUPS } from './progress';
-import { HARVEST_FOCUS, SLOW_BELOW, individualFocus } from './training';
+import { HARVEST_FOCUS, INDIVIDUAL_FOCUS, SLOW_BELOW, individualFocus } from './training';
 
 /**
  * Le côté « pédagogique » de l'entraînement : ce qui fait vraiment progresser un joueur, et pourquoi chaque réglage
@@ -120,4 +120,32 @@ export function roleAdvice(plan: { slot: unknown; player: { age: number | null; 
     return { why: 'youngBench', devRole: back ? 'dm' : 'am' };
   }
   return { why: 'project', devRole: null };
+}
+
+/**
+ * Une priorité individuelle se garde des mois : la progression d'un joueur se voit au mois, pas à la semaine, et la
+ * priorité ne crée pas de progression, elle la dirige. On ne propose donc de la changer que si :
+ * - elle a trois mois (`FOCUS_REVIEW_DAYS`) : le temps de juger si elle a donné quelque chose ;
+ * - ou elle n'a plus de sens (son rôle a changé, ses attributs ne sont plus des attributs clés du rôle).
+ * Un attribut qui gagne un point et passe derrière un autre ne suffit pas à tout changer chaque semaine.
+ */
+export const FOCUS_REVIEW_DAYS = 91;
+export type FocusKeep = 'kept' | 'review' | 'invalid';
+
+export function focusReview(
+  applied: { focus: string | null; since?: string } | undefined,
+  proposed: string | null,
+  ctx: { gameDate: string | null; roleKeys: string[]; fromStats: string | null; age: number | null; gk: boolean },
+): { focus: string | null; keep: FocusKeep | null; days: number | null } {
+  const cur = applied?.focus ?? null;
+  const days = applied?.since && ctx.gameDate ? Math.max(0, Math.round((Date.parse(ctx.gameDate.slice(0, 10)) - Date.parse(applied.since.slice(0, 10))) / 86_400_000)) : null;
+  if (!cur || cur === proposed) return { focus: proposed, keep: null, days };
+  const def = INDIVIDUAL_FOCUS[cur];
+  const valid =
+    !!def &&
+    !(def.gk && !ctx.gk) &&
+    (cur === ctx.fromStats || (cur === HARVEST_FOCUS && !ctx.gk && ctx.age != null && ctx.age <= 23) || def.attrs.some((a) => ctx.roleKeys.includes(a)));
+  if (!valid) return { focus: proposed, keep: 'invalid', days };
+  if (days != null && days >= FOCUS_REVIEW_DAYS) return { focus: proposed, keep: 'review', days };
+  return { focus: cur, keep: 'kept', days };
 }

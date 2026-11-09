@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.117",
+    "date": "2026-11-09",
+    "fr": [
+      "Entraînement individuel : plus besoin de tout refaire chaque semaine. Une fois réglée, la priorité d'un joueur est gardée trois mois, le temps de voir si elle donne quelque chose, sauf si elle ne colle plus à son rôle. Chaque fiche dit depuis combien de jours elle est en place."
+    ],
+    "en": [
+      "Individual training: no need to redo everything each week. Once set, a player's focus is kept for three months, long enough to see whether it works, unless it no longer fits the role. Each card shows how many days it has been in place."
+    ]
+  },
+  {
     "version": "0.1.116",
     "date": "2026-11-09",
     "fr": [
