@@ -101,25 +101,34 @@ de version) et la release GitHub reprend le même texte. Le test `whats-new.test
   techniques, rien ne change pour toi. »
 - Quand deux branches prennent le même numéro, la note suit la version renumérotée (une entrée par numéro publié).
 
-## Identité visuelle (choix du 06/11/2026)
-- **Anthracite et orange**, les couleurs d'Amnesix. Toujours lisible : texte anthracite sur fond clair, texte blanc
-  sur anthracite ou sur orange foncé, jamais de texte blanc sur l'orange vif.
-- Mise en page (refonte du 07/11/2026, 0.1.48) : **une seule barre latérale** anthracite (`src/components/Sidebar.tsx`).
-  En haut, la **carte de carrière** : la partie FM suivie par toute l'appli (`src/lib/career.ts`, choisie une fois),
+## Identité visuelle (choix du 09/11/2026, remplace l'anthracite et orange du 06/11)
+- **Bleu nuit et ambre**, les couleurs du **logo maillot** : un maillot ambre vu de dos, « IMMERSION » en nom et « FM » en
+  numéro (bleu nuit). Version « extérieur » : maillot bleu nuit liseré ambre, pour les grands fonds sombres. Sources en
+  tracés purs dans `brand/source` (`fabriquer-logo.py`, Barlow Condensed OFL pour « IMMERSION », « FM » dessiné à la main) ;
+  icônes de `src-tauri/icons` et favicons tirés de `fm-immersion-icone.svg`. L'ancien noir/blanc/orange a été abandonné car il
+  rappelait le logo d'un site pour adultes : ne pas y revenir.
+- Toujours lisible : texte bleu nuit sur l'ambre (9,8) et sur fond clair, texte blanc sur bleu nuit ; **jamais de texte blanc
+  sur l'ambre**, jamais d'ambre vif comme texte sur fond clair (prendre `orange-fonce`).
+- Mise en page (refonte du 07/11/2026, 0.1.48) : **une seule barre latérale** bleu nuit (`src/components/Sidebar.tsx`), logo
+  maillot en tête. Puis la **carte de carrière** : la partie FM suivie par toute l'appli (`src/lib/career.ts`, choisie une fois),
   la photo du coach (choisie par le joueur), le club et la date de jeu. Puis trois groupes : *Mon club* (les écrans
   de FM Coach à plat, `src/lib/club-nav.ts`, routes `/club/:vue`), *Ma carrière racontée* (Gazette, Live Discord,
   Défis), *Le jeu* (Visages, Plugin et réglages, Monde partagé). L'accueil « Aujourd'hui » (`/`) montre le briefing
   de l'adjoint et un cadre par mode. La lecture du plugin tourne pour toute l'appli (`src/lib/fm-sync.ts`).
   Visages reste utilisable sans carrière.
 - Les jetons Tailwind gardent leurs noms hérités de Simloom pour ne pas réécrire les écrans :
-  - `canard` #25282D — anthracite : texte principal, fonds sombres, barre latérale
-  - `orange` #F26B1D — marque : liserés, sélection, logo ; `orange-fonce` #C2410C — boutons principaux et liens (texte blanc : 5,2) ;
-    `orange-clair` #FFE4D3 — boutons secondaires et pastilles (texte anthracite)
+  - `canard` #0F1B2D — bleu nuit : texte principal, fonds sombres, barre latérale
+  - `orange` #FFB547 — ambre de marque : boutons principaux (texte bleu nuit), liserés, sélection, logo ;
+    `orange-fonce` #8F5400 — liens et textes de marque sur fond clair (5,4 sur crème, blanc dessus : 6,1) ;
+    `orange-clair` #FFEBC7 — boutons secondaires et pastilles (texte bleu nuit)
   - `eau` / `eau-soutenu` / `eau-fonce` — vert des états « bon / OK » uniquement
   - `ambre` #F5B700 — alertes ; `corail` #D93C3C — erreurs, suppression
-  - `creme` #F2F2F0 — fond ; `brun` #5C6067 — texte secondaire
+  - `creme` #F2F2F0 — fond ; `brun` #56607A — texte secondaire
+- Images Discord (gazette, direct, dépêches) : mêmes couleurs (`C.orange` = ambre, `C.orangeDark` = #8F5400 pour du texte
+  sur le papier), couleur d'embed par défaut 0xFFB547.
 - Polices embarquées (`@fontsource`) : **Fraunces** pour les titres, **Nunito** pour le texte.
-- Jeux : mention de non-affiliation, **aucun logo ni visuel du jeu**. La mascotte Simloom n'est plus affichée.
+- Jeux : mention de non-affiliation, **aucun logo ni visuel du jeu**, aucune police ni maillot copiés d'un vrai club.
+  La mascotte Simloom n'est plus affichée.
 
 ## Conventions
 - Interface : **français et anglais dès le départ**. Aucune chaîne en dur dans les composants :

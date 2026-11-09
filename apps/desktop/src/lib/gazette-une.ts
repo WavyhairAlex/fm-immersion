@@ -17,11 +17,11 @@ const H = 675;
 const M = 48;
 const C = {
   paper: '#F4F1EA',
-  ink: '#25282D',
-  grey: '#5C6067',
-  orange: '#F26B1D',
-  orangeDark: '#C2410C',
-  orangeLight: '#FFE4D3',
+  ink: '#0F1B2D',
+  grey: '#56607A',
+  orange: '#FFB547',
+  orangeDark: '#8F5400',
+  orangeLight: '#FFEBC7',
   green: '#2E9E5B',
   red: '#D93C3C',
   dash: '#B9B6AD',
@@ -462,7 +462,7 @@ export async function drawUne(
     if (extra) piece(` · ${extra}`, footInk);
   }
   ctx.font = font(400, 14);
-  ctx.fillStyle = footInk === '#FFFFFF' ? 'rgba(255,255,255,0.67)' : 'rgba(37,40,45,0.7)';
+  ctx.fillStyle = footInk === '#FFFFFF' ? 'rgba(255,255,255,0.67)' : 'rgba(15,27,45,0.7)';
   ctx.textAlign = 'right';
   ctx.fillText('FM Immersion', W - M, fy);
   return canvas;

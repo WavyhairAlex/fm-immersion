@@ -19,12 +19,12 @@ const SIDE = 360;
 const MAIN = W - 2 * M - GUTTER - SIDE;
 const C = {
   paper: '#F4F1EA',
-  ink: '#25282D',
-  grey: '#5C6067',
+  ink: '#0F1B2D',
+  grey: '#56607A',
   light: '#A9ACB2',
-  orange: '#F26B1D',
-  orangeDark: '#C2410C',
-  orangeLight: '#FFE4D3',
+  orange: '#FFB547',
+  orangeDark: '#8F5400',
+  orangeLight: '#FFEBC7',
   green: '#2E9E5B',
   red: '#D93C3C',
   amber: '#F5B700',

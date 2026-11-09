@@ -24,13 +24,13 @@ describe('couleurs des clubs', () => {
   });
 
   it('choisit un texte lisible et une couleur visible sur le papier', () => {
-    expect(inkOn('#ffffff')).toBe('#25282D');
+    expect(inkOn('#ffffff')).toBe('#0F1B2D');
     expect(inkOn('#c8102e')).toBe('#FFFFFF');
-    expect(inkOn('#ffd700')).toBe('#25282D');
+    expect(inkOn('#ffd700')).toBe('#0F1B2D');
     expect(contrast('#000000', '#ffffff')).toBeCloseTo(21, 0);
     // Club en blanc et noir : son blanc ne se voit pas sur le papier, son noir oui.
-    expect(visibleOn(['#ffffff', '#111111'], '#F4F1EA', '#F26B1D')).toBe('#111111');
-    expect(visibleOn(['#fafafa'], '#F4F1EA', '#F26B1D')).toBe('#F26B1D');
+    expect(visibleOn(['#ffffff', '#111111'], '#F4F1EA', '#FFB547')).toBe('#111111');
+    expect(visibleOn(['#fafafa'], '#F4F1EA', '#FFB547')).toBe('#FFB547');
   });
 
   it('tire un sigle du nom quand le jeu ne le donne pas', () => {

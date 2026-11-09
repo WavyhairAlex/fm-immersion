@@ -91,7 +91,7 @@ export function FmOffseason({ snap, players, list, go }: { snap: FmSnapshot; pla
       <ol className="space-y-3">
         {steps.map((st, i) => (
           <li key={st.id} className="flex gap-3">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-orange-fonce text-sm font-bold text-white" aria-hidden>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-orange text-sm font-bold text-canard" aria-hidden>
               {i + 1}
             </span>
             <div className="min-w-0 flex-1">

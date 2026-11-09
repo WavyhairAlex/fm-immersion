@@ -11,6 +11,7 @@ import { useGameStatus } from '../lib/game';
 import { useFacesDirs, useFacesUpdate } from '../lib/faces';
 import { useSaveStatus } from '../lib/save-files';
 import { CoachPhotoEditor, type CoachPhotoResult } from './CoachPhotoEditor';
+import logoMaillot from '../assets/logo-maillot.svg';
 
 /** Icônes au trait (24×24), dessinées ici : aucun visuel du jeu. */
 const ICONS: Record<string, ReactNode> = {
@@ -105,8 +106,10 @@ export function Sidebar() {
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col overflow-y-auto bg-canard px-3 py-5 text-white">
-      <Link to="/" className="px-3" aria-label="FM Immersion">
-        <span className="font-display text-2xl font-semibold">
+      <Link to="/" className="flex items-center gap-2.5 px-3" aria-label="FM Immersion">
+        {/* Logo : le maillot ambre « IMMERSION / FM » (source : brand/source/fabriquer-logo.py). */}
+        <img src={logoMaillot} alt="" className="h-9 w-9 shrink-0" />
+        <span className="font-display whitespace-nowrap text-[1.4rem] font-semibold">
           FM <span className="text-orange">Immersion</span>
         </span>
       </Link>
@@ -214,8 +217,8 @@ function CareerCard() {
             {settings?.coachPhoto ? <img src={settings.coachPhoto} alt="" className="h-full w-full object-cover" /> : <span className="text-sm font-extrabold">{initials}</span>}
           </span>
           {/* Appareil photo : montre que le rond se clique pour choisir la photo du coach. */}
-          <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-fonce ring-2 ring-canard group-hover:brightness-110" aria-hidden>
-            <svg viewBox="0 0 24 24" className="h-3 w-3 fill-none stroke-white" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+          <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange ring-2 ring-canard group-hover:brightness-110" aria-hidden>
+            <svg viewBox="0 0 24 24" className="h-3 w-3 fill-none stroke-canard" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
               <circle cx="12" cy="13" r="3.5" />
             </svg>

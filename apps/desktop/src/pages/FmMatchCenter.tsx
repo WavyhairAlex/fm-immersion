@@ -169,7 +169,7 @@ export function FmMatchCenter({
             </>
           )}
           <div className="mt-5 flex flex-wrap gap-2">
-            <button type="button" className="rounded-lg bg-orange-fonce px-4 py-2 text-sm font-bold text-white hover:bg-orange-fonce/90" onClick={() => go('tactic')}>
+            <button type="button" className="rounded-lg bg-orange px-4 py-2 text-sm font-bold text-canard hover:brightness-105" onClick={() => go('tactic')}>
               {t('fm.mc.prepareMatch')} →
             </button>
             {nm && (
@@ -307,7 +307,7 @@ export function FmMatchCenter({
               <div className="flex flex-wrap items-center gap-3">
                 <label className="flex items-center gap-2 font-bold text-canard">
                   {t('fm.matchSheet.live.minute')}
-                  <input type="range" min={0} max={95} step={5} value={minute} onChange={(e) => setMinute(Number(e.target.value))} className="w-40 accent-[#C2410C]" />
+                  <input type="range" min={0} max={95} step={5} value={minute} onChange={(e) => setMinute(Number(e.target.value))} className="w-40 accent-[#8F5400]" />
                   <span className="w-10 tabular-nums">{minute}'</span>
                 </label>
                 <div className="flex items-center gap-1">
@@ -370,7 +370,7 @@ export function FmMatchCenter({
                       className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg ${subState[i] === 'now' ? 'bg-eau/15 p-1.5 ring-1 ring-eau-fonce/40' : subState[i] === 'done' ? 'opacity-50 line-through' : ''}`}
                     >
                       {live ? (
-                        <input type="checkbox" className="h-4 w-4 accent-[#C2410C]" checked={subState[i] === 'done'} onChange={() => toggleDone(c.slot)} aria-label={t('fm.matchSheet.live.done')} />
+                        <input type="checkbox" className="h-4 w-4 accent-[#8F5400]" checked={subState[i] === 'done'} onChange={() => toggleDone(c.slot)} aria-label={t('fm.matchSheet.live.done')} />
                       ) : null}
                       <span className="w-10 shrink-0 font-bold tabular-nums text-eau-fonce">{c.minute}'</span>
                       <PlayerLink player={c.out} focus="form" />
@@ -418,19 +418,19 @@ function Stadium({ className }: { className?: string }) {
       <defs>
         <linearGradient id="fmi-sky" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#4A3340" />
-          <stop offset="0.45" stopColor="#C2410C" />
-          <stop offset="0.8" stopColor="#F26B1D" />
+          <stop offset="0.45" stopColor="#8F5400" />
+          <stop offset="0.8" stopColor="#FFB547" />
           <stop offset="1" stopColor="#FFB27A" />
         </linearGradient>
         <linearGradient id="fmi-fade" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#25282D" />
-          <stop offset="0.08" stopColor="#25282D" stopOpacity="0.85" />
-          <stop offset="0.3" stopColor="#25282D" stopOpacity="0.35" />
-          <stop offset="1" stopColor="#25282D" stopOpacity="0" />
+          <stop offset="0" stopColor="#0F1B2D" />
+          <stop offset="0.08" stopColor="#0F1B2D" stopOpacity="0.85" />
+          <stop offset="0.3" stopColor="#0F1B2D" stopOpacity="0.35" />
+          <stop offset="1" stopColor="#0F1B2D" stopOpacity="0" />
         </linearGradient>
         <radialGradient id="fmi-sun" cx="0.7" cy="0.72" r="0.25">
-          <stop offset="0" stopColor="#FFE4D3" stopOpacity="0.95" />
-          <stop offset="1" stopColor="#FFE4D3" stopOpacity="0" />
+          <stop offset="0" stopColor="#FFEBC7" stopOpacity="0.95" />
+          <stop offset="1" stopColor="#FFEBC7" stopOpacity="0" />
         </radialGradient>
       </defs>
       <rect width="600" height="260" fill="url(#fmi-sky)" />
@@ -440,7 +440,7 @@ function Stadium({ className }: { className?: string }) {
         <g key={x} fill="#1B1D21">
           <rect x={x - 2} y="40" width="4" height="150" />
           <rect x={x - 18} y="30" width="36" height="14" rx="2" />
-          <g fill="#FFE4D3" opacity="0.9">
+          <g fill="#FFEBC7" opacity="0.9">
             {[-12, -4, 4, 12].map((d) => (
               <circle key={d} cx={x + d} cy="37" r="2.6" />
             ))}

@@ -207,11 +207,11 @@ function Crest({ club, size = 40 }: { club: string; size?: number }) {
   const { data: logo } = useQuery({ queryKey: ['clubLogo', club], queryFn: () => clubLogoUrl(club), staleTime: Infinity });
   const look = clubLook(club);
   if (logo) return <img src={logo} alt="" width={size} height={size} className="shrink-0 object-contain" />;
-  const bg = look?.colors[0] ?? '#25282D';
+  const bg = look?.colors[0] ?? '#0F1B2D';
   return (
     <span
       className={`flex shrink-0 items-center justify-center rounded-full font-extrabold ${crestLetters(club, look?.abbr).length > 3 ? 'text-[10px]' : 'text-xs'}`}
-      style={{ width: size, height: size, background: bg, color: inkOn(bg), boxShadow: `inset 0 0 0 3px ${look?.colors[1] ?? '#F26B1D'}` }}
+      style={{ width: size, height: size, background: bg, color: inkOn(bg), boxShadow: `inset 0 0 0 3px ${look?.colors[1] ?? '#FFB547'}` }}
       aria-hidden
     >
       {crestLetters(club, look?.abbr)}
@@ -441,7 +441,7 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
           <path
             key={i}
             d={s.d}
-            fill={s.code && s.code === currentShape ? '#F26B1D' : s.code && visited.has(s.code) ? '#FFB98F' : '#D9DAD5'}
+            fill={s.code && s.code === currentShape ? '#FFB547' : s.code && visited.has(s.code) ? '#FFD99A' : '#D9DAD5'}
             stroke="#FFFFFF"
             strokeWidth={0.6}
             vectorEffect="non-scaling-stroke"
@@ -453,7 +453,7 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
           <polyline
             points={route.map((p) => `${p.x},${p.y}`).join(' ')}
             fill="none"
-            stroke="#C2410C"
+            stroke="#8F5400"
             strokeWidth={2}
             strokeDasharray="6 5"
             strokeLinecap="round"
@@ -467,7 +467,7 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
           return (
             <g key={i}>
               <title>{`${i + 1}. ${s.club}`}</title>
-              <circle cx={p.x} cy={p.y} r={r} fill={s.current ? '#C2410C' : '#25282D'} stroke="#FFFFFF" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+              <circle cx={p.x} cy={p.y} r={r} fill={s.current ? '#8F5400' : '#0F1B2D'} stroke="#FFFFFF" strokeWidth={2} vectorEffect="non-scaling-stroke" />
               <text x={p.x} y={p.y} dy="0.35em" textAnchor="middle" fontSize={r * 1.15} fontWeight={800} fill="#FFFFFF">
                 {i + 1}
               </text>
@@ -477,7 +477,7 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
                 dy="0.35em"
                 fontSize={r * 1.25}
                 fontWeight={800}
-                fill="#25282D"
+                fill="#0F1B2D"
                 stroke="#FFFFFF"
                 strokeWidth={3}
                 paintOrder="stroke"

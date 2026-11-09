@@ -26,7 +26,7 @@ function md(text: string): ReactNode[] {
 
 /** Aperçu d'un message Discord (thème sombre de Discord), pour montrer au joueur ce que verront ses amis. */
 export function DiscordEmbed({ embed, label }: { embed: Embed; label: string }) {
-  const color = `#${(embed.color ?? 0xf26b1d).toString(16).padStart(6, '0')}`;
+  const color = `#${(embed.color ?? 0xffb547).toString(16).padStart(6, '0')}`;
   return (
     <figure className="rounded-lg bg-[#313338] p-3 text-[13px] leading-snug text-[#DBDEE1]" aria-label={label}>
       <p className="font-bold text-white">FM Immersion</p>

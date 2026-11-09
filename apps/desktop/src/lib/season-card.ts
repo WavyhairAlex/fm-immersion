@@ -14,16 +14,16 @@ const W = 1080;
 const H = 1440;
 const M = 48;
 const C = {
-  bg: '#25282D',
+  bg: '#0F1B2D',
   panel: '#30343A',
   pitch: '#2B2F35',
   line: 'rgba(255,255,255,0.13)',
   ink: '#FFFFFF',
   soft: '#B9BCC2',
-  orange: '#F26B1D',
-  orangeDark: '#C2410C',
-  orangeLight: '#FFE4D3',
-  dark: '#25282D',
+  orange: '#FFB547',
+  orangeDark: '#8F5400',
+  orangeLight: '#FFEBC7',
+  dark: '#0F1B2D',
   green: '#2E9E5B',
 };
 const SERIF = '"Fraunces Variable", Georgia, serif';
@@ -375,7 +375,7 @@ export function cardPayload(t: TFunction, r: SeasonReview, lang?: string) {
         author: { name: `${t('card.kicker').toUpperCase()}  ·  ${t('season.label', { season: r.label })}` },
         title: r.club.slice(0, 256),
         description: lines.join('\n').slice(0, 4000),
-        color: 0xf26b1d,
+        color: 0xffb547,
         image: { url: 'attachment://une.png' },
         footer: { text: 'FM Immersion' },
       },

@@ -145,7 +145,7 @@ function Une({ issue }: { issue: GazetteIssue }) {
   const { t, i18n } = useTranslation();
   const head = headlineText(t, issue, i18n.resolvedLanguage);
   const look = clubLook(issue.club);
-  const accent = look ? visibleOn(look.colors, '#FFFFFF', '#F26B1D') : null;
+  const accent = look ? visibleOn(look.colors, '#FFFFFF', '#FFB547') : null;
   return (
     <header className="border-b-4 border-orange pb-4" style={accent ? { borderBottomColor: accent } : undefined}>
       <p className="text-xs font-bold uppercase tracking-wide text-brun">
