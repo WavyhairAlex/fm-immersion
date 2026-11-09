@@ -6,7 +6,7 @@ import { AiLink } from '../components/AiSettingsCard';
 import { DiscordEmbed } from '../components/DiscordEmbed';
 import { aiFor } from '../lib/ai';
 import { getLiveEnabled, getWebhook, isWebhook, sendDiscord, setLiveEnabled, setWebhook } from '../lib/discord';
-import { autoLastError, autoLastSent, getBreakingAuto, getGazetteAuto, setBreakingAuto, setGazetteAuto } from '../lib/gazette-auto';
+import { autoLastCheck, autoLastError, autoLastSent, checkGazetteNow, getBreakingAuto, getGazetteAuto, setBreakingAuto, setGazetteAuto } from '../lib/gazette-auto';
 import { useCareer } from '../lib/career';
 import { fmData } from '../lib/data';
 import { livePreviewPayload } from '../lib/live-discord';
@@ -190,22 +190,45 @@ function AutoState() {
   const { t, i18n } = useTranslation();
   const [, tick] = useState(0);
   useEffect(() => {
-    const id = window.setInterval(() => tick((n) => n + 1), 60_000);
+    const id = window.setInterval(() => tick((n) => n + 1), 15_000);
     return () => window.clearInterval(id);
   }, []);
   const when = (iso: string) => new Date(iso).toLocaleString(i18n.resolvedLanguage, { dateStyle: 'short', timeStyle: 'short' });
+  const day = (iso?: string | null) => (iso ? new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString(i18n.resolvedLanguage, { day: 'numeric', month: 'short', year: 'numeric' }) : '?');
   const sent = autoLastSent();
   const error = autoLastError();
+  const check = autoLastCheck();
   const showError = error && (!sent || error.at > sent.at);
   return (
     <>
       <p className="mt-1 text-sm text-brun">{sent ? t('discord.status.lastSent', { number: sent.number, date: when(sent.at) }) : t('discord.status.noneSent')}</p>
+      {check && (
+        <p className="mt-1 text-sm text-brun">
+          {t('discord.status.checkAt', { time: when(check.at) })}{' '}
+          {t(`discord.status.check.${check.state}`, { club: check.club ?? '?', date: day(check.gameDate), week: day(check.week), sent: day(check.sentWeek) })}
+        </p>
+      )}
       {showError && (
         <p className="mt-1 text-sm font-bold text-corail">
-          {t('discord.status.lastError', { what: t(`discord.status.what.${error.what}`, { defaultValue: error.what }), date: when(error.at), error: error.error })}
+          {t('discord.status.lastError', {
+            what: t(`discord.status.what.${error.what}`, { defaultValue: error.what }),
+            date: when(error.at),
+            error: error.error === 'stuck' ? t('discord.status.stuck') : error.error,
+          })}
           {error.dropped && ` ${t('discord.status.dropped')}`}
         </p>
       )}
+      <button
+        type="button"
+        className="btn-secondary mt-2 text-sm"
+        onClick={() => {
+          checkGazetteNow();
+          // L'état est relu un peu après : le temps de lire l'historique (l'envoi, lui, peut prendre plus longtemps).
+          window.setTimeout(() => tick((n) => n + 1), 3000);
+        }}
+      >
+        {t('discord.status.checkNow')}
+      </button>
     </>
   );
 }

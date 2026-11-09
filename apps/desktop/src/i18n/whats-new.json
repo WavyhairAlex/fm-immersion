@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.125",
+    "date": "2026-11-09",
+    "fr": [
+      "Live Discord te dit maintenant ce que fait la gazette automatique : dernière vérification, semaine lue, et pourquoi rien n'est parti. Un bouton « Vérifier maintenant » la relance tout de suite.",
+      "L'envoi automatique ne peut plus rester bloqué : une vérification coincée plus de 10 minutes est relancée."
+    ],
+    "en": [
+      "Live Discord now tells you what the automatic gazette is doing: last check, week read, and why nothing went out. A \"Check now\" button runs it right away.",
+      "Automatic sending can no longer stay stuck: a check stuck for more than 10 minutes is restarted."
+    ]
+  },
+  {
     "version": "0.1.124",
     "date": "2026-11-09",
     "fr": [

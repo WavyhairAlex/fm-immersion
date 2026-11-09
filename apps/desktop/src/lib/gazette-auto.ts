@@ -267,6 +267,32 @@ export async function attempt(what: string, key: string, send: () => Promise<unk
   }
 }
 
+/**
+ * Dernière vérification de l'envoi automatique et ce qu'elle a conclu, montrée dans Live Discord : le joueur (et
+ * nous) voyons pourquoi rien n'est parti, au lieu de deviner.
+ */
+const AUTO_CHECK_KEY = 'fmi.discord.autoLastCheck';
+export type AutoCheckState = 'noSave' | 'noHistory' | 'waiting' | 'alreadySent' | 'sending' | 'sent' | 'failed';
+export interface AutoCheck {
+  at: string;
+  state: AutoCheckState;
+  /** Club et date de jeu du dernier jour lu. */
+  club?: string | null;
+  gameDate?: string | null;
+  /** Lundi de la dernière semaine terminée, et celui de la dernière gazette notée comme partie. */
+  week?: string | null;
+  sentWeek?: string | null;
+}
+export const autoLastCheck = () => readJson<AutoCheck>(AUTO_CHECK_KEY);
+const noteCheck = (c: Omit<AutoCheck, 'at'>) => write(AUTO_CHECK_KEY, JSON.stringify({ at: new Date().toISOString(), ...c } satisfies AutoCheck));
+
+/** Demande une vérification tout de suite (bouton « Vérifier maintenant » de Live Discord). */
+export const AUTO_CHECK_EVENT = 'fmi:gazette-auto-check';
+export const checkGazetteNow = () => window.dispatchEvent(new Event(AUTO_CHECK_EVENT));
+
+/** Une tournée bloquée (une attente qui ne revient jamais) est abandonnée au bout de ce délai. */
+const STUCK_MS = 10 * 60_000;
+
 /** Petite pause entre deux envois : Discord refuse les rafales sur un même webhook. */
 const pause = () => new Promise((r) => window.setTimeout(r, 1500));
 
@@ -278,17 +304,25 @@ const pause = () => new Promise((r) => window.setTimeout(r, 1500));
 export function useGazetteAuto() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
-  const busy = useRef(false);
+  /** Début de la tournée en cours (0 = aucune). */
+  const busy = useRef(0);
   useEffect(() => {
     const tick = async () => {
       const gazetteOn = getGazetteAuto();
       const breakingOn = getBreakingAuto();
-      if (busy.current || (!gazetteOn && !breakingOn) || !isWebhook(getWebhook())) return;
-      busy.current = true;
+      if ((!gazetteOn && !breakingOn) || !isWebhook(getWebhook())) return;
+      // Une tournée bloquée depuis plus de 10 minutes ne doit pas arrêter l'envoi automatique pour de bon.
+      if (busy.current && Date.now() - busy.current < STUCK_MS) return;
+      if (busy.current) write(AUTO_ERROR_KEY, JSON.stringify({ what: 'check', error: 'stuck', at: new Date().toISOString(), dropped: false } satisfies AutoError));
+      const started = Date.now();
+      busy.current = started;
       try {
         const fmSaves = (await savesData.list()).filter((s) => s.gameId === 'fm');
         const saveId = fmSaves.find((s) => s.id === read(GAZETTE_SAVE_KEY))?.id ?? fmSaves[0]?.id;
-        if (!saveId) return;
+        if (!saveId) {
+          noteCheck({ state: 'noSave' });
+          return;
+        }
         // L'instantané du jour et les jours rattrapés sont importés par la lecture du plugin (`useFmSync`, active dans
         // toute l'appli) : ici, on lit seulement l'historique, dans le cache tenu à jour par celle-ci.
         const history = await fetchHistory(qc, saveId);
@@ -301,10 +335,15 @@ export function useGazetteAuto() {
         // Chaque envoi est isolé (`attempt`) : un envoi refusé ne bloque plus les autres, la gazette d'abord.
         if (gazetteOn) {
           const issues = gazetteIssues(history);
+          const sentWeek = (read(SENT_KEY) ?? '').split('|')[0] === saveId ? ((read(SENT_KEY) ?? '').split('|')[1] ?? null) : null;
+          const seen = { club: history.at(-1)?.data.club ?? null, gameDate: lastDate ?? null, week: issues[1]?.weekStart ?? null, sentWeek };
           const index = gazetteToSend(issues, saveId, read(SENT_KEY));
+          if (!history.length) noteCheck({ state: 'noHistory' });
+          else if (index == null) noteCheck({ ...seen, state: issues[1] ? 'alreadySent' : 'waiting' });
           if (index != null) {
             const week = issues[index]!;
-            await attempt(
+            noteCheck({ ...seen, state: 'sending' });
+            const ok = await attempt(
               'gazette',
               `gazette|${saveId}|${week.weekStart}`,
               async () => {
@@ -318,6 +357,7 @@ export function useGazetteAuto() {
               },
               Infinity,
             );
+            noteCheck({ ...seen, state: ok ? 'sent' : 'failed' });
             await pause();
           }
           // Fin du championnat : numéro spécial, après la gazette de la semaine.
@@ -352,13 +392,21 @@ export function useGazetteAuto() {
           }
         }
       } catch (e) {
+        // Erreur hors des envois (lecture de l'historique…) : montrée elle aussi dans Live Discord.
         console.warn('Gazette automatique :', e);
+        write(AUTO_ERROR_KEY, JSON.stringify({ what: 'check', error: String(e).slice(0, 300), at: new Date().toISOString(), dropped: false } satisfies AutoError));
       } finally {
-        busy.current = false;
+        // Une tournée abandonnée pour blocage ne libère pas la place de celle qui l'a remplacée.
+        if (busy.current === started) busy.current = 0;
       }
     };
     const id = window.setInterval(tick, 60_000);
+    const now = () => void tick();
+    window.addEventListener(AUTO_CHECK_EVENT, now);
     void tick();
-    return () => window.clearInterval(id);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener(AUTO_CHECK_EVENT, now);
+    };
   }, [t, i18n, qc]);
 }
