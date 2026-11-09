@@ -150,7 +150,9 @@ export function Sidebar() {
         <button type="button" className="hover:text-white" onClick={() => i18n.changeLanguage(otherLang)}>
           {t('nav.language')}
         </button>
-        <span>{t('nav.version', { version: __APP_VERSION__ })}</span>
+        <Link to="/nouveautes" className="hover:text-white" title={t('whatsNew.pageTitle')}>
+          {t('nav.version', { version: __APP_VERSION__ })}
+        </Link>
       </div>
     </aside>
   );

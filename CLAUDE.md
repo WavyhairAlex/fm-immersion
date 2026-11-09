@@ -89,6 +89,18 @@ Voir l'en-tête de `.github/workflows/release.yml` : version dans `apps/desktop/
 `src-tauri/Cargo.toml`, fusion sur main : la CI crée le tag et la release dans ce dépôt,
 la publie et la marque « Latest » une fois latest.json envoyé. Plus de publication manuelle.
 
+**Chaque version a sa note « Quoi de neuf »** (obligatoire) : à chaque changement de version, ajouter en tête de
+`apps/desktop/src/i18n/whats-new.json` une entrée `{ version, date, fr: [...], en: [...] }`. L'appli la montre une fois
+au joueur après la mise à jour (`src/components/WhatsNew.tsx`), l'historique est sur `/nouveautes` (clic sur le numéro
+de version) et la release GitHub reprend le même texte. Le test `whats-new.test.ts` échoue si la version de
+`package.json` n'a pas sa note.
+- Écrire **pour les joueurs, pas pour les développeurs** : ce qu'ils voient ou peuvent faire de nouveau, en mots simples,
+  tutoiement, une à trois phrases courtes. Pas de nom de fichier, de fonction, de PR ni de jargon (« review », « fusion »,
+  « refactor »). Nommer les écrans comme dans l'appli (« Ma carrière », « Gazette et Discord »).
+- Une version purement technique (CI, release, code interne) garde une note : « Corrections et améliorations
+  techniques, rien ne change pour toi. »
+- Quand deux branches prennent le même numéro, la note suit la version renumérotée (une entrée par numéro publié).
+
 ## Identité visuelle (choix du 06/11/2026)
 - **Anthracite et orange**, les couleurs d'Amnesix. Toujours lisible : texte anthracite sur fond clair, texte blanc
   sur anthracite ou sur orange foncé, jamais de texte blanc sur l'orange vif.

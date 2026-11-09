@@ -4426,5 +4426,15 @@
     "fixHelp": "Ma carrière suit seulement cette sauvegarde. Si un ancien club manque (avant que FM Immersion suive la partie, ou après un licenciement), importe ses jours ci-dessous : le plugin les a gardés. Un club venu d'une autre sauvegarde s'écarte avec « Pas dans cette carrière » sur sa fiche.",
     "hiddenLabel": "écarté de cette carrière",
     "unhide": "Remettre"
+  },
+  "whatsNew": {
+    "kicker": "Mise à jour installée · version {{version}}",
+    "title": "Quoi de neuf ?",
+    "intro": "FM Immersion vient de se mettre à jour. Voici ce qui change pour toi.",
+    "version": "Version {{version}}",
+    "ok": "C'est noté",
+    "history": "Voir toutes les nouveautés",
+    "pageTitle": "Quoi de neuf",
+    "pageIntro": "Tu utilises la version {{version}}. Voici ce que chaque mise à jour a apporté, de la plus récente à la plus ancienne."
   }
 }

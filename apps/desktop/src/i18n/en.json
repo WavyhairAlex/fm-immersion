@@ -4426,5 +4426,15 @@
     "fixHelp": "My career only follows this save. If a former club is missing (before FM Immersion followed the save, or after a sacking), import its days below: the plugin kept them. A club from another save is left out with “Not in this career” on its card.",
     "hiddenLabel": "left out of this career",
     "unhide": "Put back"
+  },
+  "whatsNew": {
+    "kicker": "Update installed · version {{version}}",
+    "title": "What's new?",
+    "intro": "FM Immersion has just updated. Here is what changes for you.",
+    "version": "Version {{version}}",
+    "ok": "Got it",
+    "history": "See all updates",
+    "pageTitle": "What's new",
+    "pageIntro": "You are using version {{version}}. Here is what each update brought, newest first."
   }
 }
