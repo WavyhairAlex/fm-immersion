@@ -1,6 +1,7 @@
 import {
   PART_TIME_DAYS,
   currentTrainingWeek,
+  effectiveness,
   snapshotFixtures,
   homeOverview,
   officialResults,
@@ -105,6 +106,10 @@ export function FmHome({
         trainingDays: (coach.clubStatus ?? 'pro') === 'pro' ? undefined : (coach.trainingDays ?? PART_TIME_DAYS),
         priorities: style ? trainingFor(style) : [],
         style: style?.id,
+        // Même semaine que l'écran Entraînement : zones faibles et efficacité tactique lues dans le jeu.
+        weakAreas: effectiveness(snap)?.weakest ?? [],
+        gaugesKnown: !!effectiveness(snap),
+        teOverall: effectiveness(snap)?.overall?.mid ?? null,
       }),
     [snap, coach.seasonStart, coach.winterBreak, coach.clubStatus, coach.trainingDays, style],
   );

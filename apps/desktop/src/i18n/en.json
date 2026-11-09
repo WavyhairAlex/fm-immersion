@@ -1181,7 +1181,8 @@
         "recovery": "Recovery",
         "prep": "Preparation",
         "dev": "Work",
-        "off": "Free"
+        "off": "Free",
+        "rest": "Full rest"
       },
       "days": [
         "Mon",
@@ -1191,11 +1192,6 @@
         "Fri",
         "Sat",
         "Sun"
-      ],
-      "slot": [
-        "Session 1",
-        "Session 2",
-        "Extra"
       ],
       "title": "Training week",
       "which": "Week",
@@ -1234,13 +1230,12 @@
       "metaHelp": "AlexJeuVideal's method (\"ENTRAINEMENT FM 27 META EFFICACITÉ 1.1\" pack): one block Pressing Trap, Line of Engagement, Build-Up; one block Pressing Trap, Chance Creation, In-Possession Shape; the day before the match Ball Progression, Defensive Block, Conditioning. Everything else is rest. Load the .fmf file shown in the Training screen.",
       "congested": "three or more matches: full rest between matches (results come before development)",
       "priorities": "Areas of your target style worked first: {{list}}.",
-      "load": "This week",
       "rules": "The rules",
-      "rule1": "Match eve: one preparation session. Day after: Rest then Recovery. Each working day: one tactical and one development session, nothing more.",
-      "rule2": "Rest pays off in matches: never removed for an extra session. Three-match weeks: full rest. Pressing trap: 2 sessions a week, no more. No conditioning two days before a match.",
-      "rule3": "If a match moves, put preparation back the day before and recovery the day after.",
-      "rule4": "Players back from international duty are handled separately.",
-      "rule5": "Judge the plan over several weeks, not one result, and lighten it if the workload doesn't suit.",
+      "rule1": "Day after a match: Rest then Recovery. Day before: one preparation session. A full rest day whenever there is room.",
+      "rule2": "Group development sessions on one or two days: same development, far fewer injuries. Four different sessions are enough.",
+      "rule3": "The number of tactical sessions follows your tactical effectiveness: many while it is low, few once the tactic is understood. Don't change tactic along the way.",
+      "rule4": "A youngster develops mostly by playing: if he doesn't play, training won't save him. Loan or minutes.",
+      "rule5": "Judge over at least two months with \"What it really gives\", not over one week: luck is strong.",
       "source": "\"Freedom\" method (FM Scout, FM27 training schedules): 44 schedules, 4-week themed cycles. The article ships no .fmf files: FM Immersion rebuilds each day with FM27's sessions, steered by your target style. Copy it into the game's Training screen. Adjusted from AlexJeuVideal's benchmark (\"The truth about tactical effectiveness\"): Rest the day after every match, 2 pressing trap sessions a week, priority to build-up, chance creation, line of engagement and out-of-possession shape, full rest in three-match weeks.",
       "clubStatus": "Club status",
       "status": {
@@ -1281,12 +1276,12 @@
         "veryTired": "condition below 80%: the game lowers the intensity",
         "tired": "condition below 90%: the game adjusts the intensity",
         "busyWeek": "young, but two-match week",
-        "young": "21 or under: team intensity, never double (freshness pays off more in matches)",
+        "young": "21 or under: team intensity, double when fit, less when tired",
         "veteran": "32 or over: let the game manage him",
         "normal": "nothing to force: the game sets it by condition"
       },
       "rusty": "lacking sharpness: reserve minutes or late appearances",
-      "individualHelp": "Matches the game's Individual Training screen. IP and OOP roles: those of his slot in the target XI, otherwise the project role he fits best. Focus: the weak point seen in matches, otherwise Quickness up to age 23 for a slow player (pace or acceleration below 12), otherwise the role's weakest key attribute. Intensity: \"Team\" for everyone, i.e. the Team intensity setting above (double for players in good condition, half and rest for the others) that the game applies to each player according to his condition; no per-player manual setting.",
+      "individualHelp": "Like the game's Individual Training screen. Each setting says why it is advised. Roles: those of his position in your tactic if he is in the XI, otherwise the project role he suits best. Focus: his weak point seen in matches, otherwise Quickness up to 23 for a slow player, a mental attribute from 28, otherwise the weakest key attribute of the role. Intensity: \"Team\" for everyone, the game applies Team intensity by condition. \"Can improve\": hover to see what helps or holds him back.",
       "mentoring": "Mentoring groups",
       "mentor": "Mentor",
       "mentees": "Mentored youngsters",
@@ -1296,8 +1291,6 @@
       "avoid": "Keep away from youngsters",
       "unassigned": "No mentor available: {{list}}.",
       "mentoringHelp": "In the game: Training, Mentoring, Create Mentoring Group. The personality and determination of influential players rub off on the youngsters in the group, for better or worse. A group has at most 3 players: the mentor and 2 youngsters, from the same area of the pitch when possible.",
-      "roleIp": "IP role",
-      "roleOop": "OOP role",
       "focusCol": "Training focus",
       "focus": {
         "gkShotStopping": "GK Shot Stopping",
@@ -1319,16 +1312,11 @@
         "endurance": "Endurance",
         "resistance": "Resistance"
       },
-      "inGame": "In game",
       "markAll": "All set in game",
       "setupDone": "{{done}} / {{total}} players set in game",
       "setupChanges_one": "{{count}} change to make",
       "setupChanges_other": "{{count}} changes to make",
       "setupHelp": "Tick a player once their individual training is set in the game. As soon as the advice changes (condition, injury, busy week, target XI), the box unticks and the row moves to the top with the old setting struck through.",
-      "setupStatus": {
-        "todo": "to set",
-        "change": "To change"
-      },
       "winterBreak": "Winter break",
       "winterFrom": "Break starts",
       "winterTo": "League restarts",
@@ -1356,21 +1344,24 @@
       "reasonHint": "Hover a player's intensity to see why it is advised.",
       "metaAdaptHelp": "AlexJeuVideal's Meta base: 2 pressing-trap sessions a week, the day before the match Ball Progression, Defensive Block, Conditioning, rest otherwise. The other 4 tactical sessions follow your priority areas (the weakest from the game and your matches) among those the benchmark finds useful: Line of Engagement, Build-Up, Chance Creation, In and Out of Possession Shape. They change when your weaknesses change.",
       "metaSwaps": "After loading it, replace: {{list}}.",
-      "coachHelp": "FM Immersion programme, one proposal only: each working day, one tactical session (two Pressing Traps a week, then the areas the game rates least understood, otherwise your style's areas) and one development session (Conditioning, Attacking ball work, Defensive ball work, Light conditioning: the four sessions that raise attributes the most in harvestgreen22's measurements). Day before a match: a single match-prep session. Day after: Rest then Recovery. Never conditioning two days before a match. When the game says everything is understood, tactical sessions shrink to the two traps.",
+      "coachHelp": "FM Immersion plan, a single proposal, rebuilt every week from your fixtures and tactical effectiveness. Day after a match: Rest then Recovery. A full rest day whenever there is room. Development sessions grouped on the first days (Conditioning, Attacking, Defending, Light Conditioning, four at most). Tactical sessions on the days close to the match: two Pressing Traps, the areas the game says are least understood, your style's main area, then the others in rotation. Their number follows your effectiveness: 7 below 60%, 5 up to 79%, 3 from 80%. Day before a match: a single preparation session.",
       "coachSummary_one": "This week: {{tactical}} tactical sessions, {{grow}} development sessions, {{count}} match.",
       "coachSummary_other": "This week: {{tactical}} tactical sessions, {{grow}} development sessions, {{count}} matches.",
-      "teamIntensityCoach": "Recommended in Training > Team intensity: double for players in good and excellent condition (that is what makes them progress, measured by harvestgreen22), half and rest for the others so they reach the match fresh (AlexJeuVideal's test bench). The game then applies it to each player. Individual focus: the weak point seen in matches, otherwise Quickness up to age 23 for a slow player (pace or acceleration below 12), otherwise the role's weakest key attribute.",
+      "teamIntensityCoach": "Recommended setting in Training > Team intensity: double for players in good and excellent condition (a little more development), half and rest for the others so they arrive fresh. The game then applies it to each player by condition.",
       "why": {
         "press": "efficiency: 2 pressing traps a week",
         "weak": "area the game rates least understood",
         "top": "your style's number-one area",
-        "grow": "development: raises attributes",
-        "noCondition": "development (no conditioning 2 days before a match)",
+        "grow": "development: a session that raises attributes",
+        "noCondition": "development, no conditioning two days before a match",
         "indiv": "no match this week: individual development",
         "prep": "match eve: one preparation session only",
         "recover": "day after a match",
         "congested": "three matches: rest",
-        "restDay": "rest: freshness pays off in matches"
+        "restDay": "rest: freshness pays off in matches",
+        "rotate": "effectiveness: area worked in rotation, what is learned fades",
+        "devBlock": "development: sessions grouped on this day",
+        "fullRest": "full rest: no training injury risk that day"
       },
       "coach": {
         "title": "Your assistant, on training",
@@ -1379,12 +1370,6 @@
         "season_other": "{{count}} matches: {{tactical}} tactical sessions ({{zones}}) and {{grow}} development sessions. Match eve: a single preparation session, the day after: Rest then Recovery.",
         "noMatch": "No match: {{tactical}} tactical sessions ({{zones}}), {{grow}} development sessions and Individual Development on the last day.",
         "congested": "{{matches}} matches in seven days: full week of rest between matches, results come first.",
-        "inGame": "In the game: load the \"{{preset}}\" schedule, workload {{workload}}, then copy the sessions below.",
-        "inGameRest": "In the game: load the \"{{preset}}\" schedule.",
-        "intensity": "Team intensity: double for players in good and excellent condition, half for tired ones, nothing for exhausted ones.",
-        "setups_one": "{{count}} individual setting to change in the game (Individual section).",
-        "setups_other": "{{count}} individual settings to change in the game (Individual section).",
-        "setupsOk": "All individual settings are up to date in the game.",
         "yieldTitle": "What it really yields",
         "yieldDetail": "See the figures",
         "yield": "From {{from}} to {{to}} ({{days}} days, {{players}} players compared): {{delta}} attribute point per player, i.e. {{month}} per month; the age curve suggested {{expected}}.",
@@ -1400,7 +1385,8 @@
         "yieldDown": "Falling: {{list}}.",
         "yieldSoon_one": "Progress is measured over at least fourteen days of snapshots: {{count}} more game day.",
         "yieldSoon_other": "Progress is measured over at least fourteen days of snapshots: {{count}} more game days.",
-        "yieldHelp": "Measured on your save, not on a test bench: sum of attribute points (out of 20) gained or lost by each player present at both dates, known attributes only. The baseline is the oldest snapshot of the last four weeks, at least fourteen days back. \"Expected\": the module's age curve (youngsters rise, over-28s decline). Good from +1.5 points per player per month, bad below −0.5."
+        "yieldHelp": "Measured on your save, not on a test bench: sum of attribute points (out of 20) gained or lost by each player present at both dates, known attributes only. The baseline is the oldest snapshot of the last four weeks, at least fourteen days back. \"Expected\": the module's age curve (youngsters rise, over-28s decline). Good from +1.5 points per player per month, bad below −0.5.",
+        "whyTitle": "Why this week"
       },
       "settings": "Schedule settings",
       "settingsSummary": "{{phase}}, {{status}} club, season starts in {{month}}{{winter}}",
@@ -1463,7 +1449,157 @@
         "week": "This week",
         "season": "The season",
         "individual": "Individual",
-        "youth": "Youth and mentoring"
+        "youth": "Youth and mentoring",
+        "learn": "Understand"
+      },
+      "mode": {
+        "learn": "Your tactic is {{te}}% understood: learning week, {{count}} tactical sessions ({{zones}}) and {{grow}} development sessions.",
+        "build": "Your tactic is {{te}}% understood: keep building, {{count}} tactical sessions ({{zones}}) and {{grow}} development sessions.",
+        "keep": "Your tactic is {{te}}% understood: maintenance, {{count}} tactical sessions ({{zones}}) and {{grow}} development sessions.",
+        "unknown": "Tactical effectiveness not read yet: a balance of {{count}} tactical sessions ({{zones}}) and {{grow}} development sessions."
+      },
+      "lesson": {
+        "fullRest_one": "One full rest day: the game runs no training injury check that day. It costs nothing in development.",
+        "fullRest_other": "{{count}} full rest days: the game runs no training injury check on those days. It costs nothing in development.",
+        "devBlock": "{{count}} development sessions, grouped on the first days: grouping sessions cuts training injury risk by about three for the same development. Beyond four, almost nothing is added.",
+        "devShort_one": "Only one development session: the week is too busy for more. One week doesn't matter, development plays out over months.",
+        "devShort_other": "{{count}} development sessions: the week is too busy for more.",
+        "tacticalShort": "Your understanding would rise faster with {{target}} tactical sessions, but there is only room for {{count}}. Weeks without a match will catch up.",
+        "pressTrap": "Two Pressing Trap sessions, on two different days: that is the measured threshold, four add nothing.",
+        "rotation": "The other areas rotate from week to week: each tactical session works one area, and what is no longer worked fades.",
+        "prep": "Day before a match: a single match preparation session, to arrive fresh.",
+        "recover": "Day after a match: Rest then Recovery. A physical session the day after a match sends injury risk up sharply.",
+        "congested_one": "{{count}} match in seven days: full rest between matches, results come before development.",
+        "congested_other": "{{count}} matches in seven days: full rest between matches, results come before development.",
+        "noMatch": "No match: this is the week development can come first, with an extra Individual Development session.",
+        "partTime_one": "Your club only trains {{count}} day: every session counts, the last one before the match is preparation.",
+        "partTime_other": "Your club only trains {{count}} days: every session counts, the last one before the match is preparation."
+      },
+      "outlook": {
+        "col": "Can improve",
+        "verdict": {
+          "strong": "A lot",
+          "good": "Well",
+          "limited": "A little",
+          "maintain": "Maintain",
+          "decline": "Decline"
+        },
+        "age": {
+          "peak": "18 or under: the age of fastest development",
+          "high": "19-21: still develops strongly",
+          "medium": "22-24: develops less",
+          "low": "25-29: develops little",
+          "decline": "30 or over: physical decline"
+        },
+        "room": {
+          "big": "lots of room below his potential",
+          "some": "some room below his potential",
+          "none": "very close to his potential"
+        },
+        "minutes": {
+          "plays": "plays a lot",
+          "some": "plays a little",
+          "bench": "hardly plays"
+        },
+        "injured": "injured for a while: no development",
+        "needsMinutes": "Needs minutes"
+      },
+      "focusWhy": {
+        "stats": "His weak point seen in matches.",
+        "slowYoung": "Young and slow: pace matters most in matches and stops improving after 24.",
+        "weakRole": "The weakest key attribute of his role.",
+        "youngDefault": "Young with no clear weak point: pace, which pays most.",
+        "seniorMental": "28 or older: a mental attribute of the role, which can still rise as the physical side declines.",
+        "none": ""
+      },
+      "roleWhy": {
+        "tactic": "His role in your tactic: he learns it, and his familiarity counts in tactical effectiveness.",
+        "youngBench": "Young and outside the XI, development first: in game you can set only an out-of-possession role ({{role}}), which gave the most growth in tests.",
+        "project": "Outside the XI: the role of your project he suits best."
+      },
+      "devRole": {
+        "dm": "Defensive Midfielder",
+        "am": "Attacking Midfielder"
+      },
+      "learn": {
+        "howTitle": "How a player really develops",
+        "howIntro": "The numbers on screen don't tell the whole story. According to community tests on FM27, the game makes two calculations, roughly each month and for each player.",
+        "step1Title": "1. How much he improves",
+        "step1": "His age, the room below his potential, his match minutes and the level of opposition, his professionalism, training facilities, injuries, and some luck. Training only plays a small part.",
+        "step2Title": "2. Where that improvement goes",
+        "step2": "This is where training acts: each session's share of the week, the individual focus, the trained role and the coach of the group decide which attributes rise.",
+        "factorsTitle": "What matters, from most to least",
+        "factor1": "Age: 16-18 is the golden age; it stays strong up to 21, then slows; almost nothing after 24 (27 for goalkeepers). After 30, the physical side declines.",
+        "factor2": "Room below potential: the closer a player gets to his potential, the slower he grows.",
+        "factor3": "Minutes: after 18, this is factor number one, and minutes against good opponents count more. A youngster who doesn't play doesn't develop, whatever the training.",
+        "factor4": "Professionalism (hidden): by far the personality trait that matters most, ahead of ambition and determination. Mentoring can raise it in a youngster.",
+        "factor5": "Training facilities: they affect the whole squad. Youth facilities only affect the quality of new talents.",
+        "factor6": "Coaches: each coaching group steers its attributes. The Fitness group covers nearly half of what matters: put your best coach there, and keep every coach's workload reasonable.",
+        "factor7": "Intensity: double for fit players brings a little more development, at the cost of a few more injuries.",
+        "howHelp": "No official formula is published: these are benchmarks from tests repeated over whole seasons, with a lot of month-to-month luck. Judge over at least two months, with \"What it really gives\" in This week.",
+        "squadTitle": "Your squad",
+        "squadIntro": "What each player can still gain, from his age, his room below potential (if CA/PA is read), his playing time and injuries. Each player's detail is in Individual.",
+        "minutes": "{{list}}: youngsters with room to grow who rarely play. Their playing time holds them back: start them, bring them on, or loan them to a club where they'll play.",
+        "mode": {
+          "learn": "Your tactical effectiveness is {{te}}%: team training's priority is getting your tactic understood. Keep the same tactic and trim the instructions, otherwise the sessions are wasted.",
+          "build": "Your tactical effectiveness is {{te}}%: the tactic is on track, keep a good balance between tactics and development.",
+          "keep": "Your tactical effectiveness is {{te}}%: it is understood, a few sessions keep it up and development takes over.",
+          "unknown": "Your tactical effectiveness hasn't been read yet: the plan uses a balance. It appears after a day of play with the plugin."
+        },
+        "squadHelp": "Playing time is compared with the most used player in the squad. Without CA/PA reading (plugin option), room below potential is not counted.",
+        "teTitle": "Development or tactical effectiveness?",
+        "teIntro": "In FM27, the first team mainly trains for the next match. The most complete test (same club, three seasons per setup, 47 players) shows the trade-off:",
+        "teSetup": "Setup",
+        "tePoints": "Points",
+        "teWin": "Wins",
+        "teInjury": "Days injured",
+        "teGrowth": "U18 development",
+        "te": {
+          "none": "No tactical sessions",
+          "some": "8 tactical sessions a month",
+          "lots": "24 tactical sessions a month",
+          "assistant": "Training left to the assistant"
+        },
+        "teLesson1": "Never leave training to your assistant: 14 fewer points, three times more injuries, and youngsters developing the wrong attributes.",
+        "teLesson2": "Tactical sessions win matches (about +4% wins) but cost injuries: their number follows your tactical effectiveness and drops once the tactic is understood.",
+        "teLesson3": "Tactical sessions don't raise attributes: conditioning and ball work do.",
+        "teLesson4": "Changing tactic resets understanding: training only pays if the tactic stays the same.",
+        "teHelp": "jamiebolden's FM27 test (Bradford, Premier League 2032/33, each setup played three times from the same save). Test on FM27's training code: about seven rotating tactical sessions a week keep every area above 80; going from 50 to 100 effectiveness is worth about 0.15 points per match.",
+        "indivTitle": "Individual training",
+        "indiv1": "Up to 23, Quickness for a slow player: pace and acceleration matter most in matches, and they stop improving after that.",
+        "indiv2": "A starter trains the role of your tactic: he knows it better, and that counts in your tactical effectiveness.",
+        "indiv3": "A youngster outside the XI can train only an out-of-possession role (Defensive Midfielder for defenders, Attacking Midfielder for the others): that setting gave the most growth in tests.",
+        "indiv4": "A focus that gives nothing in three months: change it. The focus doesn't create growth, it steers it.",
+        "indiv5": "From 28, the focus no longer makes a player grow: a mental attribute of the role can still rise, the rest is maintained.",
+        "sourcesTitle": "Where these benchmarks come from",
+        "sources": "Tests by harvestgreen22 (FM-Arena, 50 schedules, one 100-match season each), jamiebolden (fm-scoring, tactical effectiveness on FM27, with a test on the game's training code) and AlexJeuVideal (tactical effectiveness), plus FM Dossier and Passion4FM guides on personality and playing time. Sports Interactive publishes no formula."
+      },
+      "dayByDay": "Your week, day by day",
+      "steps": {
+        "title": "In the game, in this order",
+        "preset": "Load the “{{preset}}” schedule and set the workload to {{workload}}.",
+        "presetRest": "Load the “{{preset}}” schedule.",
+        "copy": "Copy each day's sessions below, in order (session 1 then session 2).",
+        "intensity": "Team intensity: double for players in good shape, half for tired ones, none for exhausted ones (table below).",
+        "setups_one": "Change {{count}} individual setting (Individual tab).",
+        "setups_other": "Change the settings of {{count}} players (Individual tab).",
+        "setupsOk": "Individual settings are already up to date."
+      },
+      "indiv": {
+        "lead": "For each player: roles, focus and intensity, with the reason for each choice. Tick “Set in game” once done.",
+        "done": "Set in game",
+        "roles": "Roles to train",
+        "ip": "In possession:",
+        "oop": "Out of possession:",
+        "weak": "Role weak points: {{list}}.",
+        "group": {
+          "change_one": "To change in the game ({{count}} player)",
+          "change_other": "To change in the game ({{count}} players)",
+          "todo_one": "To set ({{count}} player)",
+          "todo_other": "To set ({{count}} players)",
+          "ok_one": "Already set ({{count}} player)",
+          "ok_other": "Already set ({{count}} players)"
+        }
       }
     },
     "intro": {
