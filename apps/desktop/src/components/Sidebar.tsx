@@ -44,6 +44,12 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" />
     </>
   ),
+  photos: (
+    <>
+      <path d="M4 8h3l2-3h6l2 3h3v12H4z" />
+      <circle cx="12" cy="13" r="3.5" />
+    </>
+  ),
   settings: <path d="M9 2v5M15 2v5M6 7h12v4a6 6 0 01-12 0zM12 17v5" />,
   saves: (
     <>
@@ -132,6 +138,7 @@ export function Sidebar() {
           label={t('layout.nav.faces')}
           badge={facesOffer ? <span className="h-2 w-2 rounded-full bg-white/70" aria-label={t('faces.update.badge')} /> : null}
         />
+        <Item to="/photos" icon="photos" label={t('layout.nav.photos')} />
         <Item
           to="/sauvegardes"
           icon="saves"

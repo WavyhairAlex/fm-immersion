@@ -3040,7 +3040,26 @@
     "progress": "{{file}} : {{received}} sur {{size}} — {{done}} sur {{total}} au total",
     "verifying": "Chaque fichier est vérifié par SHA-256 avant d'être gardé.",
     "sources": "Fichiers publiés sur Hugging Face (Comfy-Org, lightx2v, Google) et GitHub (Comfy-Org/ComfyUI), licences Apache-2.0 et GPL-3.0.",
-    "error": "Téléchargement impossible : {{error}}"
+    "error": "Téléchargement impossible : {{error}}",
+    "engine": {
+      "title": "Moteur d'images sur ce PC",
+      "downloaded": "Tout est téléchargé et vérifié. Reste à installer ComfyUI (extraction de l'archive, quelques minutes).",
+      "ready": "Moteur installé (ComfyUI {{version}}). Les scènes arrivent à l'étape suivante ; tu peux déjà faire une image de test.",
+      "install": "Installer le moteur",
+      "extracting": "Extraction de ComfyUI…",
+      "stop": "Arrêter le moteur",
+      "test": {
+        "button": "Faire une image de test",
+        "starting": "Démarrage du moteur (chargement des modèles, jusqu'à 4 minutes la première fois)…",
+        "generating": "Génération de l'image…",
+        "title": "Image de test",
+        "alt": "Image de test générée par le moteur",
+        "note": "Scène de coach au bord du terrain, avec ta photo de coach si tu en as une. Elle n'est envoyée nulle part."
+      }
+    },
+    "files": {
+      "title": "Fichiers sur le disque"
+    }
   },
   "gazette": {
     "paper": "La Gazette de {{club}}",
@@ -3974,6 +3993,7 @@
       "results": "Résultats",
       "mercato": "Mercato et finances",
       "faces": "Visages",
+      "photos": "Photos de situation",
       "settings": "Plugin et réglages",
       "story": "Gazette et Discord",
       "saves": "Sauvegardes"

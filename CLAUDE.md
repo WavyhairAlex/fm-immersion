@@ -19,7 +19,9 @@ extraite avec son historique ; Simloom garde Planet Zoo 2 et Transport Fever 3.
   manifeste embarqué `src-tauri/photos-manifest.json`) : ComfyUI portable depuis GitHub Releases (Comfy-Org/ComfyUI) et
   les modèles Qwen Image Edit 2511 / OWLv2 depuis Hugging Face (dépôts Comfy-Org, lightx2v, google), adresses épinglées
   à une révision, ~34 Go, reprise après coupure, SHA-256 vérifié, suppression en un clic ; rangé dans
-  `%LOCALAPPDATA%\app.fmimmersion.desktop\photos`.
+  `%LOCALAPPDATA%\app.fmimmersion.desktop\photos`. ComfyUI y est extrait (`src-tauri/src/photos_engine.rs`, crate `sevenz-rust2`)
+  et lancé en processus annexe sur `127.0.0.1` (port libre) avec `--offline --disable-all-custom-nodes`, dossier de base = dossier
+  des photos ; arrêté à la fermeture de l'appli. Écran `/photos` (`src/pages/Photos.tsx`, `src/lib/photos.ts`).
   Exception choisie par le joueur : le **Live Discord** envoie une gazette à son salon par le lien webhook qu'il a
   collé (`src-tauri/src/discord.rs`, seulement vers `discord.com/api/webhooks/`, seulement ce qu'il a choisi : gazette sur son clic ou chaque semaine s'il a coché l'envoi automatique, dépêches (`modules/fm/src/breaking.ts`) sur son clic ou à leur date s'il l'a coché,
   direct de ses matchs s'il l'a activé), et un certificat de

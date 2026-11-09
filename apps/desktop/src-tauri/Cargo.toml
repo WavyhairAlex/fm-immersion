@@ -24,12 +24,14 @@ serde_json = "1"
 rusqlite = { version = "0.32", features = ["bundled"] }
 thiserror = "2"
 # Plugin FM27 : téléchargement depuis GitHub Releases (sur demande) et vérification SHA-256
-ureq = "2"
+ureq = { version = "2", features = ["json"] }
 sha2 = "0.10"
 # Visages : extraction du pack V2 téléchargé (zip de la release GitHub)
 zip = { version = "2", default-features = false, features = ["deflate"] }
 # Rédaction par IA : clé API du joueur rangée dans le coffre de Windows (Gestionnaire d'identification)
 keyring = { version = "3", features = ["windows-native"] }
+# Photos de situation : extraction de l'archive 7z de ComfyUI portable (LZMA2 + filtre BCJ, sans chiffrement)
+sevenz-rust2 = { version = "0.25", default-features = false }
 
 # FM27 : lecture directe de la base du jeu en mémoire (lecture seule, à la demande du joueur)
 [target.'cfg(windows)'.dependencies]

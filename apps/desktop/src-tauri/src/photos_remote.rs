@@ -130,7 +130,7 @@ pub fn dest_ok(dest: &str) -> bool {
         && dest.split('/').all(|s| !s.is_empty() && s != "." && s != "..")
 }
 
-fn dest_path(dir: &Path, f: &ManifestFile) -> PathBuf {
+pub fn dest_path(dir: &Path, f: &ManifestFile) -> PathBuf {
     let mut p = dir.to_path_buf();
     for seg in f.dest.split('/') {
         p.push(seg);
@@ -173,6 +173,10 @@ pub struct Status {
 }
 
 fn file_status(dir: &Path, f: &ManifestFile) -> FileStatus {
+    // L'archive de ComfyUI est supprimée une fois extraite : le marqueur d'installation vaut fichier complet.
+    if f.component == "comfyui" && crate::photos_engine::layout(dir).is_some() {
+        return FileStatus { name: f.name.clone(), component: f.component.clone(), size: f.size, on_disk: f.size, state: "ready" };
+    }
     let dest = dest_path(dir, f);
     let (on_disk, state) = match std::fs::metadata(&dest).map(|m| m.len()) {
         Ok(len) if len == f.size => (f.size, "ready"),
@@ -434,6 +438,7 @@ pub async fn photos_remote_remove(app: tauri::AppHandle) -> Result<Status, Photo
         return Err(PhotosError::Busy);
     }
     let dir = photos_dir(&app)?;
+    crate::photos_engine::stop();
     remove(&dir)?;
     Ok(status(&dir, manifest()))
 }
