@@ -4415,6 +4415,9 @@
       "GB-NIR": "Irlande du Nord"
     },
     "leftMidSeason": "départ en cours de saison",
+    "untracked_one": "{{count}} match sans score enregistré ({{goals}} but marqué) : le plugin ne lisait pas encore les résultats, ils ne comptent pas dans le bilan.",
+    "untracked_other": "{{count}} matchs sans score enregistré ({{goals}} buts marqués) : le plugin ne lisait pas encore les résultats, ils ne comptent pas dans le bilan.",
+    "untrackedShort": "+{{count}} sans score",
     "hide": "Pas dans cette carrière",
     "hideHelp": "Écarter ce club : ses jours viennent d'une autre sauvegarde ou d'un test. Rien n'est effacé, tu peux le remettre plus bas.",
     "fixTitle": "Il manque un club, ou il y en a un de trop ?",
