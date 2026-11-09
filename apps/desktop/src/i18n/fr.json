@@ -4396,6 +4396,12 @@
       "GB-WLS": "Pays de Galles",
       "GB-NIR": "Irlande du Nord"
     },
-    "leftMidSeason": "départ en cours de saison"
+    "leftMidSeason": "départ en cours de saison",
+    "hide": "Pas dans cette carrière",
+    "hideHelp": "Écarter ce club : ses jours viennent d'une autre sauvegarde ou d'un test. Rien n'est effacé, tu peux le remettre plus bas.",
+    "fixTitle": "Il manque un club, ou il y en a un de trop ?",
+    "fixHelp": "Ma carrière suit seulement cette sauvegarde. Si un ancien club manque (avant que FM Immersion suive la partie, ou après un licenciement), importe ses jours ci-dessous : le plugin les a gardés. Un club venu d'une autre sauvegarde s'écarte avec « Pas dans cette carrière » sur sa fiche.",
+    "hiddenLabel": "écarté de cette carrière",
+    "unhide": "Remettre"
   }
 }

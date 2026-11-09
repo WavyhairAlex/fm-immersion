@@ -5,6 +5,8 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useCareer } from '../lib/career';
+import { useFmFolder } from '../lib/fm-sync';
+import { FmHistoryImport } from './FmSave';
 import { clubLogoUrl, clubLook, rememberClubLooks } from '../lib/club-look';
 import { fmData } from '../lib/data';
 import { useHistory } from '../lib/fm-cache';
@@ -31,7 +33,11 @@ export function Career() {
   const { data: history = [], isLoading } = useHistory(saveId);
   const { data: settings } = useQuery({ queryKey: ['fm', saveId, 'settings'], queryFn: () => fmData.settings(saveId), enabled: !!saveId });
   useMemo(() => rememberClubLooks(history.map((h) => h.data)), [history]);
-  const raw = useMemo(() => careerOf(history, { freeSince: settings?.fmFreeSince ?? null }), [history, settings?.fmFreeSince]);
+  const folder = useFmFolder(saveId);
+  // Clubs écartés par le joueur (jours venus d'une autre sauvegarde) : leurs jours ne comptent pas dans la carrière.
+  const hidden = useMemo(() => settings?.careerHidden ?? [], [settings?.careerHidden]);
+  const kept = useMemo(() => history.filter((h) => !hidden.includes(h.data.club)), [history, hidden]);
+  const raw = useMemo(() => careerOf(kept, { freeSince: settings?.fmFreeSince ?? null }), [kept, settings?.fmFreeSince]);
   // Pays corrigés à la main par le joueur (par nom de club), à la place du pays deviné.
   const fixed = useMemo(() => settings?.careerCountries ?? {}, [settings?.careerCountries]);
   const career: CareerData = useMemo(() => {
@@ -45,6 +51,14 @@ export function Career() {
         if (code) next[club] = code;
         else delete next[club];
         return { careerCountries: next };
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['fm', saveId, 'settings'] }),
+  });
+  const setHidden = useMutation({
+    mutationFn: ({ club, hide }: { club: string; hide: boolean }) =>
+      fmData.updateSettings(saveId, (prev) => {
+        const list = (prev.careerHidden ?? []).filter((c) => c !== club);
+        return { careerHidden: hide ? [...list, club] : list.length ? list : undefined };
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['fm', saveId, 'settings'] }),
   });
@@ -67,7 +81,7 @@ export function Career() {
           </Link>
         </div>
       )}
-      {!!fmSaves.length && !isLoading && !career.spells.length && (
+      {!!fmSaves.length && !isLoading && !career.spells.length && !hidden.length && (
         <div className="card mt-6 max-w-3xl">
           <p className="font-display text-xl font-semibold">{t('careerPage.emptyTitle')}</p>
           <p className="mt-2 text-brun">{t('careerPage.empty')}</p>
@@ -143,11 +157,37 @@ export function Career() {
                 auto={raw.spells.find((r) => r.start === s.start)?.country ?? null}
                 manual={!!fixed[s.club]}
                 onCountry={(code) => setCountry.mutate({ club: s.club, code })}
+                onHide={() => setHidden.mutate({ club: s.club, hide: true })}
               />
             ))}
           </ol>
           <p className="mt-4 text-xs text-brun">{t('careerPage.source')}</p>
         </>
+      )}
+
+      {!!fmSaves.length && !isLoading && (
+        <div className="card mt-8 max-w-4xl">
+          <h2 className="text-xl font-semibold">{t('careerPage.fixTitle')}</h2>
+          <p className="mt-1 text-sm text-brun">{t('careerPage.fixHelp')}</p>
+          {!!hidden.length && (
+            <ul className="mt-3 space-y-1.5">
+              {hidden.map((club) => (
+                <li key={club} className="flex flex-wrap items-center gap-3 text-sm">
+                  <span className="font-bold">{club}</span>
+                  <span className="text-brun">{t('careerPage.hiddenLabel')}</span>
+                  <button type="button" className="btn-secondary px-3 py-1 text-xs" onClick={() => setHidden.mutate({ club, hide: false })}>
+                    {t('careerPage.unhide')}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {!!folder && (
+            <div className="mt-4">
+              <FmHistoryImport saveId={saveId} folder={folder} club={career.spells.at(-1)?.club ?? null} />
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
@@ -179,7 +219,21 @@ function Crest({ club, size = 40 }: { club: string; size?: number }) {
   );
 }
 
-function SpellCard({ n, spell: s, auto, manual, onCountry }: { n: number; spell: CareerSpell; auto: string | null; manual: boolean; onCountry: (code: string | null) => void }) {
+function SpellCard({
+  n,
+  spell: s,
+  auto,
+  manual,
+  onCountry,
+  onHide,
+}: {
+  n: number;
+  spell: CareerSpell;
+  auto: string | null;
+  manual: boolean;
+  onCountry: (code: string | null) => void;
+  onHide: () => void;
+}) {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage;
   const [editing, setEditing] = useState(false);
@@ -226,9 +280,16 @@ function SpellCard({ n, spell: s, auto, manual, onCountry }: { n: number; spell:
             )}
           </p>
         </div>
-        <span className={`pill ${s.current ? '' : s.reason === 'sacked' ? 'bg-corail text-white' : 'bg-canard/10'}`}>
-          {s.current ? t('careerPage.current') : t(`careerPage.exit.${s.reason ?? 'left'}`)}
-        </span>
+        <div className="flex flex-col items-end gap-1">
+          <span className={`pill ${s.current ? '' : s.reason === 'sacked' ? 'bg-corail text-white' : 'bg-canard/10'}`}>
+            {s.current ? t('careerPage.current') : t(`careerPage.exit.${s.reason ?? 'left'}`)}
+          </span>
+          {!s.current && (
+            <button type="button" className="text-xs font-bold text-brun hover:text-corail hover:underline" onClick={onHide} title={t('careerPage.hideHelp')}>
+              {t('careerPage.hide')}
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-x-8 gap-y-2 text-sm">

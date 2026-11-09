@@ -4396,6 +4396,12 @@
       "GB-WLS": "Wales",
       "GB-NIR": "Northern Ireland"
     },
-    "leftMidSeason": "left mid-season"
+    "leftMidSeason": "left mid-season",
+    "hide": "Not in this career",
+    "hideHelp": "Leave this club out: its days come from another save or a test. Nothing is deleted, you can put it back below.",
+    "fixTitle": "A club missing, or one too many?",
+    "fixHelp": "My career only follows this save. If a former club is missing (before FM Immersion followed the save, or after a sacking), import its days below: the plugin kept them. A club from another save is left out with “Not in this career” on its card.",
+    "hiddenLabel": "left out of this career",
+    "unhide": "Put back"
   }
 }
