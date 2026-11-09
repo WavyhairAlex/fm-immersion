@@ -5,18 +5,21 @@ import type { FmSnapshot } from '../src/snapshot';
 // Onze postes au format du plugin 0.5.5 (TacticalPositionsCombined) : 4-3-3 avec un gardien relanceur.
 const row = (pos: number, ip: number, oop: number) => ({ IPPosition: pos, IPRole: ip, OOPPosition: pos, OOPRole: oop, PlayerIndex: -1 });
 const SUPPORT = 4194304;
+// Poste en masque de bits, comme le jeu (relevé le 09/11/2026) : bit de côté pour un créneau axial décalé.
+const RIGHT = 2 ** 20;
+const LEFT = 2 ** 21;
 const f433 = [
   row(1, 4096, 1), // GK, gardien relanceur
-  row(2, 4, 512), // DR, latéral
-  row(3, 2, 8), // DCR
-  row(5, 2, 8), // DCL
-  row(6, 4, 512), // DL
-  row(9, 16, 32768), // DMC
-  row(13, 65536 + SUPPORT, 1048576), // MCR, box-to-box en soutien
-  row(15, 32, 1048576), // MCL
-  row(17, 128, 274877906944), // AMR, ailier
-  row(21, 128, 274877906944), // AML
-  row(23, 2048, 4398046511104), // ST, avant-centre
+  row(4, 4, 512), // DR, latéral
+  row(16 + RIGHT, 2, 8), // DCR
+  row(16 + LEFT, 2, 8), // DCL
+  row(8, 4, 512), // DL
+  row(128, 16, 32768), // DMC
+  row(1024 + RIGHT, 65536 + SUPPORT, 1048576), // MCR, box-to-box en soutien
+  row(1024 + LEFT, 32, 1048576), // MCL
+  row(2048, 128, 274877906944), // AMR, ailier
+  row(4096, 128, 274877906944), // AML
+  row(16384, 2048, 4398046511104), // ST, avant-centre
 ];
 
 describe('postes de la tactique lus par le plugin', () => {

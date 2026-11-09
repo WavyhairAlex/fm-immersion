@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.118",
+    "date": "2026-11-09",
+    "fr": [
+      "Tes consignes d'équipe et individuelles sont maintenant lues dans FM27 : « Partir de ma tactique du jeu » dans Construire reprend tout, et l'analyse en tient compte.",
+      "Nouveau signal : un pressing haut avec une défense qui recule laisse un trou entre les lignes."
+    ],
+    "en": [
+      "Your team and player instructions are now read from FM27: \"Start from my in-game tactic\" in Build brings them all in, and the analysis uses them.",
+      "New warning: a high press with a defence that drops off leaves a gap between the lines."
+    ]
+  },
+  {
     "version": "0.1.117",
     "date": "2026-11-09",
     "fr": [

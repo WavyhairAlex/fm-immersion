@@ -7,18 +7,26 @@ import { FORMATIONS, formationKeys, formationOfPositions } from './tactic';
  * Sert à connaître le vrai schéma et les vrais rôles même quand la compo (réglage LireCompo) n'est pas lue.
  *
  * Codes relevés dans les énumérations du jeu (PositionID, InPossessionRole, OutOfPossessionRole), 08/11/2026 :
- * le poste est un numéro, chaque rôle un bit (la mission, Défense/Soutien/Attaque, est un bit à part, ignoré ici).
+ * le poste est un masque de bits (voir POSITION_BIT), chaque rôle un bit (la mission, Défense/Soutien/Attaque, est un bit à part, ignoré ici).
  */
 
-/** PositionID du jeu → poste FM Immersion (gauche, axe et droite d'une même ligne se rejoignent). */
-const POSITION_ID: Record<number, PosCode> = {
-  1: 'GB',
-  2: 'DD', 3: 'DC', 4: 'DC', 5: 'DC', 6: 'DG',
-  7: 'DLD', 8: 'MDF', 9: 'MDF', 10: 'MDF', 11: 'DLG',
-  12: 'MD', 13: 'MC', 14: 'MC', 15: 'MC', 16: 'MG',
-  17: 'MOD', 18: 'MOC', 19: 'MOC', 20: 'MOC', 21: 'MOG',
-  22: 'BT', 23: 'BT', 24: 'BT',
+/**
+ * Poste du jeu → poste FM Immersion. Le plugin donne le poste en masque de bits (PositionMask) : un bit par poste,
+ * plus un bit de côté pour un créneau axial décalé (2^20 à droite, 2^21 à gauche). Relevé sur la tactique réelle
+ * d'un joueur le 09/11/2026 (gardien 1, latéral droit 4, gauche 8, central 16, MD 128, MC 1024, ailiers 2048/4096,
+ * MO 8192, attaquant 16384) ; pistons et milieux excentrés suivent le même ordre droite puis gauche.
+ */
+const POSITION_BIT: Record<number, PosCode> = {
+  0: 'GB', 1: 'DC', 2: 'DD', 3: 'DG', 4: 'DC', 5: 'DLD', 6: 'DLG', 7: 'MDF', 8: 'MD', 9: 'MG', 10: 'MC', 11: 'MOD', 12: 'MOG', 13: 'MOC', 14: 'BT',
 };
+
+/** Poste d'après le masque du jeu (bits de côté ignorés), ou null. */
+export function positionOf(v: unknown): PosCode | null {
+  const n = toInt(v);
+  if (n == null) return null;
+  for (let b = 0; b < 20; b++) if ((n >> BigInt(b)) & 1n) return POSITION_BIT[b] ?? null;
+  return null;
+}
 
 /** Bit du rôle avec ballon (InPossessionRole) → code du jeu, tel que `RoleRef.game.ip`. */
 const IP_ROLE: Record<number, string> = { 0: 'Goalkeeper', 1: 'CentreBack', 2: 'FullBack', 3: 'WingBack', 4: 'DefensiveMidfielder', 5: 'CentralMidfielder', 6: 'WideMidfielder', 7: 'Winger', 9: 'AttackingMidfielder', 10: 'DeepLyingForward', 11: 'CentreForward', 12: 'BallPlayingGoalkeeper', 14: 'AdvancedCentreBack', 15: 'DeepLyingPlaymaker', 16: 'BoxToBoxMidfielder', 17: 'AdvancedPlaymaker', 18: 'TargetForward', 19: 'Poacher', 20: 'CompleteForward', 24: 'BallPlayingCentreBack', 27: 'InsideForward', 28: 'BallWinningMidfielder', 29: 'NoNonsenseCentreBack', 30: 'DefensiveWinger', 31: 'ChannelForward', 32: 'FreeRole', 33: 'Anchor', 35: 'HalfBack', 36: 'NoNonsenseFullBack', 37: 'Enganche', 38: 'AdvancedWingBack', 39: 'Regista', 40: 'FalseNine', 41: 'SecondStriker', 42: 'WideTargetForward', 43: 'PlaymakingWinger', 44: 'InsideWingBack', 45: 'WideForward', 46: 'BoxToBoxPlaymaker', 47: 'Mezzala', 48: 'WideCentralMidfielder', 49: 'InsideWinger', 50: 'SegundoVolante', 51: 'WideCentreBack', 52: 'InsideFullBack', 53: 'NoNonsenseGoalkeeper', 54: 'OverlappingCentreBack', 55: 'PlaymakingWingBack', 56: 'ChannelMidfielder', 57: 'MidfieldPlaymaker' };
@@ -59,9 +67,9 @@ export function tacticSlots(tactic: unknown): TacticSlot[] | null {
   for (const r of rows) {
     if (!r || typeof r !== 'object') continue;
     const o = r as Record<string, unknown>;
-    const pos = POSITION_ID[Number(o.IPPosition ?? o.Position)];
+    const pos = positionOf(o.IPPosition ?? o.Position);
     if (!pos) continue;
-    out.push({ pos, posOOP: POSITION_ID[Number(o.OOPPosition)] ?? null, roleIP: roleOf(o.IPRole, IP_ROLE), roleOOP: roleOf(o.OOPRole, OOP_ROLE) });
+    out.push({ pos, posOOP: positionOf(o.OOPPosition), roleIP: roleOf(o.IPRole, IP_ROLE), roleOOP: roleOf(o.OOPRole, OOP_ROLE) });
   }
   return out.length === 11 ? out : null;
 }
