@@ -1,6 +1,6 @@
 [
   {
-    "version": "0.1.124",
+    "version": "0.1.125",
     "date": "2026-11-09",
     "fr": [
       "Live Discord te dit maintenant ce que fait la gazette automatique : dernière vérification, semaine lue, et pourquoi rien n'est parti. Un bouton « Vérifier maintenant » la relance tout de suite.",
@@ -9,6 +9,18 @@
     "en": [
       "Live Discord now tells you what the automatic gazette is doing: last check, week read, and why nothing went out. A \"Check now\" button runs it right away.",
       "Automatic sending can no longer stay stuck: a check stuck for more than 10 minutes is restarted."
+    ]
+  },
+  {
+    "version": "0.1.124",
+    "date": "2026-11-09",
+    "fr": [
+      "L'onglet « Progression » de l'« Effectif » se lit enfin : plus de longue liste de dates, mais les points d'attributs gagnés ou perdus par chaque joueur, depuis le début et sur les trois derniers mois, avec les attributs qui ont le plus bougé.",
+      "Les courbes sont vertes quand le joueur progresse, rouges quand il baisse, grises quand il est stable, et tu peux n'afficher que les joueurs en progrès, stables ou en baisse."
+    ],
+    "en": [
+      "The “Progression” tab of “Squad” is finally readable: no more long list of dates, but the attribute points each player gained or lost, since the start and over the last three months, with the attributes that moved most.",
+      "Curves are green when a player improves, red when they decline, grey when stable, and you can show only improving, stable or declining players."
     ]
   },
   {
