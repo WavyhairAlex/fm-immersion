@@ -691,13 +691,26 @@
     "prog": {
       "onePoint": "1 point",
       "title": "Évolution du niveau depuis le {{date}}",
-      "snaps_one": "1 instantané : {{dates}}. Importe-en un à chaque nouvelle date de jeu pour voir les courbes.",
-      "snaps_other": "{{count}} instantanés : {{dates}}. Importe-en un à chaque nouvelle date de jeu pour voir les courbes.",
       "player": "Joueur",
       "age": "Âge",
       "curve": "Courbe",
       "level": "Niveau",
-      "delta": "Évol."
+      "snapsRange_one": "1 instantané, le {{from}}. Importe-en un à chaque nouvelle date de jeu pour voir les courbes.",
+      "snapsRange_other": "{{count}} instantanés, du {{from}} au {{to}}.",
+      "howTo": "Le niveau est la moyenne de ses attributs : il bouge peu. Les points d'attributs disent mieux ce qu'il a gagné ou perdu (+3 = trois attributs qui ont pris un point, par exemple). Courbe verte : en progrès ; rouge : en baisse ; grise : stable.",
+      "points": "Depuis le début",
+      "pointsHelp": "Points d'attributs gagnés ou perdus depuis son premier instantané (somme des écarts de chaque attribut).",
+      "recent": "3 derniers mois",
+      "recentHelp": "Points d'attributs gagnés ou perdus sur les 90 derniers jours de jeu.",
+      "moves": "Ce qui a bougé",
+      "noMove": "Rien n'a bougé",
+      "since": "suivi depuis le {{date}}",
+      "trend": {
+        "all": "Tous",
+        "up": "En progrès",
+        "flat": "Stables",
+        "down": "En baisse"
+      }
     },
     "depth": {
       "injured": "Blessé",

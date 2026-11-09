@@ -691,13 +691,26 @@
     "prog": {
       "onePoint": "1 point",
       "title": "Level since {{date}}",
-      "snaps_one": "1 snapshot: {{dates}}. Import one at each new game date to see the curves.",
-      "snaps_other": "{{count}} snapshots: {{dates}}. Import one at each new game date to see the curves.",
       "player": "Player",
       "age": "Age",
       "curve": "Curve",
       "level": "Level",
-      "delta": "Change"
+      "snapsRange_one": "1 snapshot, on {{from}}. Import one at each new game date to see the curves.",
+      "snapsRange_other": "{{count}} snapshots, from {{from}} to {{to}}.",
+      "howTo": "Level is the average of their attributes: it moves little. Attribute points tell better what they gained or lost (+3 = three attributes each up one point, for instance). Green curve: improving; red: declining; grey: stable.",
+      "points": "Since start",
+      "pointsHelp": "Attribute points gained or lost since their first snapshot (sum of each attribute's change).",
+      "recent": "Last 3 months",
+      "recentHelp": "Attribute points gained or lost over the last 90 game days.",
+      "moves": "What moved",
+      "noMove": "Nothing moved",
+      "since": "tracked since {{date}}",
+      "trend": {
+        "all": "All",
+        "up": "Improving",
+        "flat": "Stable",
+        "down": "Declining"
+      }
     },
     "depth": {
       "injured": "Injured",
