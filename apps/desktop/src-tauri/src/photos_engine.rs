@@ -330,10 +330,11 @@ pub fn models_from_manifest(m: &photos_remote::Manifest) -> Option<Models> {
     })
 }
 
-/// Graphe ComfyUI de Qwen Image Edit 2511 avec la LoRA Lightning (4 pas, cfg 1, euler/simple, shift 3,1, CFGNorm),
-/// réglages validés sur les séries de test. `input_image` : nom d'un fichier du dossier `input/` (visage) ; sans
-/// image, génération à partir du texte seul.
-pub fn build_workflow(m: &Models, prompt: &str, input_image: Option<&str>, seed: u64, width: u32, height: u32, prefix: &str) -> serde_json::Value {
+/// Graphe ComfyUI de Qwen Image Edit 2511 avec la LoRA Lightning (4 pas, cfg 1, euler/simple, shift 3,1, CFGNorm,
+/// références en `index_timestep_zero`), réglages validés sur les séries de test. `images` : noms de fichiers du
+/// dossier `input/`, dans l'ordre des « image 1 », « image 2 », « image 3 » de la consigne (3 au plus) ; sans image,
+/// génération à partir du texte seul.
+pub fn build_workflow(m: &Models, prompt: &str, images: &[&str], seed: u64, width: u32, height: u32, prefix: &str) -> serde_json::Value {
     use serde_json::json;
     let mut g = serde_json::Map::new();
     let mut node = |id: &str, class: &str, inputs: serde_json::Value| {
@@ -347,23 +348,49 @@ pub fn build_workflow(m: &Models, prompt: &str, input_image: Option<&str>, seed:
     node("6", "CFGNorm", json!({ "model": ["5", 0], "strength": 1.0 }));
     let mut pos = json!({ "clip": ["2", 0], "prompt": prompt, "vae": ["3", 0] });
     let mut neg = json!({ "clip": ["2", 0], "prompt": "", "vae": ["3", 0] });
-    if let Some(img) = input_image {
-        node("7", "LoadImage", json!({ "image": img }));
-        pos["image1"] = json!(["7", 0]);
-        neg["image1"] = json!(["7", 0]);
+    for (i, img) in images.iter().take(3).enumerate() {
+        let id = format!("2{i}");
+        node(&id, "LoadImage", json!({ "image": img }));
+        pos[format!("image{}", i + 1)] = json!([id, 0]);
+        neg[format!("image{}", i + 1)] = json!([id, 0]);
     }
     node("8", "TextEncodeQwenImageEditPlus", pos);
     node("9", "TextEncodeQwenImageEditPlus", neg);
+    node("14", "FluxKontextMultiReferenceLatentMethod", json!({ "conditioning": ["8", 0], "reference_latents_method": "index_timestep_zero" }));
+    node("15", "FluxKontextMultiReferenceLatentMethod", json!({ "conditioning": ["9", 0], "reference_latents_method": "index_timestep_zero" }));
     node("10", "EmptySD3LatentImage", json!({ "width": width, "height": height, "batch_size": 1 }));
     node(
         "11",
         "KSampler",
         json!({ "model": ["6", 0], "seed": seed, "steps": 4, "cfg": 1.0, "sampler_name": "euler", "scheduler": "simple",
-                "positive": ["8", 0], "negative": ["9", 0], "latent_image": ["10", 0], "denoise": 1.0 }),
+                "positive": ["14", 0], "negative": ["15", 0], "latent_image": ["10", 0], "denoise": 1.0 }),
     );
     node("12", "VAEDecode", json!({ "samples": ["11", 0], "vae": ["3", 0] }));
     node("13", "SaveImage", json!({ "images": ["12", 0], "filename_prefix": prefix }));
     serde_json::Value::Object(g)
+}
+
+/// Mémoire vidéo totale de la carte vue par ComfyUI (octets), d'après `/system_stats`.
+pub fn vram_total(port: u16) -> Option<u64> {
+    let v: serde_json::Value = agent().get(&format!("http://127.0.0.1:{port}/system_stats")).call().ok()?.into_json().ok()?;
+    v.get("devices")?.as_array()?.iter().filter_map(|d| d.get("vram_total").and_then(|t| t.as_u64())).max()
+}
+
+/// Demande à ComfyUI de décharger ses modèles et de rendre la mémoire vidéo (avant la porte qualité).
+pub fn free_models(port: u16) -> bool {
+    agent()
+        .post(&format!("http://127.0.0.1:{port}/free"))
+        .send_json(serde_json::json!({ "unload_models": true, "free_memory": true }))
+        .is_ok()
+}
+
+/// Python embarqué de ComfyUI et dossier `comfy/text_encoders/qwen25_tokenizer` (tokenizer de la porte qualité).
+pub fn python_and_tokenizer(photos_dir: &Path) -> Option<(PathBuf, PathBuf)> {
+    let l = layout(photos_dir)?;
+    let root = engine_dir(photos_dir);
+    let main = root.join(&l.main);
+    let tokenizer = main.parent()?.join("comfy").join("text_encoders").join("qwen25_tokenizer");
+    Some((root.join(&l.python), tokenizer))
 }
 
 /// Images produites par une exécution, d'après `/history/<id>` : chemins relatifs au dossier `output/`.
@@ -514,16 +541,16 @@ pub async fn photos_engine_test(app: tauri::AppHandle, prompt: Option<String>, f
         emit("start");
         let port = start(&dir)?;
         let models = models_from_manifest(photos_remote::manifest()).ok_or_else(|| PhotosError::Manifest("modèles absents du manifeste".into()))?;
-        let input = match coach {
+        let input: Vec<&str> = match coach {
             Some(png) => {
                 std::fs::create_dir_all(dir.join("input"))?;
                 std::fs::write(dir.join("input").join("fmi-test-face.png"), png)?;
-                Some("fmi-test-face.png")
+                vec!["fmi-test-face.png"]
             }
-            None => None,
+            None => vec![],
         };
         let text = prompt.unwrap_or_else(|| {
-            if input.is_some() {
+            if !input.is_empty() {
                 "Press photo, telephoto lens. The man from image 1 stands on the touchline of a soccer stadium at dusk, \
                  wearing a plain dark navy tracksuit jacket with no logo, pointing to his left and shouting instructions, \
                  looking at the pitch. Blurred stands in the background, floodlights on."
@@ -535,7 +562,7 @@ pub async fn photos_engine_test(app: tauri::AppHandle, prompt: Option<String>, f
             }
         });
         let seed = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(1);
-        let graph = build_workflow(&models, &text, input, seed, 1024, 576, "fmi/test");
+        let graph = build_workflow(&models, &text, input.as_slice(), seed, 1024, 576, "fmi/test");
         emit("generate");
         let files = run_workflow(port, &dir, &graph, &|_| {})?;
         let first = files.first().ok_or_else(|| PhotosError::Io("aucune image produite".into()))?;
@@ -619,14 +646,17 @@ mod tests {
         assert_eq!(m.clip, "qwen_2.5_vl_7b_fp8_scaled.safetensors");
         assert_eq!(m.vae, "qwen_image_vae.safetensors");
         assert!(m.lora.contains("Lightning"));
-        let g = build_workflow(&m, "test", Some("face.png"), 42, 1024, 576, "fmi/test");
+        let g = build_workflow(&m, "test", &["face.png", "kit.png"], 42, 1024, 576, "fmi/test");
         let o = g.as_object().unwrap();
-        assert_eq!(o.len(), 13);
+        assert_eq!(o.len(), 16);
         assert_eq!(o["11"]["inputs"]["steps"], 4);
         assert_eq!(o["11"]["inputs"]["cfg"], 1.0);
         assert_eq!(o["11"]["inputs"]["sampler_name"], "euler");
         assert_eq!(o["5"]["inputs"]["shift"], 3.1);
-        assert_eq!(o["8"]["inputs"]["image1"], serde_json::json!(["7", 0]));
+        assert_eq!(o["8"]["inputs"]["image1"], serde_json::json!(["20", 0]));
+        assert_eq!(o["9"]["inputs"]["image2"], serde_json::json!(["21", 0]));
+        assert_eq!(o["14"]["inputs"]["reference_latents_method"], "index_timestep_zero");
+        assert_eq!(o["11"]["inputs"]["positive"], serde_json::json!(["14", 0]));
         assert_eq!(o["2"]["inputs"]["type"], "qwen_image");
         // Toute référence pointe vers un nœud existant.
         for (id, node) in o {
@@ -637,8 +667,8 @@ mod tests {
                 }
             }
         }
-        let sans = build_workflow(&m, "test", None, 1, 1024, 576, "fmi/test");
-        assert_eq!(sans.as_object().unwrap().len(), 12);
+        let sans = build_workflow(&m, "test", &[], 1, 1024, 576, "fmi/test");
+        assert_eq!(sans.as_object().unwrap().len(), 14);
         assert!(sans["8"]["inputs"].get("image1").is_none());
     }
 

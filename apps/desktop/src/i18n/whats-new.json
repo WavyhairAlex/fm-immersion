@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.124",
+    "date": "2026-11-09",
+    "fr": [
+      "Photos de situation, deuxième étape : sur l'écran Photos, choisis une scène (sortie sur civière, béquilles, signature, consigne sur la touche, conférence de presse, accolade coach-joueur, une de gazette…) et le visage à y mettre : l'appli fait trois images, garde la meilleure après une relecture automatique et retire les logos. Les photos restent sur ton PC, dans une petite bibliothèque.",
+      "Prochaine étape : les photos illustreront d'elles-mêmes les dépêches, le direct et la gazette."
+    ],
+    "en": [
+      "Situation photos, second step: on the Photos screen, pick a scene (stretchered off, crutches, contract signing, touchline instructions, press conference, coach-player embrace, gazette front page…) and the face to put in it: the app makes three images, keeps the best after an automatic review and removes logos. Photos stay on your PC, in a small library.",
+      "Next step: the photos will illustrate breaking news, live match and the gazette by themselves."
+    ]
+  },
+  {
     "version": "0.1.123",
     "date": "2026-11-09",
     "fr": [

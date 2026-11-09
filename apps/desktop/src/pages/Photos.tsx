@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PhotoScenes } from '../components/PhotoScenes';
 import { useCareer } from '../lib/career';
 import { fmData } from '../lib/data';
 import {
@@ -163,6 +164,8 @@ export function Photos() {
         <p className="mt-3 text-xs text-brun">{t('photos.verifying')}</p>
         <p className="text-xs text-brun">{t('photos.sources')}</p>
       </section>
+
+      {state === 'ready' && <PhotoScenes coachPhoto={coachPhoto} disabled={busy} />}
 
       {testImage && (
         <section className="card mt-6 max-w-3xl">

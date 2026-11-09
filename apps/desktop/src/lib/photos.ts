@@ -171,3 +171,131 @@ function dataUrlBytes(url: string): number[] {
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
   return out;
 }
+
+// ------------------------------------------------------------------ scènes et bibliothèque
+
+export type SceneRole = 'player' | 'coach' | 'duo' | 'front';
+export type SceneInfo = {
+  key: string;
+  role: SceneRole;
+  faces: number;
+  injury: boolean;
+  needsCoach: boolean;
+  width: number;
+  height: number;
+};
+export type CandidateReport = {
+  seed: number;
+  place: string;
+  light: string;
+  angle: string;
+  accepted: boolean | null;
+  score: number | null;
+  reasons: string[];
+};
+export type Outcome = {
+  scene: string;
+  file: string;
+  createdAt: string;
+  seed: number;
+  accepted: boolean | null;
+  score: number | null;
+  reasons: string[];
+  logosBefore: number | null;
+  logosAfter: number | null;
+  cleaned: boolean;
+  regenerate: boolean;
+  candidates: CandidateReport[];
+  warnings: string[];
+  seconds: number;
+};
+export type PipelineProgress = {
+  step: 'prepare' | 'start' | 'generate' | 'gate' | 'logos' | 'cleanup' | 'save' | 'done';
+  index: number;
+  total: number;
+};
+export type GenerateRequest = {
+  scene: string;
+  /** Visages en PNG (adresses `data:` ou octets) : 1, ou 2 pour un duo (coach puis joueur). */
+  faces: number[][];
+  kit?: number[] | null;
+  candidates?: number | null;
+  seed?: number | null;
+};
+
+export const SCENES_KEY = ['photos', 'scenes'] as const;
+export const LIBRARY_KEY = ['photos', 'library'] as const;
+
+export function useScenes() {
+  return useQuery({ queryKey: SCENES_KEY, queryFn: () => invoke<SceneInfo[]>('photos_scenes'), staleTime: Infinity });
+}
+
+export function useLibrary() {
+  return useQuery({ queryKey: LIBRARY_KEY, queryFn: () => invoke<Outcome[]>('photos_library') });
+}
+
+/** Avancement d'une génération (null au repos). */
+export function usePipelineProgress(active: boolean) {
+  const [progress, setProgress] = useState<PipelineProgress | null>(null);
+  useEffect(() => {
+    if (!active) {
+      setProgress(null);
+      return;
+    }
+    const off = listen<PipelineProgress>('photos-pipeline', (e) => setProgress(e.payload));
+    return () => {
+      off.then((f) => f());
+    };
+  }, [active]);
+  return progress;
+}
+
+export function usePipelineActions() {
+  const qc = useQueryClient();
+  const refresh = async () => {
+    await qc.invalidateQueries({ queryKey: LIBRARY_KEY });
+    await qc.invalidateQueries({ queryKey: ENGINE_STATUS_KEY });
+  };
+  return {
+    generate: async (request: GenerateRequest): Promise<Outcome> => {
+      try {
+        return await invoke<Outcome>('photos_generate', { request });
+      } finally {
+        await refresh();
+      }
+    },
+    /** Image de la bibliothèque sous forme d'adresse blob, à libérer avec URL.revokeObjectURL. */
+    read: async (file: string): Promise<string> => {
+      const bytes = await invoke<ArrayBuffer>('photos_library_read', { file });
+      return URL.createObjectURL(new Blob([bytes], { type: 'image/png' }));
+    },
+    delete: async (file: string) => {
+      try {
+        await invoke('photos_library_delete', { file });
+      } finally {
+        await refresh();
+      }
+    },
+  };
+}
+
+/** Octets PNG d'une adresse `data:` ; une autre image (JPEG…) est redessinée en PNG. */
+export async function imageToPngBytes(source: string | File): Promise<number[]> {
+  if (typeof source === 'string' && source.startsWith('data:image/png')) return dataUrlBytes(source);
+  const url = typeof source === 'string' ? source : URL.createObjectURL(source);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error('image illisible'));
+      i.src = url;
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    canvas.getContext('2d')?.drawImage(img, 0, 0);
+    return dataUrlBytes(canvas.toDataURL('image/png'));
+  } finally {
+    if (typeof source !== 'string') URL.revokeObjectURL(url);
+  }
+}
