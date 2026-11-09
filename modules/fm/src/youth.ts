@@ -71,10 +71,11 @@ export function youthTeams(plans: WorkPlan[], threshold: number): YouthTeam[] {
 
 /**
  * Semaine type des jeunes : même programme que l'équipe première, mais orienté progression (aucune zone tactique
- * faible à corriger : le programme réduit les séances tactiques au profit des séances de développement) et calendrier
- * supposé (un match le samedi en saison).
+ * faible à corriger, deux séances tactiques au plus : le programme réduit les séances tactiques au profit des séances de
+ * développement, comme le jeu qui donne aux équipes de jeunes un but de progression) et calendrier supposé (un match le
+ * samedi en saison).
  */
 export function youthWeek(o: { gameDate: string; seasonStart?: number; winterBreak?: WinterBreak | null; trainingDays?: number[]; priorities?: EffArea[]; style?: string; method?: TrainingMethod }) {
-  const plan = trainingWeekAt(mondayOf(o.gameDate), { ...o, fixtures: undefined, weakAreas: [], gaugesKnown: true });
+  const plan = trainingWeekAt(mondayOf(o.gameDate), { ...o, fixtures: undefined, weakAreas: [], gaugesKnown: true, youth: true });
   return { plan, preset: nearestPreset(plan), workload: weekWorkload(plan) };
 }

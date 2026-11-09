@@ -45,8 +45,15 @@ import {
   HARVEST_WEEK_YIELD,
   SESSION_YIELD,
   DEFAULT_METHOD,
-  coachFocus,
+  focusAdvice,
+  growthOutlook,
+  roleAdvice,
+  teamAppsOf,
   teamIntensityFor,
+  type FocusWhy,
+  type GrowthOutlook,
+  type GrowthVerdict,
+  type RoleWhy,
   trainingYield,
   yieldDaysMissing,
   type SquadAt,
@@ -110,6 +117,11 @@ export interface SetupRow {
   changed: SetupField[];
   /** Priorité choisie d'après les stats de match (centre de données) plutôt que les attributs du rôle. */
   focusFromStats: boolean;
+  /** Pourquoi cette priorité, ces rôles, et ce que le joueur peut encore gagner. */
+  focusWhy: FocusWhy;
+  roleWhy: RoleWhy;
+  devRole: 'dm' | 'am' | null;
+  outlook: GrowthOutlook;
 }
 const STATUS_ORDER: Record<SetupStatus, number> = { change: 0, todo: 1, ok: 2 };
 
@@ -133,6 +145,7 @@ export function useIndividualSetups(engine: TacticEngine, players: FmPlayer[], f
   const [applied, save] = useAppliedSetups(folder);
   const list = useMemo(() => players.filter((p) => Object.keys(p.attributes).length), [players]);
   const project = useMemo(() => buildProject(engine, list, coach), [engine, list, coach]);
+  const teamApps = useMemo(() => teamAppsOf(players), [players]);
   const rows = useMemo<SetupRow[]>(() => {
     if (!project) return [];
     return project.plans
@@ -141,16 +154,28 @@ export function useIndividualSetups(engine: TacticEngine, players: FmPlayer[], f
         const ip = x.slot ? (engine.roles.get(x.slot.ip) ?? null) : x.phase === 'ip' ? x.role : null;
         const oop = x.slot ? (engine.roles.get(x.slot.oop) ?? null) : x.phase === 'oop' ? x.role : null;
         const fromStats = statFocus.get(x.player.id) ?? null;
+        const focus = focusAdvice(x.player, x.weak, fromStats);
+        const roles = roleAdvice(x);
         const rec: IndividualSetup = {
           ip: ip?.code ?? null,
           oop: oop?.code ?? null,
-          focus: coachFocus(x.player, x.weak, fromStats),
+          focus: focus.focus,
           intensity: advice.intensity,
         };
-        return { plan: x, rec, advice, focusFromStats: !!fromStats, ...setupStatus(rec, applied[x.player.id]) };
+        return {
+          plan: x,
+          rec,
+          advice,
+          focusFromStats: !!fromStats,
+          focusWhy: focus.why,
+          roleWhy: roles.why,
+          devRole: roles.devRole,
+          outlook: growthOutlook(x.player, teamApps),
+          ...setupStatus(rec, applied[x.player.id]),
+        };
       })
       .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
-  }, [project, engine, matches, applied, statFocus]);
+  }, [project, engine, matches, applied, statFocus, teamApps]);
   const mark = (ids: string[], on: boolean) => {
     const next = { ...applied };
     for (const r of rows) if (ids.includes(r.plan.player.id)) on ? (next[r.plan.player.id] = r.rec) : delete next[r.plan.player.id];
@@ -172,7 +197,6 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
   // Une seule proposition : le programme FM Immersion (progression mesurée + efficacité tactique + calendrier).
   const method = DEFAULT_METHOD;
   const teamIntensity = teamIntensityFor(method);
-  const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 1, minimumFractionDigits: 1 });
   const trainingDays = clubStatus === 'pro' ? undefined : coach.trainingDays ?? PART_TIME_DAYS;
   // Semaine affichée, en semaines après la semaine en cours (0 = cette semaine) ; la vue saison permet d'en choisir une.
   const [offset, setOffset] = useState('0');
@@ -202,6 +226,8 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
   const gauges = effectiveness(snap);
   const weakest = gauges?.weakest ?? [];
   const gaugesKnown = !!gauges;
+  // Efficacité tactique globale : elle règle le nombre de séances tactiques de la semaine.
+  const teOverall = gauges?.overall?.mid ?? null;
   // Puis ce que montrent les matchs (centre de données : passes ratées, pressing inefficace…).
   const fromMatches = useMemo(() => statsBoard(players, matchStats(snap)).areas, [players, snap]);
   const priorities = [...new Set<EffArea>([...styleAreas.slice(0, 1), ...weakest, ...fromMatches, ...styleAreas])];
@@ -209,19 +235,19 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
   const mentoring = useMemo(() => mentoringGroups(players), [players]);
   const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
   const season = useMemo(
-    () => seasonWeeks({ gameDate: snap.gameDate, fixtures, seasonStart, winterBreak, trainingDays, priorities, style: style?.id, method, weakAreas: weakest, gaugesKnown, calendarComplete }),
-    [snap.gameDate, fixtures, calendarComplete, seasonStart, winterBreak?.from, winterBreak?.to, trainingDays?.join(), priorities.join(), style?.id, method, weakest.join(), gaugesKnown],
+    () => seasonWeeks({ gameDate: snap.gameDate, fixtures, seasonStart, winterBreak, trainingDays, priorities, style: style?.id, method, weakAreas: weakest, gaugesKnown, teOverall, calendarComplete }),
+    [snap.gameDate, fixtures, calendarComplete, seasonStart, winterBreak?.from, winterBreak?.to, trainingDays?.join(), priorities.join(), style?.id, method, weakest.join(), gaugesKnown, teOverall],
   );
   const plan = useMemo(
-    () => buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: before, priorities, style: style?.id, trainingDays, method, weakAreas: weakest, gaugesKnown }),
-    [monday, phase, week, matchDays.join(), before, priorities.join(), style?.id, trainingDays?.join(), method, weakest.join(), gaugesKnown],
+    () => buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: before, priorities, style: style?.id, trainingDays, method, weakAreas: weakest, gaugesKnown, teOverall }),
+    [monday, phase, week, matchDays.join(), before, priorities.join(), style?.id, trainingDays?.join(), method, weakest.join(), gaugesKnown, teOverall],
   );
   const load = weekLoad(plan);
   // Résumé de la semaine : séances tactiques (efficacité), séances de progression (attributs), matchs.
   const whys = plan.days.flatMap((d) => d.why ?? []);
   const summary = {
-    tactical: whys.filter((w) => w === 'press' || w === 'weak' || w === 'top').length,
-    grow: whys.filter((w) => w === 'grow' || w === 'noCondition' || w === 'indiv').length,
+    tactical: whys.filter((w) => w === 'press' || w === 'weak' || w === 'top' || w === 'rotate').length,
+    grow: whys.filter((w) => w === 'grow' || w === 'devBlock' || w === 'noCondition' || w === 'indiv').length,
     matches: plan.days.filter((d) => d.kind === 'match').length,
   };
   const resetWeek = () => {
@@ -237,7 +263,7 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
   const todoCount = setups.rows.filter((r) => r.status !== 'ok').length;
   const changeCount = setups.rows.filter((r) => r.status === 'change').length;
   // Phrases de l'adjoint : zones tactiques de la semaine (hors pièges), rendement mesuré sur les instantanés.
-  const zones = [...new Set(plan.days.flatMap((d) => d.sessions.filter((x, i) => x && x !== 'pressingTrap' && (d.why?.[i] === 'weak' || d.why?.[i] === 'top'))))] as SessionId[];
+  const zones = [...new Set(plan.days.flatMap((d) => d.sessions.filter((x, i) => x && x !== 'pressingTrap' && (d.why?.[i] === 'weak' || d.why?.[i] === 'top' || d.why?.[i] === 'rotate'))))] as SessionId[];
   const zoneList = [t('fm.train.session.pressingTrap'), ...zones.map((z) => t(`fm.train.session.${z}`))].join(', ');
   const measured = useMemo(() => trainingYield(history), [history]);
   const missingDays = useMemo(() => yieldDaysMissing(history), [history]);
@@ -265,12 +291,22 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
                 <p className="mt-1 text-base font-bold text-canard">
                   {plan.congested
                     ? t('fm.train.coach.congested', { matches: summary.matches })
-                    : seasonal
-                      ? summary.matches
-                        ? t('fm.train.coach.season', { count: summary.matches, tactical: summary.tactical, grow: summary.grow, zones: zoneList })
-                        : t('fm.train.coach.noMatch', { tactical: summary.tactical, grow: summary.grow, zones: zoneList })
+                    : seasonal && plan.mode
+                      ? t(`fm.train.mode.${plan.mode}`, { te: teOverall != null ? Math.round(teOverall) : '?', count: summary.tactical, grow: summary.grow, zones: zoneList })
                       : t(`fm.train.phaseHelp.${plan.phase}`)}
                 </p>
+                {seasonal && plan.lessons && plan.lessons.length > 0 && (
+                  <div className="mt-2 rounded-xl bg-orange-clair/40 p-3">
+                    <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.train.coach.whyTitle')}</p>
+                    <ul className="mt-1 list-disc space-y-1 pl-5 text-sm">
+                      {plan.lessons
+                        .filter((l) => l.id !== 'mode' && l.id !== 'modeUnknown')
+                        .map((l) => (
+                          <li key={l.id}>{t(`fm.train.lesson.${l.id}`, l.params ?? {})}</li>
+                        ))}
+                    </ul>
+                  </div>
+                )}
                 <ul className="mt-2 space-y-1 text-sm">
                   <li>{workload ? t('fm.train.coach.inGame', { preset: t(`fm.train.preset.${nearestPreset(plan)}`), workload: t(`fm.train.workload.${workload}`) }) : t('fm.train.coach.inGameRest', { preset: t(`fm.train.preset.${nearestPreset(plan)}`) })}</li>
                   <li>{t('fm.train.coach.intensity')}</li>
@@ -475,7 +511,7 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
 
                 <div className="mt-3 grid gap-2 sm:grid-cols-4 lg:grid-cols-7">
                   {plan.days.map((d) => (
-                    <div key={d.date} className={`rounded-xl p-2 ${d.kind === 'match' ? 'bg-eau/15' : d.kind === 'off' ? 'bg-creme/60 opacity-70' : 'bg-white/60'} ring-1 ring-canard/10`}>
+                    <div key={d.date} className={`rounded-xl p-2 ${d.kind === 'match' ? 'bg-eau/15' : d.kind === 'off' ? 'bg-creme/60 opacity-70' : d.kind === 'rest' ? 'bg-creme' : 'bg-white/60'} ring-1 ring-canard/10`}>
                       <p className="text-sm font-bold">
                         {t(`fm.train.days.${d.weekday}`)} <span className="font-normal text-brun">{dayMonth.format(new Date(`${d.date}T00:00:00Z`))}</span>
                       </p>
@@ -527,28 +563,6 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
                 <More>{t('fm.train.teamIntensityCoach')}</More>
               </Panel>
 
-              <details className="rounded-2xl bg-white/40 ring-1 ring-canard/10">
-                <summary className="cursor-pointer select-none px-4 py-3 text-sm font-bold text-canard/70 hover:text-canard">{t('fm.train.yield.title')}</summary>
-              <Panel title={t('fm.train.yield.title')}>
-                <p className="text-sm">{t('fm.train.yield.intro', { best: nf1.format(HARVEST_WEEK_YIELD) })}</p>
-                <div className="mt-2 grid gap-2 sm:grid-cols-3">
-                  {(['physical', 'ball', 'tactical'] as const).map((g) => (
-                    <div key={g} className="rounded-xl bg-white/60 p-2 ring-1 ring-canard/10">
-                      <p className="text-xs font-bold text-canard/70">{t(`fm.train.yield.${g}`)}</p>
-                      <ul className="mt-1 space-y-0.5 text-sm">
-                        {YIELD_GROUPS[g].map((id) => (
-                          <li key={id} className="flex justify-between gap-2">
-                            <span>{t(`fm.train.session.${id}`)}</span>
-                            <b className="tabular-nums text-canard">{nf1.format(SESSION_YIELD[id] ?? 0)}</b>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-                <More>{t('fm.train.yield.help')}</More>
-              </Panel>
-              </details>
             </>
           ),
         },
@@ -656,6 +670,7 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
                     <thead className="text-left text-canard/70">
                       <tr>
                         <th className="px-2 py-1">{t('fm.prog.player')}</th>
+                        <th className="px-2 py-1">{t('fm.train.outlook.col')}</th>
                         <th className="px-2 py-1">{t('fm.train.inGame')}</th>
                         <th className="px-2 py-1">{t('fm.train.roleIp')}</th>
                         <th className="px-2 py-1">{t('fm.train.roleOop')}</th>
@@ -665,7 +680,7 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
                       </tr>
                     </thead>
                     <tbody>
-                      {setups.rows.map(({ plan: x, rec, advice: a, status, changed, focusFromStats }) => {
+                      {setups.rows.map(({ plan: x, rec, advice: a, status, changed, focusFromStats, focusWhy, roleWhy, devRole, outlook }) => {
                         const ip = rec.ip ? engine.roles.get(rec.ip) : null;
                         const oop = rec.oop ? engine.roles.get(rec.oop) : null;
                         const was = setups.applied[x.player.id];
@@ -693,13 +708,21 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
                               <PlayerLink player={x.player} /> <Pos player={x.player} />
                             </td>
                             <td className="px-2 py-1.5">
+                              <Outlook o={outlook} />
+                            </td>
+                            <td className="px-2 py-1.5">
                               <label className="flex items-center gap-1.5">
                                 <input type="checkbox" checked={status === 'ok'} onChange={(e) => setups.mark([x.player.id], e.target.checked)} />
                                 {status === 'change' ? <Tag tone="warn">{t('fm.train.setupStatus.change')}</Tag> : status === 'todo' ? <span className="whitespace-nowrap text-xs text-brun">{t('fm.train.setupStatus.todo')}</span> : null}
                               </label>
                             </td>
                             <td className="px-2 py-1.5">{cell('ip', ip ? names.role(ip) : '–')}</td>
-                            <td className="px-2 py-1.5">{cell('oop', oop ? names.role(oop) : '–')}</td>
+                            <td className="px-2 py-1.5">
+                              {cell('oop', oop ? names.role(oop) : '–')}
+                              <span className="mt-0.5 block max-w-[16rem] text-[11px] leading-tight text-brun">
+                                {roleWhy === 'youngBench' && devRole ? t('fm.train.roleWhy.youngBench', { role: t(`fm.train.devRole.${devRole}`) }) : t(`fm.train.roleWhy.${roleWhy}`)}
+                              </span>
+                            </td>
                             <td className="px-2 py-1.5">
                               {cell('focus', rec.focus ? <b>{t(`fm.train.focus.${rec.focus}`)}</b> : '–')}
                               {focusFromStats && (
@@ -709,6 +732,7 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
                                 </>
                               )}
                               <span className="ml-1.5 text-xs text-brun">{x.weak.map((w) => `${attr(w.key)} ${Math.round(w.value)}`).join(', ')}</span>
+                              {focusWhy !== 'none' && <span className="mt-0.5 block max-w-[18rem] text-[11px] leading-tight text-brun">{t(`fm.train.focusWhy.${focusWhy}`)}</span>}
                             </td>
                             <td className="px-2 py-1.5" title={[t(`fm.train.reason.${a.reason}`), a.rusty ? t('fm.train.rusty') : null].filter(Boolean).join(' · ')}>
                               {cell('intensity', <Tag tone={INTENSITY_TONE[a.intensity]}>{t(`fm.train.intensityLevel.${a.intensity}`)}</Tag>)}
@@ -730,6 +754,11 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
               </Panel>
             </>
           ) : null,
+        },
+        {
+          id: 'learn',
+          label: t('fm.train.sections.learn'),
+          node: <LearnSection rows={setups.rows} teOverall={teOverall} />,
         },
         {
           id: 'youth',
@@ -789,6 +818,167 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
         },
       ]}
     />
+  );
+}
+
+
+/** Banc d'essai FM27 de jamiebolden (Bradford, Premier League, trois saisons par réglage, 47 joueurs). */
+const TE_TEST = [
+  { id: 'none', points: 63.7, win: 48.2, injury: 362, growth: 7.0 },
+  { id: 'some', points: 68.0, win: 50.9, injury: 469, growth: 7.0 },
+  { id: 'lots', points: 69.3, win: 52.6, injury: 846, growth: 6.7 },
+  { id: 'assistant', points: 50.0, win: 36.0, injury: 1072, growth: 6.7 },
+] as const;
+
+/**
+ * « Comprendre » : ce que le moteur fait vraiment de l'entraînement, appliqué à l'effectif du joueur. Les chiffres
+ * viennent des bancs d'essai de la communauté (aucune formule officielle).
+ */
+function LearnSection({ rows, teOverall }: { rows: SetupRow[]; teOverall: number | null }) {
+  const { t, i18n } = useTranslation();
+  const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+  const nf0 = new Intl.NumberFormat(i18n.resolvedLanguage);
+  const verdicts: GrowthVerdict[] = ['strong', 'good', 'limited', 'maintain', 'decline'];
+  const counts = verdicts.map((v) => ({ v, list: rows.filter((r) => r.outlook.verdict === v).map((r) => r.plan.player) }));
+  const minutes = rows.filter((r) => r.outlook.needsMinutes).map((r) => r.plan.player);
+  const mode = teOverall == null ? 'unknown' : teOverall < 60 ? 'learn' : teOverall < 80 ? 'build' : 'keep';
+  return (
+    <>
+      <Panel title={t('fm.train.learn.howTitle')}>
+        <p className="text-sm">{t('fm.train.learn.howIntro')}</p>
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          {(['step1', 'step2'] as const).map((s) => (
+            <div key={s} className="rounded-xl bg-white/60 p-3 ring-1 ring-canard/10">
+              <p className="font-bold text-canard">{t(`fm.train.learn.${s}Title`)}</p>
+              <p className="mt-1 text-sm">{t(`fm.train.learn.${s}`)}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.train.learn.factorsTitle')}</p>
+        <ul className="mt-1 list-disc space-y-1 pl-5 text-sm">
+          {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <li key={i}>{t(`fm.train.learn.factor${i}`)}</li>
+          ))}
+        </ul>
+        <More>{t('fm.train.learn.howHelp')}</More>
+      </Panel>
+
+      {rows.length > 0 && (
+        <Panel title={t('fm.train.learn.squadTitle')}>
+          <p className="text-sm">{t('fm.train.learn.squadIntro')}</p>
+          <div className="mt-2 grid gap-2 sm:grid-cols-5">
+            {counts.map(({ v, list }) => (
+              <div key={v} className="rounded-xl bg-white/60 p-2 ring-1 ring-canard/10">
+                <Tag tone={OUTLOOK_TONE[v]}>{t(`fm.train.outlook.verdict.${v}`)}</Tag>
+                <p className="mt-1 text-lg font-bold tabular-nums text-canard">{list.length}</p>
+                <p className="text-xs leading-tight text-brun">{list.slice(0, 4).map((p) => p.name.split(' ').at(-1)).join(', ')}</p>
+              </div>
+            ))}
+          </div>
+          {minutes.length > 0 && (
+            <p className="mt-3 text-sm">
+              <Tag tone="warn">{t('fm.train.outlook.needsMinutes')}</Tag> {t('fm.train.learn.minutes', { list: minutes.map((p) => p.name).join(', ') })}
+            </p>
+          )}
+          <p className="mt-3 text-sm">{t(`fm.train.learn.mode.${mode}`, { te: teOverall != null ? Math.round(teOverall) : '?' })}</p>
+          <More>{t('fm.train.learn.squadHelp')}</More>
+        </Panel>
+      )}
+
+      <Panel title={t('fm.train.learn.teTitle')}>
+        <p className="text-sm">{t('fm.train.learn.teIntro')}</p>
+        <div className="table-scroll mt-2">
+          <table className="data-table">
+            <thead className="text-left text-canard/70">
+              <tr>
+                <th className="px-2 py-1">{t('fm.train.learn.teSetup')}</th>
+                <th className="px-2 py-1 text-right">{t('fm.train.learn.tePoints')}</th>
+                <th className="px-2 py-1 text-right">{t('fm.train.learn.teWin')}</th>
+                <th className="px-2 py-1 text-right">{t('fm.train.learn.teInjury')}</th>
+                <th className="px-2 py-1 text-right">{t('fm.train.learn.teGrowth')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {TE_TEST.map((r) => (
+                <tr key={r.id} className={`border-t border-canard/5 ${r.id === 'assistant' ? 'bg-corail/10' : ''}`}>
+                  <td className="px-2 py-1.5 font-bold">{t(`fm.train.learn.te.${r.id}`)}</td>
+                  <td className="px-2 py-1.5 text-right tabular-nums">{nf1.format(r.points)}</td>
+                  <td className="px-2 py-1.5 text-right tabular-nums">{nf1.format(r.win)} %</td>
+                  <td className="px-2 py-1.5 text-right tabular-nums">{nf0.format(r.injury)}</td>
+                  <td className="px-2 py-1.5 text-right tabular-nums">+{nf1.format(r.growth)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <ul className="mt-3 list-disc space-y-1 pl-5 text-sm">
+          {[1, 2, 3, 4].map((i) => (
+            <li key={i}>{t(`fm.train.learn.teLesson${i}`)}</li>
+          ))}
+        </ul>
+        <More>{t('fm.train.learn.teHelp')}</More>
+      </Panel>
+
+      <Panel title={t('fm.train.learn.indivTitle')}>
+        <ul className="list-disc space-y-1 pl-5 text-sm">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <li key={i}>{t(`fm.train.learn.indiv${i}`)}</li>
+          ))}
+        </ul>
+      </Panel>
+
+      <YieldPanel />
+
+      <Panel title={t('fm.train.learn.sourcesTitle')}>
+        <p className="text-sm text-brun">{t('fm.train.learn.sources')}</p>
+      </Panel>
+    </>
+  );
+}
+
+/** Ce que rapporte chaque séance aux attributs (mesure d'harvestgreen22). */
+function YieldPanel() {
+  const { t, i18n } = useTranslation();
+  const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 1, minimumFractionDigits: 1 });
+  return (
+              <Panel title={t('fm.train.yield.title')}>
+                <p className="text-sm">{t('fm.train.yield.intro', { best: nf1.format(HARVEST_WEEK_YIELD) })}</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                  {(['physical', 'ball', 'tactical'] as const).map((g) => (
+                    <div key={g} className="rounded-xl bg-white/60 p-2 ring-1 ring-canard/10">
+                      <p className="text-xs font-bold text-canard/70">{t(`fm.train.yield.${g}`)}</p>
+                      <ul className="mt-1 space-y-0.5 text-sm">
+                        {YIELD_GROUPS[g].map((id) => (
+                          <li key={id} className="flex justify-between gap-2">
+                            <span>{t(`fm.train.session.${id}`)}</span>
+                            <b className="tabular-nums text-canard">{nf1.format(SESSION_YIELD[id] ?? 0)}</b>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+                <More>{t('fm.train.yield.help')}</More>
+              </Panel>
+  );
+}
+
+const OUTLOOK_TONE: Record<GrowthVerdict, 'good' | 'info' | 'warn' | 'bad'> = { strong: 'good', good: 'good', limited: 'info', maintain: 'warn', decline: 'bad' };
+
+/** Ce qu'un joueur peut encore gagner, et pourquoi (âge, marge sous son potentiel, temps de jeu, blessure). */
+function Outlook({ o }: { o: GrowthOutlook }) {
+  const { t } = useTranslation();
+  const why = [
+    o.age && t(`fm.train.outlook.age.${o.age}`),
+    o.room && t(`fm.train.outlook.room.${o.room}`),
+    o.minutes && t(`fm.train.outlook.minutes.${o.minutes}`),
+    o.injured && t('fm.train.outlook.injured'),
+  ].filter(Boolean);
+  return (
+    <span title={why.join(' · ')}>
+      <Tag tone={OUTLOOK_TONE[o.verdict]}>{t(`fm.train.outlook.verdict.${o.verdict}`)}</Tag>
+      {o.needsMinutes && <span className="mt-0.5 block text-[11px] font-bold leading-tight text-orange-fonce">{t('fm.train.outlook.needsMinutes')}</span>}
+    </span>
   );
 }
 

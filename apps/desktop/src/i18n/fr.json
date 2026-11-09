@@ -1181,7 +1181,8 @@
         "recovery": "Récupération",
         "prep": "Préparation",
         "dev": "Travail",
-        "off": "Libre"
+        "off": "Libre",
+        "rest": "Repos complet"
       },
       "days": [
         "Lun",
@@ -1236,11 +1237,11 @@
       "priorities": "Zones du style visé travaillées en priorité : {{list}}.",
       "load": "Dans la semaine",
       "rules": "Les règles",
-      "rule1": "Veille de match : une seule séance de préparation. Lendemain : Repos puis Récupération. Chaque jour de travail : une séance tactique et une séance de progression, rien de plus.",
-      "rule2": "Le Repos rapporte en match : jamais retiré pour une séance de plus. Semaine à 3 matchs : repos complet. Piège de pressing : 2 séances par semaine, pas plus. Pas de condition physique à deux jours d'un match.",
-      "rule3": "Si un match est déplacé, remets la préparation la veille et la récupération le lendemain.",
-      "rule4": "Les joueurs qui reviennent de sélection se gèrent à part.",
-      "rule5": "Juge le plan sur plusieurs semaines, pas sur un résultat, et allège si la charge ne convient pas.",
+      "rule1": "Lendemain de match : Repos puis Récupération. Veille : une seule séance de préparation. Un jour de repos complet dès qu'il y a de la place.",
+      "rule2": "Regroupe les séances de progression sur un ou deux jours : même progression, beaucoup moins de blessures. Quatre séances différentes suffisent.",
+      "rule3": "Le nombre de séances tactiques suit ton efficacité tactique : beaucoup tant qu'elle est basse, peu une fois la tactique comprise. Ne change pas de tactique en cours de route.",
+      "rule4": "Un jeune progresse surtout en jouant : s'il ne joue pas, l'entraînement ne le sauvera pas. Prêt ou temps de jeu.",
+      "rule5": "Juge sur deux mois au moins avec « Ce que ça donne vraiment », pas sur une semaine : le hasard est fort.",
       "source": "Méthode « Freedom » (FM Scout, FM27 training schedules) : 44 plannings, cycles de 4 semaines à thème. L'article ne fournit pas les fichiers .fmf : FM Immersion reconstruit chaque journée avec les séances de FM27, orientées par ton style visé. À recopier dans l'écran Entraînement du jeu. Corrigé d'après le banc d'essai d'AlexJeuVideal (« La vérité sur l'efficacité tactique ») : Repos chaque lendemain de match, 2 pièges de pressing par semaine, priorité à la construction, la création, la ligne d'engagement et l'organisation sans ballon, semaine entière de repos à 3 matchs.",
       "clubStatus": "Statut du club",
       "status": {
@@ -1281,12 +1282,12 @@
         "veryTired": "condition sous 80 % : le jeu baisse l'intensité",
         "tired": "condition sous 90 % : le jeu ajuste l'intensité",
         "busyWeek": "jeune, mais semaine à deux matchs",
-        "young": "21 ans ou moins : intensité de l'équipe, jamais de double (la fraîcheur rapporte plus en match)",
+        "young": "21 ans ou moins : intensité de l'équipe, double s'il est en forme, moins s'il est fatigué",
         "veteran": "32 ans ou plus : on laisse le jeu le ménager",
         "normal": "rien à forcer : le jeu règle selon la condition"
       },
       "rusty": "manque de rythme : temps de jeu en réserve ou en fin de match",
-      "individualHelp": "Comme l'écran Entraîn. individuel du jeu. Rôles ALB et SLB : ceux de son poste dans le onze cible, sinon le rôle du projet où il est le plus adapté. Priorité : le point faible vu en match, sinon Vitesse jusqu'à 23 ans pour un joueur lent (vitesse ou accélération sous 12), sinon l'attribut clé le plus faible du rôle. Intensité : « Équipe » pour tout le monde, c'est le réglage Intensité de l'équipe ci-dessus (double pour les joueurs en forme, moitié et repos pour les autres) que le jeu applique à chacun selon sa condition ; pas de réglage à la main par joueur.",
+      "individualHelp": "Comme l'écran Entraîn. individuel du jeu. Chaque réglage dit pourquoi il est conseillé. Rôles : ceux de son poste dans ta tactique s'il est dans le onze, sinon le rôle du projet où il est le plus adapté. Priorité : le point faible vu en match, sinon Vitesse jusqu'à 23 ans pour un joueur lent, un attribut mental à 28 ans et plus, sinon l'attribut clé le plus faible du rôle. Intensité : « Équipe » pour tout le monde, c'est le réglage Intensité de l'équipe que le jeu applique selon la condition. « Peut progresser » : survole pour voir ce qui le freine ou l'aide.",
       "mentoring": "Groupes d'encadrement",
       "mentor": "Tuteur",
       "mentees": "Jeunes encadrés",
@@ -1356,21 +1357,24 @@
       "reasonHint": "Survole l'intensité d'un joueur pour voir pourquoi elle est conseillée.",
       "metaAdaptHelp": "Base Méta d'AlexJeuVideal : 2 pièges du pressing par semaine, la veille du match Progression du ballon, Bloc défensif, Condition physique, le reste au repos. Les 4 autres séances tactiques suivent tes zones prioritaires (les plus faibles d'après le jeu et tes matchs) parmi celles que le banc d'essai juge utiles : Hauteur du pressing, Construction, Création d'occasions, Organisation avec et sans le ballon. Elles changent quand tes faiblesses changent.",
       "metaSwaps": "Après chargement, remplace : {{list}}.",
-      "coachHelp": "Programme FM Immersion, une seule proposition : chaque jour de travail, une séance tactique (deux Pièges du pressing par semaine, puis les zones que le jeu dit les moins comprises, sinon celles de ton style) et une séance de progression (Condition physique, Ballon offensif, Ballon défensif, Condition physique légère : les quatre séances qui font le plus progresser les attributs d'après les mesures d'harvestgreen22). Veille de match : une seule séance de préparation. Lendemain : Repos puis Récupération. Jamais de condition physique l'avant-veille d'un match. Quand le jeu dit que tout est compris, les séances tactiques se réduisent aux deux pièges.",
+      "coachHelp": "Programme FM Immersion, une seule proposition, refaite chaque semaine d'après ton calendrier et ton efficacité tactique. Lendemain de match : Repos puis Récupération. Un jour de repos complet dès qu'il y a de la place. Les séances de progression regroupées sur les premiers jours (Condition physique, Ballon offensif, Ballon défensif, Condition physique légère, quatre au plus). Les séances tactiques sur les jours proches du match : deux Pièges du pressing, les zones que le jeu dit les moins comprises, la zone n° 1 de ton style, puis les autres à tour de rôle. Leur nombre suit ton efficacité : 7 sous 60 %, 5 jusqu'à 79 %, 3 à 80 % et plus. Veille de match : une seule séance de préparation.",
       "coachSummary_one": "Cette semaine : {{tactical}} séances tactiques, {{grow}} séances de progression, {{count}} match.",
       "coachSummary_other": "Cette semaine : {{tactical}} séances tactiques, {{grow}} séances de progression, {{count}} matchs.",
-      "teamIntensityCoach": "Réglage conseillé dans Entraînement > Intensité de l'équipe : double pour les joueurs en bonne et très bonne forme (c'est ce qui fait progresser, mesuré par harvestgreen22), moitié et repos pour les autres afin d'arriver frais au match (banc d'essai d'AlexJeuVideal). Le jeu applique ensuite le réglage à chacun. Priorité individuelle : le point faible vu en match, sinon Vitesse jusqu'à 23 ans pour un joueur lent (vitesse ou accélération sous 12), sinon l'attribut clé le plus faible du rôle.",
+      "teamIntensityCoach": "Réglage conseillé dans Entraînement > Intensité de l'équipe : double pour les joueurs en bonne et très bonne forme (ça fait progresser un peu plus), moitié et repos pour les autres afin d'arriver frais au match. Le jeu applique ensuite le réglage à chacun selon sa condition.",
       "why": {
         "press": "efficacité : 2 pièges du pressing par semaine",
         "weak": "zone la moins comprise d'après le jeu",
         "top": "zone n° 1 de ton style",
         "grow": "progression : séance qui fait monter les attributs",
-        "noCondition": "progression (pas de condition physique à 2 jours du match)",
+        "noCondition": "progression, sans condition physique à deux jours du match",
         "indiv": "semaine sans match : développement individuel",
         "prep": "veille de match : une seule séance de préparation",
         "recover": "lendemain de match",
         "congested": "trois matchs : repos",
-        "restDay": "repos : la fraîcheur rapporte en match"
+        "restDay": "repos : la fraîcheur rapporte en match",
+        "rotate": "efficacité : zone travaillée à tour de rôle, ce qui est appris s'efface",
+        "devBlock": "progression : séances regroupées sur ce jour",
+        "fullRest": "repos complet : aucun risque de blessure à l'entraînement ce jour-là"
       },
       "coach": {
         "title": "Ton adjoint, côté entraînement",
@@ -1400,7 +1404,8 @@
         "yieldDown": "En baisse : {{list}}.",
         "yieldSoon_one": "La progression se mesure sur quatorze jours d'instantanés au moins : encore {{count}} jour de jeu.",
         "yieldSoon_other": "La progression se mesure sur quatorze jours d'instantanés au moins : encore {{count}} jours de jeu.",
-        "yieldHelp": "Mesure faite sur ta partie, pas sur un banc d'essai : somme des points d'attributs (sur 20) gagnés ou perdus par chaque joueur présent aux deux dates, attributs connus aux deux dates seulement. La référence est l'instantané le plus ancien des quatre dernières semaines, à quatorze jours au moins. « Attendu » : la courbe d'âge du module (les jeunes montent, les plus de 28 ans baissent). Bon à partir de +1,5 point par joueur et par mois, mauvais sous −0,5."
+        "yieldHelp": "Mesure faite sur ta partie, pas sur un banc d'essai : somme des points d'attributs (sur 20) gagnés ou perdus par chaque joueur présent aux deux dates, attributs connus aux deux dates seulement. La référence est l'instantané le plus ancien des quatre dernières semaines, à quatorze jours au moins. « Attendu » : la courbe d'âge du module (les jeunes montent, les plus de 28 ans baissent). Bon à partir de +1,5 point par joueur et par mois, mauvais sous −0,5.",
+        "whyTitle": "Pourquoi cette semaine"
       },
       "settings": "Réglages du planning",
       "settingsSummary": "{{phase}}, club {{status}}, reprise en {{month}}{{winter}}",
@@ -1463,7 +1468,130 @@
         "week": "Cette semaine",
         "season": "La saison",
         "individual": "Individuel",
-        "youth": "Jeunes et encadrement"
+        "youth": "Jeunes et encadrement",
+        "learn": "Comprendre"
+      },
+      "mode": {
+        "learn": "Ta tactique est comprise à {{te}} % : semaine d'apprentissage, {{count}} séances tactiques ({{zones}}) et {{grow}} séances de progression.",
+        "build": "Ta tactique est comprise à {{te}} % : on continue de construire, {{count}} séances tactiques ({{zones}}) et {{grow}} séances de progression.",
+        "keep": "Ta tactique est comprise à {{te}} % : on entretient, {{count}} séances tactiques ({{zones}}) et {{grow}} séances de progression.",
+        "unknown": "Efficacité tactique pas encore lue : compromis de {{count}} séances tactiques ({{zones}}) et {{grow}} séances de progression."
+      },
+      "lesson": {
+        "fullRest_one": "Un jour de repos complet : le jeu ne fait aucun contrôle de blessure à l'entraînement ce jour-là. C'est gratuit pour la progression.",
+        "fullRest_other": "{{count}} jours de repos complet : le jeu ne fait aucun contrôle de blessure à l'entraînement ces jours-là. C'est gratuit pour la progression.",
+        "devBlock": "{{count}} séances de progression, regroupées sur les premiers jours : regrouper les mêmes séances divise par trois le risque de blessure, pour la même progression. Au-delà de quatre, ça n'apporte presque plus rien.",
+        "devShort_one": "Une seule séance de progression : la semaine est trop chargée pour plus. Ce n'est pas grave sur une semaine, la progression se joue sur des mois.",
+        "devShort_other": "{{count}} séance de progression : la semaine est trop chargée pour plus.",
+        "tacticalShort": "Il faudrait {{target}} séances tactiques pour faire monter ta compréhension vite, il n'y a de la place que pour {{count}}. Les semaines sans match rattraperont.",
+        "pressTrap": "Deux Pièges du pressing, sur deux jours différents : c'est le seuil mesuré, en faire quatre n'apporte rien de plus.",
+        "rotation": "Les autres zones tournent d'une semaine à l'autre : chaque séance tactique ne travaille qu'une zone, et ce qui n'est plus travaillé s'efface.",
+        "prep": "Veille de match : une seule séance de préparation, pour arriver frais.",
+        "recover": "Lendemain de match : Repos puis Récupération. Une séance physique le lendemain d'un match fait exploser le risque de blessure.",
+        "congested_one": "{{count}} match en sept jours : repos complet entre les matchs, les résultats priment sur la progression.",
+        "congested_other": "{{count}} matchs en sept jours : repos complet entre les matchs, les résultats priment sur la progression.",
+        "noMatch": "Pas de match : c'est la semaine où la progression peut passer devant, avec une séance de Développement individuel en plus.",
+        "partTime_one": "Ton club ne s'entraîne qu'{{count}} jour : chaque séance compte, la dernière avant le match sert de préparation.",
+        "partTime_other": "Ton club ne s'entraîne que {{count}} jours : chaque séance compte, la dernière avant le match sert de préparation."
+      },
+      "outlook": {
+        "col": "Peut progresser",
+        "verdict": {
+          "strong": "Beaucoup",
+          "good": "Bien",
+          "limited": "Un peu",
+          "maintain": "Entretien",
+          "decline": "Déclin"
+        },
+        "age": {
+          "peak": "18 ans ou moins : l'âge où l'on progresse le plus",
+          "high": "19-21 ans : progresse encore fort",
+          "medium": "22-24 ans : progresse moins",
+          "low": "25-29 ans : progresse peu",
+          "decline": "30 ans ou plus : le physique baisse"
+        },
+        "room": {
+          "big": "beaucoup de marge sous son potentiel",
+          "some": "un peu de marge sous son potentiel",
+          "none": "tout près de son potentiel"
+        },
+        "minutes": {
+          "plays": "joue beaucoup",
+          "some": "joue un peu",
+          "bench": "joue très peu"
+        },
+        "injured": "blessé pour un moment : il ne progresse pas",
+        "needsMinutes": "Il lui faut des minutes"
+      },
+      "focusWhy": {
+        "stats": "Son point faible vu en match.",
+        "slowYoung": "Jeune et lent : la vitesse pèse le plus en match et ne progresse plus après 24 ans.",
+        "weakRole": "L'attribut clé le plus faible de son rôle.",
+        "youngDefault": "Jeune sans point faible net : la vitesse, ce qui rapporte le plus.",
+        "seniorMental": "28 ans et plus : un attribut mental du rôle, qui peut encore monter quand le physique baisse.",
+        "none": ""
+      },
+      "roleWhy": {
+        "tactic": "Son rôle dans ta tactique : il l'apprend, et sa familiarité compte dans l'efficacité tactique.",
+        "youngBench": "Jeune hors du onze, la progression d'abord : en jeu, tu peux ne mettre qu'un rôle sans ballon ({{role}}), c'est ce qui l'a fait le plus progresser dans les tests.",
+        "project": "Hors du onze : le rôle de ton projet où il est le plus adapté."
+      },
+      "devRole": {
+        "dm": "Milieu défensif",
+        "am": "Milieu offensif"
+      },
+      "learn": {
+        "howTitle": "Comment un joueur progresse vraiment",
+        "howIntro": "Les chiffres de l'écran ne disent pas tout. D'après les tests de la communauté sur FM27, le jeu fait deux calculs, à peu près chaque mois et pour chaque joueur.",
+        "step1Title": "1. Combien il progresse",
+        "step1": "Son âge, la marge sous son potentiel, ses minutes en match et le niveau des adversaires, son professionnalisme, les installations d'entraînement, ses blessures, et une part de hasard. L'entraînement n'y joue qu'un peu.",
+        "step2Title": "2. Où va cette progression",
+        "step2": "C'est là que l'entraînement agit : la part de chaque séance dans la semaine, la priorité individuelle, le rôle travaillé et le coach du groupe décident quels attributs montent.",
+        "factorsTitle": "Ce qui compte, du plus au moins important",
+        "factor1": "L'âge : 16-18 ans, c'est l'âge d'or ; ça reste fort jusqu'à 21 ans, puis ça ralentit ; presque plus rien après 24 ans (27 pour les gardiens). Après 30 ans, le physique baisse.",
+        "factor2": "La marge sous le potentiel : plus un joueur approche son potentiel, plus il ralentit.",
+        "factor3": "Les minutes : après 18 ans, c'est le facteur n° 1, et des minutes contre de bons adversaires valent plus. Un jeune qui ne joue pas ne progresse pas, quel que soit l'entraînement.",
+        "factor4": "Le professionnalisme (caché) : de loin le trait de personnalité qui compte le plus, avant l'ambition et la détermination. Le tutorat peut le faire monter chez un jeune.",
+        "factor5": "Les installations d'entraînement : elles jouent sur tout l'effectif. Celles des jeunes ne jouent que sur la qualité des nouveaux talents.",
+        "factor6": "Les entraîneurs : chaque groupe de coachs oriente ses attributs. Le groupe Physique couvre près de la moitié de ce qui compte : c'est là qu'il faut ton meilleur coach, et aucun coach ne doit être surchargé.",
+        "factor7": "L'intensité : double pour les joueurs en forme, ça fait progresser un peu plus, au prix d'un peu plus de blessures.",
+        "howHelp": "Aucune formule officielle n'est publiée : ce sont des repères tirés de bancs d'essai répétés sur des saisons entières, avec beaucoup de hasard d'un mois à l'autre. Juge sur deux mois au moins, avec « Ce que ça donne vraiment » dans Cette semaine.",
+        "squadTitle": "Ton effectif",
+        "squadIntro": "Ce que chaque joueur peut encore gagner, d'après son âge, sa marge sous son potentiel (si le CA/PA est lu), son temps de jeu et ses blessures. Le détail de chaque joueur est dans Individuel.",
+        "minutes": "{{list}} : jeunes avec de la marge qui jouent peu. C'est leur temps de jeu qui les freine : titularise-les, fais-les entrer en jeu ou prête-les à un club où ils joueront.",
+        "mode": {
+          "learn": "Ton efficacité tactique est à {{te}} % : la priorité de l'entraînement collectif, c'est de faire comprendre ta tactique. Garde la même tactique et allège les consignes, sinon les séances ne servent à rien.",
+          "build": "Ton efficacité tactique est à {{te}} % : la tactique est en bonne voie, on garde un bon équilibre entre tactique et progression.",
+          "keep": "Ton efficacité tactique est à {{te}} % : elle est comprise, quelques séances suffisent à l'entretenir et la progression reprend la main.",
+          "unknown": "Ton efficacité tactique n'est pas encore lue : le programme prend un compromis. Elle apparaît après une journée de jeu avec le plugin."
+        },
+        "squadHelp": "Le temps de jeu est comparé au joueur le plus utilisé de l'effectif. Sans lecture du CA/PA (option du plugin), la marge sous le potentiel n'est pas prise en compte.",
+        "teTitle": "Progression ou efficacité tactique ?",
+        "teIntro": "Dans FM27, l'équipe première s'entraîne surtout pour le prochain match. Le banc d'essai le plus complet (même club, trois saisons par réglage, 47 joueurs) montre l'arbitrage :",
+        "teSetup": "Réglage",
+        "tePoints": "Points",
+        "teWin": "Victoires",
+        "teInjury": "Jours de blessure",
+        "teGrowth": "Progression des U18",
+        "te": {
+          "none": "Aucune séance tactique",
+          "some": "8 séances tactiques par mois",
+          "lots": "24 séances tactiques par mois",
+          "assistant": "Entraînement confié à l'adjoint"
+        },
+        "teLesson1": "Ne confie jamais l'entraînement à ton adjoint : 14 points de moins, trois fois plus de blessures, et des jeunes qui progressent dans les mauvais attributs.",
+        "teLesson2": "Les séances tactiques font gagner des matchs (environ +4 % de victoires) mais coûtent des blessures : leur nombre suit ton efficacité tactique, il baisse quand la tactique est comprise.",
+        "teLesson3": "Les séances tactiques ne font pas monter les attributs : ce sont la condition physique et le travail avec ballon qui le font.",
+        "teLesson4": "Changer de tactique remet la compréhension à zéro : l'entraînement ne sert que si la tactique reste la même.",
+        "teHelp": "Banc d'essai de jamiebolden sur FM27 (Bradford, Premier League 2032/33, chaque réglage joué trois fois depuis la même sauvegarde). Test sur le code d'entraînement de FM27 : il faut environ sept séances tactiques par semaine en rotation pour garder toutes les zones au-dessus de 80 ; passer l'efficacité de 50 à 100 rapporte environ 0,15 point par match.",
+        "indivTitle": "L'entraînement individuel",
+        "indiv1": "Jusqu'à 23 ans, Vitesse pour un joueur lent : la vitesse et l'accélération pèsent le plus en match, et elles ne progressent plus après.",
+        "indiv2": "Un titulaire travaille le rôle de ta tactique : il le connaît mieux, et ça compte dans ton efficacité tactique.",
+        "indiv3": "Un jeune hors du onze peut ne travailler qu'un rôle sans ballon (Milieu défensif pour les défenseurs, Milieu offensif pour les autres) : c'est le réglage qui l'a fait le plus progresser dans les tests.",
+        "indiv4": "Une priorité qui ne donne rien en trois mois : change-la. La priorité ne crée pas de progression, elle la dirige.",
+        "indiv5": "À 28 ans et plus, la priorité ne fait plus grandir un joueur : un attribut mental du rôle peut encore monter, le reste s'entretient.",
+        "sourcesTitle": "D'où viennent ces repères",
+        "sources": "Bancs d'essai de harvestgreen22 (FM-Arena, 50 programmes, une saison de 100 matchs chacun), de jamiebolden (fm-scoring, efficacité tactique sur FM27, avec un test sur le code d'entraînement du jeu) et d'AlexJeuVideal (efficacité tactique), plus les guides de FM Dossier et Passion4FM sur la personnalité et le temps de jeu. Sports Interactive ne publie aucune formule."
       }
     },
     "intro": {

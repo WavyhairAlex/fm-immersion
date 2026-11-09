@@ -44,8 +44,8 @@ describe('jeunes et équipe B', () => {
   it('semaine type orientée progression, match supposé le samedi', () => {
     const w = youthWeek({ gameDate: '2027-10-06', seasonStart: 7 });
     expect(w.plan.days[5]!.kind).toBe('match');
-    const grow = w.plan.days.flatMap((d) => d.why ?? []).filter((x) => x === 'grow' || x === 'noCondition' || x === 'indiv').length;
-    const tactical = w.plan.days.flatMap((d) => d.why ?? []).filter((x) => x === 'weak' || x === 'top').length;
+    const grow = w.plan.days.flatMap((d) => d.why ?? []).filter((x) => x === 'grow' || x === 'devBlock' || x === 'noCondition' || x === 'indiv').length;
+    const tactical = w.plan.days.flatMap((d) => d.why ?? []).filter((x) => x === 'weak' || x === 'top' || x === 'rotate' || x === 'press').length;
     expect(grow).toBeGreaterThan(tactical);
     expect(w.workload).toBe('medium');
   });
