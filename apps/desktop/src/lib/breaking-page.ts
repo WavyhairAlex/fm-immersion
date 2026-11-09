@@ -24,10 +24,15 @@ const ICON = { signing: '✍️', exit: '👋', injury: '🚑' } as const;
 /** Textes d'une dépêche : rubrique, titre, ligne d'identité, nouvelle et mot sur son importance. */
 export function breakingText(t: TFunction, n: BreakingNews, lang?: string) {
   const vars = { club: n.club, name: n.name, days: n.days ?? '?', injury: n.injury?.trim() || t('breaking.injuryUnknown'), rank: n.rank, count: n.rank };
+  const parts = n.name.trim().split(/\s+/);
+  const last = parts.length > 1 ? parts.slice(1).join(' ') : n.name;
   const id = [n.age != null ? t('breaking.age', { count: n.age }) : '', n.position ?? ''].filter(Boolean).join(' · ');
   return {
     tag: t(`breaking.tag.${n.kind}`),
     title: t(`breaking.title.${n.kind}`, vars),
+    // Titre court de l'image (« Bačík rejoint Malženice ») et son passage en couleur (« 35 jours »).
+    headline: t(n.kind === 'injury' && n.days == null ? 'breaking.headline.injuryNoDays' : `breaking.headline.${n.kind}`, { ...vars, last }),
+    highlight: n.kind === 'injury' && n.days != null ? t('breaking.highlight', { days: n.days }) : '',
     id,
     body: t(`breaking.body.${n.kind}`, vars),
     weight: t(n.rank <= 3 ? `breaking.weight.top_${n.kind}` : `breaking.weight.starter_${n.kind}`, vars),
@@ -67,15 +72,52 @@ export function drawPanel(ctx: CanvasRenderingContext2D, club: ClubArt | null, P
   return bg;
 }
 
+/**
+ * Titre sur plusieurs lignes, avec un passage en couleur (« 35 jours ») : coupé mot à mot comme `wrap`, les mots du
+ * passage gardent leur couleur même s'il passe à la ligne.
+ */
+function richTitle(ctx: CanvasRenderingContext2D, text: string, hl: string, x: number, y: number, width: number, lh: number, colors: [string, string]) {
+  const start = hl ? text.indexOf(hl) : -1;
+  const words: { w: string; on: boolean }[] = [];
+  let at = 0;
+  for (const w of text.split(/\s+/).filter(Boolean)) {
+    const i = text.indexOf(w, at);
+    at = i + w.length;
+    words.push({ w, on: start >= 0 && i < start + hl.length && at > start });
+  }
+  const lines: (typeof words)[] = [];
+  let line: typeof words = [];
+  for (const w of words) {
+    const next = [...line, w].map((x) => x.w).join(' ');
+    if (!line.length || ctx.measureText(next).width <= width) line.push(w);
+    else {
+      lines.push(line);
+      line = [w];
+    }
+  }
+  if (line.length) lines.push(line);
+  const space = ctx.measureText(' ').width;
+  lines.forEach((l, li) => {
+    let cx = x;
+    for (const w of l) {
+      ctx.fillStyle = w.on ? colors[1] : colors[0];
+      ctx.fillText(w.w, cx, y + li * lh);
+      cx += ctx.measureText(w.w).width + space;
+    }
+  });
+  return lines.length;
+}
+
+/** Nombre de lignes du titre à cette taille. */
+const titleLines = (ctx: CanvasRenderingContext2D, text: string, width: number) => wrap(ctx, text, width).length;
+
 export async function drawBreaking(t: TFunction, n: BreakingNews, opts: { lang?: string; face?: CanvasImageSource | null } = {}): Promise<HTMLCanvasElement> {
   const { lang } = opts;
-  await Promise.all([font(900, 72, SERIF), font(800, 22), font(400, 22), font(900, 26)].map((f) => document.fonts.load(f).catch(() => undefined)));
+  await Promise.all([font(900, 72, SERIF), `italic ${font(400, 22, SERIF)}`, font(800, 22), font(900, 26)].map((f) => document.fonts.load(f).catch(() => undefined)));
   const club = await clubArt(n.club);
   const caps = (s: string) => s.toLocaleUpperCase(lang);
   const tx = breakingText(t, n, lang);
   const color = breakingColor(n);
-  const colors = club?.look?.colors ?? [];
-  const accent = colors.find((c) => contrast(c, C.paper) >= 3) ?? C.orangeDark;
 
   const canvas = document.createElement('canvas');
   canvas.width = W;
@@ -85,23 +127,30 @@ export async function drawBreaking(t: TFunction, n: BreakingNews, opts: { lang?:
   ctx.fillRect(0, 0, W, H);
   grain(ctx, H, n.id.length * 131 + n.date.length);
 
-  // Bandeau : rubrique à gauche, « Dépêche · date » à droite.
+  // Bandeau : rubrique à gauche, journal et date à droite.
+  const BAND = 76;
   ctx.fillStyle = color;
-  ctx.fillRect(0, 0, W, 72);
-  ctx.font = font(900, 30);
+  ctx.fillRect(0, 0, W, BAND);
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.fillRect(0, BAND - 4, W, 4);
+  ctx.font = `italic ${font(900, 34)}`;
   ctx.fillStyle = '#FFFFFF';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText(`${tx.icon} ${caps(tx.tag)}`, M, 48);
-  ctx.font = font(800, 16);
+  ctx.fillText(`${tx.icon} ${caps(tx.tag)}`, M, 51);
+  ctx.font = font(800, 17);
   ctx.textAlign = 'right';
-  ctx.fillText(caps(`${t('breaking.kind')} · ${tx.date}`), W - M, 46);
+  ctx.fillText(caps(paperName(t, n.club)), W - M, 40);
+  ctx.font = font(700, 14);
+  ctx.globalAlpha = 0.85;
+  ctx.fillText(caps(`${t('breaking.kind')} · ${tx.date}`), W - M, 60);
+  ctx.globalAlpha = 1;
   ctx.textAlign = 'left';
 
-  // Portrait sur trame aux couleurs du club.
-  const PX = M;
-  const PY = 104;
-  const PW = 400;
-  const PH = H - PY - 92;
+  // Portrait sur toute la hauteur, à gauche.
+  const PX = 36;
+  const PY = BAND + 28;
+  const PW = 430;
+  const PH = H - PY - 36;
   const bg = drawPanel(ctx, club, PX, PY, PW, PH, opts.face ?? null);
   if (!opts.face) {
     const initials = n.name.split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join('');
@@ -113,72 +162,52 @@ export async function drawBreaking(t: TFunction, n: BreakingNews, opts: { lang?:
     ctx.globalAlpha = 1;
     ctx.textAlign = 'left';
   }
-  if (club) drawCrest(ctx, club, PX + PW - 46, PY + 46, 64, { ring: bg });
+  if (club) drawCrest(ctx, club, PX + PW - 44, PY + 44, 60, { ring: bg });
 
-  // La nouvelle à droite.
-  const X = PX + PW + 44;
+  // La nouvelle à droite : titre court en très grand, nom du joueur, identité, récit en italique.
+  const X = PX + PW + 40;
   const TW = W - M - X;
-  let y = PY + 22;
-  ctx.font = font(900, 15);
-  ctx.fillStyle = accent;
-  ctx.fillText(caps(paperName(t, n.club)), X, y);
-  y += 16;
-  const parts = n.name.trim().split(/\s+/);
-  const first = parts.length > 1 ? parts[0]! : '';
-  const last = parts.length > 1 ? parts.slice(1).join(' ') : parts[0]!;
-  if (first) {
-    ctx.font = font(800, 26);
-    ctx.fillStyle = C.ink;
-    y += 30;
-    ctx.fillText(caps(first), X, y);
+  let y = PY + 4;
+  let size = 66;
+  for (; size > 40; size -= 4) {
+    ctx.font = font(900, size, SERIF);
+    if (titleLines(ctx, tx.headline, TW) <= 2) break;
   }
-  const ls = fit(ctx, caps(last), 900, 80, 36, TW, SERIF);
-  y += ls * 0.92;
-  ctx.fillStyle = C.ink;
-  ctx.fillText(caps(last), X, y);
+  ctx.font = font(900, size, SERIF);
+  const lh = Math.round(size * 1.02);
+  const nl = richTitle(ctx, tx.headline, tx.highlight, X, y + size * 0.86, TW, lh, [C.ink, C.orange]);
+  y += size * 0.86 + (nl - 1) * lh + 22;
+  ctx.fillStyle = color === C.ink ? C.orange : color;
+  ctx.fillRect(X, y, TW, 4);
+  y += 44;
+  ctx.font = font(900, 30);
+  ctx.fillStyle = color === C.ink ? C.ink : color;
+  ctx.fillText(wrap(ctx, caps(n.name), TW, 1)[0]!, X, y);
   if (tx.id) {
-    y += 38;
-    ctx.font = font(800, 20);
-    ctx.fillStyle = C.grey;
+    y += 30;
+    ctx.font = font(700, 21);
+    ctx.fillStyle = C.ink;
     ctx.fillText(wrap(ctx, tx.id, TW, 1)[0]!, X, y);
   }
-  y += 22;
-  ctx.fillStyle = color;
-  ctx.fillRect(X, y, 72, 5);
-  y += 8;
-  ctx.font = font(800, 30, SERIF);
+  y += 20;
+  ctx.fillStyle = 'rgba(37,40,45,0.18)';
+  ctx.fillRect(X, y, TW, 1.5);
+  ctx.font = `italic ${font(400, 21, SERIF)}`;
   ctx.fillStyle = C.ink;
-  for (const l of wrap(ctx, tx.title, TW, 2)) {
-    y += 38;
-    ctx.fillText(l, X, y);
-  }
-  ctx.font = font(400, 20);
-  ctx.fillStyle = C.ink;
-  y += 8;
+  y += 4;
   for (const l of wrap(ctx, tx.body, TW, 3)) {
-    y += 29;
+    y += 30;
     ctx.fillText(l, X, y);
   }
-  // Ce que pèse le joueur dans l'effectif, en encadré.
+  // Ce que pèse le joueur dans l'effectif, en encadré tout en bas.
   ctx.font = font(800, 17);
   const wl = wrap(ctx, tx.weight, TW - 36, 2);
   const bh = 26 + wl.length * 24;
-  const by = Math.min(y + 24, H - 92 - bh);
+  const by = Math.max(y + 22, PY + PH - bh);
   roundRect(ctx, X, by, TW, bh, 4, '#FFFFFF');
   roundRect(ctx, X, by, 6, bh, 0, color);
   ctx.fillStyle = C.ink;
   wl.forEach((l, i) => ctx.fillText(l, X + 22, by + 32 + i * 24));
-
-  // Pied aux couleurs du club.
-  const foot = colors.find((c) => contrast(c, C.paper) >= 1.6) ?? C.ink;
-  ctx.fillStyle = foot;
-  ctx.fillRect(0, H - 56, W, 56);
-  ctx.font = font(700, 16);
-  ctx.fillStyle = inkOn(foot);
-  ctx.fillText(`${paperName(t, n.club)} · ${t('breaking.kind')}`, M, H - 22);
-  ctx.textAlign = 'right';
-  ctx.fillText('FM Immersion', W - M, H - 22);
-  ctx.textAlign = 'left';
   return canvas;
 }
 

@@ -3462,7 +3462,18 @@
       "firstHalf": "1st half",
       "secondHalf": "2nd half",
       "statsSoon": "The game's figures are on their way",
-      "statsLater": "The game's figures come at the final whistle"
+      "statsLater": "The game's figures come at the final whistle",
+      "stats": "Match stats",
+      "motmTitle": "Player of the match",
+      "lastGoal": "Latest goal",
+      "noGoal": "No goal yet",
+      "lastFact": "Latest",
+      "rating": "Rating: {{rating}}",
+      "more_one": "+ {{count}} more",
+      "more_other": "+ {{count}} more",
+      "moments": "Key moments",
+      "redCard": "Red card",
+      "yellowCard": "Yellow card"
     },
     "say": {
       "early_level_0": "Early exchanges, {{home}} and {{away}} still sizing each other up ({{score}}).",
@@ -4212,7 +4223,14 @@
       "starter_exit": "One starter fewer: ranked {{rank}} in the squad by ability.",
       "top_injury": "A real blow: one of the three best players in the squad.",
       "starter_injury": "A key player missing: ranked {{rank}} in the squad by ability."
-    }
+    },
+    "headline": {
+      "signing": "{{last}} joins {{club}}",
+      "exit": "{{name}} leaves the club",
+      "injury": "{{last}}: {{days}} days out",
+      "injuryNoDays": "{{last}} injured"
+    },
+    "highlight": "{{days}} days"
   },
   "saveFiles": {
     "title": "My saves",

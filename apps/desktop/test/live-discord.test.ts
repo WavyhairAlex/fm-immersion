@@ -274,11 +274,12 @@ describe('but contre son camp', () => {
 });
 
 describe('encart avec image', () => {
-  it("la phrase du commentateur n'est que dans l'image, l'expulsion du jeu est listée", () => {
+  it("la phrase du commentateur et le déroulé ne sont que dans l'image, l'expulsion est listée sans image", () => {
     const red = { ...base, minute: '74 min.', awayEvents: [{ type: 3, time: "expulsé 74'", slice: 74 }] } as FmLive;
     const e = scoreboardPayload(t, red, base.home, { image: true }).embeds[0]!;
     expect(e.description).not.toContain('🎙️');
     expect(scoreboardPayload(t, red, base.home).embeds[0]!.description).toContain('🎙️');
-    expect(JSON.stringify(e.fields)).toContain("🟥 live.redUnknown · Malženice (74')".replace('Malženice', base.away));
+    expect(e.fields).toEqual([]);
+    expect(JSON.stringify(scoreboardPayload(t, red, base.home).embeds[0]!.fields)).toContain("🟥 live.redUnknown · Malženice (74')".replace('Malženice', base.away));
   });
 });
