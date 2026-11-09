@@ -31,6 +31,8 @@ export interface FmSaveSettings {
   coachPhotoCrop?: { zoom: number; x: number; y: number };
   /** Pays des clubs entraînés corrigés à la main dans « Ma carrière » (nom du club → code de `countries.ts`). */
   careerCountries?: Record<string, string>;
+  /** Clubs écartés de « Ma carrière » par le joueur (jours importés d'une autre sauvegarde, test…), par nom. */
+  careerHidden?: string[];
 }
 
 /** Fichier .fm listé par Rust (métadonnées seulement). */
@@ -104,8 +106,10 @@ export function fmRepo(db: Db) {
       // Après une période sans club dans cette carrière, le nouveau club est accepté sans confirmation.
       const newJob = !!settings.fmFreeSince && parsed.gameDate >= settings.fmFreeSince;
       if (expected && parsed.club !== expected && !opts.force && !newJob) throw new FmOtherSaveError(parsed.club, expected);
-      // Un ancien instantané (d'avant le départ) ne met pas fin à la période sans club.
-      if (settings.fmClub !== parsed.club || newJob) await this.updateSettings(saveId, { fmClub: parsed.club, ...(newJob ? { fmFreeSince: undefined } : {}) });
+      // Un ancien instantané (d'avant le départ) ne met pas fin à la période sans club, et un jour plus ancien que le
+      // dernier (ancien club importé depuis « Ma carrière ») ne change pas le club suivi par la partie.
+      const older = !!prev && parsed.gameDate < prev.gameDate;
+      if ((settings.fmClub !== parsed.club && !older) || newJob) await this.updateSettings(saveId, { fmClub: parsed.club, ...(newJob ? { fmFreeSince: undefined } : {}) });
       let snap = carryRoleStars(parsed, prev?.club === parsed.club ? prev?.data : undefined);
       // CA/PA lus en mémoire pour cette date : le plugin réécrit l'instantané, on les garde.
       if (!snap.abilities && prev?.gameDate === snap.gameDate && prev.club === snap.club && prev.data.abilities) snap = { ...snap, abilities: prev.data.abilities };

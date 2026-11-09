@@ -874,7 +874,7 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
  * On les regroupe par club et le joueur choisit lequel importer dans cette partie (du plus ancien au plus récent).
  * Les jours déjà présents ne sont pas réimportés ; un fichier sans aucun nom de joueur (lecture ratée) est ignoré.
  */
-function FmHistoryImport({ saveId, folder, club }: { saveId: string; folder: string; club: string | null }) {
+export function FmHistoryImport({ saveId, folder, club }: { saveId: string; folder: string; club: string | null }) {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
