@@ -6,6 +6,7 @@ import {
   addDays,
   autoPhase,
   buildProject,
+  projectCompat,
   buildTrainingWeek,
   effectiveness,
   individualAdvice,
@@ -38,6 +39,7 @@ import {
   type SetupStatus,
   type TacticEngine,
   type WorkPlan,
+  type ProjectCompat,
   type SessionCategory,
   type SessionId,
   type TrainingPhase,
@@ -69,7 +71,7 @@ import type { SeasonWeekKind } from '@fm-immersion/module-fm';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { ReserveContext, useTacticEngine } from './FmTactic';
-import { Chips, Fit, Panel, Pos, Tag, useCoach, useFormat, useNames, More, PlayerLink, SectionTabs } from './FmUi';
+import { Chips, CompatTag, Fit, Panel, Pos, Tag, useCoach, useFormat, useNames, More, PlayerLink, SectionTabs } from './FmUi';
 
 /** Couleur des pastilles par catégorie de séance (texte toujours canard, sauf le match en bouton principal). */
 const CAT_CLS: Record<SessionCategory, string> = {
@@ -144,6 +146,8 @@ export function useAppliedSetups(folder: string) {
 
 export interface SetupRow {
   plan: WorkPlan;
+  /** Note de projet (A à E) du joueur. */
+  compat: ProjectCompat;
   rec: IndividualSetup;
   advice: ReturnType<typeof individualAdvice>;
   status: SetupStatus;
@@ -210,6 +214,7 @@ export function useIndividualSetups(engine: TacticEngine, players: FmPlayer[], f
         };
         return {
           plan: x,
+          compat: projectCompat(engine, project, x.player),
           rec,
           advice,
           focusFromStats: !!fromStats && review.focus === fromStats,
@@ -992,7 +997,7 @@ function Outlook({ o }: { o: GrowthOutlook }) {
 function SetupCard({ row, was, engine, onMark }: { row: SetupRow; was: IndividualSetup | undefined; engine: TacticEngine; onMark: (on: boolean) => void }) {
   const { t } = useTranslation();
   const names = useNames();
-  const { plan: x, rec, advice: a, status, changed, focusFromStats, focusWhy, roleWhy, devRole, outlook, focusKeep, focusDays } = row;
+  const { plan: x, compat, rec, advice: a, status, changed, focusFromStats, focusWhy, roleWhy, devRole, outlook, focusKeep, focusDays } = row;
   const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
   const roleName = (code: string | null) => {
     const r = code ? engine.roles.get(code) : null;
@@ -1021,6 +1026,7 @@ function SetupCard({ row, was, engine, onMark }: { row: SetupRow; was: Individua
           <span className="flex items-center gap-1 text-xs text-brun">
             {t('fm.proj.fit')} <Fit value={x.fit} />
           </span>
+          <CompatTag c={compat} />
           <label className="flex cursor-pointer items-center gap-1.5 text-sm font-bold">
             <input type="checkbox" checked={status === 'ok'} onChange={(e) => onMark(e.target.checked)} />
             {t('fm.train.indiv.done')}

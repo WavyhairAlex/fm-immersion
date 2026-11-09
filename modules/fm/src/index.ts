@@ -45,6 +45,7 @@ export * from './mercato';
 export * from './evolution';
 export * from './decisions';
 export * from './compat';
+export * from './plan-grade';
 export * from './stats';
 export * from './subs';
 export * from './rules';

@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.120",
+    "date": "2026-11-09",
+    "fr": [
+      "Nouvelle note de projet, de A à E, pour savoir si un joueur est fait pour ta façon de jouer : elle regarde son rôle, son poste, ce que les consignes d'équipe de ton style lui demandent, sa lecture du jeu et son état d'esprit.",
+      "Tu la vois dans « Effectif », dans l'entraînement individuel de « Tactique et entraînement » et dans « Mercato et club », recrues comprises. Sur la fiche du joueur, la partie « Fait pour notre jeu ? » t'explique sa note critère par critère, avec ses points forts et ses points faibles."
+    ],
+    "en": [
+      "New project grade, from A to E, to know whether a player is made for the way you play: it looks at their role, position, what your style's team instructions ask of them, their reading of the game and their mindset.",
+      "You'll see it in “Squad”, in individual training under “Tactics & training” and in “Transfers & club”, scouting targets included. On the player sheet, the “Made for our game?” part explains the grade criterion by criterion, with strengths and weaknesses."
+    ]
+  },
+  {
     "version": "0.1.119",
     "date": "2026-11-09",
     "fr": [
