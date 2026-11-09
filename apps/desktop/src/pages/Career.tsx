@@ -301,7 +301,13 @@ function SpellCard({
         {r.topScorer && <Fact label={t('careerPage.topScorer')} value={`${r.topScorer.name} (${r.topScorer.value})`} />}
       </div>
 
-      {s.untracked.matches > 0 && <p className="mt-2 text-xs text-brun">{t('careerPage.untracked', { count: s.untracked.matches, goals: s.untracked.goalsFor })}</p>}
+      {s.untracked.matches > 0 && (
+        <p className="mt-2 text-xs text-brun">
+          {s.untracked.record
+            ? t('careerPage.rebuilt', { count: s.untracked.matches, witness: s.untracked.record.witness })
+            : t('careerPage.untracked', { count: s.untracked.matches, goals: s.untracked.goalsFor })}
+        </p>
+      )}
 
       {!!s.trophies.length && (
         <p className="mt-3 flex flex-wrap gap-2">
@@ -336,7 +342,7 @@ function SpellCard({
                   <td>{x.position != null ? ordinal(t, x.position) : '–'}</td>
                   <td>
                     {x.played}
-                    {x.untracked.matches > 0 && <span className="ml-1 text-xs text-brun">{t('careerPage.untrackedShort', { count: x.untracked.matches })}</span>}
+                    {x.untracked.matches > 0 && !x.untracked.record && <span className="ml-1 text-xs text-brun">{t('careerPage.untrackedShort', { count: x.untracked.matches })}</span>}
                   </td>
                   <td>
                     {x.wins}-{x.draws}-{x.losses}
