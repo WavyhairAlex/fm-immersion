@@ -1,11 +1,13 @@
 import {
   ATTR_GROUPS,
+  buildProject,
   levelSeries,
   matchStatsFull,
   mercatoAdvice,
   monthsLeft,
   playingTime,
   POS_LABEL,
+  projectCompat,
   roleMatrix,
   storedTargets,
   statsBoard,
@@ -28,7 +30,7 @@ import { LeaveButton, useLeaving } from './FmLeaving';
 import { TONE, useReason } from './FmMercato';
 import { Spark } from './FmProgression';
 import { useTacticEngine } from './FmTactic';
-import { CompatTag, fitPct, Level, Tag, useCoach, useFormat, useNames, type SheetFocus } from './FmUi';
+import { CompatTag, fitPct, Level, PlanGradeCard, Tag, useCoach, useFormat, useNames, type SheetFocus } from './FmUi';
 
 const PCT = new Set<StatKey>(['passPct', 'tacklePct', 'headerPct', 'shotsOnTargetPct', 'savePct']);
 
@@ -104,6 +106,9 @@ export function FmPlayerSheet({
     () => mercatoAdvice(engine, players, gameDate, coach, history, leavingIds, loanIds)?.advice.find((a) => a.player.id === id) ?? null,
     [engine, players, gameDate, coach, history, id, leavingIds, loanIds],
   );
+  // Note de projet (A à E) : même projet que le mercato (effectif avec attributs, partants exclus).
+  const project = useMemo(() => buildProject(engine, players.filter((x) => Object.keys(x.attributes).length && !leavingIds.has(x.id)), coach), [engine, players, coach, leavingIds]);
+  const fitProject = useMemo(() => advice?.compat ?? (project && p && Object.keys(p.attributes).length ? projectCompat(engine, project, p) : null), [advice, project, p, engine]);
   const series = useMemo(() => levelSeries(history, id), [history, id]);
   const scope = useFmSaveScope();
   const play = useMemo(() => playingTime(players, entries).rows.find((r) => r.player.id === id) ?? null, [players, entries, id]);
@@ -309,6 +314,16 @@ export function FmPlayerSheet({
               </ul>
             </div>
           </section>
+
+          {/* Note de projet : le profil colle-t-il à notre façon de jouer ? */}
+          {project && fitProject && (
+            <section className="card p-4" aria-labelledby="sheet-grade">
+              <h3 id="sheet-grade" className="mb-2 font-semibold">
+                {t('fm.grade.heading')}
+              </h3>
+              <PlanGradeCard c={fitProject} project={project} engine={engine} />
+            </section>
+          )}
 
           {/* Attributs par famille, colorés 1-20. */}
           {Object.keys(p.attributes).length > 0 && (
