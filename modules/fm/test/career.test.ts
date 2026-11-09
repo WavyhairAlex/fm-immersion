@@ -69,6 +69,20 @@ describe('Ma carrière', () => {
     expect(careerOf(h, { freeSince: '2027-08-05' }).spells[0]).toMatchObject({ current: false, reason: 'left' });
   });
 
+  it('matchs sans score : comptés par les apparitions, hors bilan', () => {
+    const day = (gameDate: string, apps: number, goals: number[]) =>
+      ({
+        schema: 'archivix/1',
+        club: 'Vänersborgs IF',
+        gameDate,
+        players: Array.from({ length: 14 }, (_, i) => ({ id: i, name: `J${i}`, nationality: 'suédois', apps: apps + (i < 13 ? 0 : -apps), goals: goals[i] ?? 0 })),
+        custom: { equipe: {} },
+      }) as unknown as FmSnapshot;
+    const c = careerOf(e([day('2026-08-29', 10, []), day('2026-08-30', 11, [1]), day('2026-09-05', 11, [1]), day('2026-09-13', 13, [2, 1])]));
+    expect(c.spells[0]!.untracked).toEqual({ matches: 3, goalsFor: 3 });
+    expect(c.spells[0]!.total.played).toBe(0);
+  });
+
   it('historique vide', () => {
     expect(careerOf([])).toMatchObject({ spells: [], totals: { clubs: 0, played: 0, winRate: null, biggestWin: null } });
   });

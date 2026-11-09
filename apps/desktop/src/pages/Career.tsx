@@ -301,6 +301,8 @@ function SpellCard({
         {r.topScorer && <Fact label={t('careerPage.topScorer')} value={`${r.topScorer.name} (${r.topScorer.value})`} />}
       </div>
 
+      {s.untracked.matches > 0 && <p className="mt-2 text-xs text-brun">{t('careerPage.untracked', { count: s.untracked.matches, goals: s.untracked.goalsFor })}</p>}
+
       {!!s.trophies.length && (
         <p className="mt-3 flex flex-wrap gap-2">
           {s.trophies.map((tr, i) => (
@@ -332,7 +334,10 @@ function SpellCard({
                     {!x.ended && <span className="ml-2 text-xs font-normal text-brun">{t(s.current ? 'careerPage.ongoing' : 'careerPage.leftMidSeason')}</span>}
                   </td>
                   <td>{x.position != null ? ordinal(t, x.position) : '–'}</td>
-                  <td>{x.played}</td>
+                  <td>
+                    {x.played}
+                    {x.untracked.matches > 0 && <span className="ml-1 text-xs text-brun">{t('careerPage.untrackedShort', { count: x.untracked.matches })}</span>}
+                  </td>
                   <td>
                     {x.wins}-{x.draws}-{x.losses}
                   </td>

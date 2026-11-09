@@ -1,6 +1,6 @@
 import { countryOfLeague, countryOfNationality } from './countries';
 import { coachSpells, type ExitReason } from './farewell';
-import { officialResults } from './results';
+import { appearanceMatches, officialResults } from './results';
 import { reviewOf, seasonSegments, type SeasonMatch, type SeasonReview } from './season';
 import type { FmSnapshot } from './snapshot';
 
@@ -26,6 +26,27 @@ export interface CareerSeason {
   cupsWon: string[];
   /** Plus longue série sans défaite de la saison. */
   unbeaten: number;
+  /** Matchs vus seulement par les apparitions des joueurs (plugin qui ne lisait pas encore les scores), hors bilan. */
+  untracked: Untracked;
+}
+
+export interface Untracked {
+  matches: number;
+  /** Buts marqués par nos joueurs pendant ces matchs (sans les buts contre son camp de l'adversaire). */
+  goalsFor: number;
+}
+
+/** Matchs d'une période que les relevés ne racontent que par les apparitions (voir `appearanceMatches`). */
+export function untrackedMatches(entries: Entry[]): Untracked {
+  const out = { matches: 0, goalsFor: 0 };
+  for (let i = 1; i < entries.length; i++) {
+    const m = appearanceMatches(entries[i - 1]!.data, entries[i]!.data);
+    if (m) {
+      out.matches += m.matches;
+      out.goalsFor += m.goalsFor;
+    }
+  }
+  return out;
 }
 
 export interface CareerSpell {
@@ -41,6 +62,8 @@ export interface CareerSpell {
   countrySource: 'squad' | 'league' | null;
   seasons: CareerSeason[];
   total: SeasonReview;
+  /** Matchs sans score connu (somme des saisons). */
+  untracked: Untracked;
   /** Titres : championnats finis en tête (competition null), coupes gagnées. */
   trophies: { season: string; competition: string | null }[];
   bestFinish: number | null;
@@ -128,6 +151,7 @@ export function careerOf(history: Entry[], opts: { freeSince?: string | null } =
         goalsAgainst: r.goalsAgainst,
         cupsWon: r.cups.filter((c) => c.status === 'won').map((c) => c.competition),
         unbeaten: r.unbeaten,
+        untracked: untrackedMatches(s.entries),
       };
     });
     const trophies = [
@@ -146,6 +170,7 @@ export function careerOf(history: Entry[], opts: { freeSince?: string | null } =
       countrySource: country?.source ?? null,
       seasons,
       total: reviewOf(sp.entries, false),
+      untracked: seasons.reduce((a, x) => ({ matches: a.matches + x.untracked.matches, goalsFor: a.goalsFor + x.untracked.goalsFor }), { matches: 0, goalsFor: 0 }),
       trophies,
       bestFinish: finished.length ? Math.min(...finished) : null,
     };

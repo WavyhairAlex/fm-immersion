@@ -415,3 +415,38 @@ export function analyzeResults(history: { gameDate: string; data: FmSnapshot }[]
     insights,
   };
 }
+
+/**
+ * Matchs vus seulement par les apparitions, quand le plugin ne lisait pas encore les stats du Centre de données
+ * (premiers jours d'une partie : chez Vänersborgs, rien avant le 03/10/2026). Le nombre de matchs de chaque joueur
+ * (`apps`) et ses buts bougent quand même : au moins 11 joueurs qui gagnent un match = un match de l'équipe. On ne
+ * sait ni le résultat ni les buts encaissés ; les buts marqués oublient les buts contre son camp de l'adversaire.
+ * Null si les stats complètes sont lues (`resultBetween` s'en charge) ou s'il n'y a pas eu de match.
+ */
+export function appearanceMatches(prev: FmSnapshot, cur: FmSnapshot): { matches: number; goalsFor: number } | null {
+  if (prev.club !== cur.club) return null;
+  const read = new Set([...matchStatsFull(prev).values()].flatMap((m) => Object.keys(m.raw)));
+  if (read.has('Minutes') && read.has('StartingAppearances')) return null;
+  const before = new Map(prev.players.map((p) => [String(p.id), p]));
+  const moved: number[] = [];
+  let goals = 0;
+  let reset = 0;
+  for (const p of cur.players) {
+    const o = before.get(String(p.id));
+    if (!o || typeof p.apps !== 'number' || typeof o.apps !== 'number') continue;
+    const d = p.apps - o.apps;
+    if (d < 0) reset++;
+    if (d > 0) {
+      moved.push(d);
+      if (typeof p.goals === 'number' && typeof o.goals === 'number' && p.goals > o.goals) goals += p.goals - o.goals;
+    }
+  }
+  // Nouvelle saison : les compteurs repartent de zéro.
+  if (reset > moved.length) return null;
+  if (moved.length < 11) return null;
+  // Plusieurs matchs entre deux relevés : autant que la plupart des titulaires en ont joué (un joueur qui joue aussi
+  // avec la réserve ne compte pas pour un match de plus).
+  let matches = 1;
+  while (moved.filter((d) => d >= matches + 1).length >= 7) matches++;
+  return { matches, goalsFor: goals };
+}
