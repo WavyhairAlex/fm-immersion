@@ -11,6 +11,7 @@ mod fm;
 mod fm_bridge;
 mod fm_memory;
 mod images;
+mod photos_remote;
 mod save_backup;
 
 use std::sync::Mutex;
@@ -63,6 +64,10 @@ pub fn run() {
             faces::faces_ageswap_set,
             faces_remote::faces_remote_check,
             faces_remote::faces_remote_download,
+            photos_remote::photos_remote_status,
+            photos_remote::photos_remote_download,
+            photos_remote::photos_remote_cancel,
+            photos_remote::photos_remote_remove,
             ai::ai_key_set,
             ai::ai_key_status,
             ai::ai_complete,

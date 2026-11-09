@@ -3017,6 +3017,31 @@
     },
     "atelierToggle": "I generate the portraits (workshop mode: paths, batch progress, local pack)"
   },
+  "photos": {
+    "title": "Situation photos",
+    "intro": "Photos of your players and staff in the day's scene (injury, signing, celebration), created on your PC to illustrate breaking news, live match and the gazette. The image engine (ComfyUI, Qwen Image Edit, OWLv2) is downloaded once, when you click.",
+    "size": "{{size}} to download, NVIDIA graphics card with at least 8 GB of video memory.",
+    "dir": "Folder: {{dir}}",
+    "state": {
+      "missing": "Engine not downloaded.",
+      "partial": "Download interrupted: {{onDisk}} of {{total}} already on disk, it will resume where it stopped.",
+      "ready": "Engine ready ({{total}} on disk)."
+    },
+    "component": {
+      "comfyui": "ComfyUI portable {{version}}",
+      "qwen": "Qwen Image Edit 2511 (model, text encoder, VAE, Lightning)",
+      "owlv2": "OWLv2 (logo removal)"
+    },
+    "download": "Download the engine",
+    "resume": "Resume download",
+    "cancel": "Stop",
+    "remove": "Delete everything",
+    "removeConfirm": "Delete the image engine ({{total}})? Photos already created are kept.",
+    "progress": "{{file}}: {{received}} of {{size}} — {{done}} of {{total}} overall",
+    "verifying": "Every file is checked by SHA-256 before being kept.",
+    "sources": "Files published on Hugging Face (Comfy-Org, lightx2v, Google) and GitHub (Comfy-Org/ComfyUI), Apache-2.0 and GPL-3.0 licences.",
+    "error": "Download failed: {{error}}"
+  },
   "gazette": {
     "paper": "The {{club}} Gazette",
     "issue": "No. {{number}}",

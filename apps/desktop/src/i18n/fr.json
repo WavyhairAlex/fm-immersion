@@ -3017,6 +3017,31 @@
     },
     "atelierToggle": "Je génère les portraits (mode atelier : chemins, avancement du lot, pack local)"
   },
+  "photos": {
+    "title": "Photos de situation",
+    "intro": "Des photos de tes joueurs et de ton staff dans la scène du jour (blessure, recrue, célébration), créées sur ton PC pour illustrer les dépêches, le direct et la gazette. Le moteur d'images (ComfyUI, Qwen Image Edit, OWLv2) se télécharge une fois, sur ton clic.",
+    "size": "{{size}} à télécharger, carte graphique NVIDIA avec au moins 8 Go de mémoire vidéo.",
+    "dir": "Dossier : {{dir}}",
+    "state": {
+      "missing": "Moteur non téléchargé.",
+      "partial": "Téléchargement interrompu : {{onDisk}} sur {{total}} déjà sur le disque, il reprendra où il s'était arrêté.",
+      "ready": "Moteur prêt ({{total}} sur le disque)."
+    },
+    "component": {
+      "comfyui": "ComfyUI portable {{version}}",
+      "qwen": "Qwen Image Edit 2511 (modèle, encodeur, VAE, Lightning)",
+      "owlv2": "OWLv2 (retrait des logos)"
+    },
+    "download": "Télécharger le moteur",
+    "resume": "Reprendre le téléchargement",
+    "cancel": "Arrêter",
+    "remove": "Tout supprimer",
+    "removeConfirm": "Supprimer le moteur d'images ({{total}}) ? Les photos déjà créées sont gardées.",
+    "progress": "{{file}} : {{received}} sur {{size}} — {{done}} sur {{total}} au total",
+    "verifying": "Chaque fichier est vérifié par SHA-256 avant d'être gardé.",
+    "sources": "Fichiers publiés sur Hugging Face (Comfy-Org, lightx2v, Google) et GitHub (Comfy-Org/ComfyUI), licences Apache-2.0 et GPL-3.0.",
+    "error": "Téléchargement impossible : {{error}}"
+  },
   "gazette": {
     "paper": "La Gazette de {{club}}",
     "issue": "N° {{number}}",
