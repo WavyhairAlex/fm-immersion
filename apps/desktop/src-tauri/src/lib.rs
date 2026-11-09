@@ -11,6 +11,8 @@ mod fm;
 mod fm_bridge;
 mod fm_memory;
 mod images;
+mod photos_engine;
+mod photos_remote;
 mod save_backup;
 
 use std::sync::Mutex;
@@ -63,6 +65,15 @@ pub fn run() {
             faces::faces_ageswap_set,
             faces_remote::faces_remote_check,
             faces_remote::faces_remote_download,
+            photos_remote::photos_remote_status,
+            photos_remote::photos_remote_download,
+            photos_remote::photos_remote_cancel,
+            photos_remote::photos_remote_remove,
+            photos_engine::photos_engine_status,
+            photos_engine::photos_engine_install,
+            photos_engine::photos_engine_start,
+            photos_engine::photos_engine_stop,
+            photos_engine::photos_engine_test,
             ai::ai_key_set,
             ai::ai_key_status,
             ai::ai_complete,
@@ -86,6 +97,8 @@ pub fn run() {
             // L'IA s'arrête avec l'appli : le modèle Ollama libère la mémoire vidéo.
             if let tauri::RunEvent::Exit = event {
                 ai::unload_all();
+                // Le moteur des photos (ComfyUI) ne survit pas à l'appli.
+                photos_engine::stop();
             }
         });
 }

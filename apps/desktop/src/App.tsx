@@ -12,6 +12,7 @@ import { useLiveDiscord } from './lib/live-discord';
 import { Career } from './pages/Career';
 import { Challenges } from './pages/Challenges';
 import { Faces } from './pages/Faces';
+import { Photos } from './pages/Photos';
 import { FmSave, SettingsWithoutCareer } from './pages/FmSave';
 import { Home } from './pages/Home';
 import { Overview } from './pages/Overview';
@@ -38,6 +39,7 @@ export function App() {
             <Route path="/reglages" element={<Settings />} />
             <Route path="/parties" element={<Home />} />
             <Route path="/visages" element={<Faces />} />
+            <Route path="/photos" element={<Photos />} />
             <Route path="/sauvegardes" element={<Saves />} />
             <Route path="/carriere" element={<Career />} />
             <Route path="/gazette" element={<Story tab="gazette" />} />

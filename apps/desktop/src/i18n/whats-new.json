@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.123",
+    "date": "2026-11-09",
+    "fr": [
+      "Nouvel écran « Photos de situation » (groupe Le jeu), première étape : tu peux télécharger le moteur d'images (34 Go, carte NVIDIA avec 8 Go de mémoire vidéo et 32 Go de RAM conseillés), l'installer et faire une image de test avec ta photo de coach. Rien n'est téléchargé sans ton clic, tout tourne sur ton PC.",
+      "Le téléchargement reprend là où il s'était arrêté, chaque fichier est vérifié, et un bouton supprime tout. Les scènes pour les dépêches, le direct et la gazette arrivent dans une prochaine version."
+    ],
+    "en": [
+      "New “Situation photos” screen (The game group), first step: you can download the image engine (34 GB, NVIDIA card with 8 GB of video memory and 32 GB of RAM advised), install it and make a test image with your coach photo. Nothing is downloaded without your click, everything runs on your PC.",
+      "The download resumes where it stopped, every file is verified, and one button deletes everything. Scenes for breaking news, live match and the gazette come in a next version."
+    ]
+  },
+  {
     "version": "0.1.122",
     "date": "2026-11-09",
     "fr": [
