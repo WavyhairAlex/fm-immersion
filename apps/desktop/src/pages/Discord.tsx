@@ -1,12 +1,12 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { AiLink } from '../components/AiSettingsCard';
 import { DiscordEmbed } from '../components/DiscordEmbed';
 import { aiFor } from '../lib/ai';
 import { getLiveEnabled, getWebhook, isWebhook, sendDiscord, setLiveEnabled, setWebhook } from '../lib/discord';
-import { getBreakingAuto, getGazetteAuto, setBreakingAuto, setGazetteAuto } from '../lib/gazette-auto';
+import { autoLastError, autoLastSent, getBreakingAuto, getGazetteAuto, setBreakingAuto, setGazetteAuto } from '../lib/gazette-auto';
 import { useCareer } from '../lib/career';
 import { fmData } from '../lib/data';
 import { livePreviewPayload } from '../lib/live-discord';
@@ -51,6 +51,7 @@ export function Discord() {
             : t('discord.status.none')}
         </p>
         <p className="mt-1 text-sm text-brun">{ai ? t('discord.status.aiOn', { model: ai.model }) : t('discord.status.aiOff')}</p>
+        {saved && (auto || breaking) && <AutoState />}
       </section>
 
       <section className="card mt-6">
@@ -181,6 +182,31 @@ export function Discord() {
 
       <p className="mt-6 text-xs text-brun">{t('discord.privacy')}</p>
     </div>
+  );
+}
+
+/** Ce qu'a fait l'envoi automatique : dernière gazette partie, dernier envoi raté (relus chaque minute). */
+function AutoState() {
+  const { t, i18n } = useTranslation();
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(() => tick((n) => n + 1), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+  const when = (iso: string) => new Date(iso).toLocaleString(i18n.resolvedLanguage, { dateStyle: 'short', timeStyle: 'short' });
+  const sent = autoLastSent();
+  const error = autoLastError();
+  const showError = error && (!sent || error.at > sent.at);
+  return (
+    <>
+      <p className="mt-1 text-sm text-brun">{sent ? t('discord.status.lastSent', { number: sent.number, date: when(sent.at) }) : t('discord.status.noneSent')}</p>
+      {showError && (
+        <p className="mt-1 text-sm font-bold text-corail">
+          {t('discord.status.lastError', { what: t(`discord.status.what.${error.what}`, { defaultValue: error.what }), date: when(error.at), error: error.error })}
+          {error.dropped && ` ${t('discord.status.dropped')}`}
+        </p>
+      )}
+    </>
   );
 }
 

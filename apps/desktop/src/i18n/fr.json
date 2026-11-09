@@ -3611,7 +3611,19 @@
       "autoOn": "Gazette automatique activée",
       "autoOff": "Gazette automatique désactivée",
       "aiOn": "Textes rédigés par l’IA ({{model}}).",
-      "aiOff": "Textes tout faits (rédaction par IA coupée)."
+      "aiOff": "Textes tout faits (rédaction par IA coupée).",
+      "lastSent": "Dernière gazette partie toute seule : n° {{number}}, le {{date}}.",
+      "noneSent": "Aucune gazette n'est encore partie toute seule. Elle part quand une semaine de jeu est finie, FM Immersion ouvert.",
+      "lastError": "Dernier envoi raté ({{what}}), le {{date}} : {{error}}",
+      "dropped": "Abandonné après 3 essais, les envois suivants continuent.",
+      "what": {
+        "gazette": "gazette",
+        "season": "bilan de la saison",
+        "farewell": "hors-série",
+        "breaking": "dépêche",
+        "record": "exploit",
+        "bigMatch": "affiche du choc"
+      }
     },
     "change": "Changer de salon",
     "sendTitle": "Ce qui part dans ton salon",
