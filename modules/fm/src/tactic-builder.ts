@@ -4,6 +4,7 @@ import { lineOf, POS_ORDER, type PosCode } from './positions';
 import { assignMax, FORMATIONS, formationOfPositions, phaseXY, readiness, shapeOf, sideOf, slotContexts, type BalanceCheck, type FormationPlan, type Phase, type RoleRef, type Slot, type StyleRef, type TacticEngine } from './tactic';
 import { checkTeamInstructions, MENTALITIES_FM27, TEAM_INSTRUCTIONS_FM27, teamInstructionOf, type TeamInstructionDef } from './team-instructions-fm27';
 import type { TacticSlot } from './tactic-slots';
+import type { GameInstructions } from './game-instructions';
 import { phaseLocks, roleLocks, type InstructionGroup } from './instructions';
 import { LEGACY_PI, lockLabel, piKey, piKeyGroup, piKeyOption, PLAYER_INSTRUCTIONS_FM27, type PiGroupDef } from './player-instructions-fm27';
 
@@ -159,15 +160,24 @@ export function newBuiltTactic(engine: TacticEngine, form: string, id: string, n
 }
 
 /** Tactique jouée dans FM27 (lue par le plugin) recopiée dans l'éditeur, pour la retoucher. */
-export function builtFromGame(engine: TacticEngine, game: TacticSlot[], id: string, name: string): BuiltTactic | null {
+export function builtFromGame(
+  engine: TacticEngine,
+  game: TacticSlot[],
+  id: string,
+  name: string,
+  instructions?: GameInstructions | null,
+  mentality?: string | null,
+): BuiltTactic | null {
   if (game.length !== 11) return null;
   const byGame = (code: string | null, phase: Phase) =>
     code ? engine.ref.roles.find((r) => (phase === 'ip' ? r.game?.ip === code && r.phase !== 'oop' : r.game?.oop === code && r.phase !== 'ip'))?.code : undefined;
-  const slots = game.map((s) => {
+  const slots = game.map((s, i) => {
     const posOOP = s.posOOP ?? defaultOOPPos(s.pos);
-    return { pos: s.pos, posOOP, ip: byGame(s.roleIP, 'ip') ?? defaultRole(engine, s.pos, 'ip'), oop: byGame(s.roleOOP, 'oop') ?? defaultRole(engine, posOOP, 'oop'), pi: [] };
+    return { pos: s.pos, posOOP, ip: byGame(s.roleIP, 'ip') ?? defaultRole(engine, s.pos, 'ip'), oop: byGame(s.roleOOP, 'oop') ?? defaultRole(engine, posOOP, 'oop'), pi: normalizePi(instructions?.pi[i] ?? []) };
   });
-  return { id, name, slots, mentality: 'Équilibrée', ti: {} };
+  // Consignes et mentalité lues dans le jeu quand le plugin les donne (chemins.json, 09/11/2026), sinon les valeurs par défaut.
+  const ment = mentality && (MENTALITIES_FM27 as readonly string[]).includes(mentality) ? mentality : 'Équilibrée';
+  return { id, name, slots, mentality: ment, ti: { ...(instructions?.ti ?? {}) } };
 }
 
 /** Consignes et mentalité d'un style de l'appli, à appliquer à la tactique construite. */
@@ -475,6 +485,10 @@ export function analyseBuiltTactic(engine: TacticEngine, t: BuiltTactic, players
   const highLine = (ti(t, 'DefensiveLine') ?? 2) >= 3 || ti(t, 'DefensiveLineBehaviour') === 0;
   const sweeper = idx.some((i) => S[i]!.oop === 'SK') || idx.some((i) => ['CCB', 'CWCB'].includes(S[i]!.oop));
   if (highLine && !sweeper) add('highLineNoCover', 'press', 'warn', {});
+  // Bloc étiré : l'avant presse haut pendant que la défense recule (ligne plus basse ou « Rester plus bas ») : un grand
+  // espace s'ouvre entre les lignes (cas réel du 09/11/2026 : pressing haut, intensité plus élevée, ligne plus basse, reculer).
+  const deepLine = (ti(t, 'DefensiveLine') ?? 2) <= 1 || ti(t, 'DefensiveLineBehaviour') === 2;
+  if (block === 'high' && deepLine) add('stretchedBlock', 'press', 'bad', {});
   // Entre les lignes : milieux qui sortent presser sans personne pour filtrer devant la défense.
   const midPress = idx.filter((i) => ['MDF', 'MC'].includes(S[i]!.posOOP) && oopG(i) === 'press');
   const midScreen = idx.filter((i) => ['MDF', 'MC'].includes(S[i]!.posOOP) && ['screen', 'cover', 'wideCover'].includes(oopG(i) ?? ''));

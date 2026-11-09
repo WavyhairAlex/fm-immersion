@@ -2951,6 +2951,7 @@
         "lowBlockPressers": "Bloc bas avec beaucoup de pressing : les joueurs sortent et ouvrent des espaces.",
         "lowBlockCompact": "Bloc bas compact : cohérent avec des rôles qui restent en place.",
         "highLineNoCover": "Ligne défensive haute sans gardien-libéro ni central de couverture : l'espace dans le dos est grand.",
+        "stretchedBlock": "Bloc étiré : pressing haut devant, mais ligne défensive plus basse ou qui recule derrière. Un grand espace s'ouvre entre les lignes ; aligne la hauteur du pressing et celle de la ligne.",
         "gapBetweenLines": "Les milieux sortent presser et personne ne filtre devant la défense : trou entre les lignes.",
         "screened_one": "{{count}} milieu filtre devant la défense sans ballon.",
         "screened_other": "{{count}} milieux filtrent devant la défense sans ballon.",

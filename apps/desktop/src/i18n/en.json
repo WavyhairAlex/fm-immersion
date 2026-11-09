@@ -2951,6 +2951,7 @@
         "lowBlockPressers": "Low block with a lot of pressing: players step out and open spaces.",
         "lowBlockCompact": "Compact low block: consistent with roles that hold position.",
         "highLineNoCover": "High defensive line without a sweeper keeper or covering centre-back: lots of space in behind.",
+        "stretchedBlock": "Stretched block: a high press up front but a deeper or dropping defensive line behind. A big gap opens between the lines; line up the press height and the defensive line.",
         "gapBetweenLines": "Midfielders step out to press and nobody screens the defence: a gap between the lines.",
         "screened_one": "{{count}} midfielder screens the defence out of possession.",
         "screened_other": "{{count}} midfielders screen the defence out of possession.",
