@@ -423,7 +423,7 @@ export function analyzeResults(history: { gameDate: string; data: FmSnapshot }[]
  * sait ni le résultat ni les buts encaissés ; les buts marqués oublient les buts contre son camp de l'adversaire.
  * Null si les stats complètes sont lues (`resultBetween` s'en charge) ou s'il n'y a pas eu de match.
  */
-export function appearanceMatches(prev: FmSnapshot, cur: FmSnapshot): { matches: number; goalsFor: number } | null {
+export function appearanceMatches(prev: FmSnapshot, cur: FmSnapshot): { matches: number; goalsFor: number; scorers: Map<string, { name: string; goals: number }> } | null {
   if (prev.club !== cur.club) return null;
   const read = new Set([...matchStatsFull(prev).values()].flatMap((m) => Object.keys(m.raw)));
   if (read.has('Minutes') && read.has('StartingAppearances')) return null;
@@ -431,6 +431,7 @@ export function appearanceMatches(prev: FmSnapshot, cur: FmSnapshot): { matches:
   const moved: number[] = [];
   let goals = 0;
   let reset = 0;
+  const scorers = new Map<string, { name: string; goals: number }>();
   for (const p of cur.players) {
     const o = before.get(String(p.id));
     if (!o || typeof p.apps !== 'number' || typeof o.apps !== 'number') continue;
@@ -438,7 +439,10 @@ export function appearanceMatches(prev: FmSnapshot, cur: FmSnapshot): { matches:
     if (d < 0) reset++;
     if (d > 0) {
       moved.push(d);
-      if (typeof p.goals === 'number' && typeof o.goals === 'number' && p.goals > o.goals) goals += p.goals - o.goals;
+      if (typeof p.goals === 'number' && typeof o.goals === 'number' && p.goals > o.goals) {
+        goals += p.goals - o.goals;
+        scorers.set(String(p.id), { name: p.name, goals: p.goals - o.goals });
+      }
     }
   }
   // Nouvelle saison : les compteurs repartent de zéro.
@@ -448,5 +452,5 @@ export function appearanceMatches(prev: FmSnapshot, cur: FmSnapshot): { matches:
   // avec la réserve ne compte pas pour un match de plus).
   let matches = 1;
   while (moved.filter((d) => d >= matches + 1).length >= 7) matches++;
-  return { matches, goalsFor: goals };
+  return { matches, goalsFor: goals, scorers };
 }

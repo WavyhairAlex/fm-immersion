@@ -4417,6 +4417,8 @@
     "leftMidSeason": "départ en cours de saison",
     "untracked_one": "{{count}} match sans score enregistré ({{goals}} but marqué) : le plugin ne lisait pas encore les résultats, ils ne comptent pas dans le bilan.",
     "untracked_other": "{{count}} matchs sans score enregistré ({{goals}} buts marqués) : le plugin ne lisait pas encore les résultats, ils ne comptent pas dans le bilan.",
+    "rebuilt_one": "Dont {{count}} match d'avant la lecture des scores, retrouvé grâce à {{witness}}, sur le terrain du début à la fin.",
+    "rebuilt_other": "Dont {{count}} matchs d'avant la lecture des scores, retrouvés grâce à {{witness}}, sur le terrain à chacun du début à la fin.",
     "untrackedShort": "+{{count}} sans score",
     "hide": "Pas dans cette carrière",
     "hideHelp": "Écarter ce club : ses jours viennent d'une autre sauvegarde ou d'un test. Rien n'est effacé, tu peux le remettre plus bas.",

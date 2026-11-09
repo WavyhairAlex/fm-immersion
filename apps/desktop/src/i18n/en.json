@@ -4417,6 +4417,8 @@
     "leftMidSeason": "left mid-season",
     "untracked_one": "{{count}} match with no recorded score ({{goals}} goals scored): the plugin was not reading results yet, so it is not in the record.",
     "untracked_other": "{{count}} matches with no recorded score ({{goals}} goals scored): the plugin was not reading results yet, so they are not in the record.",
+    "rebuilt_one": "Includes {{count}} match from before scores were read, recovered through {{witness}}, who played all of it.",
+    "rebuilt_other": "Includes {{count}} matches from before scores were read, recovered through {{witness}}, who played every minute of them.",
     "untrackedShort": "+{{count}} without score",
     "hide": "Not in this career",
     "hideHelp": "Leave this club out: its days come from another save or a test. Nothing is deleted, you can put it back below.",

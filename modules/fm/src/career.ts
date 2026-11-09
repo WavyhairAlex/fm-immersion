@@ -1,6 +1,8 @@
 import { countryOfLeague, countryOfNationality } from './countries';
 import { coachSpells, type ExitReason } from './farewell';
+import { normalizePlayer } from './player';
 import { appearanceMatches, officialResults } from './results';
+import { matchStatsFull } from './stats';
 import { reviewOf, seasonSegments, type SeasonMatch, type SeasonReview } from './season';
 import type { FmSnapshot } from './snapshot';
 
@@ -34,19 +36,67 @@ export interface Untracked {
   matches: number;
   /** Buts marqués par nos joueurs pendant ces matchs (sans les buts contre son camp de l'adversaire). */
   goalsFor: number;
+  /**
+   * Bilan retrouvé quand le plugin s'est mis à lire les stats de saison : un joueur arrivé avec le coach et présent
+   * 90 minutes à chacun de ces matchs a pour cumuls de saison exactement ces matchs (victoires, défaites, buts de
+   * l'équipe ; buts encaissés seulement si c'est le gardien, le jeu ne les compte que pour lui). Null sinon.
+   */
+  record: { wins: number; draws: number; losses: number; goalsFor: number; goalsAgainst: number | null; witness: string } | null;
+  /** Buteurs de ces matchs. */
+  scorers: { name: string; goals: number }[];
 }
+
+const hasStats = (snap: FmSnapshot) => {
+  for (const m of matchStatsFull(snap).values()) if ('Minutes' in m.raw && 'StartingAppearances' in m.raw) return true;
+  return false;
+};
 
 /** Matchs d'une période que les relevés ne racontent que par les apparitions (voir `appearanceMatches`). */
 export function untrackedMatches(entries: Entry[]): Untracked {
-  const out = { matches: 0, goalsFor: 0 };
+  let matches = 0;
+  let goalsFor = 0;
+  const scorers = new Map<string, { name: string; goals: number }>();
+  // Premier relevé avec les stats de saison : les matchs d'avant y sont cumulés.
+  const k = entries.findIndex((e) => hasStats(e.data));
+  let before = 0;
   for (let i = 1; i < entries.length; i++) {
     const m = appearanceMatches(entries[i - 1]!.data, entries[i]!.data);
-    if (m) {
-      out.matches += m.matches;
-      out.goalsFor += m.goalsFor;
+    if (!m) continue;
+    matches += m.matches;
+    goalsFor += m.goalsFor;
+    if (k >= i) before += m.matches;
+    for (const [id, x] of m.scorers) scorers.set(id, { name: x.name, goals: (scorers.get(id)?.goals ?? 0) + x.goals });
+  }
+  let record: Untracked['record'] = null;
+  // Tous les matchs sans score ont eu lieu avant ce relevé : on cherche un témoin.
+  if (k > 0 && before && before === matches) {
+    const snap = entries[k]!.data;
+    const start = new Map(entries[0]!.data.players.map((p) => [String(p.id), typeof p.apps === 'number' ? p.apps : 0]));
+    const stats = matchStatsFull(snap);
+    let best: { raw: Record<string, number>; name: string; gk: boolean } | null = null;
+    for (const p of snap.players) {
+      const raw = stats.get(String(p.id))?.raw;
+      if (!raw || typeof p.apps !== 'number') continue;
+      const season = (raw.StartingAppearances ?? 0) + (raw.SubAppearances ?? 0);
+      // Toute sa saison s'est jouée avec le coach, à chaque match, en entier.
+      if (season !== matches || p.apps - (start.get(String(p.id)) ?? 0) !== matches || (raw.Minutes ?? 0) < 90 * matches) continue;
+      const gk = (raw.TeamConceded ?? 0) > 0 || normalizePlayer(p).line === 'GB';
+      if (!best || (gk && !best.gk)) best = { raw, name: p.name, gk };
+    }
+    if (best && best.raw.GamesWon != null && best.raw.GamesLost != null) {
+      const wins = best.raw.GamesWon;
+      const losses = best.raw.GamesLost;
+      record = {
+        wins,
+        draws: Math.max(0, matches - wins - losses),
+        losses,
+        goalsFor: best.raw.TeamGoals ?? goalsFor,
+        goalsAgainst: best.gk ? (best.raw.TeamConceded ?? null) : null,
+        witness: best.name,
+      };
     }
   }
-  return out;
+  return { matches, goalsFor, record, scorers: [...scorers.values()].sort((a, b) => b.goals - a.goals) };
 }
 
 export interface CareerSpell {
@@ -131,6 +181,54 @@ export function spellCountry(entries: Entry[]): { code: string; source: 'squad' 
   return top ? { code: top[0], source: 'squad' } : null;
 }
 
+/** Ajoute à un bilan les matchs retrouvés par un témoin (voir `Untracked.record`) ; les autres restent à part. */
+function withUntracked<T extends SeasonReview>(r: T, u: Untracked): T & { untrackedDetail: Untracked } {
+  const out = { ...r, untrackedDetail: u };
+  if (u.record) {
+    const x = u.record;
+    Object.assign(out, {
+      played: r.played + u.matches,
+      wins: r.wins + x.wins,
+      draws: r.draws + x.draws,
+      losses: r.losses + x.losses,
+      goalsFor: r.goalsFor + x.goalsFor,
+      goalsAgainst: r.goalsAgainst + (x.goalsAgainst ?? 0),
+      league: {
+        played: r.league.played + u.matches,
+        wins: r.league.wins + x.wins,
+        draws: r.league.draws + x.draws,
+        losses: r.league.losses + x.losses,
+        goalsFor: r.league.goalsFor + x.goalsFor,
+        goalsAgainst: r.league.goalsAgainst + (x.goalsAgainst ?? 0),
+      },
+    });
+  }
+  if (!r.topScorer && u.scorers[0]) Object.assign(out, { topScorer: { id: u.scorers[0].name, name: u.scorers[0].name, value: u.scorers[0].goals } });
+  return out;
+}
+
+function mergeUntracked(xs: Untracked[]): Untracked {
+  const scorers = new Map<string, number>();
+  for (const x of xs) for (const s of x.scorers) scorers.set(s.name, (scorers.get(s.name) ?? 0) + s.goals);
+  const recs = xs.filter((x) => x.matches);
+  const known = recs.length > 0 && recs.every((x) => x.record);
+  return {
+    matches: xs.reduce((a, x) => a + x.matches, 0),
+    goalsFor: xs.reduce((a, x) => a + x.goalsFor, 0),
+    record: known
+      ? {
+          wins: recs.reduce((a, x) => a + x.record!.wins, 0),
+          draws: recs.reduce((a, x) => a + x.record!.draws, 0),
+          losses: recs.reduce((a, x) => a + x.record!.losses, 0),
+          goalsFor: recs.reduce((a, x) => a + x.record!.goalsFor, 0),
+          goalsAgainst: recs.some((x) => x.record!.goalsAgainst == null) ? null : recs.reduce((a, x) => a + x.record!.goalsAgainst!, 0),
+          witness: recs.map((x) => x.record!.witness).join(', '),
+        }
+      : null,
+    scorers: [...scorers].map(([name, goals]) => ({ name, goals })).sort((a, b) => b.goals - a.goals),
+  };
+}
+
 const margin = (m: SeasonMatch) => m.goalsFor - m.goalsAgainst;
 
 /** Parcours du coach dans la partie. `freeSince` : date depuis laquelle il est sans club (le dernier club est alors quitté). */
@@ -138,7 +236,7 @@ export function careerOf(history: Entry[], opts: { freeSince?: string | null } =
   const spells: CareerSpell[] = coachSpells(history, opts).map((sp) => {
     const segs = seasonSegments(sp.entries);
     const seasons: CareerSeason[] = segs.map((s) => {
-      const r = reviewOf(s.entries, !s.ended);
+      const r = withUntracked(reviewOf(s.entries, !s.ended), untrackedMatches(s.entries));
       return {
         label: r.label,
         position: r.position,
@@ -151,7 +249,7 @@ export function careerOf(history: Entry[], opts: { freeSince?: string | null } =
         goalsAgainst: r.goalsAgainst,
         cupsWon: r.cups.filter((c) => c.status === 'won').map((c) => c.competition),
         unbeaten: r.unbeaten,
-        untracked: untrackedMatches(s.entries),
+        untracked: r.untrackedDetail,
       };
     });
     const trophies = [
@@ -160,6 +258,7 @@ export function careerOf(history: Entry[], opts: { freeSince?: string | null } =
     ];
     const finished = seasons.filter((s) => s.ended && s.position != null).map((s) => s.position!);
     const country = spellCountry(sp.entries);
+    const untracked = mergeUntracked(seasons.map((x) => x.untracked));
     return {
       club: sp.club,
       start: sp.entries[0]!.gameDate,
@@ -169,8 +268,8 @@ export function careerOf(history: Entry[], opts: { freeSince?: string | null } =
       country: country?.code ?? null,
       countrySource: country?.source ?? null,
       seasons,
-      total: reviewOf(sp.entries, false),
-      untracked: seasons.reduce((a, x) => ({ matches: a.matches + x.untracked.matches, goalsFor: a.goalsFor + x.untracked.goalsFor }), { matches: 0, goalsFor: 0 }),
+      total: withUntracked(reviewOf(sp.entries, false), untracked),
+      untracked,
       trophies,
       bestFinish: finished.length ? Math.min(...finished) : null,
     };
