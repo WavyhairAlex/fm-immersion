@@ -3780,8 +3780,21 @@
         "farewell": "special edition",
         "breaking": "news flash",
         "record": "record",
-        "bigMatch": "big match poster"
-      }
+        "bigMatch": "big match poster",
+        "check": "check"
+      },
+      "checkAt": "Last check at {{time}}:",
+      "check": {
+        "noSave": "no FM career found.",
+        "noHistory": "no game day read for this career.",
+        "waiting": "{{club}} on {{date}}, the first week isn't over yet.",
+        "alreadySent": "{{club}} on {{date}}. The last finished week ({{week}}) is already marked as sent (last marked: week of {{sent}}).",
+        "sending": "{{club}} on {{date}}, sending the week of {{week}}…",
+        "sent": "{{club}} on {{date}}, gazette for the week of {{week}} sent.",
+        "failed": "{{club}} on {{date}}, sending the week of {{week}} failed, trying again in a minute."
+      },
+      "checkNow": "Check now",
+      "stuck": "the check had been stuck for over 10 minutes, it was restarted."
     },
     "change": "Change channel",
     "sendTitle": "What goes to your channel",
