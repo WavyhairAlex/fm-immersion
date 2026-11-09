@@ -3668,8 +3668,21 @@
         "farewell": "hors-série",
         "breaking": "dépêche",
         "record": "exploit",
-        "bigMatch": "affiche du choc"
-      }
+        "bigMatch": "affiche du choc",
+        "check": "vérification"
+      },
+      "checkAt": "Dernière vérification à {{time}} :",
+      "check": {
+        "noSave": "aucune carrière FM trouvée.",
+        "noHistory": "aucun jour de jeu lu pour cette carrière.",
+        "waiting": "{{club}} au {{date}}, la première semaine n'est pas encore finie.",
+        "alreadySent": "{{club}} au {{date}}. La dernière semaine finie (du {{week}}) est déjà notée comme envoyée (dernière notée : semaine du {{sent}}).",
+        "sending": "{{club}} au {{date}}, envoi de la semaine du {{week}} en cours…",
+        "sent": "{{club}} au {{date}}, gazette de la semaine du {{week}} envoyée.",
+        "failed": "{{club}} au {{date}}, l'envoi de la semaine du {{week}} a échoué, nouvel essai dans une minute."
+      },
+      "checkNow": "Vérifier maintenant",
+      "stuck": "la vérification était bloquée depuis plus de 10 minutes, elle a été relancée."
     },
     "change": "Changer de salon",
     "sendTitle": "Ce qui part dans ton salon",
