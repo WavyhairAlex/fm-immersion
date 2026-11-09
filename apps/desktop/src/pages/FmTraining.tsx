@@ -48,6 +48,10 @@ import {
   SESSION_YIELD,
   DEFAULT_METHOD,
   focusAdvice,
+  focusReview,
+  keyAttrs,
+  FOCUS_REVIEW_DAYS,
+  type FocusKeep,
   growthOutlook,
   roleAdvice,
   teamAppsOf,
@@ -151,6 +155,10 @@ export interface SetupRow {
   roleWhy: RoleWhy;
   devRole: 'dm' | 'am' | null;
   outlook: GrowthOutlook;
+  /** Priorité gardée (moins de trois mois), à revoir (trois mois passés) ou plus adaptée à son rôle. */
+  focusKeep: FocusKeep | null;
+  /** Jours depuis que la priorité réglée en jeu a été choisie. */
+  focusDays: number | null;
 }
 const STATUS_ORDER: Record<SetupStatus, number> = { change: 0, todo: 1, ok: 2 };
 
@@ -185,18 +193,29 @@ export function useIndividualSetups(engine: TacticEngine, players: FmPlayer[], f
         const fromStats = statFocus.get(x.player.id) ?? null;
         const focus = focusAdvice(x.player, x.weak, fromStats);
         const roles = roleAdvice(x);
+        // La priorité déjà réglée se garde trois mois, sauf si elle n'a plus de sens pour son rôle.
+        const was = applied[x.player.id];
+        const review = focusReview(was, focus.focus, {
+          gameDate: snap?.gameDate ?? null,
+          roleKeys: x.role ? keyAttrs(engine, x.role.code, x.phase, 8) : [],
+          fromStats,
+          age: x.player.age,
+          gk: x.player.positions[0] === 'GB',
+        });
         const rec: IndividualSetup = {
           ip: ip?.code ?? null,
           oop: oop?.code ?? null,
-          focus: focus.focus,
+          focus: review.focus,
           intensity: advice.intensity,
         };
         return {
           plan: x,
           rec,
           advice,
-          focusFromStats: !!fromStats,
-          focusWhy: focus.why,
+          focusFromStats: !!fromStats && review.focus === fromStats,
+          focusWhy: review.keep === 'kept' ? 'none' : focus.why,
+          focusKeep: review.keep,
+          focusDays: review.days,
           roleWhy: roles.why,
           devRole: roles.devRole,
           outlook: growthOutlook(x.player, teamApps),
@@ -204,10 +223,21 @@ export function useIndividualSetups(engine: TacticEngine, players: FmPlayer[], f
         };
       })
       .sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status]);
-  }, [project, engine, matches, applied, statFocus, teamApps]);
+  }, [project, engine, matches, applied, statFocus, teamApps, snap?.gameDate]);
   const mark = (ids: string[], on: boolean) => {
     const next = { ...applied };
-    for (const r of rows) if (ids.includes(r.plan.player.id)) on ? (next[r.plan.player.id] = r.rec) : delete next[r.plan.player.id];
+    for (const r of rows) {
+      const id = r.plan.player.id;
+      if (!ids.includes(id)) continue;
+      if (!on) {
+        delete next[id];
+        continue;
+      }
+      // La date compte depuis le dernier changement de priorité, pas depuis la dernière coche.
+      const prev = applied[id];
+      const since = prev && prev.focus === r.rec.focus ? (prev.since ?? snap?.gameDate) : snap?.gameDate;
+      next[id] = { ...r.rec, ...(since ? { since } : {}) };
+    }
     save(next);
   };
   return { rows, applied, mark };
@@ -962,7 +992,7 @@ function Outlook({ o }: { o: GrowthOutlook }) {
 function SetupCard({ row, was, engine, onMark }: { row: SetupRow; was: IndividualSetup | undefined; engine: TacticEngine; onMark: (on: boolean) => void }) {
   const { t } = useTranslation();
   const names = useNames();
-  const { plan: x, rec, advice: a, status, changed, focusFromStats, focusWhy, roleWhy, devRole, outlook } = row;
+  const { plan: x, rec, advice: a, status, changed, focusFromStats, focusWhy, roleWhy, devRole, outlook, focusKeep, focusDays } = row;
   const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
   const roleName = (code: string | null) => {
     const r = code ? engine.roles.get(code) : null;
@@ -1019,7 +1049,14 @@ function SetupCard({ row, was, engine, onMark }: { row: SetupRow; was: Individua
             {old('focus')}
             <b>{rec.focus ? t(`fm.train.focus.${rec.focus}`) : '–'}</b> {focusFromStats && <Tag>{t('fm.train.focusFromStats')}</Tag>}
           </p>
-          {focusWhy !== 'none' && <p className={note}>{t(`fm.train.focusWhy.${focusWhy}`)}</p>}
+          {focusKeep === 'kept' ? (
+            <p className={note}>{focusDays != null ? t('fm.train.focusKeep.kept', { count: focusDays, left: Math.max(1, FOCUS_REVIEW_DAYS - focusDays) }) : t('fm.train.focusKeep.keptNoDate')}</p>
+          ) : (
+            <>
+              {focusKeep && <p className="mt-1 text-xs font-bold leading-snug text-orange-fonce">{t(`fm.train.focusKeep.${focusKeep}`, { count: focusDays ?? 0 })}</p>}
+              {focusWhy !== 'none' && <p className={note}>{t(`fm.train.focusWhy.${focusWhy}`)}</p>}
+            </>
+          )}
           {x.weak.length > 0 && <p className="mt-0.5 text-xs text-brun">{t('fm.train.indiv.weak', { list: x.weak.map((w) => `${attr(w.key)} ${Math.round(w.value)}`).join(', ') })}</p>}
         </div>
         <div>

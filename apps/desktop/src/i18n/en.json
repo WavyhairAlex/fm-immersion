@@ -1586,7 +1586,7 @@
         "setupsOk": "Individual settings are already up to date."
       },
       "indiv": {
-        "lead": "For each player: roles, focus and intensity, with the reason for each choice. Tick “Set in game” once done.",
+        "lead": "Nothing to redo each week: once set, a player keeps the same focus for three months (progress shows month by month), and the same roles as long as your tactic and starting XI don't change. Tick “Set in game” once done.",
         "done": "Set in game",
         "roles": "Roles to train",
         "ip": "In possession:",
@@ -1600,6 +1600,15 @@
           "ok_one": "Already set ({{count}} player)",
           "ok_other": "Already set ({{count}} players)"
         }
+      },
+      "focusKeep": {
+        "kept_one": "Kept: set {{count}} day ago. A focus is judged over three months, it will be reviewed in {{left}} days.",
+        "kept_other": "Kept: set {{count}} days ago. A focus is judged over three months, it will be reviewed in {{left}} days.",
+        "keptNoDate": "Kept: a focus is judged over three months, not one week.",
+        "review_one": "Three months on the previous focus: moving to the next one.",
+        "review_other": "Three months on the previous focus: moving to the next one.",
+        "invalid_one": "The previous focus no longer fits the role: changing it.",
+        "invalid_other": "The previous focus no longer fits the role: changing it."
       }
     },
     "intro": {

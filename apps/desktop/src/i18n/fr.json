@@ -1586,7 +1586,7 @@
         "setupsOk": "Les réglages individuels sont déjà à jour."
       },
       "indiv": {
-        "lead": "Pour chaque joueur : ses rôles, sa priorité et son intensité, avec la raison de chaque choix. Coche « Réglé en jeu » une fois fait.",
+        "lead": "Rien à refaire chaque semaine : une fois réglé, un joueur garde sa priorité trois mois (la progression se voit au mois), et ses rôles tant que ta tactique et ton onze ne changent pas. Coche « Réglé en jeu » une fois fait.",
         "done": "Réglé en jeu",
         "roles": "Rôles à travailler",
         "ip": "Avec ballon :",
@@ -1600,6 +1600,15 @@
           "ok_one": "Déjà réglé ({{count}} joueur)",
           "ok_other": "Déjà réglés ({{count}} joueurs)"
         }
+      },
+      "focusKeep": {
+        "kept_one": "On la garde : réglée depuis {{count}} jour. Une priorité se juge sur trois mois, on la revoit dans {{left}} jours.",
+        "kept_other": "On la garde : réglée depuis {{count}} jours. Une priorité se juge sur trois mois, on la revoit dans {{left}} jours.",
+        "keptNoDate": "On la garde : une priorité se juge sur trois mois, pas sur une semaine.",
+        "review_one": "Trois mois sur l'ancienne priorité : on passe à la suivante.",
+        "review_other": "Trois mois sur l'ancienne priorité : on passe à la suivante.",
+        "invalid_one": "L'ancienne priorité ne colle plus à son rôle : on en change.",
+        "invalid_other": "L'ancienne priorité ne colle plus à son rôle : on en change."
       }
     },
     "intro": {

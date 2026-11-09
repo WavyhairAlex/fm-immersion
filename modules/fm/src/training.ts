@@ -1020,6 +1020,8 @@ export interface IndividualSetup {
   oop: string | null;
   focus: string | null;
   intensity: IndividualIntensity;
+  /** Date de jeu où la priorité actuelle a été réglée en jeu (pour la revoir au bout de trois mois). */
+  since?: string;
 }
 export const SETUP_FIELDS = ['ip', 'oop', 'focus', 'intensity'] as const;
 export type SetupField = (typeof SETUP_FIELDS)[number];
