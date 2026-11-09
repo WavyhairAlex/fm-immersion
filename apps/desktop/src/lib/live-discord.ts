@@ -377,7 +377,9 @@ export function scoreboardPayload(t: TFunction, l: FmLive, club: string | null, 
           .filter(Boolean)
           .join('\n\n') || clock,
         color,
-        fields: [
+        // Avec l'image, tout est dessus (déroulé, cartons, chiffres) : l'encart se réduit au titre, au temps fort et à
+        // l'image, pour qu'elle prenne toute la place.
+        fields: opts.image ? [] : [
           ...(lines.length
             ? [{ name: t('live.timeline'), value: lines.join('\n').slice(0, 1000) }]
             : l.scorers
@@ -730,7 +732,10 @@ export function useLiveDiscord() {
       const { loadFace } = await import('./player-face');
       // Photos des buteurs : nos joueurs, retrouvés dans l'effectif de l'instantané (« M. Fábry » → son visage).
       const faces = new Map<string, CanvasImageSource | null>();
-      for (const g of timeline(l) ?? []) {
+      // Et l'homme du match, une fois les chiffres du jeu arrivés.
+      const motm = (l as { stats?: MatchStats | null }).stats?.motm?.name;
+      for (const name of [...(timeline(l) ?? []).map((g) => g.name), ...(motm ? [motm] : [])]) {
+        const g = { name };
         if (faces.has(g.name)) continue;
         const id = personIdFor(contextOf(l), g.name);
         faces.set(g.name, id ? await loadFace(id).catch(() => null) : null);

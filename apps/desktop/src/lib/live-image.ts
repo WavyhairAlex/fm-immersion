@@ -2,19 +2,19 @@ import { contrast, visibleOn, type FmLive } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
 import { clubArt, drawCrest, type ClubArt } from './club-look';
 import { wrap } from './gazette-une';
-import { liveCardList } from '@fm-immersion/module-fm';
+import { liveAssists, liveCardList } from '@fm-immersion/module-fm';
 import { minuteOf, timeline, type MatchStats, type TimelineGoal } from './live-discord';
 
 /**
- * Image du tableau de score du direct, en paysage (1200 × 675, le format des aperçus Discord), redessinée à chaque
- * relevé : bandeau (en direct / score final, minute, compétition), équipes et grand score, frise du match avec buts
- * et cartons rouges à leur minute, buteurs de chaque équipe avec leur photo (nos joueurs), panneau des chiffres au
- * centre (possession, tirs, cadrés, xG, cartons, homme du match une fois le match fini), phrase du commentateur.
+ * Image du tableau de score du direct, en paysage (1200 × 600, 2:1 : bien en largeur dans Discord), redessinée à chaque
+ * relevé : bandeau (en direct / score final, minute, compétition), équipes et grand score, puis trois colonnes :
+ * buteurs et cartons rouges dans l'ordre du match, panneau des chiffres (possession, tirs, cadrés, xG, cartons une
+ * fois le match fini), homme du match avec sa photo (ou l'auteur du dernier but) ; « dernier fait » en bas.
  * Chaque équipe a son logo (pack de logos du joueur) ou son écusson à ses couleurs, le liseré du haut et les buts de
  * la frise prennent la couleur de l'équipe quand le plugin la lit.
  */
 const W = 1200;
-const H = 675;
+const H = 600;
 const M = 44;
 const C = {
   bg: '#25282D',
@@ -91,13 +91,6 @@ function avatar(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, 
   ctx.stroke();
 }
 
-/** Buteurs d'une équipe, regroupés (« M. Fábry 11', 90+1' »), dans l'ordre de leur premier but. */
-function scorersOf(tl: TimelineGoal[], side: 'home' | 'away') {
-  const merged = new Map<string, string[]>();
-  for (const g of tl.filter((x) => x.side === side)) merged.set(g.name, [...(merged.get(g.name) ?? []), g.own ? `${g.time} (csc)` : g.time]);
-  return [...merged].map(([name, times]) => ({ name, times: times.join(', ') }));
-}
-
 /** Barre de comparaison du panneau des chiffres : libellé au centre, valeurs aux deux bouts, part de chaque équipe. */
 function statBar(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, label: string, a: number, b: number, text: [string, string], colors: [string, string]) {
   ctx.font = font(800, 15);
@@ -172,10 +165,21 @@ export async function drawLiveBoard(
     tagBg = !side ? C.orangeDark : mine > theirs ? C.green : mine < theirs ? C.red : C.orangeDark;
   }
   pill(ctx, M, 26, tag, tagBg);
-  ctx.font = font(900, 24, SERIF);
+  // Minute (ou « Fin du match ») dans un cartouche orange à droite.
+  const clock = l.final ? t('live.ended') : minute != null ? `${minute}'` : t('live.kickoff');
+  ctx.font = `italic ${font(900, 22, SERIF)}`;
+  const cw = ctx.measureText(clock).width + 28;
   ctx.fillStyle = C.orange;
+  ctx.beginPath();
+  ctx.moveTo(W - M - cw + 8, 22);
+  ctx.lineTo(W - M, 22);
+  ctx.lineTo(W - M - 8, 56);
+  ctx.lineTo(W - M - cw, 56);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = C.dark;
   ctx.textAlign = 'right';
-  ctx.fillText(l.final ? t('live.ended') : minute != null ? `${minute}'` : t('live.kickoff'), W - M, 48);
+  ctx.fillText(clock, W - M - 16, 47);
   const competition = typeof extra.competition === 'string' ? extra.competition.replace(/<[^>]*>/g, '').trim() : '';
   if (competition) {
     ctx.font = font(700, 15);
@@ -209,94 +213,94 @@ export async function drawLiveBoard(
   }
   ctx.textAlign = 'left';
 
-  // Frise du match : 0' à 90', remplie jusqu'à la minute ; buts (ronds) et cartons rouges (rectangles) à leur minute,
-  // au-dessus pour le domicile, dessous pour l'extérieur.
-  const ty = 236;
-  const tx0 = M;
-  const tw = W - 2 * M;
-  ctx.fillStyle = C.track;
-  ctx.beginPath();
-  ctx.roundRect(tx0, ty - 4, tw, 8, 4);
-  ctx.fill();
-  const done = l.final ? 1 : Math.min(1, (minute ?? 0) / 90);
+  // Filet orange sous les équipes, comme un bandeau de télévision.
   ctx.fillStyle = C.orange;
-  ctx.beginPath();
-  ctx.roundRect(tx0, ty - 4, Math.max(8, tw * done), 8, 4);
-  ctx.fill();
-  ctx.font = font(700, 12);
-  ctx.fillStyle = C.soft;
-  for (const mk of [0, 45, 90]) {
-    ctx.textAlign = mk === 0 ? 'left' : mk === 90 ? 'right' : 'center';
-    ctx.fillText(`${mk}'`, tx0 + (tw * mk) / 90, ty + 42);
-  }
-  ctx.textAlign = 'left';
+  ctx.fillRect(M, 214, W - 2 * M, 3);
+
   const colorOf = (s: 'home' | 'away') => (s === 'home' ? homeColor : awayColor);
   const tl = timeline(l) ?? [];
-  for (const g of tl) {
-    const x = tx0 + tw * Math.min(1, g.minute / 90);
-    const y = g.side === 'home' ? ty - 19 : ty + 19;
-    ctx.beginPath();
-    ctx.arc(x, y, 9, 0, Math.PI * 2);
-    ctx.fillStyle = colorOf(g.side);
-    ctx.fill();
-    ctx.strokeStyle = C.bg;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  }
   const cards = liveCardList(l);
-  for (const c of cards) {
-    const m = minuteOf(c.time);
-    if (m == null) continue;
-    const x = tx0 + tw * Math.min(1, m / 90);
-    const y = c.side === 'home' ? ty - 19 : ty + 19;
-    ctx.fillStyle = c.card === 'red' ? C.red : '#F5B700';
-    ctx.strokeStyle = C.bg;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(x - 6, y - 9, 12, 18, 2);
-    ctx.fill();
-    ctx.stroke();
-  }
+  const label = (x: number, y: number, text: string, bg = C.orangeDark) => {
+    ctx.font = font(900, 14);
+    const w = ctx.measureText(text).width + 22;
+    ctx.fillStyle = bg;
+    ctx.fillRect(x, y, w, 26);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(text, x + 11, y + 18);
+  };
 
-  // Trois colonnes : buteurs du domicile, panneau des chiffres, buteurs de l'extérieur.
-  const top = 300;
-  const bottom = H - 118;
-  const colW = 330;
-  for (const s of ['home', 'away'] as const) {
-    const list = scorersOf(tl, s);
-    const x = s === 'home' ? M : W - M;
-    const align = s === 'home' ? 'left' : 'right';
-    const rows = Math.min(list.length, 4);
-    const rowH = rows > 3 ? 56 : 66;
-    const r = rows > 3 ? 22 : 26;
-    list.slice(0, rows).forEach((g, i) => {
-      const y = top + 8 + i * rowH + r;
-      const ax = s === 'home' ? x + r : x - r;
-      avatar(ctx, ax, y, r, g.name, faces?.get(g.name), colorOf(s));
-      const tx = s === 'home' ? x + 2 * r + 14 : x - 2 * r - 14;
-      ctx.textAlign = align;
-      ctx.font = font(800, 19);
-      ctx.fillStyle = C.ink;
-      ctx.fillText(wrap(ctx, g.name, colW - 2 * r - 14, 1)[0]!, tx, y - 2);
-      ctx.font = font(700, 15);
-      ctx.fillStyle = C.soft;
-      ctx.fillText(wrap(ctx, `⚽ ${g.times}`, colW - 2 * r - 14, 1)[0]!, tx, y + 19);
-    });
-    if (list.length > rows) {
-      ctx.font = font(700, 14);
-      ctx.fillStyle = C.soft;
-      ctx.textAlign = align;
-      ctx.fillText(`+ ${list.slice(rows).map((g) => g.name).join(', ')}`, x, top + 8 + rows * rowH + 14);
+  // Trois colonnes : buteurs (et cartons rouges) dans l'ordre du match, panneau des chiffres, homme du match ou dernier but.
+  const top = 240;
+  const band = 76;
+  const bottom = H - band - 20;
+  const leftW = 330;
+  const rightW = 280;
+  const px = M + leftW + 30;
+  const pw = W - M - rightW - 30 - px;
+
+  // Colonne de gauche : « 32' ⚽ A. Mojžiš », point à la couleur de l'équipe.
+  label(M, top, t('live.image.moments').toLocaleUpperCase(lang));
+  // Passeurs décisifs (rapport de fin de match) : « (M. Fábry) » à côté du buteur.
+  const assists = liveAssists(l);
+  // Retrouvé par la minute du but ; par le nom du buteur seulement s'il n'a marqué qu'une fois.
+  const tlAll = timeline(l) ?? [];
+  const assistOf = (e: { side: 'home' | 'away'; time: string; name: string }) => {
+    const byTime = assists.find((a) => a.side === e.side && a.time === e.time);
+    if (byTime) return byTime.assist;
+    const once = tlAll.filter((g) => g.side === e.side && g.name === e.name).length === 1;
+    return (once && assists.find((a) => a.side === e.side && a.player === e.name && !a.time)?.assist) || null;
+  };
+  const events = [
+    ...tl.map((g) => ({ minute: g.minute, time: g.own ? `${g.time} (csc)` : g.time, side: g.side, name: g.name, red: false, yellow: false, assist: g.own ? null : assistOf(g) })),
+    ...cards.map((c) => ({ minute: minuteOf(c.time) ?? 99, time: c.time ?? '', side: c.side, name: c.player ?? t(c.card === 'red' ? 'live.image.redCard' : 'live.image.yellowCard'), red: c.card === 'red', yellow: c.card === 'yellow', assist: null as string | null })),
+  ].sort((a, b) => a.minute - b.minute);
+  const rowH = 34;
+  const max = Math.floor((bottom - top - 40) / rowH);
+  const rows = events.length > max ? events.slice(0, max - 1) : events;
+  rows.forEach((e, i) => {
+    const y = top + 62 + i * rowH;
+    ctx.fillStyle = colorOf(e.side);
+    ctx.beginPath();
+    ctx.arc(M + 7, y - 6, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.font = font(900, 19);
+    ctx.fillStyle = C.orange;
+    const time = e.time ? e.time.replace(/['’]?$/, "'") : '–';
+    ctx.fillText(time, M + 22, y);
+    const tw = Math.max(52, ctx.measureText(time).width + 12);
+    if (e.red || e.yellow) {
+      ctx.fillStyle = e.red ? C.red : '#F5B700';
+      ctx.fillRect(M + 22 + tw, y - 18, 13, 19);
+    } else {
+      ctx.font = font(400, 18);
+      ctx.fillText('⚽', M + 18 + tw, y);
     }
+    ctx.font = font(800, 19);
+    ctx.fillStyle = e.side === side ? C.ink : C.soft;
+    ctx.fillText(wrap(ctx, e.name, leftW - tw - 52, 1)[0]!, M + 50 + tw, y);
+    if (e.assist) {
+      const nw = Math.min(ctx.measureText(e.name).width, leftW - tw - 52);
+      ctx.font = font(600, 15);
+      ctx.fillStyle = C.soft;
+      ctx.fillText(wrap(ctx, `🅰️ ${e.assist}`, Math.max(40, leftW - tw - 60 - nw), 1)[0]!, M + 58 + tw + nw, y);
+    }
+  });
+  if (events.length > rows.length) {
+    ctx.font = font(700, 15);
+    ctx.fillStyle = C.soft;
+    ctx.fillText(t('live.image.more', { count: events.length - rows.length }), M + 22, top + 62 + rows.length * rowH);
   }
-  ctx.textAlign = 'left';
+  if (!events.length) {
+    ctx.font = font(700, 17);
+    ctx.fillStyle = C.soft;
+    ctx.fillText(t('live.image.noGoal'), M, top + 62);
+  }
 
   // Panneau des chiffres : ceux du jeu une fois le match fini, sinon ce que dit le relevé (buts par mi-temps, cartons).
-  const px = M + colW + 24;
-  const pw = W - 2 * px;
+  label(px, top, t('live.image.stats').toLocaleUpperCase(lang));
   ctx.fillStyle = C.panel;
   ctx.beginPath();
-  ctx.roundRect(px - 18, top, pw + 36, bottom - top - 14, 10);
+  ctx.roundRect(px, top + 34, pw, bottom - top - 34, 8);
   ctx.fill();
   const bars: { label: string; a: number; b: number; text: [string, string] }[] = [];
   const fmt = (n: number) => new Intl.NumberFormat(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
@@ -318,41 +322,67 @@ export async function drawLiveBoard(
     if (tl.length) bars.unshift({ label: t('live.image.firstHalf'), a: count(h1, 'home'), b: count(h1, 'away'), text: [String(count(h1, 'home')), String(count(h1, 'away'))] });
     if (tl.length && (l.final || (minute ?? 0) > 45)) bars.splice(1, 0, { label: t('live.image.secondHalf'), a: count(h2, 'home'), b: count(h2, 'away'), text: [String(count(h2, 'home')), String(count(h2, 'away'))] });
   }
-  const motm = st?.motm ?? null;
-  const shown = bars.slice(0, motm ? 4 : 5);
-  // Barres centrées dans le panneau (l'homme du match en bas quand il est connu).
-  const room = bottom - top - 14 - (motm ? 46 : 0);
-  const gap = shown.length ? Math.min(52, (room - 30) / shown.length) : 0;
-  const y0 = top + 34 + Math.max(0, (room - 30 - gap * shown.length) / 2);
-  shown.forEach((b, i) => statBar(ctx, px, y0 + i * gap, pw, b.label, b.a, b.b, b.text, [homeColor, awayColor]));
+  const shown = bars.slice(0, 5);
+  const room = bottom - top - 34;
+  const gap = shown.length ? Math.min(54, (room - 20) / shown.length) : 0;
+  const y0 = top + 34 + 34 + Math.max(0, (room - 20 - gap * shown.length) / 2);
+  shown.forEach((b, i) => statBar(ctx, px + 20, y0 + i * gap, pw - 40, b.label, b.a, b.b, b.text, [homeColor, awayColor]));
   if (!shown.length) {
-    ctx.font = font(700, 17);
+    ctx.font = font(700, 16);
     ctx.fillStyle = C.soft;
     ctx.textAlign = 'center';
-    ctx.fillText(t(l.final ? 'live.image.statsSoon' : 'live.image.statsLater'), W / 2, (top + bottom) / 2);
-    ctx.textAlign = 'left';
-  }
-  if (motm) {
-    ctx.font = font(800, 16);
-    ctx.fillStyle = C.orange;
-    ctx.textAlign = 'center';
-    const txt = motm.rating != null ? t('live.image.motm', { name: motm.name, rating: motm.rating.toFixed(1).replace('.', ',') }) : t('live.image.motmNoRating', { name: motm.name });
-    ctx.fillText(`⭐ ${wrap(ctx, txt, pw - 20, 1)[0]!}`, W / 2, bottom - 34);
+    wrap(ctx, t(l.final ? 'live.image.statsSoon' : 'live.image.statsLater'), pw - 40, 2).forEach((line, i) => ctx.fillText(line, px + pw / 2, top + 34 + room / 2 + i * 22));
     ctx.textAlign = 'left';
   }
 
-  // Phrase du commentateur, sur deux lignes au plus.
-  const band = 104;
+  // Colonne de droite : homme du match (photo, nom, note) une fois connu, sinon l'auteur du dernier but.
+  const rx = W - M - rightW;
+  const motm = st?.motm ?? null;
+  const last = tl.at(-1) ?? null;
+  const who = motm ? { name: motm.name, sub: motm.rating != null ? t('live.image.rating', { rating: motm.rating.toFixed(1).replace('.', ',') }) : '', side: (side ?? 'home') as 'home' | 'away' } : last ? { name: last.name, sub: `⚽ ${last.time.replace(/['’]?$/, "'")} · ${last.side === 'home' ? l.home : l.away}`, side: last.side } : null;
+  label(rx, top, t(motm ? 'live.image.motmTitle' : 'live.image.lastGoal').toLocaleUpperCase(lang), motm ? C.orange : C.orangeDark);
+  ctx.fillStyle = C.panel;
+  ctx.beginPath();
+  ctx.roundRect(rx, top + 34, rightW, bottom - top - 34, 8);
+  ctx.fill();
+  if (who) {
+    const r = 62;
+    const cx = rx + rightW / 2;
+    const cy2 = top + 34 + 22 + r;
+    avatar(ctx, cx, cy2, r, who.name, faces?.get(who.name), colorOf(who.side));
+    ctx.textAlign = 'center';
+    ctx.font = font(800, 24, SERIF);
+    ctx.fillStyle = C.ink;
+    ctx.fillText(wrap(ctx, who.name, rightW - 30, 1)[0]!, cx, cy2 + r + 40);
+    if (who.sub) {
+      ctx.font = `italic ${font(600, 18)}`;
+      ctx.fillStyle = C.soft;
+      ctx.fillText(wrap(ctx, who.sub, rightW - 30, 1)[0]!, cx, cy2 + r + 68);
+    }
+    ctx.textAlign = 'left';
+  } else {
+    ctx.font = font(700, 17);
+    ctx.fillStyle = C.soft;
+    ctx.textAlign = 'center';
+    ctx.fillText(t('live.image.noGoal'), rx + rightW / 2, top + 34 + (bottom - top - 34) / 2);
+    ctx.textAlign = 'left';
+  }
+
+  // Dernier fait : la phrase du commentateur, sur un bandeau crème.
   ctx.fillStyle = C.cream;
   ctx.fillRect(0, H - band, W, band);
   ctx.fillStyle = C.orange;
-  ctx.fillRect(0, H - band, 8, band);
-  ctx.font = font(800, 13);
+  ctx.fillRect(0, H - band, W, 4);
+  const tag2 = t('live.image.lastFact').toLocaleUpperCase(lang);
+  ctx.font = font(900, 14);
+  const lw = ctx.measureText(tag2).width + 22;
   ctx.fillStyle = C.orangeDark;
-  ctx.fillText(t('live.image.commentator').toUpperCase(), M, H - band + 26);
-  ctx.font = `italic ${font(600, 21, SERIF)}`;
+  ctx.fillRect(M, H - band + 24, lw, 28);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillText(tag2, M + 11, H - band + 43);
+  ctx.font = `italic ${font(600, 19, SERIF)}`;
   ctx.fillStyle = C.dark;
-  const said = wrap(ctx, `« ${comment} »`, W - 2 * M, 2);
-  said.forEach((line, i) => ctx.fillText(line, M, H - band + (said.length === 1 ? 64 : 54) + i * 28));
+  const said = wrap(ctx, comment, W - 2 * M - lw - 20, 2);
+  said.forEach((line, i) => ctx.fillText(line, M + lw + 20, H - band + (said.length === 1 ? 45 : 34) + i * 24));
   return canvas;
 }

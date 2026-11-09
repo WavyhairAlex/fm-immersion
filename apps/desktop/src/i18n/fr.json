@@ -3462,7 +3462,18 @@
       "firstHalf": "1re mi-temps",
       "secondHalf": "2e mi-temps",
       "statsSoon": "Les chiffres du jeu arrivent dans un instant",
-      "statsLater": "Les chiffres du jeu arrivent au coup de sifflet final"
+      "statsLater": "Les chiffres du jeu arrivent au coup de sifflet final",
+      "stats": "Statistiques",
+      "motmTitle": "Homme du match",
+      "lastGoal": "Dernier but",
+      "noGoal": "Pas encore de but",
+      "lastFact": "Dernier fait",
+      "rating": "Note : {{rating}}",
+      "more_one": "+ {{count}} autre",
+      "more_other": "+ {{count}} autres",
+      "moments": "Temps forts",
+      "redCard": "Carton rouge",
+      "yellowCard": "Carton jaune"
     },
     "say": {
       "early_level_0": "Les débats commencent, {{home}} et {{away}} s'observent encore ({{score}}).",
@@ -4212,7 +4223,14 @@
       "starter_exit": "Un titulaire en moins : {{rank}}ᵉ niveau de l'effectif.",
       "top_injury": "Coup dur : l'un des trois meilleurs joueurs de l'effectif.",
       "starter_injury": "Un cadre en moins : {{rank}}ᵉ niveau de l'effectif."
-    }
+    },
+    "headline": {
+      "signing": "{{last}} rejoint {{club}}",
+      "exit": "{{name}} quitte le club",
+      "injury": "{{last}} : {{days}} jours d'infirmerie",
+      "injuryNoDays": "{{last}} à l'infirmerie"
+    },
+    "highlight": "{{days}} jours"
   },
   "saveFiles": {
     "title": "Mes sauvegardes",
