@@ -1,5 +1,6 @@
 import { monthsBetween } from './alerts';
 import { wageFigures } from './club';
+import { nextMatchCountdown } from './fixtures';
 import type { FmPlayer } from './player';
 import { toNumber } from './player';
 import type { FmSnapshot } from './snapshot';
@@ -84,7 +85,7 @@ export function summarize(snap: FmSnapshot, players: FmPlayer[]): FmSummary {
       ? {
           opponent,
           home: /dom|home/.test(location) ? true : /ext|away/.test(location) ? false : null,
-          inDays: toNumber(next!.inDays),
+          inDays: nextMatchCountdown(snap),
           competition: text(next!.competition),
           staffView: text(next!.threatLevel),
         }

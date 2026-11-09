@@ -58,6 +58,18 @@ describe('résultats entre deux instantanés', () => {
     expect(r.players.find((p) => p.id === 'b')!.started).toBe(false);
   });
 
+  it('lecture incomplète du plugin (aucun cumul) : le match est quand même compté, score du « dernier match » du jeu', () => {
+    const eq = (h: number, a: number, adv: string) => ({ custom: { equipe: { dernierMatchScoreDomicile: h, dernierMatchScoreExterieur: a, dernierAdvNom: adv } } });
+    const b = { ...before, custom: { ...(before as unknown as { custom: object }).custom, ...eq(0, 2, 'Trnava').custom } } as FmSnapshot;
+    const holed = { ...snap('2027-02-17', []), ...eq(2, 1, 'Senica'), nextMatch: null } as unknown as FmSnapshot;
+    const list = matchResults([
+      { gameDate: '2027-02-14', data: b },
+      { gameDate: '2027-02-17', data: holed },
+    ]);
+    expect(list).toHaveLength(1);
+    expect(list[0]).toMatchObject({ matches: 1, outcome: 'W', goalsFor: 2, goalsAgainst: 1, opponent: 'Senica', home: true, players: [] });
+  });
+
   it('buteur connu le lendemain : le jeu met à jour les buts un jour après les cumuls du match', () => {
     const day = (goals: number) =>
       snap('2027-02-17', [

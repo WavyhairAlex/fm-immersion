@@ -3,6 +3,7 @@ import { parsePositions, type PosCode } from './positions';
 import type { FmSnapshot } from './snapshot';
 import { snapshotRoleStars, type RoleStars } from './game-stars';
 import { otherTeamOf } from './teams';
+import { tacticSlots } from './tactic-slots';
 import { FORMATIONS, balancePenalty, readiness, slotContexts, type FormationPlan, type RoleRef, type Slot, type SlotCtx, type TacticEngine } from './tactic';
 
 /*
@@ -101,11 +102,27 @@ export function gameLineup(snap: FmSnapshot | null | undefined): GameSlot[] | nu
       playerName,
       roleIP: roleText(pick(o, 'roleIP', 'ipRole', 'roleInPossession', 'role')),
       roleOOP: roleText(pick(o, 'roleOOP', 'oopRole', 'roleOutOfPossession')),
-      custom: pick(o, 'customRole', 'custom') === true || (o.roleOverride != null && o.roleOverride !== '' && o.roleOverride !== false),
+      // roleOverride vaut 0 (ou « False ») quand le rôle n'est pas personnalisé : ce n'est pas un rôle perso.
+      custom: pick(o, 'customRole', 'custom') === true || !(o.roleOverride == null || o.roleOverride === '' || o.roleOverride === false || o.roleOverride === 0 || /^(0|false|none)$/i.test(String(o.roleOverride).trim())),
       instructions: { ip: insObj ? list(insObj.ip ?? insObj.inPossession) : list(ins), oop: insObj ? list(insObj.oop ?? insObj.outOfPossession) : [] },
     });
   }
-  return out.length >= 7 ? out : null;
+  if (out.length < 7) return null;
+  // Le jeu ne livre pas le poste de la compo sous une forme lisible (référence brute) et donne les rôles en masque
+  // de bits : on les prend dans les onze postes de la tactique (plugin 0.5.5), reliés par le rang dans la sélection.
+  // Sans cela, chaque joueur retombait sur son premier poste naturel (trois « D (D) », schéma faux).
+  const slots = tacticSlots((snap as Raw).tactic);
+  if (slots) {
+    const ranked = slots.every((s) => s.index != null);
+    out.forEach((row, k) => {
+      const slot = ranked ? (row.index != null ? slots.find((s) => s.index === row.index) : undefined) : out.length === slots.length ? slots[row.index ?? k] : undefined;
+      if (!slot) return;
+      row.pos ??= slot.pos;
+      row.roleIP ??= slot.roleIP;
+      row.roleOOP ??= slot.roleOOP;
+    });
+  }
+  return out;
 }
 
 const norm = (s: string) =>

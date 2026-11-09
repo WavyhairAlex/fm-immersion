@@ -21,7 +21,7 @@ export function FmCompare({ saveId, snap, players, folder, history }: { saveId: 
   const f = useFormat();
   const { engine } = useTacticEngine(folder, players);
   const { data: rows } = useQuery({ queryKey: ['fm', saveId, 'targets', snap.gameDate], queryFn: () => fmData.targets(saveId) });
-  const people = useMemo(() => pool(players, storedTargets(rows ?? []).filter((t) => !t.dismissed)), [players, rows]);
+  const people = useMemo(() => pool(players, storedTargets(rows ?? [], players).filter((t) => !t.dismissed)), [players, rows]);
   // Sélection retenue par partie : les joueurs d'une carrière n'existent pas dans une autre.
   const scope = useFmSaveScope();
   const [ids, setIds] = useState<string[]>(() => readScoped<string[]>(CMP_KEY, scope, []));

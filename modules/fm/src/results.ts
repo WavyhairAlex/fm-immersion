@@ -1,7 +1,7 @@
 import { normalizePlayer } from './player';
 import type { Line } from './positions';
 import type { FmSnapshot } from './snapshot';
-import { daysUntil, snapshotFixtures } from './fixtures';
+import { daysUntil, decodeGameDate, snapshotFixtures } from './fixtures';
 import { deriveStats, matchStatsFull, type PlayerStats, type RawStats } from './stats';
 import { isFriendly } from './rules';
 import { gameFormationOf } from './tactic';
@@ -234,14 +234,115 @@ export function resultBetween(prev: FmSnapshot, cur: FmSnapshot): MatchResult | 
   };
 }
 
-/** Tous les matchs retrouvés dans l'historique (du plus ancien au plus récent). */
+/** L'instantané porte les cumuls du Centre de données (au moins les minutes d'un joueur). */
+export function hasStats(snap: FmSnapshot): boolean {
+  for (const m of matchStatsFull(snap).values()) if (m.raw.Minutes != null) return true;
+  return false;
+}
+
+/** Dernier match joué tel que le jeu l'écrit (`custom.equipe.dernierMatch*`) : repère du match et score domicile-extérieur. */
+function lastFixture(snap: FmSnapshot): { key: string; date: string | null; home: number; away: number; opponent: string | null } | null {
+  const e = ((snap as Raw).custom as { equipe?: Raw } | undefined)?.equipe;
+  const num = (v: unknown) => (typeof v === 'number' ? v : typeof v === 'string' && /^\d+$/.test(v.trim()) ? Number(v) : null);
+  const home = num(e?.dernierMatchScoreDomicile);
+  const away = num(e?.dernierMatchScoreExterieur);
+  if (!e || home == null || away == null) return null;
+  const opponent = typeof e.dernierAdvNom === 'string' && e.dernierAdvNom.trim() && !/^(FM|SI)\./.test(e.dernierAdvNom) ? e.dernierAdvNom.trim() : null;
+  return { key: `${String(e.dernierMatchDate ?? '')}|${opponent ?? ''}|${home}-${away}`, date: decodeGameDate(e.dernierMatchDate), home, away, opponent };
+}
+
+/**
+ * Match retrouvé sans les cumuls des joueurs : quand le plugin n'a pas pu les lire (jeu ralenti, lecture coupée), le
+ * « dernier match » du jeu a quand même changé. On en tire le score et l'adversaire ; le onze, les notes et les stats
+ * manquent (`players` vide) jusqu'à ce qu'une lecture complète revienne.
+ */
+function lightResult(prev: FmSnapshot, cur: FmSnapshot): MatchResult | null {
+  if (prev.club !== cur.club) return null;
+  const before = lastFixture(prev);
+  const after = lastFixture(cur);
+  if (!before || !after || before.key === after.key) return null;
+  const { played, ...opp } = nextOpponent(prev, cur.gameDate);
+  // Sans le lieu, impossible de savoir de quel côté du score on est (sauf score nul).
+  if (opp.home == null && after.home !== after.away) return null;
+  const gf = opp.home === false ? after.away : after.home;
+  const ga = opp.home === false ? after.home : after.away;
+  const tactic = matchTactic(cur) ?? matchTactic(prev);
+  return {
+    date: cur.gameDate,
+    since: prev.gameDate,
+    played: after.date ?? played,
+    matches: 1,
+    opponent: after.opponent ?? opp.opponent,
+    competition: opp.competition,
+    home: opp.home,
+    friendly: isFriendly(opp.competition),
+    outcome: gf > ga ? 'W' : gf < ga ? 'L' : 'D',
+    wins: Number(gf > ga),
+    draws: Number(gf === ga),
+    losses: Number(gf < ga),
+    goalsFor: gf,
+    goalsAgainst: ga,
+    xg: null,
+    tactic: tactic?.name ?? null,
+    formation: gameFormationOf(tactic),
+    players: [],
+  };
+}
+
+/**
+ * Tous les matchs retrouvés dans l'historique (du plus ancien au plus récent).
+ * Un instantané sans cumuls (lecture incomplète du plugin) ne casse plus la suite : le match est d'abord repris du
+ * « dernier match » du jeu, puis, quand les cumuls reviennent, la différence est faite avec le dernier instantané
+ * complet, par-dessus le trou.
+ */
 export function matchResults(history: { gameDate: string; data: FmSnapshot }[]): MatchResult[] {
   const out: MatchResult[] = [];
-  const found = history.map((h, i) => (i ? resultBetween(history[i - 1]!.data, h.data) : null));
+  const full = history.map((h) => hasStats(h.data));
+  // Le plugin lisait-il déjà les cumuls à cette date ? (avant, un instantané sans cumuls est la règle, pas un trou)
+  let reading = false;
+  let lastFull = -1;
+  const found: (MatchResult | null)[] = history.map(() => null);
+  /** Résultats « légers » du trou en cours, remplacés ou gardés quand les cumuls reviennent. */
+  let light: number[] = [];
+  for (let i = 0; i < history.length; i++) {
+    const cur = history[i]!.data;
+    if (i === 0) {
+      if (full[0]) { reading = true; lastFull = 0; }
+      continue;
+    }
+    const prev = history[i - 1]!.data;
+    if (full[i]) {
+      const gap = reading && lastFull >= 0 && lastFull < i - 1 && history[lastFull]!.data.club === cur.club;
+      if (!gap) found[i] = resultBetween(prev, cur);
+      else {
+        const r = resultBetween(history[lastFull]!.data, cur);
+        const seen = light.filter((k) => found[k]);
+        if (r && seen.length === r.matches && r.matches > 1) {
+          // Chaque match du trou a déjà son score exact : on les garde, le bilan groupé n'apporterait rien de plus.
+        } else if (r) {
+          // Un seul match : le détail complet (onze, notes), placé au jour où le match a été vu.
+          const first = seen.length === 1 && r.matches === 1 ? found[seen[0]!]! : null;
+          for (const k of seen) found[k] = null;
+          const at = first ? seen[0]! : i;
+          found[at] = first ? { ...r, date: first.date, since: first.since, played: first.played ?? r.played, opponent: r.opponent ?? first.opponent, competition: r.competition ?? first.competition, home: r.home ?? first.home, friendly: r.competition ? r.friendly : first.friendly } : r;
+        }
+      }
+      reading = true;
+      lastFull = i;
+      light = [];
+    } else if (reading && prev.club === cur.club) {
+      found[i] = lightResult(prev, cur);
+      if (found[i]) light.push(i);
+    } else if (prev.club !== cur.club) {
+      reading = false;
+      lastFull = -1;
+      light = [];
+    }
+  }
   for (let i = 1; i < history.length; i++) {
     const r = found[i];
     if (!r) continue;
-    out.push(lateScorers(r, history[i - 1]!.data, history[i + 1]?.data, !found[i + 1]));
+    out.push(r.players.length ? lateScorers(r, history[i - 1]!.data, history[i + 1]?.data, !found[i + 1]) : r);
   }
   return out;
 }

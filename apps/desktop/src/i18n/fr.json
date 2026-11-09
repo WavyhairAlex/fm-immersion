@@ -1625,6 +1625,7 @@
       }
     },
     "intro": {
+      "playtime": "Qui joue trop, qui ne joue pas assez par rapport au statut promis, et qui risque de venir se plaindre.",
       "home": "Ce qui demande ton attention aujourd'hui, les styles qui collent à l'effectif, tes meilleurs joueurs et tes jeunes.",
       "squad": "Tous les joueurs de l'équipe première, à trier par niveau, forme, contrat ou salaire.",
       "analysis": "Le diagnostic de l'effectif : priorités, lignes, profondeur et pyramide des âges.",
@@ -1819,6 +1820,7 @@
       "stayNoYouth": "Les jeunes de 21 ans ou moins sont dans leur cadre plus haut."
     },
     "stats": {
+      "stale": "Le plugin n'a pas pu lire les stats à la dernière lecture : tu vois celles du {{date}}. Elles reviendront à la prochaine lecture complète (laisse le jeu quelques secondes sur un écran calme, ou relance FM27).",
       "title": "Centre de données",
       "none": "Pas encore de statistiques de match dans l'instantané. Elles arrivent avec le prochain instantané du plugin (clés stat* de chemins.json) : avance d'un jour dans FM27.",
       "tooEarly": "Moins de 3 matchs joués : trop tôt pour tirer des conclusions sur l'équipe.",
@@ -2800,6 +2802,7 @@
       "absentStarters_one": "{{names}} manquera le prochain match alors qu'il est prévu titulaire : la compo est à revoir.",
       "absentStarters_other": "{{names}} manqueront le prochain match alors qu'ils sont prévus titulaires : la compo est à revoir.",
       "nextMatchToday": "Match aujourd'hui contre {{opponent}}{{where}}. Un dernier coup d'œil à l'adversaire avant le coup d'envoi ?",
+      "nextMatchSoon": "Prochain match contre {{opponent}}{{where}}.",
       "nextMatch_one": "Prochain match demain contre {{opponent}}{{where}}.",
       "nextMatch_other": "Prochain match dans {{count}} jours contre {{opponent}}{{where}}.",
       "tiredStarters_one": "{{names}} est sous 85 % de condition alors qu'il est prévu titulaire : à ménager ou à remplacer.",
@@ -2860,6 +2863,7 @@
       "friendly_one": "Match amical demain contre {{opponent}}{{where}} : rien en jeu, fais jouer ceux qui manquent de temps de jeu et ménage les cadres.",
       "friendly_other": "Match amical dans {{count}} jours contre {{opponent}}{{where}} : rien en jeu, fais jouer ceux qui manquent de temps de jeu et ménage les cadres.",
       "friendlyToday": "Match amical aujourd'hui contre {{opponent}}{{where}} : rien en jeu, fais tourner et donne du temps de jeu.",
+      "friendlySoon": "Prochain match : un amical contre {{opponent}}{{where}}. Rien en jeu, fais jouer ceux qui manquent de temps de jeu et ménage les cadres.",
       "rotation_one": "{{competition}} : match secondaire, fais tourner. {{names}} manque de temps de jeu ou de fraîcheur, garde la colonne vertébrale.",
       "rotation_other": "{{competition}} : match secondaire, fais tourner. {{names}} manquent de temps de jeu ou de fraîcheur, garde la colonne vertébrale.",
       "congested_one": "Calendrier chargé (deux matchs à 3 jours ou moins) : prévois une rotation, {{names}} est le premier concerné.",

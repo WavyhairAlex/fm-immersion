@@ -63,7 +63,7 @@ export function ReplacementFinder({
   const names = useNames();
   const qc = useQueryClient();
   const { data: rows } = useQuery({ queryKey: ['fm', saveId, 'targets', gameDate], queryFn: () => fmData.targets(saveId) });
-  const followed = useMemo(() => storedTargets(rows ?? []).filter((x) => !x.dismissed && Object.keys(x.attributes).length), [rows]);
+  const followed = useMemo(() => storedTargets(rows ?? [], squad).filter((x) => !x.dismissed && Object.keys(x.attributes).length), [rows, squad]);
   const followedIds = new Set(followed.map((x) => x.id));
 
   // Recherche dans la base : CA réel du partant (lu en mémoire), puis joueurs du même poste dans une bande de CA.

@@ -196,8 +196,10 @@ export function squadSnapshot(snap: FmSnapshot): FmSnapshot {
  */
 export function snapshotTargets(snap: FmSnapshot): unknown[] | null {
   // Les prêtés (source « pretes ») sont les joueurs du club, pas des cibles : retirés de la liste.
-  const read = Array.isArray(snap.shortlist) ? (snap.shortlist as unknown[]).flatMap(withoutLoanSource) : null;
   const trial = trialistIds(snap);
+  // Un joueur recruté reste parfois dans la liste de cibles du jeu : il est dans l'effectif, ce n'est plus une cible.
+  const own = new Set((Array.isArray(snap.players) ? snap.players : []).map((p) => String((p as Raw).id)).filter((id) => !trial.has(id)));
+  const read = Array.isArray(snap.shortlist) ? (snap.shortlist as unknown[]).flatMap(withoutLoanSource).filter((x) => !own.has(String((x as Raw | null)?.id))) : null;
   if (!trial.size) return read;
   const out = [...(read ?? [])];
   for (const p of withExtended(snap).players.filter((x) => trial.has(String(x.id)))) {
@@ -302,8 +304,11 @@ export function mergeTargets(known: TargetRecord[], snap: FmSnapshot): TargetRec
 export type StoredTarget = Target & { firstSeen: string; lastSeen: string; inList: boolean; dismissed: boolean };
 
 /** Cibles de la base, prêtes pour l'écran (les lignes illisibles sont ignorées). */
-export function storedTargets(rows: TargetRecord[]): StoredTarget[] {
+export function storedTargets(rows: TargetRecord[], squad: readonly { id: string }[] = []): StoredTarget[] {
+  // Une cible qui a signé est dans l'effectif : ce n'est plus une cible (le jeu la garde parfois dans sa liste).
+  const own = new Set(squad.map((p) => p.id));
   return rows.flatMap((r) => {
+    if (own.has(r.playerId)) return [];
     const t = targetOf(r.data);
     return t ? [{ ...t, firstSeen: r.firstSeen, lastSeen: r.lastSeen, inList: r.inList, dismissed: r.dismissed }] : [];
   });

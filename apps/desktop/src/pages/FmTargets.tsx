@@ -60,7 +60,7 @@ export function FmTargets({
   folder: string;
   go: (view: string) => void;
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const scope = useFmSaveScope();
   const names = useNames();
   const f = useFormat();
@@ -87,7 +87,7 @@ export function FmTargets({
     queryKey: ["fm", saveId, "targets", snap.gameDate],
     queryFn: () => fmData.targets(saveId),
   });
-  const all = useMemo(() => storedTargets(rows ?? []), [rows]);
+  const all = useMemo(() => storedTargets(rows ?? [], players), [rows, players]);
   const shown = useMemo(
     () =>
       all.filter((p) =>
@@ -279,7 +279,7 @@ export function FmTargets({
                       </td>
                       <td className="whitespace-nowrap px-2 py-1.5 text-xs tabular-nums">
                         {p.stars?.current != null
-                          ? `★ ${p.stars.current}${p.stars.potential != null ? ` / ${p.stars.potential}` : ""}`
+                          ? `★ ${p.stars.current.toLocaleString(i18n.resolvedLanguage)}${p.stars.potential != null ? ` / ${p.stars.potential.toLocaleString(i18n.resolvedLanguage)}` : ""}`
                           : "–"}
                       </td>
                       <td

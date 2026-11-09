@@ -1,4 +1,4 @@
-import { ROTATION_CONDITION, TIRED_CONDITION } from './briefing';
+import { CONDITION_HORIZON_DAYS, ROTATION_CONDITION, TIRED_CONDITION } from './briefing';
 import { unavailable, type FmPlayer } from './player';
 import type { FormationPlan, TacticEngine } from './tactic';
 
@@ -24,8 +24,10 @@ export interface MatchdayChange {
  * Les absents sont remplacés ; les titulaires sous le seuil de condition (85 %, ou 92 % quand il faut faire tourner)
  * laissent leur place au meilleur joueur frais du poste, si l'écart d'adéquation reste raisonnable.
  */
-export function matchdayPlan(engine: TacticEngine, plan: FormationPlan, players: FmPlayer[], opts: { rotate: boolean }): { plan: FormationPlan; changes: MatchdayChange[] } {
+export function matchdayPlan(engine: TacticEngine, plan: FormationPlan, players: FmPlayer[], opts: { rotate: boolean; inDays?: number | null }): { plan: FormationPlan; changes: MatchdayChange[] } {
   const limit = opts.rotate ? ROTATION_CONDITION : TIRED_CONDITION;
+  // Match lointain (trêve) : la condition d'aujourd'hui sera remontée, seuls les absents comptent.
+  const far = opts.inDays != null && opts.inDays > CONDITION_HORIZON_DAYS;
   const fresh = (c: FmPlayer, out: FmPlayer) =>
     !unavailable(c) && (c.condition ?? 100) >= TIRED_CONDITION && (c.condition ?? 100) >= (out.condition ?? 100) + FRESHER_BY;
   const slots = plan.slots.map((s) => ({ ...s }));
@@ -39,7 +41,7 @@ export function matchdayPlan(engine: TacticEngine, plan: FormationPlan, players:
   const order = slots
     .map((s, i) => ({ i, p: s.player }))
     .filter((x): x is { i: number; p: FmPlayer } => !!x.p)
-    .map((x) => ({ ...x, reason: unavailable(x.p) ? ('unavailable' as const) : x.p.condition != null && x.p.condition < TIRED_CONDITION ? ('tired' as const) : x.p.condition != null && x.p.condition < limit ? ('rotation' as const) : null }))
+    .map((x) => ({ ...x, reason: unavailable(x.p) ? ('unavailable' as const) : far ? null : x.p.condition != null && x.p.condition < TIRED_CONDITION ? ('tired' as const) : x.p.condition != null && x.p.condition < limit ? ('rotation' as const) : null }))
     .filter((x) => x.reason)
     .sort((a, b) => (a.reason === 'unavailable' ? -1 : 0) - (b.reason === 'unavailable' ? -1 : 0) || (a.p.condition ?? 100) - (b.p.condition ?? 100));
   for (const { i, p, reason } of order) {

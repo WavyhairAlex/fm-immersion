@@ -1,4 +1,5 @@
 import { cupPending, cupRuns, type CupRun } from './cups';
+import { snapshotFixtures } from './fixtures';
 import { leaguePosition } from './gazette';
 import { normalizePlayer } from './player';
 import { lineOf, type PosCode } from './positions';
@@ -118,9 +119,13 @@ export function seasonEndedBetween(prev: FmSnapshot, cur: FmSnapshot) {
   return prev.club === cur.club && before != null && before > 0 && leagueFixturesLeft(cur) === 0;
 }
 
-const seasonLabel = (start: string, end: string) => {
-  const y1 = Number(end.slice(0, 4));
+/**
+ * « 2027/28 » pour une saison à cheval sur deux années, « 2027 » pour une saison d'année civile. Une saison en cours
+ * commencée à l'été n'a pas encore passé le Nouvel An : on regarde alors si son calendrier va jusqu'à l'année suivante.
+ */
+const seasonLabel = (start: string, end: string, upcoming: readonly { date: string }[] = []) => {
   const y0 = Number(start.slice(0, 4));
+  const y1 = Math.max(Number(end.slice(0, 4)), ...upcoming.map((f) => Number(f.date.slice(0, 4))).filter(Number.isFinite));
   return y0 < y1 ? `${y1 - 1}/${String(y1).slice(2)}` : end.slice(0, 4);
 };
 
@@ -238,7 +243,7 @@ function review(season: Entry[], ongoing = false): SeasonReview {
     club: last.data.club,
     start: first.gameDate,
     end: last.gameDate,
-    label: seasonLabel(first.gameDate, last.gameDate),
+    label: seasonLabel(first.gameDate, last.gameDate, ongoing ? snapshotFixtures(last.data) : []),
     position: leaguePosition(last.data) ?? positions.at(-1)?.position ?? null,
     positions,
     played: sum((r) => r.matches),

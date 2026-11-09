@@ -72,6 +72,11 @@ export const BRIEF_MAX = 6;
 export const TIRED_CONDITION = 85;
 /** Condition sous laquelle un titulaire est candidat à la rotation avant un match secondaire. */
 export const ROTATION_CONDITION = 92;
+/**
+ * Au-delà de ce nombre de jours avant le match, la condition du jour ne dit rien du jour du match : un joueur à 80 %
+ * est remonté bien avant. Pas d'alerte de fatigue ni de rotation (trêve, longue semaine sans match).
+ */
+export const CONDITION_HORIZON_DAYS = 4;
 
 const lastName = (p: FmPlayer) => p.name.trim().split(/\s+/).at(-1) ?? p.name;
 /** « Novák », « Novák et Kováč », « Novák, Kováč et 2 autres » : la langue joint avec `and` (« et », « and »). */
@@ -106,14 +111,15 @@ export function briefing(input: BriefingInput): BriefItem[] {
       players: [],
       values: { opponent: nextMatch.opponent, days: nextMatch.inDays ?? -1, where: nextMatch.home == null ? '' : nextMatch.home ? 'home' : 'away', competition: nextMatch.competition ?? '', count: nextMatch.inDays ?? 0 },
     });
-  const tired = xi.filter((p) => !p.injury && p.condition != null && p.condition < TIRED_CONDITION);
+  const far = nextMatch?.inDays != null && nextMatch.inDays > CONDITION_HORIZON_DAYS;
+  const tired = far ? [] : xi.filter((p) => !p.injury && p.condition != null && p.condition < TIRED_CONDITION);
 
   // Coupe ou calendrier chargé : faire tourner, en commençant par les titulaires fatigués (sous 85 %), puis ceux qui
   // manquent de temps de jeu et les titulaires entamés (sous 92 %), sans toucher à la colonne vertébrale.
   // Ce conseil englobe celui des titulaires fatigués : un seul message, pas deux qui disent la même chose.
   const weight = official ? competitionWeight(official.competition, { congested: input.congested }) : null;
   const shortIds = new Set(playtime.filter((r) => r.verdict === 'short').map((r) => r.player.id));
-  const worn = xi.filter((p) => !p.injury && !p.suspension && p.condition != null && p.condition < ROTATION_CONDITION);
+  const worn = far ? [] : xi.filter((p) => !p.injury && !p.suspension && p.condition != null && p.condition < ROTATION_CONDITION);
   const tiredIds = new Set(tired.map((p) => p.id));
   const cand =
     weight?.rotate && weight.reason

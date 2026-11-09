@@ -1,4 +1,4 @@
-import { matchStatsFull, MIN_STAT_MINUTES, RAW_GROUPS, STAT_METRICS, statsBoard, statsTrends, type FmPlayer, type FmSnapshot, type PlayerStatReport, type StatKey, type PlayerTrend, type StatMark, type StatTrend } from '@fm-immersion/module-fm';
+import { hasStats, matchStatsFull, MIN_STAT_MINUTES, RAW_GROUPS, STAT_METRICS, statsBoard, statsTrends, type FmPlayer, type FmSnapshot, type PlayerStatReport, type StatKey, type PlayerTrend, type StatMark, type StatTrend } from '@fm-immersion/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Chips, Empty, Kpi, Panel, Pos, Tag, More, PlayerLink } from './FmUi';
@@ -27,7 +27,13 @@ function Cell({ r, k }: { r: PlayerStatReport; k: StatKey }) {
 /** Centre de données : stats de la saison par joueur, comparées dans chaque ligne, et ce qu'elles disent à travailler. */
 export function FmStats({ snap, players, history }: { snap: FmSnapshot; players: FmPlayer[]; history?: { gameDate: string; data: FmSnapshot }[] }) {
   const { t, i18n } = useTranslation();
-  const full = useMemo(() => matchStatsFull(snap), [snap]);
+  // Lecture incomplète du plugin (aucun cumul dans le dernier instantané) : on montre la dernière lecture complète.
+  const stale = useMemo(() => {
+    if (hasStats(snap)) return null;
+    const last = [...(history ?? [])].sort((a, b) => b.gameDate.localeCompare(a.gameDate)).find((h) => hasStats(h.data));
+    return last ?? null;
+  }, [snap, history]);
+  const full = useMemo(() => matchStatsFull(stale ? stale.data : snap), [snap, stale]);
   const trends = useMemo(() => statsTrends(history ?? [], players), [history, players]);
   const board = useMemo(() => statsBoard(players, new Map([...full].map(([id, m]) => [id, m.stats]))), [players, full]);
   const [picked, setPicked] = useState<string | null>(null);
@@ -69,6 +75,7 @@ export function FmStats({ snap, players, history }: { snap: FmSnapshot; players:
   const teamVal = (k: string, v: number) => (k === 'xgPerMatch' ? num(v, 2) : `${num(v, 0)} %`);
   return (
     <div className="space-y-4">
+      {stale && <p className="rounded-xl bg-ambre/20 px-4 py-3 text-sm text-canard">{t('fm.stats.stale', { date: date(stale.gameDate) })}</p>}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <Kpi label={t('fm.stats.kpi.matches')} value={num(team.matches, 1)} />
         <Kpi label={t('fm.stats.kpi.xg')} value={num(team.xgPerMatch, 2)} />

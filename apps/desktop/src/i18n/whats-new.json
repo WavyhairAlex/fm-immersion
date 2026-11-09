@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.1.127",
+    "date": "2026-11-09",
+    "fr": [
+      "Grande relecture de « Mon club » sur une vraie carrière. Ton dernier match est compté même quand le plugin n'a pas réussi à lire les stats ce jour-là, et le Centre de données garde alors la dernière lecture complète au lieu de se vider.",
+      "Le briefing ne dit plus « demain » quand le prochain match est dans trois mois, et ne te demande plus de faire souffler tes joueurs en pleine trêve.",
+      "La compo du jeu montre les vrais postes de ta tactique, les cibles du mercato ne listent plus tes propres joueurs, et plusieurs affichages sont corrigés (étoiles de l'adversaire, objectifs du board, saison « 2027/28 », écran Temps de jeu)."
+    ],
+    "en": [
+      "Full review of \"My club\" on a real career. Your last match is counted even when the plugin could not read the stats that day, and the Data centre then keeps the last full read instead of going empty.",
+      "The briefing no longer says \"tomorrow\" when the next match is three months away, and no longer asks you to rest players in the middle of a break.",
+      "The in-game line-up shows the real positions of your tactic, transfer targets no longer list your own players, and several displays are fixed (opponent stars, board objectives, \"2027/28\" season, Playing time screen)."
+    ]
+  },
+  {
     "version": "0.1.126",
     "date": "2026-11-09",
     "fr": [

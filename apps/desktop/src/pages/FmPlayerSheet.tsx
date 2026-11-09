@@ -120,7 +120,7 @@ export function FmPlayerSheet({
   const mates = players.filter((x) => main && x.positions.includes(main)).sort((a, b) => (b.level ?? 0) - (a.level ?? 0));
   const place = mates.findIndex((x) => x.id === p.id) + 1;
   // Cibles suivies qui jouent au même poste : de quoi trancher une prolongation.
-  const rivals = storedTargets(targetRows ?? []).filter((x) => !x.dismissed && x.id !== p.id && main && x.positions.includes(main));
+  const rivals = storedTargets(targetRows ?? [], players).filter((x) => !x.dismissed && x.id !== p.id && main && x.positions.includes(main));
   const months = monthsLeft(p, gameDate);
   const compare = () => {
     const prev = readScoped<string[]>(CMP_KEY, scope, []).filter((x) => x !== p.id);

@@ -1,4 +1,5 @@
 import {
+  nextMatchCountdown,
   PART_TIME_DAYS,
   currentTrainingWeek,
   effectiveness,
@@ -314,7 +315,7 @@ function DayThread({ snap, entries, go }: { snap: FmSnapshot; entries: { gameDat
   const opponent = typeof nm?.opponent === 'string' ? nm.opponent : null;
   const loc = String(nm?.location ?? '').toLowerCase();
   const home = /dom|home/.test(loc) ? true : /ext|away/.test(loc) ? false : null;
-  const days = Number(nm?.inDays);
+  const days = nextMatchCountdown(snap) ?? NaN;
   const where = (h: boolean | null) => (h == null ? '' : ` (${t(h ? 'fm.mc.homeShort' : 'fm.mc.awayShort')})`);
   const arrow = (
     <span aria-hidden className="hidden self-center text-xl text-orange-fonce md:block">
