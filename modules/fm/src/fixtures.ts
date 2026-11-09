@@ -135,3 +135,13 @@ export function nextMatchInDays(snap: Pick<FmSnapshot, 'gameDate'> & { fixtures?
   const next = snap.nextMatch && typeof snap.nextMatch === 'object' ? (snap.nextMatch as Record<string, unknown>) : null;
   return typeof next?.inDays === 'number' ? next.inDays : daysUntil(next?.inDays);
 }
+
+/**
+ * Compte à rebours du prochain match tel que le joueur le voit dans FM27 : le texte du jeu (« Dans 100 jours », « Demain »)
+ * d'abord, car il est lu au moment où le jeu l'affiche ; le calendrier daté seulement si ce texte manque.
+ */
+export function nextMatchCountdown(snap: Pick<FmSnapshot, 'gameDate'> & { fixtures?: unknown; nextMatch?: unknown }): number | null {
+  const next = snap.nextMatch && typeof snap.nextMatch === 'object' ? (snap.nextMatch as Record<string, unknown>) : null;
+  const fromGame = typeof next?.inDays === 'number' ? next.inDays : daysUntil(next?.inDays);
+  return fromGame ?? nextMatchInDays(snap);
+}

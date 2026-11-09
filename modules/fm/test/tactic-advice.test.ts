@@ -26,7 +26,7 @@ describe('postes de la tactique lus par le plugin', () => {
   it('traduit postes et rôles du jeu, mission ignorée', () => {
     const slots = tacticSlots({ positionsCombined: f433 })!;
     expect(slots).toHaveLength(11);
-    expect(slots[0]).toEqual({ pos: 'GB', posOOP: 'GB', roleIP: 'BallPlayingGoalkeeper', roleOOP: 'OPGoalkeeper' });
+    expect(slots[0]).toEqual({ index: null, pos: 'GB', posOOP: 'GB', roleIP: 'BallPlayingGoalkeeper', roleOOP: 'OPGoalkeeper' });
     expect(slots[6]!.roleIP).toBe('BoxToBoxMidfielder');
     expect(slots[10]!.roleOOP).toBe('OPCentreForward');
     expect(formationOfSlots(slots)).toBe('4-3-3');

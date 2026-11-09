@@ -42,7 +42,7 @@ function PriceTag({ a }: { a: MercatoAdvice }) {
 
 /** Texte d'une raison du conseil mercato. */
 export function useReason() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   return (x: MercatoReason) => {
     switch (x.id) {
       case 'surplus':
@@ -57,7 +57,7 @@ export function useReason() {
       case 'unwanted':
         return t('fm.merc.why.unwanted', { status: x.status });
       case 'potential':
-        return t('fm.merc.why.potential', { stars: x.stars });
+        return t('fm.merc.why.potential', { stars: typeof x.stars === 'number' ? x.stars.toLocaleString(i18n.resolvedLanguage) : x.stars });
       case 'potentialPa':
         return t('fm.merc.why.potentialPa', { pa: x.pa, ca: x.ca });
       case 'overtakes':

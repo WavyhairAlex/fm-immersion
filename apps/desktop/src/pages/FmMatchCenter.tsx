@@ -69,7 +69,7 @@ export function FmMatchCenter({
   // Poids du match : coupe ou calendrier chargé = faire tourner, championnat / Europe = meilleur onze.
   const weight = competitionWeight(s.nextMatch?.competition, { congested: isCongested(fixtures, snap.gameDate) });
   // Onze du prochain match : le onze de base corrigé de la condition (et de la rotation en coupe ou calendrier chargé).
-  const matchday = useMemo(() => (basePlan ? matchdayPlan(engine, basePlan, players, { rotate: weight.rotate }) : null), [engine, basePlan, players, weight.rotate]);
+  const matchday = useMemo(() => (basePlan ? matchdayPlan(engine, basePlan, players, { rotate: weight.rotate, inDays: s.nextMatch?.inDays ?? null }) : null), [engine, basePlan, players, weight.rotate, s.nextMatch?.inDays]);
   const plan = matchday?.plan ?? basePlan;
   const changes = matchday?.changes ?? [];
   const subs = useMemo(() => (plan ? substitutionPlan(plan, plannedSubs(rules)) : []), [plan, rules]);

@@ -1,4 +1,5 @@
 import {
+  nextMatchCountdown,
   backForMatch,
   briefIsDone,
   briefKey,
@@ -67,14 +68,15 @@ export function FmBriefing({
     const opponent = typeof next?.opponent === 'string' ? next.opponent : null;
     if (!opponent) return null;
     const loc = String(next?.location ?? '').toLowerCase();
-    const days = Number(next?.inDays);
+    // Le jeu écrit « Dans 100 jours », « Demain » : un texte, pas un nombre. Le calendrier daté fait foi.
+    const days = nextMatchCountdown(snap);
     return {
       opponent,
       home: /dom|home/.test(loc) ? true : /ext|away/.test(loc) ? false : null,
-      inDays: Number.isFinite(days) ? days : null,
+      inDays: days,
       competition: typeof next?.competition === 'string' ? next.competition : null,
     };
-  }, [next]);
+  }, [next, snap]);
   // Joueurs à l'essai : hors de l'effectif (`players`), lus directement dans l'instantané.
   const trialists = useMemo(() => {
     const ids = trialistIds(snap);
@@ -119,7 +121,9 @@ export function FmBriefing({
     const v = { ...x.values, names: names(x.players), first: x.players[0]?.name ?? '', date: f.date(String(x.values.date ?? '')) };
     if (x.kind === 'nextMatch' || x.kind === 'friendly') {
       const where = x.values.where ? t(`fm.brief.where.${x.values.where}`) : '';
-      return x.values.days === 0 ? t(`fm.brief.${x.kind}Today`, { ...v, where }) : t(`fm.brief.${x.kind}`, { ...v, where });
+      // Date inconnue (-1) : on ne dit ni « demain » ni un nombre de jours.
+      const key = x.values.days === 0 ? 'Today' : Number(x.values.days) < 0 ? 'Soon' : '';
+      return t(`fm.brief.${x.kind}${key}`, { ...v, where });
     }
     return t(`fm.brief.${x.kind}`, v);
   };

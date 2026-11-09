@@ -102,8 +102,10 @@ export function opponentReport(snap: FmSnapshot): OpponentReport | null {
   for (let i = 0; i < 60; i++) {
     const name = str(team[`advEff${i}Nom`]);
     if (!name) continue;
-    const stars = num(team[`advEff${i}Etoiles`]);
-    squad.push({ name, positions: str(team[`advEff${i}Postes`]), stars: stars != null && stars >= 0 ? stars : null, foot: str(team[`advEff${i}Pied`]) });
+    // Le jeu donne les étoiles sur 20 (quarts d'étoile) : affichées sur 5, à la demi-étoile, comme celles de l'effectif.
+    const raw = num(team[`advEff${i}Etoiles`]);
+    const stars = raw == null || raw < 0 ? null : Math.round((raw > 5 ? raw / 4 : raw) * 2) / 2;
+    squad.push({ name, positions: str(team[`advEff${i}Postes`]), stars, foot: str(team[`advEff${i}Pied`]) });
   }
   const r: OpponentReport = {
     name: next ? str(next.opponent) : null,

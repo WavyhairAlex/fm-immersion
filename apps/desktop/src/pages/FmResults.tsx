@@ -45,7 +45,9 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
   const date = (d: string) => new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(d));
   const letter = (o: Outcome) => t(`fm.results.outcome.${o}`);
   const score = (r: MatchResult) => (r.goalsFor == null || r.goalsAgainst == null ? '–' : `${r.goalsFor} - ${r.goalsAgainst}`);
-  const params = (i: Insight) => Object.fromEntries(Object.entries(i.params).map(([k, v]) => [k, typeof v === 'number' && !Number.isInteger(v) ? num(v, 2) : v]));
+  // Les moyennes (points par match, buts encaissés par match) gardent deux décimales même quand elles tombent rond (« 1,00 », pas « 1 »).
+  const RATES = new Set(['with', 'without', 'ppm', 'otherPpm', 'ga']);
+  const params = (i: Insight) => Object.fromEntries(Object.entries(i.params).map(([k, v]) => [k, typeof v === 'number' && (RATES.has(k) || !Number.isInteger(v)) ? num(v, 2) : v]));
   const insight = (i: Insight) => t(`fm.results.insight.${i.kind}`, params(i));
 
   if (!an.results.length)

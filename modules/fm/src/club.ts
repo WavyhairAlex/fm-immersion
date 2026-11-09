@@ -173,6 +173,9 @@ export function boardObjectives(club: Record<string, unknown> | null | undefined
   const out: { label: string; status: string | null }[] = [];
   const seen = new Set<string>();
   const push = (label: string | null, status: string | null) => {
+    // Référence du jeu non résolue (« FM.UI.…Reference », « SI.Bindable.… ») : ce n'est pas un texte à montrer.
+    if (label && /^(FM|SI)\.[A-Za-z.]+$/.test(label)) return;
+    if (status && /^(FM|SI)\.[A-Za-z.]+$/.test(status)) status = null;
     if (!label || seen.has(label)) return;
     seen.add(label);
     out.push({ label, status });

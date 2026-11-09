@@ -51,6 +51,8 @@ function roleOf(v: unknown, table: Record<number, string>): string | null {
 }
 
 export interface TacticSlot {
+  /** Rang dans la sélection du jeu (TeamSelectionIndex, 0-10), le même que celui de la compo ; null s'il n'est pas lu. */
+  index?: number | null;
   /** Poste avec ballon. */
   pos: PosCode;
   /** Poste sans ballon (souvent le même). */
@@ -69,7 +71,8 @@ export function tacticSlots(tactic: unknown): TacticSlot[] | null {
     const o = r as Record<string, unknown>;
     const pos = positionOf(o.IPPosition ?? o.Position);
     if (!pos) continue;
-    out.push({ pos, posOOP: positionOf(o.OOPPosition), roleIP: roleOf(o.IPRole, IP_ROLE), roleOOP: roleOf(o.OOPRole, OOP_ROLE) });
+    const index = typeof o.TeamSelectionIndex === 'number' && Number.isInteger(o.TeamSelectionIndex) ? o.TeamSelectionIndex : null;
+    out.push({ index, pos, posOOP: positionOf(o.OOPPosition), roleIP: roleOf(o.IPRole, IP_ROLE), roleOOP: roleOf(o.OOPRole, OOP_ROLE) });
   }
   return out.length === 11 ? out : null;
 }

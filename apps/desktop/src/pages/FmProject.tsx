@@ -109,7 +109,8 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
                       <b>{names.style(st as typeof sw.target)}</b>
                       <div className="mt-1 flex justify-between">
                         <span>{t('fm.proj.c.fit')}</span>
-                        <Fit value={(s as typeof now.target).fit} />
+                        {/* Profil du groupe face au style (moyenne d'attributs sur 20), pas une note de rôle : en %, comme l'écart en points. */}
+                        <b className="tabular-nums">{(s as typeof now.target).fit == null ? '–' : pct((s as typeof now.target).fit!)}</b>
                       </div>
                       <div className="flex justify-between">
                         <span>{t('fm.proj.c.ready')}</span>
