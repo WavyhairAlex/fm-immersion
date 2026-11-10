@@ -32,6 +32,7 @@ import { getWebhook, isWebhook } from '../lib/discord';
 import {
   breakingFace,
   breakingPhoto,
+  gazettePhoto,
   exitReason,
   loadCoachPhoto,
   markBigMatchSent,
@@ -114,6 +115,9 @@ export function Gazette() {
   const issue = raw && writing.data ? { ...raw, written: writing.data } : raw;
   const shown = useMemo(() => (issue ? issues.map((x, i) => (i === index ? issue : x)) : issues), [issues, issue, index]);
   const figures = useMemo(() => (issue ? seasonSoFar(history, issue.date) : null), [history, issue]);
+  // Photo de situation de la une (bibliothèque du moteur), ou null : la une garde sa mise en page.
+  const unePhotoKey = ['gazette', 'une-photo', saveId, issue?.number, issue?.weekStart] as const;
+  const { data: unePhoto = null } = useQuery({ queryKey: unePhotoKey, queryFn: () => gazettePhoto(saveId, issue!, false), enabled: !!issue });
 
   return (
     <div className="w-full">
@@ -144,13 +148,14 @@ export function Gazette() {
         <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
           <div className="min-w-0 space-y-6">
             <Une issue={issue} />
-            <UnePreview issues={shown} index={index} figures={figures} looks={looksReady} />
+            <UnePreview issues={shown} index={index} figures={figures} looks={looksReady} photo={unePhoto} />
             <Paper issue={issue} />
             {/* Les commandes viennent après la lecture : réécrire avec l'IA, envoyer sur Discord. */}
             <section className="card">
               <h2 className="text-xs font-bold uppercase tracking-wide text-brun">{t('gazette.actions')}</h2>
               <div className="mt-3 flex flex-wrap items-start gap-3">
-                <SendButton saveId={saveId} issues={shown} index={index} figures={figures} />
+                <UnePhotoButton saveId={saveId} issue={issue} photoKey={unePhotoKey} photo={unePhoto} />
+                <SendButton saveId={saveId} issues={shown} index={index} figures={figures} photo={unePhoto} />
               </div>
               <div className="mt-3">
                 <AiStatus saveId={saveId} issue={raw!} state={writing} />
@@ -288,7 +293,19 @@ function AiStatus({ saveId, issue, state }: { saveId: string; issue: GazetteIssu
 }
 
 /** Une en image, telle qu'elle part sur Discord. */
-function UnePreview({ issues, index, figures, looks }: { issues: GazetteIssue[]; index: number; figures: SeasonReview | null; looks: number }) {
+function UnePreview({
+  issues,
+  index,
+  figures,
+  looks,
+  photo,
+}: {
+  issues: GazetteIssue[];
+  index: number;
+  figures: SeasonReview | null;
+  looks: number;
+  photo: CanvasImageSource | null;
+}) {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage;
   const issue = issues[index]!;
@@ -307,22 +324,70 @@ function UnePreview({ issues, index, figures, looks }: { issues: GazetteIssue[];
       looks,
       issue.written?.title,
       issue.written?.article,
+      !!photo,
     ],
     queryFn: async () =>
       (
-        await drawPage(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures, faceFor: loadFace })
+        await drawPage(t, issue, {
+          form: recentForm(issues, index),
+          lang,
+          face: await loadFace(issue.headline.params.bestId),
+          figures,
+          faceFor: loadFace,
+          photo,
+        })
       ).toDataURL('image/png'),
   });
   if (!url) return <div className="aspect-[8/5] w-full animate-pulse rounded-xl bg-canard/5" />;
   return <img src={url} alt={t('gazette.preview')} className="w-full rounded-xl shadow-sm ring-1 ring-canard/10" />;
 }
 
-function SendButton({ saveId, issues, index, figures }: { saveId: string; issues: GazetteIssue[]; index: number; figures: SeasonReview | null }) {
+/** « Faire la photo de situation » de la une (mode « sur mon clic ») : faite par le moteur, puis l'aperçu se redessine. */
+function UnePhotoButton({
+  saveId,
+  issue,
+  photoKey,
+  photo,
+}: {
+  saveId: string;
+  issue: GazetteIssue;
+  photoKey: readonly unknown[];
+  photo: CanvasImageSource | null;
+}) {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const { data: engineReady = false } = useQuery({ queryKey: ['photos', 'ready'], queryFn: photosReady, staleTime: 60_000 });
+  const make = useMutation({ mutationFn: () => gazettePhoto(saveId, issue, true), onSuccess: (img) => qc.setQueryData(photoKey, img) });
+  if (getPhotoMode() === 'off' || !engineReady || photo) return null;
+  return (
+    <>
+      <button type="button" className="btn-secondary text-sm" disabled={make.isPending} onClick={() => make.mutate()}>
+        {t(make.isPending ? 'breaking.photoMaking' : 'breaking.photoMake')}
+      </button>
+      {make.isSuccess && !photo && <p className="text-xs text-brun">{t('gazette.photoNone')}</p>}
+      {make.isError && <p className="text-xs font-bold text-corail">{String(make.error)}</p>}
+    </>
+  );
+}
+
+function SendButton({
+  saveId,
+  issues,
+  index,
+  figures,
+  photo,
+}: {
+  saveId: string;
+  issues: GazetteIssue[];
+  index: number;
+  figures: SeasonReview | null;
+  photo: CanvasImageSource | null;
+}) {
   const { t, i18n } = useTranslation();
   const webhook = getWebhook();
   const send = useMutation({
     mutationFn: async () => {
-      await sendGazette(t, i18n.resolvedLanguage, issues, index, figures);
+      await sendGazette(t, i18n.resolvedLanguage, issues, index, figures, undefined, photo);
       // La semaine en cours (n° le plus récent) n'est pas terminée : l'envoi automatique la publiera à la fin de la semaine.
       if (index > 0) markGazetteSent(saveId, issues[index]!.weekStart);
     },

@@ -34,7 +34,7 @@ import { drawPage } from './gazette-page';
 import { issuesWithPress } from './press';
 import { discordPagePayload } from './gazette-text';
 import { canvasPng, recentForm } from './gazette-une';
-import { breakingTag, getPhotoMode, photoForEvent, sceneForBreaking } from './photo-events';
+import { breakingTag, gazetteTag, getPhotoMode, photoForEvent, sceneForBreaking, sceneForHeadline } from './photo-events';
 import { loadFace } from './player-face';
 import { drawRecord, recordPayload } from './records-page';
 import { drawSeason, seasonPayload } from './season-une';
@@ -47,11 +47,12 @@ export async function sendGazette(
   index: number,
   figures: SeasonReview | null = null,
   webhook = getWebhook(),
+  photo: CanvasImageSource | null = null,
 ) {
   const issue = issues[index]!;
   // Tout le journal sur une seule image (page complète), avec un court encart : pas de long texte dans le salon.
   const png = await canvasPng(
-    await drawPage(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures, faceFor: loadFace }),
+    await drawPage(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures, faceFor: loadFace, photo }),
   );
   return sendDiscordImage(discordPagePayload(t, issue, lang), png, webhook);
 }
@@ -135,6 +136,14 @@ export async function breakingPhoto(saveId: string | null, n: BreakingNews, gene
   const coachPhoto = (await fmData.settings(saveId).catch(() => null))?.coachPhoto ?? null;
   const choice = sceneForBreaking(n, !!coachPhoto);
   return photoForEvent(breakingTag(saveId, n), choice, { playerId: isCoachBreaking(n) ? null : n.id, coachPhoto }, generate);
+}
+
+/** Photo de situation de la une d'une gazette (même règle que `breakingPhoto`) ; null : la une garde sa mise en page. */
+export async function gazettePhoto(saveId: string | null, issue: GazetteIssue, generate: boolean) {
+  if (!saveId || getPhotoMode() === 'off') return null;
+  const coachPhoto = (await fmData.settings(saveId).catch(() => null))?.coachPhoto ?? null;
+  const choice = sceneForHeadline(issue.headline, issue.weekStart, !!coachPhoto);
+  return photoForEvent(gazetteTag(saveId, issue), choice, { playerId: choice?.playerId, coachPhoto }, generate);
 }
 
 /** Dépêche (recrue, départ, blessure, avenir du coach) : image et court encart, avec le visage du joueur ou du coach, ou la photo de situation. */
@@ -392,7 +401,9 @@ export function useGazetteAuto() {
               async () => {
                 // Rédigée par l'IA du joueur quand elle est branchée (sinon, ou si elle échoue, avec les phrases toutes faites).
                 issues[index] = await withWriting(t, week, lang, saveId);
-                await sendGazette(t, lang, issues, index, seasonSoFar(history, week.date));
+                // En mode « auto », la photo de situation de la une est faite avant l'envoi (deux à quatre minutes).
+                const photo = await gazettePhoto(saveId, issues[index]!, getPhotoMode() === 'auto');
+                await sendGazette(t, lang, issues, index, seasonSoFar(history, week.date), getWebhook(), photo);
               },
               () => {
                 markGazetteSent(saveId, week.weekStart);

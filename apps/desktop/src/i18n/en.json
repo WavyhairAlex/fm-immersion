@@ -3781,7 +3781,8 @@
       }
     },
     "actions": "Rewrite and share",
-    "emptyHow": "FM Immersion reads your save on each game day through the FM27 plugin; the gazette is written from those readings, one per week."
+    "emptyHow": "FM Immersion reads your save on each game day through the FM27 plugin; the gazette is written from those readings, one per week.",
+    "photoNone": "No photo possible for this front page (no scene for this story, face not found or engine busy): the front page keeps its layout."
   },
   "discord": {
     "autoTitle": "Automatic gazette",
