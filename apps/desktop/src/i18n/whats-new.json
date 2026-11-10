@@ -1,12 +1,22 @@
 [
   {
-    "version": "0.1.129",
+    "version": "0.1.130",
     "date": "2026-11-10",
     "fr": [
       "Hors-série de départ ou de limogeage : le tampon « Départ » ou « Limogé » est posé en bas de ta photo de coach, il ne cache plus ton visage."
     ],
     "en": [
       "Departure or sacking special issue: the “Left” or “Sacked” stamp now sits at the bottom of your coach photo and no longer hides your face."
+    ]
+  },
+  {
+    "version": "0.1.129",
+    "date": "2026-11-10",
+    "fr": [
+      "Entraînement : des flèches en haut de « Cette semaine » font défiler les semaines suivantes, et un clic sur une semaine de « La saison » ouvre bien son programme."
+    ],
+    "en": [
+      "Training: arrows at the top of \"This week\" step through the coming weeks, and clicking a week in \"The season\" now opens its schedule."
     ]
   },
   {

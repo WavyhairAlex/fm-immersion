@@ -1622,7 +1622,9 @@
         "review_other": "Three months on the previous focus: moving to the next one.",
         "invalid_one": "The previous focus no longer fits the role: changing it.",
         "invalid_other": "The previous focus no longer fits the role: changing it."
-      }
+      },
+      "prevWeek": "Previous week",
+      "nextWeekBtn": "Next week"
     },
     "intro": {
       "playtime": "Who plays too much, who plays too little compared with their promised status, and who may come and complain.",

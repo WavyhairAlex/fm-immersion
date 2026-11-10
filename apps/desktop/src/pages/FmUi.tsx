@@ -398,7 +398,11 @@ export function More({ children }: { children: ReactNode }) {
  * Sections d'un long onglet, montrées une à la fois derrière une rangée de pastilles : moins de défilement, et le
  * choix est retenu (par onglet) d'une visite à l'autre.
  */
-export function SectionTabs({ id, sections }: { id: string; sections: { id: string; label: string; badge?: ReactNode; node: ReactNode }[] }) {
+/**
+ * Onglets d'une page, le dernier ouvert retenu. `jump` ouvre un onglet depuis la page (un clic dans un autre onglet) :
+ * chaque nouveau `n` bascule vers `jump.id`.
+ */
+export function SectionTabs({ id, sections, jump }: { id: string; sections: { id: string; label: string; badge?: ReactNode; node: ReactNode }[]; jump?: { id: string; n: number } }) {
   const { t } = useTranslation();
   const key = `fmi.section.${id}`;
   const [cur, setCur] = useState(() => {
@@ -418,6 +422,10 @@ export function SectionTabs({ id, sections }: { id: string; sections: { id: stri
       /* stockage indisponible */
     }
   };
+  useEffect(() => {
+    if (jump) pick(jump.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jump?.n]);
   if (!active) return null;
   return (
     <div className="space-y-4">
