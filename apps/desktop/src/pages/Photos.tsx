@@ -9,6 +9,7 @@ import {
   useEngineActions,
   useEngineProgress,
   useEngineStatus,
+  useMoveProgress,
   usePhotosActions,
   usePhotosProgress,
   usePhotosStatus,
@@ -54,10 +55,13 @@ export function Photos() {
       setTestImage(url);
     },
   });
+  const [dirInput, setDirInput] = useState<string | null>(null);
+  const move = useMutation({ mutationFn: files.setDir, onSuccess: () => setDirInput(null) });
+  const moveProgress = useMoveProgress(move.isPending);
   const downloading = download.isPending || !!status.data?.downloading;
   const dlProgress = usePhotosProgress(downloading);
   const engProgress = useEngineProgress(install.isPending || test.isPending);
-  const busy = downloading || install.isPending || test.isPending || remove.isPending;
+  const busy = downloading || install.isPending || test.isPending || remove.isPending || move.isPending;
 
   const s = status.data;
   const e = engine.data;
@@ -203,6 +207,32 @@ export function Photos() {
             })}
           </ul>
           <p className="mt-3 text-xs text-brun">{t('photos.dir', { dir: s.dir })}</p>
+          <form
+            className="mt-3 flex flex-col gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const dir = (dirInput ?? s.dir).trim();
+              if (dir && dir !== s.dir) move.mutate(dir);
+            }}
+          >
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-semibold">{t('photos.move.label')}</span>
+              <input type="text" className="input" value={dirInput ?? s.dir} onChange={(e) => setDirInput(e.target.value)} disabled={busy} spellCheck={false} />
+            </label>
+            <div className="flex flex-wrap items-center gap-3">
+              <button type="submit" className="btn-secondary" disabled={busy || (dirInput ?? s.dir).trim() === s.dir}>
+                {t('photos.move.button')}
+              </button>
+              {move.isPending && (
+                <span className="text-sm text-brun" role="status">
+                  {moveProgress ? t('photos.move.copying', { done: fmt(moveProgress.done), total: fmt(moveProgress.total) }) : t('photos.move.moving')}
+                </span>
+              )}
+            </div>
+            {move.isPending && moveProgress && <Bar done={moveProgress.done} total={moveProgress.total} />}
+            {move.error ? <p className="text-sm text-corail">{String(move.error)}</p> : null}
+            <p className="text-xs text-brun">{t('photos.move.hint', { size: fmt(s.total) })}</p>
+          </form>
         </section>
       )}
     </div>

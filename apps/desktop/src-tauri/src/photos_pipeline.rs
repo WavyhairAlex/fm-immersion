@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::Mutex;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
-use tauri::{Emitter, Manager};
+use tauri::Emitter;
 
 /// Script Python embarqué (croquis, porte qualité, logos), écrit dans `photos/scripts/` avant chaque usage.
 pub const SCRIPT: &str = include_str!("../photos-scripts/fmi_photos.py");
@@ -32,6 +32,11 @@ const LOGOS_TIMEOUT: Duration = Duration::from_secs(600);
 const SKETCH_TIMEOUT: Duration = Duration::from_secs(120);
 
 static PIPELINE: Mutex<()> = Mutex::new(());
+
+/// Une photo est en cours de fabrication.
+pub fn is_busy() -> bool {
+    PIPELINE.try_lock().is_err()
+}
 
 fn io(e: impl std::fmt::Display) -> PhotosError {
     PhotosError::Io(e.to_string())
@@ -498,9 +503,7 @@ pub fn in_library(photos_dir: &Path, file: &Path) -> bool {
 
 // ------------------------------------------------------------------ commandes Tauri
 
-fn photos_dir(app: &tauri::AppHandle) -> Result<PathBuf, PhotosError> {
-    Ok(app.path().app_local_data_dir().map_err(io)?.join(photos_remote::DIR_NAME))
-}
+use photos_remote::photos_dir;
 
 #[tauri::command]
 pub fn photos_scenes() -> Vec<SceneInfo> {

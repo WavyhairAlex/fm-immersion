@@ -3389,6 +3389,13 @@
       "visages": "visages cachés",
       "tribune": "pas de tribune",
       "un_premier_plan": "plusieurs joueurs au premier plan"
+    },
+    "move": {
+      "label": "Dossier du moteur (34 Go)",
+      "button": "Déplacer vers ce dossier",
+      "moving": "Déplacement…",
+      "copying": "Copie vers l'autre disque : {{done}} sur {{total}}",
+      "hint": "Tape un chemin complet sur le disque de ton choix (par exemple D:\\FM Immersion\\photos). Ce qui est déjà téléchargé est déplacé, rien n'est à refaire. Donne un dossier vide ou nouveau : « Tout supprimer » l'effacera entièrement."
     }
   },
   "gazette": {

@@ -13,7 +13,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
-use tauri::{Emitter, Manager};
+use tauri::Emitter;
 
 /// Sous-dossier du dossier des photos où l'archive est extraite.
 pub const ENGINE_SUBDIR: &str = "comfyui";
@@ -489,9 +489,7 @@ pub struct EngineProgress {
     pub total: u64,
 }
 
-fn photos_dir(app: &tauri::AppHandle) -> Result<PathBuf, PhotosError> {
-    Ok(app.path().app_local_data_dir().map_err(io)?.join(photos_remote::DIR_NAME))
-}
+use photos_remote::photos_dir;
 
 #[tauri::command]
 pub async fn photos_engine_status(app: tauri::AppHandle) -> Result<EngineStatus, PhotosError> {

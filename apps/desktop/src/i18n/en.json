@@ -3389,6 +3389,13 @@
       "visages": "faces hidden",
       "tribune": "no stand",
       "un_premier_plan": "several players in the foreground"
+    },
+    "move": {
+      "label": "Engine folder (34 GB)",
+      "button": "Move to this folder",
+      "moving": "Moving…",
+      "copying": "Copying to the other drive: {{done}} of {{total}}",
+      "hint": "Type a full path on the drive of your choice (for example D:\\FM Immersion\\photos). What is already downloaded is moved, nothing needs to be redone. Pick an empty or new folder: \"Delete everything\" will erase it entirely."
     }
   },
   "gazette": {
