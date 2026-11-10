@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.140",
+    "date": "2026-11-10",
+    "fr": [
+      "Photos : l'installation du moteur d'images effaçait sa propre archive au moment de l'extraire (« archive ComfyUI illisible »). Corrigé : reprends le téléchargement de l'archive dans Photos, puis installe."
+    ],
+    "en": [
+      "Photos: installing the image engine deleted its own archive right before extracting it (\"ComfyUI archive unreadable\"). Fixed: resume the archive download in Photos, then install."
+    ]
+  },
+  {
     "version": "0.1.139",
     "date": "2026-11-10",
     "fr": [
