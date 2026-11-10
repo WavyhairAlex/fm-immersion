@@ -3394,7 +3394,8 @@
       "accolade": "no embrace",
       "visages": "faces hidden",
       "tribune": "no stand",
-      "un_premier_plan": "several players in the foreground"
+      "un_premier_plan": "several players in the foreground",
+      "visage": "face hidden or seen from behind"
     },
     "move": {
       "label": "Engine folder (34 GB)",

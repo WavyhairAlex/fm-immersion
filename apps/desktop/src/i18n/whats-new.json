@@ -1,12 +1,24 @@
 [
   {
-    "version": "0.1.149",
+    "version": "0.1.150",
     "date": "2026-11-10",
     "fr": [
       "Avec la version finale de FM27, la lecture du jeu retrouve aussi les membres du staff (entraîneurs, recruteurs, kinés), plus seulement les joueurs."
     ],
     "en": [
       "With the final release of FM27, reading the game now finds staff members again (coaches, scouts, physios), not only players."
+    ]
+  },
+  {
+    "version": "0.1.149",
+    "date": "2026-11-10",
+    "fr": [
+      "Photos de situation : fini les joueurs photographiés de dos. On voit maintenant leur visage, et une photo de dos déjà faite est refaite toute seule.",
+      "Gazette rédigée par l'IA : les titres n'ont plus une majuscule à chaque mot, seulement au début et aux noms propres, comme dans un vrai journal. Le titre de ta gazette en cours est réécrit."
+    ],
+    "en": [
+      "Situational photos: no more players photographed from behind. Their face now shows, and a from-behind photo already made is redone automatically.",
+      "AI-written gazette: headlines no longer capitalise every word, only the first one and proper names, like a real newspaper. The headline of your current gazette is rewritten."
     ]
   },
   {
