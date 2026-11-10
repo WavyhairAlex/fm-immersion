@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.144",
+    "date": "2026-11-10",
+    "fr": [
+      "Photos : quand le retrait des logos signale quelque chose, des cadres rouges montrent sur la photo d'essai ce que le détecteur a pris pour un logo. Ça permet de régler les fausses alertes (bandeau de tribune, pub floue)."
+    ],
+    "en": [
+      "Photos: when logo removal flags something, red frames show on the test photo what the detector took for a logo. This helps tune false alarms (stand banner, blurred ad)."
+    ]
+  },
+  {
     "version": "0.1.143",
     "date": "2026-11-10",
     "fr": [

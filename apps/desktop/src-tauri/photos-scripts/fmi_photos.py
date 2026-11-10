@@ -12,7 +12,7 @@ Tout tourne sur le PC, hors ligne (HF_HUB_OFFLINE=1) ; aucun fichier n'est tél�
       Réponse = probabilité de « Yes » contre « No » sur le premier jeton ; score = moyenne des probabilités attendues.
   fmi_photos.py logos <dossier_owlv2> <travaux.json> <sortie.json>
       Détection de logos, écussons, sponsors et textes (OWLv2, sur le processeur). travaux = {nom: png}.
-      sortie = {nom: {"boxes": [[x0, y0, x1, y1]...], "count": n, "regenerate": bool}}.
+      sortie = {nom: {"boxes": [[x0, y0, x1, y1]...], "size": [w, h], "count": n, "regenerate": bool}}.
 """
 import json
 import os
@@ -302,7 +302,7 @@ def logos(dossier, travaux_json, sortie):
                 continue  # grande zone unie : pas un logo
             regen = regen or ratio > SEUIL_REGEN
             gardees.append(b)
-        resultat[nom] = {"path": chemin, "boxes": gardees, "count": len(gardees), "regenerate": regen, "seconds": round(time.time() - t, 1)}
+        resultat[nom] = {"path": chemin, "boxes": gardees, "size": [w, h], "count": len(gardees), "regenerate": regen, "seconds": round(time.time() - t, 1)}
         print(f"{nom}: {len(gardees)} logo(s){' à regénérer' if regen else ''} | {time.time() - t:.1f} s", flush=True)
         ecrire_json(sortie, resultat)
     ecrire_json(sortie, resultat)

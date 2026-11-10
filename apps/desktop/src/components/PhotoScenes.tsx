@@ -161,7 +161,24 @@ export function PhotoScenes({ coachPhoto, disabled }: { coachPhoto: string | nul
         ) : null}
         {result && (
           <div className="mt-4">
-            <LibraryImage file={result.file} alt={t(`photos.scenes.name.${result.scene}`)} className="w-full rounded-lg" />
+            <div className="relative">
+              <LibraryImage file={result.file} alt={t(`photos.scenes.name.${result.scene}`)} className="w-full rounded-lg" />
+              {!result.cleaned &&
+                (result.logoBoxes ?? []).map((b, i) => (
+                  <div
+                    key={i}
+                    className="pointer-events-none absolute rounded-sm border-2 border-corail"
+                    style={{
+                      left: `${(b[0] ?? 0) * 100}%`,
+                      top: `${(b[1] ?? 0) * 100}%`,
+                      width: `${((b[2] ?? 0) - (b[0] ?? 0)) * 100}%`,
+                      height: `${((b[3] ?? 0) - (b[1] ?? 0)) * 100}%`,
+                    }}
+                    title={t('photos.scenes.logos.zone')}
+                  />
+                ))}
+            </div>
+            {!result.cleaned && (result.logoBoxes ?? []).length > 0 && <p className="mt-1 text-xs text-brun">{t('photos.scenes.logos.zones')}</p>}
             <Verdict o={result} />
           </div>
         )}

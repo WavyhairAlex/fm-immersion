@@ -230,6 +230,8 @@ export type Outcome = {
   reasons: string[];
   logosBefore: number | null;
   logosAfter: number | null;
+  /** Zones prises pour des logos (parts de l'image, x0 y0 x1 y1), avant nettoyage. */
+  logoBoxes?: number[][];
   cleaned: boolean;
   regenerate: boolean;
   candidates: CandidateReport[];
