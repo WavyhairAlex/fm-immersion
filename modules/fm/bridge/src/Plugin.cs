@@ -18,7 +18,7 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.5.6";
+    public const string Version = "0.5.7";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que FM Immersion renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
@@ -102,6 +102,7 @@ public class Plugin : BasePlugin
     {
         string? lastDate = null;
         var lastFull = DateTime.MinValue;
+        int retries = 0;
         DateTime? loadedSince = null;
         // Sans équipe (manager sans club) : la date seule, au plus une fois par minute, après SettleSeconds sans équipe
         // (jamais pendant un chargement ou une sortie de partie), pour archivix-status.json avec club null.
@@ -130,9 +131,18 @@ public class Plugin : BasePlugin
                 loadedSince ??= DateTime.UtcNow;
                 if (DateTime.UtcNow - loadedSince < TimeSpan.FromSeconds(SettleSeconds)) continue;   // partie tout juste chargée
                 if (date == lastDate && DateTime.UtcNow - lastFull < TimeSpan.FromSeconds(RereadSeconds)) continue;
-                Refresh();
+                bool complete = Refresh();
+                // 0.5.7 : lecture incomplète (le jeu n'a pas répondu à temps) : on relit une minute plus tard, trois fois
+                // au plus par jour de jeu, au lieu d'attendre RereadSeconds ou le jour suivant.
+                if (date != lastDate) retries = 0;
                 lastDate = date;
                 lastFull = DateTime.UtcNow;
+                if (!complete && retries < 3)
+                {
+                    retries++;
+                    lastFull = DateTime.UtcNow - TimeSpan.FromSeconds(Math.Max(0, RereadSeconds - 60));
+                    Log.LogInfo($"Lecture incomplète du {date} : nouvelle lecture dans une minute ({retries}/3).");
+                }
             }
             catch (FmBindingReader.GameChanged) { lastDate = null; loadedSince = null; Log.LogInfo("Partie quittée ou changée pendant la lecture : instantané abandonné."); }
             catch (Exception e) { Log.LogWarning($"Instantané impossible : {e.Message}"); }
@@ -226,11 +236,19 @@ public class Plugin : BasePlugin
         }
     }
 
-    internal void Refresh()
+    // Jour de jeu et club de la dernière lecture complète écrite : une lecture incomplète du même jour ne la remplace pas.
+    string? _completeKey;
+
+    /// <summary>Lit et écrit un instantané. Faux si la lecture est incomplète (voir FmBindingReader.LastIncomplete).</summary>
+    internal bool Refresh()
     {
         var snap = _reader.Read();
         // Jamais d'instantané vide : il écraserait le dernier effectif valide (ex. partie en cours de chargement)
-        if (snap.Players.Count == 0 || string.IsNullOrEmpty(snap.Club)) return;
+        if (snap.Players.Count == 0 || string.IsNullOrEmpty(snap.Club)) return true;
+        bool complete = !_reader.LastIncomplete;
+        var key = snap.Club + "|" + snap.GameDate;
+        if (!complete && key == _completeKey) return false;
+        if (complete) _completeKey = key;
         lock (_lock) _last = snap;
         var dir = DataDir;
         Directory.CreateDirectory(dir);
@@ -244,6 +262,7 @@ public class Plugin : BasePlugin
             try { Discovery.Write(dir); }
             catch (Exception e) { Log.LogWarning($"Rapport de découverte impossible : {e.Message}"); }
         }
+        return complete;
     }
 
     // État courant pour FM Immersion (0.4.2) : date de jeu et club du manager (null = sans club). Aucune lecture en plus :
@@ -436,7 +455,7 @@ public record TacticDto(string? Formation, string? FormationSource, string? Ment
 }
 public record TacticSlotDto(string Position, int? PlayerId, string? Role, string? Duty);
 
-public interface IGameReader { Snapshot Read(); }
+public interface IGameReader { Snapshot Read(); bool LastIncomplete => false; }
 
 class PlaceholderReader : IGameReader
 {

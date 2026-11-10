@@ -55,6 +55,14 @@ donne pas). Type 3 = expulsion (vu en jeu le 08/11/2026 : « expulsé 74' ») ; 
 liste. Le rapport de match, absent du relevé final quand `LastFixture` désigne encore le match précédent au coup de
 sifflet, est retenté toutes les 15 s pendant 3 minutes, et le relevé réécrit dès qu'il est lu.
 
+**0.5.7** : lecture incomplète. Le 09/11/2026, cinq instantanés de suite ont perdu toutes les stats des joueurs et
+les consignes de la tactique (bloc `custom`) : les 4 500 requêtes de `chemins.json` partent dans la même frame, et en 8 s
+le jeu n'avait rendu que les réponses immédiates. Désormais, à chaque niveau, on attend tant que des réponses arrivent
+(jusqu'à trois fois le délai), puis les requêtes restées sans réponse (20 ou plus) repartent par paquets de 300.
+`collecte.chemins` donne le compte (« lue : 3 950/4 470 valeurs, … récupérées par paquets ») et le journal BepInEx un
+avertissement. Une lecture restée incomplète (aucune valeur pour les joueurs, ou section `tactique` vide) est refaite une
+minute plus tard, trois fois au plus par jour de jeu, et ne remplace jamais une lecture complète du même jour.
+
 ## Garde-fou « écran Tactique » (0.3.0)
 
 Toute lecture liée à la tactique (`LireTactique`, `LireEfficacite`, `LireCompo`, section `tactique` de `chemins.json`,
