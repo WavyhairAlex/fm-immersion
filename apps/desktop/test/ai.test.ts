@@ -19,7 +19,7 @@ vi.stubGlobal('localStorage', {
   removeItem: (k: string) => void store.delete(k),
 });
 
-const { aiFor, aiLiveComment, factsKept, gazettePrompt, getAiSettings, livePrompt, parseComment, parseWriting, setAiSettings } = await import('../src/lib/ai');
+const { aiFor, headlineCase, aiLiveComment, factsKept, gazettePrompt, getAiSettings, livePrompt, parseComment, parseWriting, setAiSettings } = await import('../src/lib/ai');
 const { articleText, editorialText, headlineText } = await import('../src/lib/gazette-text');
 
 const t = ((k: string, o?: Record<string, unknown>) => (o ? `${k} ${JSON.stringify(o)}` : k)) as unknown as TFunction;
@@ -152,5 +152,12 @@ describe('commentaire du direct', () => {
     expect(calls[0]).toMatchObject({ cmd: 'ai_complete', args: { provider: 'mistral', model: 'mistral-small-latest', json: false } });
     answer = new Error('Ollama ne répond pas');
     expect(await aiLiveComment(moment, 'fr')).toBeNull();
+  });
+
+  it('titre ramené à la casse de la presse quand chaque mot a sa majuscule', () => {
+    const facts = 'Faits de la semaine :\nÀ LA UNE : Infirmerie : Mauricio Cuero absent 6 jours\n- Prochain match : TU Košice, club de Ružomberok en UEFA Conference League';
+    expect(headlineCase("Cuero Blessé : Ružomberok Affronté à l'Absence", facts)).toBe("Cuero blessé : Ružomberok affronté à l'absence");
+    expect(headlineCase('Le TU Košice Attend Ružomberok De Pied Ferme', facts)).toBe('Le TU Košice attend Ružomberok de pied ferme');
+    expect(headlineCase('La coupe s’arrête là pour Ružomberok', facts)).toBe('La coupe s’arrête là pour Ružomberok');
   });
 });
