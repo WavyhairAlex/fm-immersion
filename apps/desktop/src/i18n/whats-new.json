@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.139",
+    "date": "2026-11-10",
+    "fr": [
+      "Visages : après une mise à jour de FM27, réinstaller le pack retire aussi la copie de l'ancien catalogue gardée par le jeu, au lieu de la corriger. Le jeu la reconstruit au lancement, et les portraits restent justes."
+    ],
+    "en": [
+      "Faces: after an FM27 update, reinstalling the pack also removes the game's saved copy of the old catalogue instead of fixing it. The game rebuilds it on launch, and portraits stay correct."
+    ]
+  },
+  {
     "version": "0.1.138",
     "date": "2026-11-10",
     "fr": [
