@@ -41,7 +41,7 @@ const worst = (items: CompatItem[]): CompatLevel =>
  */
 export function compatReport(
   c: Compat,
-  opts: { seenKey: string | null; bridgeInstalled: string | null; bepinex: boolean; facesMismatch: boolean },
+  opts: { seenKey: string | null; bridgeInstalled: string | null; bepinex: boolean; facesMismatch: boolean; facesUnknown?: 'stale' | 'new' | null },
 ): CompatReport | null {
   if (!c.gameFound || !c.build) return null;
   const items: CompatItem[] = [];
@@ -74,6 +74,8 @@ export function compatReport(
   else if (c.memory === 'broken') items.push({ id: 'memory', level: 'bad', key: 'memoryBroken' });
 
   if (opts.facesMismatch) items.push({ id: 'faces', level: 'bad', key: 'facesMismatch', to: '/visages' });
+  // Nouveaux portraits d'origine : l'installation du pack est bloquée tant qu'un pack compatible n'existe pas.
+  else if (opts.facesUnknown) items.push({ id: 'faces', level: opts.facesUnknown === 'stale' ? 'bad' : 'warn', key: opts.facesUnknown === 'stale' ? 'facesNewGameStale' : 'facesNewGame', to: '/visages' });
 
   return { updated, launchedSince, level: worst(items), items };
 }

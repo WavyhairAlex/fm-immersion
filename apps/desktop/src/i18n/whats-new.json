@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.135",
+    "date": "2026-11-10",
+    "fr": [
+      "Visages : si la version finale de FM27 change les portraits d'origine, l'appli bloque l'installation du pack fait pour l'ancienne version et te dit quoi faire, au lieu de risquer des portraits faux."
+    ],
+    "en": [
+      "Faces: if the full release of FM27 changes the original portraits, the app blocks installing the pack made for the old version and tells you what to do, instead of risking wrong portraits."
+    ]
+  },
+  {
     "version": "0.1.134",
     "date": "2026-11-10",
     "fr": [

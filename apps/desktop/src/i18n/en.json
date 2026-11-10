@@ -3242,7 +3242,9 @@
       "published": "Latest pack published on {{date}} ({{mb}} MB)."
     },
     "atelierToggle": "I generate the portraits (workshop mode: paths, batch progress, local pack)",
-    "steamReset": "An FM27 update restored the original catalogue: in game, portraits would be white squares. Close FM27, then click “Reinstall this pack”."
+    "steamReset": "An FM27 update restored the original catalogue: in game, portraits would be white squares. Close FM27, then click “Reinstall this pack”.",
+    "newGame": "This FM27's original portraits are not the ones the pack knows (new game version, or another mod): installing is blocked so nothing breaks. Wait for an updated pack.",
+    "newGameStale": "FM27 was updated with new original portraits, but the pack made for the old version is still in place: in game, portraits would be wrong or white squares. In Steam, run “Verify integrity of game files” for FM27, then wait for an updated pack."
   },
   "photos": {
     "title": "Situation photos",
@@ -4892,7 +4894,9 @@
       "memoryKnown": "CA/PA reading: game version already checked.",
       "memoryPatterns": "CA/PA reading: new game version, the markers were found. It should work; check a player you know.",
       "memoryBroken": "CA/PA reading: this game version is not supported yet. The rest of the app works; wait for an FM Immersion update.",
-      "facesMismatch": "Faces: the update restored the original catalogue, the game would show white squares. Reinstall the pack with FM27 closed."
+      "facesMismatch": "Faces: the update restored the original catalogue, the game would show white squares. Reinstall the pack with FM27 closed.",
+      "facesNewGame": "Faces: new original portraits in this version, the current pack cannot be installed. Wait for an updated pack.",
+      "facesNewGameStale": "Faces: the old version's pack is still in place over new original portraits. Verify FM27's files in Steam."
     },
     "go": {
       "bridge": "Plugin and settings",
