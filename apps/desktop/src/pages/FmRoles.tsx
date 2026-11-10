@@ -87,7 +87,9 @@ export function FmRoles({ players, folder }: { players: FmPlayer[]; folder: stri
                       <PlayerLink player={p} /> <span className="text-xs font-normal text-brun">{p.age}</span>
                     </td>
                     {cells.map((c, i) => {
-                      if (!c || (!c.natural && (opts.nat || gk !== (c.pos === 'GB'))))
+                      // Poste que le joueur ne sait pas jouer du tout : un point, pas « 0,0 ★ ».
+                      const none = !!c && !c.natural && Number.parseFloat(fitPct(c.fit).replace(',', '.')) === 0;
+                      if (!c || none || (!c.natural && (opts.nat || gk !== (c.pos === 'GB'))))
                         return (
                           <td key={i} className="px-1 py-1 text-center text-canard/25">
                             ·

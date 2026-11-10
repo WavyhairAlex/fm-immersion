@@ -1,5 +1,5 @@
 import type { FmSnapshot } from './snapshot';
-import { addDays } from './training';
+import { addDays, detectWinterBreak, type WinterBreak } from './training';
 
 /** Un match du calendrier, au format attendu par l'Entraînement et l'onglet Calendrier. */
 export interface SnapshotFixture {
@@ -144,4 +144,10 @@ export function nextMatchCountdown(snap: Pick<FmSnapshot, 'gameDate'> & { fixtur
   const next = snap.nextMatch && typeof snap.nextMatch === 'object' ? (snap.nextMatch as Record<string, unknown>) : null;
   const fromGame = typeof next?.inDays === 'number' ? next.inDays : daysUntil(next?.inDays);
   return fromGame ?? nextMatchInDays(snap);
+}
+
+/** Trêve hivernale déduite du calendrier de l'instantané (voir `detectWinterBreak`) ; le dernier match joué en marque le début. */
+export function snapshotWinterBreak(snap: Parameters<typeof snapshotFixtures>[0]): WinterBreak | null {
+  const e = (snap.custom as { equipe?: Record<string, unknown> } | undefined)?.equipe;
+  return detectWinterBreak(snap.gameDate, snapshotFixtures(snap).map((f) => f.date).filter((d): d is string => typeof d === 'string'), decodeGameDate(e?.dernierMatchDate));
 }

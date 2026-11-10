@@ -1755,7 +1755,7 @@
         "prospects": "Youngsters worth keeping",
         "prospectsSub": "{{loan}} of them to loan out",
         "extend": "Contracts to renew",
-        "extendSub": "starters and prospects within a year of expiry",
+        "extendSub": "within a year of expiry: starters below, promising youngsters under \"Youngsters\"",
         "off": "Off project",
         "offSub": "profiles that don't suit the target style"
       },
@@ -2143,8 +2143,8 @@
       "from": "Instruction: {{instruction}}"
     },
     "decide": {
-      "title_one": "Contracts to decide · {{count}}",
-      "title_other": "Contracts to decide · {{count}}",
+      "title_one": "Contracts to decide within 6 months · {{count}}",
+      "title_other": "Contracts to decide within 6 months · {{count}}",
       "help": "Contracts ending within six months, the ones FM27 messages you about. For each: the decision to take in the game, then why (place in today's and the project eleven, fit with the game plan, age, potential).",
       "call": {
         "extend": "Renew",

@@ -219,6 +219,26 @@ export function breakPhase(isoDate: string, wb: WinterBreak): { phase: TrainingP
   return null;
 }
 
+/**
+ * Trêve déduite du calendrier quand le joueur n'en a pas réglé : un trou d'au moins cinq semaines sans match, entre
+ * novembre et février, après le dernier match joué (ou la date de jeu). Null sinon.
+ */
+export function detectWinterBreak(gameDate: string, fixtureDates: string[], lastPlayed?: string | null): WinterBreak | null {
+  const today = gameDate.slice(0, 10);
+  const upcoming = fixtureDates.map((d) => d.slice(0, 10)).filter((d) => d > today).sort();
+  if (!upcoming.length) return null;
+  const last = lastPlayed && lastPlayed.slice(0, 10) <= today && utc(today).getTime() - utc(lastPlayed.slice(0, 10)).getTime() <= 120 * DAY ? lastPlayed.slice(0, 10) : today;
+  const points = [last, ...upcoming];
+  for (let i = 0; i + 1 < points.length; i++) {
+    const from = points[i]!;
+    const to = points[i + 1]!;
+    if (utc(to).getTime() - utc(from).getTime() < 35 * DAY) continue;
+    const month = Number(from.slice(5, 7));
+    if (month >= 11 || month <= 2) return { from: addDays(from, 1).slice(5), to: to.slice(5) };
+  }
+  return null;
+}
+
 export function autoPhase(isoDate: string, seasonStart: number, winterBreak?: WinterBreak | null): { phase: TrainingPhase; week: CycleWeek } {
   const monday = mondayOf(isoDate);
   const pause = winterBreak ? breakPhase(monday, winterBreak) : null;

@@ -1,4 +1,4 @@
-import {
+import { snapshotWinterBreak,
   nextMatchCountdown,
   PART_TIME_DAYS,
   currentTrainingWeek,
@@ -103,7 +103,7 @@ export function FmHome({
         gameDate: snap.gameDate,
         fixtures: snapshotFixtures(snap),
         seasonStart: coach.seasonStart,
-        winterBreak: coach.winterBreak,
+        winterBreak: coach.winterBreak === undefined ? snapshotWinterBreak(snap) : coach.winterBreak,
         trainingDays: (coach.clubStatus ?? 'pro') === 'pro' ? undefined : (coach.trainingDays ?? PART_TIME_DAYS),
         priorities: style ? trainingFor(style) : [],
         style: style?.id,

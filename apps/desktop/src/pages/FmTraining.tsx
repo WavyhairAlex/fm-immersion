@@ -1,4 +1,4 @@
-import {
+import { snapshotWinterBreak,
   CLUB_STATUSES,
   CONDITION_LEVELS,
   PART_TIME_DAYS,
@@ -271,7 +271,8 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
   const [eve, setEve] = useState<boolean | null>(null);
 
   const monday = addDays(mondayOf(snap.gameDate), Number(offset) * 7);
-  const winterBreak = coach.winterBreak ?? null;
+  // Trêve jamais réglée par le joueur : on la déduit du calendrier (cinq semaines sans match en hiver).
+  const winterBreak = coach.winterBreak === undefined ? snapshotWinterBreak(snap) : coach.winterBreak;
   const auto = autoPhase(monday, seasonStart, winterBreak);
   const phase = phaseOverride ?? auto.phase;
   const week = weekOverride ?? (phaseOverride && phaseOverride !== auto.phase ? 1 : auto.week);
