@@ -15,7 +15,7 @@ function useReport() {
   const { compat, seen, acknowledge, refetch, loading } = useGameCompat(gameDir);
   const { data: faces } = useQuery({
     queryKey: ['faces', 'status', gameDir, 'compat'],
-    queryFn: () => invoke<{ catalogMismatch?: boolean }>('faces_status', { gameDir, workshopDir: workshop || null }),
+    queryFn: () => invoke<{ catalogMismatch?: boolean; catalogUnknown?: boolean; stalePack?: boolean }>('faces_status', { gameDir, workshopDir: workshop || null }),
     enabled: !!gameDir,
     refetchInterval: 5 * 60_000,
   });
@@ -27,9 +27,10 @@ function useReport() {
             bridgeInstalled: status?.installedVersion ?? null,
             bepinex: !!status?.bepinex,
             facesMismatch: !!faces?.catalogMismatch,
+            facesUnknown: faces?.catalogUnknown ? (faces.stalePack ? 'stale' : 'new') : null,
           })
         : null,
-    [compat, seen, status?.installedVersion, status?.bepinex, faces?.catalogMismatch],
+    [compat, seen, status?.installedVersion, status?.bepinex, faces?.catalogMismatch, faces?.catalogUnknown, faces?.stalePack],
   );
   return { compat, report, acknowledge, refetch, loading };
 }

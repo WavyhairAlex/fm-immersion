@@ -46,6 +46,12 @@ describe('bilan de compatibilité de FM27', () => {
     expect(r.items.find((i) => i.id === 'bridgeErrors')!.params).toMatchObject({ count: 1 });
   });
 
+  it('nouveaux portraits d’origine : pack bloqué, à remplacer par Steam s’il est encore en place', () => {
+    const item = (u: 'stale' | 'new') => compatReport(base(), { ...opts, facesUnknown: u })!.items.find((i) => i.id === 'faces')!;
+    expect([item('stale').level, item('stale').key]).toEqual(['bad', 'facesNewGameStale']);
+    expect([item('new').level, item('new').key]).toEqual(['warn', 'facesNewGame']);
+  });
+
   it('nouvelle version dont les motifs sont retrouvés : à confirmer', () => {
     expect(compatReport(base({ memory: 'patterns' }), opts)!.level).toBe('warn');
   });

@@ -699,15 +699,29 @@ pub fn uninstall(p: &Paths) -> Result<bool, PackError> {
     Ok(true)
 }
 
-/// État du catalogue du jeu (pour l'écran Visages).
-/// Le bundle en place est un pack connu (v1.0 ou installé par l'appli, reconnu à sa taille) mais le catalogue
-/// ne le décrit plus : une mise à jour Steam a remis le catalogue d'origine, le jeu affiche des carrés blancs.
-pub fn catalog_mismatch(p: &Paths, bundle_size: u64) -> bool {
-    let Some(entry) = std::fs::read(&p.catalog).ok().and_then(|b| read_entry(&b)) else { return false };
+/// Tailles des packs connus (v1.0, installés par l'appli ou par l'atelier) qui ont la taille du bundle en place.
+fn packs_of_size(p: &Paths, bundle_size: u64) -> Vec<(u32, u32)> {
     let mut packs: Vec<(u32, u32)> = p.all_known().iter().map(|i| (i.crc, i.size)).collect();
     packs.push((V1_CRC, V1_SIZE));
-    let same_size: Vec<&(u32, u32)> = packs.iter().filter(|(_, size)| *size as u64 == bundle_size).collect();
-    !same_size.is_empty() && !same_size.iter().any(|(crc, size)| *crc == entry.crc && *size == entry.size)
+    packs.into_iter().filter(|(_, size)| *size as u64 == bundle_size).collect()
+}
+
+/// État du catalogue du jeu (pour l'écran Visages).
+/// Le bundle en place est un pack connu (v1.0 ou installé par l'appli, reconnu à sa taille) mais le catalogue
+/// ne le décrit plus et décrit les portraits d'origine connus : une mise à jour Steam a remis le catalogue,
+/// le jeu affiche des carrés blancs, et réinstaller le pack corrige (seule l'entrée des portraits est réécrite).
+pub fn catalog_mismatch(p: &Paths, bundle_size: u64) -> bool {
+    let Some(entry) = std::fs::read(&p.catalog).ok().and_then(|b| read_entry(&b)) else { return false };
+    let same_size = packs_of_size(p, bundle_size);
+    !same_size.is_empty() && !same_size.iter().any(|(crc, size)| *crc == entry.crc && *size == entry.size) && classify(&entry, &p.all_known()) != CatalogState::Unknown
+}
+
+/// Le catalogue décrit des portraits que l'appli ne connaît pas (nouvelle version de FM27 avec d'autres portraits
+/// d'origine, ou autre mod) : installer et désinstaller sont bloqués, rien n'est écrit. `stale_pack` : un de nos
+/// packs (fait pour l'ancienne version) est encore en place, à remplacer par Steam (vérifier les fichiers).
+pub fn catalog_unknown(p: &Paths, bundle_size: u64) -> Option<bool> {
+    let entry = std::fs::read(&p.catalog).ok().and_then(|b| read_entry(&b))?;
+    (classify(&entry, &p.all_known()) == CatalogState::Unknown).then(|| !packs_of_size(p, bundle_size).is_empty())
 }
 
 pub fn catalog_state(p: &Paths) -> Option<CatalogState> {
@@ -925,8 +939,13 @@ pub(crate) mod tests {
         // Catalogue d'origine (ou CRC d'une nouvelle version du jeu) avec le même bundle : carrés blancs.
         std::fs::write(&p.catalog, fake_catalog(ORIG_CRC, ORIG_SIZE)).unwrap();
         assert!(catalog_mismatch(&p, 4300));
+        assert_eq!(catalog_unknown(&p, 4300), None);
+        // Nouvelle version du jeu (portraits d'origine inconnus) : réinstaller ne marcherait pas, on le dit autrement.
         std::fs::write(&p.catalog, fake_catalog(7, 4300)).unwrap();
-        assert!(catalog_mismatch(&p, 4300));
+        assert!(!catalog_mismatch(&p, 4300));
+        assert_eq!(catalog_unknown(&p, 4300), Some(true));
+        assert_eq!(catalog_unknown(&p, 5000), Some(false));
+        std::fs::write(&p.catalog, fake_catalog(ORIG_CRC, ORIG_SIZE)).unwrap();
         // Pack v1.0 en place, catalogue d'origine.
         assert!(catalog_mismatch(&p, V1_SIZE as u64));
         // Bundle d'origine ou d'un autre mod : pas notre affaire.
@@ -948,6 +967,36 @@ pub(crate) mod tests {
         assert!(matches!(install(&p, &pack, "t", None), Err(PackError::UnknownGame)));
         assert_eq!(read_entry(&std::fs::read(&p.catalog).unwrap()).unwrap().crc, 1);
         assert!(matches!(uninstall(&p), Err(PackError::UnknownGame)));
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    /// Version finale de FM27 : nouveaux portraits d'origine (CRC inconnu) avec notre pack resté en place, ou
+    /// remplacé par Steam. Rien n'est écrit, ni installation ni désinstallation (l'ancienne sauvegarde ne convient plus).
+    #[test]
+    fn bloque_une_nouvelle_version_des_portraits() {
+        let root = std::env::temp_dir().join(format!("fmi-pack-finale-{}", std::process::id()));
+        std::fs::remove_dir_all(&root).ok();
+        let pack = root.join("pack.bundle");
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(&pack, fake_bundle(b"pack fait sur la beta")).unwrap();
+        let (crc, size) = (unity_crc(&pack).unwrap(), std::fs::metadata(&pack).unwrap().len() as u32);
+        let known = vec![Installed { crc, size, source: "x".into(), at: "t".into(), version: None }];
+        let p = Paths::new(&root.join("game"), root.join("cache"), root.join("backup")).with_known(known);
+        std::fs::create_dir_all(p.bundle.parent().unwrap()).unwrap();
+        std::fs::create_dir_all(&p.backup).unwrap();
+        std::fs::copy(&pack, &p.bundle).unwrap();
+        let retail = fake_catalog(0x1234_5678, 9_999);
+        std::fs::write(&p.catalog, &retail).unwrap();
+        assert!(!catalog_mismatch(&p, size as u64));
+        assert_eq!(catalog_unknown(&p, size as u64), Some(true));
+        assert!(matches!(install(&p, &pack, "t", None), Err(PackError::UnknownGame)));
+        assert!(matches!(uninstall(&p), Err(PackError::UnknownGame)));
+        // Steam a aussi remis le bundle : nouveaux portraits d'origine, le pack de la beta est refusé.
+        std::fs::write(&p.bundle, vec![0u8; 9_999]).unwrap();
+        assert_eq!(catalog_unknown(&p, 9_999), Some(false));
+        assert!(matches!(install(&p, &pack, "t", None), Err(PackError::UnknownGame)));
+        assert_eq!(std::fs::read(&p.catalog).unwrap(), retail);
+        assert_eq!(std::fs::metadata(&p.bundle).unwrap().len(), 9_999);
         std::fs::remove_dir_all(&root).ok();
     }
 

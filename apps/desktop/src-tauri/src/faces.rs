@@ -42,6 +42,10 @@ pub struct FacesStatus {
     pub backup: bool,
     /// Pack installé mais catalogue remis d'origine (mise à jour Steam) : le jeu affiche des carrés blancs.
     pub catalog_mismatch: bool,
+    /// Portraits d'origine inconnus (nouvelle version de FM27 ou autre mod) : installation bloquée.
+    pub catalog_unknown: bool,
+    /// Avec un de nos packs (fait pour l'ancienne version) encore en place : Steam doit le remplacer.
+    pub stale_pack: bool,
 }
 
 pub fn bundle_path(game: &Path) -> std::path::PathBuf {
@@ -64,19 +68,20 @@ fn game_found(game: &Path) -> bool {
 pub fn status_with(game: &Path, paths: Option<&Paths>) -> FacesStatus {
     let running = crate::fm_bridge::game_running(game);
     if !game_found(game) {
-        return FacesStatus { state: FacesState::NoGame, size: None, running, backup: false, catalog_mismatch: false };
+        return FacesStatus { state: FacesState::NoGame, size: None, running, backup: false, catalog_mismatch: false, catalog_unknown: false, stale_pack: false };
     }
     let backup = paths.is_some_and(|p| p.backup.join(faces_pack::BUNDLE).is_file());
     let Ok(m) = std::fs::metadata(bundle_path(game)) else {
-        return FacesStatus { state: FacesState::Missing, size: None, running, backup, catalog_mismatch: false };
+        return FacesStatus { state: FacesState::Missing, size: None, running, backup, catalog_mismatch: false, catalog_unknown: false, stale_pack: false };
     };
     let by_size = state_for_size(m.len());
     let catalog_mismatch = paths.is_some_and(|p| faces_pack::catalog_mismatch(p, m.len()));
+    let unknown = paths.and_then(|p| faces_pack::catalog_unknown(p, m.len()));
     let state = match (by_size, paths.and_then(faces_pack::catalog_state)) {
         (FacesState::Unknown, Some(CatalogState::Custom)) => FacesState::PhotorealCustom,
         (s, _) => s,
     };
-    FacesStatus { state, size: Some(m.len()), running, backup, catalog_mismatch }
+    FacesStatus { state, size: Some(m.len()), running, backup, catalog_mismatch, catalog_unknown: unknown.is_some(), stale_pack: unknown == Some(true) }
 }
 
 #[cfg(test)]

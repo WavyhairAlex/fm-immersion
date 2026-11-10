@@ -13,6 +13,8 @@ type FacesStatus = {
   backup: boolean;
   /** Pack en place mais catalogue remis d'origine par une mise à jour Steam (carrés blancs en jeu). */
   catalogMismatch?: boolean;
+  catalogUnknown?: boolean;
+  stalePack?: boolean;
 };
 type LotState = 'none' | 'running' | 'paused' | 'stopped' | 'finished';
 type Stage = {
@@ -260,6 +262,11 @@ export function Faces() {
         <span className="text-brun">{t('faces.pc.label')}</span>
         <b>{t(`faces.pc.${pcState(state, !!offer)}`)}</b>
       </p>
+      {status?.catalogUnknown && (
+        <p className="mt-3 max-w-3xl rounded-lg border-l-4 border-corail bg-white p-3 text-sm" role="alert">
+          {t(status.stalePack ? 'faces.newGameStale' : 'faces.newGame')}
+        </p>
+      )}
       {status?.catalogMismatch && (
         <p className="mt-3 max-w-3xl rounded-lg border-l-4 border-corail bg-white p-3 text-sm" role="alert">
           {t('faces.steamReset')}
@@ -277,7 +284,7 @@ export function Faces() {
             {update.data?.installedVersion && ` ${t('faces.update.current', { version: update.data.installedVersion })}`}
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button type="button" className="btn-primary" disabled={running || busy || state === 'noGame'} onClick={() => installOffer.mutate(offer)}>
+            <button type="button" className="btn-primary" disabled={running || busy || state === 'noGame' || !!status?.catalogUnknown} onClick={() => installOffer.mutate(offer)}>
               {installOffer.isPending
                 ? download?.step === 'download' && download.total
                   ? t('faces.update.downloading', {
@@ -328,7 +335,7 @@ export function Faces() {
               )}
               {(installed || state === 'unknown') && (
                 <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <button type="button" className="btn-secondary" disabled={running || busy || !status?.backup} onClick={() => uninstall.mutate()}>
+                  <button type="button" className="btn-secondary" disabled={running || busy || !status?.backup || !!status?.catalogUnknown} onClick={() => uninstall.mutate()}>
                     {uninstall.isPending ? t('faces.uninstalling') : t('faces.uninstall')}
                   </button>
                 </div>
@@ -423,13 +430,13 @@ export function Faces() {
                 <button
                   type="button"
                   className="btn-primary"
-                  disabled={!pack || running || busy || state === 'noGame' || state === 'missing'}
+                  disabled={!pack || running || busy || state === 'noGame' || state === 'missing' || !!status?.catalogUnknown}
                   onClick={() => install.mutate()}
                 >
                   {install.isPending ? t('faces.installing') : installed ? t('faces.reinstall') : t('faces.install')}
                 </button>
                 {(installed || state === 'unknown') && (
-                  <button type="button" className="btn-secondary" disabled={running || busy || !status?.backup} onClick={() => uninstall.mutate()}>
+                  <button type="button" className="btn-secondary" disabled={running || busy || !status?.backup || !!status?.catalogUnknown} onClick={() => uninstall.mutate()}>
                     {uninstall.isPending ? t('faces.uninstalling') : t('faces.uninstall')}
                   </button>
                 )}

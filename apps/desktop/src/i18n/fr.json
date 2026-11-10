@@ -3242,7 +3242,9 @@
       "published": "Dernier pack publié le {{date}} ({{mb}} Mo)."
     },
     "atelierToggle": "Je génère les portraits (mode atelier : chemins, avancement du lot, pack local)",
-    "steamReset": "Une mise à jour de FM27 a remis le catalogue d'origine : en jeu, les portraits seraient des carrés blancs. Ferme FM27 puis clique sur « Réinstaller ce pack »."
+    "steamReset": "Une mise à jour de FM27 a remis le catalogue d'origine : en jeu, les portraits seraient des carrés blancs. Ferme FM27 puis clique sur « Réinstaller ce pack ».",
+    "newGame": "Les portraits d'origine de ce FM27 ne sont pas ceux que le pack connaît (nouvelle version du jeu, ou autre mod) : l'installation est bloquée pour ne rien casser. Attends un pack à jour.",
+    "newGameStale": "FM27 a été mis à jour avec de nouveaux portraits d'origine, mais le pack fait pour l'ancienne version est encore en place : en jeu, les portraits seraient faux ou en carrés blancs. Dans Steam, fais « Vérifier l'intégrité des fichiers » de FM27, puis attends un pack à jour."
   },
   "photos": {
     "title": "Photos de situation",
@@ -4892,7 +4894,9 @@
       "memoryKnown": "Lecture du CA/PA : version du jeu déjà vérifiée.",
       "memoryPatterns": "Lecture du CA/PA : nouvelle version du jeu, les repères ont été retrouvés. Elle devrait marcher ; vérifie un joueur que tu connais.",
       "memoryBroken": "Lecture du CA/PA : cette version du jeu n'est pas encore prise en charge. Le reste de l'appli marche ; attends une mise à jour de FM Immersion.",
-      "facesMismatch": "Visages : la mise à jour a remis le catalogue d'origine, le jeu afficherait des carrés blancs. Réinstalle le pack, FM27 fermé."
+      "facesMismatch": "Visages : la mise à jour a remis le catalogue d'origine, le jeu afficherait des carrés blancs. Réinstalle le pack, FM27 fermé.",
+      "facesNewGame": "Visages : nouveaux portraits d'origine dans cette version, le pack actuel ne peut pas être installé. Attends un pack à jour.",
+      "facesNewGameStale": "Visages : le pack de l'ancienne version est encore en place sur de nouveaux portraits d'origine. Vérifie les fichiers de FM27 dans Steam."
     },
     "go": {
       "bridge": "Plugin et réglages",
