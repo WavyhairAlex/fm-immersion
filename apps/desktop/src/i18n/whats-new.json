@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.132",
+    "date": "2026-11-10",
+    "fr": [
+      "Entraînement : dans une semaine à deux matchs ou plus, l'adjoint ne conseille plus la double intensité, même pour les joueurs en forme. Elle revient dès que le calendrier s'allège."
+    ],
+    "en": [
+      "Training: in a week with two matches or more, your assistant no longer advises double intensity, even for players in shape. It comes back once the schedule eases."
+    ]
+  },
+  {
     "version": "0.1.131",
     "date": "2026-11-10",
     "fr": [

@@ -1596,7 +1596,8 @@
         "intensity": "Team intensity: double for players in good shape, half for tired ones, none for exhausted ones (table below).",
         "setups_one": "Change {{count}} individual setting (Individual tab).",
         "setups_other": "Change the settings of {{count}} players (Individual tab).",
-        "setupsOk": "Individual settings are already up to date."
+        "setupsOk": "Individual settings are already up to date.",
+        "intensityBusy": "Team intensity: busy week, normal intensity for players in shape, half for tired ones, none for exhausted ones (table below)."
       },
       "indiv": {
         "lead": "Nothing to redo each week: once set, a player keeps the same focus for three months (progress shows month by month), and the same roles as long as your tactic and starting XI don't change. Tick “Set in game” once done.",
@@ -1624,7 +1625,8 @@
         "invalid_other": "The previous focus no longer fits the role: changing it."
       },
       "prevWeek": "Previous week",
-      "nextWeekBtn": "Next week"
+      "nextWeekBtn": "Next week",
+      "busyIntensity": "{{count}} matches this week: no double intensity. It helps development a little but causes more injuries, and recovery is already short. It comes back once the schedule eases."
     },
     "intro": {
       "playtime": "Who plays too much, who plays too little compared with their promised status, and who may come and complain.",

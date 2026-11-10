@@ -539,11 +539,19 @@ export const HARVEST_WEEK_YIELD = 33.3;
 export const HARVEST_FOCUS = 'quickness';
 
 /** Intensité de l'équipe conseillée par méthode : Harvestgreen ne fait travailler que les joueurs en forme, en double. */
-export function teamIntensityFor(method: TrainingMethod | undefined): Record<(typeof CONDITION_LEVELS)[number], IndividualIntensity> {
+export function teamIntensityFor(method: TrainingMethod | undefined, matches = 1): Record<(typeof CONDITION_LEVELS)[number], IndividualIntensity> {
   if (method === 'harvestgreen') return { veryPoor: 'noWork', poor: 'noWork', fair: 'noWork', good: 'double', excellent: 'double' };
-  if ((method ?? DEFAULT_METHOD) === 'coach') return COACH_INTENSITY;
+  if ((method ?? DEFAULT_METHOD) === 'coach') return matches >= BUSY_WEEK_MATCHES ? BUSY_INTENSITY : COACH_INTENSITY;
   return TEAM_INTENSITY;
 }
+
+/**
+ * Semaine à deux matchs ou plus : plus de double intensité, même pour les joueurs en forme. La double intensité fait
+ * un peu plus progresser mais blesse plus, et ces semaines-là la récupération manque déjà (conseil courant des
+ * spécialistes du jeu : intensité normale pendant les périodes chargées, double en présaison et en fin de saison).
+ */
+export const BUSY_WEEK_MATCHES = 2;
+export const BUSY_INTENSITY: Record<(typeof CONDITION_LEVELS)[number], IndividualIntensity> = { veryPoor: 'noWork', poor: 'half', fair: 'normal', good: 'normal', excellent: 'normal' };
 
 /**
  * Intensité de l'équipe du programme FM Immersion : double intensité pour les joueurs en forme (c'est ce qui fait

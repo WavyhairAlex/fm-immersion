@@ -1596,7 +1596,8 @@
         "intensity": "Intensité de l'équipe : double pour les joueurs en forme, moitié pour les fatigués, rien pour les épuisés (tableau plus bas).",
         "setups_one": "Change {{count}} réglage individuel (onglet Individuel).",
         "setups_other": "Change les réglages de {{count}} joueurs (onglet Individuel).",
-        "setupsOk": "Les réglages individuels sont déjà à jour."
+        "setupsOk": "Les réglages individuels sont déjà à jour.",
+        "intensityBusy": "Intensité de l'équipe : semaine chargée, intensité normale pour les joueurs en forme, moitié pour les fatigués, rien pour les épuisés (tableau plus bas)."
       },
       "indiv": {
         "lead": "Rien à refaire chaque semaine : une fois réglé, un joueur garde sa priorité trois mois (la progression se voit au mois), et ses rôles tant que ta tactique et ton onze ne changent pas. Coche « Réglé en jeu » une fois fait.",
@@ -1624,7 +1625,8 @@
         "invalid_other": "L'ancienne priorité ne colle plus à son rôle : on en change."
       },
       "prevWeek": "Semaine précédente",
-      "nextWeekBtn": "Semaine suivante"
+      "nextWeekBtn": "Semaine suivante",
+      "busyIntensity": "{{count}} matchs cette semaine : pas de double intensité. Elle fait un peu plus progresser mais blesse plus, et la récupération manque déjà. Elle revient la semaine prochaine si le calendrier s'allège."
     },
     "intro": {
       "playtime": "Qui joue trop, qui ne joue pas assez par rapport au statut promis, et qui risque de venir se plaindre.",
