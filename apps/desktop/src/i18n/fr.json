@@ -3320,9 +3320,8 @@
       "injuryNote": "Scène de blessure : réservée aux joueurs, jamais avec ta photo de coach.",
       "coachFace": "Ta photo de coach sera utilisée.",
       "needCoach": "Ajoute d'abord ta photo de coach (barre latérale) pour cette scène.",
-      "needPlayer": "Choisis le portrait du joueur.",
-      "playerFace": "Portrait du joueur",
-      "playerFaceNote": "Une image de visage (PNG ou JPEG), par exemple un portrait du pack Visages. Dans une prochaine version, l'appli ira le chercher elle-même.",
+      "needPlayer": "Choisis un joueur de ton effectif, ou une image de visage.",
+      "playerFace": "Ou une autre image de visage (PNG ou JPEG)",
       "kit": "Maillot du club (facultatif)",
       "kitNote": "Image PNG d'un maillot (pack de kits 2D). Les couleurs et le motif sont repris ; écusson et sponsors sont retirés ensuite, pas toujours entièrement.",
       "generate": "Faire la photo",
@@ -3356,7 +3355,12 @@
       "privacy": "Les photos restent sur ton PC (dossier library du moteur). Rien n'est envoyé.",
       "library": "Photos déjà faites",
       "show": "Afficher",
-      "delete": "Supprimer"
+      "delete": "Supprimer",
+      "player": "Joueur",
+      "playerPick": "Choisis un joueur de ton effectif",
+      "playerNone": "Aucun effectif lu : choisis une carrière",
+      "playerNote": "L'appli prend elle-même son portrait (ton facepack ou le pack Visages).",
+      "noFace": "Pas de portrait trouvé pour {{name}} sur ce PC (ni facepack, ni pack Visages) : choisis une image."
     },
     "reason": {
       "texte": "texte ou logo",

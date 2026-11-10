@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.147",
+    "date": "2026-11-10",
+    "fr": [
+      "Photos, « Essayer une scène » : tu choisis un joueur de ton effectif dans une liste et l'appli prend elle-même son portrait (ton facepack ou le pack Visages). Plus besoin d'aller chercher l'image dans un dossier.",
+      "Les photos de situation des dépêches et de la gazette marchent aussi avec les facepacks en JPEG."
+    ],
+    "en": [
+      "Photos, \"Try a scene\": pick a player from your squad in a list and the app fetches the portrait itself (your facepack or the Faces pack). No more browsing for the image in a folder.",
+      "Situational photos for breaking news and the gazette now also work with JPEG facepacks."
+    ]
+  },
+  {
     "version": "0.1.146",
     "date": "2026-11-10",
     "fr": [
