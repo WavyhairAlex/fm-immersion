@@ -239,13 +239,18 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
         </Panel>
       )}
       <ContractsToDecide r={r} gameDate={gameDate} onMarked={setJustMarked} />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <Kpi label={t('fm.merc.kpi.leave')} value={n('sell') + n('release')} tone={n('sell') + n('release') ? 'bad' : undefined} sub={t('fm.merc.kpi.leaveSub', { sell: n('sell'), release: n('release') })} />
-        <Kpi label={t('fm.merc.kpi.income')} value={f.money(r.income)} dim={!r.income} sub={t('fm.merc.kpi.incomeSub', { wages: f.money(r.wagesFreed) })} />
-        <Kpi label={t('fm.merc.kpi.prospects')} value={prospects.length} sub={t('fm.merc.kpi.prospectsSub', { loan: n('loan') })} />
-        <Kpi label={t('fm.merc.kpi.extend')} value={n('extend')} sub={t('fm.merc.kpi.extendSub')} />
-        <Kpi label={t('fm.merc.kpi.off')} value={r.advice.filter((a) => a.compat?.compat === 'no').length} sub={t('fm.merc.kpi.offSub')} />
-      </div>
+      {/* Compteurs : seuls ceux qui ne sont pas à zéro, un zéro n'appelle aucune décision. */}
+      {(() => {
+        const off = r.advice.filter((a) => a.compat?.compat === 'no').length;
+        const tiles = [
+          n('sell') + n('release') > 0 && <Kpi key="leave" label={t('fm.merc.kpi.leave')} value={n('sell') + n('release')} tone="bad" sub={t('fm.merc.kpi.leaveSub', { sell: n('sell'), release: n('release') })} />,
+          r.income > 0 && <Kpi key="income" label={t('fm.merc.kpi.income')} value={f.money(r.income)} sub={t('fm.merc.kpi.incomeSub', { wages: f.money(r.wagesFreed) })} />,
+          prospects.length > 0 && <Kpi key="prospects" label={t('fm.merc.kpi.prospects')} value={prospects.length} sub={t('fm.merc.kpi.prospectsSub', { loan: n('loan') })} />,
+          n('extend') > 0 && <Kpi key="extend" label={t('fm.merc.kpi.extend')} value={n('extend')} sub={t('fm.merc.kpi.extendSub')} />,
+          off > 0 && <Kpi key="off" label={t('fm.merc.kpi.off')} value={off} sub={t('fm.merc.kpi.offSub')} />,
+        ].filter(Boolean);
+        return tiles.length ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{tiles}</div> : null;
+      })()}
       <More>{t('fm.merc.help', { form: r.nowForm ?? '–', style: names.style(style), projectForm: r.projectForm ?? '–' })}</More>
 
       {needs && <NeedsPanel needs={needs.needs} saveId={saveId} gameDate={gameDate} engine={engine} project={pr} squad={own.filter((x) => !leavingIds.has(x.id))} />}

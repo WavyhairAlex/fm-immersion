@@ -45,6 +45,7 @@ export function FmBriefing({
   onTodo,
   tactic = null,
   hideMatch = false,
+  noQuote = false,
 }: {
   snap: FmSnapshot;
   players: FmPlayer[];
@@ -60,6 +61,8 @@ export function FmBriefing({
   tactic?: TacticAdvice | null;
   /** Le prochain match a déjà son bandeau : ne pas le répéter dans la liste. */
   hideMatch?: boolean;
+  /** Accueil : la décision du jour est déjà en tête de page, pas de citation séparée, tout tient dans une liste. */
+  noQuote?: boolean;
 }) {
   const { t, i18n } = useTranslation();
   const f = useFormat();
@@ -139,7 +142,7 @@ export function FmBriefing({
   const isMatch = (x: BriefItem) => x.kind === 'nextMatch' || x.kind === 'friendly';
   const shown = hideMatch ? ordered.filter((x) => !isMatch(x)) : ordered;
   const quote = shown.find((x) => isBriefTask(x) && !isDone(x) && x.view !== 'home') ?? shown.find((x) => !isDone(x)) ?? null;
-  const rows = shown.filter((x) => x !== quote);
+  const rows = noQuote ? shown : shown.filter((x) => x !== quote);
   const shownTasks = shown.filter(isBriefTask);
   const shownDone = shownTasks.filter(isDone).length;
   const action = (x: BriefItem) => t(`fm.brief.act.${x.kind}`, { defaultValue: t('fm.brief.go') });
@@ -147,6 +150,7 @@ export function FmBriefing({
 
   return (
     <div className="space-y-4">
+      {!noQuote && (
       <section className="card p-5" aria-labelledby="fm-brief-word">
         <h2 id="fm-brief-word" className="text-lg">
           {t('fm.brief.word')}
@@ -171,6 +175,7 @@ export function FmBriefing({
           </div>
         )}
       </section>
+      )}
 
       <section className="card p-5" aria-labelledby="fm-brief-week">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
