@@ -1,4 +1,4 @@
-import type { BreakingNews } from '@fm-immersion/module-fm';
+import type { BreakingNews, GazetteIssue, GazetteStory } from '@fm-immersion/module-fm';
 import { isCoachBreaking } from '@fm-immersion/module-fm';
 import { invoke } from '@tauri-apps/api/core';
 import { facePng } from './player-face';
@@ -67,6 +67,53 @@ export function sceneForBreaking(n: Pick<BreakingNews, 'kind' | 'id' | 'date' | 
   }
 }
 
+/** Scène de la une d'une gazette, avec le joueur qu'elle met en avant (null pour une scène du coach). */
+export type HeadlineChoice = PhotoChoice & { playerId: string | number | null };
+
+/**
+ * Scène de la une selon le sujet de la semaine : victoire → le joueur du match bras levés (ou le coach qui exulte) ;
+ * défaite ou élimination → le coach mains sur la tête ; nul → consigne sur la touche ; blessure, recrue, départ,
+ * buteur comme pour les dépêches ; avenir du coach → conférence ou consigne. Null quand rien ne s'y prête
+ * (classement, formation, calme plat) : la une garde sa mise en page.
+ */
+export function sceneForHeadline(head: Pick<GazetteStory, 'kind' | 'params'>, weekStart: string, hasCoach: boolean): HeadlineChoice | null {
+  const p = head.params;
+  const key = `${head.kind}|${weekStart}`;
+  const coach = (scene: string): HeadlineChoice | null => (hasCoach ? { scene, cast: 'coach', playerId: null } : null);
+  const player = (scene: string, id: string | number | null | undefined): HeadlineChoice | null =>
+    id == null ? null : { scene, cast: 'player', playerId: id };
+  switch (head.kind) {
+    case 'result': {
+      if (p.cup === 'out') return coach('mains_tete');
+      if (p.outcome === 'W') return player('une_joueur', p.bestId) ?? coach('celebration');
+      if (p.outcome === 'L') return coach('mains_tete');
+      return coach('consigne');
+    }
+    case 'cupOut':
+      return coach('mains_tete');
+    case 'cupThrough':
+      return player('une_joueur', p.bestId) ?? coach('celebration');
+    case 'injury':
+      return player((Number(p.days) || 0) >= 90 ? pick(['civiere', 'soutenu'] as const, key) : pick(['bequilles', 'banc'] as const, key), p.id);
+    case 'arrival':
+      return p.id == null ? null : hasCoach ? { scene: 'duo_presse', cast: 'duo', playerId: p.id } : player('signature', p.id);
+    case 'departure':
+      return player('signature', p.id);
+    case 'scorer':
+      return player('glissade', p.id);
+    case 'coachFuture':
+    case 'job':
+      return coach(pick(['conference', 'consigne'] as const, key));
+    case 'streak':
+      return p.outcome === 'W' || p.outcome === 'unbeaten' ? coach('celebration') : coach('mains_tete');
+    default:
+      return null;
+  }
+}
+
+/** Clé de la une d'une gazette dans la bibliothèque (une photo par numéro). */
+export const gazetteTag = (saveId: string, issue: Pick<GazetteIssue, 'number' | 'weekStart'>) => `gazette|${saveId}|${issue.number}|${issue.weekStart}`;
+
 /** Clé d'un événement dans la bibliothèque (la photo n'est faite qu'une fois par dépêche). */
 export const breakingTag = (saveId: string, n: Pick<BreakingNews, 'kind' | 'id' | 'date'>) => `breaking|${saveId}|${n.kind}|${n.id}|${n.date.slice(0, 10)}`;
 
@@ -110,7 +157,7 @@ export async function existingPhoto(tag: string): Promise<HTMLImageElement | nul
   }
 }
 
-export type PhotoSubjects = { playerId?: string | null; coachPhoto?: string | null };
+export type PhotoSubjects = { playerId?: string | number | null; coachPhoto?: string | null };
 
 /** Visages dans l'ordre attendu par la scène (coach puis joueur pour un duo) ; null si l'un manque. */
 export async function castFaces(cast: PhotoCast, s: PhotoSubjects): Promise<number[][] | null> {

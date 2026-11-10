@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.146",
+    "date": "2026-11-10",
+    "fr": [
+      "La une de la gazette a maintenant sa photo de situation : le joueur du match bras levés après une victoire, le blessé sur civière ou en béquilles, la recrue présentée avec toi, le coach mains sur la tête après une défaite. Même réglage que les dépêches (« Photos de situation » dans Live Discord) : sur ton clic avec le bouton « Faire la photo de situation » sous la gazette, ou automatique à l'envoi."
+    ],
+    "en": [
+      "The gazette front page now has its situational photo: the man of the match arms raised after a win, the injured player on a stretcher or crutches, the new signing presented with you, the coach head in hands after a defeat. Same setting as the breaking news (\"Situational photos\" in Live Discord): on your click with the \"Take the situational photo\" button under the gazette, or automatic when sending."
+    ]
+  },
+  {
     "version": "0.1.144",
     "date": "2026-11-10",
     "fr": [

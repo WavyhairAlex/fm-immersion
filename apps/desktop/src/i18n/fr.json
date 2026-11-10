@@ -3781,7 +3781,8 @@
       }
     },
     "actions": "Réécrire et partager",
-    "emptyHow": "FM Immersion lit ta partie à chaque jour de jeu grâce au plugin FM27 ; la gazette s’écrit à partir de ces lectures, une par semaine."
+    "emptyHow": "FM Immersion lit ta partie à chaque jour de jeu grâce au plugin FM27 ; la gazette s’écrit à partir de ces lectures, une par semaine.",
+    "photoNone": "Pas de photo possible pour cette une (sujet sans scène, visage introuvable ou moteur occupé) : la une garde sa mise en page."
   },
   "discord": {
     "autoTitle": "Gazette automatique",

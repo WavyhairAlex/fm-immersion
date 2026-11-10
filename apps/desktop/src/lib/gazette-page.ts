@@ -146,8 +146,10 @@ function keyFigure(t: TFunction, p: GazetteStory['params'], lang?: string): { va
   const opponent = String(p.opponent ?? t('gazette.opponentUnknown'));
   const shots = p.shots != null ? Number(p.shots) : null;
   const shotsOpp = p.shotsOpp != null ? Number(p.shotsOpp) : null;
-  if (shots != null && shotsOpp != null && shots >= 2 * shotsOpp + 3) return { value: String(shots), label: t('gazette.page.figure.shots', { them: shotsOpp, opponent }) };
-  if (shots != null && shotsOpp != null && shotsOpp >= 2 * shots + 3) return { value: String(shotsOpp), label: t('gazette.page.figure.shotsAgainst', { us: shots, opponent }) };
+  if (shots != null && shotsOpp != null && shots >= 2 * shotsOpp + 3)
+    return { value: String(shots), label: t('gazette.page.figure.shots', { them: shotsOpp, opponent }) };
+  if (shots != null && shotsOpp != null && shotsOpp >= 2 * shots + 3)
+    return { value: String(shotsOpp), label: t('gazette.page.figure.shotsAgainst', { us: shots, opponent }) };
   const poss = p.possession != null ? Math.round(Number(p.possession)) : null;
   if (poss != null && (poss >= 60 || poss <= 40)) return { value: `${poss} %`, label: t('gazette.page.figure.possession') };
   if (p.xg != null && p.xgOpp != null) {
@@ -178,17 +180,24 @@ export async function drawPage(
     figures?: SeasonReview | null;
     /** Visage d'un joueur pour les brèves (blessé, recrue…), ou null. */
     faceFor?: (id: string | number) => Promise<CanvasImageSource | null>;
+    /** Photo de situation de la une (faite par le moteur d'images), en bandeau sous le titre ; null sans photo. */
+    photo?: CanvasImageSource | null;
   },
 ): Promise<HTMLCanvasElement> {
   await Promise.all(
-    [font(900, 76, SERIF), font(800, 50, SERIF), italic(400, 22), italic(600, 22), font(400, 19), font(800, 19)].map((f) => document.fonts.load(f).catch(() => undefined)),
+    [font(900, 76, SERIF), font(800, 50, SERIF), italic(400, 22), italic(600, 22), font(400, 19), font(800, 19)].map((f) =>
+      document.fonts.load(f).catch(() => undefined),
+    ),
   );
   const head = issue.headline;
   const isResult = head.kind === 'result';
   const p = head.params;
   const all = [head, ...issue.stories];
   const next = all.find((s) => s.kind === 'nextMatch') ?? null;
-  const briefs = [...issue.stories.filter((x) => x.kind === 'result'), ...issue.stories.filter((x) => x.kind !== 'nextMatch' && x.kind !== 'quiet' && x.kind !== 'result')];
+  const briefs = [
+    ...issue.stories.filter((x) => x.kind === 'result'),
+    ...issue.stories.filter((x) => x.kind !== 'nextMatch' && x.kind !== 'quiet' && x.kind !== 'result'),
+  ];
   const [club, opponent, nextArt, faces] = await Promise.all([
     clubArt(issue.club),
     clubArt(isResult ? String(p.opponent ?? '') || null : null),
@@ -220,8 +229,15 @@ export async function drawPage(
 function paint(
   t: TFunction,
   issue: GazetteIssue,
-  opts: { form: Outcome[]; lang?: string; face?: CanvasImageSource | null; figures?: SeasonReview | null },
-  art: { club: ClubArt | null; opponent: ClubArt | null; nextArt: ClubArt | null; faces: (CanvasImageSource | null)[]; briefs: GazetteStory[]; next: GazetteStory | null },
+  opts: { form: Outcome[]; lang?: string; face?: CanvasImageSource | null; figures?: SeasonReview | null; photo?: CanvasImageSource | null },
+  art: {
+    club: ClubArt | null;
+    opponent: ClubArt | null;
+    nextArt: ClubArt | null;
+    faces: (CanvasImageSource | null)[];
+    briefs: GazetteStory[];
+    next: GazetteStory | null;
+  },
   lim: Limits,
 ): { canvas: HTMLCanvasElement; ends: [number, number, number] } {
   const { lang } = opts;
@@ -336,7 +352,12 @@ function paint(
   const article = articleText(t, issue, lang);
   // Le chapô reprend la première phrase du récit (qui continue ensuite dans la colonne du milieu), sinon le texte de la une.
   // Fin de phrase : ponctuation après autre chose qu'un chiffre (« 2. slovenská liga » n'en est pas une), puis majuscule.
-  const sentences = article ? article.split(/(?<=[^\d\s][.!?])\s+(?=[\p{Lu}«"])/u).map((x) => x.trim()).filter(Boolean) : [];
+  const sentences = article
+    ? article
+        .split(/(?<=[^\d\s][.!?])\s+(?=[\p{Lu}«"])/u)
+        .map((x) => x.trim())
+        .filter(Boolean)
+    : [];
   const deck = sentences.length > 1 ? sentences[0]! : !article ? headText.body : '';
   const story = sentences.length > 1 ? sentences.slice(1).join(' ') : article;
   const motm = isResult && p.best;
@@ -383,6 +404,24 @@ function paint(
     }
   }
   y += 12;
+  if (opts.photo) {
+    // Photo de situation en bandeau sous le chapô : largeur de la une, recadrée (le haut gardé : les visages y sont).
+    const bw = HERO;
+    const bh = Math.min(Math.round(bw / 2), 450);
+    const pw = Number((opts.photo as { width?: number }).width) || 1;
+    const ph = Number((opts.photo as { height?: number }).height) || 1;
+    const k = Math.max(bw / pw, bh / ph);
+    const sw = bw / k;
+    const sh = bh / k;
+    ctx.save();
+    roundRect(ctx, XA, y + 4, bw, bh, 6, C.ink);
+    ctx.beginPath();
+    ctx.roundRect(XA, y + 4, bw, bh, 6);
+    ctx.clip();
+    ctx.drawImage(opts.photo, (pw - sw) / 2, (ph - sh) * 0.25, sw, sh, XA, y + 4, bw, bh);
+    ctx.restore();
+    y += bh + 12;
+  }
   if (motm) {
     // Portrait en couverture de magazine : photo pleine largeur sur trame de points aux couleurs du club, nom en
     // grand dessous, note dans une grosse pastille.
@@ -418,7 +457,12 @@ function paint(
       ctx.fillStyle = g;
       ctx.fillRect(px, heroTop + photoH * 0.55, PANEL, photoH * 0.45 + 1);
     } else {
-      const initials = String(p.best).split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join('');
+      const initials = String(p.best)
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join('');
       ctx.font = font(900, 150, SERIF);
       ctx.fillStyle = ink;
       ctx.globalAlpha = 0.9;
@@ -569,7 +613,13 @@ function paint(
     // Le match en chiffres : barres face à face sur une seule rangée, notre couleur contre celle de l'adversaire.
     const rows: [string, number, number, (v: number) => string][] = [];
     const dec = (v: number) => new Intl.NumberFormat(lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
-    if (p.possession != null) rows.push([t('gazette.page.stat.possession'), Number(p.possession), p.possessionOpp != null ? Number(p.possessionOpp) : 100 - Number(p.possession), (v) => `${Math.round(v)} %`]);
+    if (p.possession != null)
+      rows.push([
+        t('gazette.page.stat.possession'),
+        Number(p.possession),
+        p.possessionOpp != null ? Number(p.possessionOpp) : 100 - Number(p.possession),
+        (v) => `${Math.round(v)} %`,
+      ]);
     if (p.shots != null && p.shotsOpp != null) rows.push([t('gazette.page.stat.shots'), Number(p.shots), Number(p.shotsOpp), (v) => String(v)]);
     if (p.onTarget != null && p.onTargetOpp != null) rows.push([t('gazette.page.stat.onTarget'), Number(p.onTarget), Number(p.onTargetOpp), (v) => String(v)]);
     if (p.xg != null && p.xgOpp != null) rows.push([t('gazette.page.stat.xg'), Number(p.xg), Number(p.xgOpp), dec]);
@@ -615,8 +665,9 @@ function paint(
     y = section(t('gazette.une.figures', { season: fig.label }), XA, y + 14, COL_A) + 12;
     // Un encadré par compétition : d'abord le championnat (place, bilan, buts, buteur), puis chaque coupe engagée.
     const leagueName =
-      [head, ...issue.stories].map((x) => (x.kind === 'result' || x.kind === 'nextMatch' ? x.params.competition : null)).find((c) => c && competitionKind(String(c)) === 'league') ??
-      t('gazette.page.league');
+      [head, ...issue.stories]
+        .map((x) => (x.kind === 'result' || x.kind === 'nextMatch' ? x.params.competition : null))
+        .find((c) => c && competitionKind(String(c)) === 'league') ?? t('gazette.page.league');
     ctx.font = font(900, 14);
     ctx.fillStyle = C.ink;
     ctx.fillText(`🏟️ ${caps(String(leagueName))}`, XA, y + 14);
@@ -792,7 +843,12 @@ function paint(
       ctx.fill();
       ctx.font = font(400, 20);
       ctx.textAlign = 'center';
-      ctx.fillText((b.kind === 'result' && b.params.cup === 'out' ? ICON.cupOut : b.kind === 'result' && b.params.cup === 'through' ? ICON.cupThrough : ICON[b.kind]) ?? '•', XC + 24, by + 31);
+      ctx.fillText(
+        (b.kind === 'result' && b.params.cup === 'out' ? ICON.cupOut : b.kind === 'result' && b.params.cup === 'through' ? ICON.cupThrough : ICON[b.kind]) ??
+          '•',
+        XC + 24,
+        by + 31,
+      );
       ctx.textAlign = 'left';
     }
     const tx = XC + 60;

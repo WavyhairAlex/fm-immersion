@@ -31,7 +31,9 @@ extraite avec son historique ; Simloom garde Planet Zoo 2 et Transport Fever 3.
   Dans les envois Discord (`src/lib/photo-events.ts`) : réglage local « photos de situation » (`fmi.photos.mode` : off / manual / auto) dans
   Gazette et Discord ; scène tirée de la dépêche (blessure longue : civière ou soutenu, courte : béquilles ou banc ; recrue : duo avec le coach ;
   départ : signature ; avenir du coach : conférence ou consigne), photo faite une fois par événement (clé `tag` dans le compte rendu,
-  `photos_library_find`) et réutilisée ; sans photo ou en cas d'échec, la dépêche garde le portrait.
+  `photos_library_find`) et réutilisée ; sans photo ou en cas d'échec, la dépêche garde le portrait. Même chose pour la une de la
+  gazette (`sceneForHeadline` : victoire → joueur du match bras levés, défaite → coach mains sur la tête, blessure, recrue, départ,
+  buteur, avenir du coach ; clé `gazette|save|numéro|semaine`), en bandeau sous le chapô dans `gazette-page.ts`.
   Exception choisie par le joueur : le **Live Discord** envoie une gazette à son salon par le lien webhook qu'il a
   collé (`src-tauri/src/discord.rs`, seulement vers `discord.com/api/webhooks/`, seulement ce qu'il a choisi : gazette sur son clic ou chaque semaine s'il a coché l'envoi automatique, dépêches (`modules/fm/src/breaking.ts`) sur son clic ou à leur date s'il l'a coché,
   direct de ses matchs s'il l'a activé), et un certificat de
