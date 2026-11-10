@@ -229,7 +229,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
           />
         );
       case 'opponent':
-        return <FmOpponent snap={snapshot.data} />;
+        return <FmOpponent snap={snapshot.data} go={go} />;
       case 'diagnosis':
         return (
           <FmDiagnosis

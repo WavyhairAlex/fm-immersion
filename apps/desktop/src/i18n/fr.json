@@ -410,7 +410,7 @@
         }
       },
       "sections": {
-        "xi": "Le onze",
+        "xi": "Onze de base",
         "match": "Contre {{name}}",
         "balance": "Équilibre et consignes"
       }
@@ -1714,7 +1714,9 @@
       "formsHelp": "Lu dans l'analyse de formation du rapport d'équipe du jeu. Sans ballon, les occasions sont celles qu'ils concèdent.",
       "withBall": "{{value}} avec ballon",
       "withoutBall": "{{value}} sans ballon",
-      "adjustInXi": "Les réglages concrets pour ce match (consignes d'équipe, mentalité, marquage) sont dans Le onze, sous la tactique du match."
+      "adjustInXi": "Les réglages concrets pour ce match (consignes d'équipe, mentalité, marquage) sont dans Le onze, sous la tactique du match.",
+      "adjustLead": "Tu as lu le rapport : adapte ton onze et tes consignes pour ce match.",
+      "adjustGo": "Ajuster mon onze pour ce match"
     },
     "memory": {
       "open": "Essai : lire la base de FM27 directement",
@@ -2246,11 +2248,10 @@
       }
     },
     "subtabs": {
-      "tactic": "Le onze",
       "squad": "Joueurs",
       "style": "Style de jeu",
       "mercato": "Départs et jeunes",
-      "opponent": "Adversaire",
+      "opponent": "Prochain adversaire",
       "finances": "Finances et board"
     },
     "sheet": {
@@ -2900,12 +2901,11 @@
       }
     },
     "tabs": {
-      "tactic": "Le onze",
-      "depth": "Rotation",
+      "tactic": "Mon onze",
       "style": "Projet de jeu",
-      "training": "Entraînement",
       "squad": "Joueurs",
-      "playtime": "Temps de jeu et vestiaire"
+      "playtime": "Temps de jeu et vestiaire",
+      "calendar": "Préparation de la semaine"
     },
     "builder": {
       "title": "Construire ma tactique",

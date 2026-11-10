@@ -410,7 +410,7 @@
         }
       },
       "sections": {
-        "xi": "The XI",
+        "xi": "Base XI",
         "match": "Against {{name}}",
         "balance": "Balance and instructions"
       }
@@ -1714,7 +1714,9 @@
       "formsHelp": "Read from the formation analysis of the game's team report. Out of possession, chances are those they concede.",
       "withBall": "{{value}} in possession",
       "withoutBall": "{{value}} out of possession",
-      "adjustInXi": "The concrete settings for this match (team instructions, mentality, marking) are in The XI, under the match tactic."
+      "adjustInXi": "The concrete settings for this match (team instructions, mentality, marking) are in The XI, under the match tactic.",
+      "adjustLead": "Report read: adapt your XI and instructions for this match.",
+      "adjustGo": "Adjust my XI for this match"
     },
     "memory": {
       "open": "Trial: read the FM27 database directly",
@@ -2246,11 +2248,10 @@
       }
     },
     "subtabs": {
-      "tactic": "The XI",
       "squad": "Players",
       "style": "Playing style",
       "mercato": "Departures and youth",
-      "opponent": "Opponent",
+      "opponent": "Next opponent",
       "finances": "Finances and board"
     },
     "sheet": {
@@ -2900,12 +2901,11 @@
       }
     },
     "tabs": {
-      "tactic": "The XI",
-      "depth": "Rotation",
+      "tactic": "My XI",
       "style": "Game plan",
-      "training": "Training",
       "squad": "Players",
-      "playtime": "Playing time and dressing room"
+      "playtime": "Playing time and dressing room",
+      "calendar": "Week preparation"
     },
     "builder": {
       "title": "Build my tactic",
