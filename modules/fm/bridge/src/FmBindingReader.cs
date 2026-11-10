@@ -281,6 +281,9 @@ public class FmBindingReader : IGameReader
 
     public Snapshot Read()
     {
+        // 0.5.9 : durée de la lecture et temps pris au thread du jeu, écrits dans collecte.duree.
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        MainThread.TakeStats();
         var head = Batch.Run(new[]
         {
             new Req(null, Team + "/Name"), new Req(null, "game.CurrentGameDate"),
@@ -401,6 +404,11 @@ public class FmBindingReader : IGameReader
                 + (late > 0 ? $", {late} sans réponse au premier envoi dont {recovered} récupérées par paquets" : "");
             if (incomplete || late > 0) Plugin.Log.LogWarning($"chemins.json {collecte["chemins"]}");
         }
+
+        var (busyMs, worstMs) = MainThread.TakeStats();
+        collecte["duree"] = string.Format(CultureInfo.InvariantCulture, "{0:0} s ; thread du jeu : {1:0} ms au total, {2:0.0} ms au plus par image",
+            clock.Elapsed.TotalSeconds, busyMs, worstMs);
+        Plugin.Log.LogInfo($"Lecture du {date} : {collecte["duree"]}");
 
         return new Snapshot("archivix/1", "FM27", club, date, players, tactic)
         {
@@ -1105,7 +1113,7 @@ public class FmBindingReader : IGameReader
         // 0.5.7 : au-delà de RetryMin requêtes restées sans réponse à un niveau, on les renvoie par paquets de RetryChunk.
         // Le 09/11/2026, les 4 500 requêtes de chemins.json parties dans la même frame n'ont reçu en 8 s que les réponses
         // immédiates : toutes les stats des joueurs et les consignes de la tactique sont revenues vides, cinq jours de suite.
-        const int RetryMin = 20, RetryChunk = 300;
+        const int RetryMin = 20, RetryChunk = 300, FrameSlice = 50;
         /// <summary>Requêtes restées sans réponse (avant relance), récupérées par la relance, depuis le dernier TakeStats.</summary>
         static int _late, _recovered;
         public static (int Late, int Recovered) TakeStats() => (Interlocked.Exchange(ref _late, 0), Interlocked.Exchange(ref _recovered, 0));
@@ -1150,13 +1158,17 @@ public class FmBindingReader : IGameReader
             var token = new object();
             void Sig() { try { done.Signal(); } catch (ObjectDisposedException) { } catch (InvalidOperationException) { } }
             foreach (var s in active) { s.Signalled = 0; s.Token = token; s.Bound = false; }
+            // 0.5.9 : par tranches de FrameSlice requêtes, pour que MainThread puisse les étaler sur plusieurs images.
+            for (int off = 0; off < active.Length; off += FrameSlice)
+            {
+            int lo = off, hi = Math.Min(active.Length, off + FrameSlice);
             MainThread.Enqueue(() =>
             {
                 var b = GameSubsystems.Get<BindingSubsystem>();
                 _owner ??= new Il2CppSystem.Object();
-                foreach (var s in active)
+                for (int idx = lo; idx < hi; idx++)
                 {
-                    var st = s;
+                    var st = active[idx];
                     if (!ReferenceEquals(st.Token, token)) continue;   // envoi périmé (thread principal en retard) : la relance s'en charge
                     var src = st.Cur ?? root?.Invoke() ?? TypedValue.Null;
                     bool last = lvl == st.Segs.Length - 1;
@@ -1207,6 +1219,7 @@ public class FmBindingReader : IGameReader
                     catch { if (Interlocked.Exchange(ref st.Signalled, 1) == 0) { st.Failed = true; Sig(); } }
                 }
             });
+            }
             var sw = System.Diagnostics.Stopwatch.StartNew();
             int left = active.Length; long lastProgress = 0; bool any = false;
             while (!done.Wait(200))

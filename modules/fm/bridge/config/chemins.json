@@ -1,7 +1,6 @@
 {
   "_aide": "Données supplémentaires lues dans FM27 à chaque instantané, sans recompiler ni réinstaller le plugin. Clé = nom dans l'instantané (bloc custom), valeur = chemin de propriétés FM27 séparées par /. Racines : partie (game.), equipe (équipe du club), club, tactique, joueur (chaque joueur). profond = clés dont la valeur composée (liste, objet) est convertie en JSON. cibles (plugin 0.4.0, réglage LireCibles) : sources des joueurs suivis hors du club, chemin depuis game. ; une source peut renvoyer une liste de joueurs ou de fiches qui en contiennent. Clés stat_<Propriété> (centre de données, 03/11/2026) : toutes les stats de match de la saison par joueur (toutes compétitions), propriétés de PersonReference sans contexte, surtout des totaux ; lues en profond (le jeu renvoie une DynamicReference { PropertyValue, Count }) ; FM Immersion en déduit les valeurs par 90 et les pourcentages (modules/fm/src/stats.ts). Source pretes (03/11/2026) : joueurs du club prêtés ailleurs (Club/PlayersOutOnLoan), lus comme les cibles ; FM Immersion les range dans l'onglet Prêtés, pas dans les cibles. Adversaire (01/11/2026, remis le 07/11/2026) : clés adv… de la section equipe (rapport d'équipe du prochain adversaire : entraîneur, formations, joueurs clés, effectif #0-#29, pied depuis le 07/11/2026 pour l'écran Adversaire du jeu). Admissibilité (07/11/2026) : estUE, formeAuPays (section joueur) pour les règles de feuille de match ; objectifs du board (section club, profond) pour l'onglet Finances. Calendrier complet (07/11/2026) : clés calNNDate/Dom/Ext/Comp (section equipe), le NN-ième match à venir de FixtureList, toutes compétitions (jusqu'à 40) ; FM Immersion en tire la vue saison de l'entraînement (modules/fm/src/fixtures.ts, calendarFixtures). Couleurs et identifiant unique des clubs (08/11/2026) : club.idUnique/couleur1-3/abreviation, calNN{Dom,Ext}{Id,C1,C2} et dernierAdv* ; FM Immersion en habille la gazette et le direct (modules/fm/src/club-look.ts), logos lus dans graphics (identifiant unique). Consignes de la tactique (09/11/2026, section tactique) : ce_<id>_<Code> = option choisie pour chaque consigne d'équipe (SelectedTeamInstructionOption), ci_<index de sélection>_<groupe> = consigne individuelle (SelectedPlayerInstruction), ciModif_… = True si le joueur l'a choisie, False si le rôle l'impose ; lues en profond comme au test en jeu (valeur numérique du jeu), décodées par modules/fm/src/game-instructions.ts. Boîte de réception du coach (10/11/2026, section partie) : coachNom = nom du manager humain ; boiteNN{Titre,Texte,Id,Age,Club} = NN-ième message de GameCurrentManager/AllNews{human,team} (titre et texte avec les liens du jeu \\u0001base64\\u0002texte affiché\\u0001, numéro du message, ancienneté écrite par le jeu, club de l'expéditeur), 30 premiers messages ; FM Immersion y repère l'avenir du coach (entretien, offre d'un autre club, intérêt d'autres clubs, rumeur de presse : modules/fm/src/coach-news.ts) pour les dépêches et la gazette.",
   "partie": {
-    "resultatsImposes": "ForcedResults",
     "editeurDisponible": "InGameEditorAvailable",
     "editeurAutorise": "GameInGameEditorAllowed",
     "editeurUtilise": "GameInGameEditorUsed",
@@ -1058,11 +1057,8 @@
     "pretDe": "OnLoanFrom/Name",
     "pretStatut": "LoanStatusDetails",
     "pretFin": "LoanContract/EndDate",
-    "pretEntrant": "IsLoanIn",
     "equipe": "PrimaryClubTeam/Name",
     "equipeType": "PrimaryClubTeam/TeamTypeStringDefault",
-    "equipeTypeBrut": "TeamType",
-    "equipeContexte": "ContextJobTeamTypeString",
     "estUE": "IsEuNational",
     "formeAuPays": "HomeGrownStatusText{team=@team}",
     "formeAuPaysCode": "HomeGrownStatus{team=@team}",
@@ -1142,7 +1138,6 @@
     "stat_TotalSavePercentage",
     "stat_TotalSaves",
     "stat_YellowCards",
-    "resultatsImposes",
     "advFormationsAvec",
     "advFormationsSans",
     "visionObjectifsAnnee",

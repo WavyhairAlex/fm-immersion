@@ -28,10 +28,31 @@ public class MainThread : UnityCore::UnityEngine.MonoBehaviour
         return tcs.Task;
     }
 
+    // 0.5.9 : quelques millisecondes de travail par image, pas plus ; le reste attend l'image suivante. Avant, toute la
+    // file passait dans la même image : les milliers de requêtes d'une lecture complète donnaient un à-coup dans le jeu.
+    const double BudgetMs = 3;
+    static long _busyTicks, _maxFrameTicks;
+
+    /// <summary>Temps passé sur le thread du jeu depuis le dernier appel : total, et la pire image (ms).</summary>
+    public static (double TotalMs, double MaxFrameMs) TakeStats()
+    {
+        double f = 1000.0 / System.Diagnostics.Stopwatch.Frequency;
+        return (System.Threading.Interlocked.Exchange(ref _busyTicks, 0) * f, System.Threading.Interlocked.Exchange(ref _maxFrameTicks, 0) * f);
+    }
+
     void Update()
     {
+        if (Jobs.IsEmpty) return;
+        long start = System.Diagnostics.Stopwatch.GetTimestamp();
+        long limit = start + (long)(BudgetMs * System.Diagnostics.Stopwatch.Frequency / 1000);
         while (Jobs.TryDequeue(out var a))
+        {
             try { a(); } catch (Exception e) { Plugin.Log.LogError(e); }
+            if (System.Diagnostics.Stopwatch.GetTimestamp() >= limit) break;
+        }
+        long spent = System.Diagnostics.Stopwatch.GetTimestamp() - start;
+        System.Threading.Interlocked.Add(ref _busyTicks, spent);
+        if (spent > System.Threading.Interlocked.Read(ref _maxFrameTicks)) System.Threading.Interlocked.Exchange(ref _maxFrameTicks, spent);
     }
 }
 
