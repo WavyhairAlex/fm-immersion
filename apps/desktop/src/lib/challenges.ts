@@ -7,6 +7,7 @@ import {
   type ChallengeId,
   type ChallengeParams,
   type FmSnapshot,
+  type GhJoker,
   type Rewind,
 } from '@fm-immersion/module-fm';
 import { fmChallengeCerts, fmChallenges, fmSnapshots, type FmChallengeRow } from '@fm-immersion/module-fm/schema';
@@ -29,6 +30,16 @@ export function challengesRepo(db: Db) {
         .values({ saveId, challengeId: input.challengeId, startDate: input.startDate, unemployedStart: input.unemployedStart, params: input.params ?? {}, rewinds: [] })
         .returning();
       return row!;
+    },
+
+    /** Glory Hunter : ajoute un joker déclaré aux paramètres de l'inscription. */
+    async declareJoker(id: string, joker: GhJoker) {
+      const [row] = await db.select().from(fmChallenges).where(eq(fmChallenges.id, id));
+      if (!row) return;
+      await db
+        .update(fmChallenges)
+        .set({ params: { ...row.params, jokers: [...(row.params.jokers ?? []), joker] } })
+        .where(eq(fmChallenges.id, id));
     },
 
     async abandon(id: string) {

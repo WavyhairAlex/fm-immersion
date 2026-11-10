@@ -4215,7 +4215,14 @@
       "worldTourLeagues": "Different leagues won: {{value}} / {{target}} {{detail}}",
       "dunkirkSeason": "Season at 0.8 goals conceded per match or fewer (best: {{value}}, {{detail}})",
       "dunkirkCurrent": "Current season: {{value}} goals conceded per match in {{detail}} matches",
-      "promotionsCount": "Promotions: {{value}} / {{target}} {{detail}}"
+      "promotionsCount": "Promotions: {{value}} / {{target}} {{detail}}",
+      "ghClock": "Seasons played: {{value}} of {{target}} (15, plus bonuses, minus penalties)",
+      "ghTrophies": "Trophies: {{value}} / {{target}}: {{detail}}",
+      "ghMissing": "Still to win: {{detail}}",
+      "ghBonus": "Bonuses: +{{value}} season(s), {{target}} at most: {{detail}}",
+      "ghMalus": "Penalties: −{{value}} season(s), {{target}} at most: {{detail}}",
+      "ghJokers": "Jokers left: {{value}} double or nothing, {{target}} pre-season. Played: {{detail}}",
+      "ghUnreadable": "Can't be read yet: Euros and World Cup (national teams), Ballon d'Or, Europe's top scorer"
     },
     "issue": {
       "editor": "In-game editor used (reported by FM27 on {{date}}): challenge disqualified.",
@@ -4230,7 +4237,9 @@
       "notInDebt": "The club was not in the red at sign-up: the challenge needs a club in debt.",
       "balanceUnknown": "The club balance is not read yet: open the save in FM Coach.",
       "promotionGuess_one": "{{count}} promotion guessed from the final position: the plugin must read the division reputation to prove it.",
-      "promotionGuess_other": "{{count}} promotions guessed from the final position: the plugin must read the division reputation to prove them."
+      "promotionGuess_other": "{{count}} promotions guessed from the final position: the plugin must read the division reputation to prove them.",
+      "ghPenalties": "{{competition}} ({{season}}): drawn final, shoot-out winner unknown. It doesn't count.",
+      "ghJokerIgnored": "Double or nothing on \"$t(challenges.gh.bonus.{{bonus}})\" ignored: that bonus was already won or lost."
     },
     "def": {
       "zero-to-hero": {
@@ -4302,6 +4311,11 @@
         "name": "King of Promotions",
         "rules": "Beat Vítor Oliveira's record: 12 promotions in the same career.",
         "checked": "league and division reputation from one season to the next."
+      },
+      "glory-hunter": {
+        "name": "Glory Hunter",
+        "rules": "Win the 15 major trophies: the league and domestic cup of England, Spain, Germany, France and Italy, the Champions League, Europa League, Conference League, Euros and World Cup. You get 15 seasons. Each bonus adds one (10 at most), each penalty takes one away (5 at most). Jokers: two \"double or nothing\" and one \"pre-season\", declared before the season's first league match.",
+        "checked": "end-of-season standings, cup runs (winner deduced from the last round won at the end of the season), streaks, scores and leaving the club. The Euros, World Cup, Ballon d'Or and Europe's top scorer can't be read yet."
       }
     },
     "discord": {
@@ -4354,6 +4368,71 @@
         "nationality": "You pick a nationality.",
         "club": "The challenge is about your current club.",
         "until": "You set a deadline."
+      }
+    },
+    "joker": {
+      "title": "Play a joker",
+      "when": "The joker applies to the next season whose first league match hasn't been played yet. It goes into the certificate.",
+      "pending_one": "{{count}} joker waiting for next season",
+      "pending_other": "{{count}} jokers waiting for next season",
+      "pick": "Target bonus…",
+      "double_one": "Double or nothing ({{count}} left)",
+      "double_other": "Double or nothing ({{count}} left)",
+      "doubleConfirm": "Double or nothing on \"{{bonus}}\": achieved this season, it's worth two seasons; missed, it's lost for good. Confirm?",
+      "preseason": "Pre-season (1 left)",
+      "preseasonConfirm": "Pre-season: next season counts no trophy, bonus or penalty. It still uses a season on the clock. Confirm?"
+    },
+    "gh": {
+      "trophy": {
+        "leagueEng": "English league",
+        "cupEng": "FA Cup",
+        "leagueEsp": "Spanish league",
+        "cupEsp": "Copa del Rey",
+        "leagueGer": "German league",
+        "cupGer": "DFB-Pokal",
+        "leagueFra": "French league",
+        "cupFra": "Coupe de France",
+        "leagueIta": "Italian league",
+        "cupIta": "Coppa Italia",
+        "ucl": "Champions League",
+        "uel": "Europa League",
+        "uecl": "Conference League",
+        "euro": "Euros",
+        "worldCup": "World Cup"
+      },
+      "bonus": {
+        "treble": "Treble (league, domestic cup, Champions League)",
+        "invincibles": "Invincibles (unbeaten league season)",
+        "hundred": "100 league points",
+        "ballonDor": "Ballon d'Or for a regen",
+        "streak15": "15 wins in a row",
+        "backToBack": "Back-to-back titles in two countries",
+        "uclWin": "Champions League won",
+        "fiveGoals": "One player scores 5 in a league game",
+        "sharpshooter": "Europe's top scorer at the club",
+        "gapYear": "Title in another European league"
+      },
+      "malus": {
+        "sacked": "Sacked",
+        "uclFinalLost": "Champions League final lost",
+        "fiveLosses": "5 defeats in a row",
+        "drought": "3 seasons without a trophy",
+        "humiliation": "Beaten by 5 goals or more"
+      },
+      "joker": {
+        "preseason": "Pre-season"
+      },
+      "frozen": {
+        "treble": "lost: Treble (league, domestic cup, Champions League)",
+        "invincibles": "lost: Invincibles (unbeaten league season)",
+        "hundred": "lost: 100 league points",
+        "ballonDor": "lost: Ballon d'Or for a regen",
+        "streak15": "lost: 15 wins in a row",
+        "backToBack": "lost: Back-to-back titles in two countries",
+        "uclWin": "lost: Champions League won",
+        "fiveGoals": "lost: One player scores 5 in a league game",
+        "sharpshooter": "lost: Europe's top scorer at the club",
+        "gapYear": "lost: Title in another European league"
       }
     }
   },

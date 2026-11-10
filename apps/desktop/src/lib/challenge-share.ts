@@ -6,7 +6,11 @@ import { getWebhook } from './discord';
 /** Textes d'un défi (étapes, problèmes) et partage du certificat : fichier ou salon Discord. */
 
 export const stepText = (t: TFunction, s: ChallengeStep) =>
-  t(`challenges.step.${s.key}`, { value: s.value ?? '', target: s.target ?? '', detail: s.detail ?? '' });
+  t(`challenges.step.${s.key}`, {
+    value: s.value ?? '',
+    target: s.target ?? '',
+    detail: s.items ? s.items.map((i) => t(`challenges.gh.${i.key}`) + (i.detail ? ` (${i.detail})` : '')).join(', ') || '—' : (s.detail ?? ''),
+  });
 
 export const issueText = (t: TFunction, i: ChallengeIssue) => t(`challenges.issue.${i.kind}`, { ...i });
 

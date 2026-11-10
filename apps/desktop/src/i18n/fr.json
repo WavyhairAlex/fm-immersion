@@ -4215,7 +4215,14 @@
       "worldTourLeagues": "Championnats différents gagnés : {{value}} / {{target}} {{detail}}",
       "dunkirkSeason": "Saison à 0,8 but encaissé par match ou moins (meilleure : {{value}}, {{detail}})",
       "dunkirkCurrent": "Saison en cours : {{value}} but encaissé par match en {{detail}} matchs",
-      "promotionsCount": "Montées : {{value}} / {{target}} {{detail}}"
+      "promotionsCount": "Montées : {{value}} / {{target}} {{detail}}",
+      "ghClock": "Saisons jouées : {{value}} sur {{target}} (15, plus les bonus, moins les malus)",
+      "ghTrophies": "Trophées : {{value}} / {{target}} : {{detail}}",
+      "ghMissing": "Il manque : {{detail}}",
+      "ghBonus": "Bonus : +{{value}} saison(s), {{target}} au plus : {{detail}}",
+      "ghMalus": "Malus : −{{value}} saison(s), {{target}} au plus : {{detail}}",
+      "ghJokers": "Jokers restants : {{value}} quitte ou double, {{target}} préparation. Joués : {{detail}}",
+      "ghUnreadable": "Pas encore lisibles : Euro et Coupe du monde (sélections), Ballon d'or, meilleur buteur d'Europe"
     },
     "issue": {
       "editor": "Éditeur en jeu utilisé (signalé par FM27 le {{date}}) : défi éliminé.",
@@ -4230,7 +4237,9 @@
       "notInDebt": "Le club n'était pas dans le rouge à l'inscription : le défi demande un club endetté.",
       "balanceUnknown": "Le solde du club n'est pas encore lu : ouvre la partie dans FM Coach.",
       "promotionGuess_one": "{{count}} montée devinée d'après la place finale : le plugin doit lire la réputation de la division pour la prouver.",
-      "promotionGuess_other": "{{count}} montées devinées d'après la place finale : le plugin doit lire la réputation de la division pour les prouver."
+      "promotionGuess_other": "{{count}} montées devinées d'après la place finale : le plugin doit lire la réputation de la division pour les prouver.",
+      "ghPenalties": "{{competition}} ({{season}}) : finale nulle, vainqueur aux tirs au but inconnu. Elle ne compte pas.",
+      "ghJokerIgnored": "Quitte ou double sur « $t(challenges.gh.bonus.{{bonus}}) » ignoré : ce bonus était déjà gagné ou perdu."
     },
     "def": {
       "zero-to-hero": {
@@ -4302,6 +4311,11 @@
         "name": "Le roi de la montée",
         "rules": "Bats le record de Vítor Oliveira : 12 montées dans la même carrière.",
         "checked": "championnat et réputation de la division d'une saison à l'autre."
+      },
+      "glory-hunter": {
+        "name": "Glory Hunter",
+        "rules": "Gagne les 15 grands trophées : championnat et coupe nationale d'Angleterre, d'Espagne, d'Allemagne, de France et d'Italie, Ligue des champions, Ligue Europa, Ligue Conférence, Euro et Coupe du monde. Tu as 15 saisons. Chaque bonus en ajoute une (10 au plus), chaque malus en retire une (5 au plus). Jokers : deux « quitte ou double » et une « préparation », à déclarer avant le premier match de championnat de la saison.",
+        "checked": "classements de fin de saison, parcours en coupe (vainqueur déduit du dernier tour gagné en fin de saison), séries, scores et départs du club. L'Euro, la Coupe du monde, le Ballon d'or et le meilleur buteur d'Europe ne sont pas encore lisibles."
       }
     },
     "discord": {
@@ -4354,6 +4368,71 @@
         "nationality": "Tu choisis une nationalité.",
         "club": "Le défi porte sur ton club actuel.",
         "until": "Tu fixes une date limite."
+      }
+    },
+    "joker": {
+      "title": "Jouer un joker",
+      "when": "Le joker vaut pour la prochaine saison dont le premier match de championnat n'est pas encore joué. Il est inscrit dans le certificat.",
+      "pending_one": "{{count}} joker en attente de la prochaine saison",
+      "pending_other": "{{count}} jokers en attente de la prochaine saison",
+      "pick": "Bonus visé…",
+      "double_one": "Quitte ou double ({{count}} restant)",
+      "double_other": "Quitte ou double ({{count}} restants)",
+      "doubleConfirm": "Quitte ou double sur « {{bonus}} » : réussi cette saison, il vaut deux saisons ; raté, il est perdu pour toujours. Confirmer ?",
+      "preseason": "Préparation (1 restante)",
+      "preseasonConfirm": "Préparation : la prochaine saison ne compte ni trophée, ni bonus, ni malus. Elle compte quand même sur l'horloge. Confirmer ?"
+    },
+    "gh": {
+      "trophy": {
+        "leagueEng": "Championnat d'Angleterre",
+        "cupEng": "Coupe d'Angleterre",
+        "leagueEsp": "Championnat d'Espagne",
+        "cupEsp": "Coupe du Roi",
+        "leagueGer": "Championnat d'Allemagne",
+        "cupGer": "Coupe d'Allemagne",
+        "leagueFra": "Championnat de France",
+        "cupFra": "Coupe de France",
+        "leagueIta": "Championnat d'Italie",
+        "cupIta": "Coupe d'Italie",
+        "ucl": "Ligue des champions",
+        "uel": "Ligue Europa",
+        "uecl": "Ligue Conférence",
+        "euro": "Euro",
+        "worldCup": "Coupe du monde"
+      },
+      "bonus": {
+        "treble": "Triplé (championnat, coupe nationale, Ligue des champions)",
+        "invincibles": "Invincibles (championnat sans défaite)",
+        "hundred": "100 points en championnat",
+        "ballonDor": "Ballon d'or pour un jeune formé",
+        "streak15": "15 victoires de suite",
+        "backToBack": "Titres de suite dans deux pays",
+        "uclWin": "Ligue des champions gagnée",
+        "fiveGoals": "Un joueur marque 5 buts en championnat",
+        "sharpshooter": "Meilleur buteur d'Europe au club",
+        "gapYear": "Titre dans un autre championnat d'Europe"
+      },
+      "malus": {
+        "sacked": "Limogé",
+        "uclFinalLost": "Finale de Ligue des champions perdue",
+        "fiveLosses": "5 défaites de suite",
+        "drought": "3 saisons sans trophée",
+        "humiliation": "Défaite par 5 buts d'écart ou plus"
+      },
+      "joker": {
+        "preseason": "Préparation"
+      },
+      "frozen": {
+        "treble": "perdu : Triplé (championnat, coupe nationale, Ligue des champions)",
+        "invincibles": "perdu : Invincibles (championnat sans défaite)",
+        "hundred": "perdu : 100 points en championnat",
+        "ballonDor": "perdu : Ballon d'or pour un jeune formé",
+        "streak15": "perdu : 15 victoires de suite",
+        "backToBack": "perdu : Titres de suite dans deux pays",
+        "uclWin": "perdu : Ligue des champions gagnée",
+        "fiveGoals": "perdu : Un joueur marque 5 buts en championnat",
+        "sharpshooter": "perdu : Meilleur buteur d'Europe au club",
+        "gapYear": "perdu : Titre dans un autre championnat d'Europe"
       }
     }
   },
