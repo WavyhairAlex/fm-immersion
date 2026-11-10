@@ -386,8 +386,21 @@ public class FmBindingReader : IGameReader
         Guard();
         // Données supplémentaires définies dans archivix\config\chemins.json (relu à chaque instantané, sans recompiler)
         Dictionary<string, object?>? custom = null;
+        Batch.TakeStats();
         try { custom = ReadCustom(count); }
         catch (Exception e) { Plugin.Log.LogWarning($"chemins.json : {e.Message}"); }
+        // 0.5.7 : une lecture où le jeu n'a répondu ni sur les joueurs ni sur la tactique est marquée incomplète ;
+        // Plugin.RefreshLoop la refait une minute plus tard et ne remplace pas une lecture complète du même jour.
+        var (late, recovered) = Batch.TakeStats();
+        LastIncomplete = false;
+        if (custom != null)
+        {
+            var (answered, total, incomplete) = CustomHealth(custom);
+            LastIncomplete = incomplete;
+            collecte["chemins"] = $"{(incomplete ? "incomplète" : "lue")} : {answered}/{total} valeurs"
+                + (late > 0 ? $", {late} sans réponse au premier envoi dont {recovered} récupérées par paquets" : "");
+            if (incomplete || late > 0) Plugin.Log.LogWarning($"chemins.json {collecte["chemins"]}");
+        }
 
         return new Snapshot("archivix/1", "FM27", club, date, players, tactic)
         {
@@ -736,6 +749,34 @@ public class FmBindingReader : IGameReader
     // "profond" : clés dont la valeur composée (liste, objet) est convertie en JSON. Fichier absent = rien de plus.
     static string CustomFile => System.IO.Path.Combine(Plugin.DataDir, "config", "chemins.json");
 
+    /// <summary>Dernière lecture : le jeu n'a répondu sur aucun joueur ou sur aucune consigne de la tactique (chemins.json).</summary>
+    public bool LastIncomplete { get; private set; }
+
+    // Valeurs obtenues sur demandées dans le bloc custom, et lecture incomplète : des joueurs sans aucune valeur
+    // (hors identifiant), ou une section « tactique » demandée et entièrement vide.
+    static (int Answered, int Total, bool Incomplete) CustomHealth(Dictionary<string, object?> custom)
+    {
+        int answered = 0, total = 0; bool incomplete = false;
+        foreach (var (section, value) in custom)
+        {
+            if (value is Dictionary<string, Dictionary<string, object?>> players)
+            {
+                int got = 0, asked = 0;
+                foreach (var row in players.Values)
+                    foreach (var (k, v) in row) { if (k == "id") continue; asked++; if (v != null) got++; }
+                answered += got; total += asked;
+                if (asked > 0 && got == 0) incomplete = true;
+            }
+            else if (value is Dictionary<string, object?> sec)
+            {
+                int got = sec.Values.Count(v => v != null);
+                answered += got; total += sec.Count;
+                if (section == "tactique" && sec.Count >= 10 && got == 0) incomplete = true;
+            }
+        }
+        return (answered, total, incomplete);
+    }
+
     Dictionary<string, object?>? ReadCustom(int squadCount)
     {
         if (!System.IO.File.Exists(CustomFile)) return null;
@@ -929,6 +970,8 @@ public class FmBindingReader : IGameReader
             public Bindings.Key Key;
             public Bindings.ValueChangedCallback? Cb;
             public bool Bound;
+            // Envoi en cours : une réponse arrivée pour un envoi précédent est ignorée.
+            public object? Token;
             // Références utilisables comme contexte (@team, @human, @person)
             public TypedValue? Team, Human, Person;
         }
@@ -1038,6 +1081,14 @@ public class FmBindingReader : IGameReader
             return r;
         }
 
+        // 0.5.7 : au-delà de RetryMin requêtes restées sans réponse à un niveau, on les renvoie par paquets de RetryChunk.
+        // Le 09/11/2026, les 4 500 requêtes de chemins.json parties dans la même frame n'ont reçu en 8 s que les réponses
+        // immédiates : toutes les stats des joueurs et les consignes de la tactique sont revenues vides, cinq jours de suite.
+        const int RetryMin = 20, RetryChunk = 300;
+        /// <summary>Requêtes restées sans réponse (avant relance), récupérées par la relance, depuis le dernier TakeStats.</summary>
+        static int _late, _recovered;
+        public static (int Late, int Recovered) TakeStats() => (Interlocked.Exchange(ref _late, 0), Interlocked.Exchange(ref _recovered, 0));
+
         static void Resolve(State[] states, Func<TypedValue>? root, int timeoutMs)
         {
             int depth = states.Length == 0 ? 0 : states.Max(s => s.Segs.Length);
@@ -1045,76 +1096,112 @@ public class FmBindingReader : IGameReader
             {
                 var active = states.Where(s => !s.Failed && s.Segs.Length > level).ToArray();
                 if (active.Length == 0) break;
-                using var done = new CountdownEvent(active.Length);
-                foreach (var s in active) s.Signalled = 0;
-                int lvl = level;
+                var late = Send(active, level, root, timeoutMs);
+                if (late.Count >= RetryMin)
+                {
+                    Interlocked.Add(ref _late, late.Count);
+                    var still = new List<State>();
+                    for (int i = 0; i < late.Count; i += RetryChunk)
+                        still.AddRange(Send(late.Skip(i).Take(RetryChunk).ToArray(), level, root, timeoutMs));
+                    Interlocked.Add(ref _recovered, late.Count - still.Count);
+                    late = still;
+                }
+                foreach (var s in late) s.Failed = true;
+            }
+        }
+
+        // Envoie les requêtes d'un niveau dans la même frame et attend les réponses. Renvoie celles restées sans réponse,
+        // déjà désinscrites. On attend tant que des réponses arrivent : timeoutMs sans aucune réponse, ou 3 s sans nouvelle
+        // réponse une fois les premières arrivées, et jamais plus de trois fois timeoutMs.
+        static List<State> Send(State[] active, int lvl, Func<TypedValue>? root, int timeoutMs)
+        {
+            using var done = new CountdownEvent(active.Length);
+            var token = new object();
+            void Sig() { try { done.Signal(); } catch (ObjectDisposedException) { } catch (InvalidOperationException) { } }
+            foreach (var s in active) { s.Signalled = 0; s.Token = token; s.Bound = false; }
+            MainThread.Enqueue(() =>
+            {
+                var b = GameSubsystems.Get<BindingSubsystem>();
+                _owner ??= new Il2CppSystem.Object();
+                foreach (var s in active)
+                {
+                    var st = s;
+                    if (!ReferenceEquals(st.Token, token)) continue;   // envoi périmé (thread principal en retard) : la relance s'en charge
+                    var src = st.Cur ?? root?.Invoke() ?? TypedValue.Null;
+                    bool last = lvl == st.Segs.Length - 1;
+                    if (st.Segs[lvl].StartsWith('#'))   // élément de liste : pas de requête au jeu
+                    {
+                        var el = int.TryParse(st.Segs[lvl].AsSpan(1), out var n) ? ItemAt(src, n) : null;
+                        if (el == null) st.Failed = true;
+                        else { st.Cur = TypedValue.CreateCopyFrom(el); if (last) st.Result = st.Deep ? Dump(el, 3) : Simple(el); }
+                        if (Interlocked.Exchange(ref st.Signalled, 1) == 0) Sig();
+                        continue;
+                    }
+                    Bindings.ValueChangedCallback? cb = null;
+                    cb = (Action<Bindings.Key, TypedValue>)((k, v) =>
+                    {
+                        // Toujours se désinscrire, même pour une réponse arrivée après le délai :
+                        // une liaison oubliée reste active dans le jeu et s'ajoute à chaque instantané.
+                        var key = k;
+                        MainThread.Enqueue(() => { try { b.Unbind(ref key, cb!); } catch { } });
+                        // Réponse d'un envoi précédent (relance en cours, ou niveau suivant) : ignorée.
+                        if (!ReferenceEquals(st.Token, token)) return;
+                        if (Interlocked.Exchange(ref st.Signalled, 1) != 0) return;
+                        st.Bound = false;
+                        if (v == null || v.IsNull) { st.Failed = true; st.Cur = null; }
+                        else if (last) { st.Result = st.Deep ? Dump(v, 3) : Simple(v); st.Cur = TypedValue.CreateCopyFrom(v); }
+                        else st.Cur = TypedValue.CreateCopyFrom(v);
+                        Sig();
+                    });
+                    try
+                    {
+                        st.Cb = cb;
+                        var ctx = ContextRequest.Parse(st.Segs[lvl]);   // "Prop{Contexte=n,…}" : propriété de contexte
+                        if (ctx is { } c)
+                        {
+                            var key = ContextRequest.Bind(b, src, c.Prop, c.Ctxs,
+                                name => name switch { "team" => st.Team, "human" => st.Human, "person" => st.Person, _ => null },
+                                _owner, cb);
+                            if (key == null) { if (Interlocked.Exchange(ref st.Signalled, 1) == 0) { st.Failed = true; Sig(); } continue; }
+                            st.Key = key.Value;
+                        }
+                        else st.Key = BindingUtils.Request(b, src, st.Segs[lvl], _owner, cb);
+                        st.Bound = st.Signalled == 0;   // réponse immédiate : déjà désinscrite par le callback
+                    }
+                    catch { if (Interlocked.Exchange(ref st.Signalled, 1) == 0) { st.Failed = true; Sig(); } }
+                }
+            });
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            int left = active.Length; long lastProgress = 0; bool any = false;
+            while (!done.Wait(200))
+            {
+                int now = done.CurrentCount;
+                if (now < left) { left = now; lastProgress = sw.ElapsedMilliseconds; any = true; }
+                long idle = sw.ElapsedMilliseconds - lastProgress;
+                if (idle >= (any ? Math.Min(timeoutMs, 3000) : timeoutMs) || sw.ElapsedMilliseconds >= 3L * timeoutMs) break;
+            }
+            var late = new List<State>();
+            var expired = new List<(Bindings.Key Key, Bindings.ValueChangedCallback Cb)>();
+            foreach (var s in active)
+                if (Interlocked.Exchange(ref s.Signalled, 1) == 0)   // délai dépassé
+                {
+                    late.Add(s);
+                    if (s.Bound && s.Cb != null) expired.Add((s.Key, s.Cb));
+                    s.Bound = false;
+                }
+            // Délai dépassé : on retire les requêtes restées en attente, pour ne pas encombrer le jeu
+            // (cause probable des gels de l'écran Tactique en 0.2.0 / 0.2.1).
+            if (expired.Count > 0)
                 MainThread.Enqueue(() =>
                 {
                     var b = GameSubsystems.Get<BindingSubsystem>();
-                    _owner ??= new Il2CppSystem.Object();
-                    foreach (var s in active)
+                    foreach (var (k, cb) in expired)
                     {
-                        var st = s;
-                        var src = st.Cur ?? root?.Invoke() ?? TypedValue.Null;
-                        bool last = lvl == st.Segs.Length - 1;
-                        if (st.Segs[lvl].StartsWith('#'))   // élément de liste : pas de requête au jeu
-                        {
-                            var el = int.TryParse(st.Segs[lvl].AsSpan(1), out var n) ? ItemAt(src, n) : null;
-                            if (el == null) st.Failed = true;
-                            else { st.Cur = TypedValue.CreateCopyFrom(el); if (last) st.Result = st.Deep ? Dump(el, 3) : Simple(el); }
-                            if (Interlocked.Exchange(ref st.Signalled, 1) == 0) done.Signal();
-                            continue;
-                        }
-                        Bindings.ValueChangedCallback? cb = null;
-                        cb = (Action<Bindings.Key, TypedValue>)((k, v) =>
-                        {
-                            // Toujours se désinscrire, même pour une réponse arrivée après le délai :
-                            // une liaison oubliée reste active dans le jeu et s'ajoute à chaque instantané.
-                            var key = k;
-                            MainThread.Enqueue(() => { try { b.Unbind(ref key, cb!); } catch { } });
-                            if (Interlocked.Exchange(ref st.Signalled, 1) != 0) return;
-                            st.Bound = false;
-                            if (v == null || v.IsNull) { st.Failed = true; st.Cur = null; }
-                            else if (last) { st.Result = st.Deep ? Dump(v, 3) : Simple(v); st.Cur = TypedValue.CreateCopyFrom(v); }
-                            else st.Cur = TypedValue.CreateCopyFrom(v);
-                            try { done.Signal(); } catch (ObjectDisposedException) { }
-                        });
-                        try
-                        {
-                            st.Cb = cb;
-                            var ctx = ContextRequest.Parse(st.Segs[lvl]);   // "Prop{Contexte=n,…}" : propriété de contexte
-                            if (ctx is { } c)
-                            {
-                                var key = ContextRequest.Bind(b, src, c.Prop, c.Ctxs,
-                                    name => name switch { "team" => st.Team, "human" => st.Human, "person" => st.Person, _ => null },
-                                    _owner, cb);
-                                if (key == null) { if (Interlocked.Exchange(ref st.Signalled, 1) == 0) { st.Failed = true; done.Signal(); } continue; }
-                                st.Key = key.Value;
-                            }
-                            else st.Key = BindingUtils.Request(b, src, st.Segs[lvl], _owner, cb);
-                            st.Bound = st.Signalled == 0;   // réponse immédiate : déjà désinscrite par le callback
-                        }
-                        catch { if (Interlocked.Exchange(ref st.Signalled, 1) == 0) { st.Failed = true; done.Signal(); } }
+                        var key = k;
+                        try { b.Unbind(ref key, cb); } catch { }
                     }
                 });
-                done.Wait(timeoutMs);
-                var expired = new List<State>();
-                foreach (var s in active)
-                    if (Interlocked.Exchange(ref s.Signalled, 1) == 0) { s.Failed = true; if (s.Bound) expired.Add(s); }   // timeout
-                // Délai dépassé : on retire les requêtes restées en attente, pour ne pas encombrer le jeu
-                // (cause probable des gels de l'écran Tactique en 0.2.0 / 0.2.1).
-                if (expired.Count > 0)
-                    MainThread.Enqueue(() =>
-                    {
-                        var b = GameSubsystems.Get<BindingSubsystem>();
-                        foreach (var s in expired)
-                        {
-                            var key = s.Key;
-                            try { b.Unbind(ref key, s.Cb!); } catch { }
-                            s.Bound = false;
-                        }
-                    });
-            }
+            return late;
         }
 
         // Valeur IL2CPP → valeur managée (double, string) ; lue dans le callback, sur le thread principal.
