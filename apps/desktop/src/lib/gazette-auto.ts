@@ -1,4 +1,21 @@
-import { bigMatchNow, breakingNews, isCoachBreaking, recordKey, recordNews, coachExits, gazetteIssues, seasonReviews, seasonSoFar, type BigMatch, type BreakingNews, type CoachExit, type ExitReason, type GazetteIssue, type RecordNews, type SeasonReview } from '@fm-immersion/module-fm';
+import {
+  bigMatchNow,
+  breakingNews,
+  isCoachBreaking,
+  recordKey,
+  recordNews,
+  coachExits,
+  gazetteIssues,
+  seasonReviews,
+  seasonSoFar,
+  type BigMatch,
+  type BreakingNews,
+  type CoachExit,
+  type ExitReason,
+  type GazetteIssue,
+  type RecordNews,
+  type SeasonReview,
+} from '@fm-immersion/module-fm';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
@@ -17,6 +34,7 @@ import { drawPage } from './gazette-page';
 import { issuesWithPress } from './press';
 import { discordPagePayload } from './gazette-text';
 import { canvasPng, recentForm } from './gazette-une';
+import { breakingTag, getPhotoMode, photoForEvent, sceneForBreaking } from './photo-events';
 import { loadFace } from './player-face';
 import { drawRecord, recordPayload } from './records-page';
 import { drawSeason, seasonPayload } from './season-une';
@@ -32,7 +50,9 @@ export async function sendGazette(
 ) {
   const issue = issues[index]!;
   // Tout le journal sur une seule image (page complète), avec un court encart : pas de long texte dans le salon.
-  const png = await canvasPng(await drawPage(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures, faceFor: loadFace }));
+  const png = await canvasPng(
+    await drawPage(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures, faceFor: loadFace }),
+  );
   return sendDiscordImage(discordPagePayload(t, issue, lang), png, webhook);
 }
 
@@ -102,11 +122,31 @@ export function seasonToSend(reviews: SeasonReview[], lastDate: string | undefin
 }
 
 /** Visage d'une dépêche : celui du joueur, ou la photo du coach quand elle parle de son avenir. */
-export const breakingFace = (saveId: string | null, n: BreakingNews) => (isCoachBreaking(n) ? (saveId ? loadCoachPhoto(saveId) : Promise.resolve(null)) : loadFace(n.id));
+export const breakingFace = (saveId: string | null, n: BreakingNews) =>
+  isCoachBreaking(n) ? (saveId ? loadCoachPhoto(saveId) : Promise.resolve(null)) : loadFace(n.id);
 
-/** Dépêche (recrue, départ, blessure, avenir du coach) : image et court encart, avec le visage du joueur ou du coach. */
-export async function sendBreaking(t: TFunction, n: BreakingNews, lang?: string, saveId: string | null = null, webhook = getWebhook()) {
-  const png = await canvasPng(await drawBreaking(t, n, { lang, face: await breakingFace(saveId, n) }));
+/**
+ * Photo de situation d'une dépêche (faite sur le PC par le moteur d'images), selon le réglage du joueur : celle déjà
+ * dans la bibliothèque, ou faite maintenant quand `generate` (envoi automatique en mode « auto », ou son clic). Null
+ * sans moteur, sans visage, ou en cas d'échec : la dépêche garde alors le portrait.
+ */
+export async function breakingPhoto(saveId: string | null, n: BreakingNews, generate: boolean) {
+  if (!saveId || getPhotoMode() === 'off') return null;
+  const coachPhoto = (await fmData.settings(saveId).catch(() => null))?.coachPhoto ?? null;
+  const choice = sceneForBreaking(n, !!coachPhoto);
+  return photoForEvent(breakingTag(saveId, n), choice, { playerId: isCoachBreaking(n) ? null : n.id, coachPhoto }, generate);
+}
+
+/** Dépêche (recrue, départ, blessure, avenir du coach) : image et court encart, avec le visage du joueur ou du coach, ou la photo de situation. */
+export async function sendBreaking(
+  t: TFunction,
+  n: BreakingNews,
+  lang?: string,
+  saveId: string | null = null,
+  webhook = getWebhook(),
+  photo: CanvasImageSource | null = null,
+) {
+  const png = await canvasPng(await drawBreaking(t, n, { lang, face: await breakingFace(saveId, n), photo }));
   return sendDiscordImage(breakingPayload(t, n, lang), png, webhook);
 }
 
@@ -136,12 +176,10 @@ export const markRecordSent = (saveId: string, n: RecordNews) =>
 const BIGMATCH_SENT_KEY = 'fmi.discord.bigMatchSent';
 const bigMatchId = (saveId: string, m: BigMatch) => `${saveId}|${m.opponent}|${m.competition ?? ''}`;
 export const isBigMatchSent = (saveId: string, m: BigMatch) =>
-  (read(BIGMATCH_SENT_KEY) ?? '')
-    .split('\n')
-    .some((line) => {
-      const at = line.lastIndexOf('|');
-      return line.slice(0, at) === bigMatchId(saveId, m) && Math.abs(Date.parse(line.slice(at + 1)) - Date.parse(m.date)) <= 3 * 86_400_000;
-    });
+  (read(BIGMATCH_SENT_KEY) ?? '').split('\n').some((line) => {
+    const at = line.lastIndexOf('|');
+    return line.slice(0, at) === bigMatchId(saveId, m) && Math.abs(Date.parse(line.slice(at + 1)) - Date.parse(m.date)) <= 3 * 86_400_000;
+  });
 export const markBigMatchSent = (saveId: string, m: BigMatch) =>
   write(BIGMATCH_SENT_KEY, [...(read(BIGMATCH_SENT_KEY) ?? '').split('\n').filter(Boolean), `${bigMatchId(saveId, m)}|${m.date}`].slice(-30).join('\n'));
 
@@ -317,7 +355,8 @@ export function useGazetteAuto() {
       if ((!gazetteOn && !breakingOn) || !isWebhook(getWebhook())) return;
       // Une tournée bloquée depuis plus de 10 minutes ne doit pas arrêter l'envoi automatique pour de bon.
       if (busy.current && Date.now() - busy.current < STUCK_MS) return;
-      if (busy.current) write(AUTO_ERROR_KEY, JSON.stringify({ what: 'check', error: 'stuck', at: new Date().toISOString(), dropped: false } satisfies AutoError));
+      if (busy.current)
+        write(AUTO_ERROR_KEY, JSON.stringify({ what: 'check', error: 'stuck', at: new Date().toISOString(), dropped: false } satisfies AutoError));
       const started = Date.now();
       busy.current = started;
       try {
@@ -367,38 +406,67 @@ export function useGazetteAuto() {
           // Fin du championnat : numéro spécial, après la gazette de la semaine.
           const season = seasonToSend(seasonReviews(history), lastDate, (r) => isSeasonSent(saveId, r));
           if (season) {
-            await attempt('season', `season|${seasonSentKey(saveId, season)}`, () => sendSeason(t, season, lang), () => markSeasonSent(saveId, season));
+            await attempt(
+              'season',
+              `season|${seasonSentKey(saveId, season)}`,
+              () => sendSeason(t, season, lang),
+              () => markSeasonSent(saveId, season),
+            );
             await pause();
           }
           // Le coach a quitté son club (autre club, ou sans club d'après le plugin) : hors-série « Flash spécial ».
           const freeSince = (await fmData.settings(saveId)).fmFreeSince ?? null;
           const exit = farewellToSend(coachExits(history, { freeSince }), lastDate, (x) => isFarewellSent(saveId, x));
           if (exit) {
-            await attempt('farewell', `farewell|${farewellId(saveId, exit)}`, () => sendFarewell(t, saveId, exit, lang), () => markFarewellSent(saveId, exit));
+            await attempt(
+              'farewell',
+              `farewell|${farewellId(saveId, exit)}`,
+              () => sendFarewell(t, saveId, exit, lang),
+              () => markFarewellSent(saveId, exit),
+            );
             await pause();
           }
         }
         // Dépêches, exploits et affiche du choc : elles n'attendent pas la gazette de la semaine.
         if (breakingOn) {
           for (const n of breakingToSend(breakingNews(history), lastDate, (x) => isBreakingSent(saveId, x))) {
-            await attempt('breaking', `breaking|${breakingId(saveId, n)}`, () => sendBreaking(t, n, lang, saveId), () => markBreakingSent(saveId, n));
+            // En mode « auto », la photo de situation est faite avant l'envoi (deux à quatre minutes sur la carte graphique).
+            await attempt(
+              'breaking',
+              `breaking|${breakingId(saveId, n)}`,
+              async () => sendBreaking(t, n, lang, saveId, getWebhook(), await breakingPhoto(saveId, n, getPhotoMode() === 'auto')),
+              () => markBreakingSent(saveId, n),
+            );
             await pause();
           }
           // Exploits du jour (triplé, série, large victoire, fin de disette), avec les mêmes règles que les dépêches.
           for (const n of breakingToSend(recordNews(history), lastDate, (x) => isRecordSent(saveId, x))) {
-            await attempt('record', `record|${recordId(saveId, n)}`, () => sendRecord(t, n, lang), () => markRecordSent(saveId, n));
+            await attempt(
+              'record',
+              `record|${recordId(saveId, n)}`,
+              () => sendRecord(t, n, lang),
+              () => markRecordSent(saveId, n),
+            );
             await pause();
           }
           // Affiche du choc, quelques jours avant un match qui compte (une fois par match).
           const big = bigMatchNow(history);
           if (big && !isBigMatchSent(saveId, big)) {
-            await attempt('bigMatch', `bigMatch|${bigMatchId(saveId, big)}|${big.date}`, () => sendBigMatch(t, big, lang), () => markBigMatchSent(saveId, big));
+            await attempt(
+              'bigMatch',
+              `bigMatch|${bigMatchId(saveId, big)}|${big.date}`,
+              () => sendBigMatch(t, big, lang),
+              () => markBigMatchSent(saveId, big),
+            );
           }
         }
       } catch (e) {
         // Erreur hors des envois (lecture de l'historique…) : montrée elle aussi dans Live Discord.
         console.warn('Gazette automatique :', e);
-        write(AUTO_ERROR_KEY, JSON.stringify({ what: 'check', error: String(e).slice(0, 300), at: new Date().toISOString(), dropped: false } satisfies AutoError));
+        write(
+          AUTO_ERROR_KEY,
+          JSON.stringify({ what: 'check', error: String(e).slice(0, 300), at: new Date().toISOString(), dropped: false } satisfies AutoError),
+        );
       } finally {
         // Une tournée abandonnée pour blocage ne libère pas la place de celle qui l'a remplacée.
         if (busy.current === started) busy.current = 0;

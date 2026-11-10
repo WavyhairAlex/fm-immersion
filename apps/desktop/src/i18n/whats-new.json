@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.138",
+    "date": "2026-11-10",
+    "fr": [
+      "Les dépêches Discord peuvent maintenant montrer une photo de situation : le joueur blessé sur une civière ou en béquilles, la recrue présentée avec toi, un départ à la signature. Dans Gazette et Discord, choisis « jamais », « à ma demande » (un bouton « Faire la photo de situation » avant l'envoi) ou « automatique » (l'envoi automatique fait la photo lui-même, deux à quatre minutes). Il faut le moteur d'images installé depuis l'écran Photos ; sans photo, la dépêche garde le portrait."
+    ],
+    "en": [
+      "Discord breaking news can now show a situational photo: the injured player on a stretcher or on crutches, the new signing presented with you, a departure at the signing table. In Gazette and Discord, pick \"never\", \"on request\" (a \"Take the situational photo\" button before sending) or \"automatic\" (the automatic send takes the photo itself, two to four minutes). The image engine from the Photos screen must be installed; without a photo, the news keeps the portrait."
+    ]
+  },
+  {
     "version": "0.1.137",
     "date": "2026-11-10",
     "fr": [
