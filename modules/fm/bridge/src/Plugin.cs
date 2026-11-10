@@ -131,6 +131,10 @@ public class Plugin : BasePlugin
                 loadedSince ??= DateTime.UtcNow;
                 if (DateTime.UtcNow - loadedSince < TimeSpan.FromSeconds(SettleSeconds)) continue;   // partie tout juste chargée
                 if (date == lastDate && DateTime.UtcNow - lastFull < TimeSpan.FromSeconds(RereadSeconds)) continue;
+                // 0.5.8 : pas de lecture complète pendant un match (plusieurs milliers de requêtes pendant que le moteur de
+                // match tourne : jeu ralenti et réponses perdues, 10/11/2026). Elle part dès la fin du match ; le direct
+                // (LiveLoop) continue de son côté.
+                if (FmBindingReader.DuringMatch() == true) continue;
                 bool complete = Refresh();
                 // 0.5.7 : lecture incomplète (le jeu n'a pas répondu à temps) : on relit une minute plus tard, trois fois
                 // au plus par jour de jeu, au lieu d'attendre RereadSeconds ou le jour suivant.

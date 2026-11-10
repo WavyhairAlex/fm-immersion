@@ -70,7 +70,8 @@ seul joueur sans aucune valeur suffit à marquer la lecture incomplète (donc à
 Direct : une réponse manquée à « un match est-il en cours ? » ne déclare plus le match fini (état gardé, quatre lectures
 au plus). Montants : l'affichage anglais du jeu (« €1.2K p/w », « €1,250 ») et les milliards (« Md », « B ») sont lus
 correctement ; avant, un salaire affiché en anglais valait 1 €. `chemins.json` de cette version contient la lecture de la
-boîte de réception du coach (clés `boite00…29`, FM Immersion 0.1.129).
+boîte de réception du coach (clés `boite00…29`, FM Immersion 0.1.129). Plus de lecture complète pendant un match
+(le jeu ramait) : elle part dès le coup de sifflet final, le direct continue.
 
 ## Garde-fou « écran Tactique » (0.3.0)
 
