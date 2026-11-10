@@ -162,6 +162,8 @@ pub const COMMON_QUESTIONS: &[Question] = &[
     q("poteau_jaune", "Are there yellow goalposts or American football uprights anywhere in this picture?", false),
 ];
 const ALONE: Question = q("seul", "Is there exactly one person in this picture?", true);
+/// Le visage fait la photo : une image de dos ne montre plus le joueur (vu chez un joueur le 10/11/2026).
+const FACE: Question = q("visage", "Is the face of the man visible, not hidden and not seen from behind?", true);
 const ODD_GOAL: Question = q("but_insolite", "Is there a soccer goal in an odd place, for example in the stands, right behind a bench, or on the touchline?", false);
 const NO_GOAL: Question = q("but_present", "Is there a soccer goal with a net visible anywhere in this picture?", false);
 const TWO_MEN: Question = q("deux", "Are exactly two men visible in this picture, and do they have two clearly different faces?", true);
@@ -198,7 +200,7 @@ pub const SCENES: &[Scene] = &[
         width: 1024,
         height: 576,
         places: SUPPORTED_PLACES,
-        angles: &["tele", "arriere", "cote"],
+        angles: &["tele", "face", "cote"],
         gaze: "He looks down at the ground, head tilted down.",
         action: "wearing a {shirt} and plain black shorts, limping badly, barely putting any weight on his right foot which drags behind, all his weight on the two medical staff holding him under the arms, grimacing, eyes half closed, the two medical staff wear plain black polo shirts and walk one on each side of him, the two medical staff are two other men, different faces from him and different from each other, one older and grey-haired, the other younger with dark hair",
         goal: false,
@@ -219,13 +221,14 @@ pub const SCENES: &[Scene] = &[
         width: 1024,
         height: 576,
         places: CRUTCH_PLACES,
-        angles: &["tele", "arriere", "cote"],
-        gaze: "He is looking at the ground two metres ahead while walking, head slightly down.",
+        angles: &["tele", "face", "cote"],
+        gaze: "He is walking toward the camera, his face clearly visible, looking at the ground two metres ahead, head slightly down.",
         action: "wearing a {shirt} and plain black shorts, walking on two underarm crutches, exactly one crutch under each arm, a white bandage around his knee",
         goal: false,
         injury: true,
         questions: &[
             ALONE,
+            FACE,
             q("deux_bequilles", "Is the man using two crutches, one under each arm?", true),
             q("lieu", "Is the background a soccer stadium or a stadium tunnel, not a plain photo studio?", true),
             ODD_GOAL,
@@ -247,6 +250,7 @@ pub const SCENES: &[Scene] = &[
         injury: true,
         questions: &[
             ALONE,
+            FACE,
             q("glace", "Is there a blue ice pack on his knee?", true),
             q("assis", "Is he sitting on a bench?", true),
             q("but_derriere", "Is there a soccer goal right behind him?", false),
@@ -266,7 +270,7 @@ pub const SCENES: &[Scene] = &[
         action: "wearing a {shirt} and plain black shorts, sliding on both knees across the grass in a knee slide celebration, seen in profile from the side, torso leaning back, arms spread wide, shouting with joy",
         goal: true,
         injury: false,
-        questions: &[ALONE, q("genoux", "Are his knees touching the ground?", true), q("glisse", "Is he sliding on his knees, not jumping?", true), ODD_GOAL],
+        questions: &[ALONE, FACE, q("genoux", "Are his knees touching the ground?", true), q("glisse", "Is he sliding on his knees, not jumping?", true), ODD_GOAL],
     },
     Scene {
         key: "signature",
@@ -281,7 +285,7 @@ pub const SCENES: &[Scene] = &[
         action: "wearing a {shirt}, sitting at a table and signing a contract with a pen",
         goal: false,
         injury: false,
-        questions: &[ALONE, q("table", "Is he sitting at a table?", true), q("stylo", "Is he holding a pen and signing a document?", true)],
+        questions: &[ALONE, FACE, q("table", "Is he sitting at a table?", true), q("stylo", "Is he holding a pen and signing a document?", true)],
     },
     Scene {
         key: "consigne",
@@ -291,7 +295,7 @@ pub const SCENES: &[Scene] = &[
         width: 1024,
         height: 576,
         places: TOUCHLINES,
-        angles: &["tele", "cote", "arriere"],
+        angles: &["tele", "cote", "face"],
         gaze: "He is looking at the players on the pitch, not at the camera.",
         action: "wearing a plain dark tracksuit, standing on the touchline with one arm stretched out, pointing and giving instructions, shouting",
         goal: true,
@@ -313,6 +317,7 @@ pub const SCENES: &[Scene] = &[
         injury: false,
         questions: &[
             ALONE,
+            FACE,
             q("table", "Is he sitting at a table with microphones in front of him?", true),
             q("panneau", "Is the wall or backdrop behind him plain, without any writing?", true),
         ],
@@ -426,6 +431,7 @@ steep full tiers of seats behind him filled with a blurred crowd, wide press sho
         injury: false,
         questions: &[
             ALONE,
+            FACE,
             q("table", "Is he sitting at a table with microphones in front of him?", true),
             q("panneau", "Is the wall or backdrop behind him plain, without any writing?", true),
         ],
@@ -616,7 +622,7 @@ mod tests {
         assert_eq!((scene("une_joueur").unwrap().width, scene("une_joueur").unwrap().height), (1280, 720));
         assert!(u.prompt.contains("front page of a newspaper, no headline"));
         let qs = questions(scene("banc").unwrap());
-        assert_eq!(qs.len(), 5 + COMMON_QUESTIONS.len());
+        assert_eq!(qs.len(), 6 + COMMON_QUESTIONS.len());
         assert_eq!(qs.last().unwrap().id, "poteau_jaune");
         assert!(needs_coach(scene("duo_presse").unwrap()) && needs_coach(scene("une_coach").unwrap()) && !needs_coach(scene("banc").unwrap()));
         assert!(scene("banc").unwrap().injury && !scene("glissade").unwrap().injury);

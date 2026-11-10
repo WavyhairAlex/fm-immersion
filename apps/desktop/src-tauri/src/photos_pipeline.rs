@@ -511,9 +511,14 @@ pub fn library(photos_dir: &Path) -> Vec<Outcome> {
     out
 }
 
+/// Photo retenue prise de dos (angle abandonné depuis) : elle ne compte plus pour son événement, qui sera refait.
+fn rear_view(o: &Outcome) -> bool {
+    o.candidates.iter().any(|c| c.seed == o.seed && c.angle == "arriere")
+}
+
 /// La photo déjà faite pour cet événement, s'il y en a une (la plus récente).
 pub fn library_find(photos_dir: &Path, tag: &str) -> Option<Outcome> {
-    library(photos_dir).into_iter().find(|o| o.tag.as_deref() == Some(tag))
+    library(photos_dir).into_iter().find(|o| o.tag.as_deref() == Some(tag) && !rear_view(o))
 }
 
 /// Vrai si `file` est bien une image de `library/` (pas d'autre fichier lisible par ce chemin).

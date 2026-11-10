@@ -3394,7 +3394,8 @@
       "accolade": "pas d'accolade",
       "visages": "visages cachés",
       "tribune": "pas de tribune",
-      "un_premier_plan": "plusieurs joueurs au premier plan"
+      "un_premier_plan": "plusieurs joueurs au premier plan",
+      "visage": "visage caché ou de dos"
     },
     "move": {
       "label": "Dossier du moteur (34 Go)",

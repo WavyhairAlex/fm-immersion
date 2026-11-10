@@ -140,7 +140,7 @@ export function gazettePrompt(t: TFunction, issue: GazetteIssue, lang: string | 
     `Écris en ${LANG(lang)}.`,
     ...RULES,
     'Réponds uniquement par un objet JSON avec ces clés :',
-    '"titre" : le gros titre de une, 4 à 10 mots, accrocheur ;',
+    '"titre" : le gros titre de une, 4 à 10 mots, accrocheur, une phrase correcte et naturelle, avec une majuscule seulement au premier mot et aux noms propres (jamais à chaque mot) ;',
     '"article" : le récit de la une, 90 à 160 mots, avec une attaque forte et ce que ça change pour le club ;',
     '"billet" : l\'avis de la rédaction sur la semaine, 40 à 80 mots ;',
     '"tribunes" : une phrase sur ce qui se dit chez les supporters, 25 mots au plus ;',
@@ -178,6 +178,40 @@ const clean = (v: unknown) =>
         .trim()
     : '';
 
+const LETTER = /\p{L}/u;
+const isUpper = (c: string) => LETTER.test(c) && c === c.toUpperCase() && c !== c.toLowerCase();
+/** Mot sans sa ponctuation ni son article élidé (« l'Absence, » → « Absence »). */
+const bare = (w: string) => w.replace(/^[^\p{L}\d]+|[^\p{L}\d]+$/gu, '').replace(/^\p{L}{1,2}['’]/u, '');
+
+/**
+ * Titre écrit « Avec Une Majuscule À Chaque Mot » (habitude anglaise de certains modèles) ramené à l'usage de la
+ * presse : majuscule au premier mot, aux sigles et aux noms propres, c'est-à-dire aux mots écrits ainsi au milieu
+ * d'une ligne des faits (clubs, joueurs, compétitions). Un titre déjà normal est rendu tel quel.
+ */
+export function headlineCase(title: string, facts: string): string {
+  const words = title.split(' ');
+  const rest = words.slice(1).filter((w) => bare(w).length >= 4);
+  if (rest.length < 2 || rest.filter((w) => isUpper(bare(w)[0] ?? '')).length / rest.length < 0.75) return title;
+  const proper = new Set<string>();
+  for (const line of facts.split('\n')) {
+    line
+      .split(' ')
+      .slice(1)
+      .forEach((w, i, all) => {
+        const b = bare(w);
+        if (b && isUpper(b[0]!) && !/[:.!?]$/.test(all[i - 1] ?? '') && all[i - 1] !== '-') proper.add(b);
+      });
+  }
+  return words
+    .map((w, i) => {
+      const b = bare(w);
+      if (i === 0 || !b || !isUpper(b[0]!) || proper.has(b) || (b.length > 1 && b === b.toUpperCase())) return w;
+      const at = w.lastIndexOf(b);
+      return w.slice(0, at) + b[0]!.toLowerCase() + w.slice(at + 1);
+    })
+    .join(' ');
+}
+
 const LIMITS = { title: 120, article: 1400, editorial: 800, fans: 260, board: 260 } as const;
 
 /** Lit et vérifie la gazette écrite par l'IA (JSON, longueurs, faits) ; null si elle n'est pas utilisable. */
@@ -190,7 +224,7 @@ export function parseWriting(raw: string, facts: string): GazetteWriting | null 
     return null;
   }
   const w: GazetteWriting = {
-    title: clean(v.titre ?? v.title),
+    title: headlineCase(clean(v.titre ?? v.title), facts),
     article: clean(v.article),
     editorial: clean(v.billet ?? v.editorial),
     fans: clean(v.tribunes ?? v.fans),
