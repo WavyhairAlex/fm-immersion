@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><AssemblyName>Il2Cppmscorlib</AssemblyName><RootNamespace>Il2Cppmscorlib</RootNamespace><AssemblyVersion>4.0.0.0</AssemblyVersion></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Il2CppInterop.Runtime" Version="1.5.3" />
+  </ItemGroup>
+</Project>

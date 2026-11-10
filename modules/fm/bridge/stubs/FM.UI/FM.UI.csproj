@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><AssemblyName>FM.UI</AssemblyName><RootNamespace>FM.UI</RootNamespace><AssemblyVersion>0.0.0.0</AssemblyVersion></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Il2CppInterop.Runtime" Version="1.5.3" />
+    <ProjectReference Include="..\Il2Cppmscorlib\Il2Cppmscorlib.csproj" />
+    <ProjectReference Include="..\SI.Interop\SI.Interop.csproj" />
+  </ItemGroup>
+</Project>

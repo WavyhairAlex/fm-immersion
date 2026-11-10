@@ -49,3 +49,20 @@ jobs:
       - run: pnpm test
       - name: Tests Rust
         run: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --locked
+
+  # Plugin FM27 compilé sans le jeu, avec nos modèles de compilation (modules/fm/bridge/stubs, voir son README).
+  # Seule ArchivixBridge.dll est gardée : les modèles ne sont jamais livrés.
+  plugin:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Compiler le plugin (modèles de compilation)
+        run: dotnet build modules/fm/bridge/ArchivixBridge.csproj -c Release -p:Stubs=true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ArchivixBridge
+          path: modules/fm/bridge/bin/Release/net6.0/ArchivixBridge.dll
+          if-no-files-found: error
