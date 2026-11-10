@@ -74,3 +74,4 @@ export * from './cups';
 export * from './club-look';
 export * from './countries';
 export * from './career';
+export * from './press';

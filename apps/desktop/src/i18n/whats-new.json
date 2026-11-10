@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.134",
+    "date": "2026-11-10",
+    "fr": [
+      "Nouveau : la conférence de presse. Avant un gros match et après chaque match officiel, les journalistes te posent trois questions sur ta partie. Choisis un ton (confiant, mesuré, ferme) ou écris ta propre réponse, dans « Gazette et Discord ».",
+      "La gazette de la semaine te cite, et dit si tu as refusé de parler. Si ton IA est branchée, elle reformule les questions comme un vrai journaliste."
+    ],
+    "en": [
+      "New: the press conference. Before a big match and after every competitive game, journalists ask you three questions about your save. Pick a tone (confident, measured, firm) or write your own answer, in “Gazette & Discord”.",
+      "The week's gazette quotes you, and says when you declined to speak. If your AI is switched on, it rewords the questions like a real journalist."
+    ]
+  },
+  {
     "version": "0.1.133",
     "date": "2026-11-10",
     "fr": [

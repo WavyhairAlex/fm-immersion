@@ -2,9 +2,10 @@ import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 import { Discord } from './Discord';
 import { Gazette } from './Gazette';
+import { Press } from './Press';
 
-/** « Gazette et Discord » : le journal de la carrière et son envoi dans un salon Discord, sur un seul écran. */
-export function Story({ tab }: { tab: 'gazette' | 'discord' }) {
+/** « Gazette et Discord » : le journal de la carrière, la conférence de presse et l'envoi dans un salon Discord, sur un seul écran. */
+export function Story({ tab }: { tab: 'gazette' | 'presse' | 'discord' }) {
   const { t } = useTranslation();
   const link = ({ isActive }: { isActive: boolean }) =>
     `-mb-px rounded-t-lg border-b-2 px-3 py-1.5 text-sm font-bold ${isActive ? 'border-orange text-canard' : 'border-transparent text-canard/60 hover:text-canard'}`;
@@ -16,11 +17,14 @@ export function Story({ tab }: { tab: 'gazette' | 'discord' }) {
         <NavLink to="/gazette" className={link}>
           {t('modes.gazette.title')}
         </NavLink>
+        <NavLink to="/presse" className={link}>
+          {t('modes.press.title')}
+        </NavLink>
         <NavLink to="/discord" className={link}>
           {t('modes.discord.title')}
         </NavLink>
       </nav>
-      {tab === 'gazette' ? <Gazette /> : <Discord />}
+      {tab === 'gazette' ? <Gazette /> : tab === 'presse' ? <Press /> : <Discord />}
     </div>
   );
 }

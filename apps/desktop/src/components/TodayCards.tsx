@@ -1,4 +1,4 @@
-import { CHALLENGES, evaluateChallenge, gazetteIssues, type ChallengeId } from '@fm-immersion/module-fm';
+import { CHALLENGES, evaluateChallenge, gazetteIssues, pendingConference, type ChallengeId } from '@fm-immersion/module-fm';
 import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useMemo } from 'react';
@@ -9,14 +9,16 @@ import { useFacesDirs, useFacesUpdate, v2Count, pcState } from '../lib/faces';
 import { challengesData } from '../lib/data';
 import { useHistory } from '../lib/fm-cache';
 import { storyText } from '../lib/gazette-text';
+import { usePressHeld } from '../lib/press';
 
 type FacesStatus = { state: 'noGame' | 'missing' | 'original' | 'photorealV1' | 'photorealCustom' | 'unknown' };
 type Progress = { found: boolean; completePermille: number };
 
-/** Bas de « Aujourd'hui » : un cadre par chose racontée ou installée (gazette, défi, visages), avec son lien. */
+/** Bas de « Aujourd'hui » : un cadre par chose racontée ou installée (conférence en attente, gazette, défi, visages), avec son lien. */
 export function TodayCards({ saveId }: { saveId: string }) {
   return (
     <div className="mt-6 grid gap-4 md:grid-cols-3">
+      <PressCard saveId={saveId} />
       <GazetteCard saveId={saveId} />
       <ChallengeCard saveId={saveId} />
       <FacesCard />
@@ -33,6 +35,22 @@ function Card({ label, to, action, children }: { label: string; to: string; acti
         {action} →
       </Link>
     </section>
+  );
+}
+
+/** Conférence de presse en attente : seulement quand la presse a des questions (avant une affiche, après un match). */
+function PressCard({ saveId }: { saveId: string }) {
+  const { t } = useTranslation();
+  const { data: history = [] } = useHistory(saveId);
+  const { data: held } = usePressHeld(saveId);
+  const pending = useMemo(() => (held ? pendingConference(history, new Set(held.map((h) => h.key))) : null), [history, held]);
+  if (!pending) return null;
+  return (
+    <Card label={t('press.page.today')} to="/presse" action={t('press.page.go')}>
+      <p className="font-display text-lg font-semibold leading-snug">
+        {t(pending.kind === 'pre' ? 'press.page.todayPre' : 'press.page.todayPost', { opponent: pending.opponent })}
+      </p>
+    </Card>
   );
 }
 

@@ -99,6 +99,11 @@ export function storyText(t: TFunction, club: string, s: GazetteStory, lang?: st
       const legs = Number(p.legs) === 2 ? 'Legs' : '';
       return { title: k('title'), body: k(`body${legs}`, { opponent, score, count: Number(p.rounds) }) };
     }
+    case 'press': {
+      // Paroles du coach en conférence de presse, citées telles qu'il les a dites (ou son refus de répondre).
+      const opponent = str(p.opponent) ?? t('gazette.opponentUnknown');
+      return { title: k(`title_${p.moment === 'pre' ? 'pre' : 'post'}`, { opponent }), body: p.quote ? k('body', { quote: p.quote }) : k('noComment') };
+    }
     case 'injury': {
       const days = Number(p.days);
       return { title: k('title'), body: days > 0 ? k('body', { count: days }) : k('bodyNoDate') };
@@ -258,6 +263,7 @@ const ICON: Record<GazetteStory['kind'], string> = {
   nextMatch: '📅',
   cupOut: '💔',
   cupThrough: '🏆',
+  press: '🎙️',
   quiet: '☕',
 };
 

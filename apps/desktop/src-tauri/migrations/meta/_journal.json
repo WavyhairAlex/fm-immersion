@@ -57,6 +57,13 @@
       "when": 1794138241325,
       "tag": "0007_instantane_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794296408967,
+      "tag": "0008_conferences_presse",
+      "breakpoints": true
     }
   ]
 }
