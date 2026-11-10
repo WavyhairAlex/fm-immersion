@@ -1,4 +1,5 @@
 import { boardObjectives } from './club';
+import { coachNews } from './coach-news';
 import { cupRuns, type CupStatus, type CupTie } from './cups';
 import { calendarFixtures } from './fixtures';
 import { figuresForResultIn } from './lastmatch';
@@ -19,7 +20,9 @@ import type { FmSnapshot } from './snapshot';
  * - séries : trois victoires ou défaites de suite, longue période sans victoire ou sans défaite (matchs officiels) ;
  * - effectif : arrivées, départs, blessures, retours, prolongations, buts (comparaison des joueurs) ;
  * - classement, confiance, sécurité de l'emploi, présentation du prochain adversaire (`adv*`) : `custom.equipe`
- *   (chemins.json), seulement si le plugin les lit.
+ *   (chemins.json), seulement si le plugin les lit ;
+ * - avenir du coach (entretien, offre, intérêt d'autres clubs, rumeur de presse) : sa boîte de réception
+ *   (`custom.partie.boite*`, voir `coachNews`), la rubrique « Bruits de couloir ».
  */
 
 export type StoryKind =
@@ -36,6 +39,7 @@ export type StoryKind =
   | 'extension'
   | 'fans'
   | 'job'
+  | 'coachFuture'
   | 'nextMatch'
   | 'cupOut'
   | 'cupThrough'
@@ -187,6 +191,9 @@ export function streakStory(earlier: MatchResult[], week: MatchResult[]): Gazett
   return null;
 }
 
+/** Une offre ou un entretien ailleurs peut faire la une ; l'intérêt et les rumeurs restent des échos. */
+const COACH_WEIGHT = { offer: 82, interview: 76, courted: 62, linked: 55 } as const;
+
 /**
  * Brèves d'une semaine : `prev` = dernier instantané avant la semaine (ou null), `week` = instantanés de la semaine,
  * `results` = matchs de la semaine, `earlier` = matchs d'avant (pour les séries).
@@ -243,6 +250,17 @@ export function weekStories(prev: FmSnapshot | null, week: FmSnapshot[], results
     const job0 = text(equipe(prev).securiteEmploi);
     const job1 = text(equipe(cur).securiteEmploi);
     if (job1 && job0 && job1 !== job0) out.push({ kind: 'job', weight: /insécur|danger|insecure|precarious/i.test(job1) ? 70 : 30, params: { status: job1 } });
+  }
+
+  // Avenir du coach : messages apparus cette semaine dans sa boîte de réception (un par club et par type).
+  const from = prev?.gameDate ?? '';
+  const future = coachNews([...(prev ? [prev] : []), ...week].map((data) => ({ gameDate: data.gameDate, data }))).filter((c) => c.date > from);
+  const told = new Set<string>();
+  for (const c of future) {
+    const id = `${c.kind}|${c.other ?? ''}`;
+    if (told.has(id)) continue;
+    told.add(id);
+    out.push({ kind: 'coachFuture', weight: COACH_WEIGHT[c.kind], params: { type: c.kind, other: c.other, coach: c.coach, date: c.date } });
   }
 
   const next = (cur as { nextMatch?: Record<string, unknown> }).nextMatch;

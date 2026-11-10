@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.131",
+    "date": "2026-11-10",
+    "fr": [
+      "Gazette et Discord : quand un autre club convie ton coach à un entretien, lui propose un contrat, ou quand ta direction sait que d'autres clubs s'intéressent à lui, une dépêche part avec sa photo, et la gazette en parle dans ses « Bruits de couloir ».",
+      "Pour que ça marche, mets à jour le plugin FM27 depuis Plugin et réglages dès que la nouvelle version est proposée : il lit maintenant ta boîte de réception du jeu (sans rien y changer)."
+    ],
+    "en": [
+      "Gazette and Discord: when another club invites your manager to an interview, offers a contract, or your board knows other clubs are interested, a breaking news card goes out with the manager's photo, and the gazette covers it in its \"Rumour mill\".",
+      "For this to work, update the FM27 plugin from Plugin and settings as soon as the new version is offered: it now reads your in-game inbox (without changing anything)."
+    ]
+  },
+  {
     "version": "0.1.130",
     "date": "2026-11-10",
     "fr": [
