@@ -79,6 +79,7 @@ pub fn run() {
             photos_engine::photos_engine_start,
             photos_engine::photos_engine_stop,
             photos_engine::photos_engine_test,
+            photos_engine::photos_gpu_busy,
             photos_pipeline::photos_scenes,
             photos_pipeline::photos_generate,
             photos_pipeline::photos_library,
