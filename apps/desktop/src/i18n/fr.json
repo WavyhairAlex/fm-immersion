@@ -3348,7 +3348,9 @@
         "cleaned": "Logos : {{before}} détecté(s), {{after}} après retrait.",
         "left": "Logos : {{count}} détecté(s), non retiré(s).",
         "unknown": "Détection des logos non disponible.",
-        "regenerate": "Un motif trop grand pour être retiré : relance plutôt la photo."
+        "regenerate": "Un motif trop grand pour être retiré : relance plutôt la photo.",
+        "zone": "Zone prise pour un logo",
+        "zones": "Cadres rouges : ce que le détecteur a pris pour des logos. Si c'est une fausse alerte (bandeau de tribune, pub floue), dis-le, le seuil sera ajusté."
       },
       "took": "{{seconds}} s au total.",
       "privacy": "Les photos restent sur ton PC (dossier library du moteur). Rien n'est envoyé.",

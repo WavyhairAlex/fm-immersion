@@ -89,6 +89,9 @@ pub struct Outcome {
     pub reasons: Vec<String>,
     pub logos_before: Option<u32>,
     pub logos_after: Option<u32>,
+    /// Zones prises pour des logos sur l'image avant nettoyage, en parts de l'image `[x0, y0, x1, y1]`.
+    #[serde(default)]
+    pub logo_boxes: Vec<[f32; 4]>,
     /// La passe de nettoyage a remplacé l'image.
     pub cleaned: bool,
     /// Un logo trop grand pour être nettoyé : mieux vaut relancer.
@@ -120,6 +123,22 @@ struct LogoVerdict {
     count: u32,
     #[serde(default)]
     regenerate: bool,
+    /// Boîtes en pixels `[x0, y0, x1, y1]` et taille de l'image, pour situer ce qui a été pris pour un logo.
+    #[serde(default)]
+    boxes: Vec<[f32; 4]>,
+    #[serde(default)]
+    size: Option<[f32; 2]>,
+}
+
+impl LogoVerdict {
+    /// Boîtes ramenées à l'image (0 à 1), vides sans taille connue.
+    fn normalized(&self) -> Vec<[f32; 4]> {
+        let Some([w, h]) = self.size else { return vec![] };
+        if w <= 0.0 || h <= 0.0 {
+            return vec![];
+        }
+        self.boxes.iter().map(|b| [b[0] / w, b[1] / h, b[2] / w, b[3] / h]).collect()
+    }
 }
 
 /// Choisit le meilleur candidat : les acceptés d'abord, puis le moins de motifs de rejet, puis le meilleur score.
@@ -382,11 +401,12 @@ pub fn generate(photos_dir: &Path, req: &GenerateRequest, emit: &dyn Fn(&'static
     // Logos sur l'image retenue, nettoyage si besoin.
     emit("logos", 0, n);
     let mut final_file = files[chosen].clone();
-    let (mut before, mut after, mut cleaned, mut regenerate) = (None, None, false, false);
+    let (mut before, mut after, mut cleaned, mut regenerate, mut logo_boxes) = (None, None, false, false, Vec::new());
     match logos(photos_dir, &python, &final_file, run, "avant") {
         Ok(v) => {
             before = Some(v.count);
             regenerate = v.regenerate;
+            logo_boxes = v.normalized();
             if v.count > 0 && !v.regenerate {
                 emit("cleanup", 0, n);
                 if stop_engine {
@@ -440,6 +460,7 @@ pub fn generate(photos_dir: &Path, req: &GenerateRequest, emit: &dyn Fn(&'static
         reasons: reports[chosen].reasons.clone(),
         logos_before: before,
         logos_after: after,
+        logo_boxes,
         cleaned,
         regenerate,
         candidates: reports,
@@ -599,6 +620,14 @@ mod tests {
     }
 
     #[test]
+    fn boites_de_logos_ramenees_a_l_image() {
+        let v: LogoVerdict = serde_json::from_str(r#"{"count":1,"regenerate":true,"boxes":[[100,50,300,150]],"size":[1000,500]}"#).unwrap();
+        assert_eq!(v.normalized(), vec![[0.1, 0.1, 0.3, 0.3]]);
+        let sans: LogoVerdict = serde_json::from_str(r#"{"count":0}"#).unwrap();
+        assert!(sans.normalized().is_empty());
+    }
+
+    #[test]
     fn bibliotheque_et_compte_rendu() {
         let dir = std::env::temp_dir().join(format!("fmi-photos-lib-{}", now_secs()));
         let lib = dir.join(LIBRARY_SUBDIR);
@@ -616,6 +645,7 @@ mod tests {
             reasons: vec![],
             logos_before: Some(1),
             logos_after: Some(0),
+            logo_boxes: vec![[0.1, 0.2, 0.3, 0.4]],
             cleaned: true,
             regenerate: false,
             candidates: vec![],

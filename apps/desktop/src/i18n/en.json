@@ -3348,7 +3348,9 @@
         "cleaned": "Logos: {{before}} detected, {{after}} after removal.",
         "left": "Logos: {{count}} detected, not removed.",
         "unknown": "Logo detection unavailable.",
-        "regenerate": "A print too large to remove: better make the photo again."
+        "regenerate": "A print too large to remove: better make the photo again.",
+        "zone": "Area taken for a logo",
+        "zones": "Red frames: what the detector took for logos. If it is a false alarm (stand banner, blurred ad), say so and the threshold will be adjusted."
       },
       "took": "{{seconds}} s in total.",
       "privacy": "Photos stay on your PC (the engine's library folder). Nothing is sent.",
