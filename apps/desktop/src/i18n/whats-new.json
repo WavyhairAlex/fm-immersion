@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.143",
+    "date": "2026-11-10",
+    "fr": [
+      "La lecture du CA/PA reconnaît la version finale de FM27. Si un chiffre te semble faux, dis-le : c'est la première version de cette lecture pour le jeu final."
+    ],
+    "en": [
+      "CA/PA reading now recognises the full release of FM27. If a number looks wrong, say so: this is the first version of that reading for the final game."
+    ]
+  },
+  {
     "version": "0.1.142",
     "date": "2026-11-10",
     "fr": [

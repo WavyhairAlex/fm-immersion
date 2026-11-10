@@ -159,12 +159,20 @@ pub const KNOWN_TRIAL_VTABLE: u64 = 0x4C8EB78;
 pub const KNOWN_1103: Globals = Globals { database: 0x57056D0, humans: 0x56F5008, date: 0x56AF378 };
 pub const KNOWN_1103_TRIAL_VTABLE: u64 = 0x4C90B78;
 
+/// Version finale de FM27 (Steam, 10/11/2026, build 26385295 ; game_plugin.dll de 398 661 632 octets) : points
+/// d'entrée décalés de 0x11B040, retrouvés par les motifs (base : `C7 44 24 5C 00 01 00 1B` au lieu de `00 00 00 1B`) ;
+/// vtable de `TRIAL_CONTRACT@db` retrouvée par la RTTI. Disposition des objets à confirmer en jeu.
+pub const KNOWN_1110: Globals = Globals { database: 0x5820710, humans: 0x5810048, date: 0x57CA3B8 };
+pub const KNOWN_1110_TRIAL_VTABLE: u64 = 0x4D92BB8;
+
 /// Vtable du contrat d'essai pour une version connue.
 fn trial_vtable_for(globals: Globals) -> Option<u64> {
     if globals == KNOWN {
         Some(KNOWN_TRIAL_VTABLE)
     } else if globals == KNOWN_1103 {
         Some(KNOWN_1103_TRIAL_VTABLE)
+    } else if globals == KNOWN_1110 {
+        Some(KNOWN_1110_TRIAL_VTABLE)
     } else {
         None
     }
@@ -183,13 +191,15 @@ struct Sig {
     minus: u64,
 }
 
-const SIG_DATABASE: Sig = Sig { pattern: "48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? C7 44 24 5C 00 00 00 1B", disp: 3, minus: 0 };
+/// L'octet après `5C 00` vaut 00 avant la version finale, 01 depuis : laissé libre.
+const SIG_DATABASE: Sig = Sig { pattern: "48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? C7 44 24 5C 00 ?? 00 1B", disp: 3, minus: 0 };
 const SIG_PERSONS: Sig = Sig {
     pattern: "48 8B 05 ?? ?? ?? ?? 48 8B 80 80 00 00 00 48 8B 48 08 48 3B 08 0F 85 ?? ?? ?? ??",
     disp: 3,
     minus: 0x68,
 };
-const SIG_HUMANS: Sig = Sig { pattern: "4C 8B 25 ?? ?? ?? ?? 49 8B 44 24 18 49 8B 54 24 20 48 39 C2 74 4D", disp: 3, minus: 0 };
+/// Le saut qui suit (`74 4D` avant la version finale) change d'une version à l'autre : hors du motif.
+const SIG_HUMANS: Sig = Sig { pattern: "4C 8B 25 ?? ?? ?? ?? 49 8B 44 24 18 49 8B 54 24 20 48 39 C2", disp: 3, minus: 0 };
 /// `lea rdx, [date courante]` dans le calcul d'âge du jeu.
 const SIG_DATE: Sig = Sig { pattern: "48 8D 15 ?? ?? ?? ?? 49 0F 42 D0 0F B7 42 02", disp: 3, minus: 0 };
 
@@ -1920,5 +1930,17 @@ mod tests {
         emit(&mut code, va, &SIG_DATE, KNOWN.date);
         emit(&mut code, va, &SIG_DATE, KNOWN.date + 8);
         assert!(matches!(scan_globals(&mut Cursor::new(fake_pe(&code, va))), Err(MemError::UnknownVersion(_))));
+    }
+}
+
+/// Vérification sur le vrai module du jeu (hors CI) : `FMI_MODULE=…\\game_plugin.dll cargo test module_reel -- --ignored --nocapture`
+#[cfg(test)]
+mod module_reel {
+    #[test]
+    #[ignore]
+    fn points_d_entree() {
+        let p = std::path::PathBuf::from(std::env::var("FMI_MODULE").unwrap());
+        let g = super::globals_for(&p);
+        println!("points d'entrée : {:?}, version connue : {:?}", g, g.as_ref().ok().map(|g| super::is_known(*g)));
     }
 }
