@@ -4,8 +4,11 @@ type Raw = Record<string, unknown>;
 
 const text = (v: unknown) => (typeof v === 'string' && v.trim() && !v.startsWith('SI.') ? v.trim() : null);
 
-/** Libellé d'équipe première tel que le jeu l'écrit (« Équipe prem. », « First Team », « Senior », « Équipe A »). */
-const FIRST_TEAM = /prem|first|senior|^(équipe |equipe |team )?a$/i;
+/**
+ * Libellé d'équipe première tel que le jeu l'écrit (« Équipe prem. » en bêta, « Équipe 1ère » dans la version finale
+ * de FM27 du 10/11/2026, « First Team », « Senior », « Équipe A »).
+ */
+const FIRST_TEAM = /prem|\b1(è|e)?re\b|\b1st\b|first|senior|^(équipe |equipe |team )?a$/i;
 
 /**
  * Équipe du club de chaque joueur, lue par chemins.json (joueur : `equipe` = PrimaryClubTeam/Name, `equipeType` =
@@ -27,7 +30,9 @@ export function otherTeamOf(snap: FmSnapshot): Map<string, string> {
     const type = text(row.equipeType);
     if (!name && !type) continue;
     read = true;
-    const first = type ? FIRST_TEAM.test(type) : name === snap.club;
+    // Une équipe qui porte le nom du club est son équipe première, quel que soit le libellé du type : un libellé
+    // renommé par le jeu (« Équipe prem. » → « Équipe 1ère ») sortait sinon tout l'effectif et vidait Mon club.
+    const first = name === snap.club || (type ? FIRST_TEAM.test(type) : false);
     if (!first) out.set(String(row.id ?? key), name ?? type!);
   }
   if (read) return out;
