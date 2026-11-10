@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.141",
+    "date": "2026-11-10",
+    "fr": [
+      "La lecture du CA/PA marche à nouveau avec la version finale de FM27."
+    ],
+    "en": [
+      "CA/PA reading works again with the full release of FM27."
+    ]
+  },
+  {
     "version": "0.1.140",
     "date": "2026-11-10",
     "fr": [
