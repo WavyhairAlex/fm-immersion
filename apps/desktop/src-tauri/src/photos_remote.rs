@@ -381,8 +381,157 @@ pub struct DownloadProgress {
     pub total_bytes: u64,
 }
 
-fn photos_dir(app: &tauri::AppHandle) -> Result<PathBuf, PhotosError> {
-    Ok(app.path().app_local_data_dir().map_err(|e| PhotosError::Io(e.to_string()))?.join(DIR_NAME))
+// ------------------------------------------------------------------ emplacement du dossier
+
+/// Fichier texte à côté du dossier par défaut : le chemin choisi par le joueur (34 Go, souvent sur un autre disque).
+pub const LOCATION_FILE: &str = "photos-dir.txt";
+
+/// Dossier des photos à partir du dossier de données de l'appli : celui du fichier d'emplacement s'il est
+/// renseigné et absolu, sinon `photos/` à côté.
+pub fn resolve_dir(app_data: &Path) -> PathBuf {
+    if let Ok(text) = std::fs::read_to_string(app_data.join(LOCATION_FILE)) {
+        let chosen = text.trim();
+        if !chosen.is_empty() {
+            let p = PathBuf::from(chosen);
+            if p.is_absolute() {
+                return p;
+            }
+        }
+    }
+    app_data.join(DIR_NAME)
+}
+
+/// Un dossier est « à nous » s'il est vide, absent, ou contient déjà un dossier du moteur.
+fn is_ours(dir: &Path) -> std::io::Result<bool> {
+    if !dir.exists() {
+        return Ok(true);
+    }
+    if !dir.is_dir() {
+        return Ok(false);
+    }
+    if std::fs::read_dir(dir)?.next().is_none() {
+        return Ok(true);
+    }
+    Ok(["models", "comfyui", "library", "scripts"].iter().any(|d| dir.join(d).is_dir()) || dir.join("comfyui.log").is_file())
+}
+
+/// Vérifie le dossier demandé : absolu, pas la racine d'un disque, vide ou déjà à nous (il sera supprimé
+/// entièrement par « Tout supprimer »). Renvoie le chemin nettoyé.
+pub fn validate_target(dir: &str) -> Result<PathBuf, PhotosError> {
+    let p = PathBuf::from(dir.trim().trim_end_matches(['\\', '/']));
+    if !p.is_absolute() || p.parent().is_none() || p.file_name().is_none() {
+        return Err(PhotosError::Io("dossier invalide : donne un chemin complet, pas la racine d'un disque (par exemple D:\\FM Immersion\\photos)".into()));
+    }
+    if !is_ours(&p)? {
+        return Err(PhotosError::Io("ce dossier n'est pas vide : choisis un dossier vide ou nouveau".into()));
+    }
+    Ok(p)
+}
+
+fn dir_size(dir: &Path) -> std::io::Result<u64> {
+    let mut total = 0;
+    for entry in std::fs::read_dir(dir)? {
+        let entry = entry?;
+        let meta = entry.metadata()?;
+        total += if meta.is_dir() { dir_size(&entry.path())? } else { meta.len() };
+    }
+    Ok(total)
+}
+
+fn copy_tree(from: &Path, to: &Path, done: &mut u64, total: u64, progress: &dyn Fn(u64, u64)) -> std::io::Result<()> {
+    std::fs::create_dir_all(to)?;
+    for entry in std::fs::read_dir(from)? {
+        let entry = entry?;
+        let src = entry.path();
+        let dst = to.join(entry.file_name());
+        if entry.file_type()?.is_dir() {
+            copy_tree(&src, &dst, done, total, progress)?;
+            continue;
+        }
+        let mut r = std::fs::File::open(&src)?;
+        let mut w = std::io::BufWriter::new(std::fs::File::create(&dst)?);
+        let mut buf = vec![0u8; 4 << 20];
+        let mut last = *done;
+        loop {
+            let n = r.read(&mut buf)?;
+            if n == 0 {
+                break;
+            }
+            w.write_all(&buf[..n])?;
+            *done += n as u64;
+            if *done - last >= 64 << 20 {
+                last = *done;
+                progress(*done, total);
+            }
+        }
+        w.flush()?;
+    }
+    Ok(())
+}
+
+/// Déplace le dossier des photos : renommage quand c'est le même disque, sinon copie fichier par fichier
+/// (`progress(octets copiés, total)`) puis suppression de l'ancien. Sans ancien dossier, crée le nouveau.
+pub fn move_dir(from: &Path, to: &Path, progress: &dyn Fn(u64, u64)) -> std::io::Result<()> {
+    if from == to {
+        return Ok(());
+    }
+    if !from.is_dir() {
+        return std::fs::create_dir_all(to);
+    }
+    if let Some(parent) = to.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    if to.exists() && std::fs::read_dir(to)?.next().is_none() {
+        std::fs::remove_dir(to)?;
+    }
+    if std::fs::rename(from, to).is_ok() {
+        return Ok(());
+    }
+    let total = dir_size(from)?;
+    let mut done = 0;
+    copy_tree(from, to, &mut done, total, progress)?;
+    progress(total, total);
+    std::fs::remove_dir_all(from)
+}
+
+/// Dossier des photos sur ce PC (voir `resolve_dir`).
+pub fn photos_dir(app: &tauri::AppHandle) -> Result<PathBuf, PhotosError> {
+    Ok(resolve_dir(&app.path().app_local_data_dir().map_err(|e| PhotosError::Io(e.to_string()))?))
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MoveProgress {
+    pub done: u64,
+    pub total: u64,
+}
+
+/// Change le dossier du moteur (sur clic du joueur) et y déplace ce qui est déjà téléchargé. Émet « photos-move ».
+#[tauri::command]
+pub async fn photos_set_dir(app: tauri::AppHandle, dir: String) -> Result<Status, PhotosError> {
+    if DOWNLOADING.load(Ordering::SeqCst) || crate::photos_pipeline::is_busy() {
+        return Err(PhotosError::Busy);
+    }
+    let app_data = app.path().app_local_data_dir().map_err(|e| PhotosError::Io(e.to_string()))?;
+    let from = resolve_dir(&app_data);
+    let to = validate_target(&dir)?;
+    let emitter = app.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::photos_engine::stop();
+        move_dir(&from, &to, &|done, total| {
+            emitter.emit("photos-move", MoveProgress { done, total }).ok();
+        })?;
+        std::fs::create_dir_all(&app_data)?;
+        let location = app_data.join(LOCATION_FILE);
+        if to == app_data.join(DIR_NAME) {
+            std::fs::remove_file(&location).ok();
+        } else {
+            std::fs::write(&location, to.to_string_lossy().as_bytes())?;
+        }
+        Ok(status(&to, manifest()))
+    })
+    .await
+    .map_err(|e| PhotosError::Io(e.to_string()))?
 }
 
 #[tauri::command]
@@ -545,6 +694,65 @@ mod tests {
         assert!(!s.ready);
         remove(&dir).unwrap();
         assert!(!dir.exists());
+    }
+
+    #[test]
+    fn emplacement_choisi_ou_par_defaut() {
+        let base = tmp("emplacement");
+        assert_eq!(resolve_dir(&base), base.join(DIR_NAME));
+        std::fs::write(base.join(LOCATION_FILE), "   \n").unwrap();
+        assert_eq!(resolve_dir(&base), base.join(DIR_NAME));
+        std::fs::write(base.join(LOCATION_FILE), "relatif/photos").unwrap();
+        assert_eq!(resolve_dir(&base), base.join(DIR_NAME));
+        let ailleurs = base.join("ailleurs");
+        std::fs::write(base.join(LOCATION_FILE), format!("{}\n", ailleurs.display())).unwrap();
+        assert_eq!(resolve_dir(&base), ailleurs);
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn dossier_cible_controle() {
+        let base = tmp("cible");
+        assert!(validate_target("relatif").is_err());
+        assert!(validate_target("/").is_err());
+        // Nouveau dossier : accepté, barre finale retirée.
+        let neuf = base.join("neuf");
+        assert_eq!(validate_target(&format!("{}/", neuf.display())).unwrap(), neuf);
+        // Dossier plein qui n'est pas à nous : refusé.
+        let plein = base.join("plein");
+        std::fs::create_dir_all(&plein).unwrap();
+        std::fs::write(plein.join("perso.txt"), b"x").unwrap();
+        assert!(validate_target(&plein.display().to_string()).is_err());
+        // Dossier du moteur déjà là : accepté.
+        std::fs::create_dir_all(plein.join("models")).unwrap();
+        assert!(validate_target(&plein.display().to_string()).is_ok());
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn deplacement_renomme_ou_copie() {
+        let base = tmp("deplacer");
+        let from = base.join("a");
+        std::fs::create_dir_all(from.join("models").join("x")).unwrap();
+        std::fs::write(from.join("models").join("x").join("m.bin"), vec![7u8; 3000]).unwrap();
+        std::fs::write(from.join("comfyui.log"), b"log").unwrap();
+        let to = base.join("b").join("photos");
+        move_dir(&from, &to, &|_, _| {}).unwrap();
+        assert!(!from.exists());
+        assert_eq!(std::fs::read(to.join("models").join("x").join("m.bin")).unwrap().len(), 3000);
+        // Copie fichier par fichier : même résultat.
+        let c = base.join("c");
+        let mut done = 0;
+        let total = dir_size(&to).unwrap();
+        assert_eq!(total, 3003);
+        copy_tree(&to, &c, &mut done, total, &|_, _| {}).unwrap();
+        assert_eq!(done, 3003);
+        assert_eq!(std::fs::read(c.join("comfyui.log")).unwrap(), b"log");
+        // Sans ancien dossier : le nouveau est créé vide.
+        let d = base.join("d");
+        move_dir(&base.join("absent"), &d, &|_, _| {}).unwrap();
+        assert!(d.is_dir());
+        let _ = std::fs::remove_dir_all(&base);
     }
 
     #[test]

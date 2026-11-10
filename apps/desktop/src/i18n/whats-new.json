@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.142",
+    "date": "2026-11-10",
+    "fr": [
+      "Photos : tu choisis maintenant le disque du moteur d'images (34 Go). Dans Photos, cadre « Fichiers sur le disque », tape un dossier (par exemple D:\\FM Immersion\\photos) et clique « Déplacer vers ce dossier » : ce qui est déjà téléchargé est déplacé, rien n'est à refaire."
+    ],
+    "en": [
+      "Photos: you now choose the drive for the image engine (34 GB). In Photos, under \"Files on disk\", type a folder (for example D:\\FM Immersion\\photos) and click \"Move to this folder\": what is already downloaded is moved, nothing needs to be redone."
+    ]
+  },
+  {
     "version": "0.1.141",
     "date": "2026-11-10",
     "fr": [
