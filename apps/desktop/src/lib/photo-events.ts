@@ -1,7 +1,7 @@
 import type { BreakingNews, GazetteIssue, GazetteStory } from '@fm-immersion/module-fm';
 import { isCoachBreaking } from '@fm-immersion/module-fm';
 import { invoke } from '@tauri-apps/api/core';
-import { facePng } from './player-face';
+import { faceBytes } from './player-face';
 import { imageToPngBytes, type EngineStatus, type Outcome } from './photos';
 
 /**
@@ -163,8 +163,9 @@ export type PhotoSubjects = { playerId?: string | number | null; coachPhoto?: st
 export async function castFaces(cast: PhotoCast, s: PhotoSubjects): Promise<number[][] | null> {
   const coach = async () => (s.coachPhoto ? imageToPngBytes(s.coachPhoto) : null);
   const player = async () => {
-    const b = await facePng(s.playerId);
-    return b ? Array.from(b) : null;
+    // Facepack en JPEG : converti en PNG, comme la photo du coach.
+    const b = await faceBytes(s.playerId);
+    return b ? imageToPngBytes(new File([b as BlobPart], 'visage')) : null;
   };
   const faces = cast === 'coach' ? [await coach()] : cast === 'player' ? [await player()] : [await coach(), await player()];
   return faces.every((f): f is number[] => !!f && f.length > 0) ? faces : null;

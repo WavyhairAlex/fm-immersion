@@ -3320,9 +3320,8 @@
       "injuryNote": "Injury scene: players only, never with your coach photo.",
       "coachFace": "Your coach photo will be used.",
       "needCoach": "Add your coach photo first (sidebar) for this scene.",
-      "needPlayer": "Choose the player's portrait.",
-      "playerFace": "Player portrait",
-      "playerFaceNote": "A face image (PNG or JPEG), for example a portrait from the Faces pack. In a next version the app will fetch it itself.",
+      "needPlayer": "Pick a player from your squad, or a face image.",
+      "playerFace": "Or another face image (PNG or JPEG)",
       "kit": "Club shirt (optional)",
       "kitNote": "PNG image of a shirt (2D kit pack). Colours and pattern are kept; crest and sponsors are removed afterwards, not always completely.",
       "generate": "Make the photo",
@@ -3356,7 +3355,12 @@
       "privacy": "Photos stay on your PC (the engine's library folder). Nothing is sent.",
       "library": "Photos already made",
       "show": "Show",
-      "delete": "Delete"
+      "delete": "Delete",
+      "player": "Player",
+      "playerPick": "Pick a player from your squad",
+      "playerNone": "No squad read yet: pick a career",
+      "playerNote": "The app fetches the portrait itself (your facepack or the Faces pack).",
+      "noFace": "No portrait found for {{name}} on this PC (no facepack, no Faces pack): pick an image."
     },
     "reason": {
       "texte": "text or logo",
