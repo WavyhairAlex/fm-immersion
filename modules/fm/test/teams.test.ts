@@ -34,6 +34,23 @@ describe('équipes du club', () => {
     expect(players.map((p) => p.team)).toEqual([null, 'Malženice U19', 'Malženice II', null]);
   });
 
+  it('reconnaît l’équipe première de la version finale de FM27 (« Équipe 1ère ») et le nom du club', () => {
+    const snap = {
+      ...base,
+      players: [{ id: 1, name: 'A' }, { id: 2, name: 'B' }, { id: 3, name: 'C' }, { id: 4, name: 'D' }],
+      custom: {
+        joueurs: {
+          a: { id: 1, equipe: 'Malženice', equipeType: 'Équipe 1ère' },
+          b: { id: 2, equipe: 'Malženice U19', equipeType: 'Équipe U19' },
+          c: { id: 3, equipe: 'Nitra', equipeType: 'Équipe 1ère' },
+          d: { id: 4, equipe: 'Malženice', equipeType: 'Libellé inconnu' },
+        },
+      },
+    } as unknown as FmSnapshot;
+    expect([...otherTeamOf(snap)]).toEqual([['2', 'Malženice U19']]);
+    expect(firstTeamSnapshot(snap).players.map((p) => p.id)).toEqual([1, 3, 4]);
+  });
+
   it('sans le type, compare le nom de l’équipe au club', () => {
     const snap = {
       ...base,
