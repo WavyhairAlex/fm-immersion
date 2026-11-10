@@ -73,6 +73,12 @@ correctement ; avant, un salaire affiché en anglais valait 1 €. `chemins.json
 boîte de réception du coach (clés `boite00…29`, FM Immersion 0.1.129). Plus de lecture complète pendant un match
 (le jeu ramait) : elle part dès le coup de sifflet final, le direct continue.
 
+**0.5.9** : fluidité. Les requêtes d'une lecture partaient toutes dans la même image du jeu (plus de 5 000 pour
+`chemins.json`), d'où un à-coup à chaque jour de jeu. Le plugin ne prend plus que 3 ms par image au thread du jeu et
+envoie ses requêtes par tranches de 50 ; le reste attend l'image suivante. `collecte.duree` et le journal BepInEx donnent
+la durée de chaque lecture et le temps pris au thread du jeu (total, et pire image). Quatre lectures qui ne répondaient
+jamais sont retirées de `chemins.json` (`pretEntrant`, `equipeTypeBrut`, `equipeContexte`, `resultatsImposes`).
+
 ## Garde-fou « écran Tactique » (0.3.0)
 
 Toute lecture liée à la tactique (`LireTactique`, `LireEfficacite`, `LireCompo`, section `tactique` de `chemins.json`,
