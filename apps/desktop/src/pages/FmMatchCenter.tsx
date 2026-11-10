@@ -96,6 +96,8 @@ export function FmMatchCenter({
   }, [liveRaw, snap.club, s.nextMatch?.opponent]);
   const [manual, setManual] = useState(false);
   const [live, setLive] = useState(false);
+  // Feuille de match repliée en une ligne, sauf la veille et le jour du match (ou pendant le direct).
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [minute, setMinute] = useState(0);
   const [diff, setDiff] = useState(0);
   const [tired, setTired] = useState(false);
@@ -277,7 +279,18 @@ export function FmMatchCenter({
       </div>
 
       {/* Feuille de match : remplacements prévus et ajustements selon le score. */}
-      {plan && (
+      {plan && !(sheetOpen || live || !!game || (nm?.inDays != null && nm.inDays <= 1)) && (
+        <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
+          <p className="text-sm">
+            <b className="text-canard">{t('fm.matchSheet.title')}</b>{' '}
+            <span className="text-brun">{t('fm.matchSheet.folded', { subs: subs.length, tweaks: tweaks.length })}</span>
+          </p>
+          <button type="button" className="chip" onClick={() => setSheetOpen(true)}>
+            {t('fm.matchSheet.open')}
+          </button>
+        </div>
+      )}
+      {plan && (sheetOpen || live || !!game || (nm?.inDays != null && nm.inDays <= 1)) && (
         <div className="card p-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2>{t('fm.matchSheet.title')}</h2>

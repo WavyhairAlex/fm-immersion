@@ -2408,7 +2408,9 @@
         "cup": "Coupe : match secondaire par rapport au championnat. Fais tourner sans brader : garde la colonne vertébrale (gardien, un central, le meneur) et donne du temps à ceux qui en manquent.",
         "congested": "Calendrier chargé : un autre match dans les 3 jours. Fais tourner les joueurs entamés, les remplaçants frais comptent en fin de match.",
         "high": "{{competition}} : match prioritaire, meilleur onze disponible."
-      }
+      },
+      "folded": "prête : {{subs}} remplacements prévus et {{tweaks}} ajustements selon le score. Elle s'ouvre seule la veille du match.",
+      "open": "Voir la feuille"
     },
     "squadPitch": {
       "label": "Affichage de l'effectif",

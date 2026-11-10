@@ -2408,7 +2408,9 @@
         "cup": "Cup: secondary to the league. Rotate without giving it away: keep the spine (keeper, one centre-back, the playmaker) and give minutes to those who need them.",
         "congested": "Busy schedule: another match within 3 days. Rotate the worn players; fresh substitutes matter late in the match.",
         "high": "{{competition}}: priority match, best available eleven."
-      }
+      },
+      "folded": "ready: {{subs}} planned substitutions and {{tweaks}} score-based tweaks. It opens by itself the day before the match.",
+      "open": "See the sheet"
     },
     "squadPitch": {
       "label": "Squad display",

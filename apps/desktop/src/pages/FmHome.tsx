@@ -140,6 +140,7 @@ export function FmHome({
   const alerts = h.alerts.filter((a) => a.kind !== 'condition');
   const shown = alerts.slice(0, 8);
 
+  const threadShown = useHasDecision(snap.gameDate);
   return (
     <div className="space-y-4">
       <DayThread snap={snap} entries={entries ?? []} go={go} />
@@ -165,9 +166,10 @@ export function FmHome({
             onTodo={onTodo}
             tactic={tactic}
             hideMatch
+            noQuote
           />
         }
-        asideAfter={<FixturesCard snap={snap} entries={entries ?? []} go={go} />}
+        asideAfter={<FixturesCard snap={snap} entries={entries ?? []} go={go} hideLast={threadShown} />}
       />
       {board}
       <FmOffseason snap={snap} players={players} list={decisionList} go={go} />
@@ -302,6 +304,13 @@ const OUTCOME_TONE = { W: 'bg-eau-fonce', D: 'bg-ambre', L: 'bg-corail' } as con
  * Le fil du jour, en haut de l'accueil quand une décision attend : dernier match → prochain adversaire → décision
  * du jour (le message le plus urgent du briefing). Quand rien n'attend, il disparaît et le bandeau du match mène.
  */
+/** Une décision attend-elle (message du briefing à traiter, hors prochain match et simples infos) ? */
+function useHasDecision(gameDate: string) {
+  const scope = useFmSaveScope();
+  const brief = useCareerStore((s) => s.brief);
+  return brief.at === `${scope.saveId}|${gameDate}` && brief.items.some((x) => !/^(nextMatch|friendly):/.test(x.key) && x.tone !== 'info');
+}
+
 function DayThread({ snap, entries, go }: { snap: FmSnapshot; entries: { gameDate: string; data: FmSnapshot }[]; go: (view: string) => void }) {
   const { t } = useTranslation();
   const scope = useFmSaveScope();
@@ -372,9 +381,11 @@ function DayThread({ snap, entries, go }: { snap: FmSnapshot; entries: { gameDat
 }
 
 /** Dernier résultat et prochains matchs, sous le briefing de l'accueil. */
-function FixturesCard({ snap, entries, go }: { snap: FmSnapshot; entries: { gameDate: string; data: FmSnapshot }[]; go: (view: string) => void }) {
+function FixturesCard({ snap, entries, go, hideLast = false }: { snap: FmSnapshot; entries: { gameDate: string; data: FmSnapshot }[]; go: (view: string) => void; hideLast?: boolean }) {
   const { t, i18n } = useTranslation();
-  const last = useMemo(() => officialResults(entries).filter((r) => r.matches === 1).at(-1) ?? null, [entries]);
+  const found = useMemo(() => officialResults(entries).filter((r) => r.matches === 1).at(-1) ?? null, [entries]);
+  // Le fil du jour montre déjà le dernier résultat : pas de doublon ici.
+  const last = hideLast ? null : found;
   const next = useMemo(() => snapshotFixtures(snap).filter((f) => f.date >= snap.gameDate).slice(1, 4), [snap]);
   const day = new Intl.DateTimeFormat(i18n.resolvedLanguage, { weekday: 'short', day: 'numeric', month: 'short' });
   if (!last && !next.length) return null;
