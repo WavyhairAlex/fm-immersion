@@ -9,6 +9,7 @@ mod faces_remote;
 mod facepack;
 mod fm;
 mod fm_bridge;
+mod fm_compat;
 mod fm_memory;
 mod images;
 mod photos_engine;
@@ -47,6 +48,7 @@ pub fn run() {
             fm::fm_history_list,
             fm::fm_history_read,
             fm_bridge::fm_bridge_status,
+            fm_compat::fm_compat_status,
             fm_bridge::fm_bridge_latest,
             fm_bridge::fm_bridge_install,
             fm_bridge::fm_bridge_default_game_dir,

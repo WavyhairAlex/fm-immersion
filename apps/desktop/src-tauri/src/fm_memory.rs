@@ -1218,7 +1218,7 @@ mod win {
 /// Points d'entrée retrouvés pour un fichier donné (taille + date), pour ne pas relire 400 Mo à chaque fois.
 static GLOBALS_CACHE: Mutex<Option<((PathBuf, u64, u128), Globals)>> = Mutex::new(None);
 
-fn globals_for(path: &Path) -> Result<Globals, MemError> {
+pub(crate) fn globals_for(path: &Path) -> Result<Globals, MemError> {
     let meta = std::fs::metadata(path)?;
     let modified = meta.modified().ok().and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok()).map_or(0, |d| d.as_millis());
     let key = (path.to_path_buf(), meta.len(), modified);

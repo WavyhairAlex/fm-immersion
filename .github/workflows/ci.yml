@@ -29,3 +29,23 @@ jobs:
       - run: pnpm build
       - name: Tests Rust
         run: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --locked
+
+  # L'appli ne tourne que sous Windows : mêmes tests sur une machine Windows, pour attraper ce qui ne se voit
+  # pas sous Linux (chemins, lecture en mémoire, processus, NSIS…).
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - name: Tests Rust
+        run: cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml --locked

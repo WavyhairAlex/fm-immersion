@@ -1,3 +1,4 @@
+import { GameCompatBanner, GameCompatCard } from '../components/GameCompat';
 import { AiSettingsCard } from '../components/AiSettingsCard';
 import {
   buildProject,
@@ -393,6 +394,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
                           <h1 className="text-3xl font-semibold">{t('layout.today.title')}</h1>
                           <p className="mt-1 text-brun first-letter:uppercase">{longDateFmt.format(new Date(shownGameDate(snapshot, sync.now) ?? snapshot.gameDate))}</p>
                         </header>
+                        <GameCompatBanner />
                         {part('home')}
                         <TodayCards saveId={saveId} />
                       </>
@@ -532,6 +534,8 @@ function SettingsPage({
           </div>
         </form>
       </section>
+
+      <GameCompatCard />
 
       <section className="space-y-4" aria-labelledby="advanced">
         <h2 id="advanced" className="text-lg">{t('layout.connect.advanced')}</h2>
@@ -1074,6 +1078,7 @@ export function SettingsWithoutCareer() {
         </button>
         {folder && <FmBridge dataFolder={folder} />}
       </section>
+      <GameCompatCard />
     </div>
   );
 }
