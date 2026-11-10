@@ -530,3 +530,10 @@ describe('ce qui fait vraiment progresser', () => {
     expect(roleAdvice({ slot: null, player: { age: 26, positions: ['MOD'] } }).why).toBe('project');
   });
 });
+
+describe('intensité de l’équipe selon la semaine', () => {
+  it('pas de double intensité dans une semaine à deux matchs', () => {
+    expect(teamIntensityFor(undefined, 1).good).toBe('double');
+    expect(teamIntensityFor(undefined, 2)).toEqual({ veryPoor: 'noWork', poor: 'half', fair: 'normal', good: 'normal', excellent: 'normal' });
+  });
+});

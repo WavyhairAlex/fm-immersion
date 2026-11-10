@@ -58,6 +58,7 @@ import { snapshotWinterBreak,
   roleAdvice,
   teamAppsOf,
   teamIntensityFor,
+  BUSY_WEEK_MATCHES,
   type FocusWhy,
   type GrowthOutlook,
   type GrowthVerdict,
@@ -260,7 +261,6 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
   const clubStatus: ClubStatus = coach.clubStatus ?? 'pro';
   // Une seule proposition : le programme FM Immersion (progression mesurée + efficacité tactique + calendrier).
   const method = DEFAULT_METHOD;
-  const teamIntensity = teamIntensityFor(method);
   const trainingDays = clubStatus === 'pro' ? undefined : coach.trainingDays ?? PART_TIME_DAYS;
   // Semaine affichée, en semaines après la semaine en cours (0 = cette semaine) ; la vue saison permet d'en choisir une.
   const [offset, setOffset] = useState('0');
@@ -320,6 +320,9 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
     grow: whys.filter((w) => w === 'grow' || w === 'devBlock' || w === 'noCondition' || w === 'indiv').length,
     matches: plan.days.filter((d) => d.kind === 'match').length,
   };
+  // Semaine chargée : plus de double intensité (voir BUSY_WEEK_MATCHES).
+  const busy = summary.matches >= BUSY_WEEK_MATCHES;
+  const teamIntensity = teamIntensityFor(method, summary.matches);
   // Ouvrir une semaine donnée (flèches, ou clic dans La saison) : on revient sur l'onglet de la semaine.
   const [jump, setJump] = useState<{ id: string; n: number } | undefined>();
   const goToWeek = (o: number, open = false) => {
@@ -400,7 +403,7 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
                   {[
                     workload ? t('fm.train.steps.preset', { preset: t(`fm.train.preset.${nearestPreset(plan)}`), workload: t(`fm.train.workload.${workload}`) }) : t('fm.train.steps.presetRest', { preset: t(`fm.train.preset.${nearestPreset(plan)}`) }),
                     t('fm.train.steps.copy'),
-                    t('fm.train.steps.intensity'),
+                    t(busy ? 'fm.train.steps.intensityBusy' : 'fm.train.steps.intensity'),
                     ...(setups.rows.length > 0 ? [todoCount ? t('fm.train.steps.setups', { count: todoCount }) : t('fm.train.steps.setupsOk')] : []),
                   ].map((s, i) => (
                     <li key={i} className="flex gap-2">
@@ -477,6 +480,7 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
               )}
 
               <Panel title={t('fm.train.teamIntensity')}>
+                {busy && <p className="mb-2 text-sm">{t('fm.train.busyIntensity', { count: summary.matches })}</p>}
                 <div className="max-w-2xl">
                   {CONDITION_LEVELS.map((c) => (
                     <div key={c} className="flex flex-wrap items-center justify-between gap-2 border-b border-canard/5 py-1.5 text-sm last:border-0">
