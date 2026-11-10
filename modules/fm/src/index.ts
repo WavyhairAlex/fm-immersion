@@ -61,6 +61,7 @@ export * from './live';
 export * from './season';
 export * from './farewell';
 export * from './breaking';
+export * from './coach-news';
 export * from './bigmatch';
 export * from './records';
 export * from './offseason';

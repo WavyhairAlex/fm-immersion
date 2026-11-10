@@ -60,6 +60,7 @@ const ICON: Partial<Record<GazetteStory['kind'], string>> = {
   extension: '🖊️',
   fans: '📣',
   job: '🪑',
+  coachFuture: '🗞️',
   cupOut: '💔',
   cupThrough: '🏆',
 };

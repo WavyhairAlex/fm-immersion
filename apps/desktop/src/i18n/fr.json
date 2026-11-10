@@ -3456,6 +3456,16 @@
         "title": "La chaise du coach : {{status}}",
         "body": "La direction a revu sa confiance envers l'entraîneur."
       },
+      "coachFuture": {
+        "title_interview": "Bruits de couloir : {{coach}} en entretien avec {{other}}",
+        "body_interview": "Les dirigeants de {{other}} ont reçu {{coach}} pour parler du poste d'entraîneur. À {{club}}, on s'interroge.",
+        "title_offer": "Bruits de couloir : {{other}} fait une offre à {{coach}}",
+        "body_offer": "Un contrat attend {{coach}} à {{other}}. Son avenir à {{club}} est désormais en suspens.",
+        "title_courted": "Bruits de couloir : {{coach}} a la cote",
+        "body_courted": "D'autres clubs se renseignent sur {{coach}}, et la direction de {{club}} veut garder son coach.",
+        "title_linked": "Bruits de couloir : {{coach}} annoncé à {{other}}",
+        "body_linked": "La presse envoie {{coach}} sur le banc de {{other}}. Rien d'officiel pour l'instant."
+      },
       "nextMatch": {
         "title": "Prochain rendez-vous : {{opponent}}",
         "body": "",
@@ -3817,7 +3827,7 @@
       "scorer": "L. Martin"
     },
     "breakingEnable": "Envoyer les dépêches automatiquement",
-    "breakingShort": "Recrue, départ d'un titulaire, blessure longue, affiche des grands matchs, exploits (triplé, série, large victoire) : l'image part dans le salon le jour où le plugin la voit."
+    "breakingShort": "Recrue, départ d'un titulaire, blessure longue, entretien ou offre d'un autre club pour ton coach, affiche des grands matchs, exploits (triplé, série, large victoire) : l'image part dans le salon le jour où le plugin la voit."
   },
   "live": {
     "title": "Match en direct",
@@ -4584,7 +4594,7 @@
   "breaking": {
     "kind": "Dépêche",
     "recent": "Dépêches récentes",
-    "recentHelp": "Recrue, départ d'un joueur du onze, blessure de quatre semaines ou plus : une dépêche en image, le jour où le plugin la voit.",
+    "recentHelp": "Recrue, départ d'un joueur du onze, blessure de quatre semaines ou plus, entretien ou offre d'un autre club pour ton coach : une dépêche en image, le jour où le plugin la voit.",
     "send": "Envoyer la dépêche",
     "sent": "Dépêche envoyée sur Discord.",
     "age_one": "{{count}} an",
@@ -4593,17 +4603,29 @@
     "tag": {
       "signing": "Officiel",
       "exit": "Départ",
-      "injury": "Flash infirmerie"
+      "injury": "Flash infirmerie",
+      "interview": "Mercato des bancs",
+      "offer": "Exclusif",
+      "courted": "Bruits de couloir",
+      "linked": "Rumeur"
     },
     "title": {
       "signing": "{{name}} s'engage avec {{club}}",
       "exit": "{{name}} quitte {{club}}",
-      "injury": "Coup dur pour {{club}} : {{name}} à l'infirmerie"
+      "injury": "Coup dur pour {{club}} : {{name}} à l'infirmerie",
+      "interview": "{{other}} veut s'entretenir avec {{name}}",
+      "offer": "{{other}} fait une offre à {{name}}",
+      "courted": "{{name}} a la cote, {{club}} veut garder son coach",
+      "linked": "{{name}} annoncé du côté de {{other}}"
     },
     "body": {
       "signing": "C'est officiel : {{name}} rejoint l'effectif de {{club}}. Les supporters attendent de voir la recrue à l'œuvre.",
       "exit": "{{name}} ne fait plus partie de l'effectif de {{club}}. Un départ qui laisse une place à prendre dans le onze.",
-      "injury": "Diagnostic : {{injury}}. {{name}} manquera environ {{days}} jours de compétition, le temps de se soigner."
+      "injury": "Diagnostic : {{injury}}. {{name}} manquera environ {{days}} jours de compétition, le temps de se soigner.",
+      "interview": "Selon nos informations, les dirigeants de {{other}} ont convié {{name}} à un entretien pour le poste d'entraîneur. À {{club}}, on retient son souffle.",
+      "offer": "Les dirigeants de {{other}} ont mis un contrat sur la table de {{name}}. Reste à savoir si le coach est prêt à quitter {{club}}.",
+      "courted": "La direction de {{club}} a convoqué {{name}} pour parler de son avenir : d'autres clubs se renseignent, et elle veut garder son coach.",
+      "linked": "La presse envoie {{name}} sur le banc de {{other}}. Rien d'officiel pour l'instant, mais l'information agite {{club}}."
     },
     "weight": {
       "top_signing": "Recrue de premier plan : parmi les trois meilleurs joueurs de l'effectif.",
@@ -4611,15 +4633,26 @@
       "top_exit": "Une perte majeure : l'un des trois meilleurs joueurs de l'effectif s'en va.",
       "starter_exit": "Un titulaire en moins : {{rank}}ᵉ niveau de l'effectif.",
       "top_injury": "Coup dur : l'un des trois meilleurs joueurs de l'effectif.",
-      "starter_injury": "Un cadre en moins : {{rank}}ᵉ niveau de l'effectif."
+      "starter_injury": "Un cadre en moins : {{rank}}ᵉ niveau de l'effectif.",
+      "interview": "Un entretien n'est pas une signature, mais la porte est entrouverte.",
+      "offer": "La balle est désormais dans le camp du coach.",
+      "courted": "Le coach a la cote, et ça se sait.",
+      "linked": "Simple rumeur ou vrai départ ? Affaire à suivre."
     },
     "headline": {
       "signing": "{{last}} rejoint {{club}}",
       "exit": "{{name}} quitte le club",
       "injury": "{{last}} : {{days}} jours d'infirmerie",
-      "injuryNoDays": "{{last}} à l'infirmerie"
+      "injuryNoDays": "{{last}} à l'infirmerie",
+      "interview": "{{other}} reçoit {{last}}",
+      "offer": "{{other}} veut {{last}}",
+      "courted": "{{last}} a la cote",
+      "linked": "{{last}} pisté par {{other}}"
     },
-    "highlight": "{{days}} jours"
+    "highlight": "{{days}} jours",
+    "coach": "Le coach",
+    "otherClub": "un autre club",
+    "coachId": "Entraîneur de {{club}}"
   },
   "saveFiles": {
     "title": "Mes sauvegardes",

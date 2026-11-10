@@ -12,7 +12,7 @@ import { useCareer } from '../lib/career';
 import { clubLook, rememberClubLooks } from '../lib/club-look';
 import { useHistory } from '../lib/fm-cache';
 import { getWebhook, isWebhook } from '../lib/discord';
-import { exitReason, loadCoachPhoto, markBigMatchSent, markBreakingSent, markFarewellSent, markGazetteSent, markRecordSent, markSeasonSent, sendBigMatch, sendBreaking, sendRecord, sendFarewell, sendGazette, sendSeason, setExitReason } from '../lib/gazette-auto';
+import { breakingFace, exitReason, loadCoachPhoto, markBigMatchSent, markBreakingSent, markFarewellSent, markGazetteSent, markRecordSent, markSeasonSent, sendBigMatch, sendBreaking, sendRecord, sendFarewell, sendGazette, sendSeason, setExitReason } from '../lib/gazette-auto';
 import { drawBigMatch } from '../lib/bigmatch-page';
 import { drawBreaking } from '../lib/breaking-page';
 import { drawFarewell } from '../lib/farewell-page';
@@ -390,11 +390,11 @@ function BreakingSection({ saveId, news, looks }: { saveId: string; news: Breaki
   const n = news[Math.min(at, news.length - 1)]!;
   const { data: url } = useQuery({
     queryKey: ['gazette', 'breaking', saveId, n.kind, n.id, n.date, lang, looks],
-    queryFn: async () => (await drawBreaking(t, n, { lang, face: await loadFace(n.id) })).toDataURL('image/png'),
+    queryFn: async () => (await drawBreaking(t, n, { lang, face: await breakingFace(saveId, n) })).toDataURL('image/png'),
   });
   const send = useMutation({
     mutationFn: async () => {
-      await sendBreaking(t, n, lang);
+      await sendBreaking(t, n, lang, saveId);
       markBreakingSent(saveId, n);
     },
   });
@@ -415,7 +415,7 @@ function BreakingSection({ saveId, news, looks }: { saveId: string; news: Breaki
           {news.map((x, i) => (
             <li key={`${x.kind}|${x.id}|${x.date}`}>
               <button type="button" className={`chip w-full justify-between ${i === at ? 'chip-on' : ''}`} onClick={() => setAt(i)}>
-                <span className="truncate">{t(`breaking.tag.${x.kind}`)} · {x.name}</span>
+                <span className="truncate">{t(`breaking.tag.${x.kind}`)} · {x.other ?? (x.name || t('breaking.coach'))}</span>
                 <span className="text-xs opacity-70">{x.date.slice(5, 10)}</span>
               </button>
             </li>

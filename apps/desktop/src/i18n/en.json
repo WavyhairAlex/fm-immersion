@@ -3456,6 +3456,16 @@
         "title": "Manager's hot seat: {{status}}",
         "body": "The board has reviewed its confidence in the manager."
       },
+      "coachFuture": {
+        "title_interview": "Rumour mill: {{coach}} interviewed by {{other}}",
+        "body_interview": "The {{other}} board met {{coach}} to discuss the manager's job. At {{club}}, questions are being asked.",
+        "title_offer": "Rumour mill: {{other}} make an offer to {{coach}}",
+        "body_offer": "A contract awaits {{coach}} at {{other}}. The manager's future at {{club}} now hangs in the balance.",
+        "title_courted": "Rumour mill: {{coach}} in demand",
+        "body_courted": "Other clubs are asking about {{coach}}, and the {{club}} board are keen to keep their manager.",
+        "title_linked": "Rumour mill: {{coach}} linked with {{other}}",
+        "body_linked": "The papers are sending {{coach}} to the {{other}} dugout. Nothing official yet."
+      },
       "nextMatch": {
         "title": "Next up: {{opponent}}",
         "body": "",
@@ -3817,7 +3827,7 @@
       "scorer": "L. Martin"
     },
     "breakingEnable": "Send breaking news automatically",
-    "breakingShort": "New signing, departure of a starter, long injury, big match poster, feats (hat-trick, winning run, big win): the card goes to the channel on the day the plugin sees it."
+    "breakingShort": "New signing, departure of a starter, long injury, interview or offer from another club for your manager, big match poster, feats (hat-trick, winning run, big win): the card goes to the channel on the day the plugin sees it."
   },
   "live": {
     "title": "Live match",
@@ -4584,7 +4594,7 @@
   "breaking": {
     "kind": "Breaking",
     "recent": "Recent breaking news",
-    "recentHelp": "New signing, departure of a first-team player, injury of four weeks or more: a news card, on the day the plugin sees it.",
+    "recentHelp": "New signing, departure of a first-team player, injury of four weeks or more, interview or offer from another club for your manager: a news card, on the day the plugin sees it.",
     "send": "Send the news",
     "sent": "News sent to Discord.",
     "age_one": "{{count}} year old",
@@ -4593,17 +4603,29 @@
     "tag": {
       "signing": "Official",
       "exit": "Departure",
-      "injury": "Injury flash"
+      "injury": "Injury flash",
+      "interview": "Managerial merry-go-round",
+      "offer": "Exclusive",
+      "courted": "Rumour mill",
+      "linked": "Rumour"
     },
     "title": {
       "signing": "{{name}} joins {{club}}",
       "exit": "{{name}} leaves {{club}}",
-      "injury": "Blow for {{club}}: {{name}} injured"
+      "injury": "Blow for {{club}}: {{name}} injured",
+      "interview": "{{other}} want to talk to {{name}}",
+      "offer": "{{other}} make an offer to {{name}}",
+      "courted": "{{name}} in demand, {{club}} keen to keep their manager",
+      "linked": "{{name}} linked with {{other}}"
     },
     "body": {
       "signing": "It's official: {{name}} joins the {{club}} squad. The fans can't wait to see the new signing in action.",
       "exit": "{{name}} is no longer part of the {{club}} squad. A departure that leaves a place to fill in the starting eleven.",
-      "injury": "Diagnosis: {{injury}}. {{name}} will miss about {{days}} days of football while recovering."
+      "injury": "Diagnosis: {{injury}}. {{name}} will miss about {{days}} days of football while recovering.",
+      "interview": "We understand the {{other}} board have invited {{name}} for an interview about the manager's job. At {{club}}, everyone is holding their breath.",
+      "offer": "The {{other}} board have put a contract in front of {{name}}. The question now is whether the manager is ready to leave {{club}}.",
+      "courted": "The {{club}} board have called {{name}} in to discuss the future: other clubs have been asking questions, and the board want to keep their manager.",
+      "linked": "The papers are sending {{name}} to the {{other}} dugout. Nothing official yet, but the story is causing a stir at {{club}}."
     },
     "weight": {
       "top_signing": "A major signing: among the three best players in the squad.",
@@ -4611,15 +4633,26 @@
       "top_exit": "A major loss: one of the three best players in the squad is leaving.",
       "starter_exit": "One starter fewer: ranked {{rank}} in the squad by ability.",
       "top_injury": "A real blow: one of the three best players in the squad.",
-      "starter_injury": "A key player missing: ranked {{rank}} in the squad by ability."
+      "starter_injury": "A key player missing: ranked {{rank}} in the squad by ability.",
+      "interview": "An interview is not a signature, but the door is ajar.",
+      "offer": "The ball is now in the manager's court.",
+      "courted": "The manager is in demand, and everyone knows it.",
+      "linked": "Idle gossip or a real move? Watch this space."
     },
     "headline": {
       "signing": "{{last}} joins {{club}}",
       "exit": "{{name}} leaves the club",
       "injury": "{{last}}: {{days}} days out",
-      "injuryNoDays": "{{last}} injured"
+      "injuryNoDays": "{{last}} injured",
+      "interview": "{{other}} meet {{last}}",
+      "offer": "{{other}} want {{last}}",
+      "courted": "{{last}} in demand",
+      "linked": "{{other}} eye {{last}}"
     },
-    "highlight": "{{days}} days"
+    "highlight": "{{days}} days",
+    "coach": "The manager",
+    "otherClub": "another club",
+    "coachId": "{{club}} manager"
   },
   "saveFiles": {
     "title": "My saves",

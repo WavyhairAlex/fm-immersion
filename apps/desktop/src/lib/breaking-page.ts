@@ -1,4 +1,4 @@
-import { contrast, inkOn, type BreakingNews } from '@fm-immersion/module-fm';
+import { contrast, inkOn, isCoachBreaking, type BreakingNews } from '@fm-immersion/module-fm';
 import type { TFunction } from 'i18next';
 import { clubArt, drawCrest, type ClubArt } from './club-look';
 import { grain, solid } from './gazette-page';
@@ -19,14 +19,17 @@ const SANS = '"Nunito Variable", system-ui, sans-serif';
 const font = (weight: number, size: number, family = SANS) => `${weight} ${size}px ${family}`;
 
 export const breakingColor = (n: BreakingNews) => (n.kind === 'signing' ? C.green : n.kind === 'injury' ? C.red : C.ink);
-const ICON = { signing: '✍️', exit: '👋', injury: '🚑' } as const;
+const ICON: Record<BreakingNews['kind'], string> = { signing: '✍️', exit: '👋', injury: '🚑', interview: '🤝', offer: '📝', courted: '👀', linked: '🗞️' };
 
 /** Textes d'une dépêche : rubrique, titre, ligne d'identité, nouvelle et mot sur son importance. */
 export function breakingText(t: TFunction, n: BreakingNews, lang?: string) {
-  const vars = { club: n.club, name: n.name, days: n.days ?? '?', injury: n.injury?.trim() || t('breaking.injuryUnknown'), rank: n.rank, count: n.rank };
-  const parts = n.name.trim().split(/\s+/);
-  const last = parts.length > 1 ? parts.slice(1).join(' ') : n.name;
-  const id = [n.age != null ? t('breaking.age', { count: n.age }) : '', n.position ?? ''].filter(Boolean).join(' · ');
+  // Avenir du coach : son nom (ou « le coach »), et le club qui le courtise.
+  const coach = isCoachBreaking(n);
+  const name = n.name || (coach ? t('breaking.coach') : '');
+  const vars = { club: n.club, name, other: n.other ?? t('breaking.otherClub'), days: n.days ?? '?', injury: n.injury?.trim() || t('breaking.injuryUnknown'), rank: n.rank, count: n.rank };
+  const parts = name.trim().split(/\s+/);
+  const last = parts.length > 1 ? parts.slice(1).join(' ') : name;
+  const id = coach ? t('breaking.coachId', { club: n.club }) : [n.age != null ? t('breaking.age', { count: n.age }) : '', n.position ?? ''].filter(Boolean).join(' · ');
   return {
     tag: t(`breaking.tag.${n.kind}`),
     title: t(`breaking.title.${n.kind}`, vars),
@@ -35,9 +38,10 @@ export function breakingText(t: TFunction, n: BreakingNews, lang?: string) {
     highlight: n.kind === 'injury' && n.days != null ? t('breaking.highlight', { days: n.days }) : '',
     id,
     body: t(`breaking.body.${n.kind}`, vars),
-    weight: t(n.rank <= 3 ? `breaking.weight.top_${n.kind}` : `breaking.weight.starter_${n.kind}`, vars),
+    weight: coach ? t(`breaking.weight.${n.kind}`, vars) : t(n.rank <= 3 ? `breaking.weight.top_${n.kind}` : `breaking.weight.starter_${n.kind}`, vars),
     date: new Date(`${n.date.slice(0, 10)}T12:00:00`).toLocaleDateString(lang, { day: 'numeric', month: 'long', year: 'numeric' }),
     icon: ICON[n.kind],
+    name,
   };
 }
 
@@ -153,7 +157,7 @@ export async function drawBreaking(t: TFunction, n: BreakingNews, opts: { lang?:
   const PH = H - PY - 36;
   const bg = drawPanel(ctx, club, PX, PY, PW, PH, opts.face ?? null);
   if (!opts.face) {
-    const initials = n.name.split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join('');
+    const initials = tx.name.split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join('');
     ctx.font = font(900, 170, SERIF);
     ctx.fillStyle = inkOn(bg);
     ctx.globalAlpha = 0.85;
@@ -182,7 +186,7 @@ export async function drawBreaking(t: TFunction, n: BreakingNews, opts: { lang?:
   y += 44;
   ctx.font = font(900, 30);
   ctx.fillStyle = color === C.ink ? C.ink : color;
-  ctx.fillText(wrap(ctx, caps(n.name), TW, 1)[0]!, X, y);
+  ctx.fillText(wrap(ctx, caps(tx.name), TW, 1)[0]!, X, y);
   if (tx.id) {
     y += 30;
     ctx.font = font(700, 21);
@@ -221,7 +225,7 @@ export function breakingPayload(t: TFunction, n: BreakingNews, lang?: string) {
         author: { name: `${tx.icon}  ${tx.tag.toUpperCase()}  ·  ${t('breaking.kind').toUpperCase()}` },
         title: tx.title.slice(0, 256),
         description: [tx.body, tx.weight].join('\n').slice(0, 4000),
-        color: n.kind === 'signing' ? 0x2e9e5b : n.kind === 'injury' ? 0xd93c3c : 0x0f1b2d,
+        color: n.kind === 'signing' ? 0x2e9e5b : n.kind === 'injury' ? 0xd93c3c : isCoachBreaking(n) ? 0xffb547 : 0x0f1b2d,
         image: { url: 'attachment://une.png' },
         footer: { text: `${paperName(t, n.club)}  ·  FM Immersion` },
       },

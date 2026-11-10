@@ -76,6 +76,11 @@ export function storyText(t: TFunction, club: string, s: GazetteStory, lang?: st
     }
     case 'streak':
       return { title: k(`title_${p.outcome}`, { count: Number(p.count) }), body: k(`body_${p.outcome}`, { count: Number(p.count) }) };
+    case 'coachFuture': {
+      // Avenir du coach : un titre et un texte par type (entretien, offre, intérêt, rumeur de presse).
+      const vars = { coach: str(p.coach) ?? t('breaking.coach'), other: str(p.other) ?? t('breaking.otherClub') };
+      return { title: k(`title_${p.type}`, vars), body: k(`body_${p.type}`, vars) };
+    }
     case 'job':
     case 'fans':
     case 'nextMatch': {
@@ -249,6 +254,7 @@ const ICON: Record<GazetteStory['kind'], string> = {
   extension: '🖊️',
   fans: '📣',
   job: '🪑',
+  coachFuture: '🗞️',
   nextMatch: '📅',
   cupOut: '💔',
   cupThrough: '🏆',

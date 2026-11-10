@@ -1,4 +1,4 @@
-import { bigMatchNow, breakingNews, recordKey, recordNews, coachExits, gazetteIssues, seasonReviews, seasonSoFar, type BigMatch, type BreakingNews, type CoachExit, type ExitReason, type GazetteIssue, type RecordNews, type SeasonReview } from '@fm-immersion/module-fm';
+import { bigMatchNow, breakingNews, isCoachBreaking, recordKey, recordNews, coachExits, gazetteIssues, seasonReviews, seasonSoFar, type BigMatch, type BreakingNews, type CoachExit, type ExitReason, type GazetteIssue, type RecordNews, type SeasonReview } from '@fm-immersion/module-fm';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
 import { useEffect, useRef } from 'react';
@@ -100,9 +100,12 @@ export function seasonToSend(reviews: SeasonReview[], lastDate: string | undefin
   return days <= 60 ? r : null;
 }
 
-/** Dépêche (recrue, départ, blessure) : image et court encart, avec le visage du joueur. */
-export async function sendBreaking(t: TFunction, n: BreakingNews, lang?: string, webhook = getWebhook()) {
-  const png = await canvasPng(await drawBreaking(t, n, { lang, face: await loadFace(n.id) }));
+/** Visage d'une dépêche : celui du joueur, ou la photo du coach quand elle parle de son avenir. */
+export const breakingFace = (saveId: string | null, n: BreakingNews) => (isCoachBreaking(n) ? (saveId ? loadCoachPhoto(saveId) : Promise.resolve(null)) : loadFace(n.id));
+
+/** Dépêche (recrue, départ, blessure, avenir du coach) : image et court encart, avec le visage du joueur ou du coach. */
+export async function sendBreaking(t: TFunction, n: BreakingNews, lang?: string, saveId: string | null = null, webhook = getWebhook()) {
+  const png = await canvasPng(await drawBreaking(t, n, { lang, face: await breakingFace(saveId, n) }));
   return sendDiscordImage(breakingPayload(t, n, lang), png, webhook);
 }
 
@@ -377,7 +380,7 @@ export function useGazetteAuto() {
         // Dépêches, exploits et affiche du choc : elles n'attendent pas la gazette de la semaine.
         if (breakingOn) {
           for (const n of breakingToSend(breakingNews(history), lastDate, (x) => isBreakingSent(saveId, x))) {
-            await attempt('breaking', `breaking|${breakingId(saveId, n)}`, () => sendBreaking(t, n, lang), () => markBreakingSent(saveId, n));
+            await attempt('breaking', `breaking|${breakingId(saveId, n)}`, () => sendBreaking(t, n, lang, saveId), () => markBreakingSent(saveId, n));
             await pause();
           }
           // Exploits du jour (triplé, série, large victoire, fin de disette), avec les mêmes règles que les dépêches.
