@@ -73,6 +73,7 @@ pub fn run() {
             photos_remote::photos_remote_download,
             photos_remote::photos_remote_cancel,
             photos_remote::photos_remote_remove,
+            photos_remote::photos_set_dir,
             photos_engine::photos_engine_status,
             photos_engine::photos_engine_install,
             photos_engine::photos_engine_start,

@@ -74,6 +74,15 @@ export function usePhotosActions() {
       }
     },
     cancel: () => invoke<void>('photos_remote_cancel'),
+    /** Change le dossier du moteur et y déplace ce qui est déjà téléchargé (copie si autre disque). */
+    setDir: async (dir: string) => {
+      try {
+        return await invoke<PhotosStatus>('photos_set_dir', { dir });
+      } finally {
+        await refresh();
+        await qc.invalidateQueries({ queryKey: ENGINE_STATUS_KEY });
+      }
+    },
     remove: async () => {
       try {
         return await invoke<PhotosStatus>('photos_remote_remove');
@@ -82,6 +91,24 @@ export function usePhotosActions() {
       }
     },
   };
+}
+
+export type MoveProgress = { done: number; total: number };
+
+/** Avancement du déplacement du dossier (null hors déplacement, ou tant que c'est un simple renommage). */
+export function useMoveProgress(active: boolean) {
+  const [progress, setProgress] = useState<MoveProgress | null>(null);
+  useEffect(() => {
+    if (!active) {
+      setProgress(null);
+      return;
+    }
+    const off = listen<MoveProgress>('photos-move', (e) => setProgress(e.payload));
+    return () => {
+      off.then((f) => f());
+    };
+  }, [active]);
+  return progress;
 }
 
 /** « 33,7 Go » / « 850 Mo », selon la langue. */
