@@ -18,7 +18,7 @@ export const PARTS: Record<ClubPage, readonly string[]> = {
  * montrées une à la fois derrière des pastilles. L'ordre des parties suit PARTS.
  */
 export const TABS: Record<ClubPage, readonly (readonly string[])[]> = {
-  tactic: [['tactic', 'instructions', 'builder'], ['opponent'], ['depth', 'calendar'], ['style', 'effectiveness', 'project'], ['training', 'staff']],
+  tactic: [['tactic', 'instructions', 'builder'], ['opponent'], ['calendar', 'training', 'depth'], ['style', 'effectiveness', 'project'], ['staff']],
   squad: [['squad', 'loans', 'numbers'], ['playtime', 'dressing'], ['progression'], ['roles'], ['compare']],
   results: [['results'], ['diagnosis'], ['stats'], ['analysis']],
   mercato: [['mercato'], ['targets'], ['finances'], ['wages'], ['contracts']],

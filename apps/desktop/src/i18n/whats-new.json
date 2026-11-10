@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.136",
+    "date": "2026-11-10",
+    "fr": [
+      "Tactique et entraînement : les onglets deviennent Mon onze, Prochain adversaire, Préparation de la semaine (calendrier, entraînement, titulaires et remplaçants), Projet de jeu et Staff.",
+      "Depuis le rapport sur l'adversaire, le bouton « Ajuster mon onze pour ce match » t'emmène directement aux réglages contre lui."
+    ],
+    "en": [
+      "Tactics and training: the tabs are now My XI, Next opponent, Week preparation (calendar, training, starters and backups), Game plan and Staff.",
+      "From the opponent report, the \"Adjust my XI for this match\" button takes you straight to the settings against them."
+    ]
+  },
+  {
     "version": "0.1.135",
     "date": "2026-11-10",
     "fr": [

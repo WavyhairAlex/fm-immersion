@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Empty, Kpi, Panel } from './FmUi';
 
 /** Rapport sur le prochain adversaire : profil de l'entraîneur, joueurs clés et conseils de préparation. */
-export function FmOpponent({ snap }: { snap: FmSnapshot }) {
+export function FmOpponent({ snap, go }: { snap: FmSnapshot; go?: (view: string) => void }) {
   const { t, i18n } = useTranslation();
   const r = useMemo(() => opponentReport(snap), [snap]);
   const nf = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 2 });
@@ -17,8 +17,25 @@ export function FmOpponent({ snap }: { snap: FmSnapshot }) {
     r.rated && [t('fm.opp.rated'), r.rated.name, r.rated.value != null ? nf.format(r.rated.value) : null],
   ].filter((x): x is [string, string, string | null] => !!x);
 
+  // Du rapport à la décision : ouvre Mon onze directement sur l'onglet « Contre {adversaire} ».
+  const adjust = () => {
+    try {
+      localStorage.setItem('fmi.section.tactic', 'match');
+    } catch {
+      /* stockage indisponible */
+    }
+    go?.('tactic');
+  };
   return (
     <div className="space-y-4">
+      {go && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-l-4 border-orange bg-orange-clair/60 px-4 py-3">
+          <p className="text-sm">{t('fm.opp.adjustLead', { name: r.name ?? '' })}</p>
+          <button type="button" className="btn-primary text-sm" onClick={adjust}>
+            {t('fm.opp.adjustGo')} →
+          </button>
+        </div>
+      )}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Kpi label={t('fm.opp.club')} value={dash(r.name)} sub={r.position ? t('fm.opp.position', { value: r.position }) : undefined} />
         <Kpi label={t('fm.opp.formation')} value={dash(r.manager.formation)} sub={r.manager.name ?? undefined} />
@@ -74,7 +91,13 @@ export function FmOpponent({ snap }: { snap: FmSnapshot }) {
             <Empty>{t('fm.opp.noAdvice')}</Empty>
           )}
           <p className="mt-3 text-xs text-brun">{t('fm.opp.adviceHelp')}</p>
-          <p className="mt-1 text-xs font-bold text-canard/70">{t('fm.opp.adjustInXi')}</p>
+          {go ? (
+            <button type="button" className="mt-2 text-sm font-bold text-orange-fonce hover:underline" onClick={adjust}>
+              {t('fm.opp.adjustGo')} →
+            </button>
+          ) : (
+            <p className="mt-1 text-xs font-bold text-canard/70">{t('fm.opp.adjustInXi')}</p>
+          )}
         </Panel>
 
         <Panel title={t('fm.opp.keyTitle')}>
