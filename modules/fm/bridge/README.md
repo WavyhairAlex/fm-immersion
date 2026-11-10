@@ -63,6 +63,15 @@ le jeu n'avait rendu que les réponses immédiates. Désormais, à chaque niveau
 avertissement. Une lecture restée incomplète (aucune valeur pour les joueurs, ou section `tactique` vide) est refaite une
 minute plus tard, trois fois au plus par jour de jeu, et ne remplace jamais une lecture complète du même jour.
 
+**0.5.8** : relecture du 10/11/2026 (journal BepInEx et instantanés d'une partie en cours). Pendant un match, un paquet
+entier de 300 requêtes restait parfois sans réponse : trois ou quatre joueurs sans aucune stat dans un instantané
+pourtant marqué « lue ». Un paquet resté entièrement muet est maintenant renvoyé une fois avec un délai double, et un
+seul joueur sans aucune valeur suffit à marquer la lecture incomplète (donc à la refaire une minute plus tard).
+Direct : une réponse manquée à « un match est-il en cours ? » ne déclare plus le match fini (état gardé, quatre lectures
+au plus). Montants : l'affichage anglais du jeu (« €1.2K p/w », « €1,250 ») et les milliards (« Md », « B ») sont lus
+correctement ; avant, un salaire affiché en anglais valait 1 €. `chemins.json` de cette version contient la lecture de la
+boîte de réception du coach (clés `boite00…29`, FM Immersion 0.1.129).
+
 ## Garde-fou « écran Tactique » (0.3.0)
 
 Toute lecture liée à la tactique (`LireTactique`, `LireEfficacite`, `LireCompo`, section `tactique` de `chemins.json`,

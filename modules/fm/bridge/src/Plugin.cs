@@ -18,7 +18,7 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.5.7";
+    public const string Version = "0.5.8";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que FM Immersion renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
@@ -185,6 +185,7 @@ public class Plugin : BasePlugin
     void LiveLoop()
     {
         bool was = false;
+        int silent = 0;
         string? gameDate = null;
         Dictionary<string, object?>? last = null;
         Dictionary<string, object?>? pending = null;
@@ -205,7 +206,11 @@ public class Plugin : BasePlugin
         {
             try
             {
-                var now = FmBindingReader.DuringMatch() == true;
+                // 0.5.8 : sans réponse du jeu (null), on garde l'état précédent, quatre fois de suite au plus. Avant, une seule
+                // réponse manquée pendant un match le déclarait fini, puis le rouvrait à la lecture suivante.
+                var during = FmBindingReader.DuringMatch();
+                silent = during == null ? silent + 1 : 0;
+                var now = during ?? (was && silent <= 4);
                 if (now && !was) { gameDate = FmBindingReader.CurrentDate(); last = null; pending = null; Log.LogInfo("Match en cours : direct dans archivix-live.json"); }
                 if (now || was)   // une dernière lecture après la fin du match, pour le résultat final
                 {
