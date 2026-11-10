@@ -26,7 +26,7 @@ import { drawSeason } from '../lib/season-une';
 
 /** Mode Gazette : un journal par semaine de jeu, rédigé à partir des instantanés de la partie. */
 export function Gazette() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   // Carrière suivie, choisie dans la barre latérale.
   const { saveId, fmSaves } = useCareer();
 
@@ -120,7 +120,7 @@ export function Gazette() {
                 <li key={x.weekStart}>
                   <button type="button" className={`chip w-full justify-between ${i === index ? 'chip-on' : ''}`} onClick={() => setIndex(i)}>
                     <span>{t('gazette.issue', { number: x.number })}</span>
-                    <span className="text-xs opacity-70">{x.weekStart}</span>
+                    <span className="text-xs opacity-70">{new Intl.DateTimeFormat(i18n.resolvedLanguage, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${x.weekStart.slice(0, 10)}T00:00:00Z`))}</span>
                   </button>
                 </li>
               ))}

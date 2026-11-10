@@ -25,7 +25,7 @@ export function FmCalendar({ snap, players }: { snap: FmSnapshot; players: FmPla
                 {m.gap != null && m.gap <= 3 && <Tag tone="warn">{t('fm.cal.gap', { count: m.gap })}</Tag>}
               </Row>
             ))}
-            <p className="mt-2 text-xs text-brun">{t('fm.cal.help')}</p>
+            {fixtures.some((m) => m.gap != null && m.gap <= 3) && <p className="mt-2 text-xs text-brun">{t('fm.cal.help')}</p>}
           </>
         ) : (
           <Empty>{t('fm.cal.none')}</Empty>

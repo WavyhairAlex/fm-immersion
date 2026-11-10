@@ -47,7 +47,7 @@ export function FmEffectiveness({ snap, history, go }: { snap: FmSnapshot; histo
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
         <Kpi label={t('fm.eff.overall')} value={txt(e.overall)} tone={e.overall?.mid != null && e.overall.mid < 50 ? 'bad' : undefined} sub={typeof tactic.name === 'string' ? tactic.name : undefined} />
-        <Kpi label={t('fm.eff.complexity')} value={typeof tactic.complexityLabel === 'string' ? tactic.complexityLabel : txt(e.complexity)} sub={t('fm.eff.comprehension', { value: txt(e.comprehension) })} />
+        <Kpi label={t('fm.eff.complexity')} value={typeof tactic.complexityLabel === 'string' ? tactic.complexityLabel : txt(e.complexity)} sub={e.comprehension == null ? undefined : t('fm.eff.comprehension', { value: txt(e.comprehension) })} />
         <Kpi label={t('fm.eff.snaps')} value={history.length} sub={t('fm.eff.snapsSub')} />
       </div>
       {e.flags.length > 0 && (

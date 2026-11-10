@@ -1755,7 +1755,7 @@
         "prospects": "Jeunes qui valent le coup",
         "prospectsSub": "dont {{loan}} à prêter",
         "extend": "Contrats à prolonger",
-        "extendSub": "titulaires et jeunes prometteurs à moins d'un an de la fin",
+        "extendSub": "à moins d'un an de la fin : titulaires ci-dessous, jeunes prometteurs dans « Les jeunes »",
         "off": "Hors projet",
         "offSub": "profils qui ne collent pas au style visé"
       },
@@ -2143,8 +2143,8 @@
       "from": "Consigne : {{instruction}}"
     },
     "decide": {
-      "title_one": "Contrats à décider · {{count}}",
-      "title_other": "Contrats à décider · {{count}}",
+      "title_one": "Contrats à décider d'ici 6 mois · {{count}}",
+      "title_other": "Contrats à décider d'ici 6 mois · {{count}}",
       "help": "Les contrats qui finissent dans six mois ou moins, ceux que FM27 t'envoie en message. Pour chacun : la décision à prendre dans le jeu, puis pourquoi (place dans le onze du jour et du projet, compatibilité avec le projet de jeu, âge, potentiel).",
       "call": {
         "extend": "Prolonger",

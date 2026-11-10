@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.1.128",
+    "date": "2026-11-10",
+    "fr": [
+      "Entraînement : la trêve hivernale est reconnue toute seule quand ton calendrier n'a plus de match pendant cinq semaines. Le planning passe au repos puis à une mini-présaison avant la reprise, sans rien régler.",
+      "Postes et rôles : un poste que le joueur ne sait pas jouer affiche un simple point au lieu de « 0,0 ★ ».",
+      "Mercato : les contrats « à décider d'ici 6 mois » et « à prolonger » sont mieux distingués. Les anciens numéros de la gazette affichent une vraie date, et le conseil de rotation du calendrier n'apparaît que quand deux matchs sont vraiment rapprochés."
+    ],
+    "en": [
+      "Training: the winter break is recognised on its own when your calendar has no match for five weeks. The schedule switches to rest, then to a mini pre-season before the restart, with nothing to set.",
+      "Positions and roles: a position the player cannot play shows a simple dot instead of \"0.0 ★\".",
+      "Transfers: contracts \"to decide within 6 months\" and \"to extend\" are easier to tell apart. Old gazette issues show a proper date, and the calendar's rotation tip only appears when two matches are really close together."
+    ]
+  },
+  {
     "version": "0.1.127",
     "date": "2026-11-09",
     "fr": [
