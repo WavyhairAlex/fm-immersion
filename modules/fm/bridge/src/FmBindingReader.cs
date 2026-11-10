@@ -749,10 +749,10 @@ public class FmBindingReader : IGameReader
     // "profond" : clés dont la valeur composée (liste, objet) est convertie en JSON. Fichier absent = rien de plus.
     static string CustomFile => System.IO.Path.Combine(Plugin.DataDir, "config", "chemins.json");
 
-    /// <summary>Dernière lecture : le jeu n'a répondu sur aucun joueur ou sur aucune consigne de la tactique (chemins.json).</summary>
+    /// <summary>Dernière lecture : au moins un joueur sans aucune valeur, ou aucune consigne de la tactique (chemins.json).</summary>
     public bool LastIncomplete { get; private set; }
 
-    // Valeurs obtenues sur demandées dans le bloc custom, et lecture incomplète : des joueurs sans aucune valeur
+    // Valeurs obtenues sur demandées dans le bloc custom, et lecture incomplète : un joueur sans aucune valeur
     // (hors identifiant), ou une section « tactique » demandée et entièrement vide.
     static (int Answered, int Total, bool Incomplete) CustomHealth(Dictionary<string, object?> custom)
     {
@@ -761,11 +761,17 @@ public class FmBindingReader : IGameReader
         {
             if (value is Dictionary<string, Dictionary<string, object?>> players)
             {
+                // 0.5.8 : un seul joueur sans aucune valeur suffit (10/11/2026 : un paquet entier de 300 requêtes resté sans
+                // réponse pendant un match, trois ou quatre joueurs sans stats dans un instantané marqué « lue »).
                 int got = 0, asked = 0;
                 foreach (var row in players.Values)
-                    foreach (var (k, v) in row) { if (k == "id") continue; asked++; if (v != null) got++; }
+                {
+                    int rowGot = 0, rowAsked = 0;
+                    foreach (var (k, v) in row) { if (k == "id") continue; rowAsked++; if (v != null) rowGot++; }
+                    got += rowGot; asked += rowAsked;
+                    if (rowAsked > 0 && rowGot == 0) incomplete = true;
+                }
                 answered += got; total += asked;
-                if (asked > 0 && got == 0) incomplete = true;
             }
             else if (value is Dictionary<string, object?> sec)
             {
@@ -934,16 +940,31 @@ public class FmBindingReader : IGameReader
         return n;
     }
 
-    // "95 € p/m", "1,2 M €", "450 k €" → montant entier
+    // "95 € p/m", "1,2 M €", "3,22K €", "1,5 Md €" → montant entier.
+    // 0.5.8 : aussi l'affichage anglais ("€1.2K p/w", "€1,250", "£3.5M", "€1.25B") : la 0.5.7 lisait 1 € et 3 €,
+    // et un « Md » (milliard) valait un million. Un séparateur unique suivi de trois chiffres, sans suffixe, sépare les milliers.
     static long? ParseMoney(string? s)
     {
         if (string.IsNullOrEmpty(s)) return null;
-        var m = Regex.Match(s, @"([\d\s  ]+(?:,\d+)?)\s*([kKM]?)");
+        var m = Regex.Match(s, @"(\d[\d\s\u00A0\u202F.,]*)\s*((?:Mrd|Md|Mio|[kKMB])(?![A-Za-z]))?");
         if (!m.Success) return null;
-        var digits = Regex.Replace(m.Groups[1].Value, @"[\s  ]", "").Replace(',', '.');
-        if (!double.TryParse(digits, NumberStyles.Float, CultureInfo.InvariantCulture, out var n)) return null;
-        n *= m.Groups[2].Value switch { "k" or "K" => 1e3, "M" => 1e6, _ => 1 };
-        return (long)n;
+        var suffix = m.Groups[2].Value;
+        var t = Regex.Replace(m.Groups[1].Value, @"[\s\u00A0\u202F]", "").TrimEnd('.', ',');
+        int dot = t.LastIndexOf('.'), com = t.LastIndexOf(',');
+        char? dec = null;
+        if (dot >= 0 && com >= 0) dec = dot > com ? '.' : ',';
+        else if (dot >= 0 || com >= 0)
+        {
+            char c = dot >= 0 ? '.' : ','; int last = Math.Max(dot, com);
+            if (t.IndexOf(c) == last && !(t.Length - last - 1 == 3 && suffix == "")) dec = c;
+        }
+        var digits = new System.Text.StringBuilder();
+        foreach (var ch in t)
+            if (ch == dec) digits.Append('.');
+            else if (ch != '.' && ch != ',') digits.Append(ch);
+        if (!double.TryParse(digits.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var n)) return null;
+        n *= suffix switch { "k" or "K" => 1e3, "M" or "Mio" => 1e6, "Md" or "Mrd" or "B" => 1e9, _ => 1 };
+        return (long)Math.Round(n);
     }
 
     // --- Moteur de requêtes groupées ---
@@ -1101,8 +1122,18 @@ public class FmBindingReader : IGameReader
                 {
                     Interlocked.Add(ref _late, late.Count);
                     var still = new List<State>();
+                    bool several = late.Count > RetryChunk;
                     for (int i = 0; i < late.Count; i += RetryChunk)
-                        still.AddRange(Send(late.Skip(i).Take(RetryChunk).ToArray(), level, root, timeoutMs));
+                    {
+                        var chunk = late.Skip(i).Take(RetryChunk).ToArray();
+                        var lost = Send(chunk, level, root, timeoutMs);
+                        // 0.5.8 : un paquet resté entièrement sans réponse (jeu occupé, ex. pendant un match) est renvoyé
+                        // une fois, avec un délai double. Seulement quand il y a plusieurs paquets : un paquet unique est
+                        // en général fait des chemins qui ne répondent jamais.
+                        if (several && lost.Count == chunk.Length && chunk.Length >= RetryMin)
+                            lost = Send(chunk, level, root, timeoutMs * 2);
+                        still.AddRange(lost);
+                    }
                     Interlocked.Add(ref _recovered, late.Count - still.Count);
                     late = still;
                 }
@@ -1131,9 +1162,14 @@ public class FmBindingReader : IGameReader
                     bool last = lvl == st.Segs.Length - 1;
                     if (st.Segs[lvl].StartsWith('#'))   // élément de liste : pas de requête au jeu
                     {
-                        var el = int.TryParse(st.Segs[lvl].AsSpan(1), out var n) ? ItemAt(src, n) : null;
-                        if (el == null) st.Failed = true;
-                        else { st.Cur = TypedValue.CreateCopyFrom(el); if (last) st.Result = st.Deep ? Dump(el, 3) : Simple(el); }
+                        // 0.5.8 : une erreur ici ne doit pas interrompre les requêtes suivantes de la frame.
+                        try
+                        {
+                            var el = int.TryParse(st.Segs[lvl].AsSpan(1), out var n) && n >= 0 ? ItemAt(src, n) : null;
+                            if (el == null) st.Failed = true;
+                            else { st.Cur = TypedValue.CreateCopyFrom(el); if (last) st.Result = st.Deep ? Dump(el, 3) : Simple(el); }
+                        }
+                        catch { st.Failed = true; }
                         if (Interlocked.Exchange(ref st.Signalled, 1) == 0) Sig();
                         continue;
                     }
@@ -1188,6 +1224,9 @@ public class FmBindingReader : IGameReader
                     late.Add(s);
                     if (s.Bound && s.Cb != null) expired.Add((s.Key, s.Cb));
                     s.Bound = false;
+                    // 0.5.8 : si le thread principal n'a pas encore traité cet envoi (jeu figé), il ne doit plus le lancer
+                    // après coup : la liaison ne serait jamais retirée.
+                    s.Token = null;
                 }
             // Délai dépassé : on retire les requêtes restées en attente, pour ne pas encombrer le jeu
             // (cause probable des gels de l'écran Tactique en 0.2.0 / 0.2.1).

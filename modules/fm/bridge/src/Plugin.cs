@@ -18,7 +18,7 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.5.7";
+    public const string Version = "0.5.8";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que FM Immersion renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
@@ -131,6 +131,10 @@ public class Plugin : BasePlugin
                 loadedSince ??= DateTime.UtcNow;
                 if (DateTime.UtcNow - loadedSince < TimeSpan.FromSeconds(SettleSeconds)) continue;   // partie tout juste chargée
                 if (date == lastDate && DateTime.UtcNow - lastFull < TimeSpan.FromSeconds(RereadSeconds)) continue;
+                // 0.5.8 : pas de lecture complète pendant un match (plusieurs milliers de requêtes pendant que le moteur de
+                // match tourne : jeu ralenti et réponses perdues, 10/11/2026). Elle part dès la fin du match ; le direct
+                // (LiveLoop) continue de son côté.
+                if (FmBindingReader.DuringMatch() == true) continue;
                 bool complete = Refresh();
                 // 0.5.7 : lecture incomplète (le jeu n'a pas répondu à temps) : on relit une minute plus tard, trois fois
                 // au plus par jour de jeu, au lieu d'attendre RereadSeconds ou le jour suivant.
@@ -185,6 +189,7 @@ public class Plugin : BasePlugin
     void LiveLoop()
     {
         bool was = false;
+        int silent = 0;
         string? gameDate = null;
         Dictionary<string, object?>? last = null;
         Dictionary<string, object?>? pending = null;
@@ -205,7 +210,11 @@ public class Plugin : BasePlugin
         {
             try
             {
-                var now = FmBindingReader.DuringMatch() == true;
+                // 0.5.8 : sans réponse du jeu (null), on garde l'état précédent, quatre fois de suite au plus. Avant, une seule
+                // réponse manquée pendant un match le déclarait fini, puis le rouvrait à la lecture suivante.
+                var during = FmBindingReader.DuringMatch();
+                silent = during == null ? silent + 1 : 0;
+                var now = during ?? (was && silent <= 4);
                 if (now && !was) { gameDate = FmBindingReader.CurrentDate(); last = null; pending = null; Log.LogInfo("Match en cours : direct dans archivix-live.json"); }
                 if (now || was)   // une dernière lecture après la fin du match, pour le résultat final
                 {
