@@ -303,6 +303,9 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
     () => seasonWeeks({ gameDate: snap.gameDate, fixtures, seasonStart, winterBreak, trainingDays, priorities, style: style?.id, method, weakAreas: weakest, gaugesKnown, teOverall, calendarComplete }),
     [snap.gameDate, fixtures, calendarComplete, seasonStart, winterBreak?.from, winterBreak?.to, trainingDays?.join(), priorities.join(), style?.id, method, weakest.join(), gaugesKnown, teOverall],
   );
+  // Dernière semaine qu'on peut ouvrir avec les flèches : la fin de la saison calculée, au moins trois mois.
+  const lastMonday = season.at(-1)?.monday;
+  const maxOffset = Math.max(12, lastMonday ? Math.round((Date.parse(lastMonday) - Date.parse(mondayOf(snap.gameDate))) / (7 * 86_400_000)) : 0);
   const plan = useMemo(
     () => buildTrainingWeek({ monday, phase, week, matchDays, matchBeforeMonday: before, priorities, style: style?.id, trainingDays, method, weakAreas: weakest, gaugesKnown, teOverall }),
     [monday, phase, week, matchDays.join(), before, priorities.join(), style?.id, trainingDays?.join(), method, weakest.join(), gaugesKnown, teOverall],
@@ -316,6 +319,19 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
     tactical: whys.filter((w) => w === 'press' || w === 'weak' || w === 'top' || w === 'rotate').length,
     grow: whys.filter((w) => w === 'grow' || w === 'devBlock' || w === 'noCondition' || w === 'indiv').length,
     matches: plan.days.filter((d) => d.kind === 'match').length,
+  };
+  // Ouvrir une semaine donnée (flèches, ou clic dans La saison) : on revient sur l'onglet de la semaine.
+  const [jump, setJump] = useState<{ id: string; n: number } | undefined>();
+  const goToWeek = (o: number, open = false) => {
+    setOffset(String(Math.max(0, o)));
+    setManualDays(null);
+    setEve(null);
+    setPhase(null);
+    setWeek(null);
+    if (open) {
+      setJump((j) => ({ id: 'week', n: (j?.n ?? 0) + 1 }));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
   const resetWeek = () => {
     setManualDays(null);
@@ -347,6 +363,7 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
   return (
     <SectionTabs
       id="training"
+      jump={jump}
       sections={[
         {
           id: 'week',
@@ -354,7 +371,22 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
           node: (
             <>
               {/* 1. L'essentiel : ce que dit l'adjoint, puis les gestes à faire dans le jeu, numérotés. */}
-              <Panel title={t('fm.train.coach.title')}>
+              <Panel
+                title={t('fm.train.coach.title')}
+                action={
+                  <div className="flex items-center gap-1.5" role="group" aria-label={t('fm.train.which')}>
+                    <button type="button" className="btn-secondary px-2.5 py-1 text-sm disabled:opacity-40" disabled={Number(offset) <= 0} onClick={() => goToWeek(Number(offset) - 1)} aria-label={t('fm.train.prevWeek')}>
+                      ‹
+                    </button>
+                    <span className="min-w-[8.5rem] text-center text-sm font-bold">
+                      {offset === '0' ? t('fm.train.thisWeek') : offset === '1' ? t('fm.train.nextWeek') : t('fm.train.weekOfDate', { date: dayMonth.format(new Date(`${monday}T00:00:00Z`)) })}
+                    </span>
+                    <button type="button" className="btn-secondary px-2.5 py-1 text-sm disabled:opacity-40" disabled={Number(offset) >= maxOffset} onClick={() => goToWeek(Number(offset) + 1)} aria-label={t('fm.train.nextWeekBtn')}>
+                      ›
+                    </button>
+                  </div>
+                }
+              >
                 <p className="text-sm text-brun">{t('fm.train.coach.week', { date: dayMonth.format(new Date(`${monday}T00:00:00Z`)), code: plan.code })}</p>
                 <p className="mt-1 text-base font-bold text-canard">
                   {plan.congested
@@ -495,24 +527,6 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
                 </summary>
               <Panel title={t('fm.train.title')}>
                 <div className="flex flex-wrap items-end gap-4">
-                  <div className={label}>
-                    {t('fm.train.which')}
-                    <div className="mt-1">
-                      <Chips
-                        value={offset}
-                        options={[
-                          ['0', t('fm.train.thisWeek')],
-                          ['1', t('fm.train.nextWeek')],
-                          ...(Number(offset) > 1 ? ([[offset, t('fm.train.weekOfDate', { date: dayMonth.format(new Date(`${monday}T00:00:00Z`)) })]] as [string, string][]) : []),
-                        ]}
-                        onChange={(v) => {
-                          setOffset(v);
-                          resetWeek();
-                          setWeek(null);
-                        }}
-                      />
-                    </div>
-                  </div>
                   <label className={label}>
                     {t('fm.train.phaseLabel')}
                     <select
@@ -667,13 +681,7 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
                         return (
                           <tr
                             key={w.monday}
-                            onClick={() => {
-                              setOffset(String(i));
-                              resetWeek();
-                              setPhase(null);
-                              setWeek(null);
-                              window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
+                            onClick={() => goToWeek(Math.round((Date.parse(w.monday) - Date.parse(mondayOf(snap.gameDate))) / (7 * 86_400_000)), true)}
                             title={t('fm.train.season.open')}
                             className={`cursor-pointer border-t hover:bg-orange-clair/40 ${newMonth ? 'border-canard/25' : 'border-canard/5'} ${w.monday === monday ? 'bg-orange-clair/60' : ''}`}
                           >
