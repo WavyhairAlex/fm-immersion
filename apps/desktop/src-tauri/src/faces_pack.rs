@@ -493,6 +493,26 @@ fn cache_catalogs(dir: &Path) -> Vec<(PathBuf, Entry)> {
     out
 }
 
+/// Deux catalogues identiques à l'entrée des portraits près. Un cache Addressables qui ne l'est pas date d'une
+/// autre version du jeu (mise à jour Steam) : le corriger en place mélangerait l'ancien catalogue et les nouveaux
+/// bundles, il faut le retirer pour que le jeu le reconstruise depuis son catalogue.
+fn same_catalog(a: &[u8], b: &[u8]) -> bool {
+    match (read_entry(a), read_entry(b)) {
+        (Some(ea), Some(eb)) => a.len() == b.len() && patched(a, ea, 0, 0) == patched(b, eb, 0, 0),
+        _ => false,
+    }
+}
+
+/// Retire une copie du catalogue dans le cache (et son `.hash`) : le jeu la reconstruit au prochain lancement.
+fn drop_cached(file: &Path) -> std::io::Result<()> {
+    std::fs::remove_file(file)?;
+    let hash = file.with_extension("hash");
+    if hash.is_file() {
+        std::fs::remove_file(&hash)?;
+    }
+    Ok(())
+}
+
 fn sha256_file(p: &Path) -> std::io::Result<[u8; 32]> {
     let mut f = BufReader::with_capacity(1 << 20, File::open(p)?);
     let mut h = Sha256::new();
@@ -603,7 +623,8 @@ pub fn install(p: &Paths, pack: &Path, now: &str, version: Option<&str>) -> Resu
         return Err(PackError::UnknownGame);
     }
     let cached = cache_catalogs(&p.cache);
-    if entry.crc == crc && entry.size == size && cached.iter().all(|(_, e)| e.crc == crc && e.size == size) {
+    let stale = cached.iter().any(|(f, _)| std::fs::read(f).map_or(true, |b| !same_catalog(&b, &catalog)));
+    if entry.crc == crc && entry.size == size && !stale && cached.iter().all(|(_, e)| e.crc == crc && e.size == size) {
         return Ok(InstallReport { crc, size, already: true });
     }
 
@@ -619,7 +640,12 @@ pub fn install(p: &Paths, pack: &Path, now: &str, version: Option<&str>) -> Resu
     copy_checked(pack, &p.bundle)?;
     write_checked(&new_catalog, &p.catalog)?;
     for (file, e) in &cached {
-        std::fs::write(file, patched(&std::fs::read(file)?, *e, crc, size))?;
+        let bytes = std::fs::read(file)?;
+        if !same_catalog(&bytes, &catalog) {
+            drop_cached(file)?;
+            continue;
+        }
+        std::fs::write(file, patched(&bytes, *e, crc, size))?;
         if p.catalog_hash.is_file() {
             std::fs::copy(&p.catalog_hash, file.with_extension("hash"))?;
         }
@@ -679,7 +705,10 @@ pub fn uninstall(p: &Paths) -> Result<bool, PackError> {
         let name = file.file_name().map(|n| n.to_owned());
         let hash = file.with_extension("hash");
         let saved = set.as_ref().zip(name.as_ref()).map(|(s, n)| s.join("cache").join(n));
-        match saved.filter(|s| s.is_file()) {
+        // La copie sauvegardée ne sert que si elle correspond au catalogue remis (sinon elle date d'une autre version).
+        let restored = std::fs::read(&p.catalog).ok();
+        let saved = saved.filter(|s| s.is_file() && std::fs::read(s).ok().zip(restored.as_ref()).is_some_and(|(b, c)| same_catalog(&b, c)));
+        match saved {
             Some(saved) => {
                 copy_checked(&saved, &file)?;
                 let saved_hash = saved.with_extension("hash");
@@ -710,10 +739,21 @@ fn packs_of_size(p: &Paths, bundle_size: u64) -> Vec<(u32, u32)> {
 /// Le bundle en place est un pack connu (v1.0 ou installé par l'appli, reconnu à sa taille) mais le catalogue
 /// ne le décrit plus et décrit les portraits d'origine connus : une mise à jour Steam a remis le catalogue,
 /// le jeu affiche des carrés blancs, et réinstaller le pack corrige (seule l'entrée des portraits est réécrite).
+/// Vrai aussi quand le catalogue est bon mais qu'une copie du cache Addressables date d'une autre version du jeu
+/// (corrigée par l'appli avant la mise à jour) : réinstaller la retire.
 pub fn catalog_mismatch(p: &Paths, bundle_size: u64) -> bool {
-    let Some(entry) = std::fs::read(&p.catalog).ok().and_then(|b| read_entry(&b)) else { return false };
+    let Some(catalog) = std::fs::read(&p.catalog).ok() else { return false };
+    let Some(entry) = read_entry(&catalog) else { return false };
     let same_size = packs_of_size(p, bundle_size);
-    !same_size.is_empty() && !same_size.iter().any(|(crc, size)| *crc == entry.crc && *size == entry.size) && classify(&entry, &p.all_known()) != CatalogState::Unknown
+    if same_size.is_empty() || classify(&entry, &p.all_known()) == CatalogState::Unknown {
+        return false;
+    }
+    if !same_size.iter().any(|(crc, size)| *crc == entry.crc && *size == entry.size) {
+        return true;
+    }
+    cache_catalogs(&p.cache)
+        .iter()
+        .any(|(f, e)| classify(e, &[]) != CatalogState::Original && std::fs::read(f).is_ok_and(|b| !same_catalog(&b, &catalog)))
 }
 
 /// Le catalogue décrit des portraits que l'appli ne connaît pas (nouvelle version de FM27 avec d'autres portraits
@@ -997,6 +1037,46 @@ pub(crate) mod tests {
         assert!(matches!(install(&p, &pack, "t", None), Err(PackError::UnknownGame)));
         assert_eq!(std::fs::read(&p.catalog).unwrap(), retail);
         assert_eq!(std::fs::metadata(&p.bundle).unwrap().len(), 9_999);
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    /// Mise à jour Steam avec un nouveau catalogue : la copie du cache corrigée sur l'ancien catalogue est retirée
+    /// (le jeu la reconstruit), jamais corrigée en place avec l'empreinte du nouveau.
+    #[test]
+    fn retire_le_cache_d_une_autre_version() {
+        let root = std::env::temp_dir().join(format!("fmi-pack-cache-{}", std::process::id()));
+        std::fs::remove_dir_all(&root).ok();
+        let p0 = Paths::new(&root.join("game"), root.join("cache"), root.join("backup"));
+        std::fs::create_dir_all(p0.bundle.parent().unwrap()).unwrap();
+        std::fs::create_dir_all(&p0.cache).unwrap();
+        let orig = File::create(&p0.bundle).unwrap();
+        orig.set_len(ORIG_SIZE as u64).unwrap();
+        drop(orig);
+        let beta = fake_catalog(ORIG_CRC, ORIG_SIZE);
+        std::fs::write(&p0.catalog, &beta).unwrap();
+        std::fs::write(&p0.catalog_hash, b"hash-beta").unwrap();
+        std::fs::write(p0.cache.join("abc.bin"), &beta).unwrap();
+        std::fs::write(p0.cache.join("abc.hash"), b"hash-beta").unwrap();
+        let pack = root.join("pack.bundle");
+        std::fs::write(&pack, fake_bundle(b"pack")).unwrap();
+        let r = install(&p0, &pack, "t", None).unwrap();
+        let p = Paths::new(&root.join("game"), root.join("cache"), root.join("backup")).with_known(read_installs(&p0.backup));
+
+        // Steam : nouveau catalogue (portraits d'origine inchangés), le cache garde l'ancien catalogue corrigé.
+        let mut retail = beta.clone();
+        retail.extend_from_slice(b"...nouvelles entrees de la version finale");
+        std::fs::write(&p.catalog, &retail).unwrap();
+        std::fs::write(&p.catalog_hash, b"hash-finale").unwrap();
+        assert!(catalog_mismatch(&p, r.size as u64));
+        install(&p, &pack, "t2", None).unwrap();
+        assert!(!p.cache.join("abc.bin").exists());
+        assert!(!p.cache.join("abc.hash").exists());
+        assert_eq!(read_entry(&std::fs::read(&p.catalog).unwrap()).map(|e| (e.crc, e.size)), Some((r.crc, r.size)));
+        assert!(!catalog_mismatch(&p, r.size as u64));
+        // Désinstaller remet le catalogue de la version finale, pas l'ancien cache.
+        assert!(uninstall(&p).unwrap());
+        assert_eq!(std::fs::read(&p.catalog).unwrap(), retail);
+        assert!(!p.cache.join("abc.bin").exists());
         std::fs::remove_dir_all(&root).ok();
     }
 
