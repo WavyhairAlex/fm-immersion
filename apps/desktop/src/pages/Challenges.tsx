@@ -2,6 +2,9 @@ import {
   buildCertificate,
   CHALLENGES,
   evaluateChallenge,
+  GH_BONUSES,
+  GH_UNREADABLE_BONUSES,
+  gloryHunterState,
   shortDigest,
   verifyCertificate,
   type ChallengeDef,
@@ -9,6 +12,7 @@ import {
   type ChallengeResult,
   type ChallengeStatus,
   type FmSnapshot,
+  type GhBonus,
 } from '@fm-immersion/module-fm';
 import type { FmChallengeCertRow, FmChallengeRow } from '@fm-immersion/module-fm/schema';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -188,6 +192,7 @@ function Enrolled({ row, history, coach }: { row: FmChallengeRow; history: { gam
         </div>
       )}
       <Steps result={result} />
+      {row.challengeId === 'glory-hunter' && result.status === 'running' && <Jokers row={row} history={history} />}
       <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" className="btn-primary text-sm" disabled={share.isPending || !webhookOk} onClick={() => share.mutate()}>
           {t('challenges.shareDiscord')}
@@ -218,6 +223,71 @@ function Enrolled({ row, history, coach }: { row: FmChallengeRow; history: { gam
       {share.isSuccess && <p className="mt-2 text-sm text-eau-fonce">{t('challenges.shared', { digest: shortDigest(share.data.digest) })}</p>}
       {share.isError && <p className="mt-2 text-sm text-corail">{String(share.error)}</p>}
     </article>
+  );
+}
+
+/** Glory Hunter : déclarer un joker pour la prochaine saison pas encore commencée. */
+function Jokers({ row, history }: { row: FmChallengeRow; history: { gameDate: string; data: FmSnapshot }[] }) {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const state = useMemo(() => gloryHunterState(factsFor(row, history), row.params), [row, history]);
+  const targeted = new Set((row.params.jokers ?? []).map((j) => j.bonus).filter(Boolean));
+  const choices = GH_BONUSES.filter(
+    (b) => !GH_UNREADABLE_BONUSES.includes(b) && !state.bonuses.some((x) => x.id === b) && !state.frozen.includes(b) && !targeted.has(b),
+  );
+  const [bonus, setBonus] = useState<GhBonus | ''>('');
+  const today = history.at(-1)?.gameDate ?? row.startDate;
+  const declare = useMutation({
+    mutationFn: (kind: 'double' | 'preseason') =>
+      challengesData.declareJoker(row.id, kind === 'double' ? { kind, bonus: bonus as GhBonus, declaredAt: today } : { kind, declaredAt: today }),
+    onSuccess: () => {
+      setBonus('');
+      qc.invalidateQueries({ queryKey: ['challenges', row.saveId] });
+    },
+  });
+  if (!state.doublesLeft && !state.preseasonsLeft) return null;
+  return (
+    <div className="mt-3 rounded-xl bg-creme p-3 text-sm">
+      <p className="font-bold">{t('challenges.joker.title')}</p>
+      <p className="mt-1 text-xs text-brun">{t('challenges.joker.when')}</p>
+      {!!state.pending.length && <p className="mt-1 text-xs font-bold">{t('challenges.joker.pending', { count: state.pending.length })}</p>}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {state.doublesLeft > 0 && (
+          <>
+            <select className="input w-auto text-sm" value={bonus} onChange={(e) => setBonus(e.target.value as GhBonus | '')}>
+              <option value="">{t('challenges.joker.pick')}</option>
+              {choices.map((b) => (
+                <option key={b} value={b}>
+                  {t(`challenges.gh.bonus.${b}`)}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="btn-secondary text-sm"
+              disabled={!bonus || declare.isPending}
+              onClick={() => {
+                if (window.confirm(t('challenges.joker.doubleConfirm', { bonus: t(`challenges.gh.bonus.${bonus}`) }))) declare.mutate('double');
+              }}
+            >
+              {t('challenges.joker.double', { count: state.doublesLeft })}
+            </button>
+          </>
+        )}
+        {state.preseasonsLeft > 0 && (
+          <button
+            type="button"
+            className="btn-secondary text-sm"
+            disabled={declare.isPending}
+            onClick={() => {
+              if (window.confirm(t('challenges.joker.preseasonConfirm'))) declare.mutate('preseason');
+            }}
+          >
+            {t('challenges.joker.preseason')}
+          </button>
+        )}
+      </div>
+    </div>
   );
 }
 

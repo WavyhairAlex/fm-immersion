@@ -70,6 +70,7 @@ export * from './pricing';
 export * from './briefing';
 export * from './matchday';
 export * from './challenges';
+export * from './glory-hunter';
 export * from './cups';
 export * from './club-look';
 export * from './countries';
