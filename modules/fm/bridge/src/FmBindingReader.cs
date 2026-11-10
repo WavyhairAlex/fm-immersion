@@ -1051,9 +1051,14 @@ public class FmBindingReader : IGameReader
                 lists[lp] = cur == null ? new() : MainThread.Run(() => Persons(cur, MaxListPersons)).Result;
             }
 
+            // 0.5.9 : préparation par tranches de SetupSlice requêtes. D'un seul tenant pour plusieurs milliers de requêtes,
+            // elle prenait une image de 77 ms (mesure du 10/11/2026) malgré le plafond de MainThread.
+            for (int off = 0; off < reqs.Count; off += SetupSlice)
+            {
+            int lo = off, hi = Math.Min(reqs.Count, off + SetupSlice);
             MainThread.Run(() =>
             {
-                for (int k = 0; k < reqs.Count; k++)
+                for (int k = lo; k < hi; k++)
                 {
                     var r = reqs[k]; var st = states[k];
                     st.Team = team; st.Human = human;
@@ -1083,6 +1088,7 @@ public class FmBindingReader : IGameReader
                 }
                 return 0;
             }).Wait();
+            }
 
             Resolve(states.Where(s => !s.Failed).ToArray(), null, timeoutMs);
             return states.Select(s => s.Result).ToArray();
@@ -1113,7 +1119,7 @@ public class FmBindingReader : IGameReader
         // 0.5.7 : au-delà de RetryMin requêtes restées sans réponse à un niveau, on les renvoie par paquets de RetryChunk.
         // Le 09/11/2026, les 4 500 requêtes de chemins.json parties dans la même frame n'ont reçu en 8 s que les réponses
         // immédiates : toutes les stats des joueurs et les consignes de la tactique sont revenues vides, cinq jours de suite.
-        const int RetryMin = 20, RetryChunk = 300, FrameSlice = 50;
+        const int RetryMin = 20, RetryChunk = 300, FrameSlice = 50, SetupSlice = 100;
         /// <summary>Requêtes restées sans réponse (avant relance), récupérées par la relance, depuis le dernier TakeStats.</summary>
         static int _late, _recovered;
         public static (int Late, int Recovered) TakeStats() => (Interlocked.Exchange(ref _late, 0), Interlocked.Exchange(ref _recovered, 0));
