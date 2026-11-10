@@ -1622,7 +1622,9 @@
         "review_other": "Trois mois sur l'ancienne priorité : on passe à la suivante.",
         "invalid_one": "L'ancienne priorité ne colle plus à son rôle : on en change.",
         "invalid_other": "L'ancienne priorité ne colle plus à son rôle : on en change."
-      }
+      },
+      "prevWeek": "Semaine précédente",
+      "nextWeekBtn": "Semaine suivante"
     },
     "intro": {
       "playtime": "Qui joue trop, qui ne joue pas assez par rapport au statut promis, et qui risque de venir se plaindre.",
