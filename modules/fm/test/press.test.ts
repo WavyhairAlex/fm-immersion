@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pendingConference, postMatchConference, preMatchConference, type FmSnapshot } from '../src';
+import { pendingConference, postMatchConference, preMatchConference, type FmSnapshot, type GazetteStory } from '../src';
 
 type P = { id: string; name?: string; min: number; starts: number; tg: number; tc: number; goals?: number; injury?: string };
 
@@ -75,7 +75,7 @@ describe('conférences de presse', () => {
 describe('conférences dans la gazette', () => {
   it('cite le coach dans la semaine du match, ou dit qu’il a refusé de parler', async () => {
     const { withPress } = await import('../src');
-    const issues = [
+    const issues: { weekStart: string; weekEnd: string; stories: GazetteStory[] }[] = [
       { weekStart: '2026-10-19', weekEnd: '2026-10-25', stories: [] },
       { weekStart: '2026-10-12', weekEnd: '2026-10-18', stories: [] },
     ];
