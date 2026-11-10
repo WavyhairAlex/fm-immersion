@@ -11,26 +11,28 @@ import { imageToPngBytes, type EngineStatus, type Outcome } from './photos';
  * Réglage du joueur (gardé sur ce PC) :
  * - `off` : jamais de photo de situation, les dépêches gardent le portrait ;
  * - `manual` : la photo se fait sur son clic dans « Gazette et Discord », avant l'envoi ; l'envoi automatique part sans ;
- * - `auto` : l'envoi automatique fait la photo lui-même avant d'envoyer (deux à quatre minutes), portrait si elle échoue.
+ * - `auto` (par défaut, dès que le moteur d'images est installé) : l'appli fait les photos toute seule, en arrière-plan
+ *   dès qu'une une ou une dépêche existe, et avant un envoi automatique ; portrait si elle échoue. Elle attend quand la
+ *   carte graphique est déjà prise par un autre logiciel (`gpuBusy`).
  */
 export type PhotoMode = 'off' | 'manual' | 'auto';
-const MODE_KEY = 'fmi.photos.mode';
+// Clé « .v2 » : l'ancien réglage valait « jamais » par défaut ; le nouveau vaut « automatique ».
+const MODE_KEY = 'fmi.photos.mode.v2';
 
 export function getPhotoMode(): PhotoMode {
   try {
     const v = localStorage.getItem(MODE_KEY);
-    return v === 'manual' || v === 'auto' ? v : 'off';
+    return v === 'manual' || v === 'off' ? v : 'auto';
   } catch {
-    return 'off';
+    return 'auto';
   }
 }
 
 export function setPhotoMode(mode: PhotoMode) {
   try {
-    if (mode === 'off') localStorage.removeItem(MODE_KEY);
-    else localStorage.setItem(MODE_KEY, mode);
+    localStorage.setItem(MODE_KEY, mode);
   } catch {
-    /* stockage indisponible : le réglage reste « off » */
+    /* stockage indisponible : le réglage reste « auto » */
   }
 }
 
@@ -133,6 +135,18 @@ export async function photosReady(): Promise<boolean> {
   readyCache = { at: Date.now(), ok };
   return ok;
 }
+
+/** La carte graphique est déjà prise par un autre logiciel : une photo faite toute seule attend (faux si inconnu). */
+export async function gpuBusy(): Promise<boolean> {
+  try {
+    return await invoke<boolean>('photos_gpu_busy');
+  } catch {
+    return false;
+  }
+}
+
+/** Les photos se font-elles toutes seules maintenant ? Réglage « automatique », moteur installé, carte libre. */
+export const autoPhotosNow = async () => getPhotoMode() === 'auto' && (await photosReady()) && !(await gpuBusy());
 
 export async function libraryImage(file: string): Promise<HTMLImageElement | null> {
   try {

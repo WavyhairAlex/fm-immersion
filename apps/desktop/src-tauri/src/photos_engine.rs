@@ -541,6 +541,49 @@ pub async fn photos_engine_stop(app: tauri::AppHandle) -> Result<EngineStatus, P
     Ok(status(&photos_dir(&app)?))
 }
 
+/// Au-delà, la carte graphique est tenue pour occupée par un autre logiciel (un jeu seul reste en dessous).
+const GPU_BUSY_MIB: u64 = 4096;
+
+/// Sortie de `nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader,nounits` : (Mio utilisés, Mio au
+/// total) de la carte qui a le plus de mémoire ; None si illisible.
+pub fn parse_gpu_memory(text: &str) -> Option<(u64, u64)> {
+    text.lines()
+        .filter_map(|l| {
+            let mut it = l.split(',').map(|v| v.trim().parse::<u64>().ok());
+            Some((it.next()??, it.next()??))
+        })
+        .max_by_key(|&(_, total)| total)
+}
+
+#[cfg(windows)]
+fn gpu_memory() -> Option<(u64, u64)> {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+    let out = std::process::Command::new("nvidia-smi")
+        .args(["--query-gpu=memory.used,memory.total", "--format=csv,noheader,nounits"])
+        .creation_flags(CREATE_NO_WINDOW)
+        .output()
+        .ok()?;
+    parse_gpu_memory(&String::from_utf8_lossy(&out.stdout))
+}
+
+#[cfg(not(windows))]
+fn gpu_memory() -> Option<(u64, u64)> {
+    None
+}
+
+/// La carte graphique est-elle déjà prise par un autre logiciel ? Demandé avant une photo faite toute seule (jamais
+/// avant un clic du joueur) : la photo attend plutôt que de faire planter l'autre travail par manque de mémoire.
+/// Faux quand notre moteur tourne déjà (la mémoire prise est la sienne) ou quand la carte ne répond pas.
+#[tauri::command]
+pub async fn photos_gpu_busy(app: tauri::AppHandle) -> Result<bool, PhotosError> {
+    if status(&photos_dir(&app)?).running {
+        return Ok(false);
+    }
+    let mem = tauri::async_runtime::spawn_blocking(gpu_memory).await.map_err(io)?;
+    Ok(mem.map(|(used, _)| used > GPU_BUSY_MIB).unwrap_or(false))
+}
+
 /// Image de test : le moteur est lancé si besoin, une photo est générée (avec `face`, la photo du coach en PNG,
 /// si le joueur en a une), les octets PNG sont renvoyés.
 #[tauri::command]
@@ -594,6 +637,14 @@ pub async fn photos_engine_test(app: tauri::AppHandle, prompt: Option<String>, f
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn memoire_de_la_carte_graphique() {
+        assert_eq!(parse_gpu_memory("1523, 16303\r\n"), Some((1523, 16303)));
+        assert_eq!(parse_gpu_memory("300, 4096\n9000, 16303\n"), Some((9000, 16303)));
+        assert_eq!(parse_gpu_memory("NVIDIA-SMI has failed"), None);
+        assert_eq!(parse_gpu_memory(""), None);
+    }
 
     #[test]
     fn chemins_d_archive_surs() {

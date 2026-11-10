@@ -10,14 +10,14 @@ vi.stubGlobal('localStorage', {
 const { breakingTag, gazetteTag, getPhotoMode, hashKey, sceneForBreaking, sceneForHeadline, setPhotoMode } = await import('../src/lib/photo-events');
 
 describe('photos de situation dans les dépêches', () => {
-  it('réglage à trois positions, « off » par défaut', () => {
-    expect(getPhotoMode()).toBe('off');
-    setPhotoMode('auto');
+  it('réglage à trois positions, « auto » par défaut', () => {
     expect(getPhotoMode()).toBe('auto');
     setPhotoMode('manual');
     expect(getPhotoMode()).toBe('manual');
     setPhotoMode('off');
     expect(getPhotoMode()).toBe('off');
+    setPhotoMode('auto');
+    expect(getPhotoMode()).toBe('auto');
   });
 
   it('choisit une scène stable selon la dépêche', () => {

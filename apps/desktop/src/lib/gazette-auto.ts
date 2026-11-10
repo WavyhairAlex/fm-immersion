@@ -1,3 +1,4 @@
+import { invoke } from '@tauri-apps/api/core';
 import {
   bigMatchNow,
   breakingNews,
@@ -34,7 +35,7 @@ import { drawPage } from './gazette-page';
 import { issuesWithPress } from './press';
 import { discordPagePayload } from './gazette-text';
 import { canvasPng, recentForm } from './gazette-une';
-import { breakingTag, gazetteTag, getPhotoMode, photoForEvent, sceneForBreaking, sceneForHeadline } from './photo-events';
+import { autoPhotosNow, breakingTag, existingPhoto, gazetteTag, getPhotoMode, photoForEvent, sceneForBreaking, sceneForHeadline } from './photo-events';
 import { loadFace } from './player-face';
 import { drawRecord, recordPayload } from './records-page';
 import { drawSeason, seasonPayload } from './season-une';
@@ -352,16 +353,23 @@ const pause = () => new Promise((r) => window.setTimeout(r, 1500));
  * du plugin (comme FM Coach) puis envoie la gazette dès qu'une semaine de jeu est terminée, le bilan de la saison
  * dès que le dernier match de championnat est joué, et le hors-série quand le coach quitte son club.
  */
+/** Événements dont la photo a déjà été tentée pendant cette session (réussie ou non) : pas de nouvel essai chaque minute. */
+const photoTried = new Set<string>();
+
 export function useGazetteAuto() {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   /** Début de la tournée en cours (0 = aucune). */
   const busy = useRef(0);
+  /** Une photo a été faite en arrière-plan : le moteur sera arrêté quand il n'en restera plus à faire. */
+  const photoMade = useRef(false);
   useEffect(() => {
     const tick = async () => {
-      const gazetteOn = getGazetteAuto();
-      const breakingOn = getBreakingAuto();
-      if ((!gazetteOn && !breakingOn) || !isWebhook(getWebhook())) return;
+      const sending = isWebhook(getWebhook());
+      const gazetteOn = sending && getGazetteAuto();
+      const breakingOn = sending && getBreakingAuto();
+      // Sans envoi automatique, la tournée ne sert qu'aux photos de situation faites toutes seules.
+      if (!gazetteOn && !breakingOn && getPhotoMode() !== 'auto') return;
       // Une tournée bloquée depuis plus de 10 minutes ne doit pas arrêter l'envoi automatique pour de bon.
       if (busy.current && Date.now() - busy.current < STUCK_MS) return;
       if (busy.current)
@@ -402,7 +410,7 @@ export function useGazetteAuto() {
                 // Rédigée par l'IA du joueur quand elle est branchée (sinon, ou si elle échoue, avec les phrases toutes faites).
                 issues[index] = await withWriting(t, week, lang, saveId);
                 // En mode « auto », la photo de situation de la une est faite avant l'envoi (deux à quatre minutes).
-                const photo = await gazettePhoto(saveId, issues[index]!, getPhotoMode() === 'auto');
+                const photo = await gazettePhoto(saveId, issues[index]!, await autoPhotosNow());
                 await sendGazette(t, lang, issues, index, seasonSoFar(history, week.date), getWebhook(), photo);
               },
               () => {
@@ -445,7 +453,7 @@ export function useGazetteAuto() {
             await attempt(
               'breaking',
               `breaking|${breakingId(saveId, n)}`,
-              async () => sendBreaking(t, n, lang, saveId, getWebhook(), await breakingPhoto(saveId, n, getPhotoMode() === 'auto')),
+              async () => sendBreaking(t, n, lang, saveId, getWebhook(), await breakingPhoto(saveId, n, await autoPhotosNow())),
               () => markBreakingSent(saveId, n),
             );
             await pause();
@@ -469,6 +477,36 @@ export function useGazetteAuto() {
               () => sendBigMatch(t, big, lang),
               () => markBigMatchSent(saveId, big),
             );
+          }
+        }
+        // Photos de situation faites toutes seules, sans attendre un envoi : la une de la dernière gazette terminée et
+        // les dépêches des derniers jours. Une seule par tournée (deux à quatre minutes), chaque événement essayé une
+        // fois par session ; rien tant que la carte graphique est prise par un autre logiciel.
+        if (getPhotoMode() === 'auto') {
+          const issues = issuesWithPress(gazetteIssues(history), await fmData.pressConferences(saveId).catch(() => []));
+          const todo: { tag: string; make: () => Promise<unknown>; key: readonly unknown[] }[] = [];
+          const une = issues[1];
+          if (une) todo.push({ tag: gazetteTag(saveId, une), make: () => gazettePhoto(saveId, une, true), key: ['gazette', 'une-photo', saveId] });
+          for (const n of breakingToSend(breakingNews(history), lastDate, () => false))
+            todo.push({ tag: breakingTag(saveId, n), make: () => breakingPhoto(saveId, n, true), key: ['gazette', 'breaking-photo', saveId] });
+          let next: (typeof todo)[number] | null = null;
+          for (const x of todo) {
+            if (photoTried.has(x.tag)) continue;
+            if (await existingPhoto(x.tag)) photoTried.add(x.tag);
+            else {
+              next = x;
+              break;
+            }
+          }
+          if (next && (await autoPhotosNow())) {
+            photoTried.add(next.tag);
+            await next.make();
+            photoMade.current = true;
+            await qc.invalidateQueries({ queryKey: next.key });
+          } else if (!next && photoMade.current) {
+            // Plus rien à faire : le moteur d'images rend la carte graphique au jeu.
+            photoMade.current = false;
+            await invoke('photos_engine_stop').catch(() => undefined);
           }
         }
       } catch (e) {

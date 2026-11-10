@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.148",
+    "date": "2026-11-10",
+    "fr": [
+      "Les photos de situation se font maintenant toutes seules : dès que la gazette de la semaine ou une dépêche existe, l'appli prépare la photo en arrière-plan et tu la découvres en ouvrant la gazette, comme un vrai journal. Plus aucun bouton à cliquer.",
+      "C'est le réglage par défaut dès que le moteur d'images est installé (« Photos de situation » dans Live Discord pour revenir à « Sur mon clic » ou « Jamais »). L'appli attend si ta carte graphique est déjà occupée par un autre logiciel."
+    ],
+    "en": [
+      "Situational photos now make themselves: as soon as the weekly gazette or a breaking news item exists, the app prepares the photo in the background and you discover it when opening the gazette, like a real newspaper. No button to click anymore.",
+      "This is the default as soon as the image engine is installed (\"Situational photos\" in Live Discord to go back to \"On my click\" or \"Never\"). The app waits if your graphics card is already busy with other software."
+    ]
+  },
+  {
     "version": "0.1.147",
     "date": "2026-11-10",
     "fr": [

@@ -3859,17 +3859,17 @@
     },
     "breakingEnable": "Send breaking news automatically",
     "breakingShort": "New signing, departure of a starter, long injury, interview or offer from another club for your manager, big match poster, feats (hat-trick, winning run, big win): the card goes to the channel on the day the plugin sees it.",
-    "photosTitle": "Situation photos in breaking news",
-    "photosShort": "A photo of the player or coach in the day's scene (stretcher, signing, press conference…), made on your PC by the image engine, instead of the portrait.",
+    "photosTitle": "Situational photos",
+    "photosShort": "A photo of the player or coach in the scene of the day (stretcher, signing, press conference…), made on your PC by the image engine, for the gazette front page and breaking news.",
     "photos": {
       "off": "Never",
       "manual": "On my click",
       "auto": "Automatic"
     },
     "photosHelp": {
-      "off": "Breaking news keep the portrait.",
-      "manual": "In “Gazette and Discord”, a button makes the photo before sending; automatic sending goes out with the portrait. The image engine must be installed:",
-      "auto": "Automatic sending makes the photo itself (two to four minutes on the graphics card); portrait if it fails. The image engine must be installed:"
+      "off": "The gazette and breaking news keep the portrait.",
+      "manual": "In \"Gazette & Discord\", a button makes the photo before sending; automatic sending goes out with the portrait. The image engine must be installed:",
+      "auto": "Nothing to do: the app makes the photos by itself as soon as a front page or breaking news exists (two to four minutes each), and you discover them in the gazette. It waits if your graphics card is already used by other software; portrait if a photo fails. The image engine must be installed:"
     }
   },
   "live": {
