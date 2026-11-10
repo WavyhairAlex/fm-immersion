@@ -19,7 +19,8 @@ extraite avec son historique ; Simloom garde Planet Zoo 2 et Transport Fever 3.
   manifeste embarqué `src-tauri/photos-manifest.json`) : ComfyUI portable depuis GitHub Releases (Comfy-Org/ComfyUI) et
   les modèles Qwen Image Edit 2511 / OWLv2 depuis Hugging Face (dépôts Comfy-Org, lightx2v, google), adresses épinglées
   à une révision, ~34 Go, reprise après coupure, SHA-256 vérifié, suppression en un clic ; rangé dans
-  `%LOCALAPPDATA%\app.fmimmersion.desktop\photos`. ComfyUI y est extrait (`src-tauri/src/photos_engine.rs`, crate `sevenz-rust2`)
+  `%LOCALAPPDATA%\app.fmimmersion.desktop\photos` par défaut, ou le dossier choisi par le joueur dans Photos (chemin dans
+  `photos-dir.txt` à côté, `photos_remote::resolve_dir`, déplacement des fichiers par `photos_set_dir`). ComfyUI y est extrait (`src-tauri/src/photos_engine.rs`, crate `sevenz-rust2`)
   et lancé en processus annexe sur `127.0.0.1` (port libre) avec `--offline --disable-all-custom-nodes`, dossier de base = dossier
   des photos ; arrêté à la fermeture de l'appli. Écran `/photos` (`src/pages/Photos.tsx`, `src/lib/photos.ts`).
   Chaîne d'une photo (`src-tauri/src/photos_pipeline.rs`) : scènes et consignes validées (`photos_scenes.rs`, vocabulaire « soccer », regard
