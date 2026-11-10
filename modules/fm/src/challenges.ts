@@ -1,5 +1,7 @@
 import { normalizePlayer, toNumber } from './player';
 import { officialResults, type MatchResult, type Outcome } from './results';
+import { coachSpells } from './farewell';
+import { gloryHunter, type GhJoker } from './glory-hunter';
 import { competitionKind } from './rules';
 import { leagueFixturesLeft, seasonSegments } from './season';
 import { matchStatsFull } from './stats';
@@ -29,7 +31,8 @@ export type ChallengeId =
   | 'chosen-club'
   | 'world-tour'
   | 'dunkirk'
-  | 'promotions';
+  | 'promotions'
+  | 'glory-hunter';
 
 /** Paramètres choisis à l'inscription. */
 export interface ChallengeParams {
@@ -38,6 +41,8 @@ export interface ChallengeParams {
   club?: string;
   /** Date de jeu (ISO) jusqu'à laquelle aucune recrue n'est permise. */
   until?: string;
+  /** Glory Hunter : jokers déclarés en cours de défi (voir `glory-hunter.ts`). */
+  jokers?: GhJoker[];
 }
 
 export interface ChallengeDef {
@@ -64,6 +69,7 @@ export const CHALLENGES: ChallengeDef[] = [
   { id: 'world-tour', unemployedStart: false, available: true },
   { id: 'dunkirk', unemployedStart: false, available: true },
   { id: 'promotions', unemployedStart: false, available: true },
+  { id: 'glory-hunter', unemployedStart: false, available: true },
   { id: 'pentagon', unemployedStart: true, available: false },
 ];
 
@@ -144,6 +150,8 @@ export interface FactPlayer {
   nat: string | null;
   started: boolean;
   minutes: number;
+  /** Buts du match (seulement pour un match seul ; absent des certificats d'avant la 0.1.141). */
+  goals?: number | null;
 }
 
 export interface FactMatch {
@@ -212,6 +220,8 @@ export interface ChallengeFacts {
   arrivals?: FactArrival[];
   /** Solde du club, un relevé par mois et à chaque fin de saison. */
   finances?: { date: string; club: string; balance: number }[];
+  /** Départs du coach (dernier jour suivi au club), limogeage deviné par la sécurité de l'emploi (0.1.141). */
+  exits?: { date: string; club: string; sacked: boolean }[];
 }
 
 const custom = (s: FmSnapshot) => (s as { custom?: Record<string, unknown> }).custom ?? {};
@@ -330,7 +340,15 @@ export function challengeFacts(history: Entry[], opts: { start: string; unemploy
       l: r.losses,
       gf: r.goalsFor,
       ga: r.goalsAgainst,
-      players: r.players.map((p) => ({ id: p.id, name: p.name, age: ages.get(p.id) ?? null, nat: nats.get(p.id) ?? null, started: p.started, minutes: p.minutes })),
+      players: r.players.map((p) => ({
+        id: p.id,
+        name: p.name,
+        age: ages.get(p.id) ?? null,
+        nat: nats.get(p.id) ?? null,
+        started: p.started,
+        minutes: p.minutes,
+        ...(r.matches === 1 && p.goals != null ? { goals: p.goals } : {}),
+      })),
     };
   });
 
@@ -365,6 +383,9 @@ export function challengeFacts(history: Entry[], opts: { start: string; unemploy
     rewinds: opts.rewinds ?? [],
     arrivals: arrivalsOf(sorted, history),
     finances: financesOf(sorted, segs.filter((x) => x.ended).map((x) => x.entries.at(-1)!.gameDate)),
+    exits: coachSpells(sorted)
+      .filter((sp) => sp.left)
+      .map((sp) => ({ date: sp.entries.at(-1)!.gameDate, club: sp.club, sacked: sp.reason === 'sacked' })),
   };
 }
 
@@ -383,7 +404,9 @@ export type ChallengeIssue =
   | { kind: 'nationalityUnknown'; count: number }
   | { kind: 'notInDebt' }
   | { kind: 'balanceUnknown' }
-  | { kind: 'promotionGuess'; count: number };
+  | { kind: 'promotionGuess'; count: number }
+  | { kind: 'ghPenalties'; competition: string; season: string }
+  | { kind: 'ghJokerIgnored'; bonus: string };
 
 /** Une étape du défi, à traduire dans l'interface (`challenges.step.<key>`). */
 export interface ChallengeStep {
@@ -392,6 +415,8 @@ export interface ChallengeStep {
   value?: number | string | null;
   target?: number;
   detail?: string | null;
+  /** Éléments à traduire (`challenges.gh.<key>`), suivis de leur précision ; remplacent `detail` à l'affichage. */
+  items?: { key: string; detail?: string | null }[];
 }
 
 export interface ChallengeResult {
@@ -484,10 +509,10 @@ function integrity(f: ChallengeFacts): { fatal: ChallengeIssue[]; notes: Challen
   return { fatal, notes };
 }
 
-const inSeason = (m: FactMatch, s: FactSeason) => m.date > s.start && m.date <= s.end;
+export const inSeason = (m: { date: string }, s: FactSeason) => m.date > s.start && m.date <= s.end;
 
 /** Matchs de championnat de la saison, et la saison est-elle suivie depuis la 1re journée ? */
-function leagueCoverage(f: ChallengeFacts, s: FactSeason) {
+export function leagueCoverage(f: ChallengeFacts, s: FactSeason) {
   const ms = f.matches.filter((m) => inSeason(m, s));
   const league = ms.filter((m) => m.league).reduce((a, m) => a + m.n, 0);
   // Période de plusieurs matchs : compétition inconnue, comptée comme possible match de championnat.
@@ -865,7 +890,7 @@ const promotions: Rule = (f) => {
   };
 };
 
-const EXTRA: Record<Exclude<ChallengeId, 'zero-to-hero' | 'invincibles' | 'u19' | 'locals' | 'pentagon'>, Rule> = {
+const EXTRA: Record<Exclude<ChallengeId, 'zero-to-hero' | 'invincibles' | 'u19' | 'locals' | 'pentagon' | 'glory-hunter'>, Rule> = {
   'old-guard': oldGuard,
   vikings,
   'no-signings': noSignings,
@@ -891,7 +916,9 @@ export function evaluateChallenge(id: ChallengeId, f: ChallengeFacts, params: Ch
           ? u19(f)
           : id === 'locals'
             ? locals(f, params.nationality ?? '')
-            : EXTRA[id as keyof typeof EXTRA](f, params);
+            : id === 'glory-hunter'
+              ? gloryHunter(f, params)
+              : EXTRA[id as keyof typeof EXTRA](f, params);
   const { fatal, notes } = integrity(f);
   return {
     ...base,
