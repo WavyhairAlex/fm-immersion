@@ -9,7 +9,7 @@ import { ordinal } from './season-une';
 
 /**
  * Hors-série « Flash spécial » quand le coach quitte son club (limogé ou parti) : bandeau d'alerte, gros titre et
- * photo du coach (celle choisie dans la barre latérale) barrée d'un tampon, le bilan de tout le passage en chiffres, puis la fausse interview de départ à
+ * photo du coach (celle choisie dans la barre latérale) avec un tampon en bas du cadre, le bilan de tout le passage en chiffres, puis la fausse interview de départ à
  * gauche, les saisons et le palmarès à droite. Même format que la page de la gazette (1200 de large).
  */
 const W = 1200;
@@ -163,22 +163,23 @@ export async function drawFarewell(
   ctx.fillStyle = '#FFFFFF';
   ctx.textAlign = 'left';
   ctx.fillText(caps(t('farewell.coach')), px + 14, heroTop + panelH - 13);
-  // Tampon en travers de la photo.
+  // Tampon posé en bas de la photo, juste au-dessus de la légende : il barre le buste, jamais le visage
+  // (la photo est recadrée « cover », le visage est dans la moitié haute du cadre).
   ctx.save();
-  ctx.translate(px + PANEL / 2, heroTop + panelH * 0.42);
-  ctx.rotate(-0.26);
+  ctx.translate(px + PANEL / 2, heroTop + panelH - 36 - 52);
+  ctx.rotate(-0.1);
   const stamp = caps(t(`farewell.stamp.${reason}`));
-  ctx.font = font(900, 50, SERIF);
-  const sw = Math.min(ctx.measureText(stamp).width + 40, PANEL + 40);
-  ctx.lineWidth = 7;
+  ctx.font = font(900, 40, SERIF);
+  const sw = Math.min(ctx.measureText(stamp).width + 36, PANEL - 24);
+  ctx.lineWidth = 6;
   ctx.strokeStyle = reason === 'sacked' ? C.red : C.orange;
-  ctx.fillStyle = 'rgba(255,255,255,0.82)';
-  ctx.fillRect(-sw / 2, -42, sw, 80);
-  ctx.strokeRect(-sw / 2, -42, sw, 80);
+  ctx.fillStyle = 'rgba(255,255,255,0.86)';
+  ctx.fillRect(-sw / 2, -32, sw, 64);
+  ctx.strokeRect(-sw / 2, -32, sw, 64);
   ctx.fillStyle = reason === 'sacked' ? C.red : C.orangeDark;
   ctx.textAlign = 'center';
-  fit(ctx, stamp, 900, 50, 24, sw - 30, SERIF);
-  ctx.fillText(stamp, 0, 16);
+  fit(ctx, stamp, 900, 40, 22, sw - 28, SERIF);
+  ctx.fillText(stamp, 0, 14);
   ctx.restore();
   ctx.textAlign = 'left';
   y = heroTop + panelH + 30;
