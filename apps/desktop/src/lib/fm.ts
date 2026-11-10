@@ -1,6 +1,6 @@
 import { saves } from '@fm-immersion/db';
 import { addBaseTarget, carryRoleStars, fmSnapshotSchema, fmStatusSchema, type DbPlayer, type FmStatus, type GazetteWriting, type LeavingMark, type LeavingMarks, mergeTargets, type FmSnapshot, type TargetRecord } from '@fm-immersion/module-fm';
-import { fmGazetteWriting, fmSnapshots, fmTargets } from '@fm-immersion/module-fm/schema';
+import { fmGazetteWriting, fmPressConferences, fmSnapshots, fmTargets, type FmPressConferenceRow } from '@fm-immersion/module-fm/schema';
 import { and, asc, desc, eq, lte } from 'drizzle-orm';
 import { challengesRepo } from './challenges';
 import type { Db } from './db';
@@ -196,6 +196,20 @@ export function fmRepo(db: Db) {
         .insert(fmGazetteWriting)
         .values({ saveId, weekStart, facts, content, model, writtenAt })
         .onConflictDoUpdate({ target: [fmGazetteWriting.saveId, fmGazetteWriting.weekStart], set: { facts, content, model, writtenAt } });
+    },
+
+    /** Conférences de presse tenues ou refusées par le coach, de la plus récente à la plus ancienne. */
+    async pressConferences(saveId: string): Promise<FmPressConferenceRow[]> {
+      return db.select().from(fmPressConferences).where(eq(fmPressConferences.saveId, saveId)).orderBy(desc(fmPressConferences.matchDate));
+    },
+
+    /** Garde une conférence de presse (réponses vides = refusée). Une seule par match et par moment. */
+    async savePressConference(row: Omit<FmPressConferenceRow, 'answeredAt'>) {
+      const answeredAt = new Date().toISOString();
+      await db
+        .insert(fmPressConferences)
+        .values({ ...row, answeredAt })
+        .onConflictDoUpdate({ target: [fmPressConferences.saveId, fmPressConferences.key], set: { questions: row.questions, answers: row.answers, answeredAt } });
     },
 
     /** Écarte une cible (ou la remet) dans FM Immersion, sans rien changer dans le jeu. */

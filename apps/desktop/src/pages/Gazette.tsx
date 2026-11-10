@@ -20,6 +20,7 @@ import { drawRecord, recordText } from '../lib/records-page';
 import { fmData } from '../lib/data';
 import { articleText, editorialText, headlineText, paperName, storyText, weekLabel } from '../lib/gazette-text';
 import { drawPage } from '../lib/gazette-page';
+import { issuesWithPress, usePressHeld } from '../lib/press';
 import { recentForm } from '../lib/gazette-une';
 import { loadFace } from '../lib/player-face';
 import { drawSeason } from '../lib/season-une';
@@ -36,7 +37,9 @@ export function Gazette() {
     rememberClubLooks(history.map((h) => h.data));
     return history.length;
   }, [history]);
-  const issues = useMemo(() => gazetteIssues(history), [history]);
+  // Paroles du coach en conférence de presse, citées dans la semaine du match.
+  const { data: held } = usePressHeld(saveId);
+  const issues = useMemo(() => issuesWithPress(gazetteIssues(history), held), [history, held]);
   const reviews = useMemo(() => seasonReviews(history), [history]);
   const season = reviews[0] ?? null;
   // Carte de fin de saison : saisons finies, et la saison en cours en aperçu tant qu'elle n'est pas finie.

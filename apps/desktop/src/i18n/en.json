@@ -3135,6 +3135,10 @@
     "challenges": {
       "title": "Challenges",
       "summary": "Famous FM challenges (Zero to Hero, Invincibles…) proven by your save, with a certificate to share."
+    },
+    "press": {
+      "title": "Press conference",
+      "summary": "Before a big match and after every game, the press questions you. Your answers make it into the gazette."
     }
   },
   "faces": {
@@ -3505,6 +3509,12 @@
         "title": "{{club}} through in the {{competition}}",
         "body": "A {{score}} win against {{opponent}}: the club awaits its next opponent.",
         "bodyLegs": "{{score}} on aggregate against {{opponent}}: the club awaits its next opponent."
+      },
+      "press": {
+        "title_pre": "Before {{opponent}}, the manager speaks",
+        "title_post": "After {{opponent}}, the manager explains",
+        "body": "“{{quote}}”",
+        "noComment": "The manager declined to answer the journalists' questions."
       }
     },
     "discord": {
@@ -4887,6 +4897,160 @@
     "go": {
       "bridge": "Plugin and settings",
       "faces": "Faces"
+    }
+  },
+  "press": {
+    "page": {
+      "intro": "Before a big match and after every competitive game, journalists ask three questions about your save. Pick a tone or write your own answer: the week's gazette will quote you.",
+      "pre": "Pre-match · {{opponent}}",
+      "post": "Post-match · {{opponent}}",
+      "date": "Match on {{date}}",
+      "none": "No press conference right now. The next one comes before your next big match or after your next competitive game.",
+      "noSave": "Create your career first: the questions come from your save.",
+      "answer": "Your answer",
+      "placeholder": "Write your answer, or pick a tone above.",
+      "send": "Answer the press",
+      "decline": "No comment",
+      "saved": "Answers saved: they will appear in this week's gazette.",
+      "declined": "You did not answer: the gazette will say you declined to speak.",
+      "error": "Could not save your answers: {{error}}",
+      "aiRewording": "Your AI is rewording the questions…",
+      "past": "Past press conferences",
+      "pastDeclined": "No comment.",
+      "today": "The press is waiting",
+      "todayPre": "Pre-match press conference before {{opponent}}.",
+      "todayPost": "Post-match press conference after {{opponent}}.",
+      "go": "Answer",
+      "formLetters": "WDL"
+    },
+    "tones": {
+      "confident": "Confident",
+      "calm": "Measured",
+      "firm": "Firm"
+    },
+    "q": {
+      "stakes_cup": "Is this {{competition}} tie against {{opponent}} a priority, or will you rotate?",
+      "stakes_europe": "A European night against {{opponent}}: how are you approaching this {{competition}} game?",
+      "stakes_top": "{{positionOrd}} against {{opponentPositionOrd}}: can this clash with {{opponent}} decide the season?",
+      "stakes_rival": "{{opponent}} are direct rivals in the table. Is this a six-pointer?",
+      "theirScorer": "{{name}} has already scored {{goals}} goals for {{opponent}}. How will you keep that threat quiet?",
+      "injuries": "You have {{count}} players injured. Does that change your plans for this game?",
+      "form": "Your recent form is {{wins}} wins in the last {{games}} games ({{form}}). Worried or reassured?",
+      "ourScorer": "{{name}} is on {{goals}} goals. Is everything going through him right now?",
+      "result_W": "A {{score}} win against {{opponent}}. What made the difference?",
+      "result_D": "A {{score}} draw with {{opponent}}. Two points dropped or a point gained?",
+      "result_L": "A {{score}} defeat to {{opponent}}. What went wrong?",
+      "cup_W": "You are through in the {{competition}}. How far can this team go?",
+      "cup_D": "It is still all to play for in the {{competition}} against {{opponent}}. Confident for what comes next?",
+      "cup_L": "A blow in the {{competition}} against {{opponent}}. How will the team recover?",
+      "hero": "{{name}} scored {{goals}} goals tonight. What do you make of that performance?",
+      "streak_W": "{{count}} wins in a row. What is working so well right now?",
+      "streak_L": "{{count}} defeats in a row. How do you get out of this bad run?",
+      "streak_winless": "{{count}} games without a win. Is doubt creeping into the dressing room?",
+      "streak_unbeaten": "{{count}} games unbeaten. Has this team become hard to beat?",
+      "pressure": "Your job is said to be at risk ({{status}}). Do you still feel the board's backing?"
+    },
+    "a": {
+      "stakes_cup": {
+        "confident": "We want to go far in this cup, we will pick a team to win.",
+        "calm": "It is an important game, we will prepare it like any other.",
+        "firm": "There are no small games. Whoever plays must give everything."
+      },
+      "stakes_europe": {
+        "confident": "We wait all year for nights like this. We will play to win.",
+        "calm": "We respect the opponent, we know what we have to do.",
+        "firm": "Europe forgives nothing. We will have to be perfect for 90 minutes."
+      },
+      "stakes_top": {
+        "confident": "We fear nobody. If we play our football, we can win.",
+        "calm": "It is a big game, but the season is still long.",
+        "firm": "These are the games that show who we really are. I expect a response."
+      },
+      "stakes_rival": {
+        "confident": "We are ready. Winning this would give us some breathing room.",
+        "calm": "Three points like any others, even if we know what they mean.",
+        "firm": "We cannot afford to miss this one. Everybody knows it."
+      },
+      "theirScorer": {
+        "confident": "We have a plan. {{name}} will see very little of the ball.",
+        "calm": "He is a very good player, we will be careful as a team.",
+        "firm": "I do not talk about opponents. I talk about my team."
+      },
+      "injuries": {
+        "confident": "The squad is deep enough. Whoever plays is ready.",
+        "calm": "We deal with it. That is football, it happens to everyone.",
+        "firm": "I am not looking for excuses. Eleven players will be on the pitch."
+      },
+      "form": {
+        "confident": "The results show we are on the right track.",
+        "calm": "We look at the next game, not the previous ones.",
+        "firm": "It is not good enough. We must do better, and we know it."
+      },
+      "ourScorer": {
+        "confident": "{{name}} is full of confidence, and the team serves that very well.",
+        "calm": "He scores, great, but the whole group is working.",
+        "firm": "Nobody is above the team. Goals will come from everywhere."
+      },
+      "result_W": {
+        "confident": "We were better from start to finish. I am proud of the players.",
+        "calm": "A good win, but there are still things to fix.",
+        "firm": "That is what I expect every week. Nothing more."
+      },
+      "result_D": {
+        "confident": "We had the chances, the win will come next time.",
+        "calm": "We take the point. We move on.",
+        "firm": "It is not enough. We should have won this game."
+      },
+      "result_L": {
+        "confident": "One defeat does not change everything. We will bounce back.",
+        "calm": "We will analyse the game calmly and fix our mistakes.",
+        "firm": "That is unacceptable. I will have a word with the group."
+      },
+      "cup_W": {
+        "confident": "We have no limit. We play every round to win it.",
+        "calm": "We take it one round at a time, without getting carried away.",
+        "firm": "Going through was the minimum. We want more."
+      },
+      "cup_D": {
+        "confident": "We have what it takes to finish the job.",
+        "calm": "Nothing is decided, either way.",
+        "firm": "We will have to be much better in the next game."
+      },
+      "cup_L": {
+        "confident": "We will bounce back quickly, there is a lot left this season.",
+        "calm": "It is a disappointment, but we take the lessons.",
+        "firm": "We were not good enough. I take my share of the blame."
+      },
+      "hero": {
+        "confident": "{{name}} is becoming a really great player.",
+        "calm": "A good game from {{name}}, like the whole team.",
+        "firm": "I am happy for {{name}}, but the work must go on."
+      },
+      "streak_W": {
+        "confident": "We are confident and it shows on the pitch.",
+        "calm": "We do not look at the run, only at the next game.",
+        "firm": "Nobody can relax. A run can end very quickly."
+      },
+      "streak_L": {
+        "confident": "We are closer to a win than people think.",
+        "calm": "We keep working. The work will pay off.",
+        "firm": "Enough. Things must change, and they will."
+      },
+      "streak_winless": {
+        "confident": "The group is together, the win will come.",
+        "calm": "The games were tight. We are missing very little.",
+        "firm": "We need to find our hunger again. Everyone is responsible, me first."
+      },
+      "streak_unbeaten": {
+        "confident": "We have become a very solid team.",
+        "calm": "We are pleased, but the season is long.",
+        "firm": "Not losing is good. Winning more often is better."
+      },
+      "pressure": {
+        "confident": "I have the backing of the chairman and the players. I am calm.",
+        "calm": "I focus on my work, the rest is out of my hands.",
+        "firm": "I will not comment on rumours. The results will speak."
+      }
     }
   }
 }

@@ -14,6 +14,7 @@ import { fetchHistory } from './fm-cache';
 import { drawFarewell } from './farewell-page';
 import { farewellPayload } from './farewell-text';
 import { drawPage } from './gazette-page';
+import { issuesWithPress } from './press';
 import { discordPagePayload } from './gazette-text';
 import { canvasPng, recentForm } from './gazette-une';
 import { loadFace } from './player-face';
@@ -337,7 +338,7 @@ export function useGazetteAuto() {
         const lang = i18n.resolvedLanguage;
         // Chaque envoi est isolé (`attempt`) : un envoi refusé ne bloque plus les autres, la gazette d'abord.
         if (gazetteOn) {
-          const issues = gazetteIssues(history);
+          const issues = issuesWithPress(gazetteIssues(history), await fmData.pressConferences(saveId).catch(() => []));
           const sentWeek = (read(SENT_KEY) ?? '').split('|')[0] === saveId ? ((read(SENT_KEY) ?? '').split('|')[1] ?? null) : null;
           const seen = { club: history.at(-1)?.data.club ?? null, gameDate: lastDate ?? null, week: issues[1]?.weekStart ?? null, sentWeek };
           const index = gazetteToSend(issues, saveId, read(SENT_KEY));

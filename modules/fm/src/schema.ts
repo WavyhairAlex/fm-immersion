@@ -2,6 +2,7 @@ import { saves } from '@fm-immersion/db';
 import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import type { ChallengeCertificate, ChallengeParams, Rewind } from './challenges';
 import type { GazetteWriting } from './gazette';
+import type { PressAnswer, PressAsked, PressKind } from './press';
 import type { FmSnapshot } from './snapshot';
 
 /**
@@ -135,3 +136,31 @@ export const fmGazetteWriting = sqliteTable(
 );
 
 export type FmGazetteWritingRow = typeof fmGazetteWriting.$inferSelect;
+
+/**
+ * Conférences de presse tenues (ou refusées) par le coach : une par match et par moment (`key`, voir `pressKey`).
+ * `questions` garde le texte posé au joueur (reformulé par l'IA ou non), `answers` ses réponses telles que la gazette
+ * les citera ; `answers` vide = conférence refusée (« pas de commentaire »).
+ */
+export const fmPressConferences = sqliteTable(
+  'fm_press_conferences',
+  {
+    saveId: text('save_id')
+      .notNull()
+      .references(() => saves.id, { onDelete: 'cascade' }),
+    key: text('key').notNull(),
+    kind: text('kind').$type<PressKind>().notNull(),
+    matchDate: text('match_date').notNull(),
+    club: text('club').notNull(),
+    opponent: text('opponent').notNull(),
+    competition: text('competition'),
+    questions: text('questions', { mode: 'json' }).$type<PressAsked[]>().notNull(),
+    answers: text('answers', { mode: 'json' }).$type<PressAnswer[]>().notNull(),
+    answeredAt: text('answered_at')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+  },
+  (t) => [primaryKey({ columns: [t.saveId, t.key] })],
+);
+
+export type FmPressConferenceRow = typeof fmPressConferences.$inferSelect;

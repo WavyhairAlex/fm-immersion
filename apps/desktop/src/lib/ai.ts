@@ -94,7 +94,7 @@ const RULES = [
   "Pas de markdown, pas d'émoji, pas de guillemets de citation.",
 ];
 
-const LANG = (lang?: string) => (lang?.startsWith('en') ? 'anglais (British English, football vocabulary)' : 'français');
+export const LANG = (lang?: string) => (lang?.startsWith('en') ? 'anglais (British English, football vocabulary)' : 'français');
 
 export interface GazettePrompt {
   system: string;

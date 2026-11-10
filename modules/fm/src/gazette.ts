@@ -43,6 +43,7 @@ export type StoryKind =
   | 'nextMatch'
   | 'cupOut'
   | 'cupThrough'
+  | 'press'
   | 'quiet';
 
 export interface GazetteStory {

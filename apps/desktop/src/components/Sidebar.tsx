@@ -132,7 +132,7 @@ export function Sidebar() {
         ))}
         <p className="nav-group">{t('layout.groups.story')}</p>
         <Item to="/carriere" icon="career" label={t('careerPage.title')} />
-        <Item to="/gazette" icon="gazette" label={t('layout.nav.story')} active={pathname === '/gazette' || pathname === '/discord'} />
+        <Item to="/gazette" icon="gazette" label={t('layout.nav.story')} active={pathname === '/gazette' || pathname === '/presse' || pathname === '/discord'} />
         <Item to="/defis" icon="challenges" label={t('modes.challenges.title')} />
         <p className="nav-group">{t('layout.groups.game')}</p>
         <Item

@@ -31,6 +31,27 @@ describe('instantanés Football Manager', () => {
     expect((await fm.writing(save.id, '2027-09-27', 'def'))?.title).toBe('T2');
   });
 
+  it('garde une conférence de presse par match et par moment, la dernière réponse l’emporte', async () => {
+    const save = await saves.create({ gameId: 'fm', name: 'Malženice' });
+    const row = {
+      saveId: save.id,
+      key: 'post|Malženice|Nitra|2027-09-28',
+      kind: 'post' as const,
+      matchDate: '2027-09-28',
+      club: 'Malženice',
+      opponent: 'Nitra',
+      competition: '2. liga',
+      questions: [{ id: 'result' as const, text: 'Victoire 2-1 contre Nitra ?' }],
+      answers: [{ question: 'result' as const, tone: 'calm' as const, text: 'Une bonne victoire.' }],
+    };
+    await fm.savePressConference(row);
+    await fm.savePressConference({ ...row, answers: [] });
+    const held = await fm.pressConferences(save.id);
+    expect(held).toHaveLength(1);
+    expect(held[0]!.answers).toEqual([]);
+    expect(held[0]!.questions[0]!.text).toBe('Victoire 2-1 contre Nitra ?');
+  });
+
   it('joint le CA/PA lus en mémoire à l’instantané de la date et les garde quand le plugin le réécrit', async () => {
     const save = await saves.create({ gameId: 'fm', name: 'Malženice' });
     await fm.importSnapshot(save.id, snap('2027-02-14', ['A', 'B']));
