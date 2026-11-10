@@ -1,0 +1,23 @@
+<Project>
+  <!--
+    Modèles de compilation (« stubs ») des DLL d'interop de FM27, écrits à la main pour le dépôt.
+    Ils ne contiennent que les noms et signatures des types et membres que le plugin appelle, sans aucun code
+    du jeu : chaque corps lève une exception. Ils servent uniquement à compiler le plugin dans GitHub ; en jeu,
+    ce sont les vraies DLL générées par BepInEx qui sont chargées (même nom d'assemblage, mêmes signatures).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>$(NoWarn);CS0169;CS0649;CS0626;CS0824;CS8597</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>$(MSBuildThisFileDirectory)bin\</OutputPath>
+    <AssemblyVersion>0.0.0.0</AssemblyVersion>
+    <FileVersion>0.0.0.0</FileVersion>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <RestoreAdditionalProjectSources>https://nuget.bepinex.dev/v3/index.json</RestoreAdditionalProjectSources>
+  </PropertyGroup>
+</Project>

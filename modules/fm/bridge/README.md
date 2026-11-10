@@ -182,7 +182,29 @@ pour générer `BepInEx\interop`. FM Immersion n'installe pas BepInEx lui-même.
 dotnet build -c Release -p:FMDir="G:\Steam\steamapps\common\Football Manager 27"
 ```
 
-`FMDir` peut aussi venir de la variable d'environnement `FM27_DIR`. La cartographie des données du jeu
+`FMDir` peut aussi venir de la variable d'environnement `FM27_DIR`.
+
+## Compiler sans le jeu (CI)
+
+```bash
+dotnet build -c Release -p:Stubs=true
+```
+
+GitHub compile le plugin à chaque PR de cette façon (job `plugin` de `.github/workflows/ci.yml`) et garde
+`ArchivixBridge.dll` en artefact. BepInEx et Il2CppInterop viennent de NuGet (logiciels libres,
+`nuget.bepinex.dev`, même version que chez le joueur : BepInEx 6.0.0-be.791, Il2CppInterop 1.5.3). Les DLL
+d'interop du jeu, elles, sont remplacées par des **modèles de compilation** écrits pour le dépôt (`stubs/`) :
+seulement les noms et signatures des types et membres que le plugin appelle, sans aucun code du jeu (chaque corps
+lève une exception). En jeu, ce sont toujours les vraies DLL générées par BepInEx qui sont chargées.
+
+- Vérifié le 10/11/2026 : compilé avec les modèles ou avec les vraies DLL du jeu, le plugin 0.5.9 référence
+  exactement les mêmes types, membres et assemblages (DLL de même taille, seuls l'identifiant de module et les
+  dates diffèrent).
+- Si le plugin appelle un nouveau membre du jeu, la compilation sans le jeu échoue : ajouter sa signature au
+  modèle de l'assemblage concerné, en la recopiant de la vraie DLL d'interop (même nom, mêmes types de paramètres
+  et de retour, même `static`/`virtual`/`new`), puis compiler les deux façons.
+- Les modèles ne sont **jamais** livrés : seule `ArchivixBridge.dll` part en artefact ou en release.
+- La publication (`publier.ps1`) et le test en jeu restent sur le PC du joueur, avec les vraies DLL. La cartographie des données du jeu
 (chemins, types, limites connues) est décrite dans le rapport `cartographie.md` produit pendant le développement.
 
 ## Centre de données (chemins.json, 01/11/2026, complété le 03/11/2026)

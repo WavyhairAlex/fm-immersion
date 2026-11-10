@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><AssemblyName>SI.Bindable</AssemblyName><RootNamespace>SI.Bindable</RootNamespace><AssemblyVersion>0.0.0.0</AssemblyVersion></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Il2CppInterop.Runtime" Version="1.5.3" />
+    <ProjectReference Include="..\Il2Cppmscorlib\Il2Cppmscorlib.csproj" />
+    <ProjectReference Include="..\SI.Core\SI.Core.csproj" />
+    <ProjectReference Include="..\SI.Bindable.Reference.Core\SI.Bindable.Reference.Core.csproj" />
+  </ItemGroup>
+</Project>

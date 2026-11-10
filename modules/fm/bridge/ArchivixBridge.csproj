@@ -2,8 +2,9 @@
   <!--
     Plugin BepInEx 6 (IL2CPP) en lecture seule pour Football Manager 27.
     Se compile contre les DLL d'interop générées par BepInEx dans le dossier du jeu : elles appartiennent à
-    l'éditeur et ne sont jamais versionnées ni publiées. Compilation locale uniquement (voir README.md) :
+    l'éditeur et ne sont jamais versionnées ni publiées. Compilation avec le jeu (voir README.md) :
       dotnet build -c Release -p:FMDir="G:\Steam\steamapps\common\Football Manager 27"
+    Sans le jeu (CI) : dotnet build -c Release -p:Stubs=true (modèles de compilation de stubs/).
   -->
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -19,7 +20,22 @@
   <ItemGroup>
     <Compile Include="src\*.cs" />
   </ItemGroup>
-  <ItemGroup>
+  <!-- Compilation sans le jeu (CI) : -p:Stubs=true. BepInEx et Il2CppInterop viennent de NuGet (logiciels libres),
+       les DLL d'interop du jeu sont remplacées par nos modèles de compilation (stubs/, signatures seulement). -->
+  <PropertyGroup Condition="'$(Stubs)' == 'true'">
+    <RestoreAdditionalProjectSources>https://nuget.bepinex.dev/v3/index.json</RestoreAdditionalProjectSources>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(Stubs)' == 'true'">
+    <PackageReference Include="BepInEx.Unity.IL2CPP" Version="6.0.0-be.791" PrivateAssets="all" ExcludeAssets="runtime" />
+    <ProjectReference Include="stubs\UnityEngine.CoreModule\UnityEngine.CoreModule.csproj" Private="false" Aliases="UnityCore" />
+    <ProjectReference Include="stubs\Il2Cppmscorlib\Il2Cppmscorlib.csproj" Private="false" />
+    <ProjectReference Include="stubs\SI.Core\SI.Core.csproj" Private="false" />
+    <ProjectReference Include="stubs\SI.Bindable\SI.Bindable.csproj" Private="false" />
+    <ProjectReference Include="stubs\SI.Bindable.Reference.Core\SI.Bindable.Reference.Core.csproj" Private="false" />
+    <ProjectReference Include="stubs\SI.Interop\SI.Interop.csproj" Private="false" />
+    <ProjectReference Include="stubs\FM.UI\FM.UI.csproj" Private="false" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Stubs)' != 'true'">
     <Reference Include="$(FMDir)\BepInEx\core\BepInEx.Core.dll" Private="false" />
     <Reference Include="$(FMDir)\BepInEx\core\BepInEx.Unity.IL2CPP.dll" Private="false" />
     <Reference Include="$(FMDir)\BepInEx\core\Il2CppInterop.Runtime.dll" Private="false" />
