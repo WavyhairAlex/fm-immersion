@@ -1,12 +1,8 @@
-import type {
-  BreakingNews,
-  GazetteIssue,
-  GazetteStory,
-} from "@fm-immersion/module-fm";
-import { isCoachBreaking } from "@fm-immersion/module-fm";
-import { invoke } from "@tauri-apps/api/core";
-import { faceBytes } from "./player-face";
-import { imageToPngBytes, type EngineStatus, type Outcome } from "./photos";
+import type { BreakingNews, GazetteIssue, GazetteStory } from '@fm-immersion/module-fm';
+import { isCoachBreaking } from '@fm-immersion/module-fm';
+import { invoke } from '@tauri-apps/api/core';
+import { faceBytes } from './player-face';
+import { imageToPngBytes, type EngineStatus, type Outcome } from './photos';
 
 /**
  * Photos de situation dans les envois Discord : quelle scène pour quel événement, et comment obtenir la photo
@@ -19,16 +15,16 @@ import { imageToPngBytes, type EngineStatus, type Outcome } from "./photos";
  *   dès qu'une une ou une dépêche existe, et avant un envoi automatique ; portrait si elle échoue. Elle attend quand la
  *   carte graphique est déjà prise par un autre logiciel (`gpuBusy`).
  */
-export type PhotoMode = "off" | "manual" | "auto";
+export type PhotoMode = 'off' | 'manual' | 'auto';
 // Clé « .v2 » : l'ancien réglage valait « jamais » par défaut ; le nouveau vaut « automatique ».
-const MODE_KEY = "fmi.photos.mode.v2";
+const MODE_KEY = 'fmi.photos.mode.v2';
 
 export function getPhotoMode(): PhotoMode {
   try {
     const v = localStorage.getItem(MODE_KEY);
-    return v === "manual" || v === "off" ? v : "auto";
+    return v === 'manual' || v === 'off' ? v : 'auto';
   } catch {
-    return "auto";
+    return 'auto';
   }
 }
 
@@ -41,49 +37,33 @@ export function setPhotoMode(mode: PhotoMode) {
 }
 
 /** Qui pose : le joueur de la dépêche, le coach, ou les deux (image 1 = coach, image 2 = joueur). */
-export type PhotoCast = "player" | "coach" | "duo";
+export type PhotoCast = 'player' | 'coach' | 'duo';
 export type PhotoChoice = { scene: string; cast: PhotoCast };
 
 /** Petit hachage stable : la même dépêche tire toujours la même scène. */
 export function hashKey(s: string): number {
   let h = 2166136261;
-  for (let i = 0; i < s.length; i++)
-    h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0;
   return h;
 }
 
-const pick = <T>(items: readonly T[], key: string) =>
-  items[hashKey(key) % items.length]!;
+const pick = <T>(items: readonly T[], key: string) => items[hashKey(key) % items.length]!;
 
 /**
  * Scène d'une dépêche. Blessure : civière ou soutenu pour les longues absences, béquilles ou banc sinon (jamais avec
  * la photo du coach : ce sont des scènes de joueur). Recrue : présentation avec le coach quand il a sa photo, sinon
  * signature. Départ : signature (ailleurs). Avenir du coach : conférence ou consigne sur la touche.
  */
-export function sceneForBreaking(
-  n: Pick<BreakingNews, "kind" | "id" | "date" | "days">,
-  hasCoach: boolean,
-): PhotoChoice | null {
+export function sceneForBreaking(n: Pick<BreakingNews, 'kind' | 'id' | 'date' | 'days'>, hasCoach: boolean): PhotoChoice | null {
   const key = `${n.kind}|${n.id}|${n.date.slice(0, 10)}`;
-  if (isCoachBreaking(n))
-    return hasCoach
-      ? { scene: pick(["conference", "consigne"] as const, key), cast: "coach" }
-      : null;
+  if (isCoachBreaking(n)) return hasCoach ? { scene: pick(['conference', 'consigne'] as const, key), cast: 'coach' } : null;
   switch (n.kind) {
-    case "injury":
-      return {
-        scene:
-          (n.days ?? 0) >= 90
-            ? pick(["civiere", "soutenu"] as const, key)
-            : pick(["bequilles", "banc"] as const, key),
-        cast: "player",
-      };
-    case "signing":
-      return hasCoach
-        ? { scene: "duo_presse", cast: "duo" }
-        : { scene: "signature", cast: "player" };
-    case "exit":
-      return { scene: "signature", cast: "player" };
+    case 'injury':
+      return { scene: (n.days ?? 0) >= 90 ? pick(['civiere', 'soutenu'] as const, key) : pick(['bequilles', 'banc'] as const, key), cast: 'player' };
+    case 'signing':
+      return hasCoach ? { scene: 'duo_presse', cast: 'duo' } : { scene: 'signature', cast: 'player' };
+    case 'exit':
+      return { scene: 'signature', cast: 'player' };
     default:
       return null;
   }
@@ -98,72 +78,46 @@ export type HeadlineChoice = PhotoChoice & { playerId: string | number | null };
  * buteur comme pour les dépêches ; avenir du coach → conférence ou consigne. Null quand rien ne s'y prête
  * (classement, formation, calme plat) : la une garde sa mise en page.
  */
-export function sceneForHeadline(
-  head: Pick<GazetteStory, "kind" | "params">,
-  weekStart: string,
-  hasCoach: boolean,
-): HeadlineChoice | null {
+export function sceneForHeadline(head: Pick<GazetteStory, 'kind' | 'params'>, weekStart: string, hasCoach: boolean): HeadlineChoice | null {
   const p = head.params;
   const key = `${head.kind}|${weekStart}`;
-  const coach = (scene: string): HeadlineChoice | null =>
-    hasCoach ? { scene, cast: "coach", playerId: null } : null;
-  const player = (
-    scene: string,
-    id: string | number | null | undefined,
-  ): HeadlineChoice | null =>
-    id == null ? null : { scene, cast: "player", playerId: id };
+  const coach = (scene: string): HeadlineChoice | null => (hasCoach ? { scene, cast: 'coach', playerId: null } : null);
+  const player = (scene: string, id: string | number | null | undefined): HeadlineChoice | null =>
+    id == null ? null : { scene, cast: 'player', playerId: id };
   switch (head.kind) {
-    case "result": {
-      if (p.cup === "out") return coach("mains_tete");
-      if (p.outcome === "W")
-        return player("une_joueur", p.bestId) ?? coach("celebration");
-      if (p.outcome === "L") return coach("mains_tete");
-      return coach("consigne");
+    case 'result': {
+      if (p.cup === 'out') return coach('mains_tete');
+      if (p.outcome === 'W') return player('une_joueur', p.bestId) ?? coach('celebration');
+      if (p.outcome === 'L') return coach('mains_tete');
+      return coach('consigne');
     }
-    case "cupOut":
-      return coach("mains_tete");
-    case "cupThrough":
-      return player("une_joueur", p.bestId) ?? coach("celebration");
-    case "injury":
-      return player(
-        (Number(p.days) || 0) >= 90
-          ? pick(["civiere", "soutenu"] as const, key)
-          : pick(["bequilles", "banc"] as const, key),
-        p.id,
-      );
-    case "arrival":
-      return p.id == null
-        ? null
-        : hasCoach
-          ? { scene: "duo_presse", cast: "duo", playerId: p.id }
-          : player("signature", p.id);
-    case "departure":
-      return player("signature", p.id);
-    case "scorer":
-      return player("glissade", p.id);
-    case "coachFuture":
-    case "job":
-      return coach(pick(["conference", "consigne"] as const, key));
-    case "streak":
-      return p.outcome === "W" || p.outcome === "unbeaten"
-        ? coach("celebration")
-        : coach("mains_tete");
+    case 'cupOut':
+      return coach('mains_tete');
+    case 'cupThrough':
+      return player('une_joueur', p.bestId) ?? coach('celebration');
+    case 'injury':
+      return player((Number(p.days) || 0) >= 90 ? pick(['civiere', 'soutenu'] as const, key) : pick(['bequilles', 'banc'] as const, key), p.id);
+    case 'arrival':
+      return p.id == null ? null : hasCoach ? { scene: 'duo_presse', cast: 'duo', playerId: p.id } : player('signature', p.id);
+    case 'departure':
+      return player('signature', p.id);
+    case 'scorer':
+      return player('glissade', p.id);
+    case 'coachFuture':
+    case 'job':
+      return coach(pick(['conference', 'consigne'] as const, key));
+    case 'streak':
+      return p.outcome === 'W' || p.outcome === 'unbeaten' ? coach('celebration') : coach('mains_tete');
     default:
       return null;
   }
 }
 
 /** Clé de la une d'une gazette dans la bibliothèque (une photo par numéro). */
-export const gazetteTag = (
-  saveId: string,
-  issue: Pick<GazetteIssue, "number" | "weekStart">,
-) => `gazette|${saveId}|${issue.number}|${issue.weekStart}`;
+export const gazetteTag = (saveId: string, issue: Pick<GazetteIssue, 'number' | 'weekStart'>) => `gazette|${saveId}|${issue.number}|${issue.weekStart}`;
 
 /** Clé d'un événement dans la bibliothèque (la photo n'est faite qu'une fois par dépêche). */
-export const breakingTag = (
-  saveId: string,
-  n: Pick<BreakingNews, "kind" | "id" | "date">,
-) => `breaking|${saveId}|${n.kind}|${n.id}|${n.date.slice(0, 10)}`;
+export const breakingTag = (saveId: string, n: Pick<BreakingNews, 'kind' | 'id' | 'date'>) => `breaking|${saveId}|${n.kind}|${n.id}|${n.date.slice(0, 10)}`;
 
 // ------------------------------------------------------------------ moteur
 
@@ -174,7 +128,7 @@ export async function photosReady(): Promise<boolean> {
   if (readyCache && Date.now() - readyCache.at < 60_000) return readyCache.ok;
   let ok = false;
   try {
-    ok = (await invoke<EngineStatus>("photos_engine_status")).installed;
+    ok = (await invoke<EngineStatus>('photos_engine_status')).installed;
   } catch {
     ok = false;
   }
@@ -185,22 +139,19 @@ export async function photosReady(): Promise<boolean> {
 /** La carte graphique est déjà prise par un autre logiciel : une photo faite toute seule attend (faux si inconnu). */
 export async function gpuBusy(): Promise<boolean> {
   try {
-    return await invoke<boolean>("photos_gpu_busy");
+    return await invoke<boolean>('photos_gpu_busy');
   } catch {
     return false;
   }
 }
 
 /** Les photos se font-elles toutes seules maintenant ? Réglage « automatique », moteur installé, carte libre. */
-export const autoPhotosNow = async () =>
-  getPhotoMode() === "auto" && (await photosReady()) && !(await gpuBusy());
+export const autoPhotosNow = async () => getPhotoMode() === 'auto' && (await photosReady()) && !(await gpuBusy());
 
-export async function libraryImage(
-  file: string,
-): Promise<HTMLImageElement | null> {
+export async function libraryImage(file: string): Promise<HTMLImageElement | null> {
   try {
-    const bytes = await invoke<ArrayBuffer>("photos_library_read", { file });
-    const url = URL.createObjectURL(new Blob([bytes], { type: "image/png" }));
+    const bytes = await invoke<ArrayBuffer>('photos_library_read', { file });
+    const url = URL.createObjectURL(new Blob([bytes], { type: 'image/png' }));
     const img = new Image();
     img.src = url;
     await img.decode();
@@ -211,40 +162,26 @@ export async function libraryImage(
 }
 
 /** Photo déjà faite pour cet événement, ou null. */
-export async function existingPhoto(
-  tag: string,
-): Promise<HTMLImageElement | null> {
+export async function existingPhoto(tag: string): Promise<HTMLImageElement | null> {
   try {
-    const o = await invoke<Outcome | null>("photos_library_find", { tag });
+    const o = await invoke<Outcome | null>('photos_library_find', { tag });
     return o ? libraryImage(o.file) : null;
   } catch {
     return null;
   }
 }
 
-export type PhotoSubjects = {
-  playerId?: string | number | null;
-  coachPhoto?: string | null;
-};
+export type PhotoSubjects = { playerId?: string | number | null; coachPhoto?: string | null };
 
 /** Visages dans l'ordre attendu par la scène (coach puis joueur pour un duo) ; null si l'un manque. */
-export async function castFaces(
-  cast: PhotoCast,
-  s: PhotoSubjects,
-): Promise<number[][] | null> {
-  const coach = async () =>
-    s.coachPhoto ? imageToPngBytes(s.coachPhoto) : null;
+export async function castFaces(cast: PhotoCast, s: PhotoSubjects): Promise<number[][] | null> {
+  const coach = async () => (s.coachPhoto ? imageToPngBytes(s.coachPhoto) : null);
   const player = async () => {
     // Facepack en JPEG : converti en PNG, comme la photo du coach.
     const b = await faceBytes(s.playerId);
-    return b ? imageToPngBytes(new File([b as BlobPart], "visage")) : null;
+    return b ? imageToPngBytes(new File([b as BlobPart], 'visage')) : null;
   };
-  const faces =
-    cast === "coach"
-      ? [await coach()]
-      : cast === "player"
-        ? [await player()]
-        : [await coach(), await player()];
+  const faces = cast === 'coach' ? [await coach()] : cast === 'player' ? [await player()] : [await coach(), await player()];
   return faces.every((f): f is number[] => !!f && f.length > 0) ? faces : null;
 }
 
@@ -252,12 +189,7 @@ export async function castFaces(
  * Photo de situation d'un événement : celle de la bibliothèque si elle existe, sinon faite maintenant par le moteur
  * (quand `generate`), sinon null. Ne lève jamais : sans photo, l'image Discord garde le portrait.
  */
-export async function photoForEvent(
-  tag: string,
-  choice: PhotoChoice | null,
-  subjects: PhotoSubjects,
-  generate: boolean,
-): Promise<HTMLImageElement | null> {
+export async function photoForEvent(tag: string, choice: PhotoChoice | null, subjects: PhotoSubjects, generate: boolean): Promise<HTMLImageElement | null> {
   if (!choice) return null;
   const found = await existingPhoto(tag);
   if (found || !generate) return found;
@@ -265,12 +197,10 @@ export async function photoForEvent(
     if (!(await photosReady())) return null;
     const faces = await castFaces(choice.cast, subjects);
     if (!faces) return null;
-    const o = await invoke<Outcome>("photos_generate", {
-      request: { scene: choice.scene, faces, tag },
-    });
+    const o = await invoke<Outcome>('photos_generate', { request: { scene: choice.scene, faces, tag } });
     return libraryImage(o.file);
   } catch (e) {
-    console.warn("Photo de situation :", e);
+    console.warn('Photo de situation :', e);
     return null;
   }
 }
