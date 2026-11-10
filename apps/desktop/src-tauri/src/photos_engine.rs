@@ -105,13 +105,29 @@ fn find_layout(root: &Path) -> Option<(String, String)> {
     None
 }
 
-/// Extrait l'archive 7z dans `comfyui/` (dossier recréé), puis écrit le marqueur. `progress(octets écrits, total)`.
+/// Vide `dir` d'une extraction précédente en gardant `keep` : l'archive téléchargée est rangée dans ce même dossier
+/// (`comfyui/…​.7z`), la supprimer avec le reste la rendait introuvable au moment de l'ouvrir.
+fn clear_dir_except(dir: &Path, keep: &Path) -> std::io::Result<()> {
+    let keep = keep.canonicalize().unwrap_or_else(|_| keep.to_path_buf());
+    for entry in std::fs::read_dir(dir)? {
+        let path = entry?.path();
+        if path.canonicalize().map(|p| p == keep).unwrap_or(false) {
+            continue;
+        }
+        if path.is_dir() {
+            std::fs::remove_dir_all(&path)?;
+        } else {
+            std::fs::remove_file(&path)?;
+        }
+    }
+    Ok(())
+}
+
+/// Extrait l'archive 7z dans `comfyui/` (vidé d'abord, archive gardée), puis écrit le marqueur. `progress(octets écrits, total)`.
 pub fn extract(archive: &Path, photos_dir: &Path, comfyui_version: &str, progress: &dyn Fn(u64, u64)) -> Result<Layout, PhotosError> {
     let target = engine_dir(photos_dir);
-    if target.exists() {
-        std::fs::remove_dir_all(&target)?;
-    }
     std::fs::create_dir_all(&target)?;
+    clear_dir_except(&target, archive)?;
 
     let mut reader = sevenz_rust2::ArchiveReader::open(archive, sevenz_rust2::Password::empty()).map_err(|e| PhotosError::Corrupt(format!("archive ComfyUI illisible : {e}")))?;
     let total: u64 = reader.archive().files.iter().filter(|f| f.has_stream()).map(|f| f.size()).sum();
@@ -685,6 +701,26 @@ mod tests {
         assert!(history_error(&h, "abc").is_none());
         let e = serde_json::json!({ "abc": { "status": { "status_str": "error", "messages": [["execution_error", { "exception_message": "CUDA out of memory" }]] }, "outputs": {} } });
         assert_eq!(history_error(&e, "abc").as_deref(), Some("CUDA out of memory"));
+    }
+
+    #[test]
+    fn vider_le_dossier_garde_l_archive() {
+        let root = std::env::temp_dir().join(format!("fmi-engine-clear-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let target = engine_dir(&root);
+        std::fs::create_dir_all(target.join("ComfyUI_windows_portable").join("ComfyUI")).unwrap();
+        std::fs::write(target.join("ComfyUI_windows_portable").join("ComfyUI").join("main.py"), b"x").unwrap();
+        std::fs::write(target.join(INSTALLED_MARKER), b"{}").unwrap();
+        let archive = target.join("ComfyUI_windows_portable_nvidia.7z");
+        std::fs::write(&archive, b"7z").unwrap();
+        clear_dir_except(&target, &archive).unwrap();
+        assert!(archive.is_file());
+        assert_eq!(std::fs::read_dir(&target).unwrap().count(), 1);
+        // Archive rangée ailleurs : tout le dossier est vidé.
+        std::fs::write(target.join("reste"), b"x").unwrap();
+        clear_dir_except(&target, &root.join("ailleurs.7z")).unwrap();
+        assert_eq!(std::fs::read_dir(&target).unwrap().count(), 0);
+        let _ = std::fs::remove_dir_all(&root);
     }
 
     #[test]
