@@ -3237,7 +3237,8 @@
       "v1Help": "Les portraits pas encore refaits en V2 restent ceux de la V1.",
       "published": "Dernier pack publié le {{date}} ({{mb}} Mo)."
     },
-    "atelierToggle": "Je génère les portraits (mode atelier : chemins, avancement du lot, pack local)"
+    "atelierToggle": "Je génère les portraits (mode atelier : chemins, avancement du lot, pack local)",
+    "steamReset": "Une mise à jour de FM27 a remis le catalogue d'origine : en jeu, les portraits seraient des carrés blancs. Ferme FM27 puis clique sur « Réinstaller ce pack »."
   },
   "photos": {
     "title": "Photos de situation",
@@ -4860,5 +4861,32 @@
     "history": "Voir toutes les nouveautés",
     "pageTitle": "Quoi de neuf",
     "pageIntro": "Tu utilises la version {{version}}. Voici ce que chaque mise à jour a apporté, de la plus récente à la plus ancienne."
+  },
+  "compat": {
+    "title": "Version de FM27",
+    "version": "FM27 installé le {{date}}.",
+    "versionSteam": "FM27 installé le {{date}} (build Steam {{build}}).",
+    "recheck": "Vérifier à nouveau",
+    "ack": "J'ai vu",
+    "details": "Voir le détail",
+    "bannerUpdated": "FM27 a été mis à jour : voici ce qui marche avec la nouvelle version",
+    "bannerProblem": "Quelque chose ne marche plus avec FM27",
+    "help": "FM Immersion lit seulement des fichiers du jeu (version, journal des plugins) : rien n'est modifié.",
+    "items": {
+      "updated": "Nouvelle version du jeu depuis le {{date}}.",
+      "launch": "Lance FM27 une fois et charge ta partie : l'appli vérifiera ensuite que les plugins démarrent.",
+      "bepinexStuck": "BepInEx n'a pas fini de démarrer à la dernière partie : les plugins ne sont pas chargés. Une mise à jour de BepInEx est peut-être nécessaire.",
+      "bridgeOk": "Le plugin FM27 {{version}} a bien démarré.",
+      "bridgeMissing": "Le plugin FM27 n'a pas démarré à la dernière partie : réinstalle-le, FM27 fermé.",
+      "bridgeErrors": "Le plugin FM27 a signalé {{count}} erreur(s) au démarrage : « {{first}} ».",
+      "memoryKnown": "Lecture du CA/PA : version du jeu déjà vérifiée.",
+      "memoryPatterns": "Lecture du CA/PA : nouvelle version du jeu, les repères ont été retrouvés. Elle devrait marcher ; vérifie un joueur que tu connais.",
+      "memoryBroken": "Lecture du CA/PA : cette version du jeu n'est pas encore prise en charge. Le reste de l'appli marche ; attends une mise à jour de FM Immersion.",
+      "facesMismatch": "Visages : la mise à jour a remis le catalogue d'origine, le jeu afficherait des carrés blancs. Réinstalle le pack, FM27 fermé."
+    },
+    "go": {
+      "bridge": "Plugin et réglages",
+      "faces": "Visages"
+    }
   }
 }

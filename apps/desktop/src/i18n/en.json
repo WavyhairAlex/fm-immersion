@@ -3237,7 +3237,8 @@
       "v1Help": "Portraits not yet redone in V2 stay as V1.",
       "published": "Latest pack published on {{date}} ({{mb}} MB)."
     },
-    "atelierToggle": "I generate the portraits (workshop mode: paths, batch progress, local pack)"
+    "atelierToggle": "I generate the portraits (workshop mode: paths, batch progress, local pack)",
+    "steamReset": "An FM27 update restored the original catalogue: in game, portraits would be white squares. Close FM27, then click “Reinstall this pack”."
   },
   "photos": {
     "title": "Situation photos",
@@ -4860,5 +4861,32 @@
     "history": "See all updates",
     "pageTitle": "What's new",
     "pageIntro": "You are using version {{version}}. Here is what each update brought, newest first."
+  },
+  "compat": {
+    "title": "FM27 version",
+    "version": "FM27 installed on {{date}}.",
+    "versionSteam": "FM27 installed on {{date}} (Steam build {{build}}).",
+    "recheck": "Check again",
+    "ack": "Got it",
+    "details": "See details",
+    "bannerUpdated": "FM27 was updated: here is what works with the new version",
+    "bannerProblem": "Something no longer works with FM27",
+    "help": "FM Immersion only reads game files (version, plugin log): nothing is changed.",
+    "items": {
+      "updated": "New game version since {{date}}.",
+      "launch": "Start FM27 once and load your save: the app will then check that the plugins start.",
+      "bepinexStuck": "BepInEx did not finish starting last time: plugins are not loaded. BepInEx may need an update.",
+      "bridgeOk": "The FM27 plugin {{version}} started fine.",
+      "bridgeMissing": "The FM27 plugin did not start last time: reinstall it with FM27 closed.",
+      "bridgeErrors": "The FM27 plugin reported {{count}} error(s) at start: “{{first}}”.",
+      "memoryKnown": "CA/PA reading: game version already checked.",
+      "memoryPatterns": "CA/PA reading: new game version, the markers were found. It should work; check a player you know.",
+      "memoryBroken": "CA/PA reading: this game version is not supported yet. The rest of the app works; wait for an FM Immersion update.",
+      "facesMismatch": "Faces: the update restored the original catalogue, the game would show white squares. Reinstall the pack with FM27 closed."
+    },
+    "go": {
+      "bridge": "Plugin and settings",
+      "faces": "Faces"
+    }
   }
 }

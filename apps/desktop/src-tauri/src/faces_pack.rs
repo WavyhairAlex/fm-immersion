@@ -596,7 +596,10 @@ pub fn install(p: &Paths, pack: &Path, now: &str, version: Option<&str>) -> Resu
     let mut installs = read_installs(&p.backup);
     let state = classify(&entry, &p.all_known());
     let game_size = std::fs::metadata(&p.bundle)?.len();
-    if state == CatalogState::Unknown || game_size != entry.size as u64 {
+    // Après une mise à jour Steam, le catalogue revient d'origine alors que le bundle du pack est resté :
+    // on peut alors réécrire le catalogue (c'est ce que faisait INSTALLER_MOD.bat).
+    let steam_reset = state == CatalogState::Original && catalog_mismatch(p, game_size);
+    if state == CatalogState::Unknown || (game_size != entry.size as u64 && !steam_reset) {
         return Err(PackError::UnknownGame);
     }
     let cached = cache_catalogs(&p.cache);
@@ -697,6 +700,16 @@ pub fn uninstall(p: &Paths) -> Result<bool, PackError> {
 }
 
 /// État du catalogue du jeu (pour l'écran Visages).
+/// Le bundle en place est un pack connu (v1.0 ou installé par l'appli, reconnu à sa taille) mais le catalogue
+/// ne le décrit plus : une mise à jour Steam a remis le catalogue d'origine, le jeu affiche des carrés blancs.
+pub fn catalog_mismatch(p: &Paths, bundle_size: u64) -> bool {
+    let Some(entry) = std::fs::read(&p.catalog).ok().and_then(|b| read_entry(&b)) else { return false };
+    let mut packs: Vec<(u32, u32)> = p.all_known().iter().map(|i| (i.crc, i.size)).collect();
+    packs.push((V1_CRC, V1_SIZE));
+    let same_size: Vec<&(u32, u32)> = packs.iter().filter(|(_, size)| *size as u64 == bundle_size).collect();
+    !same_size.is_empty() && !same_size.iter().any(|(crc, size)| *crc == entry.crc && *size == entry.size)
+}
+
 pub fn catalog_state(p: &Paths) -> Option<CatalogState> {
     let entry = read_entry(&std::fs::read(&p.catalog).ok()?)?;
     Some(classify(&entry, &p.all_known()))
@@ -852,6 +865,15 @@ pub(crate) mod tests {
         assert_eq!(read_installs(&p.backup).len(), 2);
         assert_eq!(std::fs::metadata(p.backup.join(BUNDLE)).unwrap().len(), ORIG_SIZE as u64);
 
+        // Mise à jour Steam : catalogue (et cache) remis d'origine, bundle du pack resté en place.
+        std::fs::write(&p.catalog, &cat).unwrap();
+        std::fs::write(p.cache.join("abc.bin"), &cat).unwrap();
+        assert!(catalog_mismatch(&p, r2.size as u64));
+        let r3 = install(&p, &pack2, "t3", None).unwrap();
+        assert!(!r3.already);
+        assert_eq!(catalog_state(&p), Some(CatalogState::Custom));
+        assert!(!catalog_mismatch(&p, r2.size as u64));
+
         assert!(uninstall(&p).unwrap());
         assert_eq!(std::fs::metadata(&p.bundle).unwrap().len(), ORIG_SIZE as u64);
         assert_eq!(std::fs::read(&p.catalog).unwrap(), cat);
@@ -886,6 +908,30 @@ pub(crate) mod tests {
         std::fs::write(&p.catalog, fake_catalog(0xfb0c_25a5, 535_426_723)).unwrap();
         assert_eq!(catalog_state(&p), Some(CatalogState::Custom));
         assert_eq!(installed_version(&p, 0xfb0c_25a5, 535_426_723).as_deref(), Some("2026-11-08 15:04:50"));
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    /// Mise à jour Steam : bundle du pack toujours là, catalogue remis d'origine (ou d'une nouvelle version).
+    #[test]
+    fn detecte_le_catalogue_remis_par_steam() {
+        let root = std::env::temp_dir().join(format!("fmi-pack-steam-{}", std::process::id()));
+        std::fs::remove_dir_all(&root).ok();
+        let known = vec![Installed { crc: 42, size: 4300, source: "x".into(), at: "t".into(), version: None }];
+        let p = Paths::new(&root.join("game"), root.join("cache"), root.join("backup")).with_known(known);
+        std::fs::create_dir_all(p.catalog.parent().unwrap()).unwrap();
+        // Pack de l'atelier en place, catalogue à jour : rien à signaler.
+        std::fs::write(&p.catalog, fake_catalog(42, 4300)).unwrap();
+        assert!(!catalog_mismatch(&p, 4300));
+        // Catalogue d'origine (ou CRC d'une nouvelle version du jeu) avec le même bundle : carrés blancs.
+        std::fs::write(&p.catalog, fake_catalog(ORIG_CRC, ORIG_SIZE)).unwrap();
+        assert!(catalog_mismatch(&p, 4300));
+        std::fs::write(&p.catalog, fake_catalog(7, 4300)).unwrap();
+        assert!(catalog_mismatch(&p, 4300));
+        // Pack v1.0 en place, catalogue d'origine.
+        assert!(catalog_mismatch(&p, V1_SIZE as u64));
+        // Bundle d'origine ou d'un autre mod : pas notre affaire.
+        assert!(!catalog_mismatch(&p, ORIG_SIZE as u64));
+        assert!(!catalog_mismatch(&p, 999));
         std::fs::remove_dir_all(&root).ok();
     }
 

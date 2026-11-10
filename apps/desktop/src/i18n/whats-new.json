@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.133",
+    "date": "2026-11-10",
+    "fr": [
+      "Après une mise à jour de FM27, l'appli te dit ce qui marche avec la nouvelle version : plugin, lecture du CA/PA et visages. Le bilan est dans « Plugin et réglages », et un bandeau apparaît sur « Aujourd'hui » s'il y a quelque chose à faire.",
+      "Visages : si une mise à jour de Steam a remis le catalogue d'origine (portraits en carrés blancs), « Réinstaller ce pack » le corrige, sans passer par Steam."
+    ],
+    "en": [
+      "After an FM27 update, the app tells you what works with the new version: plugin, CA/PA reading and faces. The check is in “Plugin and settings”, and a banner shows on “Today” when something needs doing.",
+      "Faces: if a Steam update restored the original catalogue (portraits as white squares), “Reinstall this pack” fixes it, without going through Steam."
+    ]
+  },
+  {
     "version": "0.1.132",
     "date": "2026-11-10",
     "fr": [

@@ -11,6 +11,8 @@ type FacesStatus = {
   size: number | null;
   running: boolean;
   backup: boolean;
+  /** Pack en place mais catalogue remis d'origine par une mise à jour Steam (carrés blancs en jeu). */
+  catalogMismatch?: boolean;
 };
 type LotState = 'none' | 'running' | 'paused' | 'stopped' | 'finished';
 type Stage = {
@@ -258,6 +260,11 @@ export function Faces() {
         <span className="text-brun">{t('faces.pc.label')}</span>
         <b>{t(`faces.pc.${pcState(state, !!offer)}`)}</b>
       </p>
+      {status?.catalogMismatch && (
+        <p className="mt-3 max-w-3xl rounded-lg border-l-4 border-corail bg-white p-3 text-sm" role="alert">
+          {t('faces.steamReset')}
+        </p>
+      )}
 
       {offer && (
         <section className="card mt-6 max-w-6xl ring-2 ring-orange">
