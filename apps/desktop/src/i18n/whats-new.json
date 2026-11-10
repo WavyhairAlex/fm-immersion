@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.150",
+    "date": "2026-11-10",
+    "fr": [
+      "Avec la version finale de FM27, la lecture du jeu retrouve aussi les membres du staff (entraîneurs, recruteurs, kinés), plus seulement les joueurs."
+    ],
+    "en": [
+      "With the final release of FM27, reading the game now finds staff members again (coaches, scouts, physios), not only players."
+    ]
+  },
+  {
     "version": "0.1.149",
     "date": "2026-11-10",
     "fr": [

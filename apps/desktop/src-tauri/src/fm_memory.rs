@@ -357,9 +357,11 @@ mod off {
     pub const L_TEAM: u64 = 0x10;
     pub const L_END: u64 = 0x48;
 
-    /// `DATABASE` : table des personnes (`DATABASE_TABLE<PERSON>*`), vecteur par index à `+0x60`.
+    /// `DATABASE` : table des personnes (`DATABASE_TABLE<PERSON>*`), vecteur par index à `+0x60` jusqu'à la bêta,
+    /// à `+0x88` dans la version finale (vu en jeu le 10/11/2026 : `+0x60` n'y contient plus que des zéros).
     pub const DB_PERSONS: u64 = 0x68;
     pub const TABLE_BY_INDEX: u64 = 0x60;
+    pub const TABLE_BY_INDEX_1110: u64 = 0x88;
     /// Fonction (poste) d'un membre du staff : octet du contrat (slot 0x50 de la vtable des contrats).
     pub const C_JOB: u64 = 0x26;
 
@@ -1023,10 +1025,19 @@ impl<M: Mem> Ctx<'_, M> {
 }
 
 impl<M: Mem> Database<'_, M> {
-    /// Toutes les personnes de la base (`PERSON*`) : table `[DATABASE+0x68]`, vecteur par index à `+0x60`.
+    /// Toutes les personnes de la base (`PERSON*`) : table `[DATABASE+0x68]`, vecteur par index à `+0x60`
+    /// (bêta) ou `+0x88` (version finale). Le premier vecteur non vide l'emporte : les deux dispositions restent lues.
     fn persons(&self) -> Option<Vec<u64>> {
         let table = self.ctx.r.ptr(self.module_base + self.globals.database + off::DB_PERSONS)?;
-        pointer_vec(&self.ctx.r, table + off::TABLE_BY_INDEX, MAX_PERSONS)
+        let mut found = None;
+        for at in [off::TABLE_BY_INDEX, off::TABLE_BY_INDEX_1110] {
+            match pointer_vec(&self.ctx.r, table + at, MAX_PERSONS) {
+                Some(v) if !v.is_empty() => return Some(v),
+                Some(v) => found = found.or(Some(v)),
+                None => {}
+            }
+        }
+        found
     }
 
     /// Membres du staff acceptés par `keep`, jusqu'à `limit` (classe reconnue par son nom RTTI, mis en cache par vtable).
@@ -1781,6 +1792,21 @@ mod tests {
         // Sans manager humain : rien à lister pour « notre » club ; le staff libre est demandé à part.
         let c = club_staff(&mut db, true).unwrap();
         assert!(c.staff.is_empty() && c.free_agents.is_empty());
+    }
+
+    #[test]
+    fn table_des_personnes_de_la_version_finale() {
+        // Version finale : `+0x60` ne contient que des zéros, le vecteur par index est à `+0x88`.
+        let mut m = world();
+        let (table, list) = (0x3000_0000u64, 0x3000_1000u64);
+        m.put_u64(BASE + KNOWN.database + off::DB_PERSONS, table);
+        m.put(table, vec![0u8; 0x100]);
+        m.put_u64(table + off::TABLE_BY_INDEX_1110, list);
+        m.put_u64(table + off::TABLE_BY_INDEX_1110 + 8, list + 16);
+        m.put_u64(list, 0x2000_0288);
+        m.put_u64(list + 8, 0x2100_0100);
+        let db = Database::open(&m, BASE, KNOWN).unwrap();
+        assert_eq!(db.persons(), Some(vec![0x2000_0288, 0x2100_0100]));
     }
 
     #[test]
