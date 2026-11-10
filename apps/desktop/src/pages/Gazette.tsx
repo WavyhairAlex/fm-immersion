@@ -1,5 +1,22 @@
 import { AiLink } from '../components/AiSettingsCard';
-import { bigMatchNow, breakingNews, coachExits, recordKey, recordNews, gazetteIssues, seasonReviews, seasonSoFar, visibleOn, type BigMatch, type BreakingNews, type CoachExit, type ExitReason, type GazetteIssue, type RecordNews, type SeasonReview } from '@fm-immersion/module-fm';
+import {
+  bigMatchNow,
+  breakingNews,
+  coachExits,
+  recordKey,
+  recordNews,
+  gazetteIssues,
+  seasonReviews,
+  seasonSoFar,
+  visibleOn,
+  type BigMatch,
+  type BreakingNews,
+  type CoachExit,
+  type ExitReason,
+  type GazetteIssue,
+  type RecordNews,
+  type SeasonReview,
+} from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
 import { SeasonCard } from '../components/SeasonCard';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -12,7 +29,25 @@ import { useCareer } from '../lib/career';
 import { clubLook, rememberClubLooks } from '../lib/club-look';
 import { useHistory } from '../lib/fm-cache';
 import { getWebhook, isWebhook } from '../lib/discord';
-import { breakingFace, exitReason, loadCoachPhoto, markBigMatchSent, markBreakingSent, markFarewellSent, markGazetteSent, markRecordSent, markSeasonSent, sendBigMatch, sendBreaking, sendRecord, sendFarewell, sendGazette, sendSeason, setExitReason } from '../lib/gazette-auto';
+import {
+  breakingFace,
+  breakingPhoto,
+  exitReason,
+  loadCoachPhoto,
+  markBigMatchSent,
+  markBreakingSent,
+  markFarewellSent,
+  markGazetteSent,
+  markRecordSent,
+  markSeasonSent,
+  sendBigMatch,
+  sendBreaking,
+  sendRecord,
+  sendFarewell,
+  sendGazette,
+  sendSeason,
+  setExitReason,
+} from '../lib/gazette-auto';
 import { drawBigMatch } from '../lib/bigmatch-page';
 import { drawBreaking } from '../lib/breaking-page';
 import { drawFarewell } from '../lib/farewell-page';
@@ -22,6 +57,7 @@ import { articleText, editorialText, headlineText, paperName, storyText, weekLab
 import { drawPage } from '../lib/gazette-page';
 import { issuesWithPress, usePressHeld } from '../lib/press';
 import { recentForm } from '../lib/gazette-une';
+import { getPhotoMode, photosReady } from '../lib/photo-events';
 import { loadFace } from '../lib/player-face';
 import { drawSeason } from '../lib/season-une';
 
@@ -44,7 +80,12 @@ export function Gazette() {
   const season = reviews[0] ?? null;
   // Carte de fin de saison : saisons finies, et la saison en cours en aperçu tant qu'elle n'est pas finie.
   const cards = useMemo(() => {
-    const now = history.length ? seasonSoFar(history, history.reduce((a, e) => (e.gameDate > a ? e.gameDate : a), '')) : null;
+    const now = history.length
+      ? seasonSoFar(
+          history,
+          history.reduce((a, e) => (e.gameDate > a ? e.gameDate : a), ''),
+        )
+      : null;
     return now?.ongoing && now.played > 0 ? [now, ...reviews] : reviews;
   }, [history, reviews]);
   // Départs du coach (autre club, ou sans club d'après le plugin) : hors-série « Flash spécial ».
@@ -123,7 +164,11 @@ export function Gazette() {
                 <li key={x.weekStart}>
                   <button type="button" className={`chip w-full justify-between ${i === index ? 'chip-on' : ''}`} onClick={() => setIndex(i)}>
                     <span>{t('gazette.issue', { number: x.number })}</span>
-                    <span className="text-xs opacity-70">{new Intl.DateTimeFormat(i18n.resolvedLanguage, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${x.weekStart.slice(0, 10)}T00:00:00Z`))}</span>
+                    <span className="text-xs opacity-70">
+                      {new Intl.DateTimeFormat(i18n.resolvedLanguage, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(
+                        new Date(`${x.weekStart.slice(0, 10)}T00:00:00Z`),
+                      )}
+                    </span>
                   </button>
                 </li>
               ))}
@@ -170,7 +215,12 @@ export function Paper({ issue }: { issue: GazetteIssue }) {
       <section className="border-b border-canard/10 px-6 py-5">
         <div className="flex items-start gap-4">
           {(issue.headline.params.bestId ?? issue.headline.params.id) != null && (
-            <Face id={(issue.headline.params.bestId ?? issue.headline.params.id) as string | number} name={String(issue.headline.params.best ?? issue.headline.params.name ?? '')} size={64} className="mt-1 ring-2 ring-orange" />
+            <Face
+              id={(issue.headline.params.bestId ?? issue.headline.params.id) as string | number}
+              name={String(issue.headline.params.best ?? issue.headline.params.name ?? '')}
+              size={64}
+              className="mt-1 ring-2 ring-orange"
+            />
           )}
           {article && <p className="text-brun">{article}</p>}
         </div>
@@ -189,10 +239,17 @@ export function Paper({ issue }: { issue: GazetteIssue }) {
           const x = storyText(t, issue.club, s);
           return (
             <section key={i} className="flex gap-3">
-              {(s.params.id ?? s.params.bestId) != null && <Face id={(s.params.id ?? s.params.bestId) as string | number} name={String(s.params.name ?? s.params.best ?? '')} size={36} className="mt-0.5" />}
+              {(s.params.id ?? s.params.bestId) != null && (
+                <Face
+                  id={(s.params.id ?? s.params.bestId) as string | number}
+                  name={String(s.params.name ?? s.params.best ?? '')}
+                  size={36}
+                  className="mt-0.5"
+                />
+              )}
               <div>
-              <h3 className="font-sans text-sm font-extrabold">{x.title}</h3>
-              {x.body && <p className="mt-1 text-sm text-brun">{x.body}</p>}
+                <h3 className="font-sans text-sm font-extrabold">{x.title}</h3>
+                {x.body && <p className="mt-1 text-sm text-brun">{x.body}</p>}
               </div>
             </section>
           );
@@ -236,9 +293,25 @@ function UnePreview({ issues, index, figures, looks }: { issues: GazetteIssue[];
   const lang = i18n.resolvedLanguage;
   const issue = issues[index]!;
   const { data: url } = useQuery({
-    queryKey: ['gazette', 'une', issue.club, issue.weekStart, issue.date, lang, index, issues.length, figures?.end, figures?.played, looks, issue.written?.title, issue.written?.article],
+    queryKey: [
+      'gazette',
+      'une',
+      issue.club,
+      issue.weekStart,
+      issue.date,
+      lang,
+      index,
+      issues.length,
+      figures?.end,
+      figures?.played,
+      looks,
+      issue.written?.title,
+      issue.written?.article,
+    ],
     queryFn: async () =>
-      (await drawPage(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures, faceFor: loadFace })).toDataURL('image/png'),
+      (
+        await drawPage(t, issue, { form: recentForm(issues, index), lang, face: await loadFace(issue.headline.params.bestId), figures, faceFor: loadFace })
+      ).toDataURL('image/png'),
   });
   if (!url) return <div className="aspect-[8/5] w-full animate-pulse rounded-xl bg-canard/5" />;
   return <img src={url} alt={t('gazette.preview')} className="w-full rounded-xl shadow-sm ring-1 ring-canard/10" />;
@@ -334,7 +407,9 @@ function FarewellSection({ saveId, exits, looks }: { saveId: string; exits: Coac
   return (
     <section className="grid gap-6 xl:grid-cols-[1fr_16rem]">
       <div className="min-w-0">
-        <p className="text-xs font-bold uppercase tracking-wide text-corail">⚡ {t('farewell.flash')} · {t('farewell.special')}</p>
+        <p className="text-xs font-bold uppercase tracking-wide text-corail">
+          ⚡ {t('farewell.flash')} · {t('farewell.special')}
+        </p>
         {url ? (
           <img src={url} alt={t('farewell.special')} className="mt-3 w-full rounded-xl shadow-sm ring-1 ring-canard/10" />
         ) : (
@@ -391,13 +466,23 @@ function BreakingSection({ saveId, news, looks }: { saveId: string; news: Breaki
   const [at, setAt] = useState(0);
   useEffect(() => setAt(0), [saveId]);
   const n = news[Math.min(at, news.length - 1)]!;
+  const qc = useQueryClient();
+  // Photo de situation déjà faite pour cette dépêche (bibliothèque du moteur), ou null : l'image garde le portrait.
+  const photoKey = ['gazette', 'breaking-photo', saveId, n.kind, n.id, n.date] as const;
+  const { data: photo = null } = useQuery({ queryKey: photoKey, queryFn: () => breakingPhoto(saveId, n, false) });
+  const { data: engineReady = false } = useQuery({ queryKey: ['photos', 'ready'], queryFn: photosReady, staleTime: 60_000 });
+  const photoMode = getPhotoMode();
   const { data: url } = useQuery({
-    queryKey: ['gazette', 'breaking', saveId, n.kind, n.id, n.date, lang, looks],
-    queryFn: async () => (await drawBreaking(t, n, { lang, face: await breakingFace(saveId, n) })).toDataURL('image/png'),
+    queryKey: ['gazette', 'breaking', saveId, n.kind, n.id, n.date, lang, looks, !!photo],
+    queryFn: async () => (await drawBreaking(t, n, { lang, face: await breakingFace(saveId, n), photo })).toDataURL('image/png'),
+  });
+  const makePhoto = useMutation({
+    mutationFn: () => breakingPhoto(saveId, n, true),
+    onSuccess: (img) => qc.setQueryData(photoKey, img),
   });
   const send = useMutation({
     mutationFn: async () => {
-      await sendBreaking(t, n, lang, saveId);
+      await sendBreaking(t, n, lang, saveId, undefined, photo);
       markBreakingSent(saveId, n);
     },
   });
@@ -418,14 +503,23 @@ function BreakingSection({ saveId, news, looks }: { saveId: string; news: Breaki
           {news.map((x, i) => (
             <li key={`${x.kind}|${x.id}|${x.date}`}>
               <button type="button" className={`chip w-full justify-between ${i === at ? 'chip-on' : ''}`} onClick={() => setAt(i)}>
-                <span className="truncate">{t(`breaking.tag.${x.kind}`)} · {x.other ?? (x.name || t('breaking.coach'))}</span>
+                <span className="truncate">
+                  {t(`breaking.tag.${x.kind}`)} · {x.other ?? (x.name || t('breaking.coach'))}
+                </span>
                 <span className="text-xs opacity-70">{x.date.slice(5, 10)}</span>
               </button>
             </li>
           ))}
         </ul>
+        {photoMode !== 'off' && engineReady && !photo && (
+          <button type="button" className="btn-secondary mt-2 text-sm" disabled={makePhoto.isPending || send.isPending} onClick={() => makePhoto.mutate()}>
+            {t(makePhoto.isPending ? 'breaking.photoMaking' : 'breaking.photoMake')}
+          </button>
+        )}
+        {makePhoto.isSuccess && !photo && <p className="text-xs text-brun">{t('breaking.photoNone')}</p>}
+        {makePhoto.isError && <p className="text-xs font-bold text-corail">{String(makePhoto.error)}</p>}
         {isWebhook(getWebhook()) ? (
-          <button type="button" className="btn-primary mt-2 text-sm" disabled={send.isPending} onClick={() => send.mutate()}>
+          <button type="button" className="btn-primary mt-2 text-sm" disabled={send.isPending || makePhoto.isPending} onClick={() => send.mutate()}>
             {t('breaking.send')}
           </button>
         ) : (
@@ -517,7 +611,10 @@ function RecordSection({ saveId, news, looks }: { saveId: string; news: RecordNe
             {news.map((x, i) => (
               <li key={recordKey(x)}>
                 <button type="button" className={`chip w-full justify-between ${i === at ? 'chip-on' : ''}`} onClick={() => setAt(i)}>
-                  <span className="truncate">{t(`records.tag.${x.kind}`)}{x.kind === 'hatTrick' ? ` · ${x.name}` : ''}</span>
+                  <span className="truncate">
+                    {t(`records.tag.${x.kind}`)}
+                    {x.kind === 'hatTrick' ? ` · ${x.name}` : ''}
+                  </span>
                   <span className="text-xs opacity-70">{x.date.slice(5, 10)}</span>
                 </button>
               </li>

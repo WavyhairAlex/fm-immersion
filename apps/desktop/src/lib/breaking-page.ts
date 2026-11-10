@@ -26,10 +26,20 @@ export function breakingText(t: TFunction, n: BreakingNews, lang?: string) {
   // Avenir du coach : son nom (ou « le coach »), et le club qui le courtise.
   const coach = isCoachBreaking(n);
   const name = n.name || (coach ? t('breaking.coach') : '');
-  const vars = { club: n.club, name, other: n.other ?? t('breaking.otherClub'), days: n.days ?? '?', injury: n.injury?.trim() || t('breaking.injuryUnknown'), rank: n.rank, count: n.rank };
+  const vars = {
+    club: n.club,
+    name,
+    other: n.other ?? t('breaking.otherClub'),
+    days: n.days ?? '?',
+    injury: n.injury?.trim() || t('breaking.injuryUnknown'),
+    rank: n.rank,
+    count: n.rank,
+  };
   const parts = name.trim().split(/\s+/);
   const last = parts.length > 1 ? parts.slice(1).join(' ') : name;
-  const id = coach ? t('breaking.coachId', { club: n.club }) : [n.age != null ? t('breaking.age', { count: n.age }) : '', n.position ?? ''].filter(Boolean).join(' · ');
+  const id = coach
+    ? t('breaking.coachId', { club: n.club })
+    : [n.age != null ? t('breaking.age', { count: n.age }) : '', n.position ?? ''].filter(Boolean).join(' · ');
   return {
     tag: t(`breaking.tag.${n.kind}`),
     title: t(`breaking.title.${n.kind}`, vars),
@@ -49,7 +59,16 @@ export function breakingText(t: TFunction, n: BreakingNews, lang?: string) {
  * Cadre de gauche des dépêches : fond aux couleurs du club, trame de points qui grossit vers le bas et, s'il y en a
  * un, le visage du joueur posé en bas. Renvoie la couleur du fond, pour écrire dessus.
  */
-export function drawPanel(ctx: CanvasRenderingContext2D, club: ClubArt | null, PX: number, PY: number, PW: number, PH: number, face: CanvasImageSource | null): string {
+export function drawPanel(
+  ctx: CanvasRenderingContext2D,
+  club: ClubArt | null,
+  PX: number,
+  PY: number,
+  PW: number,
+  PH: number,
+  face: CanvasImageSource | null,
+  cover = false,
+): string {
   const bg = solid(club, C.ink);
   roundRect(ctx, PX, PY, PW, PH, 4, bg);
   ctx.save();
@@ -68,9 +87,15 @@ export function drawPanel(ctx: CanvasRenderingContext2D, club: ClubArt | null, P
   if (face) {
     const fw = Number((face as { width?: number }).width) || 1;
     const fh = Number((face as { height?: number }).height) || 1;
-    const side = Math.min(fw, fh);
-    const size = Math.min(PW, PH);
-    ctx.drawImage(face, (fw - side) / 2, 0, side, side, PX + (PW - size) / 2, PY + PH - size, size, size);
+    if (cover) {
+      // Photo de situation (paysage) : elle remplit le cadre, centrée (le sujet est au milieu de la scène).
+      const k = Math.max(PW / fw, PH / fh);
+      ctx.drawImage(face, PX + (PW - fw * k) / 2, PY + (PH - fh * k) / 2, fw * k, fh * k);
+    } else {
+      const side = Math.min(fw, fh);
+      const size = Math.min(PW, PH);
+      ctx.drawImage(face, (fw - side) / 2, 0, side, side, PX + (PW - size) / 2, PY + PH - size, size, size);
+    }
   }
   ctx.restore();
   return bg;
@@ -115,9 +140,19 @@ function richTitle(ctx: CanvasRenderingContext2D, text: string, hl: string, x: n
 /** Nombre de lignes du titre à cette taille. */
 const titleLines = (ctx: CanvasRenderingContext2D, text: string, width: number) => wrap(ctx, text, width).length;
 
-export async function drawBreaking(t: TFunction, n: BreakingNews, opts: { lang?: string; face?: CanvasImageSource | null } = {}): Promise<HTMLCanvasElement> {
+/**
+ * `face` : portrait du joueur ou photo du coach (carré, en bas du panneau). `photo` : photo de situation (paysage,
+ * faite sur le PC du joueur) : le panneau s'élargit et la photo le remplit ; elle remplace le portrait.
+ */
+export async function drawBreaking(
+  t: TFunction,
+  n: BreakingNews,
+  opts: { lang?: string; face?: CanvasImageSource | null; photo?: CanvasImageSource | null } = {},
+): Promise<HTMLCanvasElement> {
   const { lang } = opts;
-  await Promise.all([font(900, 72, SERIF), `italic ${font(400, 22, SERIF)}`, font(800, 22), font(900, 26)].map((f) => document.fonts.load(f).catch(() => undefined)));
+  await Promise.all(
+    [font(900, 72, SERIF), `italic ${font(400, 22, SERIF)}`, font(800, 22), font(900, 26)].map((f) => document.fonts.load(f).catch(() => undefined)),
+  );
   const club = await clubArt(n.club);
   const caps = (s: string) => s.toLocaleUpperCase(lang);
   const tx = breakingText(t, n, lang);
@@ -150,14 +185,19 @@ export async function drawBreaking(t: TFunction, n: BreakingNews, opts: { lang?:
   ctx.globalAlpha = 1;
   ctx.textAlign = 'left';
 
-  // Portrait sur toute la hauteur, à gauche.
+  // Portrait sur toute la hauteur, à gauche ; plus large quand c'est une photo de situation.
   const PX = 36;
   const PY = BAND + 28;
-  const PW = 430;
+  const PW = opts.photo ? 620 : 430;
   const PH = H - PY - 36;
-  const bg = drawPanel(ctx, club, PX, PY, PW, PH, opts.face ?? null);
-  if (!opts.face) {
-    const initials = tx.name.split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join('');
+  const bg = drawPanel(ctx, club, PX, PY, PW, PH, opts.photo ?? opts.face ?? null, !!opts.photo);
+  if (!opts.face && !opts.photo) {
+    const initials = tx.name
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join('');
     ctx.font = font(900, 170, SERIF);
     ctx.fillStyle = inkOn(bg);
     ctx.globalAlpha = 0.85;

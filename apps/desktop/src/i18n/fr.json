@@ -3844,7 +3844,19 @@
       "scorer": "L. Martin"
     },
     "breakingEnable": "Envoyer les dépêches automatiquement",
-    "breakingShort": "Recrue, départ d'un titulaire, blessure longue, entretien ou offre d'un autre club pour ton coach, affiche des grands matchs, exploits (triplé, série, large victoire) : l'image part dans le salon le jour où le plugin la voit."
+    "breakingShort": "Recrue, départ d'un titulaire, blessure longue, entretien ou offre d'un autre club pour ton coach, affiche des grands matchs, exploits (triplé, série, large victoire) : l'image part dans le salon le jour où le plugin la voit.",
+    "photosTitle": "Photos de situation dans les dépêches",
+    "photosShort": "Une photo du joueur ou du coach dans la scène du jour (civière, signature, conférence de presse…), faite sur ton PC par le moteur d'images, à la place du portrait.",
+    "photos": {
+      "off": "Jamais",
+      "manual": "Sur mon clic",
+      "auto": "Automatique"
+    },
+    "photosHelp": {
+      "off": "Les dépêches gardent le portrait.",
+      "manual": "Dans « Gazette et Discord », un bouton fait la photo avant l'envoi ; l'envoi automatique part avec le portrait. Il faut le moteur d'images installé :",
+      "auto": "L'envoi automatique fait la photo lui-même (deux à quatre minutes sur la carte graphique) ; portrait si elle échoue. Il faut le moteur d'images installé :"
+    }
   },
   "live": {
     "title": "Match en direct",
@@ -4669,7 +4681,10 @@
     "highlight": "{{days}} jours",
     "coach": "Le coach",
     "otherClub": "un autre club",
-    "coachId": "Entraîneur de {{club}}"
+    "coachId": "Entraîneur de {{club}}",
+    "photoMake": "Faire la photo de situation",
+    "photoMaking": "Photo en cours (deux à quatre minutes)…",
+    "photoNone": "Pas de photo possible pour cette dépêche (visage introuvable ou moteur occupé) : l'image garde le portrait."
   },
   "saveFiles": {
     "title": "Mes sauvegardes",

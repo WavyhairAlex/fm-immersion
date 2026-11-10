@@ -81,6 +81,7 @@ pub fn run() {
             photos_pipeline::photos_scenes,
             photos_pipeline::photos_generate,
             photos_pipeline::photos_library,
+            photos_pipeline::photos_library_find,
             photos_pipeline::photos_library_read,
             photos_pipeline::photos_library_delete,
             ai::ai_key_set,

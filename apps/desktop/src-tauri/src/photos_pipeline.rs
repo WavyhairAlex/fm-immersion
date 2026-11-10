@@ -50,6 +50,9 @@ pub struct GenerateRequest {
     pub candidates: Option<u8>,
     #[serde(default)]
     pub seed: Option<u64>,
+    /// Clé de l'événement (dépêche, exploit…) : la photo est retrouvée dans la bibliothèque sans être refaite.
+    #[serde(default)]
+    pub tag: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -69,6 +72,8 @@ pub struct CandidateReport {
 #[serde(rename_all = "camelCase")]
 pub struct Outcome {
     pub scene: String,
+    #[serde(default)]
+    pub tag: Option<String>,
     /// Chemin absolu de l'image finale.
     pub file: String,
     pub created_at: String,
@@ -421,6 +426,7 @@ pub fn generate(photos_dir: &Path, req: &GenerateRequest, emit: &dyn Fn(&'static
     std::fs::copy(&final_file, &dest)?;
     let outcome = Outcome {
         scene: scene.key.into(),
+        tag: req.tag.clone(),
         file: dest.to_string_lossy().into_owned(),
         created_at: iso_now(),
         seed,
@@ -479,6 +485,11 @@ pub fn library(photos_dir: &Path) -> Vec<Outcome> {
     out
 }
 
+/// La photo déjà faite pour cet événement, s'il y en a une (la plus récente).
+pub fn library_find(photos_dir: &Path, tag: &str) -> Option<Outcome> {
+    library(photos_dir).into_iter().find(|o| o.tag.as_deref() == Some(tag))
+}
+
 /// Vrai si `file` est bien une image de `library/` (pas d'autre fichier lisible par ce chemin).
 pub fn in_library(photos_dir: &Path, file: &Path) -> bool {
     let Ok(lib) = photos_dir.join(LIBRARY_SUBDIR).canonicalize() else { return false };
@@ -513,6 +524,11 @@ pub async fn photos_generate(app: tauri::AppHandle, request: GenerateRequest) ->
 #[tauri::command]
 pub async fn photos_library(app: tauri::AppHandle) -> Result<Vec<Outcome>, PhotosError> {
     Ok(library(&photos_dir(&app)?))
+}
+
+#[tauri::command]
+pub async fn photos_library_find(app: tauri::AppHandle, tag: String) -> Result<Option<Outcome>, PhotosError> {
+    Ok(library_find(&photos_dir(&app)?, &tag))
 }
 
 /// Octets PNG d'une image de la bibliothèque.
@@ -588,6 +604,7 @@ mod tests {
         std::fs::write(&img, b"png").unwrap();
         let o = Outcome {
             scene: "banc".into(),
+            tag: Some("ev1".into()),
             file: img.to_string_lossy().into_owned(),
             created_at: "2026-11-09T20:00:00Z".into(),
             seed: 1,
@@ -608,6 +625,8 @@ mod tests {
         let l = library(&dir);
         assert_eq!(l.len(), 1);
         assert_eq!(l[0], o);
+        assert_eq!(library_find(&dir, "ev1").as_ref(), Some(&o));
+        assert!(library_find(&dir, "autre").is_none());
         assert!(scene_infos().iter().any(|s| s.key == "duo_presse" && s.faces == 2));
         std::fs::remove_dir_all(&dir).ok();
     }

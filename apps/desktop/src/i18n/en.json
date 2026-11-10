@@ -3844,7 +3844,19 @@
       "scorer": "L. Martin"
     },
     "breakingEnable": "Send breaking news automatically",
-    "breakingShort": "New signing, departure of a starter, long injury, interview or offer from another club for your manager, big match poster, feats (hat-trick, winning run, big win): the card goes to the channel on the day the plugin sees it."
+    "breakingShort": "New signing, departure of a starter, long injury, interview or offer from another club for your manager, big match poster, feats (hat-trick, winning run, big win): the card goes to the channel on the day the plugin sees it.",
+    "photosTitle": "Situation photos in breaking news",
+    "photosShort": "A photo of the player or coach in the day's scene (stretcher, signing, press conference…), made on your PC by the image engine, instead of the portrait.",
+    "photos": {
+      "off": "Never",
+      "manual": "On my click",
+      "auto": "Automatic"
+    },
+    "photosHelp": {
+      "off": "Breaking news keep the portrait.",
+      "manual": "In “Gazette and Discord”, a button makes the photo before sending; automatic sending goes out with the portrait. The image engine must be installed:",
+      "auto": "Automatic sending makes the photo itself (two to four minutes on the graphics card); portrait if it fails. The image engine must be installed:"
+    }
   },
   "live": {
     "title": "Live match",
@@ -4669,7 +4681,10 @@
     "highlight": "{{days}} days",
     "coach": "The manager",
     "otherClub": "another club",
-    "coachId": "{{club}} manager"
+    "coachId": "{{club}} manager",
+    "photoMake": "Make the situation photo",
+    "photoMaking": "Photo in progress (two to four minutes)…",
+    "photoNone": "No photo possible for this news (face not found or engine busy): the image keeps the portrait."
   },
   "saveFiles": {
     "title": "My saves",

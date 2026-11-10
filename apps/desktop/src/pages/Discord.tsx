@@ -6,10 +6,20 @@ import { AiLink } from '../components/AiSettingsCard';
 import { DiscordEmbed } from '../components/DiscordEmbed';
 import { aiFor } from '../lib/ai';
 import { getLiveEnabled, getWebhook, isWebhook, sendDiscord, setLiveEnabled, setWebhook } from '../lib/discord';
-import { autoLastCheck, autoLastError, autoLastSent, checkGazetteNow, getBreakingAuto, getGazetteAuto, setBreakingAuto, setGazetteAuto } from '../lib/gazette-auto';
+import {
+  autoLastCheck,
+  autoLastError,
+  autoLastSent,
+  checkGazetteNow,
+  getBreakingAuto,
+  getGazetteAuto,
+  setBreakingAuto,
+  setGazetteAuto,
+} from '../lib/gazette-auto';
 import { useCareer } from '../lib/career';
 import { fmData } from '../lib/data';
 import { livePreviewPayload } from '../lib/live-discord';
+import { getPhotoMode, setPhotoMode, type PhotoMode } from '../lib/photo-events';
 
 /**
  * Live Discord (solo) : en haut, ce qui est branché en une phrase (direct, gazette automatique, IA) ;
@@ -25,14 +35,12 @@ export function Discord() {
   const [live, setLive] = useState(getLiveEnabled());
   const [auto, setAuto] = useState(getGazetteAuto());
   const [breaking, setBreaking] = useState(getBreakingAuto());
+  const [photoMode, setMode] = useState<PhotoMode>(getPhotoMode());
   const ai = aiFor('gazette') ?? aiFor('live');
   // Exemple d'encart du direct, au nom du club de la carrière suivie quand on le connaît.
   const { saveId } = useCareer();
   const { data: snapshot } = useQuery({ queryKey: ['fm', saveId, 'latest'], queryFn: () => fmData.latest(saveId), enabled: !!saveId });
-  const preview = useMemo(
-    () => livePreviewPayload(t, snapshot?.club || t('discord.preview.club'), t('discord.preview.opponent')),
-    [t, snapshot?.club],
-  );
+  const preview = useMemo(() => livePreviewPayload(t, snapshot?.club || t('discord.preview.club'), t('discord.preview.opponent')), [t, snapshot?.club]);
 
   const test = useMutation({
     mutationFn: () => sendDiscord({ username: 'FM Immersion', content: t('discord.testMessage') }, url),
@@ -43,7 +51,10 @@ export function Discord() {
       <p className="text-brun">{t('discord.intro')}</p>
 
       {/* État du salon en une phrase : ce qui part vraiment, et vers où. */}
-      <section className={`mt-5 rounded-xl border px-4 py-3 ${saved ? 'border-eau-soutenu bg-eau/15' : 'border-canard/10 bg-white'}`} aria-label={t('discord.status.title')}>
+      <section
+        className={`mt-5 rounded-xl border px-4 py-3 ${saved ? 'border-eau-soutenu bg-eau/15' : 'border-canard/10 bg-white'}`}
+        aria-label={t('discord.status.title')}
+      >
         <p className="text-xs font-bold uppercase tracking-wide text-brun">{t('discord.status.title')}</p>
         <p className={`mt-1 font-extrabold ${saved ? 'text-eau-fonce' : 'text-canard/70'}`}>
           {saved
@@ -166,6 +177,32 @@ export function Discord() {
               setBreaking(v);
             }}
           />
+          <div className="py-3">
+            <p className="text-sm font-bold">{t('discord.photosTitle')}</p>
+            <p className="text-sm text-brun">{t('discord.photosShort')}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {(['off', 'manual', 'auto'] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  className={`chip ${photoMode === m ? 'chip-on' : ''}`}
+                  disabled={!saved}
+                  onClick={() => {
+                    setPhotoMode(m);
+                    setMode(m);
+                  }}
+                >
+                  {t(`discord.photos.${m}`)}
+                </button>
+              ))}
+            </div>
+            <p className="mt-1 text-xs text-brun">
+              {t(`discord.photosHelp.${photoMode}`)}{' '}
+              <Link to="/photos" className="font-bold text-orange-fonce hover:underline">
+                {t('layout.nav.photos')}
+              </Link>
+            </p>
+          </div>
           <div className="flex flex-wrap items-center justify-between gap-3 py-3">
             <div>
               <p className="text-sm font-bold">{t('discord.manualTitle')}</p>
@@ -194,14 +231,17 @@ function AutoState() {
     return () => window.clearInterval(id);
   }, []);
   const when = (iso: string) => new Date(iso).toLocaleString(i18n.resolvedLanguage, { dateStyle: 'short', timeStyle: 'short' });
-  const day = (iso?: string | null) => (iso ? new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString(i18n.resolvedLanguage, { day: 'numeric', month: 'short', year: 'numeric' }) : '?');
+  const day = (iso?: string | null) =>
+    iso ? new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString(i18n.resolvedLanguage, { day: 'numeric', month: 'short', year: 'numeric' }) : '?';
   const sent = autoLastSent();
   const error = autoLastError();
   const check = autoLastCheck();
   const showError = error && (!sent || error.at > sent.at);
   return (
     <>
-      <p className="mt-1 text-sm text-brun">{sent ? t('discord.status.lastSent', { number: sent.number, date: when(sent.at) }) : t('discord.status.noneSent')}</p>
+      <p className="mt-1 text-sm text-brun">
+        {sent ? t('discord.status.lastSent', { number: sent.number, date: when(sent.at) }) : t('discord.status.noneSent')}
+      </p>
       {check && (
         <p className="mt-1 text-sm text-brun">
           {t('discord.status.checkAt', { time: when(check.at) })}{' '}
@@ -245,7 +285,13 @@ function Toggle({ on, disabled, title, help, onChange }: { on: boolean; disabled
         <span className="block text-sm font-bold">{title}</span>
         <span className="block text-sm text-brun">{help}</span>
       </span>
-      <input type="checkbox" className="mt-1 h-5 w-5 shrink-0 accent-orange-fonce" checked={on && !disabled} disabled={disabled} onChange={(e) => onChange(e.target.checked)} />
+      <input
+        type="checkbox"
+        className="mt-1 h-5 w-5 shrink-0 accent-orange-fonce"
+        checked={on && !disabled}
+        disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)}
+      />
     </label>
   );
 }
