@@ -2603,7 +2603,6 @@
         "motm": "Homme du match : {{name}} ({{rating}})"
       },
       "q": {
-        "label": "Les trois questions des résultats",
         "what": "Que s'est-il passé ?",
         "repeat": "Qu'est-ce qui se répète ?",
         "adjust": "Que puis-je ajuster ?",
@@ -2785,7 +2784,8 @@
       "youth_one": "Piocher en interne : {{count}} jeune vaut le coup, et la compo appelle la réserve ou les U19 dès qu'un poste manque.",
       "youth_other": "Piocher en interne : {{count}} jeunes valent le coup, et la compo appelle la réserve ou les U19 dès qu'un poste manque.",
       "noRaise": "Pas d'augmentation : prolonge au même salaire ou pas du tout, le budget salarial est déjà dépassé.",
-      "overBudget": "hors budget"
+      "overBudget": "hors budget",
+      "more": "ce que ça change"
     },
     "leave": {
       "title_one": "Départs annoncés · {{count}}",
@@ -3227,7 +3227,8 @@
       "savedHelp": "Chaque changement est enregistré sur ce PC, pour cette partie. Retrouve la tactique par son nom dans la liste."
     },
     "secondary": {
-      "numbers": "Attribuer les numéros de maillot"
+      "numbers": "Numéros de maillot",
+      "loans": "Joueurs prêtés"
     }
   },
   "modes": {
@@ -4660,7 +4661,9 @@
         "squad": "Le groupe va bien cette semaine : pas de joueur à recadrer ni à rassurer.",
         "results": "Rien d'inquiétant dans les résultats : continue comme ça.",
         "mercato": "Pas de décision de mercato ni de finances à prendre cette semaine."
-      }
+      },
+      "todo_one": "À faire ici",
+      "todo_other": "À faire ici ({{count}})"
     },
     "state": {
       "open": "FM27 ouvert",

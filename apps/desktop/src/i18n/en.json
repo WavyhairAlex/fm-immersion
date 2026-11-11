@@ -2603,7 +2603,6 @@
         "motm": "Player of the match: {{name}} ({{rating}})"
       },
       "q": {
-        "label": "The three results questions",
         "what": "What happened?",
         "repeat": "What keeps happening?",
         "adjust": "What can I adjust?",
@@ -2785,7 +2784,8 @@
       "youth_one": "Look inside first: {{count}} youngster is worth it, and the line-up calls on the reserves or U19s whenever a position is short.",
       "youth_other": "Look inside first: {{count}} youngsters are worth it, and the line-up calls on the reserves or U19s whenever a position is short.",
       "noRaise": "No pay rises: extend on the same wage or not at all, the wage budget is already exceeded.",
-      "overBudget": "over budget"
+      "overBudget": "over budget",
+      "more": "what it changes"
     },
     "leave": {
       "title_one": "Announced departures · {{count}}",
@@ -3227,7 +3227,8 @@
       "savedHelp": "Every change is saved on this PC, for this save. Find the tactic by its name in the list."
     },
     "secondary": {
-      "numbers": "Assign shirt numbers"
+      "numbers": "Shirt numbers",
+      "loans": "Players out on loan"
     }
   },
   "modes": {
@@ -4660,7 +4661,9 @@
         "squad": "The squad is fine this week: nobody to calm down or reassure.",
         "results": "Nothing worrying in the results: keep it up.",
         "mercato": "No transfer or finance decision to make this week."
-      }
+      },
+      "todo_one": "To do here",
+      "todo_other": "To do here ({{count}})"
     },
     "state": {
       "open": "FM27 open",

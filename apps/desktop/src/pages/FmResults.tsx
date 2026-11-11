@@ -69,18 +69,8 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
     const to = MOVE_VIEW[i.kind];
     return to ? [{ i, to }] : [];
   });
-  const q = (id: string, key: string) => (
-    <a href={`#${id}`} onClick={(e) => { e.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="card flex-1 p-3 text-sm font-bold hover:ring-orange/40">
-      {t(`fm.results.q.${key}`)} <span className="text-orange-fonce">↓</span>
-    </a>
-  );
   return (
     <div className="space-y-4">
-      <nav className="flex flex-col gap-2 sm:flex-row" aria-label={t('fm.results.q.label')}>
-        {q('res-what', 'what')}
-        {q('res-repeat', 'repeat')}
-        {q('res-adjust', 'adjust')}
-      </nav>
       <h2 id="res-what" className="scroll-mt-28 text-xl font-semibold">{t('fm.results.q.what')}</h2>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         <Kpi label={t('fm.results.kpi.matches')} value={rec.matches} sub={t('fm.results.kpi.matchesSub')} />
