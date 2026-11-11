@@ -182,12 +182,12 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
   const needs = useMemo(() => recruitmentNeeds(engine, players, gameDate, coach, history, leavingIds, loanIds), [engine, players, gameDate, coach, history, leavingIds, loanIds]);
   const [replacing, setReplacing] = useState<string | null>(null);
   // Finances serrées : le mercato commence par les départs ; les recrues se cherchent libres ou en prêt.
+  const fin = useMemo(() => (snap ? clubFinances(snap, players) : null), [snap, players]);
   const tight = useMemo(() => {
-    if (!snap) return null;
-    const fin = clubFinances(snap, players);
+    if (!fin) return null;
     const st = financeState(fin);
     return st.tight ? { fin, signals: st.signals } : null;
-  }, [snap, players]);
+  }, [fin]);
   if (!r) return <Empty>{t('fm.tac.noAttributes')}</Empty>;
   const style = engine.ref.styles.find((s) => s.id === r.projectStyle);
 
@@ -233,6 +233,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
                 leaving={p}
                 squad={own.filter((x) => !leavingIds.has(x.id))}
                 autoSearch={justMarked === p.id}
+                finances={fin}
               />
             </div>
           ))}
@@ -253,7 +254,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
       })()}
       <More>{t('fm.merc.help', { form: r.nowForm ?? '–', style: names.style(style), projectForm: r.projectForm ?? '–' })}</More>
 
-      {needs && <NeedsPanel needs={needs.needs} saveId={saveId} gameDate={gameDate} engine={engine} project={pr} squad={own.filter((x) => !leavingIds.has(x.id))} />}
+      {needs && <NeedsPanel needs={needs.needs} saveId={saveId} gameDate={gameDate} engine={engine} project={pr} squad={own.filter((x) => !leavingIds.has(x.id))} finances={fin} />}
 
       <Panel title={t('fm.merc.youth', { count: r.youth.length })}>
         {r.youth.length ? r.youth.map((a) => <AdviceLine key={a.player.id} a={a} tag={<Tag tone={TONE[a.verdict]}>{t(`fm.merc.verdict.${a.verdict}`)}</Tag>} />) : <Empty>{t('fm.merc.noYouth')}</Empty>}
@@ -284,7 +285,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
                   }
                   after={
                     replacing === a.player.id && (
-                      <ReplacementFinder saveId={saveId} gameDate={gameDate} engine={engine} project={pr} leaving={a.player} squad={own} onClose={() => setReplacing(null)} />
+                      <ReplacementFinder saveId={saveId} gameDate={gameDate} engine={engine} project={pr} leaving={a.player} squad={own} onClose={() => setReplacing(null)} finances={fin} />
                     )
                   }
                 />

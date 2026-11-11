@@ -343,6 +343,8 @@ export interface DbPlayer {
   wageWeekly: number | null;
   contractEnd: string | null;
   valueRaw: number | null;
+  /** Réputation à domicile, actuelle et mondiale (échelle du jeu) ; 0 ou moins = non lue. */
+  reputation?: [number, number, number];
   transferListed?: boolean;
   injured?: boolean;
 }
