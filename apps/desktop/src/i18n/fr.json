@@ -236,7 +236,7 @@
       "offPos": "hors poste naturel (accompli)",
       "fromTeam": "de {{team}}",
       "nobody": "Personne",
-      "pitchHelp": "Onze choisi par adéquation aux rôles du style, blessés exclus. Les pointillés montrent le déplacement depuis l'autre phase ; survole un joueur pour le retrouver dans la liste.",
+      "pitchHelp": "Onze choisi par adéquation aux rôles du style, blessés exclus. Survole un joueur : un trait ambre montre d'où il part dans l'autre phase, et sa ligne s'allume dans la liste.",
       "balance": "Équilibre de l'équipe",
       "balanceHelp": "Vitesse, pressing et jeu aérien sont comparés au niveau moyen de ton onze : vert = point fort, rouge = point faible. Chaque point faible baisse la note d'équipe, qui choisit le schéma et le style : le calcul juge le onze dans son ensemble, pas seulement poste par poste.",
       "forms": "Schémas pour ce style",
@@ -303,7 +303,7 @@
       "fromGame": "Compo du jeu",
       "fromGameHelp": "Joueurs et postes lus dans ta tactique FM27. Rôles et consignes : ceux du jeu quand le plugin les lit, sinon le meilleur rôle de chaque joueur à son poste.",
       "suggestedHelpGame": "Placement calculé par FM Immersion selon le style choisi. « Ma tactique FM27 » affiche ta vraie compo.",
-      "pitchHelpGame": "Ta compo FM27. Les pointillés montrent le déplacement depuis l'autre phase ; survole un joueur pour le retrouver dans la liste. Clique un schéma plus bas pour comparer avec un onze calculé par FM Immersion.",
+      "pitchHelpGame": "Ta compo FM27. Survole un joueur : un trait ambre montre d'où il part dans l'autre phase, et sa ligne s'allume dans la liste. Clique un schéma plus bas pour comparer avec un onze calculé par FM Immersion.",
       "lineupStatus": "Lecture de la compo par le plugin : {{status}}.",
       "duty": {
         "d": "Défense",
@@ -449,7 +449,12 @@
         "player": "Joueur",
         "backup": "Doublure",
         "role": "Rôle",
-        "backupOf": "Doublure : {{name}}"
+        "backupOf": "Doublure : {{name}}",
+        "phaseLabel": "Phase de jeu montrée",
+        "phaseHelp": {
+          "ip": "Où chacun se place quand ton équipe a le ballon. L'étiquette reste le poste à régler dans FM27.",
+          "oop": "Où chacun se place quand l'adversaire a le ballon. L'étiquette reste le poste à régler dans FM27."
+        }
       },
       "matchTitle": "Tactique du match contre {{name}}",
       "matchSame": "Ta tactique de base, {{form}} {{style}}, reste la meilleure contre cet adversaire.",

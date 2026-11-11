@@ -1,6 +1,7 @@
 import {
   FORMATIONS,
   POS_LABEL,
+  lineOf,
   STYLE_FORMS,
   TacticEngine,
   bestTactic,
@@ -30,6 +31,7 @@ import {
   type FmSnapshot,
   type GameSlot,
   type Phase,
+  type PosCode,
   type TacticReference,
 } from '@fm-immersion/module-fm';
 import { useQuery } from '@tanstack/react-query';
@@ -38,7 +40,7 @@ import { gameInstructions, gamePlayerInstructions, instructionLoad, lineupAdvice
 import { GamePiLine, LineupAdviceCard, MatchReviewCard, PiState, TeamAdviceBlock, TodoCard } from './FmTacticAdvice';
 import { createContext, useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PosBadge } from './FmFoot';
+import { LINE_COLOR, Pitch, PosBadge } from './FmFoot';
 import { readBuiltTactics } from './FmBuilder';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach, SectionStack } from './FmUi';
@@ -215,8 +217,13 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   const field = plan.slots.filter((s) => s.pos !== 'GB');
   const shape = (ph: Phase) => shapeOf(field.map((s) => phaseXY(s, ph, block)));
   // Écarts minimum entre deux joueurs (en % du terrain) à la taille des pastilles, gardées dans le terrain.
-  const shown = spreadXY(plan.slots.map((s) => phaseXY(s, phase, block)), 23, 14).map(([x, y]) => [Math.min(88, Math.max(12, x)), Math.min(91, Math.max(7, y))] as [number, number]);
+  const shown = spreadXY(plan.slots.map((s) => phaseXY(s, phase, block)), 27, 11).map(([x, y]) => [Math.min(86, Math.max(14, x)), Math.min(93, Math.max(6, y))] as [number, number]);
   const other: Phase = phase === 'ip' ? 'oop' : 'ip';
+  // Lignes du tableau rangées comme on lit un terrain : gardien, défense, milieu, attaque ; de gauche à droite dans chaque ligne.
+  const ROW_ORDER: readonly PosCode[] = ['GB', 'DLG', 'DG', 'DC', 'DD', 'DLD', 'MDF', 'MG', 'MC', 'MD', 'MOG', 'MOC', 'MOD', 'BT'];
+  const rows = plan.slots
+    .map((_, i) => i)
+    .sort((a, b) => ROW_ORDER.indexOf(plan.slots[a]!.pos) - ROW_ORDER.indexOf(plan.slots[b]!.pos) || plan.slots[a]!.x - plan.slots[b]!.x);
 
   return (
     <div className="space-y-4">
@@ -342,30 +349,45 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   </p>
                   {!gamePlan && lineupStatus && lineupStatus !== 'lue' && <p className="mt-1 text-xs text-brun">{t('fm.tac.lineupStatus', { status: lineupStatus })}</p>}
 
-                <div className="mt-4 grid gap-6 xl:grid-cols-[minmax(18rem,26rem)_minmax(0,1fr)]">
+                {/* La phase montrée sur le terrain, choisie en tête avec une phrase qui dit ce qu'on regarde. */}
+                <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <div className="inline-flex rounded-xl bg-creme p-1" role="tablist" aria-label={t('fm.tac.xi.phaseLabel')}>
+                    {(['ip', 'oop'] as const).map((ph) => (
+                      <button
+                        key={ph}
+                        type="button"
+                        role="tab"
+                        aria-selected={phase === ph}
+                        onClick={() => update({ phase: ph })}
+                        className={`rounded-lg px-4 py-2 text-base font-bold transition ${phase === ph ? 'bg-canard text-white shadow' : 'text-canard hover:bg-white'}`}
+                      >
+                        {t(`fm.tac.phase.${ph}`)} <span className="ml-1 font-normal opacity-75">{shape(ph)}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="min-w-[14rem] flex-1 text-sm text-brun">{t(`fm.tac.xi.phaseHelp.${phase}`)}</p>
+                </div>
+
+                <div className="mt-4 grid items-start gap-8 xl:grid-cols-[minmax(20rem,27rem)_minmax(0,1fr)]">
+                  {/* Terrain : une pastille par joueur, poste à la couleur de sa ligne et nom. */}
                   <div>
-                    <div className="relative mx-auto aspect-[3/4] w-full max-w-[26rem] overflow-hidden rounded-2xl bg-eau-fonce/90">
-                      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden>
-                        <g fill="none" stroke="white" strokeOpacity="0.35" strokeWidth="0.4">
-                          <rect x="3" y="2" width="94" height="96" />
-                          <line x1="3" y1="50" x2="97" y2="50" />
-                          <circle cx="50" cy="50" r="9" />
-                          <rect x="25" y="2" width="50" height="15" />
-                          <rect x="25" y="83" width="50" height="15" />
-                        </g>
-                        <g stroke="white" strokeOpacity="0.6" strokeWidth="0.35" strokeDasharray="1 1">
-                          {plan.slots.map((sl, i) => {
-                            const [x1, y1] = phaseXY(sl, other, block);
-                            const [x2, y2] = shown[i] ?? [x1, y1];
-                            return Math.hypot(x1 - x2, y1 - y2) > 2 ? <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} /> : null;
-                          })}
-                        </g>
-                      </svg>
+                    <Pitch className="mx-auto w-full max-w-[27rem]">
+                      {/* Au survol seulement : d'où part le joueur dans l'autre phase. */}
+                      {hover != null && plan.slots[hover] && (() => {
+                        const [x1, y1] = phaseXY(plan.slots[hover]!, other, block);
+                        const [x2, y2] = shown[hover] ?? [x1, y1];
+                        return Math.hypot(x1 - x2, y1 - y2) > 2 ? (
+                          <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>
+                            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#FFB547" strokeWidth="0.6" strokeDasharray="1.5 1" />
+                            <ellipse cx={x1} cy={y1} rx="1.6" ry="1.1" fill="none" stroke="#FFB547" strokeWidth="0.5" />
+                          </svg>
+                        ) : null;
+                      })()}
                       {plan.slots.map((sl, i) => {
                         const [x, y] = shown[i] ?? [sl.x, sl.y];
                         const code = phase === 'ip' ? sl.ip : sl.oop;
-                        const fit = sl.player ? engine.roleFit(sl.player, code, phase, sl.pos) : null;
                         const off = !!sl.player && !sl.player.positions.includes(sl.pos);
+                        const c = LINE_COLOR[lineOf(sl.pos)];
                         return (
                           <button
                             key={i}
@@ -375,37 +397,25 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                             onMouseLeave={() => setHover(null)}
                             onFocus={() => setHover(i)}
                             onBlur={() => setHover(null)}
-                            className="absolute flex w-[23%] -translate-x-1/2 -translate-y-1/2 flex-col items-center transition-all duration-500"
+                            className={`absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5 transition-all duration-500 ${hover === i ? 'z-10 scale-110' : ''}`}
                             style={{ left: `${x}%`, top: `${y}%` }}
                           >
+                            {/* Le poste FM27 du créneau : le rôle déplace la pastille sur le terrain, jamais le poste. */}
                             <span
-                              className={`whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-xs font-bold text-canard shadow ring-2 ${hover === i ? 'ring-ambre' : off ? 'ring-corail' : 'ring-white/0'}`}
+                              className={`whitespace-nowrap rounded-md px-2 py-1 text-xs font-bold leading-none shadow ring-2 ${c.bg} ${c.text} ${hover === i ? 'ring-white' : off ? 'ring-corail' : 'ring-white/40'}`}
                             >
-                              {/* Le poste FM27 du créneau : le rôle déplace la pastille sur le terrain, jamais le poste. */}
                               {POS_LABEL[sl.pos]}
                             </span>
-                            <span className="mt-0.5 max-w-full truncate rounded bg-canard/85 px-1.5 text-xs font-bold text-white">{sl.player ? shortName(sl.player.name) : t('fm.tac.nobody')}</span>
-                            {fit != null && <span className="text-xs font-bold text-white/90">{note(fit)}</span>}
+                            <span className="max-w-[8rem] truncate rounded-md bg-white px-2 py-0.5 text-sm font-bold text-canard shadow">
+                              {sl.player ? shortName(sl.player.name) : t('fm.tac.nobody')}
+                            </span>
                           </button>
                         );
                       })}
-                    </div>
-                    <div className="mt-3 flex flex-wrap justify-center gap-2" role="tablist">
-                      {(['ip', 'oop'] as const).map((ph) => (
-                        <button
-                          key={ph}
-                          type="button"
-                          role="tab"
-                          aria-selected={phase === ph}
-                          onClick={() => update({ phase: ph })}
-                          className={`chip ${phase === ph ? 'chip-on' : ''}`}
-                        >
-                          {t(`fm.tac.phase.${ph}`)} {shape(ph)}
-                        </button>
-                      ))}
-                    </div>
+                    </Pitch>
                   </div>
 
+                  {/* Liste à recopier dans FM27 : une ligne par poste, rangée du gardien aux attaquants, les deux rôles et la doublure sous le titulaire. */}
                   <div className="min-w-0">
                     <h3 className="font-semibold">{t('fm.tac.xi.title')}</h3>
                     <div className="mt-2 overflow-x-auto">
@@ -418,7 +428,8 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                           </tr>
                         </thead>
                         <tbody>
-                          {plan.slots.map((sl, i) => {
+                          {rows.map((i) => {
+                            const sl = plan.slots[i]!;
                             const p = sl.player;
                             const fitOf = (ph: Phase) => (p ? engine.roleFit(p, ph === 'ip' ? sl.ip : sl.oop, ph, sl.pos) : null);
                             return (
