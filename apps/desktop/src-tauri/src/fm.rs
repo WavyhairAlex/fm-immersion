@@ -15,6 +15,8 @@ pub const SNAPSHOT_FILE: &str = "archivix-snapshot.json";
 /// État du manager écrit par le plugin à chaque relecture : club entraîné, ou aucun quand il est sans club.
 pub const STATUS_FILE: &str = "archivix-status.json";
 pub const LIVE_FILE: &str = "archivix-live.json";
+/// Demande envoyée depuis FM27 par le bouton FM Immersion de la fiche joueur (plugin FM Immersion Fiche).
+pub const REQUEST_FILE: &str = "fmimmersion-demande.json";
 /// Repères de rôles et de styles fournis par le joueur (facultatif) : ils remplacent les repères maison.
 pub const REFERENCE_FILE: &str = "simloom-roles.json";
 /// Un effectif complet pèse quelques centaines de Ko ; au-delà, ce n'est pas notre fichier.
@@ -86,6 +88,17 @@ pub fn fm_read_status(folder: String) -> Result<Option<String>, FmError> {
 #[tauri::command]
 pub fn fm_read_live(folder: String) -> Result<Option<String>, FmError> {
     match read_fixed(Path::new(&folder), LIVE_FILE) {
+        Ok(s) => Ok(Some(s)),
+        Err(FmError::NotFound) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+/// Dernière demande faite depuis FM27 (bouton FM Immersion de la fiche joueur), ou rien. Lecture seule : l'appli
+/// retient l'identifiant de la dernière demande traitée, le fichier reste tel quel.
+#[tauri::command]
+pub fn fm_read_request(folder: String) -> Result<Option<String>, FmError> {
+    match read_fixed(Path::new(&folder), REQUEST_FILE) {
         Ok(s) => Ok(Some(s)),
         Err(FmError::NotFound) => Ok(None),
         Err(e) => Err(e),

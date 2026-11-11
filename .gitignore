@@ -16,3 +16,5 @@ modules/fm/coach-photo/bin/
 modules/fm/coach-photo/obj/
 modules/fm/bridge/stubs/bin/
 modules/fm/bridge/stubs/*/obj/
+modules/fm/fiche/bin/
+modules/fm/fiche/obj/

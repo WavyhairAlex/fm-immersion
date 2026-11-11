@@ -1,6 +1,6 @@
 [
   {
-    "version": "0.1.175",
+    "version": "0.1.176",
     "date": "2026-11-11",
     "fr": [
       "Les conférences de presse de FM Immersion s'ouvrent maintenant directement dans FM27, par-dessus le jeu : les questions de tes quatre rédactions, trois réponses proposées ou tes propres mots. Elles arrivent dans la Gazette et sur Discord comme si tu avais répondu dans l'appli.",
@@ -9,6 +9,16 @@
     "en": [
       "FM Immersion press conferences now open right inside FM27, on top of the game: questions from your four outlets, three suggested answers or your own words. They reach the Gazette and Discord just as if you had answered in the app.",
       "You need the FM27 plugin 0.6.0 (install it from \"Plugin and settings\" with FM27 closed). The F8 key opens or closes the window. It doesn't change anything in your save."
+    ]
+  },
+  {
+    "version": "0.1.175",
+    "date": "2026-11-11",
+    "fr": [
+      "En test : un bouton « FM Immersion » sur la fiche d'un joueur dans FM27. Un clic, et l'appli s'ouvre directement sur la fiche de ce joueur."
+    ],
+    "en": [
+      "Testing: an \"FM Immersion\" button on a player's profile in FM27. One click and the app opens straight on that player's sheet."
     ]
   },
   {

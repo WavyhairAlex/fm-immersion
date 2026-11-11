@@ -97,6 +97,7 @@ pub fn run() {
             discord::discord_edit,
             discord::discord_live_image,
             fm::fm_read_live,
+            fm::fm_read_request,
             fm::fm_write_coach_photo,
             fm::fm_write_press,
             fm::fm_read_press_answer,

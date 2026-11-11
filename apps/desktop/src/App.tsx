@@ -6,6 +6,7 @@ import { UpdateGate } from './components/UpdateGate';
 import { WhatsNew } from './components/WhatsNew';
 import { useCareer, useCareerStore } from './lib/career';
 import { useFmSync } from './lib/fm-sync';
+import { useGameRequests } from './lib/game-request';
 import { useAutoBackups } from './lib/save-backup';
 import { useGazetteAuto } from './lib/gazette-auto';
 import { useLiveDiscord } from './lib/live-discord';
@@ -27,6 +28,7 @@ export function App() {
   useGazetteAuto();
   useFmSync();
   usePressInGame();
+  useGameRequests();
   useAutoBackups();
   return (
     <UpdateGate>
