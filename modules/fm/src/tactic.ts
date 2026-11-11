@@ -141,7 +141,10 @@ const POS_BASE: Record<string, string[]> = {
   ST: ['Finishing', 'Movement', 'Composure', 'FirstTouch', 'Anticipation', 'Acceleration', 'Pace', 'Technique', 'Heading', 'Strength'],
 };
 const POS_BASE_OF: Record<PosCode, string> = { GB: 'GK', DC: 'CB', DD: 'FB', DG: 'FB', DLD: 'WB', DLG: 'WB', MDF: 'DM', MC: 'CM', MD: 'WM', MG: 'WM', MOD: 'W', MOG: 'W', MOC: 'AM', BT: 'ST' };
-const ENGINE_KEYS = ['Acceleration', 'Pace', 'Anticipation', 'Decisions'];
+// Attributs qui pèsent le plus dans le moteur de FM27 (tests d'Harvestgreen, FM-Arena, 10/11/2026, voir engine-value.ts) :
+// vitesse, accélération et endurance loin devant, puis l'anticipation. Les prises de décision n'y changent presque rien.
+// Ne sert qu'aux rôles sans note du jeu.
+const ENGINE_KEYS = ['Acceleration', 'Pace', 'Stamina', 'Anticipation'];
 const FIT_W = { keys: 0.7, base: 0.2, engine: 0.1 };
 export const INVERTED = new Set(['IFB', 'IWB', 'IF', 'IW', 'IOW']);
 

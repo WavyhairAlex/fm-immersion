@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.151",
+    "date": "2026-11-11",
+    "fr": [
+      "Nouvel « indice moteur » dans l'effectif, la fiche joueur, le mercato et la recherche de remplaçant : il dit ce que les attributs d'un joueur pèsent vraiment dans les matchs de FM27, d'après les tests de la communauté (vitesse, accélération et endurance d'abord).",
+      "La fiche joueur montre ses atouts, ce qui lui coûte des matchs et les attributs sous le minimum de 6."
+    ],
+    "en": [
+      "New \"engine index\" in the squad, player sheet, transfers and replacement search: it shows what a player's attributes really weigh in FM27 matches, according to community tests (pace, acceleration and stamina first).",
+      "The player sheet shows his strengths, what costs matches and the attributes below the minimum of 6."
+    ]
+  },
+  {
     "version": "0.1.150",
     "date": "2026-11-10",
     "fr": [

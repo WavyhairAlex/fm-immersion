@@ -1,11 +1,11 @@
-import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, askingPrice, buildProject, clubFinances, contractDecisions, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type SquadAt } from '@fm-immersion/module-fm';
+import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type SquadAt } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
 import { LeaveButton, useLeaving } from './FmLeaving';
 import { NeedsPanel } from './FmNeeds';
 import { DivisionLevelPanel, ReplacementFinder } from './FmReplacement';
-import { CompatTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone, More, PlayerLink } from './FmUi';
+import { CompatTag, EngineTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone, More, PlayerLink } from './FmUi';
 
 export const TONE: Record<MercatoVerdict, Tone> = { sell: 'bad', release: 'bad', loan: 'warn', extend: 'warn', develop: 'good', replace: 'warn', backup: 'info', core: 'good' };
 /** Groupes affichés en détail : ce qui demande une décision au mercato. */
@@ -83,6 +83,7 @@ function AdviceLine({ a, tag, extra, after }: { a: MercatoAdvice; tag?: ReactNod
           <span className="text-xs text-brun">{t('fm.contracts.age', { count: a.player.age ?? 0 })}</span>
           {a.player.team && <Tag>{a.player.team}</Tag>}
           <CompatTag c={a.compat} />
+          <EngineTag v={engineValue(a.player)} />
           {tag}
         </div>
         <p className="mt-0.5 text-xs text-brun">{a.reasons.map(reason).join(' · ')}</p>
