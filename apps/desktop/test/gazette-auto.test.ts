@@ -9,11 +9,25 @@ vi.stubGlobal('localStorage', {
   setItem: (k: string, v: string) => void store.set(k, v),
   removeItem: (k: string) => void store.delete(k),
 });
-const { attempt, autoLastError, breakingToSend, farewellToSend, isBigMatchSent, isRecordSent, markBigMatchSent, markRecordSent, gazetteToSend, seasonToSend } = await import('../src/lib/gazette-auto');
+const { attempt, autoLastError, breakingToSend, farewellToSend, isBigMatchSent, isRecordSent, markBigMatchSent, markRecordSent, gazetteToSend, seasonToSend, withTimeout } = await import('../src/lib/gazette-auto');
 
 const issue = (weekStart: string) => ({ weekStart }) as GazetteIssue;
 
 describe('gazette automatique', () => {
+  it("n'attend pas indéfiniment la photo de situation avant un envoi", async () => {
+    vi.useFakeTimers();
+    try {
+      const never = new Promise<string>(() => undefined);
+      const late = withTimeout(never, 1000, 'portrait');
+      vi.advanceTimersByTime(1000);
+      await expect(late).resolves.toBe('portrait');
+      await expect(withTimeout(Promise.resolve('photo'), 1000, 'portrait')).resolves.toBe('photo');
+      await expect(withTimeout(Promise.reject(new Error('moteur')), 1000, 'portrait')).resolves.toBe('portrait');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('envoie la dernière semaine terminée, une seule fois', () => {
     const issues = [issue('2027-04-26'), issue('2027-04-19'), issue('2027-04-12')];
     expect(gazetteToSend([issue('2027-04-26')], 's', null)).toBeNull(); // semaine en cours seulement

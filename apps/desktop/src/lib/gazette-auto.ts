@@ -345,6 +345,29 @@ export const checkGazetteNow = () => window.dispatchEvent(new Event(AUTO_CHECK_E
 /** Une tournée bloquée (une attente qui ne revient jamais) est abandonnée au bout de ce délai. */
 const STUCK_MS = 10 * 60_000;
 
+/**
+ * Attente maximale de la photo de situation avant un envoi : au-delà (moteur figé, carte graphique prise par le jeu),
+ * l'envoi part avec le portrait. Une photo prend d'habitude deux à quatre minutes.
+ */
+export const PHOTO_WAIT_MS = 5 * 60_000;
+
+/** `p`, ou `fallback` s'il ne répond pas avant `ms` (le travail continue en arrière-plan, son résultat est ignoré). */
+export function withTimeout<T>(p: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const id = setTimeout(() => resolve(fallback), ms);
+    p.then(
+      (v) => {
+        clearTimeout(id);
+        resolve(v);
+      },
+      () => {
+        clearTimeout(id);
+        resolve(fallback);
+      },
+    );
+  });
+}
+
 /** Petite pause entre deux envois : Discord refuse les rafales sur un même webhook. */
 const pause = () => new Promise((r) => window.setTimeout(r, 1500));
 
@@ -363,6 +386,8 @@ export function useGazetteAuto() {
   const busy = useRef(0);
   /** Une photo a été faite en arrière-plan : le moteur sera arrêté quand il n'en restera plus à faire. */
   const photoMade = useRef(false);
+  /** Début de la photo faite toute seule en cours (0 = aucune) : elle tourne à part des envois. */
+  const photoBusy = useRef(0);
   useEffect(() => {
     const tick = async () => {
       const sending = isWebhook(getWebhook());
@@ -410,7 +435,8 @@ export function useGazetteAuto() {
                 // Rédigée par l'IA du joueur quand elle est branchée (sinon, ou si elle échoue, avec les phrases toutes faites).
                 issues[index] = await withWriting(t, week, lang, saveId);
                 // En mode « auto », la photo de situation de la une est faite avant l'envoi (deux à quatre minutes).
-                const photo = await gazettePhoto(saveId, issues[index]!, await autoPhotosNow());
+                // Jamais plus de cinq minutes : une photo qui traîne ne doit pas empêcher la gazette de partir.
+                const photo = await withTimeout(gazettePhoto(saveId, issues[index]!, await autoPhotosNow()), PHOTO_WAIT_MS, null);
                 await sendGazette(t, lang, issues, index, seasonSoFar(history, week.date), getWebhook(), photo);
               },
               () => {
@@ -453,7 +479,8 @@ export function useGazetteAuto() {
             await attempt(
               'breaking',
               `breaking|${breakingId(saveId, n)}`,
-              async () => sendBreaking(t, n, lang, saveId, getWebhook(), await breakingPhoto(saveId, n, await autoPhotosNow())),
+              async () =>
+                sendBreaking(t, n, lang, saveId, getWebhook(), await withTimeout(breakingPhoto(saveId, n, await autoPhotosNow()), PHOTO_WAIT_MS, null)),
               () => markBreakingSent(saveId, n),
             );
             await pause();
@@ -479,36 +506,6 @@ export function useGazetteAuto() {
             );
           }
         }
-        // Photos de situation faites toutes seules, sans attendre un envoi : la une de la dernière gazette terminée et
-        // les dépêches des derniers jours. Une seule par tournée (deux à quatre minutes), chaque événement essayé une
-        // fois par session ; rien tant que la carte graphique est prise par un autre logiciel.
-        if (getPhotoMode() === 'auto') {
-          const issues = issuesWithPress(gazetteIssues(history), await fmData.pressConferences(saveId).catch(() => []));
-          const todo: { tag: string; make: () => Promise<unknown>; key: readonly unknown[] }[] = [];
-          const une = issues[1];
-          if (une) todo.push({ tag: gazetteTag(saveId, une), make: () => gazettePhoto(saveId, une, true), key: ['gazette', 'une-photo', saveId] });
-          for (const n of breakingToSend(breakingNews(history), lastDate, () => false))
-            todo.push({ tag: breakingTag(saveId, n), make: () => breakingPhoto(saveId, n, true), key: ['gazette', 'breaking-photo', saveId] });
-          let next: (typeof todo)[number] | null = null;
-          for (const x of todo) {
-            if (photoTried.has(x.tag)) continue;
-            if (await existingPhoto(x.tag)) photoTried.add(x.tag);
-            else {
-              next = x;
-              break;
-            }
-          }
-          if (next && (await autoPhotosNow())) {
-            photoTried.add(next.tag);
-            await next.make();
-            photoMade.current = true;
-            await qc.invalidateQueries({ queryKey: next.key });
-          } else if (!next && photoMade.current) {
-            // Plus rien à faire : le moteur d'images rend la carte graphique au jeu.
-            photoMade.current = false;
-            await invoke('photos_engine_stop').catch(() => undefined);
-          }
-        }
       } catch (e) {
         // Erreur hors des envois (lecture de l'historique…) : montrée elle aussi dans Live Discord.
         console.warn('Gazette automatique :', e);
@@ -519,6 +516,59 @@ export function useGazetteAuto() {
       } finally {
         // Une tournée abandonnée pour blocage ne libère pas la place de celle qui l'a remplacée.
         if (busy.current === started) busy.current = 0;
+      }
+      // Les photos faites toutes seules tournent à part : elles ne retardent plus jamais un envoi.
+      void photoTick();
+    };
+    /**
+     * Photos de situation faites toutes seules, sans attendre un envoi : la une de la dernière gazette terminée et les
+     * dépêches des derniers jours. Une seule à la fois (deux à quatre minutes), chaque événement essayé une fois par
+     * session ; rien tant que la carte graphique est prise par un autre logiciel.
+     */
+    const photoTick = async () => {
+      if (getPhotoMode() !== 'auto') return;
+      // Une photo figée depuis plus de dix minutes ne doit pas arrêter les suivantes pour de bon.
+      if (photoBusy.current && Date.now() - photoBusy.current < STUCK_MS) return;
+      const started = Date.now();
+      photoBusy.current = started;
+      try {
+        const fmSaves = (await savesData.list()).filter((s) => s.gameId === 'fm');
+        const saveId = fmSaves.find((s) => s.id === read(GAZETTE_SAVE_KEY))?.id ?? fmSaves[0]?.id;
+        if (!saveId) return;
+        const history = await fetchHistory(qc, saveId);
+        const lastDate = history
+          .map((h) => h.gameDate)
+          .sort()
+          .at(-1);
+        const issues = issuesWithPress(gazetteIssues(history), await fmData.pressConferences(saveId).catch(() => []));
+        const todo: { tag: string; make: () => Promise<unknown>; key: readonly unknown[] }[] = [];
+        const une = issues[1];
+        if (une) todo.push({ tag: gazetteTag(saveId, une), make: () => gazettePhoto(saveId, une, true), key: ['gazette', 'une-photo', saveId] });
+        for (const n of breakingToSend(breakingNews(history), lastDate, () => false))
+          todo.push({ tag: breakingTag(saveId, n), make: () => breakingPhoto(saveId, n, true), key: ['gazette', 'breaking-photo', saveId] });
+        let next: (typeof todo)[number] | null = null;
+        for (const x of todo) {
+          if (photoTried.has(x.tag)) continue;
+          if (await existingPhoto(x.tag)) photoTried.add(x.tag);
+          else {
+            next = x;
+            break;
+          }
+        }
+        if (next && (await autoPhotosNow())) {
+          photoTried.add(next.tag);
+          await next.make();
+          photoMade.current = true;
+          await qc.invalidateQueries({ queryKey: next.key });
+        } else if (!next && photoMade.current && !busy.current) {
+          // Plus rien à faire (et aucun envoi en cours) : le moteur d'images rend la carte graphique au jeu.
+          photoMade.current = false;
+          await invoke('photos_engine_stop').catch(() => undefined);
+        }
+      } catch (e) {
+        console.warn('Photo de situation automatique :', e);
+      } finally {
+        if (photoBusy.current === started) photoBusy.current = 0;
       }
     };
     const id = window.setInterval(tick, 60_000);
