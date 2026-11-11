@@ -35,7 +35,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useUi } from '../lib/ui-store';
 import { TodayCards } from '../components/TodayCards';
 import { shownGameDate, useCareer, useCareerStore } from '../lib/career';
-import { CLUB_PAGES, clubPath, pageOf, PARTS, TABS, tabOf, type ClubPage } from '../lib/club-nav';
+import { CLUB_PAGES, clubPath, pageOf, PARTS, TABS, type ClubPage } from '../lib/club-nav';
 import { fmData } from '../lib/data';
 import { useHistory } from '../lib/fm-cache';
 import { importMissingHistory, type FmHistoryFile } from '../lib/fm-history';
@@ -583,54 +583,26 @@ export function NextStep({ step, club }: { step: 'career' | 'plugin' | 'save' | 
   );
 }
 
-/** Parties d'un écran regroupé : une à la fois, choisie par des sous-onglets ; au-delà de cinq, dans « Plus ». */
-/** Parties qui sont des actions de groupe ponctuelles plutôt que des vues : proposées en lien discret. */
-const SECONDARY_PARTS = new Set(['numbers', 'loans']);
-
+/** Parties d'un écran : une rangée de pastilles, une partie par onglet (celle choisie en bleu nuit). */
 function PageParts({ page, current, go, render }: { page: ClubPage; current: string; go: (v: string) => void; render: (v: string) => ReactNode }) {
   const { t } = useTranslation();
   const parts = PARTS[page];
   const active = parts.includes(current) ? current : parts[0]!;
-  const tabs = TABS[page];
-  const tab = tabOf(page, active);
-  const label = (v: string) => t(`fm.subtabs.${v}`, { defaultValue: t(`fm.views.${v}`) });
-  // Un sous-onglet regroupé porte son propre nom ; seul, il garde celui de sa partie.
-  const tabLabel = (g: readonly string[]) => (g.length > 1 ? t(`fm.tabs.${g[0]}`, { defaultValue: label(g[0]!) }) : label(g[0]!));
-  // Une rangée de pastilles seulement s'il y a vraiment plusieurs vues ; les parties secondaires vont en liens.
-  const primary = tab.filter((v) => !SECONDARY_PARTS.has(v));
-  const secondary = tab.filter((v) => SECONDARY_PARTS.has(v));
-  const cls = (on: boolean) => `-mb-px rounded-t-lg border-b-2 px-3 py-1.5 text-sm font-bold ${on ? 'border-orange text-canard' : 'border-transparent text-canard/60 hover:text-canard'}`;
+  const tabs = TABS[page].flat();
   return (
     <>
       {tabs.length > 1 && (
-        <div className="sticky top-[3.25rem] z-30 -mx-1 mb-4 flex flex-wrap items-end gap-1 border-b border-canard/10 bg-creme px-1 pt-2" role="tablist" aria-label={t('fm.onThisPage')}>
-          {tabs.map((g) => (
+        <div className="sticky top-[3.25rem] z-30 -mx-1 mb-4 flex flex-wrap gap-1.5 bg-creme px-1 py-2" role="tablist" aria-label={t('fm.onThisPage')}>
+          {tabs.map((v) => (
             <button
-              key={g[0]}
+              key={v}
               type="button"
               role="tab"
-              aria-selected={g === tab}
-              onClick={() => go(g.includes(active) && !SECONDARY_PARTS.has(active) ? active : g[0]!)}
-              className={cls(g === tab)}
+              aria-selected={v === active}
+              onClick={() => go(v)}
+              className={`rounded-md px-3 py-1.5 text-sm font-bold ${v === active ? 'bg-canard text-white' : 'bg-white text-canard ring-1 ring-canard/10 hover:bg-orange-clair'}`}
             >
-              {tabLabel(g)}
-            </button>
-          ))}
-          {/* Listes et actions ponctuelles (prêtés, numéros) : des liens discrets au bout des onglets, pas une rangée de plus. */}
-          <span className="ml-auto flex flex-wrap gap-x-4 pb-2">
-            {secondary.map((v) => (
-              <button key={v} type="button" onClick={() => go(v === active ? tab[0]! : v)} className={`text-sm font-bold hover:underline ${v === active ? 'text-canard underline' : 'text-orange-fonce'}`}>
-                {t(`fm.secondary.${v}`)}
-              </button>
-            ))}
-          </span>
-        </div>
-      )}
-      {primary.length > 1 && (
-        <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label={tabLabel(tab)}>
-          {primary.map((v) => (
-            <button key={v} type="button" role="tab" aria-selected={v === active} onClick={() => go(v)} className={`chip ${v === active ? 'chip-on' : ''}`}>
-              {label(v)}
+              {t(`fm.tabNames.${v}`)}
             </button>
           ))}
         </div>
@@ -689,8 +661,9 @@ function ViewHeader({ view, part }: { view: string; part: string }) {
   const { t } = useTranslation();
   return (
     <header className="mb-2">
-      <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('layout.groups.club')}</p>
-      <h1 className="text-3xl font-semibold">{pageLabel(t, view)}</h1>
+      {/* Comme la maquette : l'écran en surtitre, la partie ouverte en titre, puis ce qu'on y regarde. */}
+      <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t(`layout.navShort.${pageOf(view)}`, { defaultValue: pageLabel(t, view) })}</p>
+      <h1 className="text-3xl font-semibold">{t(`fm.tabNames.${part}`, { defaultValue: pageLabel(t, view) })}</h1>
       <p className="mt-1 max-w-3xl text-sm text-brun">{t(`fm.intro.${part}`)}</p>
     </header>
   );

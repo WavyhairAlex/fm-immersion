@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.163",
+    "date": "2026-11-11",
+    "fr": [
+      "La barre latérale suit la nouvelle maquette : Tactique, Effectif, Résultats et Mercato, puis Ma carrière, Gazette, Presse, Live Discord et Défis, puis Visages, Photos, Sauvegardes et réglages.",
+      "Chaque écran du club a une seule rangée d'onglets, un par partie (par exemple Adversaire, Calendrier ou Entraînement dans Tactique), et le titre dit la partie que tu regardes."
+    ],
+    "en": [
+      "The sidebar follows the new design: Tactics, Squad, Results and Transfers, then My career, Gazette, Press, Live Discord and Challenges, then Faces, Photos, Saves and settings.",
+      "Each club screen has a single row of tabs, one per section (for example Opponent, Calendar or Training in Tactics), and the title names the section you are looking at."
+    ]
+  },
+  {
     "version": "0.1.162",
     "date": "2026-11-11",
     "fr": [

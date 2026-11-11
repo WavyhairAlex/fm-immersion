@@ -14,12 +14,12 @@ export const PARTS: Record<ClubPage, readonly string[]> = {
 };
 
 /**
- * Sous-onglets de chaque écran (5 au plus, tous visibles) : un sous-onglet regroupe une ou plusieurs parties,
- * montrées une à la fois derrière des pastilles. L'ordre des parties suit PARTS.
+ * Onglets de chaque écran, sur une seule rangée de pastilles (maquette du 11/11/2026) : une partie par onglet.
+ * L'ordre suit la maquette.
  */
 export const TABS: Record<ClubPage, readonly (readonly string[])[]> = {
-  tactic: [['tactic', 'instructions', 'builder'], ['opponent'], ['calendar', 'training', 'depth'], ['style', 'effectiveness', 'project'], ['staff']],
-  squad: [['squad', 'loans', 'numbers'], ['playtime', 'dressing'], ['progression'], ['roles'], ['compare']],
+  tactic: ['tactic', 'instructions', 'builder', 'opponent', 'calendar', 'training', 'depth', 'style', 'effectiveness', 'project', 'staff'].map((v) => [v]),
+  squad: ['squad', 'loans', 'numbers', 'playtime', 'dressing', 'progression', 'roles', 'compare'].map((v) => [v]),
   results: [['results'], ['diagnosis'], ['stats'], ['analysis']],
   mercato: [['mercato'], ['targets'], ['finances'], ['wages'], ['contracts']],
 };
