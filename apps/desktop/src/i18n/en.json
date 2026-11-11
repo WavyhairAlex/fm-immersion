@@ -311,55 +311,103 @@
       "auto": "Automatic: best choice",
       "styles": "Playing styles",
       "myTactics": "My tactics (Build)",
-        "advice": {
-          "title": "Your assistant's view of this eleven",
-          "none": "Nothing to add: everyone is in a role that suits him, and every position has cover.",
-          "help": "A role is only suggested when it is worth at least 0.3 star more for the player and does not unbalance the team (width, creation, cover, presence in the box). A starter is only questioned for half a star, current form included. Cover comes first from the first team, then from a starter who can shift, then from the reserves.",
-          "starters": "Starters to review",
-          "starter": "{{pos}}: {{better}} ({{betterFit}}) would do better today than {{starter}} ({{starterFit}}) in these roles, current form included.",
-          "roles": "Roles to review",
-          "role": "{{player}}, {{phase}}: \"{{to}}\" suits him better ({{toFit}}) than \"{{from}}\" ({{fromFit}}).",
-          "rolesNote": "Changing a role resets the player's familiarity with it: make these changes in one go, away from a big match.",
-          "cover": "Positions without cover",
-          "coverShift": "{{pos}}: nobody on the bench to cover {{starter}}. If needed, {{player}} shifts from {{from}} and {{replacement}} comes in for him.",
-          "coverThin": "{{pos}}: nobody on the bench to cover {{starter}}.",
-          "coverNone": "{{pos}}: nobody at the club can cover {{starter}}. A position to recruit.",
-          "coverReserve": "Other option: {{name}} ({{team}}).",
-          "coverMakeshift": "{{name}} can fill in (knows the position {{fam}}/20).",
-          "rested": "To get going again",
-          "restedWhy": {
-            "sharpness": "{{pos}}: {{better}} ({{betterFit}}) rates higher than {{starter}} ({{starterFit}}), but he lacks match sharpness ({{value}}%). Give him late minutes or a reserve match.",
-            "condition": "{{pos}}: {{better}} ({{betterFit}}) rates higher than {{starter}} ({{starterFit}}), but he is tired ({{value}}%). He takes his place back once rested.",
-            "morale": "{{pos}}: {{better}} ({{betterFit}}) rates higher than {{starter}} ({{starterFit}}), but his morale is low ({{morale}}). A chat or playing time can lift him."
-          }
+      "review": {
+        "title": "What your last matches say",
+        "tooFew_one": "{{count}} official match read so far: it takes 3 to judge the tactic on what it produces.",
+        "tooFew_other": "{{count}} official matches read so far: it takes 3 to judge the tactic on what it produces.",
+        "scopeTactic_one": "Your last match with “{{tactic}}”:",
+        "scopeTactic_other": "Your last {{count}} matches with “{{tactic}}”:",
+        "scopeAll_one": "Your last official match:",
+        "scopeAll_other": "Your last {{count}} official matches, all tactics together:",
+        "record": "{{wins}} W, {{draws}} D, {{losses}} L, {{gf}} scored and {{ga}} conceded per match.",
+        "xg": "Chances: {{xgFor}} xG created against {{xgAgainst}} conceded per match.",
+        "wdl": "{{wins}} W · {{draws}} D · {{losses}} L",
+        "early_one": "“{{tactic}}” has only {{count}} match read: too few to judge it alone, so the trend mixes several tactics.",
+        "early_other": "“{{tactic}}” has only {{count}} matches read: too few to judge it alone, so the trend mixes several tactics.",
+        "verdict": {
+          "keep": "“{{tactic}}” is proving itself: you create more chances than you concede. Keep it and fix the details below rather than switching.",
+          "keepOther": "“{{tactic}}”, the one you play in FM27, is proving itself on the pitch: you create more chances than you concede. Before adopting the XI suggested here, check what you would really gain: switching tactic sends the squad's understanding back down.",
+          "doubt": "Over time your opponents create more chances than you with “{{tactic}}”. Start with the fixes below; if nothing changes in three matches, try the suggested XI."
         },
-        "tiAdvice": {
-          "title": "Adapted to your eleven",
-          "none": "The style's instructions suit this eleven: nothing to correct.",
-          "noneGame": "Your instructions hold up with this eleven: nothing to correct.",
-          "insteadOf": "instead of \"{{label}}\"",
-          "reason": {
-            "slowLine": "your defence lacks pace ({{value}} for an eleven at {{level}}): playing high leaves too much space behind it",
-            "lowPress": "work rate, stamina and teamwork too low ({{value}} for an eleven at {{level}}) to press this much for 90 minutes",
-            "lowPressBlock": "work rate, stamina and teamwork too low ({{value}} for an eleven at {{level}}) to hold a high press",
-            "stretched": "high press up front and a low line behind: the block stretches and a big gap opens between the lines",
-            "aerialStriker": "{{name}} dominates in the air ({{value}}): give him balls at head height",
-            "smallStrikers": "no striker strong in the air ({{value}}): high crosses are wasted",
-            "noHighBlock": "this instruction only exists with a high press"
-          },
-          "heavy": "{{count}} team instructions set in FM27: the game rates their complexity at {{complexity}}/100 for a tactical understanding of {{understanding}}/100. Put back on default those that do not serve your plan: the squad will learn faster.",
-          "vsGame": "Compared with your FM27 tactic",
-          "sameAsGame": "Your FM27 tactic already has these instructions.",
-          "notRead": "The instructions set in FM27 are not read yet: play a day in the game with the Tactics screen closed.",
-          "col": {
-            "card": "Instruction",
-            "advised": "Advised",
-            "game": "In FM27"
-          },
-          "gameTactic": "your FM27 tactic",
-          "gameIntro": "The instructions you set in FM27, read by the plugin.",
-          "gameHelp": "Every card of the game's Team Instructions screen, in its order; in bold, those you changed."
+        "finding": {
+          "dominant": "You are on top: {{xgFor}} xG created against {{xgAgainst}} conceded per match over {{matches}} matches. The base is sound.",
+          "outplayed": "You are being outplayed: {{xgFor}} xG created against {{xgAgainst}} conceded per match over {{matches}} matches.",
+          "wasteful": "Finishing: {{goals}} goals from {{xg}} xG. The chances are there, it is not the tactic: work on finishing in training and give it time.",
+          "overperforming": "Running hot: {{goals}} goals from only {{xg}} xG. It will not last at this rate: you need to create more.",
+          "unluckyDefence": "You concede {{goals}} goals from {{xg}} xG against: it is the keeper or bad luck more than the defensive block.",
+          "sterile": "Sterile possession: {{possession}}% of the ball for {{xg}} xG per match. The ball moves without hurting: speed the game up.",
+          "fewChances": "You create little: {{xg}} xG per match. Check the balance of the XI (creation, presence in the box).",
+          "longShots": "Too many long shots: {{shots}} shots per match at {{quality}} xG per shot. Better to look for the extra pass.",
+          "leaky": "You concede too much: {{xg}} xG per match for the opponent.",
+          "bigChancesAgainst": "Few shots conceded ({{shots}} per match) but big chances ({{quality}} xG per shot): balls are getting in behind your defence.",
+          "pressFails": "Your pressing wins little: {{value}}% of presses succeed. Your players run without winning the ball."
         },
+        "byTactic": "Record of each tactic played this season",
+        "byTacticNote": "xG difference: chances created minus chances conceded, per match (from 3 matches with figures). It is the most reliable number over few matches.",
+        "col": {
+          "tactic": "Tactic",
+          "matches": "Matches",
+          "record": "Record",
+          "ppm": "Points per match",
+          "xg": "xG difference"
+        },
+        "help": "xG (expected goals) measure chances: they tell you better than the score whether a tactic works, because over five or six matches the score depends a lot on finishing luck. Friendlies do not count. The team and player instructions advised below take these matches into account."
+      },
+      "advice": {
+        "title": "Your assistant's view of this eleven",
+        "none": "Nothing to add: everyone is in a role that suits him, and every position has cover.",
+        "help": "A role is only suggested when it is worth at least 0.3 star more for the player and does not unbalance the team (width, creation, cover, presence in the box). A starter is only questioned for half a star, current form included. Cover comes first from the first team, then from a starter who can shift, then from the reserves.",
+        "starters": "Starters to review",
+        "starter": "{{pos}}: {{better}} ({{betterFit}}) would do better today than {{starter}} ({{starterFit}}) in these roles, current form included.",
+        "roles": "Roles to review",
+        "role": "{{player}}, {{phase}}: \"{{to}}\" suits him better ({{toFit}}) than \"{{from}}\" ({{fromFit}}).",
+        "rolesNote": "Changing a role resets the player's familiarity with it: make these changes in one go, away from a big match.",
+        "cover": "Positions without cover",
+        "coverShift": "{{pos}}: nobody on the bench to cover {{starter}}. If needed, {{player}} shifts from {{from}} and {{replacement}} comes in for him.",
+        "coverThin": "{{pos}}: nobody on the bench to cover {{starter}}.",
+        "coverNone": "{{pos}}: nobody at the club can cover {{starter}}. A position to recruit.",
+        "coverReserve": "Other option: {{name}} ({{team}}).",
+        "coverMakeshift": "{{name}} can fill in (knows the position {{fam}}/20).",
+        "rested": "To get going again",
+        "restedWhy": {
+          "sharpness": "{{pos}}: {{better}} ({{betterFit}}) rates higher than {{starter}} ({{starterFit}}), but he lacks match sharpness ({{value}}%). Give him late minutes or a reserve match.",
+          "condition": "{{pos}}: {{better}} ({{betterFit}}) rates higher than {{starter}} ({{starterFit}}), but he is tired ({{value}}%). He takes his place back once rested.",
+          "morale": "{{pos}}: {{better}} ({{betterFit}}) rates higher than {{starter}} ({{starterFit}}), but his morale is low ({{morale}}). A chat or playing time can lift him."
+        }
+      },
+      "tiAdvice": {
+        "title": "Adapted to your eleven",
+        "none": "The style's instructions suit this eleven: nothing to correct.",
+        "noneGame": "Your instructions hold up with this eleven: nothing to correct.",
+        "insteadOf": "instead of \"{{label}}\"",
+        "reason": {
+          "slowLine": "your defence lacks pace ({{value}} for an eleven at {{level}}): playing high leaves too much space behind it",
+          "lowPress": "work rate, stamina and teamwork too low ({{value}} for an eleven at {{level}}) to press this much for 90 minutes",
+          "lowPressBlock": "work rate, stamina and teamwork too low ({{value}} for an eleven at {{level}}) to hold a high press",
+          "stretched": "high press up front and a low line behind: the block stretches and a big gap opens between the lines",
+          "aerialStriker": "{{name}} dominates in the air ({{value}}): give him balls at head height",
+          "smallStrikers": "no striker strong in the air ({{value}}): high crosses are wasted",
+          "noHighBlock": "this instruction only exists with a high press",
+          "pressFails": "over your last matches only {{value}}% of presses win the ball: pressing this much tires the squad for nothing",
+          "leakyLine": "you concede {{xg}} xG per match: a lower line leaves less space in behind",
+          "leakyBlock": "you concede {{xg}} xG per match: a mid block protects your defence better than a high press",
+          "ballsBehind": "few shots conceded but big chances ({{quality}} xG per shot): balls are getting in behind your high line",
+          "sterile": "{{possession}}% possession for {{xg}} xG per match: a higher tempo stops the opponent getting back in shape",
+          "longShots": "{{shots}} shots per match at {{quality}} xG per shot: too many long shots, better to look for the extra pass"
+        },
+        "heavy": "{{count}} team instructions set in FM27: the game rates their complexity at {{complexity}}/100 for a tactical understanding of {{understanding}}/100. Put back on default those that do not serve your plan: the squad will learn faster.",
+        "vsGame": "Compared with your FM27 tactic",
+        "sameAsGame": "Your FM27 tactic already has these instructions.",
+        "notRead": "The instructions set in FM27 are not read yet: play a day in the game with the Tactics screen closed.",
+        "col": {
+          "card": "Instruction",
+          "advised": "Advised",
+          "game": "In FM27"
+        },
+        "gameTactic": "your FM27 tactic",
+        "gameIntro": "The instructions you set in FM27, read by the plugin.",
+        "gameHelp": "Every card of the game's Team Instructions screen, in its order; in bold, those you changed."
+      },
       "bestNow": "Best applicable tactic",
       "projectBest": "Your project is now the best choice",
       "baseKept": "Your base tactic, kept",
@@ -1149,17 +1197,20 @@
         "pressLess": "stamina {{a}}: last 90 minutes",
         "tackleHarder": "tackling {{a}}, aggression {{b}}",
         "tackleLess": "weak tackling: avoid fouls and cards",
-        "markTighter": "marking {{a}}, strength {{b}}"
+        "markTighter": "marking {{a}}, strength {{b}}",
+        "statShootLess": "in matches: {{a}} shots per 90 min at {{b}} xG per shot, he shoots from too far",
+        "statRiskLess": "in matches: {{a}}% pass completion, he gives the ball away too much",
+        "statTackleLess": "in matches: {{a}} yellow cards in {{b}} matches played"
       },
-        "state": {
-          "done": "already set",
-          "conflict": "FM27: \"{{label}}\""
-        },
-        "over_one": "{{count}} instruction set in FM27 (advised limit: {{budget}}). Remove first: {{labels}}.",
-        "over_other": "{{count}} instructions set in FM27 (advised limit: {{budget}}). Remove first: {{labels}}.",
-        "budgetGame_one": "Tactical understanding at {{understanding}}/100 in FM27: {{count}} instruction per player at most for now, the most useful one. More will come as the squad understands the tactic better.",
-        "budgetGame_other": "Tactical understanding at {{understanding}}/100 in FM27: {{count}} instructions per player at most, the most useful ones. Beyond that, complexity lowers understanding.",
-        "heavy": "The game rates your player instructions at {{complexity}}/100 complexity, for a tactical understanding of {{understanding}}/100. That is heavy: keep those marked \"already set\", remove the others first.",
+      "state": {
+        "done": "already set",
+        "conflict": "FM27: \"{{label}}\""
+      },
+      "over_one": "{{count}} instruction set in FM27 (advised limit: {{budget}}). Remove first: {{labels}}.",
+      "over_other": "{{count}} instructions set in FM27 (advised limit: {{budget}}). Remove first: {{labels}}.",
+      "budgetGame_one": "Tactical understanding at {{understanding}}/100 in FM27: {{count}} instruction per player at most for now, the most useful one. More will come as the squad understands the tactic better.",
+      "budgetGame_other": "Tactical understanding at {{understanding}}/100 in FM27: {{count}} instructions per player at most, the most useful ones. Beyond that, complexity lowers understanding.",
+      "heavy": "The game rates your player instructions at {{complexity}}/100 complexity, for a tactical understanding of {{understanding}}/100. That is heavy: keep those marked \"already set\", remove the others first.",
       "custom": "custom",
       "inGame": "In game:",
       "budgetLow_one": "At most {{count}} instruction per player for now: the group still lacks tactical ability for this style. More will come as it improves (see Development plan).",

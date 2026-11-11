@@ -205,6 +205,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
       case 'tactic':
         return (
           <FmTactic
+            matches={all as { gameDate: string; data: FmSnapshot }[] | undefined}
             part="lineup"
             snap={snapshot.data}
             go={go}
@@ -218,6 +219,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
       case 'instructions':
         return (
           <FmTactic
+            matches={all as { gameDate: string; data: FmSnapshot }[] | undefined}
             part="instructions"
             snap={snapshot.data}
             go={go}
