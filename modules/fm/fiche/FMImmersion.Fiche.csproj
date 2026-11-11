@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Plugin FM Immersion Fiche : bouton « FM Immersion » sur la fiche d'un joueur dans FM27 (lecture seule).
+       Compilation : dotnet build -c Release -p:FM="<dossier BepInEx du jeu>" -->
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <AssemblyName>FMImmersion.Fiche</AssemblyName>
+    <RootNamespace>FMImmersion</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <Version>0.1.0</Version>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup><Compile Include="src\*.cs" /></ItemGroup>
+  <ItemGroup>
+    <Reference Include="$(FM)\core\BepInEx.Core.dll" Private="false" />
+    <Reference Include="$(FM)\core\BepInEx.Unity.IL2CPP.dll" Private="false" />
+    <Reference Include="$(FM)\core\Il2CppInterop.Runtime.dll" Private="false" />
+    <Reference Include="$(FM)\interop\UnityEngine.CoreModule.dll" Private="false" />
+    <Reference Include="$(FM)\interop\UnityEngine.UIElementsModule.dll" Private="false" />
+    <Reference Include="$(FM)\interop\UnityEngine.TextCoreTextEngineModule.dll" Private="false" />
+    <Reference Include="$(FM)\interop\UnityEngine.TextRenderingModule.dll" Private="false" />
+    <Reference Include="$(FM)\interop\Il2Cppmscorlib.dll" Private="false" />
+  </ItemGroup>
+</Project>

@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.175",
+    "date": "2026-11-11",
+    "fr": [
+      "En test : un bouton « FM Immersion » sur la fiche d'un joueur dans FM27. Un clic, et l'appli s'ouvre directement sur la fiche de ce joueur."
+    ],
+    "en": [
+      "Testing: an \"FM Immersion\" button on a player's profile in FM27. One click and the app opens straight on that player's sheet."
+    ]
+  },
+  {
     "version": "0.1.174",
     "date": "2026-11-11",
     "fr": [
