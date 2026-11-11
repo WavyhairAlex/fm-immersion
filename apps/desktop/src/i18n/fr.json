@@ -296,12 +296,12 @@
         }
       },
       "source": {
-        "game": "Onze du jeu",
-        "simloom": "Onze FM Immersion"
+        "game": "Ma tactique FM27",
+        "simloom": "Proposition de l'appli"
       },
       "fromGame": "Compo du jeu",
       "fromGameHelp": "Joueurs et postes lus dans ta tactique FM27. Rôles et consignes : ceux du jeu quand le plugin les lit, sinon le meilleur rôle de chaque joueur à son poste.",
-      "suggestedHelpGame": "Placement calculé par FM Immersion selon le style choisi. « Onze du jeu » affiche ta vraie compo FM27.",
+      "suggestedHelpGame": "Placement calculé par FM Immersion selon le style choisi. « Ma tactique FM27 » affiche ta vraie compo.",
       "pitchHelpGame": "Ta compo FM27. Les pointillés montrent le déplacement depuis l'autre phase ; survole un joueur pour le retrouver dans la liste. Clique un schéma plus bas pour comparer avec un onze calculé par FM Immersion.",
       "lineupStatus": "Lecture de la compo par le plugin : {{status}}.",
       "duty": {
@@ -312,6 +312,31 @@
       "auto": "Automatique : meilleur choix",
       "styles": "Styles de jeu",
       "myTactics": "Mes tactiques (Construire)",
+      "todo": {
+        "title": "À changer dans FM27",
+        "intro": "Ce que l'appli te conseille de modifier dans « {{tactic}} », le plus important d'abord.",
+        "introNoName": "Ce que l'appli te conseille de modifier dans ta tactique, le plus important d'abord.",
+        "none": "Rien à changer : ta tactique FM27 est réglée comme conseillé.",
+        "tag": {
+          "team": "Consigne d'équipe",
+          "starter": "Titulaire",
+          "player": "Consigne individuelle",
+          "role": "Rôle"
+        },
+        "team": "{{title}} : passe de « {{from}} » à « {{to}} »",
+        "starter": "{{pos}} : titularise {{better}} à la place de {{starter}}",
+        "starterWhy": "{{better}} est noté {{betterFit}} dans ces rôles contre {{starterFit}}, forme du jour comprise",
+        "piChange": "{{player}} : remplace « {{from}} » par « {{to}} »",
+        "piAdd": "{{player}} : ajoute « {{to}} »",
+        "piRemove": "{{player}} : retire {{labels}}",
+        "piRemoveWhy": "{{count}} consignes réglées pour {{budget}} conseillées : ses attributs n'appuient pas celles-ci",
+        "role": "{{player}}, {{phase}} : « {{to}} » au lieu de « {{from}} »",
+        "roleWhy": "noté {{toFit}} contre {{fromFit}} ; à faire loin d'un gros match, la familiarité avec le rôle repart de zéro",
+        "help": "Cette liste reprend les conseils des cadres plus bas (derniers matchs, consignes d'équipe, consignes individuelles, avis de l'adjoint), dans l'ordre où ils pèsent sur tes résultats. Elle se vide à mesure que tu règles ta tactique dans FM27 et que l'appli relit la partie. Rien n'est modifié dans le jeu : c'est toi qui décides.",
+        "more_one": "Voir le {{count}} autre point",
+        "more_other": "Voir les {{count}} autres points",
+        "less": "Réduire la liste"
+      },
       "review": {
         "title": "Ce que disent tes derniers matchs",
         "tooFew_one": "{{count}} match officiel lu pour l'instant : il en faut 3 pour juger la tactique sur ce qu'elle produit.",
@@ -510,7 +535,8 @@
       "sections": {
         "xi": "Onze de base",
         "match": "Contre {{name}}",
-        "balance": "Équilibre et consignes"
+        "balance": "Équilibre et consignes",
+        "balanceFold": "Équilibre de l'équipe et consignes d'équipe, en détail"
       }
     },
     "nav": "Sections de la partie",
