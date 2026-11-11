@@ -1,6 +1,6 @@
 [
   {
-    "version": "0.1.167",
+    "version": "0.1.168",
     "date": "2026-11-11",
     "fr": [
       "Ma carrière, Presse, Visages et Photos s'ouvrent sur un grand bandeau : ton club et ta saison avec ta photo de coach, la conférence qui t'attend, l'état de ton pack de visages, ta dernière photo de situation.",
@@ -9,6 +9,18 @@
     "en": [
       "My career, Press, Faces and Photos open on a large banner: your club and season with your coach photo, the press conference waiting for you, the state of your faces pack, your latest situation photo.",
       "Live Discord shows in a small table what goes to your channel: live coverage of your matches, the gazette, news flashes, and whether it is automatic or on your click."
+    ]
+  },
+  {
+    "version": "0.1.167",
+    "date": "2026-11-11",
+    "fr": [
+      "Tactique : le terrain du onze est plus grand et plus net. Chaque joueur a son poste à la couleur de sa ligne et son nom, et le trait de déplacement n'apparaît plus que pour le joueur que tu survoles.",
+      "Le choix « Avec ballon » ou « Sans ballon » est en haut, avec une phrase qui dit ce que tu regardes. La liste du onze est rangée du gardien aux attaquants."
+    ],
+    "en": [
+      "Tactics: the XI pitch is bigger and cleaner. Each player shows their position in their line's colour and their name, and the movement line only appears for the player you hover.",
+      "The \"In possession\" / \"Out of possession\" switch sits at the top, with a sentence saying what you are looking at. The XI list runs from goalkeeper to strikers."
     ]
   },
   {
