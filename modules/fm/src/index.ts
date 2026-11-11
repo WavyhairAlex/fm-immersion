@@ -81,3 +81,4 @@ export * from './career';
 export * from './press';
 export * from './match-review';
 export * from './tactic-todo';
+export * from './formations-faced';

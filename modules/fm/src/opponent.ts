@@ -73,7 +73,7 @@ export function strikersOf(formation: string | null): number | null {
 }
 
 /** Liste de formations lue en JSON (clé « profond » de chemins.json) ; TacticalPositions est ignoré (références opaques). */
-function formationsOf(v: unknown): OpponentFormation[] {
+export function formationsOf(v: unknown): OpponentFormation[] {
   let list = v;
   if (typeof list === 'string') {
     try {
