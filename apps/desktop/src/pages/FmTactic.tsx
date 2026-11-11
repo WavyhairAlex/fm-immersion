@@ -414,9 +414,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                           <tr>
                             <th>{t('fm.tac.xi.pos')}</th>
                             <th>{t('fm.tac.xi.player')}</th>
-                            <th>{t('fm.tac.phase.ip')}</th>
-                            <th>{t('fm.tac.phase.oop')}</th>
-                            <th>{t('fm.tac.xi.backup')}</th>
+                            <th>{t('fm.tac.xi.role')}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -432,16 +430,21 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                                   {p ? <PlayerLink player={p} /> : <span className="text-corail">{t('fm.tac.nobody')}</span>}
                                   {p?.team && <span className="ml-2 text-xs font-normal text-orange-fonce">{t('fm.tac.fromTeam', { team: p.team })}</span>}
                                   {p && !p.positions.includes(sl.pos) && <span className="ml-2 text-xs font-normal text-brun">{t('fm.tac.offPos')}</span>}
+                                  {(plan.subs[i] ?? [])[0] && (
+                                    <div className="text-xs font-normal text-brun">
+                                      {t('fm.tac.xi.backupOf', { name: (plan.subs[i] ?? [])[0]!.name })}
+                                      {(plan.subs[i] ?? [])[0]!.team && <span className="ml-1 text-orange-fonce">{t('fm.tac.fromTeam', { team: (plan.subs[i] ?? [])[0]!.team })}</span>}
+                                    </div>
+                                  )}
                                 </td>
-                                {(['ip', 'oop'] as const).map((ph) => (
-                                  <td key={ph}>
-                                    <span className="text-canard">{roleName(ph === 'ip' ? sl.ip : sl.oop, ph)}</span>
-                                    {p && <span className="ml-2 text-xs font-bold text-brun">{note(fitOf(ph))}</span>}
-                                  </td>
-                                ))}
-                                <td className="text-brun">
-                                  {(plan.subs[i] ?? [])[0]?.name ?? '–'}
-                                  {(plan.subs[i] ?? [])[0]?.team && <span className="ml-1 text-xs text-orange-fonce">{t('fm.tac.fromTeam', { team: (plan.subs[i] ?? [])[0]!.team })}</span>}
+                                <td>
+                                  {(['ip', 'oop'] as const).map((ph) => (
+                                    <div key={ph} className="flex flex-wrap items-baseline gap-x-2">
+                                      <span className="text-xs text-brun">{t(`fm.tac.phase.${ph}`)}</span>
+                                      <span className="text-canard">{roleName(ph === 'ip' ? sl.ip : sl.oop, ph)}</span>
+                                      {p && <span className="text-xs font-bold text-brun">{note(fitOf(ph))}</span>}
+                                    </div>
+                                  ))}
                                 </td>
                               </tr>
                             );
@@ -606,7 +609,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
             fold: true,
             node: (
               <>
-              <div className="grid gap-4 lg:grid-cols-2">
+              <div className="grid gap-4">
                 <section className="card">
                   <h2 className="text-xl font-semibold">{t('fm.tac.balance')}</h2>
                   <ul className="mt-3 space-y-3">
@@ -645,6 +648,16 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                     ))}
                   </ol>
                 </section>
+              </div>
+              </>
+            ),
+          },
+        ]}
+      />
+      )}
+
+      {showPi && (
+      <>
                 <section className="card">
                   <h2 className="text-xl font-semibold">{t('fm.tac.teamTitle', { style: tiBase === 'game' ? (gameTactic ?? t('fm.tac.tiAdvice.gameTactic')) : styleName(style) })}</h2>
                   {tiBase === 'game' ? (
@@ -658,15 +671,6 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   <p className="mt-3 text-xs text-brun">{t(tiBase === 'game' ? 'fm.tac.tiAdvice.gameHelp' : 'fm.tac.teamHelp')}</p>
                   {tiAdvice && <TeamAdviceBlock advice={tiAdvice} base={tiBase} load={load} />}
                 </section>
-              </div>
-              </>
-            ),
-          },
-        ]}
-      />
-      )}
-
-      {showPi && (
       <section className="card">
         <h2 className="text-xl font-semibold">{t('fm.pi.title')}</h2>
         <p className="mt-1 text-sm text-brun">
@@ -734,6 +738,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
         <p className="mt-3 text-xs text-brun">{t('fm.pi.help')}</p>
         <More>{t('fm.pi.locks')}</More>
       </section>
+      </>
       )}
     </div>
   );
