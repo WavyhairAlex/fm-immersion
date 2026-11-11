@@ -1,6 +1,7 @@
 import {
   FORMATIONS,
   POS_LABEL,
+  lineOf,
   STYLE_FORMS,
   TacticEngine,
   bestTactic,
@@ -30,16 +31,17 @@ import {
   type FmSnapshot,
   type GameSlot,
   type Phase,
+  type PosCode,
   type TacticReference,
 } from '@fm-immersion/module-fm';
 import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { createContext, useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PosBadge } from './FmFoot';
+import { LINE_COLOR, Pitch, PosBadge } from './FmFoot';
 import { readBuiltTactics } from './FmBuilder';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
-import { fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach, SectionTabs } from './FmUi';
+import { Fit, fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach, SectionTabs } from './FmUi';
 
 // v2 : le choix automatique (meilleure tactique applicable) devient la valeur par défaut.
 const PREFS_KEY = 'fmi.tactic.v2';
@@ -180,8 +182,13 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   const field = plan.slots.filter((s) => s.pos !== 'GB');
   const shape = (ph: Phase) => shapeOf(field.map((s) => phaseXY(s, ph, block)));
   // Écarts minimum entre deux joueurs (en % du terrain) à la taille des pastilles, gardées dans le terrain.
-  const shown = spreadXY(plan.slots.map((s) => phaseXY(s, phase, block)), 23, 14).map(([x, y]) => [Math.min(88, Math.max(12, x)), Math.min(91, Math.max(7, y))] as [number, number]);
+  const shown = spreadXY(plan.slots.map((s) => phaseXY(s, phase, block)), 26, 10).map(([x, y]) => [Math.min(86, Math.max(14, x)), Math.min(93, Math.max(6, y))] as [number, number]);
   const other: Phase = phase === 'ip' ? 'oop' : 'ip';
+  // Lignes du tableau rangées comme on lit un terrain : gardien, défense, milieu, attaque ; de gauche à droite dans chaque ligne.
+  const ROW_ORDER: readonly PosCode[] = ['GB', 'DLG', 'DG', 'DC', 'DD', 'DLD', 'MDF', 'MG', 'MC', 'MD', 'MOG', 'MOC', 'MOD', 'BT'];
+  const rows = plan.slots
+    .map((_, i) => i)
+    .sort((a, b) => ROW_ORDER.indexOf(plan.slots[a]!.pos) - ROW_ORDER.indexOf(plan.slots[b]!.pos) || plan.slots[a]!.x - plan.slots[b]!.x);
 
   return (
     <div className="space-y-4">
@@ -296,55 +303,10 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   </p>
                   {!gamePlan && lineupStatus && lineupStatus !== 'lue' && <p className="mt-1 text-xs text-brun">{t('fm.tac.lineupStatus', { status: lineupStatus })}</p>}
 
-                <div className="mt-4 grid gap-6 xl:grid-cols-[minmax(18rem,26rem)_minmax(0,1fr)]">
+                <div className="mt-4 grid gap-6 xl:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)]">
+                  {/* Terrain : d'abord la phase montrée (avec ou sans ballon), puis une pastille par joueur, poste à la couleur de sa ligne et nom. */}
                   <div>
-                    <div className="relative mx-auto aspect-[3/4] w-full max-w-[26rem] overflow-hidden rounded-2xl bg-eau-fonce/90">
-                      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden>
-                        <g fill="none" stroke="white" strokeOpacity="0.35" strokeWidth="0.4">
-                          <rect x="3" y="2" width="94" height="96" />
-                          <line x1="3" y1="50" x2="97" y2="50" />
-                          <circle cx="50" cy="50" r="9" />
-                          <rect x="25" y="2" width="50" height="15" />
-                          <rect x="25" y="83" width="50" height="15" />
-                        </g>
-                        <g stroke="white" strokeOpacity="0.6" strokeWidth="0.35" strokeDasharray="1 1">
-                          {plan.slots.map((sl, i) => {
-                            const [x1, y1] = phaseXY(sl, other, block);
-                            const [x2, y2] = shown[i] ?? [x1, y1];
-                            return Math.hypot(x1 - x2, y1 - y2) > 2 ? <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} /> : null;
-                          })}
-                        </g>
-                      </svg>
-                      {plan.slots.map((sl, i) => {
-                        const [x, y] = shown[i] ?? [sl.x, sl.y];
-                        const code = phase === 'ip' ? sl.ip : sl.oop;
-                        const fit = sl.player ? engine.roleFit(sl.player, code, phase, sl.pos) : null;
-                        const off = !!sl.player && !sl.player.positions.includes(sl.pos);
-                        return (
-                          <button
-                            key={i}
-                            type="button"
-                            title={`${roleName(code, phase)}${off ? ` · ${t('fm.tac.offPos')}` : ''}`}
-                            onMouseEnter={() => setHover(i)}
-                            onMouseLeave={() => setHover(null)}
-                            onFocus={() => setHover(i)}
-                            onBlur={() => setHover(null)}
-                            className="absolute flex w-[23%] -translate-x-1/2 -translate-y-1/2 flex-col items-center transition-all duration-500"
-                            style={{ left: `${x}%`, top: `${y}%` }}
-                          >
-                            <span
-                              className={`whitespace-nowrap rounded-full bg-white px-2 py-0.5 text-xs font-bold text-canard shadow ring-2 ${hover === i ? 'ring-ambre' : off ? 'ring-corail' : 'ring-white/0'}`}
-                            >
-                              {/* Le poste FM27 du créneau : le rôle déplace la pastille sur le terrain, jamais le poste. */}
-                              {POS_LABEL[sl.pos]}
-                            </span>
-                            <span className="mt-0.5 max-w-full truncate rounded bg-canard/85 px-1.5 text-xs font-bold text-white">{sl.player ? shortName(sl.player.name) : t('fm.tac.nobody')}</span>
-                            {fit != null && <span className="text-xs font-bold text-white/90">{note(fit)}</span>}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="mt-3 flex flex-wrap justify-center gap-2" role="tablist">
+                    <div className="flex justify-center gap-2" role="tablist" aria-label={t('fm.tac.xi.phaseLabel')}>
                       {(['ip', 'oop'] as const).map((ph) => (
                         <button
                           key={ph}
@@ -354,49 +316,124 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                           onClick={() => update({ phase: ph })}
                           className={`chip ${phase === ph ? 'chip-on' : ''}`}
                         >
-                          {t(`fm.tac.phase.${ph}`)} {shape(ph)}
+                          {t(`fm.tac.phase.${ph}`)} <span className="ml-1 font-normal opacity-80">{shape(ph)}</span>
                         </button>
                       ))}
                     </div>
+                    <p className="mt-2 text-center text-xs text-brun">{t(`fm.tac.xi.phaseHelp.${phase}`)}</p>
+                    <Pitch className="mx-auto mt-2 w-full max-w-[22rem]">
+                      {/* Au survol seulement : d'où part le joueur dans l'autre phase. */}
+                      {hover != null && plan.slots[hover] && (() => {
+                        const [x1, y1] = phaseXY(plan.slots[hover]!, other, block);
+                        const [x2, y2] = shown[hover] ?? [x1, y1];
+                        return Math.hypot(x1 - x2, y1 - y2) > 2 ? (
+                          <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>
+                            <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#FFB547" strokeWidth="0.6" strokeDasharray="1.5 1" />
+                            <ellipse cx={x1} cy={y1} rx="1.6" ry="1.1" fill="none" stroke="#FFB547" strokeWidth="0.5" />
+                          </svg>
+                        ) : null;
+                      })()}
+                      {plan.slots.map((sl, i) => {
+                        const [x, y] = shown[i] ?? [sl.x, sl.y];
+                        const code = phase === 'ip' ? sl.ip : sl.oop;
+                        const off = !!sl.player && !sl.player.positions.includes(sl.pos);
+                        const c = LINE_COLOR[lineOf(sl.pos)];
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            title={`${roleName(code, phase)}${off ? ` · ${t('fm.tac.offPos')}` : ''}`}
+                            onMouseEnter={() => setHover(i)}
+                            onMouseLeave={() => setHover(null)}
+                            onFocus={() => setHover(i)}
+                            onBlur={() => setHover(null)}
+                            className={`absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5 transition-all duration-500 ${hover === i ? 'z-10 scale-110' : ''}`}
+                            style={{ left: `${x}%`, top: `${y}%` }}
+                          >
+                            {/* Le poste FM27 du créneau : le rôle déplace la pastille sur le terrain, jamais le poste. */}
+                            <span
+                              className={`whitespace-nowrap rounded-md px-1.5 py-0.5 text-[0.7rem] font-bold leading-none shadow ring-2 ${c.bg} ${c.text} ${hover === i ? 'ring-white' : off ? 'ring-corail' : 'ring-white/40'}`}
+                            >
+                              {POS_LABEL[sl.pos]}
+                            </span>
+                            <span className="max-w-[6.5rem] truncate rounded bg-white px-1.5 py-px text-xs font-bold text-canard shadow">
+                              {sl.player ? shortName(sl.player.name) : t('fm.tac.nobody')}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </Pitch>
                   </div>
 
+                  {/* Liste à recopier dans FM27 : une ligne par poste, les deux rôles côte à côte, la doublure sous le titulaire. */}
                   <div className="min-w-0">
                     <h3 className="font-semibold">{t('fm.tac.xi.title')}</h3>
                     <div className="mt-2 overflow-x-auto">
                       <table className="data-table">
                         <thead>
                           <tr>
-                            <th>{t('fm.tac.xi.pos')}</th>
+                            <th className="w-16">{t('fm.tac.xi.pos')}</th>
                             <th>{t('fm.tac.xi.player')}</th>
-                            <th>{t('fm.tac.phase.ip')}</th>
-                            <th>{t('fm.tac.phase.oop')}</th>
-                            <th>{t('fm.tac.xi.backup')}</th>
+                            {(['ip', 'oop'] as const).map((ph) => (
+                              <th key={ph} className={phase === ph ? 'text-canard' : ''}>
+                                <button type="button" onClick={() => update({ phase: ph })} className="uppercase hover:text-orange-fonce" title={t('fm.tac.xi.showPhase')}>
+                                  {t(`fm.tac.phase.${ph}`)}
+                                  {phase === ph && <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-orange align-middle" aria-hidden />}
+                                </button>
+                              </th>
+                            ))}
                           </tr>
                         </thead>
                         <tbody>
-                          {plan.slots.map((sl, i) => {
+                          {rows.map((i, k) => {
+                            const sl = plan.slots[i]!;
                             const p = sl.player;
-                            const fitOf = (ph: Phase) => (p ? engine.roleFit(p, ph === 'ip' ? sl.ip : sl.oop, ph, sl.pos) : null);
+                            const sub = (plan.subs[i] ?? [])[0];
+                            const prev = k > 0 ? plan.slots[rows[k - 1]!] : undefined;
+                            const newLine = !!prev && lineOf(prev.pos) !== lineOf(sl.pos);
                             return (
-                              <tr key={i} className={hover === i ? 'bg-creme/70' : ''} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
-                                <td>
+                              <tr
+                                key={i}
+                                className={`${newLine ? 'border-t-2 border-t-canard/15' : ''} ${hover === i ? '!bg-orange/15' : ''}`}
+                                onMouseEnter={() => setHover(i)}
+                                onMouseLeave={() => setHover(null)}
+                              >
+                                <td className="align-top">
                                   <PosBadge pos={sl.pos} />
                                 </td>
-                                <td className="font-bold text-canard">
-                                  {p ? <PlayerLink player={p} /> : <span className="text-corail">{t('fm.tac.nobody')}</span>}
-                                  {p?.team && <span className="ml-2 text-xs font-normal text-orange-fonce">{t('fm.tac.fromTeam', { team: p.team })}</span>}
-                                  {p && !p.positions.includes(sl.pos) && <span className="ml-2 text-xs font-normal text-brun">{t('fm.tac.offPos')}</span>}
+                                <td className="align-top">
+                                  <div className="font-bold text-canard">
+                                    {p ? <PlayerLink player={p} /> : <span className="text-corail">{t('fm.tac.nobody')}</span>}
+                                  </div>
+                                  {p?.team && <div className="text-xs text-orange-fonce">{t('fm.tac.fromTeam', { team: p.team })}</div>}
+                                  {p && !p.positions.includes(sl.pos) && <div className="text-xs font-bold text-corail">{t('fm.tac.offPos')}</div>}
+                                  {sub && (
+                                    <div className="mt-0.5 text-xs text-brun">
+                                      {t('fm.tac.xi.backupOf', { name: sub.name })}
+                                      {sub.team && <span className="ml-1 text-orange-fonce">{t('fm.tac.fromTeam', { team: sub.team })}</span>}
+                                    </div>
+                                  )}
                                 </td>
-                                {(['ip', 'oop'] as const).map((ph) => (
-                                  <td key={ph}>
-                                    <span className="text-canard">{roleName(ph === 'ip' ? sl.ip : sl.oop, ph)}</span>
-                                    {p && <span className="ml-2 text-xs font-bold text-brun">{note(fitOf(ph))}</span>}
-                                  </td>
-                                ))}
-                                <td className="text-brun">
-                                  {(plan.subs[i] ?? [])[0]?.name ?? '–'}
-                                  {(plan.subs[i] ?? [])[0]?.team && <span className="ml-1 text-xs text-orange-fonce">{t('fm.tac.fromTeam', { team: (plan.subs[i] ?? [])[0]!.team })}</span>}
-                                </td>
+                                {(['ip', 'oop'] as const).map((ph) => {
+                                  const code = ph === 'ip' ? sl.ip : sl.oop;
+                                  const r = engine.roles.get(code);
+                                  const name = (en ? r?.en : r?.fr) ?? r?.fr ?? code;
+                                  return (
+                                    <td key={ph} className={`align-top ${phase === ph ? 'bg-orange/[0.06]' : ''}`}>
+                                      <div className="flex items-start justify-between gap-2">
+                                        <span className="leading-snug text-canard">
+                                          {name}
+                                          {ph === 'ip' && r?.duty && <span className="block text-xs text-brun">{t(`fm.tac.duty.${r.duty}`)}</span>}
+                                        </span>
+                                        {p && (
+                                          <span className="shrink-0 whitespace-nowrap">
+                                            <Fit value={engine.roleFit(p, code, ph, sl.pos)} />
+                                          </span>
+                                        )}
+                                      </div>
+                                    </td>
+                                  );
+                                })}
                               </tr>
                             );
                           })}

@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.151",
+    "date": "2026-11-11",
+    "fr": [
+      "Mon onze est plus lisible : sur le terrain, chaque joueur a son poste à la couleur de sa ligne et son nom, et en survolant un joueur, un trait montre d'où il part dans l'autre phase.",
+      "La liste à appliquer dans FM27 se lit comme un terrain, du gardien aux attaquants, avec les rôles avec et sans ballon côte à côte, leurs notes en couleur et la doublure sous chaque titulaire."
+    ],
+    "en": [
+      "My eleven is easier to read: on the pitch each player shows their position in their line's colour and their name, and hovering a player draws where they start from in the other phase.",
+      "The list to apply in FM27 now reads like a pitch, from goalkeeper to strikers, with in- and out-of-possession roles side by side, colour-coded ratings and the backup under each starter."
+    ]
+  },
+  {
     "version": "0.1.150",
     "date": "2026-11-10",
     "fr": [

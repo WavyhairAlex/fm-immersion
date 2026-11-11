@@ -234,7 +234,7 @@
       "offPos": "outside natural position (accomplished)",
       "fromTeam": "from {{team}}",
       "nobody": "Nobody",
-      "pitchHelp": "Eleven picked by fit to the style's roles, injured players left out. Dotted lines show the move from the other phase; hover a player to find them in the list.",
+      "pitchHelp": "Eleven picked by fit to the style's roles, injured players left out. Hover a player: an amber line shows where they start from in the other phase, and their row lights up in the list.",
       "balance": "Team balance",
       "balanceHelp": "Pace, pressing and aerial play are compared to your eleven's average level: green = strength, red = weakness. Each weakness lowers the team rating, which picks the formation and style: the eleven is judged as a whole, not only position by position.",
       "forms": "Formations for this style",
@@ -301,7 +301,7 @@
       "fromGame": "Game line-up",
       "fromGameHelp": "Players and positions read from your FM27 tactic. Roles and instructions: the game's when the plugin reads them, otherwise each player's best role in that position.",
       "suggestedHelpGame": "Placement computed by FM Immersion for the chosen style. “Game XI” shows your real FM27 line-up.",
-      "pitchHelpGame": "Your FM27 line-up. Dotted lines show the move from the other phase; hover a player to find them in the list. Click a formation below to compare with an eleven worked out by FM Immersion.",
+      "pitchHelpGame": "Your FM27 line-up. Hover a player: an amber line shows where they start from in the other phase, and their row lights up in the list. Click a formation below to compare with an eleven worked out by FM Immersion.",
       "lineupStatus": "Plugin line-up reading: {{status}}.",
       "duty": {
         "d": "Defend",
@@ -323,7 +323,14 @@
         "title": "The eleven to set in FM27",
         "pos": "Position",
         "player": "Player",
-        "backup": "Backup"
+        "backup": "Backup",
+        "backupOf": "Backup: {{name}}",
+        "phaseLabel": "Phase shown",
+        "showPhase": "Show this phase on the pitch",
+        "phaseHelp": {
+          "ip": "Where each player stands when your team has the ball. The label stays the position to set in FM27.",
+          "oop": "Where each player stands when the opponent has the ball. The label stays the position to set in FM27."
+        }
       },
       "matchTitle": "Match tactic against {{name}}",
       "matchSame": "Your base tactic, {{form}} {{style}}, remains the best against this opponent.",
