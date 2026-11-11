@@ -1,0 +1,188 @@
+import {
+  POS_LABEL,
+  instructionKey,
+  instructionState,
+  piLabel,
+  type FormationPlan,
+  type LineupAdvice,
+  type PlayerInstruction,
+  type TacticEngine,
+  type TeamAdvice,
+} from '@fm-immersion/module-fm';
+import { useTranslation } from 'react-i18next';
+import { fitPct, More } from './FmUi';
+
+/*
+ * Mon onze : ce que l'adjoint dit du onze affiché (rôles à revoir, titulaires, joueurs à relancer, doublures),
+ * des consignes d'équipe (adaptées à l'effectif, comparées à FM27) et des consignes individuelles réglées dans le jeu.
+ */
+
+/** L'avis de l'adjoint sur le onze affiché : des phrases courtes, chacune avec ses chiffres. */
+export function LineupAdviceCard({ advice, plan, engine }: { advice: LineupAdvice; plan: FormationPlan; engine: TacticEngine }) {
+  const { t, i18n } = useTranslation();
+  const en = i18n.resolvedLanguage === 'en';
+  const role = (code: string) => {
+    const r = engine.roles.get(code);
+    return (en ? r?.en : r?.fr) ?? r?.fr ?? code;
+  };
+  const pos = (i: number) => POS_LABEL[plan.slots[i]!.pos];
+  const empty = !advice.roles.length && !advice.starters.length && !advice.rested.length && !advice.cover.length;
+  return (
+    <section className="card">
+      <h2 className="text-xl font-semibold">{t('fm.tac.advice.title')}</h2>
+      {empty ? (
+        <p className="mt-2 text-sm">{t('fm.tac.advice.none')}</p>
+      ) : (
+        <div className="mt-3 grid gap-4 lg:grid-cols-2">
+          {advice.starters.length > 0 && (
+            <Group title={t('fm.tac.advice.starters')}>
+              {advice.starters.map((a) => (
+                <li key={a.slot}>
+                  {t('fm.tac.advice.starter', { pos: pos(a.slot), better: a.better.name, betterFit: fitPct(a.betterFit), starter: a.starter.name, starterFit: fitPct(a.starterFit) })}
+                </li>
+              ))}
+            </Group>
+          )}
+          {advice.roles.length > 0 && (
+            <Group title={t('fm.tac.advice.roles')} note={t('fm.tac.advice.rolesNote')}>
+              {advice.roles.map((a) => (
+                <li key={`${a.slot}${a.phase}`}>
+                  {t('fm.tac.advice.role', { player: a.player.name, phase: t(a.phase === 'ip' ? 'fm.pi.phaseIp' : 'fm.pi.phaseOop'), to: role(a.to), toFit: fitPct(a.toFit), from: role(a.from), fromFit: fitPct(a.fromFit) })}
+                </li>
+              ))}
+            </Group>
+          )}
+          {advice.cover.length > 0 && (
+            <Group title={t('fm.tac.advice.cover')}>
+              {advice.cover.map((a) => (
+                <li key={a.slot}>
+                  {a.shift
+                    ? t('fm.tac.advice.coverShift', { pos: pos(a.slot), starter: a.starter?.name ?? '', player: a.shift.player.name, from: POS_LABEL[a.shift.from], replacement: a.shift.replacement.name })
+                    : t(a.reserve || a.makeshift ? 'fm.tac.advice.coverThin' : 'fm.tac.advice.coverNone', { pos: pos(a.slot), starter: a.starter?.name ?? '' })}
+                  {a.reserve && <> {t('fm.tac.advice.coverReserve', { name: a.reserve.name, team: a.reserve.team ?? '' })}</>}
+                  {a.makeshift && <> {t('fm.tac.advice.coverMakeshift', { name: a.makeshift.player.name, fam: a.makeshift.familiarity })}</>}
+                </li>
+              ))}
+            </Group>
+          )}
+          {advice.rested.length > 0 && (
+            <Group title={t('fm.tac.advice.rested')}>
+              {advice.rested.map((a) => (
+                <li key={a.slot}>
+                  {t(`fm.tac.advice.restedWhy.${a.reason}`, {
+                    pos: pos(a.slot),
+                    better: a.better.name,
+                    betterFit: fitPct(a.betterFit),
+                    starter: a.starter.name,
+                    starterFit: fitPct(a.starterFit),
+                    value: a.value ?? '–',
+                    morale: a.better.morale ?? '–',
+                  })}
+                </li>
+              ))}
+            </Group>
+          )}
+        </div>
+      )}
+      <More>{t('fm.tac.advice.help')}</More>
+    </section>
+  );
+}
+
+function Group({ title, note, children }: { title: string; note?: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{title}</p>
+      <ul className="mt-1 space-y-1.5 text-sm [&>li]:rounded-xl [&>li]:bg-creme/50 [&>li]:px-3 [&>li]:py-2">{children}</ul>
+      {note && <p className="mt-1 text-xs text-brun">{note}</p>}
+    </div>
+  );
+}
+
+/**
+ * Consignes d'équipe adaptées au onze : ce que l'effectif fait corriger, puis, si le plugin a lu la tactique,
+ * les cases réglées autrement dans FM27. `base` : « game » quand on part des consignes du jeu (onze du jeu).
+ */
+export function TeamAdviceBlock({ advice, base, load }: { advice: TeamAdvice; base: 'style' | 'game'; load: { team: number | null; understanding: number | null } }) {
+  const { t } = useTranslation();
+  const changes = advice.rows.filter((r) => r.reason);
+  const diffs = base === 'style' ? advice.rows.filter((r) => r.game != null && r.game !== r.option) : [];
+  const val = (r: TeamAdvice['rows'][number], o: number) => r.def.short[o] ?? r.def.options[o] ?? '';
+  const heavy = load.team != null && load.understanding != null && load.team >= 50 && load.understanding < 50;
+  return (
+    <div className="mt-4 border-t border-canard/10 pt-3 text-sm">
+      <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.tac.tiAdvice.title')}</p>
+      {changes.length ? (
+        <ul className="mt-1 space-y-1.5">
+          {changes.map((r) => (
+            <li key={r.def.id} className="rounded-xl bg-creme/50 px-3 py-2">
+              <span className="text-brun">{r.def.title} :</span> <b>{val(r, r.option)}</b>{' '}
+              {r.styleOption != null && r.styleOption !== r.option && <span className="text-xs text-brun">{t('fm.tac.tiAdvice.insteadOf', { label: val(r, r.styleOption) })}</span>}
+              <span className="block text-xs text-brun first-letter:uppercase">{t(`fm.tac.tiAdvice.reason.${r.reason}`, r.vals)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-1">{t(base === 'game' ? 'fm.tac.tiAdvice.noneGame' : 'fm.tac.tiAdvice.none')}</p>
+      )}
+      {heavy && <p className="mt-2 rounded-xl bg-ambre/20 px-3 py-2">{t('fm.tac.tiAdvice.heavy', { count: advice.count.game ?? 0, complexity: Math.round(load.team!), understanding: Math.round(load.understanding!) })}</p>}
+      {base === 'style' && advice.read && (
+        <>
+          <p className="mt-4 text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.tac.tiAdvice.vsGame')}</p>
+          {diffs.length ? (
+            <table className="data-table mt-1">
+              <thead>
+                <tr>
+                  <th>{t('fm.tac.tiAdvice.col.card')}</th>
+                  <th>{t('fm.tac.tiAdvice.col.advised')}</th>
+                  <th>{t('fm.tac.tiAdvice.col.game')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {diffs.map((r) => (
+                  <tr key={r.def.id}>
+                    <td className="text-brun">{r.def.title}</td>
+                    <td className="font-bold text-canard">{val(r, r.option)}</td>
+                    <td>{val(r, r.game!)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="mt-1">{t('fm.tac.tiAdvice.sameAsGame')}</p>
+          )}
+        </>
+      )}
+      {!advice.read && <p className="mt-2 text-xs text-brun">{t('fm.tac.tiAdvice.notRead')}</p>}
+    </div>
+  );
+}
+
+/** État d'une consigne conseillée dans la tactique du jeu : déjà réglée, ou réglée à l'inverse. */
+export function PiState({ x, keys }: { x: PlayerInstruction; keys: readonly string[] | null }) {
+  const { t, i18n } = useTranslation();
+  if (!keys) return null;
+  const s = instructionState(x.id, keys);
+  if (s.state === 'done') return <span className="ml-1 whitespace-nowrap rounded-md bg-eau/30 px-1.5 py-0.5 text-xs font-bold text-canard">{t('fm.pi.state.done')}</span>;
+  if (s.state === 'conflict') return <span className="ml-1 whitespace-nowrap rounded-md bg-corail/20 px-1.5 py-0.5 text-xs font-bold text-canard">{t('fm.pi.state.conflict', { label: piLabel(s.other!, i18n.resolvedLanguage === 'en').option })}</span>;
+  return null;
+}
+
+/**
+ * Consignes individuelles réglées dans FM27 pour un joueur, et celles à retirer en premier quand il y en a trop.
+ * `supported` : toutes les consignes que ses attributs appuient, sans la limite par joueur.
+ */
+export function GamePiLine({ mine, supported, budget }: { mine: readonly string[]; supported: readonly PlayerInstruction[]; budget: number }) {
+  const { t, i18n } = useTranslation();
+  const en = i18n.resolvedLanguage === 'en';
+  if (!mine.length) return null;
+  // Consignes du jeu que les attributs du joueur n'appuient pas : les premières à enlever si la tactique est trop chargée.
+  const extra = mine.filter((k) => !supported.some((x) => instructionKey(x.id) === k));
+  const over = mine.length > budget;
+  return (
+    <p className="mb-1 text-xs text-canard">
+      <b>{t('fm.pi.inGame')}</b> {mine.map((k) => piLabel(k, en).option).join(' · ')}
+      {over && extra.length > 0 && <span className="mt-0.5 block text-brun">{t('fm.pi.over', { count: mine.length, budget, labels: extra.map((k) => piLabel(k, en).option).join(', ') })}</span>}
+    </p>
+  );
+}

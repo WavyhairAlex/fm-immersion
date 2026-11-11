@@ -37,6 +37,8 @@ export * from './lineup';
 export * from './tactic-slots';
 export * from './game-instructions';
 export * from './tactic-advice';
+export * from './lineup-advice';
+export * from './team-advice';
 export * from './tactic-builder';
 export * from './opponent';
 export * from './matchup';

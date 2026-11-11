@@ -34,6 +34,8 @@ import {
 } from '@fm-immersion/module-fm';
 import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
+import { gameInstructions, gamePlayerInstructions, instructionLoad, lineupAdvice, teamAdvice, TEAM_INSTRUCTIONS_FM27 } from '@fm-immersion/module-fm';
+import { GamePiLine, LineupAdviceCard, PiState, TeamAdviceBlock } from './FmTacticAdvice';
 import { createContext, useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
@@ -115,7 +117,7 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
   const natural = (style && STYLE_FORMS[style.id]?.filter((f) => FORMATIONS[f])) || ['4-3-3'];
   const form = prefs.form && FORMATIONS[prefs.form] ? prefs.form : auto && pick ? pick.form : (gameForm ?? natural[0] ?? '4-3-3');
   const plans = useMemo(() => ranked.find((r) => r.style.id === style?.id)?.plans ?? [], [ranked, style]);
-  const gamePlan = useMemo(() => (lineup ? planFromLineup(engine, lineup, players, gameForm ?? gameFormation) : null), [engine, lineup, players, gameForm, gameFormation]);
+  const gamePlan = useMemo(() => (lineup ? planFromLineup(engine, lineup, players, gameForm ?? gameFormation, reserve) : null), [engine, lineup, players, gameForm, gameFormation, reserve]);
   const builtPlanA = useMemo(() => (built ? builtPlan(engine, built, avail, reserve) : null), [engine, built, avail, reserve]);
   const fromGame = !!gamePlan && prefs.source !== 'simloom' && !built;
   const plan = builtPlanA ?? (fromGame ? gamePlan : plans.find((p) => p.form === form));
@@ -161,11 +163,28 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   // Poste survolé : mis en évidence à la fois sur le terrain et dans la liste.
   const [hover, setHover] = useState<number | null>(null);
 
+  // Ce que le plugin a lu de la tactique réglée dans FM27 : consignes d'équipe, consignes individuelles par joueur, charge.
+  const gameTi = useMemo(() => gameInstructions(snap), [snap]);
+  const gamePi = useMemo(() => gamePlayerInstructions(snap), [snap]);
+  const load = useMemo(() => instructionLoad(snap), [snap]);
+  // L'avis de l'adjoint porte sur le onze de base (équipe A) : rôles à revoir, titulaires, joueurs à relancer, doublures.
+  const advice = useMemo(() => (planA ? lineupAdvice(engine, planA, avail, built ? 'built' : fromGame ? 'game' : 'suggested') : null), [engine, planA, avail, built, fromGame]);
+  // Onze du jeu : on part des consignes réglées dans FM27, pas de celles d'un style que le joueur n'a pas choisi.
+  const tiBase: 'style' | 'game' = fromGame && gameTi && Object.keys(gameTi.ti).length > 0 ? 'game' : 'style';
+  const tiAdvice = useMemo(() => (planA && style ? teamAdvice(planA, style, gameTi, tiBase) : null), [planA, style, gameTi, tiBase]);
+  const gameTiLabels = useMemo(() => {
+    const of = (oop: boolean) => TEAM_INSTRUCTIONS_FM27.filter((d) => (d.phase === 'oop' || d.code === 'DefensiveTransition') === oop).flatMap((d) => {
+      const l = gameTi ? d.options[gameTi.ti[d.id] ?? -1] : null;
+      return l ? [l] : [];
+    });
+    return { ip: of(false), oop: of(true) };
+  }, [gameTi]);
+
   if (!avail.length || !style || !plan) return <p className="card mt-6 text-brun">{t('fm.tac.noAttributes')}</p>;
 
   const block = styleBlock(style);
   // Complexité : moins l'effectif lit le jeu, moins on charge chaque joueur de consignes individuelles.
-  const budget = instructionBudget(style, tactAbility(avail));
+  const budget = instructionBudget(style, tactAbility(avail), load.understanding);
   // Rôle avec ballon : FM27 fixe la mission d'après le rôle, on l'affiche à côté (« Milieu axial (Soutien) »).
   const roleName = (code: string, ph?: Phase) => {
     const r = engine.roles.get(code);
@@ -270,7 +289,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
               <section className="card">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <h2 className="text-xl font-semibold">
-                      {team === 'B' ? plan.form : form} · {styleName(style)} <span className="text-sm font-normal text-brun">{t('fm.tac.fit', { value: note(plan.score) })}</span>
+                      {team === 'B' ? plan.form : form} · {fromGame && team === 'A' && gameTactic ? gameTactic : styleName(style)} <span className="text-sm font-normal text-brun">{t('fm.tac.fit', { value: note(plan.score) })}</span>
                     </h2>
                     <div className="flex gap-1" role="tablist" aria-label={t('fm.tac.team.label')}>
                       {(['A', 'B'] as const).map((k) => (
@@ -407,6 +426,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   </div>
                 </div>
               </section>
+              {team === 'A' && advice && planA && <LineupAdviceCard advice={advice} plan={planA} engine={engine} />}
               </>
             ),
           },
@@ -597,12 +617,17 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   </ol>
                 </section>
                 <section className="card">
-                  <h2 className="text-xl font-semibold">{t('fm.tac.teamTitle', { style: styleName(style) })}</h2>
-                  {style.mentality && <p className="mt-1 text-sm">{t('fm.style.mentality', { value: style.mentality })}</p>}
+                  <h2 className="text-xl font-semibold">{t('fm.tac.teamTitle', { style: tiBase === 'game' ? (gameTactic ?? t('fm.tac.tiAdvice.gameTactic')) : styleName(style) })}</h2>
+                  {tiBase === 'game' ? (
+                    <p className="mt-1 text-sm text-brun">{t('fm.tac.tiAdvice.gameIntro')}</p>
+                  ) : (
+                    style.mentality && <p className="mt-1 text-sm">{t('fm.style.mentality', { value: style.mentality })}</p>
+                  )}
                   <div className="mt-3">
-                    <TeamCards inPossession={style.inPossession} outOfPossession={style.outOfPossession} />
+                    {tiBase === 'game' ? <TeamCards inPossession={gameTiLabels.ip} outOfPossession={gameTiLabels.oop} /> : <TeamCards inPossession={style.inPossession} outOfPossession={style.outOfPossession} />}
                   </div>
-                  <p className="mt-3 text-xs text-brun">{t('fm.tac.teamHelp')}</p>
+                  <p className="mt-3 text-xs text-brun">{t(tiBase === 'game' ? 'fm.tac.tiAdvice.gameHelp' : 'fm.tac.teamHelp')}</p>
+                  {tiAdvice && <TeamAdviceBlock advice={tiAdvice} base={tiBase} load={load} />}
                 </section>
               </div>
               </>
@@ -615,12 +640,20 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
       {showPi && (
       <section className="card">
         <h2 className="text-xl font-semibold">{t('fm.pi.title')}</h2>
-        <p className="mt-1 text-sm text-brun">{budget < 3 ? t('fm.pi.budgetLow', { count: budget }) : t('fm.pi.budgetFull')}</p>
+        <p className="mt-1 text-sm text-brun">
+          {load.understanding != null ? t('fm.pi.budgetGame', { count: budget, understanding: Math.round(load.understanding) }) : budget < 3 ? t('fm.pi.budgetLow', { count: budget }) : t('fm.pi.budgetFull')}
+        </p>
+        {load.player != null && load.player >= 60 && (load.understanding ?? 100) < 50 && (
+          <p className="mt-2 rounded-xl bg-ambre/20 px-3 py-2 text-sm">{t('fm.pi.heavy', { complexity: Math.round(load.player), understanding: Math.round(load.understanding!) })}</p>
+        )}
         <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {plan.slots
             .filter((sl) => sl.player)
             .map((sl, i) => {
               const adv = playerInstructions(engine, sl, style, plan.slots, budget);
+              // Ce que le joueur a déjà réglé dans FM27 pour lui (toutes compos), et ce que son rôle impose.
+              const inGame = gamePi.get(sl.player!.id) ?? null;
+              const gameKeys = inGame ? [...inGame.mine, ...inGame.imposed] : null;
               return (
                 <div key={i} className="rounded-xl bg-creme/50 px-3 py-2 text-sm">
                   <div className="flex items-baseline gap-2">
@@ -631,10 +664,14 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                     {roleName(sl.ip, 'ip')} · {roleName(sl.oop)}
                     {sl.game?.custom && <span className="ml-1 rounded-full bg-canard/10 px-1.5 text-canard">{t('fm.pi.custom')}</span>}
                   </p>
-                  {sl.game && (sl.game.instructions.ip.length > 0 || sl.game.instructions.oop.length > 0) && (
-                    <p className="mb-1 text-xs text-canard">
-                      <b>{t('fm.pi.inGame')}</b> {[...sl.game.instructions.ip, ...sl.game.instructions.oop].join(' · ')}
-                    </p>
+                  {inGame ? (
+                    <GamePiLine mine={inGame.mine} supported={budget < 3 ? playerInstructions(engine, sl, style, plan.slots, 3).list : adv.list} budget={budget} />
+                  ) : (
+                    sl.game && (sl.game.instructions.ip.length > 0 || sl.game.instructions.oop.length > 0) && (
+                      <p className="mb-1 text-xs text-canard">
+                        <b>{t('fm.pi.inGame')}</b> {[...sl.game.instructions.ip, ...sl.game.instructions.oop].join(' · ')}
+                      </p>
+                    )
                   )}
                   {adv.list.length ? (
                     adv.list.map((x) => (
@@ -644,6 +681,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                         </span>
                         <b className="text-canard">{t(`fm.pi.id.${x.id}`)}</b>{' '}
                         <span className="text-xs text-brun">{t(`fm.pi.why.${x.why}`, fmtVals(x.vals, nf1))}</span>
+                        <PiState x={x} keys={gameKeys} />
                       </div>
                     ))
                   ) : (

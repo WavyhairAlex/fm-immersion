@@ -4,7 +4,7 @@ import type { FmSnapshot } from './snapshot';
 import { snapshotRoleStars, type RoleStars } from './game-stars';
 import { otherTeamOf } from './teams';
 import { tacticSlots } from './tactic-slots';
-import { FORMATIONS, balancePenalty, readiness, slotContexts, type FormationPlan, type RoleRef, type Slot, type SlotCtx, type TacticEngine } from './tactic';
+import { FORMATIONS, balancePenalty, readiness, slotContexts, slotFit, type FormationPlan, type RoleRef, type Slot, type SlotCtx, type TacticEngine } from './tactic';
 
 /*
  * Compo réelle lue dans FM27 (bloc « lineup » de l'instantané, plugin 0.3 et suivants) :
@@ -22,6 +22,8 @@ export interface GameSlot {
   index: number | null;
   /** Poste lu ; null si le jeu ne l'a pas donné sous une forme reconnue (déduit plus tard du schéma ou du joueur). */
   pos: PosCode | null;
+  /** Poste sans ballon lu dans la tactique, quand il diffère du poste avec ballon. */
+  posOOP?: PosCode | null;
   playerId: string | null;
   playerName: string | null;
   roleIP: string | null;
@@ -118,6 +120,7 @@ export function gameLineup(snap: FmSnapshot | null | undefined): GameSlot[] | nu
       const slot = ranked ? (row.index != null ? slots.find((s) => s.index === row.index) : undefined) : out.length === slots.length ? slots[row.index ?? k] : undefined;
       if (!slot) return;
       row.pos ??= slot.pos;
+      row.posOOP ??= slot.posOOP;
       row.roleIP ??= slot.roleIP;
       row.roleOOP ??= slot.roleOOP;
     });
@@ -173,7 +176,7 @@ const XY: Record<PosCode, [number, number]> = {
  * Plan « onze du jeu » : les joueurs et rôles réels, au format du plan calculé, pour que
  * Composition, Titulaires et remplaçants et les consignes s'appuient sur la vraie compo.
  */
-export function planFromLineup(engine: TacticEngine, lineup: GameSlot[], players: FmPlayer[], form: string | null): FormationPlan {
+export function planFromLineup(engine: TacticEngine, lineup: GameSlot[], players: FmPlayer[], form: string | null, reserve: FmPlayer[] = []): FormationPlan {
   const byId = new Map(players.map((p) => [p.id, p]));
   const byName = new Map(players.map((p) => [norm(p.name), p]));
   const ref = form && FORMATIONS[form] ? [...FORMATIONS[form]!] : null;
@@ -213,21 +216,27 @@ export function planFromLineup(engine: TacticEngine, lineup: GameSlot[], players
   // Créneaux excentrés (deux milieux défensifs, centraux gauche et droit…) : le jeu y propose d'autres rôles.
   const ctxs = slotContexts(placed.map(({ s, x }) => ({ pos: s.pos, x })));
   const slots: Slot[] = placed.map(({ s, p, x, y }, i) => {
+    // Sans ballon, le rôle se lit au poste sans ballon du joueur (un MO qui défend en M (C) a les rôles du milieu axial).
+    const posOOP = s.posOOP && s.posOOP !== s.pos ? s.posOOP : undefined;
     const ip = roleFor(s.roleIP, p, s.pos, 'ip', ctxs[i]!);
-    const oop = roleFor(s.roleOOP, p, s.pos, 'oop', ctxs[i]!);
+    const oop = roleFor(s.roleOOP, p, posOOP ?? s.pos, 'oop', posOOP ? { wide: false, cbs: ctxs[i]!.cbs } : ctxs[i]!);
     const a = p ? engine.roleFit(p, ip, 'ip', s.pos) : null;
-    const b = p ? engine.roleFit(p, oop, 'oop', s.pos) : null;
-    return { pos: s.pos, x, y, ip, oop, player: p, fit: a != null && b != null ? (a + b) / 2 : (a ?? b), game: { custom: s.custom, instructions: s.instructions } };
+    const b = p ? engine.roleFit(p, oop, 'oop', posOOP ?? s.pos) : null;
+    return { pos: s.pos, ...(posOOP ? { posOOP } : {}), x, y, ip, oop, player: p, fit: a != null && b != null ? (a + b) / 2 : (a ?? b), game: { custom: s.custom, instructions: s.instructions } };
   });
   const xi = new Set(slots.flatMap((s) => (s.player ? [s.player.id] : [])));
-  const subs = slots.map((sl) =>
-    players
+  const benchFor = (list: FmPlayer[], sl: Slot) =>
+    list
       .filter((p) => !xi.has(p.id) && !unavailable(p) && engine.canPlay(p, sl.pos))
-      .map((p) => ({ p, f: ((engine.roleFit(p, sl.ip, 'ip', sl.pos) ?? 0) + (engine.roleFit(p, sl.oop, 'oop', sl.pos) ?? 0)) / 2 }))
+      .map((p) => ({ p, f: slotFit(engine, p, sl) ?? 0 }))
       .sort((a, b) => b.f - a.f)
       .slice(0, 2)
-      .map((x) => x.p),
-  );
+      .map((x) => x.p);
+  // Doublures : l'équipe première d'abord ; sans personne, le meilleur de la réserve ou des jeunes.
+  const subs = slots.map((sl) => {
+    const first = benchFor(players, sl);
+    return first.length ? first : benchFor(reserve, sl).slice(0, 1);
+  });
   // Même note d'équipe que les plans calculés (sans le style, inconnu ici : seuls les déséquilibres de rôles comptent).
   const n = slots.length || 1;
   const fit = slots.reduce((a, s) => a + (s.fit ?? 0), 0) / n;

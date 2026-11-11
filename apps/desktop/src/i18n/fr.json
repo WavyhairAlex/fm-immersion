@@ -311,6 +311,55 @@
       "auto": "Automatique : meilleur choix",
       "styles": "Styles de jeu",
       "myTactics": "Mes tactiques (Construire)",
+        "advice": {
+          "title": "L'avis de ton adjoint sur ce onze",
+          "none": "Rien à redire : chacun est dans un rôle qui lui va, et chaque poste a sa doublure.",
+          "help": "Un rôle n'est proposé que s'il vaut au moins 0,3 étoile de mieux pour le joueur et ne déséquilibre pas l'équipe (largeur, création, couverture, présence dans la surface). Un titulaire n'est remis en cause que pour une demi-étoile d'écart, forme du jour comprise. Les doublures viennent d'abord de l'équipe première, puis d'un titulaire qui peut glisser, puis de la réserve.",
+          "starters": "Titulaires à revoir",
+          "starter": "{{pos}} : {{better}} ({{betterFit}}) ferait mieux aujourd'hui que {{starter}} ({{starterFit}}) dans ces rôles, forme du jour comprise.",
+          "roles": "Rôles à revoir",
+          "role": "{{player}}, {{phase}} : « {{to}} » lui va mieux ({{toFit}}) que « {{from}} » ({{fromFit}}).",
+          "rolesNote": "Changer un rôle remet à zéro la familiarité du joueur avec lui : fais ces changements en une fois, loin d'un gros match.",
+          "cover": "Postes sans doublure",
+          "coverShift": "{{pos}} : personne sur le banc pour doubler {{starter}}. En cas de pépin, {{player}} glisse de {{from}} et {{replacement}} entre à sa place.",
+          "coverThin": "{{pos}} : personne sur le banc pour doubler {{starter}}.",
+          "coverNone": "{{pos}} : personne au club ne peut doubler {{starter}}. Poste à recruter.",
+          "coverReserve": "Autre solution : {{name}} ({{team}}).",
+          "coverMakeshift": "{{name}} peut dépanner (poste connu à {{fam}}/20).",
+          "rested": "À relancer",
+          "restedWhy": {
+            "sharpness": "{{pos}} : {{better}} ({{betterFit}}) est mieux noté que {{starter}} ({{starterFit}}), mais il manque de rythme ({{value}} %). Donne-lui des fins de match ou un match avec la réserve.",
+            "condition": "{{pos}} : {{better}} ({{betterFit}}) est mieux noté que {{starter}} ({{starterFit}}), mais il est fatigué ({{value}} %). Il reprend sa place une fois reposé.",
+            "morale": "{{pos}} : {{better}} ({{betterFit}}) est mieux noté que {{starter}} ({{starterFit}}), mais son moral est bas ({{morale}}). Une discussion ou du temps de jeu peut le relancer."
+          }
+        },
+        "tiAdvice": {
+          "title": "Adapté à ton onze",
+          "none": "Les consignes du style conviennent à ce onze : rien à corriger.",
+          "noneGame": "Tes consignes tiennent la route avec ce onze : rien à corriger.",
+          "insteadOf": "au lieu de « {{label}} »",
+          "reason": {
+            "slowLine": "ta défense manque de vitesse ({{value}} pour un onze à {{level}}) : jouer haut laisse trop d'espace dans son dos",
+            "lowPress": "volume de jeu, endurance et collectif trop justes ({{value}} pour un onze à {{level}}) pour presser autant pendant 90 minutes",
+            "lowPressBlock": "volume de jeu, endurance et collectif trop justes ({{value}} pour un onze à {{level}}) pour tenir un pressing haut",
+            "stretched": "pressing haut devant et ligne basse derrière : le bloc s'étire et un grand espace s'ouvre entre les lignes",
+            "aerialStriker": "{{name}} domine dans les airs ({{value}}) : donne-lui des ballons à hauteur de tête",
+            "smallStrikers": "pas d'attaquant fort de la tête ({{value}}) : les centres en l'air sont perdus",
+            "noHighBlock": "cette consigne n'existe qu'en pressing haut"
+          },
+          "heavy": "{{count}} consignes d'équipe réglées dans FM27 : le jeu note leur complexité à {{complexity}}/100 pour une compréhension tactique de {{understanding}}/100. Remets sur la valeur par défaut celles qui ne servent pas ton plan : le groupe comprendra plus vite.",
+          "vsGame": "Par rapport à ta tactique FM27",
+          "sameAsGame": "Ta tactique FM27 a déjà ces consignes.",
+          "notRead": "Les consignes réglées dans FM27 ne sont pas encore lues : joue un jour dans le jeu, écran Tactique fermé.",
+          "col": {
+            "card": "Consigne",
+            "advised": "Conseillé",
+            "game": "Dans FM27"
+          },
+          "gameTactic": "ta tactique FM27",
+          "gameIntro": "Les consignes que tu as réglées dans FM27, lues par le plugin.",
+          "gameHelp": "Toutes les cases de l'écran Consignes d'équipe du jeu, dans son ordre ; en gras, celles que tu as changées."
+        },
       "bestNow": "Meilleure tactique applicable",
       "projectBest": "Ton projet est devenu le meilleur choix",
       "baseKept": "Ta tactique de base, gardée",
@@ -1102,6 +1151,15 @@
         "tackleLess": "tacles faibles : éviter fautes et cartons",
         "markTighter": "marquage {{a}}, puissance {{b}}"
       },
+        "state": {
+          "done": "déjà réglée",
+          "conflict": "FM27 : « {{label}} »"
+        },
+        "over_one": "{{count}} consigne réglée dans FM27 (limite conseillée : {{budget}}). À retirer en premier : {{labels}}.",
+        "over_other": "{{count}} consignes réglées dans FM27 (limite conseillée : {{budget}}). À retirer en premier : {{labels}}.",
+        "budgetGame_one": "Compréhension tactique à {{understanding}}/100 dans FM27 : {{count}} consigne par joueur au plus pour l'instant, la plus utile. On en ajoutera quand le groupe comprendra mieux la tactique.",
+        "budgetGame_other": "Compréhension tactique à {{understanding}}/100 dans FM27 : {{count}} consignes par joueur au plus, les plus utiles. Au-delà, la complexité fait baisser la compréhension.",
+        "heavy": "Le jeu note tes consignes individuelles à {{complexity}}/100 de complexité, pour une compréhension tactique de {{understanding}}/100. C'est lourd : garde celles marquées « déjà réglée », retire d'abord les autres.",
       "custom": "perso",
       "inGame": "Dans le jeu :",
       "budgetLow_one": "Au plus {{count}} consigne par joueur pour l'instant : le groupe manque encore de capacité tactique pour ce style. On en ajoutera quand il progresse (voir Plan d'évolution).",

@@ -685,14 +685,18 @@ export function builtPlan(engine: TacticEngine, t: BuiltTactic, players: FmPlaye
   const xy = layoutPositions(S.map((s) => s.pos));
   const slots: Slot[] = S.map((s, i) => {
     const player = xi[i] ?? null;
-    return { pos: s.pos, x: xy[i]![0], y: xy[i]![1], ip: s.ip, oop: s.oop, player, fit: player ? fitOf(player, i) : null };
+    return { pos: s.pos, ...(s.posOOP !== s.pos ? { posOOP: s.posOOP } : {}), x: xy[i]![0], y: xy[i]![1], ip: s.ip, oop: s.oop, player, fit: player ? fitOf(player, i) : null };
   });
-  const subs = S.map((_, i) =>
-    players
+  const benchFor = (list: FmPlayer[], i: number) =>
+    list
       .filter((p) => !used.has(p.id) && ok(p, i))
       .sort((a, b) => fitOf(b, i) - fitOf(a, i))
-      .slice(0, 2),
-  );
+      .slice(0, 2);
+  // Doublures : l'équipe première d'abord ; sans personne, le meilleur de la réserve ou des jeunes.
+  const subs = S.map((_, i) => {
+    const first = benchFor(players, i);
+    return first.length ? first : benchFor(reserve, i).slice(0, 1);
+  });
   const fit = slots.reduce((a, s) => a + (s.fit ?? 0), 0) / slots.length;
   const form = formationOfPositions(S.map((s) => s.pos)) ?? shapeOf(slots.filter((s) => s.pos !== 'GB').map((s) => [s.x, s.y] as [number, number]));
   return { form, slots, subs, score: fit, fit, penalty: 0, holes: slots.filter((s) => !s.player).length };
