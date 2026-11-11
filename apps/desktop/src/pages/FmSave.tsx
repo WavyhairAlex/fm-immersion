@@ -579,7 +579,7 @@ export function NextStep({ step, club }: { step: 'career' | 'plugin' | 'save' | 
 
 /** Parties d'un écran regroupé : une à la fois, choisie par des sous-onglets ; au-delà de cinq, dans « Plus ». */
 /** Parties qui sont des actions de groupe ponctuelles plutôt que des vues : proposées en lien discret. */
-const SECONDARY_PARTS = new Set(['numbers']);
+const SECONDARY_PARTS = new Set(['numbers', 'loans']);
 
 function PageParts({ page, current, go, render }: { page: ClubPage; current: string; go: (v: string) => void; render: (v: string) => ReactNode }) {
   const { t } = useTranslation();
@@ -590,35 +590,43 @@ function PageParts({ page, current, go, render }: { page: ClubPage; current: str
   const label = (v: string) => t(`fm.subtabs.${v}`, { defaultValue: t(`fm.views.${v}`) });
   // Un sous-onglet regroupé porte son propre nom ; seul, il garde celui de sa partie.
   const tabLabel = (g: readonly string[]) => (g.length > 1 ? t(`fm.tabs.${g[0]}`, { defaultValue: label(g[0]!) }) : label(g[0]!));
+  // Une rangée de pastilles seulement s'il y a vraiment plusieurs vues ; les parties secondaires vont en liens.
+  const primary = tab.filter((v) => !SECONDARY_PARTS.has(v));
+  const secondary = tab.filter((v) => SECONDARY_PARTS.has(v));
   const cls = (on: boolean) => `-mb-px rounded-t-lg border-b-2 px-3 py-1.5 text-sm font-bold ${on ? 'border-orange text-canard' : 'border-transparent text-canard/60 hover:text-canard'}`;
   return (
     <>
       {tabs.length > 1 && (
-        <div className="sticky top-[3.25rem] z-30 -mx-1 mb-4 flex flex-wrap gap-1 border-b border-canard/10 bg-creme px-1 pt-2" role="tablist" aria-label={t('fm.onThisPage')}>
+        <div className="sticky top-[3.25rem] z-30 -mx-1 mb-4 flex flex-wrap items-end gap-1 border-b border-canard/10 bg-creme px-1 pt-2" role="tablist" aria-label={t('fm.onThisPage')}>
           {tabs.map((g) => (
-            <button key={g[0]} type="button" role="tab" aria-selected={g === tab} onClick={() => go(g.includes(active) ? active : g[0]!)} className={cls(g === tab)}>
+            <button
+              key={g[0]}
+              type="button"
+              role="tab"
+              aria-selected={g === tab}
+              onClick={() => go(g.includes(active) && !SECONDARY_PARTS.has(active) ? active : g[0]!)}
+              className={cls(g === tab)}
+            >
               {tabLabel(g)}
             </button>
           ))}
+          {/* Listes et actions ponctuelles (prêtés, numéros) : des liens discrets au bout des onglets, pas une rangée de plus. */}
+          <span className="ml-auto flex flex-wrap gap-x-4 pb-2">
+            {secondary.map((v) => (
+              <button key={v} type="button" onClick={() => go(v === active ? tab[0]! : v)} className={`text-sm font-bold hover:underline ${v === active ? 'text-canard underline' : 'text-orange-fonce'}`}>
+                {t(`fm.secondary.${v}`)}
+              </button>
+            ))}
+          </span>
         </div>
       )}
-      {tab.length > 1 && (
+      {primary.length > 1 && (
         <div className="mb-4 flex flex-wrap gap-2" role="tablist" aria-label={tabLabel(tab)}>
-          {tab
-            .filter((v) => !SECONDARY_PARTS.has(v) || v === active)
-            .map((v) => (
-              <button key={v} type="button" role="tab" aria-selected={v === active} onClick={() => go(v)} className={`chip ${v === active ? 'chip-on' : ''}`}>
-                {label(v)}
-              </button>
-            ))}
-          {/* Action de groupe secondaire (numéros de maillot) : un lien discret, pas une vue au même rang. */}
-          {tab
-            .filter((v) => SECONDARY_PARTS.has(v) && v !== active)
-            .map((v) => (
-              <button key={v} type="button" onClick={() => go(v)} className="ml-auto text-sm font-bold text-orange-fonce hover:underline">
-                {t(`fm.secondary.${v}`)} →
-              </button>
-            ))}
+          {primary.map((v) => (
+            <button key={v} type="button" role="tab" aria-selected={v === active} onClick={() => go(v)} className={`chip ${v === active ? 'chip-on' : ''}`}>
+              {label(v)}
+            </button>
+          ))}
         </div>
       )}
       <section key={active} role={tabs.length > 1 ? 'tabpanel' : undefined}>
@@ -644,7 +652,7 @@ function AssistantSays({ page, saveId, go }: { page: ClubPage; saveId: string; g
         {t('layout.assistant.initial')}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="font-extrabold">{t('layout.assistant.label')}</p>
+        <p className="font-extrabold">{t(lines.length ? 'layout.assistant.todo' : 'layout.assistant.label', { count: lines.length })}</p>
         {lines.length ? (
           <ul className="mt-1 space-y-2">
             {lines.map((x, i) => (
