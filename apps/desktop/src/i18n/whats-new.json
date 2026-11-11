@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.157",
+    "date": "2026-11-11",
+    "fr": [
+      "Effectif, Résultats et Mercato vont plus droit au but : en haut, « À faire ici » liste ce qui t'attend, avec un bouton par ligne.",
+      "Moins de rangées de boutons : les joueurs prêtés et les numéros de maillot sont au bout des onglets de l'Effectif, et le détail « Finances serrées » du Mercato se déplie seulement si tu le veux."
+    ],
+    "en": [
+      "Squad, Results and Transfers get straight to the point: at the top, “To do here” lists what's waiting for you, with one button per line.",
+      "Fewer rows of buttons: loaned-out players and shirt numbers sit at the end of the Squad tabs, and the “Money is tight” detail in Transfers only opens if you want it."
+    ]
+  },
+  {
     "version": "0.1.155",
     "date": "2026-11-11",
     "fr": [
