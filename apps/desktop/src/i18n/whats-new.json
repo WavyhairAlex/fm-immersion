@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.1.169",
+    "date": "2026-11-11",
+    "fr": [
+      "Effectif s'ouvre sur le tableau des joueurs, avec les postes écrits simplement ; le terrain reste à un clic.",
+      "Résultats montre tes matchs juste sous le bilan, l'analyse vient ensuite.",
+      "Mercato commence par un tableau « Mouvements à décider » : arrivées, départs, prêts et prolongations en un coup d'œil."
+    ],
+    "en": [
+      "Squad opens on the player table, with positions written plainly; the pitch view is one click away.",
+      "Results shows your matches right under the summary, the analysis comes next.",
+      "Transfers starts with a \"Moves to decide\" table: signings, departures, loans and extensions at a glance."
+    ]
+  },
+  {
     "version": "0.1.168",
     "date": "2026-11-11",
     "fr": [
