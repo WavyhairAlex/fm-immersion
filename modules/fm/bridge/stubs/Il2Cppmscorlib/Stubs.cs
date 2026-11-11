@@ -117,3 +117,12 @@ namespace Il2CppSystem.Collections.Generic
         public TValue Value => throw null;
     }
 }
+
+namespace Il2CppSystem
+{
+    public class Action : MulticastDelegate
+    {
+        public Action(IntPtr pointer) : base(pointer) { }
+        public static implicit operator Action(System.Action a) => throw null;
+    }
+}

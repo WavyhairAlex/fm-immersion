@@ -5731,6 +5731,14 @@
       "radio": "à Radio Vestiaire",
       "tabloid": "au Crampon",
       "tv": "à Grand Stade TV"
+    },
+    "ingame": {
+      "free": "Ou avec tes mots :",
+      "send": "Répondre",
+      "skip": "Question suivante",
+      "later": "Plus tard",
+      "thanks": "Réponses envoyées à FM Immersion. Merci coach !",
+      "inGame": "Tu peux aussi répondre directement dans FM27 : la fenêtre de conférence s'ouvre par-dessus le jeu (touche F8)."
     }
   }
 }

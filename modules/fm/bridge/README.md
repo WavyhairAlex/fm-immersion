@@ -16,6 +16,7 @@ le club et le prochain match via le système de bindings de l'interface du jeu, 
 |---|---|
 | `src/Plugin.cs` | Point d'entrée BepInEx, boucle d'instantanés, serveur local facultatif `http://localhost:8727` (sonde, coupé par défaut) |
 | `src/FmBindingReader.cs` | Lecture groupée des bindings (chemins texte, ex. `game.GameCurrentManagerClubTeam/Club/Squad`) |
+| `src/PressWindow.cs` | Conférence de presse FM Immersion affichée par-dessus FM27 (UI Toolkit), réponses écrites pour l'appli |
 | `src/Probe.cs` | Sonde de découverte (`/api/probe`, `/api/properties`, `/api/refprops`) et file du thread principal |
 | `config/chemins.json` | **Données supplémentaires sans recompiler** : chemins lus à chaque instantané (bloc `custom`) |
 
@@ -222,3 +223,16 @@ de la section `joueur` de `config/chemins.json` (70 propriétés de `PersonRefer
 `decouverte.json`), en profond (`{ PropertyValue, Count }`). Surtout des totaux : FM Immersion en déduit les valeurs par 90
 et les pourcentages. Aucune recompilation ; aucune lecture liée à la tactique. Import : `modules/fm/src/stats.ts`,
 page Effectif > Centre de données.
+
+**0.6.0** : conférence de presse dans le jeu. FM Immersion dépose la conférence du moment dans
+`<Dossier>\fmimmersion-presse.json` (format `fmi-presse/1` : `key`, `title`, `subtitle`, `questions[{id, by, text,
+answers[{tone, label, text}]}]`, `ui` ; tous les textes déjà rédigés dans la langue du joueur) et le retire quand il n'y a
+plus de conférence. Le plugin le relit toutes les 5 s sur un thread à part ; une nouvelle conférence ouvre la fenêtre
+(jamais pendant un match), F8 l'ouvre ou la ferme. Une question à la fois : trois réponses proposées, texte libre,
+« Question suivante », « Pas de commentaire » (refus de toute la conférence), « Plus tard ». Les réponses vont dans
+`<Dossier>\fmimmersion-presse-reponse.json` (`fmi-presse-reponse/1` : `key`, `declined`, `answers[{question, tone, text}]`,
+écriture atomique), que FM Immersion enregistre pour la gazette et Discord. La fenêtre n'envoie rien au jeu : aucun effet
+sur le moral ni la réputation. Clé `ConferenceEnJeu` (oui par défaut) pour la couper.
+Affichage : FM27 n'a plus IMGUI (`OnGUI` lève « Method unstripping failed », test du 11/11/2026) ; la fenêtre est faite en
+UI Toolkit, dans un panneau à nous (réglages copiés du panneau FM le plus haut, ordre +100) avec une police SDF du jeu
+(sans police, aucun texte ne s'affiche). Validé en jeu le 11/11/2026 avec un plugin de test.

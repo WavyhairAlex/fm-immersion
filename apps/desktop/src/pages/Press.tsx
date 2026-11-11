@@ -146,6 +146,7 @@ function Conference({ saveId, club, conference: c, onDone }: { saveId: string; c
         {t('press.page.date', { date: dateLabel(c.date, lang) })}
         {c.competition ? ` · ${c.competition}` : ''}
       </p>
+      <p className="mt-2 text-xs text-brun">{t('press.ingame.inGame')}</p>
       {rewording && <p className="mt-2 text-xs text-brun">{t('press.page.aiRewording')}</p>}
       <ol className="mt-4 space-y-5">
         {c.questions.map((q, i) => (

@@ -12,7 +12,7 @@
     <RootNamespace>Archivix</RootNamespace>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
-    <Version>0.5.9</Version>
+    <Version>0.6.0</Version>
     <FMDir Condition="'$(FMDir)' == ''">$(FM27_DIR)</FMDir>
     <FMDir Condition="'$(FMDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Football Manager 27</FMDir>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
@@ -34,6 +34,10 @@
     <ProjectReference Include="stubs\SI.Bindable.Reference.Core\SI.Bindable.Reference.Core.csproj" Private="false" />
     <ProjectReference Include="stubs\SI.Interop\SI.Interop.csproj" Private="false" />
     <ProjectReference Include="stubs\FM.UI\FM.UI.csproj" Private="false" />
+    <ProjectReference Include="stubs\UnityEngine.UIElementsModule\UnityEngine.UIElementsModule.csproj" Private="false" />
+    <ProjectReference Include="stubs\UnityEngine.TextCoreTextEngineModule\UnityEngine.TextCoreTextEngineModule.csproj" Private="false" />
+    <ProjectReference Include="stubs\UnityEngine.TextRenderingModule\UnityEngine.TextRenderingModule.csproj" Private="false" />
+    <ProjectReference Include="stubs\Unity.InputSystem\Unity.InputSystem.csproj" Private="false" />
   </ItemGroup>
   <ItemGroup Condition="'$(Stubs)' != 'true'">
     <Reference Include="$(FMDir)\BepInEx\core\BepInEx.Core.dll" Private="false" />
@@ -47,5 +51,9 @@
     <Reference Include="$(FMDir)\BepInEx\interop\SI.Bindable.Reference.Core.dll" Private="false" />
     <Reference Include="$(FMDir)\BepInEx\interop\SI.Interop.dll" Private="false" />
     <Reference Include="$(FMDir)\BepInEx\interop\FM.UI.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\UnityEngine.UIElementsModule.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\UnityEngine.TextCoreTextEngineModule.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\UnityEngine.TextRenderingModule.dll" Private="false" />
+    <Reference Include="$(FMDir)\BepInEx\interop\Unity.InputSystem.dll" Private="false" />
   </ItemGroup>
 </Project>
