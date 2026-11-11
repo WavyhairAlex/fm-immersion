@@ -447,6 +447,7 @@
         "pos": "Position",
         "player": "Player",
         "backup": "Backup",
+        "role": "Role",
         "backupOf": "Backup: {{name}}",
         "phaseLabel": "Phase shown",
         "phaseHelp": {
@@ -542,7 +543,7 @@
         "xi": "Base XI",
         "match": "Against {{name}}",
         "balance": "Balance and instructions",
-        "balanceFold": "Team balance and team instructions, in detail"
+        "balanceFold": "Team balance, in detail"
       }
     },
     "nav": "Save sections",

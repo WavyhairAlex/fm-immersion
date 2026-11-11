@@ -447,6 +447,7 @@
         "pos": "Poste",
         "player": "Joueur",
         "backup": "Doublure",
+        "role": "Rôle",
         "backupOf": "Doublure : {{name}}",
         "phaseLabel": "Phase de jeu montrée",
         "phaseHelp": {
@@ -542,7 +543,7 @@
         "xi": "Onze de base",
         "match": "Contre {{name}}",
         "balance": "Équilibre et consignes",
-        "balanceFold": "Équilibre de l'équipe et consignes d'équipe, en détail"
+        "balanceFold": "Équilibre de l'équipe, en détail"
       }
     },
     "nav": "Sections de la partie",

@@ -43,7 +43,7 @@ import { useTranslation } from 'react-i18next';
 import { LINE_COLOR, Pitch, PosBadge } from './FmFoot';
 import { readBuiltTactics } from './FmBuilder';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
-import { Fit, fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach, SectionStack } from './FmUi';
+import { fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach, SectionStack } from './FmUi';
 
 // v2 : le choix automatique (meilleure tactique applicable) devient la valeur par défaut.
 const PREFS_KEY = 'fmi.tactic.v2';
@@ -349,7 +349,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   </p>
                   {!gamePlan && lineupStatus && lineupStatus !== 'lue' && <p className="mt-1 text-xs text-brun">{t('fm.tac.lineupStatus', { status: lineupStatus })}</p>}
 
-                {/* La phase montrée commande tout l'écran : le terrain et la liste ne parlent que d'elle. */}
+                {/* La phase montrée sur le terrain, choisie en tête avec une phrase qui dit ce qu'on regarde. */}
                 <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
                   <div className="inline-flex rounded-xl bg-creme p-1" role="tablist" aria-label={t('fm.tac.xi.phaseLabel')}>
                     {(['ip', 'oop'] as const).map((ph) => (
@@ -415,51 +415,54 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                     </Pitch>
                   </div>
 
-                  {/* Liste à recopier dans FM27 : une ligne par poste, le rôle de la phase montrée seulement, la doublure sous le titulaire. */}
+                  {/* Liste à recopier dans FM27 : une ligne par poste, rangée du gardien aux attaquants, les deux rôles et la doublure sous le titulaire. */}
                   <div className="min-w-0">
                     <h3 className="font-semibold">{t('fm.tac.xi.title')}</h3>
-                    <ul className="mt-2">
-                      {rows.map((i, k) => {
-                        const sl = plan.slots[i]!;
-                        const p = sl.player;
-                        const sub = (plan.subs[i] ?? [])[0];
-                        const prev = k > 0 ? plan.slots[rows[k - 1]!] : undefined;
-                        const newLine = !!prev && lineOf(prev.pos) !== lineOf(sl.pos);
-                        const code = phase === 'ip' ? sl.ip : sl.oop;
-                        const r = engine.roles.get(code);
-                        const name = (en ? r?.en : r?.fr) ?? r?.fr ?? code;
-                        return (
-                          <li
-                            key={i}
-                            className={`grid grid-cols-[4.25rem_minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-2 ${newLine ? 'mt-4' : ''} ${hover === i ? 'bg-orange/15' : ''}`}
-                            onMouseEnter={() => setHover(i)}
-                            onMouseLeave={() => setHover(null)}
-                          >
-                            <span className="text-sm">
-                              <PosBadge pos={sl.pos} />
-                            </span>
-                            <span className="min-w-0">
-                              <span className="block truncate text-base font-bold text-canard">
-                                {p ? <PlayerLink player={p} /> : <span className="text-corail">{t('fm.tac.nobody')}</span>}
-                              </span>
-                              {p?.team && <span className="block text-xs text-orange-fonce">{t('fm.tac.fromTeam', { team: p.team })}</span>}
-                              {p && !p.positions.includes(sl.pos) && <span className="block text-xs font-bold text-corail">{t('fm.tac.offPos')}</span>}
-                              {sub && (
-                                <span className="block truncate text-xs text-brun">
-                                  {t('fm.tac.xi.backupOf', { name: sub.name })}
-                                  {sub.team && <span className="ml-1 text-orange-fonce">{t('fm.tac.fromTeam', { team: sub.team })}</span>}
-                                </span>
-                              )}
-                            </span>
-                            <span className="min-w-0 text-base leading-snug text-canard">
-                              {name}
-                              {phase === 'ip' && r?.duty && <span className="block text-xs text-brun">{t(`fm.tac.duty.${r.duty}`)}</span>}
-                            </span>
-                            <span className="whitespace-nowrap text-right">{p && <Fit value={engine.roleFit(p, code, phase, sl.pos)} />}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
+                    <div className="mt-2 overflow-x-auto">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>{t('fm.tac.xi.pos')}</th>
+                            <th>{t('fm.tac.xi.player')}</th>
+                            <th>{t('fm.tac.xi.role')}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rows.map((i) => {
+                            const sl = plan.slots[i]!;
+                            const p = sl.player;
+                            const fitOf = (ph: Phase) => (p ? engine.roleFit(p, ph === 'ip' ? sl.ip : sl.oop, ph, sl.pos) : null);
+                            return (
+                              <tr key={i} className={hover === i ? 'bg-creme/70' : ''} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
+                                <td>
+                                  <PosBadge pos={sl.pos} />
+                                </td>
+                                <td className="font-bold text-canard">
+                                  {p ? <PlayerLink player={p} /> : <span className="text-corail">{t('fm.tac.nobody')}</span>}
+                                  {p?.team && <span className="ml-2 text-xs font-normal text-orange-fonce">{t('fm.tac.fromTeam', { team: p.team })}</span>}
+                                  {p && !p.positions.includes(sl.pos) && <span className="ml-2 text-xs font-normal text-brun">{t('fm.tac.offPos')}</span>}
+                                  {(plan.subs[i] ?? [])[0] && (
+                                    <div className="text-xs font-normal text-brun">
+                                      {t('fm.tac.xi.backupOf', { name: (plan.subs[i] ?? [])[0]!.name })}
+                                      {(plan.subs[i] ?? [])[0]!.team && <span className="ml-1 text-orange-fonce">{t('fm.tac.fromTeam', { team: (plan.subs[i] ?? [])[0]!.team })}</span>}
+                                    </div>
+                                  )}
+                                </td>
+                                <td>
+                                  {(['ip', 'oop'] as const).map((ph) => (
+                                    <div key={ph} className="flex flex-wrap items-baseline gap-x-2">
+                                      <span className="text-xs text-brun">{t(`fm.tac.phase.${ph}`)}</span>
+                                      <span className="text-canard">{roleName(ph === 'ip' ? sl.ip : sl.oop, ph)}</span>
+                                      {p && <span className="text-xs font-bold text-brun">{note(fitOf(ph))}</span>}
+                                    </div>
+                                  ))}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
                     <More>{t(fromGame ? 'fm.tac.pitchHelpGame' : 'fm.tac.pitchHelp')}</More>
                   </div>
                 </div>
@@ -617,7 +620,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
             fold: true,
             node: (
               <>
-              <div className="grid gap-4 lg:grid-cols-2">
+              <div className="grid gap-4">
                 <section className="card">
                   <h2 className="text-xl font-semibold">{t('fm.tac.balance')}</h2>
                   <ul className="mt-3 space-y-3">
@@ -656,6 +659,16 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                     ))}
                   </ol>
                 </section>
+              </div>
+              </>
+            ),
+          },
+        ]}
+      />
+      )}
+
+      {showPi && (
+      <>
                 <section className="card">
                   <h2 className="text-xl font-semibold">{t('fm.tac.teamTitle', { style: tiBase === 'game' ? (gameTactic ?? t('fm.tac.tiAdvice.gameTactic')) : styleName(style) })}</h2>
                   {tiBase === 'game' ? (
@@ -669,15 +682,6 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   <p className="mt-3 text-xs text-brun">{t(tiBase === 'game' ? 'fm.tac.tiAdvice.gameHelp' : 'fm.tac.teamHelp')}</p>
                   {tiAdvice && <TeamAdviceBlock advice={tiAdvice} base={tiBase} load={load} />}
                 </section>
-              </div>
-              </>
-            ),
-          },
-        ]}
-      />
-      )}
-
-      {showPi && (
       <section className="card">
         <h2 className="text-xl font-semibold">{t('fm.pi.title')}</h2>
         <p className="mt-1 text-sm text-brun">
@@ -745,6 +749,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
         <p className="mt-3 text-xs text-brun">{t('fm.pi.help')}</p>
         <More>{t('fm.pi.locks')}</More>
       </section>
+      </>
       )}
     </div>
   );

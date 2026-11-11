@@ -1,14 +1,26 @@
 [
   {
+    "version": "0.1.165",
+    "date": "2026-11-11",
+    "fr": [
+      "Tactique : le terrain du onze est plus grand et plus net. Chaque joueur a son poste à la couleur de sa ligne et son nom, et le trait de déplacement n'apparaît plus que pour le joueur que tu survoles.",
+      "Le choix « Avec ballon » ou « Sans ballon » est en haut, avec une phrase qui dit ce que tu regardes. La liste du onze est rangée du gardien aux attaquants."
+    ],
+    "en": [
+      "Tactics: the XI pitch is bigger and cleaner. Each player shows their position in their line's colour and their name, and the movement line only appears for the player you hover.",
+      "The \"In possession\" / \"Out of possession\" switch sits at the top, with a sentence saying what you are looking at. The XI list runs from goalkeeper to strikers."
+    ]
+  },
+  {
     "version": "0.1.164",
     "date": "2026-11-11",
     "fr": [
-      "L'écran Tactique est plus lisible : tu choisis « Avec ballon » ou « Sans ballon » en haut, et le terrain comme la liste ne montrent plus que cette phase.",
-      "Sur le terrain, plus grand, chaque joueur a son poste à la couleur de sa ligne et son nom. Dans la liste, rangée du gardien aux attaquants : une ligne par joueur, son rôle, sa note en couleur et sa doublure."
+      "Tactique suit la nouvelle maquette. Le tableau du onze tient en trois colonnes, Poste, Joueur et Rôle : les deux rôles (avec et sans ballon) sont dans la même case, et la doublure est sous le nom du joueur.",
+      "Les consignes d'équipe conseillées quittent l'écran du onze : elles sont maintenant en tête de Consignes, au-dessus des consignes individuelles. Tout ce qui se règle dans le jeu est au même endroit."
     ],
     "en": [
-      "The Tactics screen is easier to read: pick \"In possession\" or \"Out of possession\" at the top, and both the pitch and the list show only that phase.",
-      "On the bigger pitch each player shows their position in their line's colour and their name. The list runs from goalkeeper to strikers: one row per player with their role, colour-coded rating and backup."
+      "Tactics follows the new mock-up. The XI table fits in three columns, Position, Player and Role: both roles (in and out of possession) share one cell, and the backup sits under the player's name.",
+      "Advised team instructions leave the XI screen: they now open Instructions, above the player instructions. Everything you set in the game is in one place."
     ]
   },
   {
