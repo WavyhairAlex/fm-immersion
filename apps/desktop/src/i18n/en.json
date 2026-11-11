@@ -2385,6 +2385,36 @@
         "computed": "FM Immersion estimate"
       }
     },
+    "tabNames": {
+      "tactic": "Tactics",
+      "instructions": "Instructions",
+      "builder": "Line-up",
+      "opponent": "Opponent",
+      "calendar": "Calendar",
+      "training": "Training",
+      "depth": "Depth",
+      "style": "Playing style",
+      "effectiveness": "Effectiveness",
+      "project": "Game plan",
+      "staff": "Staff",
+      "squad": "Squad",
+      "loans": "Loans",
+      "numbers": "Numbers",
+      "playtime": "Playing time",
+      "dressing": "Dressing room",
+      "progression": "Progression",
+      "roles": "Roles",
+      "compare": "Comparison",
+      "results": "Results",
+      "diagnosis": "Diagnosis",
+      "stats": "Statistics",
+      "analysis": "Analysis",
+      "mercato": "Transfers",
+      "targets": "Targets",
+      "finances": "Finances",
+      "wages": "Wages",
+      "contracts": "Contracts"
+    },
     "subtabs": {
       "squad": "Players",
       "style": "Playing style",
@@ -4621,6 +4651,11 @@
     "bridgeAction": "The plugin needs an action",
     "settingsIntro": "Where FM Immersion reads your game: plugin folder, linked save, history and the FM27 plugin.",
     "manageCareers": "Manage my careers",
+    "storySub": {
+      "gazette": "Your career's newspaper, one edition per game week.",
+      "presse": "Your answers to journalists, before big matches and after every competitive game.",
+      "discord": "Live coverage of your matches and posts in your Discord channel."
+    },
     "navShort": {
       "tactic": "Tactics",
       "squad": "Squad",

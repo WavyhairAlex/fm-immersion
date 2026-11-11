@@ -2385,6 +2385,36 @@
         "computed": "calcul FM Immersion"
       }
     },
+    "tabNames": {
+      "tactic": "Tactique",
+      "instructions": "Consignes",
+      "builder": "Composition",
+      "opponent": "Adversaire",
+      "calendar": "Calendrier",
+      "training": "Entraînement",
+      "depth": "Profondeur",
+      "style": "Style de jeu",
+      "effectiveness": "Efficacité",
+      "project": "Projet de jeu",
+      "staff": "Staff",
+      "squad": "Effectif",
+      "loans": "Prêts",
+      "numbers": "Numéros",
+      "playtime": "Temps de jeu",
+      "dressing": "Vestiaire",
+      "progression": "Progression",
+      "roles": "Rôles",
+      "compare": "Comparaison",
+      "results": "Résultats",
+      "diagnosis": "Diagnostic",
+      "stats": "Statistiques",
+      "analysis": "Analyse",
+      "mercato": "Mercato",
+      "targets": "Cibles",
+      "finances": "Finances",
+      "wages": "Salaires",
+      "contracts": "Contrats"
+    },
     "subtabs": {
       "squad": "Joueurs",
       "style": "Style de jeu",
@@ -4621,6 +4651,11 @@
     "bridgeAction": "Le plugin demande une action",
     "settingsIntro": "Où FM Immersion lit ta partie : dossier du plugin, sauvegarde liée, historique et plugin FM27.",
     "manageCareers": "Gérer mes carrières",
+    "storySub": {
+      "gazette": "Le journal de ta carrière, une édition par semaine de jeu.",
+      "presse": "Tes réponses aux journalistes, avant les grands matchs et après chaque match officiel.",
+      "discord": "Le direct de tes matchs et les publications dans ton salon Discord."
+    },
     "navShort": {
       "tactic": "Tactique",
       "squad": "Effectif",

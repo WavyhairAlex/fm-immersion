@@ -29,7 +29,6 @@ const ICONS: Record<string, ReactNode> = {
     </>
   ),
   results: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
-  opponent: <path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z" />,
   press: (
     <>
       <rect x="9" y="3" width="6" height="11" rx="3" />
@@ -91,8 +90,8 @@ function Item({ to, icon, label, active, end, badge }: { to: string; icon: strin
   );
 }
 
-/** Mon club dans la barre : l'adversaire a sa propre entrée (partie de l'écran Tactique). */
-const CLUB_ORDER = ['squad', 'tactic', 'opponent', 'results', 'mercato'] as const;
+/** Mon club dans la barre, dans l'ordre de la maquette (l'adversaire est un onglet de Tactique). */
+const CLUB_ORDER = ['tactic', 'squad', 'results', 'mercato'] as const;
 
 const Count = ({ n, label }: { n: number; label: string }) =>
   n > 0 ? (
@@ -137,31 +136,20 @@ export function Sidebar() {
       <nav className="mt-2 flex flex-col gap-0.5" aria-label={t('nav.modes')}>
         <Item to="/" end icon="today" label={t('layout.nav.today')} badge={<Count n={todoViews.length} label={t('fm.brief.tabBadge', { count: todoViews.length })} />} />
         <p className="nav-group">{t('layout.groups.club')}</p>
-        {CLUB_ORDER.map((p) =>
-          p === 'opponent' ? (
-            <Item key={p} to="/club/opponent" icon="opponent" label={t('layout.navShort.opponent')} active={pathname === '/club/opponent'} />
-          ) : (
-            <Item
-              key={p}
-              to={`/club/${p}`}
-              icon={p}
-              label={t(`layout.navShort.${p}`)}
-              active={clubOpen === p && pathname !== '/club/opponent'}
-              badge={<Count n={count(p)} label={t('fm.brief.tabBadge', { count: count(p) })} />}
-            />
-          ),
-        )}
+        {CLUB_ORDER.map((p) => (
+          <Item key={p} to={`/club/${p}`} icon={p} label={t(`layout.navShort.${p}`)} active={clubOpen === p} badge={<Count n={count(p)} label={t('fm.brief.tabBadge', { count: count(p) })} />} />
+        ))}
         <p className="nav-group">{t('layout.groups.story')}</p>
+        <Item to="/carriere" icon="career" label={t('careerPage.title')} />
         <Item to="/gazette" icon="gazette" label={t('layout.navShort.gazette')} />
         <Item to="/presse" icon="press" label={t('layout.navShort.press')} />
         <Item to="/discord" icon="discord" label={t('layout.navShort.discord')} />
-        <Item to="/carriere" icon="career" label={t('careerPage.title')} />
+        <Item to="/defis" icon="challenges" label={t('modes.challenges.title')} />
       </nav>
 
       {/* Le reste (installation, réglages, défis) : en bas, plus discret, pour garder le haut court. */}
       <nav className="mt-auto flex flex-col gap-0.5 pt-6 text-sm [&_.nav-link]:py-1.5 [&_.nav-link]:text-white/70" aria-label={t('layout.groups.game')}>
         <p className="nav-group">{t('layout.groups.game')}</p>
-        <Item to="/defis" icon="challenges" label={t('modes.challenges.title')} />
         <Item
           to="/visages"
           icon="faces"
