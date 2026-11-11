@@ -93,6 +93,7 @@
       "status": "Status",
       "starsHelp": "Current / potential ability stars according to your staff",
       "compat": "Project",
+      "reach": "Reach",
       "apps": "Apps",
       "goals": "Goals",
       "avgRating": "Avg rating"
@@ -2646,6 +2647,29 @@
         "wasteful": "Work on finishing: {{goals}} goals from {{xg}} xG per match.",
         "leaky": "Tighten the defence: {{ga}} goals conceded per match."
       }
+    },
+    "reach": {
+      "level": {
+        "easy": "Easy to sign",
+        "possible": "Within your means",
+        "hard": "Difficult",
+        "out": "Out of reach"
+      },
+      "why": {
+        "free": "free agent",
+        "preContract": "contract ending: pre-contract possible",
+        "loan": "youngster at a bigger club: loan possible",
+        "listed": "transfer listed",
+        "wage": "wage above your structure",
+        "wageRoom": "you need to free up wages",
+        "fee": "fee above your budget",
+        "reputation": "too famous for your club",
+        "league": "comes from a much higher-rated league"
+      },
+      "wide": "Also show players out of reach",
+      "hidden_one": "{{count}} player out of reach hidden",
+      "hidden_other": "{{count}} players out of reach hidden",
+      "help": "The search only keeps players your club can attract and afford. Benchmarks come from your squad: a wage up to twice your highest wage, a reputation up to 1.75 times that of your three most famous players, a fee within your transfer budget. Free agents, expiring contracts (pre-contract) and youngsters at bigger clubs (loan) cost no fee. FM27 has the final say in negotiations."
     },
     "repl": {
       "open": "Replacement",

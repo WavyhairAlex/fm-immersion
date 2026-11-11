@@ -1,6 +1,6 @@
 [
   {
-    "version": "0.1.158",
+    "version": "0.1.160",
     "date": "2026-11-11",
     "fr": [
       "Mon onze est réorganisé pour aller droit au but. Tout est sur une seule page : d'abord ce que disent tes derniers matchs, puis une liste « À changer dans FM27 », classée par importance, qui rassemble consignes d'équipe, titulaires, consignes individuelles et rôles à revoir. Le terrain et le détail viennent ensuite.",
@@ -11,6 +11,18 @@
       "My XI is reorganised to get straight to the point. Everything is on one page: first what your last matches say, then a “To change in FM27” list, most important first, gathering team instructions, starters, player instructions and roles to review. The pitch and the detail come after.",
       "Fewer buttons: you choose between “My FM27 tactic” and “App's suggestion”, and style and formation only show for the suggestion.",
       "Less scrolling: the match review and the list sit side by side, the list shows the five most important points first, and the team instruction detail opens with one click."
+    ]
+  },
+  {
+    "version": "0.1.159",
+    "date": "2026-11-11",
+    "fr": [
+      "Mercato : quand tu cherches un remplaçant dans la base du jeu, tu ne vois plus que des joueurs que ton club peut attirer et payer. Salaire, réputation, championnat d'origine et indemnité sont comparés à ton effectif et à ton budget : fini les joueurs du Real Madrid pour un petit club.",
+      "Chaque joueur proposé dit s'il est facile à faire venir, dans tes moyens ou difficile, et pourquoi (libre, fin de contrat, prêt possible, salaire trop haut, masse salariale à libérer). Une case montre aussi ceux hors de portée si tu veux rêver un peu."
+    ],
+    "en": [
+      "Transfers: when you look for a replacement in the game database, you now only see players your club can attract and afford. Wage, reputation, league and fee are compared with your squad and your budget: no more Real Madrid players for a small club.",
+      "Each suggested player says whether he is easy to sign, within your means or difficult, and why (free agent, contract ending, loan possible, wage too high, wages to free up). A box also shows those out of reach if you want to dream a little."
     ]
   },
   {

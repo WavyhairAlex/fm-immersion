@@ -93,6 +93,7 @@
       "status": "Statut",
       "starsHelp": "Étoiles de niveau actuel / potentiel selon ton staff",
       "compat": "Projet",
+      "reach": "Portée",
       "apps": "Matchs",
       "goals": "Buts",
       "avgRating": "Note moy."
@@ -2646,6 +2647,29 @@
         "wasteful": "Travailler la finition : {{goals}} buts pour {{xg}} xG par match.",
         "leaky": "Resserrer la défense : {{ga}} buts encaissés par match."
       }
+    },
+    "reach": {
+      "level": {
+        "easy": "Facile à faire venir",
+        "possible": "Dans tes moyens",
+        "hard": "Difficile",
+        "out": "Hors de portée"
+      },
+      "why": {
+        "free": "libre",
+        "preContract": "fin de contrat : précontrat possible",
+        "loan": "jeune d'un club plus huppé : prêt possible",
+        "listed": "sur la liste des transferts",
+        "wage": "salaire au-dessus de ta grille",
+        "wageRoom": "il faut libérer de la masse salariale",
+        "fee": "indemnité au-dessus du budget",
+        "reputation": "trop réputé pour ton club",
+        "league": "vient d'un championnat bien plus coté"
+      },
+      "wide": "Voir aussi les joueurs hors de portée",
+      "hidden_one": "{{count}} joueur hors de portée masqué",
+      "hidden_other": "{{count}} joueurs hors de portée masqués",
+      "help": "La recherche ne garde que les joueurs que ton club peut attirer et payer. Repères tirés de ton effectif : un salaire jusqu'à deux fois ton plus gros salaire, une réputation jusqu'à 1,75 fois celle de tes trois joueurs les plus réputés, une indemnité dans ton budget de transferts. Les libres, les fins de contrat (précontrat) et les jeunes de clubs plus huppés (prêt) ne coûtent pas d'indemnité. FM27 a le dernier mot à la négociation."
     },
     "repl": {
       "open": "Remplaçant",
