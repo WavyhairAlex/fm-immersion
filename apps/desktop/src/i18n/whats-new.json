@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.160",
+    "date": "2026-11-11",
+    "fr": [
+      "Gazette et Discord : tant que ton salon n'est pas relié, une seule ligne te dit combien d'images sont prêtes à partager, et la gazette de la semaine passe en premier. Dans Live Discord, les réglages restent repliés jusqu'à ce que le salon soit relié.",
+      "Plugin et réglages montre d'abord l'état de la connexion et la prochaine étape ; les options avancées se déplient sur un clic. Dans Défis, ton pseudo et tes défis en cours n'apparaissent qu'une fois inscrit."
+    ],
+    "en": [
+      "Gazette and Discord: until your channel is linked, a single line tells you how many pictures are ready to share, and the week's gazette comes first. In Live Discord, settings stay folded until the channel is linked.",
+      "Plugin and settings shows the connection state and next step first; advanced options open with one click. In Challenges, your nickname and current challenges only appear once you have signed up."
+    ]
+  },
+  {
     "version": "0.1.157",
     "date": "2026-11-11",
     "fr": [

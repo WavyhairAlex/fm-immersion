@@ -50,20 +50,20 @@ export function Discord() {
     <div className="w-full max-w-3xl">
       <p className="text-brun">{t('discord.intro')}</p>
 
-      {/* État du salon en une phrase : ce qui part vraiment, et vers où. */}
-      <section
-        className={`mt-5 rounded-xl border px-4 py-3 ${saved ? 'border-eau-soutenu bg-eau/15' : 'border-canard/10 bg-white'}`}
-        aria-label={t('discord.status.title')}
-      >
-        <p className="text-xs font-bold uppercase tracking-wide text-brun">{t('discord.status.title')}</p>
-        <p className={`mt-1 font-extrabold ${saved ? 'text-eau-fonce' : 'text-canard/70'}`}>
-          {saved
-            ? [t(live ? 'discord.status.liveOn' : 'discord.status.liveOff'), t(auto ? 'discord.status.autoOn' : 'discord.status.autoOff')].join(' · ')
-            : t('discord.status.none')}
-        </p>
-        <p className="mt-1 text-sm text-brun">{ai ? t('discord.status.aiOn', { model: ai.model }) : t('discord.status.aiOff')}</p>
-        {saved && (auto || breaking) && <AutoState />}
-      </section>
+      {/* État du salon en une phrase : ce qui part vraiment, et vers où (une fois le salon relié). */}
+      {saved && (
+        <section
+          className="mt-5 rounded-xl border border-eau-soutenu bg-eau/15 px-4 py-3"
+          aria-label={t('discord.status.title')}
+        >
+          <p className="text-xs font-bold uppercase tracking-wide text-brun">{t('discord.status.title')}</p>
+          <p className="mt-1 font-extrabold text-eau-fonce">
+            {[t(live ? 'discord.status.liveOn' : 'discord.status.liveOff'), t(auto ? 'discord.status.autoOn' : 'discord.status.autoOff')].join(' · ')}
+          </p>
+          <p className="mt-1 text-sm text-brun">{ai ? t('discord.status.aiOn', { model: ai.model }) : t('discord.status.aiOff')}</p>
+          {(auto || breaking) && <AutoState />}
+        </section>
+      )}
 
       <section className="card mt-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -109,7 +109,7 @@ export function Discord() {
               <button
                 type="button"
                 className="btn-primary"
-                disabled={!valid && !!url}
+                disabled={!valid && (!!url || !getWebhook())}
                 onClick={() => {
                   setWebhook(url);
                   const ok = isWebhook(url);
@@ -117,7 +117,7 @@ export function Discord() {
                   setEditing(!ok);
                 }}
               >
-                {url ? t('discord.save') : t('discord.remove')}
+                {url || !getWebhook() ? t('discord.save') : t('discord.remove')}
               </button>
               <button type="button" className="btn-secondary" disabled={!valid || test.isPending} onClick={() => test.mutate()}>
                 {t('discord.test')}
@@ -135,84 +135,87 @@ export function Discord() {
           {t('discord.sendTitle')}
         </h2>
         {!saved && <p className="mt-2 text-sm font-bold text-ambre">{t('live.needWebhook')}</p>}
-        <div className="mt-3 divide-y divide-canard/10">
-          <Toggle
-            on={live}
-            disabled={!saved}
-            title={t('live.enable')}
-            help={
-              <>
-                {t('discord.liveShort')} <span className="text-canard/60">{t('discord.livePlugin')}</span>
-              </>
-            }
-            onChange={(v) => {
-              setLiveEnabled(v);
-              setLive(v);
-            }}
-          />
-          <details className="pb-3" open={!live}>
-            <summary className="cursor-pointer text-sm font-bold text-orange-fonce">{t('discord.preview.title')}</summary>
-            <p className="mt-1 text-sm text-brun">{t('discord.preview.help')}</p>
-            <div className="mt-2">
-              <DiscordEmbed embed={preview.embeds[0]!} label={t('discord.preview.title')} />
+        {/* Salon pas encore relié : les options restent repliées, rien n'est encore réglable. */}
+        <Fold folded={!saved} label={t('discord.seeOptions')}>
+          <div className="mt-3 divide-y divide-canard/10">
+            <Toggle
+              on={live}
+              disabled={!saved}
+              title={t('live.enable')}
+              help={
+                <>
+                  {t('discord.liveShort')} <span className="text-canard/60">{t('discord.livePlugin')}</span>
+                </>
+              }
+              onChange={(v) => {
+                setLiveEnabled(v);
+                setLive(v);
+              }}
+            />
+            <details className="pb-3">
+              <summary className="cursor-pointer text-sm font-bold text-orange-fonce">{t('discord.preview.title')}</summary>
+              <p className="mt-1 text-sm text-brun">{t('discord.preview.help')}</p>
+              <div className="mt-2">
+                <DiscordEmbed embed={preview.embeds[0]!} label={t('discord.preview.title')} />
+              </div>
+            </details>
+            <Toggle
+              on={auto}
+              disabled={!saved}
+              title={t('discord.autoEnable')}
+              help={t('discord.autoShort')}
+              onChange={(v) => {
+                setGazetteAuto(v);
+                setAuto(v);
+              }}
+            />
+            <Toggle
+              on={breaking}
+              disabled={!saved}
+              title={t('discord.breakingEnable')}
+              help={t('discord.breakingShort')}
+              onChange={(v) => {
+                setBreakingAuto(v);
+                setBreaking(v);
+              }}
+            />
+            <div className="py-3">
+              <p className="text-sm font-bold">{t('discord.photosTitle')}</p>
+              <p className="text-sm text-brun">{t('discord.photosShort')}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(['off', 'manual', 'auto'] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    className={`chip ${photoMode === m ? 'chip-on' : ''}`}
+                    disabled={!saved}
+                    onClick={() => {
+                      setPhotoMode(m);
+                      setMode(m);
+                    }}
+                  >
+                    {t(`discord.photos.${m}`)}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1 text-xs text-brun">
+                {t(`discord.photosHelp.${photoMode}`)}{' '}
+                <Link to="/photos" className="font-bold text-orange-fonce hover:underline">
+                  {t('layout.nav.photos')}
+                </Link>
+              </p>
             </div>
-          </details>
-          <Toggle
-            on={auto}
-            disabled={!saved}
-            title={t('discord.autoEnable')}
-            help={t('discord.autoShort')}
-            onChange={(v) => {
-              setGazetteAuto(v);
-              setAuto(v);
-            }}
-          />
-          <Toggle
-            on={breaking}
-            disabled={!saved}
-            title={t('discord.breakingEnable')}
-            help={t('discord.breakingShort')}
-            onChange={(v) => {
-              setBreakingAuto(v);
-              setBreaking(v);
-            }}
-          />
-          <div className="py-3">
-            <p className="text-sm font-bold">{t('discord.photosTitle')}</p>
-            <p className="text-sm text-brun">{t('discord.photosShort')}</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {(['off', 'manual', 'auto'] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  className={`chip ${photoMode === m ? 'chip-on' : ''}`}
-                  disabled={!saved}
-                  onClick={() => {
-                    setPhotoMode(m);
-                    setMode(m);
-                  }}
-                >
-                  {t(`discord.photos.${m}`)}
-                </button>
-              ))}
-            </div>
-            <p className="mt-1 text-xs text-brun">
-              {t(`discord.photosHelp.${photoMode}`)}{' '}
-              <Link to="/photos" className="font-bold text-orange-fonce hover:underline">
-                {t('layout.nav.photos')}
+            <div className="flex flex-wrap items-center justify-between gap-3 py-3">
+              <div>
+                <p className="text-sm font-bold">{t('discord.manualTitle')}</p>
+                <p className="text-sm text-brun">{t('discord.manualShort')}</p>
+              </div>
+              <Link to="/gazette" className="btn-secondary text-sm">
+                {t('modes.gazette.title')}
               </Link>
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-3 py-3">
-            <div>
-              <p className="text-sm font-bold">{t('discord.manualTitle')}</p>
-              <p className="text-sm text-brun">{t('discord.manualShort')}</p>
             </div>
-            <Link to="/gazette" className="btn-secondary text-sm">
-              {t('modes.gazette.title')}
-            </Link>
           </div>
-        </div>
+        </Fold>
       </section>
 
       <AiLink />
@@ -293,5 +296,16 @@ function Toggle({ on, disabled, title, help, onChange }: { on: boolean; disabled
         onChange={(e) => onChange(e.target.checked)}
       />
     </label>
+  );
+}
+
+/** Replie son contenu derrière un lien quand `folded`, sinon l'affiche tel quel. */
+function Fold({ folded, label, children }: { folded: boolean; label: string; children: ReactNode }) {
+  if (!folded) return <>{children}</>;
+  return (
+    <details className="mt-3">
+      <summary className="cursor-pointer text-sm font-bold text-orange-fonce">{label}</summary>
+      {children}
+    </details>
   );
 }
