@@ -4031,7 +4031,12 @@
     },
     "actions": "Rewrite and share",
     "emptyHow": "FM Immersion reads your save on each game day through the FM27 plugin; the gazette is written from those readings, one per week.",
-    "photoNone": "No photo possible for this front page (no scene for this story, face not found or engine busy): the front page keeps its layout."
+    "photoNone": "No photo possible for this front page (no scene for this story, face not found or engine busy): the front page keeps its layout.",
+    "inIssue": {
+      "title": "In this issue",
+      "article": "Article",
+      "section": "Section"
+    }
   },
   "discord": {
     "autoTitle": "Automatic gazette",
@@ -4621,19 +4626,12 @@
     "next": "Next step to validate",
     "nextWhen": "Validated when:",
     "fit": {
-      "yes": "Fits your career",
       "no": "Doesn't fit your career",
       "taken": "Already running"
     },
     "start": {
       "label": "To start:",
-      "unemployed": "a new career, with your manager still unemployed.",
-      "current": "your current career, from the last date read.",
-      "param": {
-        "nationality": "You pick a nationality.",
-        "club": "The challenge is about your current club.",
-        "until": "You set a deadline."
-      }
+      "unemployed": "a new career, with your manager still unemployed."
     },
     "joker": {
       "title": "Play a joker",
@@ -4699,7 +4697,8 @@
         "sharpshooter": "lost: Europe's top scorer at the club",
         "gapYear": "lost: Title in another European league"
       }
-    }
+    },
+    "catalogHelp": "Unless stated otherwise, a challenge starts from your current game, from the last date read. Playable challenges come first."
   },
   "layout": {
     "readNow": "Refresh the game",
@@ -4835,7 +4834,22 @@
         "save": "pick your FM27 save in the list.",
         "read": "start FM27 and load your save. The first read arrives on its own, or click \"Import\".",
         "done": "FM Immersion follows {{club}} on every new game day."
-      }
+      },
+      "table": {
+        "setting": "Setting",
+        "value": "Value",
+        "club": "Club read",
+        "save": "Linked FM27 save",
+        "saved": "Last game save",
+        "read": "Reading the game",
+        "readAuto": "automatic, every minute",
+        "abilities": "CA/PA reading",
+        "backups": "Backup copies",
+        "ai": "AI writing",
+        "on": "yes",
+        "off": "no"
+      },
+      "change": "Change the save or the plugin folder"
     }
   },
   "ai": {
@@ -5077,7 +5091,8 @@
       "size": "Size",
       "career": "Career",
       "club": "Club",
-      "status": "Status"
+      "status": "Status",
+      "copies": "Copies"
     },
     "none": "not linked",
     "followed": "followed",
@@ -5140,7 +5155,13 @@
     "busy": "FM27 is still writing the save: try again in a minute.",
     "error": "The backup failed: {{error}}",
     "none": "No backup yet.",
-    "restore": "To go back to a backup: close FM27, then copy it into the games folder (it shows up with its date in FM27). FM Immersion never replaces your save."
+    "restore": "To go back to a backup: close FM27, then copy it into the games folder (it shows up with its date in FM27). FM Immersion never replaces your save.",
+    "cols": {
+      "copy": "Copy",
+      "made": "Made",
+      "size": "Size"
+    },
+    "latest": "latest"
   },
   "records": {
     "kind": "Record edition",

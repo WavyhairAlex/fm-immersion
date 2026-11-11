@@ -1,6 +1,7 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useTranslation } from 'react-i18next';
+import { PageTitle } from '../components/PageTitle';
 import { Link } from 'react-router-dom';
 import { useCareer } from '../lib/career';
 import { fmData } from '../lib/data';
@@ -62,8 +63,9 @@ export function Saves() {
 
   return (
     <div className="w-full px-6 py-6 xl:px-10">
-      <h1 className="text-3xl font-semibold">{t('saveFiles.title')}</h1>
-      <p className="mt-1 max-w-3xl text-brun">{t('saveFiles.intro', { days: UNSAVED_DAYS_WARN })}</p>
+      <PageTitle eyebrow={t('layout.groups.game')} title={t('saveFiles.title')}>
+        {t('saveFiles.intro', { days: UNSAVED_DAYS_WARN })}
+      </PageTitle>
 
       {!folder ? (
         <div className="card mt-6 max-w-2xl">
@@ -86,6 +88,7 @@ export function Saves() {
                   <th>{t('saveFiles.cols.file')}</th>
                   <th>{t('saveFiles.cols.written')}</th>
                   <th>{t('saveFiles.cols.size')}</th>
+                  <th>{t('saveFiles.cols.copies')}</th>
                   <th>{t('saveFiles.cols.career')}</th>
                   <th>{t('saveFiles.cols.club')}</th>
                   <th>{t('saveFiles.cols.status')}</th>
@@ -93,7 +96,7 @@ export function Saves() {
               </thead>
               <tbody>
                 {files.map((f) => (
-                  <FileRow key={f.name} file={f} career={linkOf.get(f.name)} careers={fmSaves} current={saveId} busy={link.isPending} onLink={onLink} />
+                  <FileRow key={f.name} folder={folder} file={f} career={linkOf.get(f.name)} careers={fmSaves} current={saveId} busy={link.isPending} onLink={onLink} />
                 ))}
               </tbody>
             </table>
@@ -134,6 +137,7 @@ export function Saves() {
 }
 
 function FileRow({
+  folder,
   file,
   career,
   careers,
@@ -141,6 +145,7 @@ function FileRow({
   busy,
   onLink,
 }: {
+  folder: string;
   file: FmSaveFile;
   career: Save | undefined;
   careers: Save[];
@@ -152,11 +157,14 @@ function FileRow({
   const ago = useAgo();
   const stampFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium', timeStyle: 'short' });
   const mbFmt = new Intl.NumberFormat(i18n.resolvedLanguage, { style: 'unit', unit: 'megabyte', maximumFractionDigits: 0 });
+  // Copies de secours de ce fichier (dossier fm-immersion-secours) : seules les sauvegardes liées en ont d'habitude.
+  const { data: copies } = useBackups(folder, file.name);
   return (
     <tr className={career?.id === current ? 'bg-orange/5' : ''}>
       <td className="font-bold">{file.name.replace(/\.fm$/i, '')}</td>
       <td title={file.modifiedMs != null ? stampFmt.format(new Date(file.modifiedMs)) : undefined}>{file.modifiedMs != null ? ago(file.modifiedMs) : '—'}</td>
       <td>{mbFmt.format(file.bytes / 1_000_000)}</td>
+      <td className="tabular-nums">{copies?.length ? copies.length : '—'}</td>
       <td>
         <select
           className="input w-auto py-1 pr-8 text-sm"
@@ -266,17 +274,29 @@ function BackupPanel({ career, file }: { career: Save; file: FmSaveFile }) {
       <p className="text-xs text-brun">{t('saveBackups.help', { size: mbFmt.format((file.bytes * keep) / 1_000_000) })}</p>
       {shownError && <p className="text-sm text-corail">{t(shownError.includes("cours d'écriture") ? 'saveBackups.busy' : 'saveBackups.error', { error: shownError })}</p>}
       {backups && backups.length > 0 ? (
-        <ul className="space-y-1 text-sm">
-          {backups.map((b) => (
-            <li key={b.name} className="flex flex-wrap gap-x-3">
-              <span className="font-bold">{b.name}</span>
-              <span className="text-brun" title={b.modifiedMs != null ? stampFmt.format(new Date(b.modifiedMs)) : undefined}>
-                {b.modifiedMs != null ? ago(b.modifiedMs) : ''}
-              </span>
-              <span className="text-brun">{mbFmt.format(b.bytes / 1_000_000)}</span>
-            </li>
-          ))}
-        </ul>
+        <table className="w-full text-sm">
+          <thead className="text-left text-xs uppercase tracking-wide text-brun">
+            <tr>
+              <th className="px-3 py-2 font-bold">{t('saveBackups.cols.copy')}</th>
+              <th className="px-3 py-2 font-bold">{t('saveBackups.cols.made')}</th>
+              <th className="px-3 py-2 font-bold">{t('saveBackups.cols.size')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {backups.map((b, i) => (
+              <tr key={b.name} className="border-t border-canard/5 odd:bg-creme/40">
+                <td className="px-3 py-1.5 font-bold">
+                  {b.name.replace(/\.fm$/i, '')}
+                  {i === 0 && <span className="pill ml-2">{t('saveBackups.latest')}</span>}
+                </td>
+                <td className="px-3 py-1.5 text-brun" title={b.modifiedMs != null ? stampFmt.format(new Date(b.modifiedMs)) : undefined}>
+                  {b.modifiedMs != null ? ago(b.modifiedMs) : '—'}
+                </td>
+                <td className="px-3 py-1.5 text-brun">{mbFmt.format(b.bytes / 1_000_000)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       ) : (
         <p className="text-sm text-brun">{t('saveBackups.none')}</p>
       )}

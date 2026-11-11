@@ -1,5 +1,7 @@
 import { GameCompatBanner, GameCompatCard } from '../components/GameCompat';
 import { AiSettingsCard } from '../components/AiSettingsCard';
+import { aiFor } from '../lib/ai';
+import { PageTitle } from '../components/PageTitle';
 import {
   buildProject,
   engineValue,
@@ -485,20 +487,45 @@ function SettingsPage({
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-3xl font-semibold">{t('layout.nav.settings')}</h1>
-        <p className="mt-1 max-w-3xl text-brun">
-          {t('layout.settingsIntro')}{' '}
-          <Link to="/parties" className="font-bold text-orange-fonce hover:underline">
-            {t('layout.manageCareers')}
-          </Link>
-        </p>
-      </header>
+      <PageTitle eyebrow={t('layout.groups.game')} title={t('layout.nav.settings')}>
+        {t('layout.settingsIntro')}{' '}
+        <Link to="/parties" className="font-bold text-orange-fonce hover:underline">
+          {t('layout.manageCareers')}
+        </Link>
+      </PageTitle>
 
       <section className="card space-y-4 p-5" aria-labelledby="connect-fm">
         <h2 id="connect-fm" className="text-lg">{t('layout.connect.title')}</h2>
         <NextStep step={next} club={club} />
         <FmBridge dataFolder={folder} onHealth={onHealth} />
+        {/* Une fois tout relié, l'état en tableau (comme la maquette) ; le formulaire se replie, à portée pour changer. */}
+        {next === 'done' && (
+          <table className="w-full max-w-2xl text-sm">
+            <thead className="text-left text-xs uppercase tracking-wide text-brun">
+              <tr>
+                <th className="px-3 py-2 font-bold">{t('layout.connect.table.setting')}</th>
+                <th className="px-3 py-2 font-bold">{t('layout.connect.table.value')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ['club', club ?? '–'],
+                ['save', linked.replace(/\.fm$/i, '')],
+                ['saved', linkedFile?.modifiedMs != null ? stampFmt.format(new Date(linkedFile.modifiedMs)) : '–'],
+                ['read', t('layout.connect.table.readAuto')],
+                ['abilities', t(settings?.fmReadAbilities ? 'layout.connect.table.on' : 'layout.connect.table.off')],
+                ['backups', t(settings?.fmBackups ? 'layout.connect.table.on' : 'layout.connect.table.off')],
+                ['ai', t(aiFor('gazette') ? 'layout.connect.table.on' : 'layout.connect.table.off')],
+              ].map(([k, v]) => (
+                <tr key={k} className="border-t border-canard/5 odd:bg-creme/40">
+                  <td className="px-3 py-1.5">{t(`layout.connect.table.${k}`)}</td>
+                  <td className="px-3 py-1.5 font-bold">{v}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <Fold folded={next === 'done'} label={t('layout.connect.change')}>
         <label className="block text-sm font-bold text-canard">
           {t('fm.saveFile.label')}
           <select
@@ -539,6 +566,7 @@ function SettingsPage({
             <span className="text-xs text-brun">{t('fm.autoImport')}</span>
           </div>
         </form>
+        </Fold>
       </section>
 
       <GameCompatCard />
@@ -567,6 +595,17 @@ function SettingsPage({
         <AiSettingsCard />
       </details>
     </div>
+  );
+}
+
+/** Replie son contenu derrière un lien quand `folded` ; sinon l'affiche tel quel. */
+function Fold({ folded, label, children }: { folded: boolean; label: string; children: ReactNode }) {
+  if (!folded) return <>{children}</>;
+  return (
+    <details className="space-y-4">
+      <summary className="cursor-pointer text-sm font-bold text-orange-fonce hover:underline">{label}</summary>
+      <div className="mt-3 space-y-4">{children}</div>
+    </details>
   );
 }
 
