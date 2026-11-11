@@ -259,27 +259,41 @@ export function Paper({ issue }: { issue: GazetteIssue }) {
           </p>
         </section>
       )}
-      <div className="grid gap-x-8 gap-y-5 px-6 py-5 md:grid-cols-2">
-        {issue.stories.map((s, i) => {
-          const x = storyText(t, issue.club, s);
-          return (
-            <section key={i} className="flex gap-3">
-              {(s.params.id ?? s.params.bestId) != null && (
-                <Face
-                  id={(s.params.id ?? s.params.bestId) as string | number}
-                  name={String(s.params.name ?? s.params.best ?? '')}
-                  size={36}
-                  className="mt-0.5"
-                />
-              )}
-              <div>
-                <h3 className="font-sans text-sm font-extrabold">{x.title}</h3>
-                {x.body && <p className="mt-1 text-sm text-brun">{x.body}</p>}
-              </div>
-            </section>
-          );
-        })}
-      </div>
+      {/* Comme la maquette : les brèves du numéro en tableau, avec leur rubrique. */}
+      {issue.stories.length > 0 && (
+        <section className="px-6 py-5">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-canard">{t('gazette.inIssue.title')}</h3>
+          <table className="mt-2 w-full text-sm">
+            <thead className="text-left text-xs uppercase tracking-wide text-brun">
+              <tr>
+                <th className="px-3 py-2 font-bold">{t('gazette.inIssue.article')}</th>
+                <th className="px-3 py-2 font-bold">{t('gazette.inIssue.section')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {issue.stories.map((s, i) => {
+                const x = storyText(t, issue.club, s);
+                return (
+                  <tr key={i} className="border-t border-canard/5 align-top odd:bg-creme/40">
+                    <td className="px-3 py-2">
+                      <span className="flex gap-3">
+                        {(s.params.id ?? s.params.bestId) != null && (
+                          <Face id={(s.params.id ?? s.params.bestId) as string | number} name={String(s.params.name ?? s.params.best ?? '')} size={32} className="mt-0.5 shrink-0" />
+                        )}
+                        <span>
+                          <span className="block font-bold">{x.title}</span>
+                          {x.body && <span className="mt-0.5 block text-brun">{x.body}</span>}
+                        </span>
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 text-brun">{t(`gazette.une.section.${s.kind}`, { defaultValue: t('gazette.une.section.default') })}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </section>
+      )}
     </article>
   );
 }

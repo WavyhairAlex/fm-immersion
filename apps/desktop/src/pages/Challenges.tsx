@@ -18,6 +18,7 @@ import type { FmChallengeCertRow, FmChallengeRow } from '@fm-immersion/module-fm
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PageTitle } from '../components/PageTitle';
 import { Link } from 'react-router-dom';
 import { factsFor } from '../lib/challenges';
 import { issueText, saveCertificate, sendCertificate, stepText } from '../lib/challenge-share';
@@ -69,10 +70,9 @@ export function Challenges() {
 
   return (
     <div className="w-full px-6 py-6 xl:px-10">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-3xl font-semibold">{t('modes.challenges.title')}</h1>
-      </div>
-      <p className="mt-2 max-w-3xl text-brun">{t('challenges.intro')}</p>
+      <PageTitle eyebrow={t('layout.groups.story')} title={t('modes.challenges.title')}>
+        {t('challenges.intro')}
+      </PageTitle>
 
       {!fmSaves.length && (
         <div className="card mt-6 max-w-3xl">
@@ -111,6 +111,7 @@ export function Challenges() {
           )}
 
           <h2 className="mt-8 text-xl font-semibold">{t('challenges.catalog')}</h2>
+          <p className="mt-1 max-w-3xl text-sm text-brun">{t('challenges.catalogHelp')}</p>
           <div className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {[...CHALLENGES]
               .map((d) => ({ d, b: blockedOf(d, active.some((c) => c.challengeId === d.id), !!settings?.fmFreeSince && !history.length, history.at(-1)?.gameDate ?? null) }))
@@ -353,15 +354,15 @@ function CatalogCard(p: { def: ChallengeDef; saveId: string; taken: boolean; une
           <span className="pill bg-canard/10">{t('challenges.fit.taken')}</span>
         ) : blocked ? (
           <span className="pill bg-ambre/30">{t('challenges.fit.no')}</span>
-        ) : (
-          <span className="pill bg-eau-soutenu/30">{t('challenges.fit.yes')}</span>
-        )}
+        ) : null}
       </div>
-      <p className="rounded-lg bg-creme px-3 py-2 text-xs">
-        <span className="font-bold">{t('challenges.start.label')} </span>
-        {t(def.unemployedStart ? 'challenges.start.unemployed' : 'challenges.start.current')}
-        {def.param ? ` ${t(`challenges.start.param.${def.param}`)}` : ''}
-      </p>
+      {/* Le départ habituel (ta partie actuelle) est dit une fois au-dessus du catalogue ; seule l'exception reste ici. */}
+      {def.unemployedStart && (
+        <p className="rounded-lg bg-creme px-3 py-2 text-xs">
+          <span className="font-bold">{t('challenges.start.label')} </span>
+          {t('challenges.start.unemployed')}
+        </p>
+      )}
       <p className="text-sm">{t(`challenges.def.${def.id}.rules`)}</p>
       <p className="text-xs text-brun">
         <span className="font-bold">{t('challenges.checked')} </span>

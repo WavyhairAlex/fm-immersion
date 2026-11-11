@@ -4031,7 +4031,12 @@
     },
     "actions": "Réécrire et partager",
     "emptyHow": "FM Immersion lit ta partie à chaque jour de jeu grâce au plugin FM27 ; la gazette s’écrit à partir de ces lectures, une par semaine.",
-    "photoNone": "Pas de photo possible pour cette une (sujet sans scène, visage introuvable ou moteur occupé) : la une garde sa mise en page."
+    "photoNone": "Pas de photo possible pour cette une (sujet sans scène, visage introuvable ou moteur occupé) : la une garde sa mise en page.",
+    "inIssue": {
+      "title": "Dans ce numéro",
+      "article": "Article",
+      "section": "Rubrique"
+    }
   },
   "discord": {
     "autoTitle": "Gazette automatique",
@@ -4621,19 +4626,12 @@
     "next": "Prochaine étape à valider",
     "nextWhen": "Validé quand :",
     "fit": {
-      "yes": "Compatible avec ta partie",
       "no": "Pas compatible avec ta partie",
       "taken": "Déjà en cours"
     },
     "start": {
       "label": "Pour commencer :",
-      "unemployed": "une nouvelle carrière, avec ton manager encore sans club.",
-      "current": "ta partie actuelle, à partir de la dernière date lue.",
-      "param": {
-        "nationality": "Tu choisis une nationalité.",
-        "club": "Le défi porte sur ton club actuel.",
-        "until": "Tu fixes une date limite."
-      }
+      "unemployed": "une nouvelle carrière, avec ton manager encore sans club."
     },
     "joker": {
       "title": "Jouer un joker",
@@ -4699,7 +4697,8 @@
         "sharpshooter": "perdu : Meilleur buteur d'Europe au club",
         "gapYear": "perdu : Titre dans un autre championnat d'Europe"
       }
-    }
+    },
+    "catalogHelp": "Sauf mention contraire, un défi part de ta partie actuelle, à partir de la dernière date lue. Les défis jouables sont en premier."
   },
   "layout": {
     "readNow": "Actualiser la partie",
@@ -4835,7 +4834,22 @@
         "save": "choisis ta sauvegarde FM27 dans la liste.",
         "read": "lance FM27 et charge ta partie. La première lecture arrive toute seule, ou clique sur « Importer ».",
         "done": "FM Immersion suit {{club}} à chaque nouveau jour de jeu."
-      }
+      },
+      "table": {
+        "setting": "Réglage",
+        "value": "Valeur",
+        "club": "Club lu",
+        "save": "Sauvegarde FM27 liée",
+        "saved": "Dernière sauvegarde du jeu",
+        "read": "Lecture de la partie",
+        "readAuto": "automatique, chaque minute",
+        "abilities": "Lecture du CA/PA",
+        "backups": "Copies de secours",
+        "ai": "Rédaction par IA",
+        "on": "oui",
+        "off": "non"
+      },
+      "change": "Changer la sauvegarde ou le dossier du plugin"
     }
   },
   "ai": {
@@ -5077,7 +5091,8 @@
       "size": "Taille",
       "career": "Carrière",
       "club": "Club",
-      "status": "État"
+      "status": "État",
+      "copies": "Copies"
     },
     "none": "non liée",
     "followed": "suivie",
@@ -5140,7 +5155,13 @@
     "busy": "FM27 est encore en train d'écrire la sauvegarde : réessaie dans une minute.",
     "error": "La copie a échoué : {{error}}",
     "none": "Pas encore de copie.",
-    "restore": "Pour revenir à une copie : ferme FM27, puis copie-la dans le dossier games (elle s'affiche avec sa date dans FM27). FM Immersion ne remplace jamais ta sauvegarde."
+    "restore": "Pour revenir à une copie : ferme FM27, puis copie-la dans le dossier games (elle s'affiche avec sa date dans FM27). FM Immersion ne remplace jamais ta sauvegarde.",
+    "cols": {
+      "copy": "Copie",
+      "made": "Faite",
+      "size": "Taille"
+    },
+    "latest": "la plus récente"
   },
   "records": {
     "kind": "Édition record",

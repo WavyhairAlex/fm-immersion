@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.1.171",
+    "date": "2026-11-11",
+    "fr": [
+      "Plugin et réglages montre l'état de ta connexion en un tableau clair une fois tout relié ; le formulaire se replie, toujours à portée pour changer de sauvegarde.",
+      "Sauvegardes affiche le nombre de copies de secours par fichier, et la liste des copies indique la plus récente.",
+      "La Gazette range ses brèves dans un tableau « Dans ce numéro » avec leur rubrique, et Défis va droit à l'essentiel."
+    ],
+    "en": [
+      "Plugin and settings shows your connection in a clear table once everything is linked; the form folds away, still at hand to change save.",
+      "Saves shows how many backup copies each file has, and the list of copies marks the latest one.",
+      "The Gazette lists its news items in an \"In this issue\" table with their section, and Challenges gets straight to the point."
+    ]
+  },
+  {
     "version": "0.1.170",
     "date": "2026-11-11",
     "fr": [

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { PageTitle } from '../components/PageTitle';
 import { Discord } from './Discord';
 import { Gazette } from './Gazette';
 import { Press } from './Press';
@@ -10,9 +11,9 @@ export function Story({ tab }: { tab: 'gazette' | 'presse' | 'discord' }) {
   const { t } = useTranslation();
   return (
     <div className="w-full px-6 py-6 xl:px-10">
-      <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('layout.groups.story')}</p>
-      <h1 className="text-3xl font-semibold">{t(TITLE[tab])}</h1>
-      <p className="mb-5 mt-1 max-w-3xl text-sm text-brun">{t(`layout.storySub.${tab}`)}</p>
+      <PageTitle eyebrow={t('layout.groups.story')} title={t(TITLE[tab])}>
+        {t(`layout.storySub.${tab}`)}
+      </PageTitle>
       {tab === 'gazette' ? <Gazette /> : tab === 'presse' ? <Press /> : <Discord />}
     </div>
   );
