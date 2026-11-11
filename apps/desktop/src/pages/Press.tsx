@@ -1,4 +1,5 @@
 import { ANSWER_TONES, pendingConference, type AnswerTone, type PressAnswer, type PressConference } from '@fm-immersion/module-fm';
+import { PageHero } from '../components/PageHero';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -21,7 +22,14 @@ export function Press() {
 
   return (
     <div className="w-full max-w-3xl">
-      <p className="text-brun">{t('press.page.intro')}</p>
+      {/* Bandeau de la maquette : la conférence qui attend, s'il y en a une. */}
+      {pending && (
+        <PageHero
+          eyebrow={t('press.page.today')}
+          title={t(pending.kind === 'pre' ? 'press.page.todayPre' : 'press.page.todayPost', { opponent: pending.opponent })}
+          text={t('press.page.heroText')}
+        />
+      )}
       {!fmSaves.length && (
         <div className="card mt-6">
           <p className="text-brun">{t('press.page.noSave')}</p>

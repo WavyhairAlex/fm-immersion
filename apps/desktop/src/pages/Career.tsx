@@ -4,6 +4,7 @@ import type { TFunction } from 'i18next';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { PageHero } from '../components/PageHero';
 import { useCareer } from '../lib/career';
 import { useFmFolder } from '../lib/fm-sync';
 import { FmHistoryImport } from './FmSave';
@@ -90,14 +91,18 @@ export function Career() {
 
       {!!career.spells.length && (
         <>
-          <p className="mt-4 font-display text-xl">
-            {t('careerPage.summary', {
+          {/* Bandeau de la maquette : la saison et le club d'aujourd'hui, la photo du coach à droite. */}
+          <PageHero
+            eyebrow={career.spells.at(-1)!.seasons.at(-1)?.label ?? t('careerPage.title')}
+            title={career.spells.at(-1)!.current ? career.spells.at(-1)!.club : t('layout.career.free')}
+            text={t('careerPage.summary', {
               coach: save?.name ?? '',
               since: dateFmt.format(new Date(career.spells[0]!.start.slice(0, 10))),
               clubs: t('careerPage.nClubs', { count: tt.clubs }),
               countries: t('careerPage.nCountries', { count: tt.countries }),
             })}
-          </p>
+            image={settings?.coachPhoto ?? null}
+          />
 
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
             <Tile value={String(tt.seasons + (tt.ongoingSeason ? 1 : 0))} label={t('careerPage.tile.seasons', { count: tt.seasons + (tt.ongoingSeason ? 1 : 0) })} />

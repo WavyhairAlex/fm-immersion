@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.168",
+    "date": "2026-11-11",
+    "fr": [
+      "Ma carrière, Presse, Visages et Photos s'ouvrent sur un grand bandeau : ton club et ta saison avec ta photo de coach, la conférence qui t'attend, l'état de ton pack de visages, ta dernière photo de situation.",
+      "Live Discord montre en un petit tableau ce qui part dans ton salon : le direct de tes matchs, la gazette, les dépêches, et si c'est automatique ou sur ton clic."
+    ],
+    "en": [
+      "My career, Press, Faces and Photos open on a large banner: your club and season with your coach photo, the press conference waiting for you, the state of your faces pack, your latest situation photo.",
+      "Live Discord shows in a small table what goes to your channel: live coverage of your matches, the gazette, news flashes, and whether it is automatic or on your click."
+    ]
+  },
+  {
     "version": "0.1.167",
     "date": "2026-11-11",
     "fr": [
