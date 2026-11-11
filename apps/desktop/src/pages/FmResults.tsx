@@ -87,109 +87,6 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
         />
       </div>
 
-      <h2 id="res-repeat" className="scroll-mt-28 pt-2 text-xl font-semibold">{t('fm.results.q.repeat')}</h2>
-      <Panel title={t('fm.results.works')}>
-        {an.insights.length ? (
-          <ul className="space-y-1.5 text-sm">
-            {an.insights.map((i, k) => (
-              <li key={k} className="flex flex-wrap items-baseline gap-2">
-                <span aria-hidden className={i.kind === 'merged' ? 'text-brun' : /Best|Plus|lucky/.test(i.kind) ? 'text-eau-fonce' : 'text-corail'}>●</span>
-                <span className="flex-1">{insight(i)}</span>
-                {i.kind !== 'merged' && (
-                  <button type="button" className="shrink-0 text-xs font-bold text-orange-fonce hover:underline" onClick={() => showProof(i)}>
-                    {t('fm.results.q.proof', { count: an.results.filter((r) => backs(i, r)).length })} →
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <Empty>{t('fm.results.fewMatches', { min: 3 })}</Empty>
-        )}
-        <More>{t('fm.results.how')}</More>
-      </Panel>
-
-      <h2 id="res-adjust" className="scroll-mt-28 pt-2 text-xl font-semibold">{t('fm.results.q.adjust')}</h2>
-      <Panel title={t('fm.results.q.adjustTitle')}>
-        {moves.length ? (
-          <ul className="space-y-2 text-sm">
-            {moves.map(({ i, to }, k) => (
-              <li key={k} className="flex flex-wrap items-baseline gap-2">
-                <span className="flex-1">{t(`fm.results.move.${i.kind}`, params(i))}</span>
-                <button type="button" className="shrink-0 text-xs font-bold text-brun hover:underline" onClick={() => showProof(i)}>
-                  {t('fm.results.q.proof', { count: an.results.filter((r) => backs(i, r)).length })}
-                </button>
-                <button type="button" className="shrink-0 text-xs font-bold text-orange-fonce hover:underline" onClick={() => navigate(clubPath(to))}>
-                  {t(`fm.views.${to}`)} →
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <Empty>{t('fm.results.q.nothing')}</Empty>
-        )}
-      </Panel>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title={t('fm.results.byTactic')}>
-          <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase text-canard/60">
-              <tr>
-                <th className="py-1">{t('fm.results.col.tactic')}</th>
-                <th className="text-right">{t('fm.results.col.matches')}</th>
-                <th className="text-right">{t('fm.results.kpi.record')}</th>
-                <th className="text-right">{t('fm.results.kpi.ppm')}</th>
-                <th className="text-right">{t('fm.results.kpi.goals')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {an.byTactic.map((x) => (
-                <tr key={x.key} className="border-t border-canard/10">
-                  <td className="py-1.5 font-bold">{x.key === '?' ? t('fm.results.unknownTactic') : x.key}</td>
-                  <td className="text-right tabular-nums">{x.matches}</td>
-                  <td className="text-right tabular-nums">{`${x.wins}-${x.draws}-${x.losses}`}</td>
-                  <td className="text-right font-bold tabular-nums">{num(x.ppm, 2)}</td>
-                  <td className="text-right tabular-nums">{`${x.goalsFor} - ${x.goalsAgainst}`}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Panel>
-
-        <Panel title={t('fm.results.byPlayer')}>
-          <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase text-canard/60">
-              <tr>
-                <th className="py-1">{t('fm.results.col.player')}</th>
-                <th className="text-right">{t('fm.results.col.starts')}</th>
-                <th className="text-right">{t('fm.results.col.with')}</th>
-                <th className="text-right">{t('fm.results.col.without')}</th>
-                <th className="text-right">{t('fm.results.col.rating')}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {an.players
-                .filter((p) => p.starts > 0)
-                .slice(0, 16)
-                .map((p) => {
-                  const pl = byId.get(p.id);
-                  const tone = p.impact == null ? '' : p.impact >= 0.5 ? 'text-eau-fonce' : p.impact <= -0.5 ? 'text-corail' : '';
-                  return (
-                    <tr key={p.id} className="border-t border-canard/10">
-                      <td className="py-1.5">{pl ? <PlayerLink player={pl} /> : <span className="font-bold">{p.name}</span>}</td>
-                      <td className="text-right tabular-nums">{p.starts}</td>
-                      <td className={`text-right font-bold tabular-nums ${tone}`}>{num(p.ppmWith, 2)}</td>
-                      <td className="text-right tabular-nums">{num(p.ppmWithout, 2)}</td>
-                      <td className="text-right tabular-nums">{num(p.avgRating, 2)}</td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
-          <p className="mt-2 text-xs text-brun">{t('fm.results.withHelp', { min: 3 })}</p>
-        </Panel>
-      </div>
-
       <div id="res-matches" className="scroll-mt-28">
       <Panel title={t('fm.results.list')}>
         {proof && (
@@ -292,6 +189,109 @@ export function FmResults({ players, history }: { players: FmPlayer[]; history?:
           })}
         </ul>
       </Panel>
+      </div>
+
+      <h2 id="res-repeat" className="scroll-mt-28 pt-2 text-xl font-semibold">{t('fm.results.q.repeat')}</h2>
+      <Panel title={t('fm.results.works')}>
+        {an.insights.length ? (
+          <ul className="space-y-1.5 text-sm">
+            {an.insights.map((i, k) => (
+              <li key={k} className="flex flex-wrap items-baseline gap-2">
+                <span aria-hidden className={i.kind === 'merged' ? 'text-brun' : /Best|Plus|lucky/.test(i.kind) ? 'text-eau-fonce' : 'text-corail'}>●</span>
+                <span className="flex-1">{insight(i)}</span>
+                {i.kind !== 'merged' && (
+                  <button type="button" className="shrink-0 text-xs font-bold text-orange-fonce hover:underline" onClick={() => showProof(i)}>
+                    {t('fm.results.q.proof', { count: an.results.filter((r) => backs(i, r)).length })} →
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <Empty>{t('fm.results.fewMatches', { min: 3 })}</Empty>
+        )}
+        <More>{t('fm.results.how')}</More>
+      </Panel>
+
+      <h2 id="res-adjust" className="scroll-mt-28 pt-2 text-xl font-semibold">{t('fm.results.q.adjust')}</h2>
+      <Panel title={t('fm.results.q.adjustTitle')}>
+        {moves.length ? (
+          <ul className="space-y-2 text-sm">
+            {moves.map(({ i, to }, k) => (
+              <li key={k} className="flex flex-wrap items-baseline gap-2">
+                <span className="flex-1">{t(`fm.results.move.${i.kind}`, params(i))}</span>
+                <button type="button" className="shrink-0 text-xs font-bold text-brun hover:underline" onClick={() => showProof(i)}>
+                  {t('fm.results.q.proof', { count: an.results.filter((r) => backs(i, r)).length })}
+                </button>
+                <button type="button" className="shrink-0 text-xs font-bold text-orange-fonce hover:underline" onClick={() => navigate(clubPath(to))}>
+                  {t(`fm.views.${to}`)} →
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <Empty>{t('fm.results.q.nothing')}</Empty>
+        )}
+      </Panel>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Panel title={t('fm.results.byTactic')}>
+          <table className="w-full text-sm">
+            <thead className="text-left text-xs uppercase text-canard/60">
+              <tr>
+                <th className="py-1">{t('fm.results.col.tactic')}</th>
+                <th className="text-right">{t('fm.results.col.matches')}</th>
+                <th className="text-right">{t('fm.results.kpi.record')}</th>
+                <th className="text-right">{t('fm.results.kpi.ppm')}</th>
+                <th className="text-right">{t('fm.results.kpi.goals')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {an.byTactic.map((x) => (
+                <tr key={x.key} className="border-t border-canard/10">
+                  <td className="py-1.5 font-bold">{x.key === '?' ? t('fm.results.unknownTactic') : x.key}</td>
+                  <td className="text-right tabular-nums">{x.matches}</td>
+                  <td className="text-right tabular-nums">{`${x.wins}-${x.draws}-${x.losses}`}</td>
+                  <td className="text-right font-bold tabular-nums">{num(x.ppm, 2)}</td>
+                  <td className="text-right tabular-nums">{`${x.goalsFor} - ${x.goalsAgainst}`}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Panel>
+
+        <Panel title={t('fm.results.byPlayer')}>
+          <table className="w-full text-sm">
+            <thead className="text-left text-xs uppercase text-canard/60">
+              <tr>
+                <th className="py-1">{t('fm.results.col.player')}</th>
+                <th className="text-right">{t('fm.results.col.starts')}</th>
+                <th className="text-right">{t('fm.results.col.with')}</th>
+                <th className="text-right">{t('fm.results.col.without')}</th>
+                <th className="text-right">{t('fm.results.col.rating')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {an.players
+                .filter((p) => p.starts > 0)
+                .slice(0, 16)
+                .map((p) => {
+                  const pl = byId.get(p.id);
+                  const tone = p.impact == null ? '' : p.impact >= 0.5 ? 'text-eau-fonce' : p.impact <= -0.5 ? 'text-corail' : '';
+                  return (
+                    <tr key={p.id} className="border-t border-canard/10">
+                      <td className="py-1.5">{pl ? <PlayerLink player={pl} /> : <span className="font-bold">{p.name}</span>}</td>
+                      <td className="text-right tabular-nums">{p.starts}</td>
+                      <td className={`text-right font-bold tabular-nums ${tone}`}>{num(p.ppmWith, 2)}</td>
+                      <td className="text-right tabular-nums">{num(p.ppmWithout, 2)}</td>
+                      <td className="text-right tabular-nums">{num(p.avgRating, 2)}</td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+          <p className="mt-2 text-xs text-brun">{t('fm.results.withHelp', { min: 3 })}</p>
+        </Panel>
       </div>
     </div>
   );

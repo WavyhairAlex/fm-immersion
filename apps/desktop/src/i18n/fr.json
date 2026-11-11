@@ -1906,8 +1906,6 @@
         "incomeSub": "valeur des joueurs à vendre · salaires libérés : {{wages}}",
         "prospects": "Jeunes qui valent le coup",
         "prospectsSub": "dont {{loan}} à prêter",
-        "extend": "Contrats à prolonger",
-        "extendSub": "à moins d'un an de la fin : titulaires ci-dessous, jeunes prometteurs dans « Les jeunes »",
         "off": "Hors projet",
         "offSub": "profils qui ne collent pas au style visé"
       },
@@ -1969,7 +1967,19 @@
         "offProject": "profil hors projet de jeu",
         "loanIn": "prêté chez nous : il compte cette saison, ni vente ni prolongation"
       },
-      "stayNoYouth": "Les jeunes de 21 ans ou moins sont dans leur cadre plus haut."
+      "stayNoYouth": "Les jeunes de 21 ans ou moins sont dans leur cadre plus haut.",
+      "moves": {
+        "title": "Mouvements à décider",
+        "move": "Mouvement",
+        "who": "Joueur ou poste",
+        "status": "Situation",
+        "arrival": "Arrivée",
+        "departure": "Départ",
+        "loan": "Prêt",
+        "extension": "Prolongation",
+        "until": "contrat jusqu'au {{date}}",
+        "help": "Le détail de chaque ligne (profil à chercher, prix, remplaçant) est plus bas. Rien n'est fait dans le jeu : c'est toi qui décides."
+      }
     },
     "stats": {
       "stale": "Le plugin n'a pas pu lire les stats à la dernière lecture : tu vois celles du {{date}}. Elles reviendront à la prochaine lecture complète (laisse le jeu quelques secondes sur un écran calme, ou relance FM27).",

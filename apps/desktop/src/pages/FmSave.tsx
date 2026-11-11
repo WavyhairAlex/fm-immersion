@@ -670,14 +670,14 @@ function ViewHeader({ view, part }: { view: string; part: string }) {
   );
 }
 
-/** Effectif : vue terrain (par poste) ou tableau détaillé ; le choix est gardé d'une visite à l'autre. */
+/** Effectif : tableau détaillé (par défaut, comme la maquette) ou vue terrain par poste ; le choix est gardé d'une visite à l'autre. */
 function SquadViews({ players, folder, gameDate }: { players: FmPlayer[]; folder: string; gameDate: string }) {
   const { t } = useTranslation();
   const [mode, setMode] = useState<'pitch' | 'table'>(() => {
     try {
-      return localStorage.getItem('fmi.squadView') === 'table' ? 'table' : 'pitch';
+      return localStorage.getItem('fmi.squadView') === 'pitch' ? 'pitch' : 'table';
     } catch {
-      return 'pitch';
+      return 'table';
     }
   });
   const choose = (m: 'pitch' | 'table') => {
@@ -691,7 +691,7 @@ function SquadViews({ players, folder, gameDate }: { players: FmPlayer[]; folder
   return (
     <div className="space-y-3">
       <div className="flex gap-1" role="tablist" aria-label={t('fm.squadPitch.label')}>
-        {(['pitch', 'table'] as const).map((k) => (
+        {(['table', 'pitch'] as const).map((k) => (
           <button
             key={k}
             type="button"
@@ -854,15 +854,7 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-1.5">
-                    <span className="flex flex-wrap gap-1">
-                      {p.positionsLabel.split(', ').map((pos) => (
-                        <span key={pos} className="pill whitespace-nowrap">
-                          {pos}
-                        </span>
-                      ))}
-                    </span>
-                  </td>
+                  <td className="min-w-[8rem] max-w-[11rem] px-3 py-1.5 text-brun">{p.positionsLabel.replace(/ \(/g, '\u00a0(')}</td>
                   <td className="px-3 py-1.5 tabular-nums">{p.age ?? '–'}</td>
                   <td className="whitespace-nowrap px-3 py-1.5 font-bold tabular-nums">
                     {p.level != null ? nf1.format(p.level) : '–'}

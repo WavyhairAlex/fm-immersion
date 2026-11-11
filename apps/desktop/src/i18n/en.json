@@ -1906,8 +1906,6 @@
         "incomeSub": "value of players to sell · wages freed: {{wages}}",
         "prospects": "Youngsters worth keeping",
         "prospectsSub": "{{loan}} of them to loan out",
-        "extend": "Contracts to renew",
-        "extendSub": "within a year of expiry: starters below, promising youngsters under \"Youngsters\"",
         "off": "Off project",
         "offSub": "profiles that don't suit the target style"
       },
@@ -1969,7 +1967,19 @@
         "offProject": "profile off the game plan",
         "loanIn": "on loan with us: counts this season, no sale or extension"
       },
-      "stayNoYouth": "Players aged 21 or under are in their own panel above."
+      "stayNoYouth": "Players aged 21 or under are in their own panel above.",
+      "moves": {
+        "title": "Moves to decide",
+        "move": "Move",
+        "who": "Player or position",
+        "status": "Status",
+        "arrival": "Signing",
+        "departure": "Departure",
+        "loan": "Loan",
+        "extension": "Extension",
+        "until": "contract until {{date}}",
+        "help": "The detail of each line (profile to look for, price, replacement) is further down. Nothing is done in the game: you decide."
+      }
     },
     "stats": {
       "stale": "The plugin could not read the stats on its last pass: these are from {{date}}. They will come back with the next full read (leave the game a few seconds on a quiet screen, or restart FM27).",
