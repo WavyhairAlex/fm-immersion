@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { PageHero } from '../components/PageHero';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useState } from 'react';
@@ -257,11 +258,8 @@ export function Faces() {
       <h1 className="text-3xl font-semibold">{t('modes.faces.title')}</h1>
       <p className="mt-2 max-w-3xl text-brun">{t('faces.intro')}</p>
       {/* L'état de TON PC d'abord ; l'avancement du projet de portraits vient plus bas, avec son propre libellé. */}
-      <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm ring-1 ring-canard/10" role="status">
-        <span className={`h-2.5 w-2.5 rounded-full ${DOT[state]}`} aria-hidden />
-        <span className="text-brun">{t('faces.pc.label')}</span>
-        <b>{t(`faces.pc.${pcState(state, !!offer)}`)}</b>
-      </p>
+      {/* Bandeau de la maquette : l'état du pack sur ce PC, en une ligne. */}
+      <PageHero eyebrow={t('faces.pc.label').replace(/\s*:\s*$/, '')} title={t(`faces.pc.${pcState(state, !!offer)}`)} />
       {status?.catalogUnknown && (
         <p className="mt-3 max-w-3xl rounded-lg border-l-4 border-corail bg-white p-3 text-sm" role="alert">
           {t(status.stalePack ? 'faces.newGameStale' : 'faces.newGame')}

@@ -3595,6 +3595,15 @@
       "moving": "Déplacement…",
       "copying": "Copie vers l'autre disque : {{done}} sur {{total}}",
       "hint": "Tape un chemin complet sur le disque de ton choix (par exemple D:\\FM Immersion\\photos). Ce qui est déjà téléchargé est déplacé, rien n'est à refaire. Donne un dossier vide ou nouveau : « Tout supprimer » l'effacera entièrement."
+    },
+    "hero": {
+      "eyebrow": "Photothèque",
+      "last": "Dernière photo : {{date}}",
+      "none": "Pas encore de photo",
+      "missing": "Moteur à télécharger (environ 34 Go), sur ton PC.",
+      "partial": "Téléchargement du moteur en cours ou interrompu.",
+      "downloaded": "Moteur téléchargé, il reste à l'installer.",
+      "ready": "Moteur prêt : les photos vont dans la gazette et les dépêches."
     }
   },
   "gazette": {
@@ -4006,10 +4015,6 @@
     "privacy": "Le lien reste sur ton PC. FM Immersion n'envoie rien à Discord sans ton clic, et seulement vers l'adresse des webhooks de Discord.",
     "status": {
       "title": "Ce qui est branché",
-      "liveOn": "Direct des matchs activé",
-      "liveOff": "Direct des matchs désactivé",
-      "autoOn": "Gazette automatique activée",
-      "autoOff": "Gazette automatique désactivée",
       "aiOn": "Textes rédigés par l’IA ({{model}}).",
       "aiOff": "Textes tout faits (rédaction par IA coupée).",
       "lastSent": "Dernière gazette partie toute seule : n° {{number}}, le {{date}}.",
@@ -4065,6 +4070,17 @@
       "off": "La gazette et les dépêches gardent le portrait.",
       "manual": "Dans « Gazette et Discord », un bouton fait la photo avant l'envoi ; l'envoi automatique part avec le portrait. Il faut le moteur d'images installé :",
       "auto": "Tu n'as rien à faire : l'appli fait les photos toute seule dès qu'une une ou une dépêche existe (deux à quatre minutes chacune), et tu les découvres dans la gazette. Elle attend si ta carte graphique est déjà prise par un autre logiciel ; portrait si une photo échoue. Il faut le moteur d'images installé :"
+    },
+    "table": {
+      "what": "Publication",
+      "mode": "Diffusion",
+      "live": "Direct de tes matchs",
+      "gazette": "Gazette de la semaine",
+      "breaking": "Dépêches",
+      "on": "Activée",
+      "off": "Coupée",
+      "auto": "Automatique",
+      "manual": "Sur ton clic"
     }
   },
   "live": {
@@ -5242,7 +5258,6 @@
   },
   "press": {
     "page": {
-      "intro": "Avant une affiche et après chaque match officiel, les journalistes posent trois questions sur ta partie. Choisis un ton ou écris ta propre réponse : la gazette de la semaine te citera.",
       "pre": "Avant-match · {{opponent}}",
       "post": "Après-match · {{opponent}}",
       "date": "Match du {{date}}",
@@ -5262,7 +5277,8 @@
       "todayPre": "Conférence d'avant-match contre {{opponent}}.",
       "todayPost": "Conférence d'après-match contre {{opponent}}.",
       "go": "Répondre",
-      "formLetters": "VND"
+      "formLetters": "VND",
+      "heroText": "Les journalistes attendent tes réponses. La gazette de la semaine te citera."
     },
     "tones": {
       "confident": "Confiant",

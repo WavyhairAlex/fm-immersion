@@ -3595,6 +3595,15 @@
       "moving": "Moving…",
       "copying": "Copying to the other drive: {{done}} of {{total}}",
       "hint": "Type a full path on the drive of your choice (for example D:\\FM Immersion\\photos). What is already downloaded is moved, nothing needs to be redone. Pick an empty or new folder: \"Delete everything\" will erase it entirely."
+    },
+    "hero": {
+      "eyebrow": "Photo library",
+      "last": "Latest photo: {{date}}",
+      "none": "No photo yet",
+      "missing": "Engine to download (about 34 GB), on your PC.",
+      "partial": "Engine download in progress or interrupted.",
+      "downloaded": "Engine downloaded, it still needs installing.",
+      "ready": "Engine ready: photos go into the gazette and news flashes."
     }
   },
   "gazette": {
@@ -4006,10 +4015,6 @@
     "privacy": "The link stays on your PC. FM Immersion sends nothing to Discord without your click, and only to Discord's webhook address.",
     "status": {
       "title": "What is connected",
-      "liveOn": "Live matches on",
-      "liveOff": "Live matches off",
-      "autoOn": "Automatic gazette on",
-      "autoOff": "Automatic gazette off",
       "aiOn": "Texts written by AI ({{model}}).",
       "aiOff": "Ready-made texts (AI writing off).",
       "lastSent": "Last gazette sent on its own: No. {{number}}, on {{date}}.",
@@ -4065,6 +4070,17 @@
       "off": "The gazette and breaking news keep the portrait.",
       "manual": "In \"Gazette & Discord\", a button makes the photo before sending; automatic sending goes out with the portrait. The image engine must be installed:",
       "auto": "Nothing to do: the app makes the photos by itself as soon as a front page or breaking news exists (two to four minutes each), and you discover them in the gazette. It waits if your graphics card is already used by other software; portrait if a photo fails. The image engine must be installed:"
+    },
+    "table": {
+      "what": "Post",
+      "mode": "Sending",
+      "live": "Live coverage of your matches",
+      "gazette": "Weekly gazette",
+      "breaking": "News flashes",
+      "on": "On",
+      "off": "Off",
+      "auto": "Automatic",
+      "manual": "On your click"
     }
   },
   "live": {
@@ -5242,7 +5258,6 @@
   },
   "press": {
     "page": {
-      "intro": "Before a big match and after every competitive game, journalists ask three questions about your save. Pick a tone or write your own answer: the week's gazette will quote you.",
       "pre": "Pre-match · {{opponent}}",
       "post": "Post-match · {{opponent}}",
       "date": "Match on {{date}}",
@@ -5262,7 +5277,8 @@
       "todayPre": "Pre-match press conference before {{opponent}}.",
       "todayPost": "Post-match press conference after {{opponent}}.",
       "go": "Answer",
-      "formLetters": "WDL"
+      "formLetters": "WDL",
+      "heroText": "Journalists are waiting for your answers. This week's gazette will quote you."
     },
     "tones": {
       "confident": "Confident",

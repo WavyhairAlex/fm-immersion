@@ -1,7 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PageHero } from '../components/PageHero';
 import { PhotoScenes } from '../components/PhotoScenes';
+import { libraryImage } from '../lib/photo-events';
 import { useCareer } from '../lib/career';
 import { fmData } from '../lib/data';
 import {
@@ -13,6 +15,7 @@ import {
   usePhotosActions,
   usePhotosProgress,
   usePhotosStatus,
+  useLibrary,
   type PhotosFileStatus,
 } from '../lib/photos';
 
@@ -41,6 +44,10 @@ export function Photos() {
   const { saveId } = useCareer();
   const { data: settings } = useQuery({ queryKey: ['fm', saveId, 'settings'], queryFn: () => fmData.settings(saveId), enabled: !!saveId });
   const coachPhoto = settings?.coachPhoto ?? null;
+  // Dernière photo de la bibliothèque, pour le bandeau.
+  const library = useLibrary();
+  const last = (library.data ?? []).filter((o) => o.accepted !== false).sort((x, y) => y.createdAt.localeCompare(x.createdAt))[0] ?? null;
+  const { data: lastUrl = null } = useQuery({ queryKey: ['photos', 'hero', last?.file], queryFn: async () => (await libraryImage(last!.file))?.src ?? null, enabled: !!last });
   const [testImage, setTestImage] = useState<string | null>(null);
   useEffect(() => () => void (testImage && URL.revokeObjectURL(testImage)), [testImage]);
 
@@ -84,6 +91,13 @@ export function Photos() {
       <h1 className="text-3xl font-semibold">{t('photos.title')}</h1>
       <p className="mt-2 max-w-3xl text-brun">{t('photos.intro')}</p>
       <p className="mt-1 max-w-3xl text-sm text-brun">{t('photos.size', { size: s ? fmt(s.total) : '…' })}</p>
+      {/* Bandeau de la maquette : la dernière photo faite, sinon le stade dessiné. */}
+      <PageHero
+        eyebrow={t('photos.hero.eyebrow')}
+        title={last ? t('photos.hero.last', { date: new Date(last.createdAt).toLocaleDateString(i18n.language) }) : t('photos.hero.none')}
+        text={t(`photos.hero.${state}`)}
+        image={lastUrl}
+      />
 
       <section className="card mt-6 max-w-3xl">
         <h2 className="text-lg font-semibold">{t('photos.engine.title')}</h2>
