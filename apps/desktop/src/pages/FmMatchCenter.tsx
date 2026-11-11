@@ -46,6 +46,7 @@ export function FmMatchCenter({
   go,
   aside,
   asideAfter,
+  afterHero,
 }: {
   snap: FmSnapshot;
   players: FmPlayer[];
@@ -58,6 +59,8 @@ export function FmMatchCenter({
   aside?: ReactNode;
   /** Sous la colonne de gauche (prochains matchs). */
   asideAfter?: ReactNode;
+  /** Sous le bandeau du match (cartes de l'accueil : point du staff, gazette). */
+  afterHero?: ReactNode;
 }) {
   const { t, i18n } = useTranslation();
   const names = useNames();
@@ -170,21 +173,25 @@ export function FmMatchCenter({
               <p className="mt-2 text-white/70">{t('fm.sum.noMatch')}</p>
             </>
           )}
-          <div className="mt-5 flex flex-wrap gap-2">
-            <button type="button" className="rounded-lg bg-orange px-4 py-2 text-sm font-bold text-canard hover:brightness-105" onClick={() => go('tactic')}>
-              {t('fm.mc.prepareMatch')} →
-            </button>
+          {/* Une action principale : l'adversaire (préparer le match vient après, en lien). */}
+          <div className="mt-5 flex flex-wrap items-center gap-2">
             {nm && (
-              <button type="button" className="rounded-lg bg-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white/20" onClick={() => go('opponent')}>
+              <button type="button" className="rounded-lg bg-orange px-5 py-2.5 font-bold text-canard hover:brightness-105" onClick={() => go('opponent')}>
                 {t('fm.mc.seeOpponent')}
               </button>
             )}
-            <button type="button" className="rounded-lg px-3 py-2 text-sm font-bold text-white/80 hover:bg-white/10 hover:text-white" onClick={() => go('calendar')}>
-              {t('fm.mc.calendar')}
+            <button
+              type="button"
+              className={nm ? 'rounded-lg px-3 py-2 text-sm font-bold text-white/80 hover:bg-white/10 hover:text-white' : 'rounded-lg bg-orange px-5 py-2.5 font-bold text-canard hover:brightness-105'}
+              onClick={() => go('tactic')}
+            >
+              {t('fm.mc.prepareMatch')} →
             </button>
           </div>
         </div>
       </div>
+
+      {afterHero}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0 space-y-4">
