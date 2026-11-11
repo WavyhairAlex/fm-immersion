@@ -34,14 +34,14 @@ import {
 } from '@fm-immersion/module-fm';
 import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
-import { gameInstructions, gamePlayerInstructions, instructionLoad, lineupAdvice, matchReview, matchStats, teamAdvice, TEAM_INSTRUCTIONS_FM27, type PlayerStats } from '@fm-immersion/module-fm';
-import { GamePiLine, LineupAdviceCard, MatchReviewCard, PiState, TeamAdviceBlock } from './FmTacticAdvice';
+import { gameInstructions, gamePlayerInstructions, instructionLoad, lineupAdvice, matchReview, matchStats, tacticTodo, teamAdvice, TEAM_INSTRUCTIONS_FM27, type PlayerStats } from '@fm-immersion/module-fm';
+import { GamePiLine, LineupAdviceCard, MatchReviewCard, PiState, TeamAdviceBlock, TodoCard } from './FmTacticAdvice';
 import { createContext, useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
 import { readBuiltTactics } from './FmBuilder';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
-import { fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach, SectionTabs } from './FmUi';
+import { fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach, SectionStack } from './FmUi';
 
 // v2 : le choix automatique (meilleure tactique applicable) devient la valeur par défaut.
 const PREFS_KEY = 'fmi.tactic.v2';
@@ -189,6 +189,18 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   const block = styleBlock(style);
   // Complexité : moins l'effectif lit le jeu, moins on charge chaque joueur de consignes individuelles.
   const budget = instructionBudget(style, tactAbility(avail), load.understanding);
+  // « À changer dans FM27 » : tout ce que les conseils demandent de modifier dans la tactique du jeu, en une liste.
+  // (calcul direct : on est après le retour anticipé, un hook n'a pas sa place ici)
+  const todo = (() => {
+    if (!planA || !fromGame) return [];
+    const players = planA.slots.flatMap((sl) => {
+      if (!sl.player) return [];
+      const st = seasonStats.get(sl.player.id);
+      const supported = playerInstructions(engine, sl, style, planA.slots, 3, st).list;
+      return [{ player: sl.player, list: budget < 3 ? playerInstructions(engine, sl, style, planA.slots, budget, st).list : supported, supported, game: gamePi.get(sl.player.id) ?? null }];
+    });
+    return tacticTodo({ team: tiBase === 'game' ? tiAdvice : null, lineup: advice, players, budget });
+  })();
   // Rôle avec ballon : FM27 fixe la mission d'après le rôle, on l'affiche à côté (« Milieu axial (Soutien) »).
   const roleName = (code: string, ph?: Phase) => {
     const r = engine.roles.get(code);
@@ -209,6 +221,26 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
+        {/* D'abord : de quelle tactique parle-t-on ? La tienne (lue dans FM27) ou la proposition de l'appli. */}
+        {gamePlan && (
+          <div className="flex gap-1" role="tablist">
+            {(['game', 'simloom'] as const).map((src) => (
+              <button
+                key={src}
+                type="button"
+                role="tab"
+                aria-selected={!built && (src === 'game') === fromGame}
+                onClick={() => update({ source: src })}
+                className={`chip ${!built && (src === 'game') === fromGame ? 'chip-on' : ''}`}
+              >
+                {t(`fm.tac.source.${src}`)}
+              </button>
+            ))}
+          </div>
+        )}
+        {fromGame && gameTactic && <span className="text-sm font-bold text-canard">{gameTactic}</span>}
+        {/* Style et schéma ne se choisissent que pour la proposition de l'appli : ta tactique FM27 a déjà les siens. */}
+        {!fromGame && (<>
         <label className="flex items-center gap-2 whitespace-nowrap text-sm font-bold" title={style.summary ?? undefined}>
           {t('fm.tac.style')}
           <select
@@ -250,22 +282,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
             ))}
           </select>
         </label>
-        {gamePlan && (
-          <div className="flex gap-1" role="tablist">
-            {(['game', 'simloom'] as const).map((src) => (
-              <button
-                key={src}
-                type="button"
-                role="tab"
-                aria-selected={!built && (src === 'game') === fromGame}
-                onClick={() => update({ source: src })}
-                className={`chip ${!built && (src === 'game') === fromGame ? 'chip-on' : ''}`}
-              >
-                {t(`fm.tac.source.${src}`)}
-              </button>
-            ))}
-          </div>
-        )}
+        </>)}
         {auto && pick && !fromGame && (
           <span className="rounded-md bg-eau/20 px-1.5 py-0.5 text-xs font-bold text-canard">{t(pick.kept ? 'fm.tac.baseKept' : pick.project ? 'fm.tac.projectBest' : 'fm.tac.bestNow')}</span>
         )}
@@ -281,14 +298,16 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
       
 
       {showLineup && (
-      <SectionTabs
-        id="tactic"
+      <SectionStack
         sections={[
           {
             id: 'xi',
             label: t('fm.tac.sections.xi'),
             node: (
               <>
+              {/* D'abord ce que disent les matchs et ce qu'il faut changer dans le jeu ; le onze et son détail ensuite. */}
+              {team === 'A' && <MatchReviewCard review={review} tactic={gameTactic} fromGame={fromGame} />}
+              {team === 'A' && fromGame && planA && <TodoCard items={todo} plan={planA} engine={engine} tactic={gameTactic} />}
               {/* Le onze : terrain compact à gauche, liste prête à appliquer dans FM27 à droite. Survoler l'un met l'autre en évidence. */}
               <section className="card">
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -430,7 +449,6 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   </div>
                 </div>
               </section>
-              {team === 'A' && <MatchReviewCard review={review} tactic={gameTactic} fromGame={fromGame} />}
               {team === 'A' && advice && planA && <LineupAdviceCard advice={advice} plan={planA} engine={engine} />}
               </>
             ),

@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.156",
+    "date": "2026-11-11",
+    "fr": [
+      "Mon onze est réorganisé pour aller droit au but. Tout est sur une seule page : d'abord ce que disent tes derniers matchs, puis une liste « À changer dans FM27 », classée par importance, qui rassemble consignes d'équipe, titulaires, consignes individuelles et rôles à revoir. Le terrain et le détail viennent ensuite.",
+      "Moins de boutons : tu choisis entre « Ma tactique FM27 » et « Proposition de l'appli », et le style et le schéma n'apparaissent que pour la proposition."
+    ],
+    "en": [
+      "My XI is reorganised to get straight to the point. Everything is on one page: first what your last matches say, then a “To change in FM27” list, most important first, gathering team instructions, starters, player instructions and roles to review. The pitch and the detail come after.",
+      "Fewer buttons: you choose between “My FM27 tactic” and “App's suggestion”, and style and formation only show for the suggestion."
+    ]
+  },
+  {
     "version": "0.1.155",
     "date": "2026-11-11",
     "fr": [

@@ -9,6 +9,7 @@ import {
   type PlayerInstruction,
   type TacticEngine,
   type TeamAdvice,
+  type TodoItem,
 } from '@fm-immersion/module-fm';
 import { useTranslation } from 'react-i18next';
 import { fitPct, More } from './FmUi';
@@ -163,6 +164,84 @@ export function MatchReviewCard({ review, tactic, fromGame }: { review: MatchRev
         </details>
       )}
       <More>{t('fm.tac.review.help')}</More>
+    </section>
+  );
+}
+
+const TODO_TAG: Record<TodoItem['kind'], string> = { team: 'team', starter: 'starter', piChange: 'player', piAdd: 'player', piRemove: 'player', role: 'role' };
+
+/**
+ * « À changer dans FM27 » : la liste unique, classée par importance, de tout ce que les conseils de l'écran demandent
+ * de modifier dans la tactique du jeu. Chaque ligne dit quoi faire, puis pourquoi, avec ses chiffres.
+ */
+export function TodoCard({ items, plan, engine, tactic }: { items: TodoItem[]; plan: FormationPlan; engine: TacticEngine; tactic: string | null }) {
+  const { t, i18n } = useTranslation();
+  const en = i18n.resolvedLanguage === 'en';
+  const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 2 });
+  const fmt = (vals: Record<string, number | string>) => Object.fromEntries(Object.entries(vals).map(([k, v]) => [k, typeof v === 'number' ? nf1.format(v) : v]));
+  const role = (code: string) => {
+    const r = engine.roles.get(code);
+    return (en ? r?.en : r?.fr) ?? r?.fr ?? code;
+  };
+  const val = (r: TeamAdvice['rows'][number], o: number) => r.def.short[o] ?? r.def.options[o] ?? '';
+  const line = (it: TodoItem): { what: string; why: string } => {
+    switch (it.kind) {
+      case 'team':
+        return {
+          what: t('fm.tac.todo.team', { title: it.row.def.title, to: val(it.row, it.row.option), from: val(it.row, it.row.game ?? it.row.styleOption ?? it.row.option) }),
+          why: t(`fm.tac.tiAdvice.reason.${it.row.reason}`, fmt(it.row.vals)),
+        };
+      case 'starter':
+        return {
+          what: t('fm.tac.todo.starter', { pos: POS_LABEL[plan.slots[it.advice.slot]!.pos], better: it.advice.better.name, starter: it.advice.starter.name }),
+          why: t('fm.tac.todo.starterWhy', { better: it.advice.better.name, betterFit: fitPct(it.advice.betterFit), starterFit: fitPct(it.advice.starterFit) }),
+        };
+      case 'piChange':
+        return {
+          what: t('fm.tac.todo.piChange', { player: it.player.name, to: t(`fm.pi.id.${it.instruction.id}`), from: piLabel(it.other, en).option }),
+          why: t(`fm.pi.why.${it.instruction.why}`, fmt(it.instruction.vals)),
+        };
+      case 'piAdd':
+        return { what: t('fm.tac.todo.piAdd', { player: it.player.name, to: t(`fm.pi.id.${it.instruction.id}`) }), why: t(`fm.pi.why.${it.instruction.why}`, fmt(it.instruction.vals)) };
+      case 'piRemove':
+        return {
+          what: t('fm.tac.todo.piRemove', { player: it.player.name, labels: it.keys.map((k) => piLabel(k, en).option).join(', ') }),
+          why: t('fm.tac.todo.piRemoveWhy', { count: it.count, budget: it.budget }),
+        };
+      case 'role':
+        return {
+          what: t('fm.tac.todo.role', { player: it.advice.player.name, phase: t(it.advice.phase === 'ip' ? 'fm.pi.phaseIp' : 'fm.pi.phaseOop'), to: role(it.advice.to), from: role(it.advice.from) }),
+          why: t('fm.tac.todo.roleWhy', { toFit: fitPct(it.advice.toFit), fromFit: fitPct(it.advice.fromFit) }),
+        };
+    }
+  };
+  return (
+    <section className="card border-l-4 border-orange">
+      <h2 className="text-xl font-semibold">
+        {t('fm.tac.todo.title')}
+        {items.length > 0 && <span className="ml-2 rounded-full bg-orange px-2 py-0.5 text-sm font-bold text-canard">{items.length}</span>}
+      </h2>
+      <p className="mt-1 text-sm text-brun">{t(tactic ? 'fm.tac.todo.intro' : 'fm.tac.todo.introNoName', { tactic: tactic ?? '' })}</p>
+      {items.length ? (
+        <ol className="mt-3 space-y-1.5 text-sm">
+          {items.map((it, i) => {
+            const l = line(it);
+            return (
+              <li key={i} className="flex items-start gap-3 rounded-xl bg-creme/50 px-3 py-2">
+                <span className="mt-0.5 w-6 shrink-0 text-right font-bold text-canard/50">{i + 1}</span>
+                <span className="mt-0.5 w-36 shrink-0 text-xs font-bold uppercase tracking-wide text-orange-fonce">{t(`fm.tac.todo.tag.${TODO_TAG[it.kind]}`)}</span>
+                <span>
+                  <b className="text-canard">{l.what}</b>
+                  <span className="block text-xs text-brun first-letter:uppercase">{l.why}</span>
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      ) : (
+        <p className="mt-2 rounded-xl bg-eau/15 px-3 py-2 text-sm">{t('fm.tac.todo.none')}</p>
+      )}
+      <More>{t('fm.tac.todo.help')}</More>
     </section>
   );
 }
