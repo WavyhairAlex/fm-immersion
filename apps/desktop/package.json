@@ -1,6 +1,6 @@
 {
   "name": "@fm-immersion/desktop",
-  "version": "0.1.172",
+  "version": "0.1.174",
   "private": true,
   "type": "module",
   "scripts": {

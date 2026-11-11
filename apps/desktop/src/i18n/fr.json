@@ -2199,6 +2199,11 @@
           "headerPct": "Duels aériens",
           "xgPerMatch": "xG par match"
         }
+      },
+      "season": {
+        "title": "Saison",
+        "current": "Saison en cours",
+        "frozen": "Saison {{label}} à {{club}} : les stats telles qu'au {{date}}, dernière lecture avant que le jeu les remette à zéro. FM Immersion garde toutes tes saisons."
       }
     },
     "dbSearch": {
