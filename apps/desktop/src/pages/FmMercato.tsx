@@ -182,12 +182,12 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
   const needs = useMemo(() => recruitmentNeeds(engine, players, gameDate, coach, history, leavingIds, loanIds), [engine, players, gameDate, coach, history, leavingIds, loanIds]);
   const [replacing, setReplacing] = useState<string | null>(null);
   // Finances serrées : le mercato commence par les départs ; les recrues se cherchent libres ou en prêt.
+  const fin = useMemo(() => (snap ? clubFinances(snap, players) : null), [snap, players]);
   const tight = useMemo(() => {
-    if (!snap) return null;
-    const fin = clubFinances(snap, players);
+    if (!fin) return null;
     const st = financeState(fin);
     return st.tight ? { fin, signals: st.signals } : null;
-  }, [snap, players]);
+  }, [fin]);
   if (!r) return <Empty>{t('fm.tac.noAttributes')}</Empty>;
   const style = engine.ref.styles.find((s) => s.id === r.projectStyle);
 
@@ -199,8 +199,12 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
 
   return (
     <div className="space-y-4">
+      {/* Finances serrées : l'adjoint le dit déjà en tête ; le détail reste à portée, replié. */}
       {tight && (
-        <Panel title={t('fm.tight.title')}>
+        <details className="card group p-5">
+          <summary className="cursor-pointer list-none font-bold [&::-webkit-details-marker]:hidden">
+            {t('fm.tight.title')} <span className="text-sm font-normal text-orange-fonce group-open:hidden">· {t('fm.tight.more')}</span>
+          </summary>
           <p className="text-sm">
             {t('fm.tight.signals', {
               list: tight.signals.map((sg) => t(`fm.tight.signal.${sg}`, { amount: f.money(Math.abs((sg === 'wageOver' ? tight.fin.wageRoom : sg === 'debt' ? tight.fin.balance : 0) ?? 0)) })).join(', '),
@@ -212,7 +216,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
             <li>{t('fm.tight.youth', { count: prospects.length })}</li>
             {tight.signals.includes('wageOver') && <li>{t('fm.tight.noRaise')}</li>}
           </ul>
-        </Panel>
+        </details>
       )}
       {pr && r.leaving.length > 0 && (
         <Panel title={t('fm.leave.title', { count: r.leaving.length })}>
@@ -233,6 +237,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
                 leaving={p}
                 squad={own.filter((x) => !leavingIds.has(x.id))}
                 autoSearch={justMarked === p.id}
+                finances={fin}
               />
             </div>
           ))}
@@ -245,7 +250,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
         const tiles = [
           n('sell') + n('release') > 0 && <Kpi key="leave" label={t('fm.merc.kpi.leave')} value={n('sell') + n('release')} tone="bad" sub={t('fm.merc.kpi.leaveSub', { sell: n('sell'), release: n('release') })} />,
           r.income > 0 && <Kpi key="income" label={t('fm.merc.kpi.income')} value={f.money(r.income)} sub={t('fm.merc.kpi.incomeSub', { wages: f.money(r.wagesFreed) })} />,
-          prospects.length > 0 && <Kpi key="prospects" label={t('fm.merc.kpi.prospects')} value={prospects.length} sub={t('fm.merc.kpi.prospectsSub', { loan: n('loan') })} />,
+          prospects.length > 0 && <Kpi key="prospects" label={t('fm.merc.kpi.prospects')} value={prospects.length} sub={n('loan') > 0 ? t('fm.merc.kpi.prospectsSub', { loan: n('loan') }) : undefined} />,
           n('extend') > 0 && <Kpi key="extend" label={t('fm.merc.kpi.extend')} value={n('extend')} sub={t('fm.merc.kpi.extendSub')} />,
           off > 0 && <Kpi key="off" label={t('fm.merc.kpi.off')} value={off} sub={t('fm.merc.kpi.offSub')} />,
         ].filter(Boolean);
@@ -253,7 +258,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
       })()}
       <More>{t('fm.merc.help', { form: r.nowForm ?? '–', style: names.style(style), projectForm: r.projectForm ?? '–' })}</More>
 
-      {needs && <NeedsPanel needs={needs.needs} saveId={saveId} gameDate={gameDate} engine={engine} project={pr} squad={own.filter((x) => !leavingIds.has(x.id))} />}
+      {needs && <NeedsPanel needs={needs.needs} saveId={saveId} gameDate={gameDate} engine={engine} project={pr} squad={own.filter((x) => !leavingIds.has(x.id))} finances={fin} />}
 
       <Panel title={t('fm.merc.youth', { count: r.youth.length })}>
         {r.youth.length ? r.youth.map((a) => <AdviceLine key={a.player.id} a={a} tag={<Tag tone={TONE[a.verdict]}>{t(`fm.merc.verdict.${a.verdict}`)}</Tag>} />) : <Empty>{t('fm.merc.noYouth')}</Empty>}
@@ -284,7 +289,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
                   }
                   after={
                     replacing === a.player.id && (
-                      <ReplacementFinder saveId={saveId} gameDate={gameDate} engine={engine} project={pr} leaving={a.player} squad={own} onClose={() => setReplacing(null)} />
+                      <ReplacementFinder saveId={saveId} gameDate={gameDate} engine={engine} project={pr} leaving={a.player} squad={own} onClose={() => setReplacing(null)} finances={fin} />
                     )
                   }
                 />

@@ -936,7 +936,7 @@ function LearnSection({ rows, teOverall }: { rows: SetupRow[]; teOverall: number
           </table>
         </div>
         <ul className="mt-3 list-disc space-y-1 pl-5 text-sm">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 5, 6, 3, 4].map((i) => (
             <li key={i}>{t(`fm.train.learn.teLesson${i}`)}</li>
           ))}
         </ul>

@@ -1,14 +1,140 @@
 [
   {
-    "version": "0.1.151",
+    "version": "0.1.164",
     "date": "2026-11-11",
     "fr": [
-      "Mon onze est plus lisible : tu choisis « Avec ballon » ou « Sans ballon » en haut, et le terrain comme la liste ne montrent plus que cette phase.",
+      "L'écran Tactique est plus lisible : tu choisis « Avec ballon » ou « Sans ballon » en haut, et le terrain comme la liste ne montrent plus que cette phase.",
       "Sur le terrain, plus grand, chaque joueur a son poste à la couleur de sa ligne et son nom. Dans la liste, rangée du gardien aux attaquants : une ligne par joueur, son rôle, sa note en couleur et sa doublure."
     ],
     "en": [
-      "My eleven is easier to read: pick \"In possession\" or \"Out of possession\" at the top, and both the pitch and the list show only that phase.",
+      "The Tactics screen is easier to read: pick \"In possession\" or \"Out of possession\" at the top, and both the pitch and the list show only that phase.",
       "On the bigger pitch each player shows their position in their line's colour and their name. The list runs from goalkeeper to strikers: one row per player with their role, colour-coded rating and backup."
+    ]
+  },
+  {
+    "version": "0.1.163",
+    "date": "2026-11-11",
+    "fr": [
+      "La barre latérale suit la nouvelle maquette : Tactique, Effectif, Résultats et Mercato, puis Ma carrière, Gazette, Presse, Live Discord et Défis, puis Visages, Photos, Sauvegardes et réglages.",
+      "Chaque écran du club a une seule rangée d'onglets, un par partie (par exemple Adversaire, Calendrier ou Entraînement dans Tactique), et le titre dit la partie que tu regardes."
+    ],
+    "en": [
+      "The sidebar follows the new design: Tactics, Squad, Results and Transfers, then My career, Gazette, Press, Live Discord and Challenges, then Faces, Photos, Saves and settings.",
+      "Each club screen has a single row of tabs, one per section (for example Opponent, Calendar or Training in Tactics), and the title names the section you are looking at."
+    ]
+  },
+  {
+    "version": "0.1.162",
+    "date": "2026-11-11",
+    "fr": [
+      "Nouvel accueil « Aujourd'hui » : le prochain match en grand avec « Voir l'adversaire », le point du staff sur un joueur (blessure, retour, forme) avec sa photo et sa fiche, et la une de ta dernière gazette façon journal.",
+      "Barre latérale plus courte : Effectif, Tactique, Adversaire, Résultats et Mercato dans Mon club ; Gazette, Presse et Live Discord ont chacun leur entrée ; Défis, Visages, Photos, Sauvegardes et réglages passent en bas."
+    ],
+    "en": [
+      "New “Today” home: the next match up front with “See the opponent”, a staff update on one player (injury, return, form) with his photo and profile, and the front page of your latest gazette in newspaper style.",
+      "Shorter sidebar: Squad, Tactics, Opponent, Results and Transfers under My club; Gazette, Press and Live Discord each get their own entry; Challenges, Faces, Photos, Saves and settings move to the bottom."
+    ]
+  },
+  {
+    "version": "0.1.161",
+    "date": "2026-11-11",
+    "fr": [
+      "Gazette et Discord : tant que ton salon n'est pas relié, une seule ligne te dit combien d'images sont prêtes à partager, et la gazette de la semaine passe en premier. Dans Live Discord, les réglages restent repliés jusqu'à ce que le salon soit relié.",
+      "Plugin et réglages montre d'abord l'état de la connexion et la prochaine étape ; les options avancées se déplient sur un clic. Dans Défis, ton pseudo et tes défis en cours n'apparaissent qu'une fois inscrit."
+    ],
+    "en": [
+      "Gazette and Discord: until your channel is linked, a single line tells you how many pictures are ready to share, and the week's gazette comes first. In Live Discord, settings stay folded until the channel is linked.",
+      "Plugin and settings shows the connection state and next step first; advanced options open with one click. In Challenges, your nickname and current challenges only appear once you have signed up."
+    ]
+  },
+  {
+    "version": "0.1.160",
+    "date": "2026-11-11",
+    "fr": [
+      "Mon onze est réorganisé pour aller droit au but. Tout est sur une seule page : d'abord ce que disent tes derniers matchs, puis une liste « À changer dans FM27 », classée par importance, qui rassemble consignes d'équipe, titulaires, consignes individuelles et rôles à revoir. Le terrain et le détail viennent ensuite.",
+      "Moins de boutons : tu choisis entre « Ma tactique FM27 » et « Proposition de l'appli », et le style et le schéma n'apparaissent que pour la proposition.",
+      "Moins de défilement : le bilan des matchs et la liste sont côte à côte, la liste montre d'abord les cinq points les plus importants, et le détail des consignes d'équipe se déplie d'un clic."
+    ],
+    "en": [
+      "My XI is reorganised to get straight to the point. Everything is on one page: first what your last matches say, then a “To change in FM27” list, most important first, gathering team instructions, starters, player instructions and roles to review. The pitch and the detail come after.",
+      "Fewer buttons: you choose between “My FM27 tactic” and “App's suggestion”, and style and formation only show for the suggestion.",
+      "Less scrolling: the match review and the list sit side by side, the list shows the five most important points first, and the team instruction detail opens with one click."
+    ]
+  },
+  {
+    "version": "0.1.159",
+    "date": "2026-11-11",
+    "fr": [
+      "Mercato : quand tu cherches un remplaçant dans la base du jeu, tu ne vois plus que des joueurs que ton club peut attirer et payer. Salaire, réputation, championnat d'origine et indemnité sont comparés à ton effectif et à ton budget : fini les joueurs du Real Madrid pour un petit club.",
+      "Chaque joueur proposé dit s'il est facile à faire venir, dans tes moyens ou difficile, et pourquoi (libre, fin de contrat, prêt possible, salaire trop haut, masse salariale à libérer). Une case montre aussi ceux hors de portée si tu veux rêver un peu."
+    ],
+    "en": [
+      "Transfers: when you look for a replacement in the game database, you now only see players your club can attract and afford. Wage, reputation, league and fee are compared with your squad and your budget: no more Real Madrid players for a small club.",
+      "Each suggested player says whether he is easy to sign, within your means or difficult, and why (free agent, contract ending, loan possible, wage too high, wages to free up). A box also shows those out of reach if you want to dream a little."
+    ]
+  },
+  {
+    "version": "0.1.157",
+    "date": "2026-11-11",
+    "fr": [
+      "Effectif, Résultats et Mercato vont plus droit au but : en haut, « À faire ici » liste ce qui t'attend, avec un bouton par ligne.",
+      "Moins de rangées de boutons : les joueurs prêtés et les numéros de maillot sont au bout des onglets de l'Effectif, et le détail « Finances serrées » du Mercato se déplie seulement si tu le veux."
+    ],
+    "en": [
+      "Squad, Results and Transfers get straight to the point: at the top, “To do here” lists what's waiting for you, with one button per line.",
+      "Fewer rows of buttons: loaned-out players and shirt numbers sit at the end of the Squad tabs, and the “Money is tight” detail in Transfers only opens if you want it."
+    ]
+  },
+  {
+    "version": "0.1.155",
+    "date": "2026-11-11",
+    "fr": [
+      "Mon onze regarde maintenant tes derniers matchs. Un nouveau cadre « Ce que disent tes derniers matchs » compare les occasions que tu crées à celles que tu concèdes avec ta tactique, et te dit si elle fait ses preuves ou non. Une tactique qui marche est gardée et corrigée, pas remplacée.",
+      "Les consignes d'équipe conseillées tiennent compte de ces matchs : pressing qui ne récupère rien, trop d'occasions concédées, possession sans danger, tirs de trop loin. Le bilan de chaque tactique essayée cette saison est juste en dessous.",
+      "Les consignes individuelles suivent aussi les stats de la saison : un joueur qui tire beaucoup pour rien, perd trop de passes ou collectionne les cartons reçoit la consigne qui va avec, chiffres à l'appui."
+    ],
+    "en": [
+      "My XI now looks at your last matches. A new “What your last matches say” box compares the chances you create with those you concede with your tactic, and tells you whether it is proving itself or not. A tactic that works is kept and fixed, not replaced.",
+      "Advised team instructions take these matches into account: pressing that wins nothing, too many chances conceded, harmless possession, shots from too far. The record of each tactic tried this season is just below.",
+      "Player instructions follow the season's stats too: a player who shoots a lot for nothing, loses too many passes or collects cards gets the matching instruction, with the numbers."
+    ]
+  },
+  {
+    "version": "0.1.154",
+    "date": "2026-11-11",
+    "fr": [
+      "Mon onze : l'adjoint donne son avis sur ton onze. Un rôle qui irait mieux à un joueur, un remplaçant meilleur que le titulaire, un joueur laissé sur le banc pour sa forme, et quoi faire à un poste sans doublure (qui peut glisser, qui monter des jeunes).",
+      "Les consignes d'équipe sont jugées sur la tactique que tu joues vraiment dans FM27 : une ligne trop haute pour ta défense, un pressing trop gourmand pour ton groupe ou un bloc étiré sont signalés, chiffres à l'appui.",
+      "Les consignes individuelles sont comparées à celles réglées dans le jeu : déjà faite, à ajouter, ou réglée à l'inverse. Leur nombre suit la compréhension tactique de ton groupe."
+    ],
+    "en": [
+      "My XI: your assistant now reviews your lineup. A role that would suit a player better, a substitute better than the starter, a player left out because of his form, and what to do at a position with no backup (who can move across, who to call up from the youth team).",
+      "Team instructions are judged on the tactic you really play in FM27: a line too high for your defence, pressing too demanding for your squad or a stretched block are flagged, with the numbers.",
+      "Player instructions are compared with those set in the game: already done, to add, or set the opposite way. How many you get follows your squad's tactical understanding."
+    ]
+  },
+  {
+    "version": "0.1.153",
+    "date": "2026-11-11",
+    "fr": [
+      "La gazette part de nouveau à l'heure sur Discord : si la photo de situation de la une tarde plus de cinq minutes, la gazette part avec le portrait au lieu d'attendre.",
+      "Les photos faites toutes seules en arrière-plan ne retardent plus les envois automatiques."
+    ],
+    "en": [
+      "The gazette goes out on time on Discord again: if the front-page situation photo takes more than five minutes, the gazette goes with the portrait instead of waiting.",
+      "Photos made on their own in the background no longer delay automatic posts."
+    ]
+  },
+  {
+    "version": "0.1.152",
+    "date": "2026-11-11",
+    "fr": [
+      "Entraînement : moins de séances tactiques une fois ta tactique comprise à 50 %. Au-delà, elles ne font presque plus gagner de matchs et coûtent des blessures. La progression reprend la main.",
+      "Le lendemain d'un match devient un jour de repos complet, et l'onglet « Comprendre » explique d'où vient l'efficacité tactique."
+    ],
+    "en": [
+      "Training: fewer tactical sessions once your tactic is 50% understood. Beyond that they barely win more matches and cost injuries, so development takes over.",
+      "The day after a match is now a full rest day, and the \"Understand\" tab explains where tactical effectiveness comes from."
     ]
   },
   {

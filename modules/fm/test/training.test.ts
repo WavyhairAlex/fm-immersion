@@ -441,11 +441,12 @@ describe('programme FM Immersion (méthode par défaut)', () => {
     expect(w.days[0]!.why).toEqual(['fullRest', 'fullRest', null]);
     // Développement regroupé le premier jour de travail.
     expect(w.days[1]!.sessions).toEqual(['conditioning', 'attackingPatient', null]);
-    // Jauge non lue : 4 séances tactiques, les deux pièges sur deux jours différents.
-    expect(w.days[2]!.sessions.slice(0, 2)).toEqual(['pressingTrap', 'buildUpStrategy']);
-    expect(w.days[3]!.sessions.slice(0, 2)).toEqual(['pressingTrap', 'chanceCreation']);
+    // Jauge non lue : 3 séances tactiques, les deux pièges sur deux jours différents.
+    expect(w.days[2]!.sessions.slice(0, 2)).toEqual(['defendingEngaged', 'pressingTrap']);
+    expect(w.days[3]!.sessions.slice(0, 2)).toEqual(['buildUpStrategy', 'pressingTrap']);
     expect(w.days[4]!.sessions).toEqual(['ballProgression', 'rest', null]);
-    expect(w.days[6]!.sessions).toEqual(['rest', 'recovery', null]);
+    // Lendemain de match : repos complet.
+    expect(w.days[6]!.sessions).toEqual(['rest', 'rest', null]);
     expect(w.lessons!.map((l) => l.id)).toEqual(['modeUnknown', 'fullRest', 'devBlock', 'pressTrap', 'prep', 'recover']);
   });
 
@@ -454,20 +455,21 @@ describe('programme FM Immersion (méthode par défaut)', () => {
       const w = buildTrainingWeek({ monday: MONDAY, phase: 'B', week: 2, matchDays: [], priorities: ['buildUpStrategy'], weakAreas: ['pressingIntensity'], teOverall: te });
       return w.days.flatMap((d) => d.sessions.filter((s) => s && sessionCategory(s) === 'tactical')).length;
     };
-    expect(tacticalMode(47)).toBe('learn');
-    expect(tacticalMode(70)).toBe('build');
+    expect(tacticalMode(20)).toBe('learn');
+    expect(tacticalMode(47)).toBe('build');
+    expect(tacticalMode(50)).toBe('keep');
     expect(tacticalMode(85)).toBe('keep');
     expect(tacticalMode(null)).toBe('unknown');
-    expect(count(47)).toBe(TACTICAL_TARGET.learn);
-    expect(count(70)).toBe(TACTICAL_TARGET.build);
+    expect(count(20)).toBe(TACTICAL_TARGET.learn);
+    expect(count(47)).toBe(TACTICAL_TARGET.build);
     expect(count(90)).toBe(TACTICAL_TARGET.keep);
   });
 
   it('régime apprentissage : zones faibles du jeu d’abord ; la place manque, la semaine le dit', () => {
-    const w = buildTrainingWeek({ monday: MONDAY, phase: 'A', week: 2, matchDays: [5], priorities: ['buildUpStrategy'], weakAreas: ['pressingIntensity', 'lineOfEngagement'], teOverall: 47 });
+    const w = buildTrainingWeek({ monday: MONDAY, phase: 'A', week: 2, matchDays: [5], priorities: ['buildUpStrategy'], weakAreas: ['pressingIntensity', 'lineOfEngagement'], teOverall: 20 });
     const tactical = w.days.flatMap((d) => d.sessions.filter((s) => s && sessionCategory(s) === 'tactical'));
     expect(tactical.sort()).toEqual(['lineOfEngagement', 'pressingIntensity', 'pressingTrap', 'pressingTrap']);
-    expect(w.lessons!.find((l) => l.id === 'mode')!.params).toEqual({ te: 47, mode: 'learn', count: 4 });
+    expect(w.lessons!.find((l) => l.id === 'mode')!.params).toEqual({ te: 20, mode: 'learn', count: 4 });
     expect(w.lessons!.some((l) => l.id === 'tacticalShort')).toBe(true);
   });
 

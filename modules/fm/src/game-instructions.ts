@@ -121,3 +121,25 @@ export function gameInstructions(snap: unknown): GameInstructions | null {
   }
   return seen ? { ti, pi, imposed } : null;
 }
+
+/**
+ * Consignes individuelles réglées dans FM27, par joueur : celles qu'il a choisies (`mine`) et celles que son rôle
+ * impose (`imposed`). Le rang de sélection relie la tactique à la compo (`lineup[].index` → `playerId`).
+ * Vide si le plugin n'a lu ni les consignes ni la compo.
+ */
+export function gamePlayerInstructions(snap: unknown): Map<string, { mine: string[]; imposed: string[] }> {
+  const out = new Map<string, { mine: string[]; imposed: string[] }>();
+  const gi = gameInstructions(snap);
+  const raw = (snap as { lineup?: unknown } | null | undefined)?.lineup;
+  const rows = Array.isArray(raw) ? raw : Array.isArray((raw as { slots?: unknown } | null)?.slots) ? ((raw as { slots: unknown[] }).slots) : null;
+  if (!gi || !rows) return out;
+  rows.forEach((r, k) => {
+    if (!r || typeof r !== 'object') return;
+    const o = r as Record<string, unknown>;
+    const id = o.playerId ?? o.player_id ?? o.id;
+    const index = typeof o.index === 'number' ? o.index : k;
+    if (id == null || index < 0 || index > 10) return;
+    out.set(String(id), { mine: gi.pi[index] ?? [], imposed: gi.imposed[index] ?? [] });
+  });
+  return out;
+}

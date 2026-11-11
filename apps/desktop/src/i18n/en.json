@@ -93,6 +93,7 @@
       "status": "Status",
       "starsHelp": "Current / potential ability stars according to your staff",
       "compat": "Project",
+      "reach": "Reach",
       "apps": "Apps",
       "goals": "Goals",
       "avgRating": "Avg rating"
@@ -295,12 +296,12 @@
         }
       },
       "source": {
-        "game": "Game XI",
-        "simloom": "FM Immersion XI"
+        "game": "My FM27 tactic",
+        "simloom": "App's suggestion"
       },
       "fromGame": "Game line-up",
       "fromGameHelp": "Players and positions read from your FM27 tactic. Roles and instructions: the game's when the plugin reads them, otherwise each player's best role in that position.",
-      "suggestedHelpGame": "Placement computed by FM Immersion for the chosen style. “Game XI” shows your real FM27 line-up.",
+      "suggestedHelpGame": "Placement computed by FM Immersion for the chosen style. “My FM27 tactic” shows your real line-up.",
       "pitchHelpGame": "Your FM27 line-up. Hover a player: an amber line shows where they start from in the other phase, and their row lights up in the list. Click a formation below to compare with an eleven worked out by FM Immersion.",
       "lineupStatus": "Plugin line-up reading: {{status}}.",
       "duty": {
@@ -311,6 +312,128 @@
       "auto": "Automatic: best choice",
       "styles": "Playing styles",
       "myTactics": "My tactics (Build)",
+      "todo": {
+        "title": "To change in FM27",
+        "intro": "What the app advises you to change in “{{tactic}}”, most important first.",
+        "introNoName": "What the app advises you to change in your tactic, most important first.",
+        "none": "Nothing to change: your FM27 tactic is set as advised.",
+        "tag": {
+          "team": "Team instruction",
+          "starter": "Starter",
+          "player": "Player instruction",
+          "role": "Role"
+        },
+        "team": "{{title}}: go from “{{from}}” to “{{to}}”",
+        "starter": "{{pos}}: start {{better}} instead of {{starter}}",
+        "starterWhy": "{{better}} rates {{betterFit}} in these roles against {{starterFit}}, today's form included",
+        "piChange": "{{player}}: replace “{{from}}” with “{{to}}”",
+        "piAdd": "{{player}}: add “{{to}}”",
+        "piRemove": "{{player}}: remove {{labels}}",
+        "piRemoveWhy": "{{count}} instructions set for {{budget}} advised: his attributes do not back these",
+        "role": "{{player}}, {{phase}}: “{{to}}” instead of “{{from}}”",
+        "roleWhy": "rated {{toFit}} against {{fromFit}}; do it away from a big match, familiarity with the role starts again from zero",
+        "help": "This list gathers the advice from the boxes below (last matches, team instructions, player instructions, assistant's view), in the order they weigh on your results. It empties as you set your tactic in FM27 and the app reads the save again. Nothing is changed in the game: you decide.",
+        "more_one": "Show the {{count}} other point",
+        "more_other": "Show the {{count}} other points",
+        "less": "Shorten the list"
+      },
+      "review": {
+        "title": "What your last matches say",
+        "tooFew_one": "{{count}} official match read so far: it takes 3 to judge the tactic on what it produces.",
+        "tooFew_other": "{{count}} official matches read so far: it takes 3 to judge the tactic on what it produces.",
+        "scopeTactic_one": "Your last match with “{{tactic}}”:",
+        "scopeTactic_other": "Your last {{count}} matches with “{{tactic}}”:",
+        "scopeAll_one": "Your last official match:",
+        "scopeAll_other": "Your last {{count}} official matches, all tactics together:",
+        "record": "{{wins}} W, {{draws}} D, {{losses}} L, {{gf}} scored and {{ga}} conceded per match.",
+        "xg": "Chances: {{xgFor}} xG created against {{xgAgainst}} conceded per match.",
+        "wdl": "{{wins}} W · {{draws}} D · {{losses}} L",
+        "early_one": "“{{tactic}}” has only {{count}} match read: too few to judge it alone, so the trend mixes several tactics.",
+        "early_other": "“{{tactic}}” has only {{count}} matches read: too few to judge it alone, so the trend mixes several tactics.",
+        "verdict": {
+          "keep": "“{{tactic}}” is proving itself: you create more chances than you concede. Keep it and fix the details below rather than switching.",
+          "keepOther": "“{{tactic}}”, the one you play in FM27, is proving itself on the pitch: you create more chances than you concede. Before adopting the XI suggested here, check what you would really gain: switching tactic sends the squad's understanding back down.",
+          "doubt": "Over time your opponents create more chances than you with “{{tactic}}”. Start with the fixes below; if nothing changes in three matches, try the suggested XI."
+        },
+        "finding": {
+          "dominant": "You are on top: {{xgFor}} xG created against {{xgAgainst}} conceded per match over {{matches}} matches. The base is sound.",
+          "outplayed": "You are being outplayed: {{xgFor}} xG created against {{xgAgainst}} conceded per match over {{matches}} matches.",
+          "wasteful": "Finishing: {{goals}} goals from {{xg}} xG. The chances are there, it is not the tactic: work on finishing in training and give it time.",
+          "overperforming": "Running hot: {{goals}} goals from only {{xg}} xG. It will not last at this rate: you need to create more.",
+          "unluckyDefence": "You concede {{goals}} goals from {{xg}} xG against: it is the keeper or bad luck more than the defensive block.",
+          "sterile": "Sterile possession: {{possession}}% of the ball for {{xg}} xG per match. The ball moves without hurting: speed the game up.",
+          "fewChances": "You create little: {{xg}} xG per match. Check the balance of the XI (creation, presence in the box).",
+          "longShots": "Too many long shots: {{shots}} shots per match at {{quality}} xG per shot. Better to look for the extra pass.",
+          "leaky": "You concede too much: {{xg}} xG per match for the opponent.",
+          "bigChancesAgainst": "Few shots conceded ({{shots}} per match) but big chances ({{quality}} xG per shot): balls are getting in behind your defence.",
+          "pressFails": "Your pressing wins little: {{value}}% of presses succeed. Your players run without winning the ball."
+        },
+        "byTactic": "Record of each tactic played this season",
+        "byTacticNote": "xG difference: chances created minus chances conceded, per match (from 3 matches with figures). It is the most reliable number over few matches.",
+        "col": {
+          "tactic": "Tactic",
+          "matches": "Matches",
+          "record": "Record",
+          "ppm": "Points per match",
+          "xg": "xG difference"
+        },
+        "help": "xG (expected goals) measure chances: they tell you better than the score whether a tactic works, because over five or six matches the score depends a lot on finishing luck. Friendlies do not count. The team and player instructions advised below take these matches into account."
+      },
+      "advice": {
+        "title": "Your assistant's view of this eleven",
+        "none": "Nothing to add: everyone is in a role that suits him, and every position has cover.",
+        "help": "A role is only suggested when it is worth at least 0.3 star more for the player and does not unbalance the team (width, creation, cover, presence in the box). A starter is only questioned for half a star, current form included. Cover comes first from the first team, then from a starter who can shift, then from the reserves.",
+        "starters": "Starters to review",
+        "starter": "{{pos}}: {{better}} ({{betterFit}}) would do better today than {{starter}} ({{starterFit}}) in these roles, current form included.",
+        "roles": "Roles to review",
+        "role": "{{player}}, {{phase}}: \"{{to}}\" suits him better ({{toFit}}) than \"{{from}}\" ({{fromFit}}).",
+        "rolesNote": "Changing a role resets the player's familiarity with it: make these changes in one go, away from a big match.",
+        "cover": "Positions without cover",
+        "coverShift": "{{pos}}: nobody on the bench to cover {{starter}}. If needed, {{player}} shifts from {{from}} and {{replacement}} comes in for him.",
+        "coverThin": "{{pos}}: nobody on the bench to cover {{starter}}.",
+        "coverNone": "{{pos}}: nobody at the club can cover {{starter}}. A position to recruit.",
+        "coverReserve": "Other option: {{name}} ({{team}}).",
+        "coverMakeshift": "{{name}} can fill in (knows the position {{fam}}/20).",
+        "rested": "To get going again",
+        "restedWhy": {
+          "sharpness": "{{pos}}: {{better}} ({{betterFit}}) rates higher than {{starter}} ({{starterFit}}), but he lacks match sharpness ({{value}}%). Give him late minutes or a reserve match.",
+          "condition": "{{pos}}: {{better}} ({{betterFit}}) rates higher than {{starter}} ({{starterFit}}), but he is tired ({{value}}%). He takes his place back once rested.",
+          "morale": "{{pos}}: {{better}} ({{betterFit}}) rates higher than {{starter}} ({{starterFit}}), but his morale is low ({{morale}}). A chat or playing time can lift him."
+        }
+      },
+      "tiAdvice": {
+        "title": "Adapted to your eleven",
+        "none": "The style's instructions suit this eleven: nothing to correct.",
+        "noneGame": "Your instructions hold up with this eleven: nothing to correct.",
+        "insteadOf": "instead of \"{{label}}\"",
+        "reason": {
+          "slowLine": "your defence lacks pace ({{value}} for an eleven at {{level}}): playing high leaves too much space behind it",
+          "lowPress": "work rate, stamina and teamwork too low ({{value}} for an eleven at {{level}}) to press this much for 90 minutes",
+          "lowPressBlock": "work rate, stamina and teamwork too low ({{value}} for an eleven at {{level}}) to hold a high press",
+          "stretched": "high press up front and a low line behind: the block stretches and a big gap opens between the lines",
+          "aerialStriker": "{{name}} dominates in the air ({{value}}): give him balls at head height",
+          "smallStrikers": "no striker strong in the air ({{value}}): high crosses are wasted",
+          "noHighBlock": "this instruction only exists with a high press",
+          "pressFails": "over your last matches only {{value}}% of presses win the ball: pressing this much tires the squad for nothing",
+          "leakyLine": "you concede {{xg}} xG per match: a lower line leaves less space in behind",
+          "leakyBlock": "you concede {{xg}} xG per match: a mid block protects your defence better than a high press",
+          "ballsBehind": "few shots conceded but big chances ({{quality}} xG per shot): balls are getting in behind your high line",
+          "sterile": "{{possession}}% possession for {{xg}} xG per match: a higher tempo stops the opponent getting back in shape",
+          "longShots": "{{shots}} shots per match at {{quality}} xG per shot: too many long shots, better to look for the extra pass"
+        },
+        "heavy": "{{count}} team instructions set in FM27: the game rates their complexity at {{complexity}}/100 for a tactical understanding of {{understanding}}/100. Put back on default those that do not serve your plan: the squad will learn faster.",
+        "vsGame": "Compared with your FM27 tactic",
+        "sameAsGame": "Your FM27 tactic already has these instructions.",
+        "notRead": "The instructions set in FM27 are not read yet: play a day in the game with the Tactics screen closed.",
+        "col": {
+          "card": "Instruction",
+          "advised": "Advised",
+          "game": "In FM27"
+        },
+        "gameTactic": "your FM27 tactic",
+        "gameIntro": "The instructions you set in FM27, read by the plugin.",
+        "gameHelp": "Every card of the game's Team Instructions screen, in its order; in bold, those you changed."
+      },
       "bestNow": "Best applicable tactic",
       "projectBest": "Your project is now the best choice",
       "baseKept": "Your base tactic, kept",
@@ -418,7 +541,8 @@
       "sections": {
         "xi": "Base XI",
         "match": "Against {{name}}",
-        "balance": "Balance and instructions"
+        "balance": "Balance and instructions",
+        "balanceFold": "Team balance and team instructions, in detail"
       }
     },
     "nav": "Save sections",
@@ -1106,8 +1230,20 @@
         "pressLess": "stamina {{a}}: last 90 minutes",
         "tackleHarder": "tackling {{a}}, aggression {{b}}",
         "tackleLess": "weak tackling: avoid fouls and cards",
-        "markTighter": "marking {{a}}, strength {{b}}"
+        "markTighter": "marking {{a}}, strength {{b}}",
+        "statShootLess": "in matches: {{a}} shots per 90 min at {{b}} xG per shot, he shoots from too far",
+        "statRiskLess": "in matches: {{a}}% pass completion, he gives the ball away too much",
+        "statTackleLess": "in matches: {{a}} yellow cards in {{b}} matches played"
       },
+      "state": {
+        "done": "already set",
+        "conflict": "FM27: \"{{label}}\""
+      },
+      "over_one": "{{count}} instruction set in FM27 (advised limit: {{budget}}). Remove first: {{labels}}.",
+      "over_other": "{{count}} instructions set in FM27 (advised limit: {{budget}}). Remove first: {{labels}}.",
+      "budgetGame_one": "Tactical understanding at {{understanding}}/100 in FM27: {{count}} instruction per player at most for now, the most useful one. More will come as the squad understands the tactic better.",
+      "budgetGame_other": "Tactical understanding at {{understanding}}/100 in FM27: {{count}} instructions per player at most, the most useful ones. Beyond that, complexity lowers understanding.",
+      "heavy": "The game rates your player instructions at {{complexity}}/100 complexity, for a tactical understanding of {{understanding}}/100. That is heavy: keep those marked \"already set\", remove the others first.",
       "custom": "custom",
       "inGame": "In game:",
       "budgetLow_one": "At most {{count}} instruction per player for now: the group still lacks tactical ability for this style. More will come as it improves (see Development plan).",
@@ -1250,7 +1386,7 @@
       "congested": "three or more matches: full rest between matches (results come before development)",
       "priorities": "Areas of your target style worked first: {{list}}.",
       "rules": "The rules",
-      "rule1": "Day after a match: Rest then Recovery. Day before: one preparation session. A full rest day whenever there is room.",
+      "rule1": "Day after a match: full rest. Day before: a single preparation session. Another full rest day whenever there is room.",
       "rule2": "Group development sessions on one or two days: same development, far fewer injuries. Four different sessions are enough.",
       "rule3": "The number of tactical sessions follows your tactical effectiveness: many while it is low, few once the tactic is understood. Don't change tactic along the way.",
       "rule4": "A youngster develops mostly by playing: if he doesn't play, training won't save him. Loan or minutes.",
@@ -1363,7 +1499,7 @@
       "reasonHint": "Hover a player's intensity to see why it is advised.",
       "metaAdaptHelp": "AlexJeuVideal's Meta base: 2 pressing-trap sessions a week, the day before the match Ball Progression, Defensive Block, Conditioning, rest otherwise. The other 4 tactical sessions follow your priority areas (the weakest from the game and your matches) among those the benchmark finds useful: Line of Engagement, Build-Up, Chance Creation, In and Out of Possession Shape. They change when your weaknesses change.",
       "metaSwaps": "After loading it, replace: {{list}}.",
-      "coachHelp": "FM Immersion plan, a single proposal, rebuilt every week from your fixtures and tactical effectiveness. Day after a match: Rest then Recovery. A full rest day whenever there is room. Development sessions grouped on the first days (Conditioning, Attacking, Defending, Light Conditioning, four at most). Tactical sessions on the days close to the match: two Pressing Traps, the areas the game says are least understood, your style's main area, then the others in rotation. Their number follows your effectiveness: 7 below 60%, 5 up to 79%, 3 from 80%. Day before a match: a single preparation session.",
+      "coachHelp": "FM Immersion plan, a single proposal, rebuilt every week from your fixtures and tactical effectiveness. Day after a match: full rest. Another full rest day whenever there is room. Development sessions grouped on the first days (Conditioning, Attacking, Defending, Light Conditioning, four at most). Tactical sessions on the days close to the match: Pressing Trap, the areas the game says are least understood, your style's main area, then the others in rotation. Their number follows your effectiveness: 6 below 25%, 4 up to 49%, 2 from 50% (beyond that there is almost nothing left to gain). Day before a match: a single preparation session.",
       "coachSummary_one": "This week: {{tactical}} tactical sessions, {{grow}} development sessions, {{count}} match.",
       "coachSummary_other": "This week: {{tactical}} tactical sessions, {{grow}} development sessions, {{count}} matches.",
       "teamIntensityCoach": "Recommended setting in Training > Team intensity: double for players in good and excellent condition (a little more development), half and rest for the others so they arrive fresh. The game then applies it to each player by condition.",
@@ -1385,8 +1521,8 @@
       "coach": {
         "title": "Your assistant, on training",
         "week": "Week of {{date}}, schedule {{code}}.",
-        "season_one": "{{count}} match: {{tactical}} tactical sessions ({{zones}}) and {{grow}} development sessions. Match eve: a single preparation session, the day after: Rest then Recovery.",
-        "season_other": "{{count}} matches: {{tactical}} tactical sessions ({{zones}}) and {{grow}} development sessions. Match eve: a single preparation session, the day after: Rest then Recovery.",
+        "season_one": "{{count}} match: {{tactical}} tactical sessions ({{zones}}) and {{grow}} development sessions. Match eve: a single preparation session, the day after: full rest.",
+        "season_other": "{{count}} matches: {{tactical}} tactical sessions ({{zones}}) and {{grow}} development sessions. Match eve: a single preparation session, the day after: full rest.",
         "noMatch": "No match: {{tactical}} tactical sessions ({{zones}}), {{grow}} development sessions and Individual Development on the last day.",
         "congested": "{{matches}} matches in seven days: full week of rest between matches, results come first.",
         "yieldTitle": "What it really yields",
@@ -1487,7 +1623,7 @@
         "pressTrap": "Two Pressing Trap sessions, on two different days: that is the measured threshold, four add nothing.",
         "rotation": "The other areas rotate from week to week: each tactical session works one area, and what is no longer worked fades.",
         "prep": "Day before a match: a single match preparation session, to arrive fresh.",
-        "recover": "Day after a match: Rest then Recovery. A physical session the day after a match sends injury risk up sharply.",
+        "recover": "Day after a match: full rest. The game rolls no injuries on a day without training, the Recovery session yields no more than rest, and that day costs no sharpness.",
         "congested_one": "{{count}} match in seven days: full rest between matches, results come before development.",
         "congested_other": "{{count}} matches in seven days: full rest between matches, results come before development.",
         "noMatch": "No match: this is the week development can come first, with an extra Individual Development session.",
@@ -1580,10 +1716,10 @@
           "assistant": "Training left to the assistant"
         },
         "teLesson1": "Never leave training to your assistant: 14 fewer points, three times more injuries, and youngsters developing the wrong attributes.",
-        "teLesson2": "Tactical sessions win matches (about +4% wins) but cost injuries: their number follows your tactical effectiveness and drops once the tactic is understood.",
+        "teLesson2": "Tactical sessions win matches (about +4% wins with 8 a month) but cost injuries: 24 a month add almost nothing and nearly double the days injured.",
         "teLesson3": "Tactical sessions don't raise attributes: conditioning and ball work do.",
         "teLesson4": "Changing tactic resets understanding: training only pays if the tactic stays the same.",
-        "teHelp": "jamiebolden's FM27 test (Bradford, Premier League 2032/33, each setup played three times from the same save). Test on FM27's training code: about seven rotating tactical sessions a week keep every area above 80; going from 50 to 100 effectiveness is worth about 0.15 points per match.",
+        "teHelp": "jamiebolden's FM27 test (Bradford, Premier League 2032/33, each setup played three times from the same save). Win rate / effectiveness curve by harvestgreen22 and the playgm forum, quoted by ZaZ on FM-Arena (\"Training Schedules\", November 2026), who advises no more tactical sessions beyond 50%. Effectiveness breakdown: research by Chinese players quoted by ZaZ, to take as rough guides.",
         "indivTitle": "Individual training",
         "indiv1": "Up to 23, Quickness for a slow player: pace and acceleration matter most in matches, and they stop improving after that.",
         "indiv2": "A starter trains the role of your tactic: he knows it better, and that counts in your tactical effectiveness.",
@@ -1591,7 +1727,9 @@
         "indiv4": "A focus that gives nothing in three months: change it. The focus doesn't create growth, it steers it.",
         "indiv5": "From 28, the focus no longer makes a player grow: a mental attribute of the role can still rise, the rest is maintained.",
         "sourcesTitle": "Where these benchmarks come from",
-        "sources": "Tests by harvestgreen22 (FM-Arena, 50 schedules, one 100-match season each), jamiebolden (fm-scoring, tactical effectiveness on FM27, with a test on the game's training code) and AlexJeuVideal (tactical effectiveness), plus FM Dossier and Passion4FM guides on personality and playing time. Sports Interactive publishes no formula."
+        "sources": "Tests by harvestgreen22 (FM-Arena, 50 schedules, one 100-match season each), jamiebolden (fm-scoring, tactical effectiveness on FM27, with a test on the game's training code) and AlexJeuVideal (tactical effectiveness), plus FM Dossier and Passion4FM guides on personality and playing time. Sports Interactive publishes no formula.",
+        "teLesson5": "Effectiveness pays most early on: from 0 to 20%, +15% wins; from 40 to 50%, +3%; from 50 to 100%, barely +1.6%. Beyond 50%, keep two sessions a week and let development take over.",
+        "teLesson6": "Tactical effectiveness is half understanding (players' tactical ability, simple instructions, training, matches played), a quarter player buy-in, and the opposition report. A player's tactical ability follows Anticipation, Decisions, Composure, Concentration and Versatility. Every match played raises it, every day without a match lowers it a little."
       },
       "dayByDay": "Your week, day by day",
       "steps": {
@@ -2253,6 +2391,36 @@
         "computed": "FM Immersion estimate"
       }
     },
+    "tabNames": {
+      "tactic": "Tactics",
+      "instructions": "Instructions",
+      "builder": "Line-up",
+      "opponent": "Opponent",
+      "calendar": "Calendar",
+      "training": "Training",
+      "depth": "Depth",
+      "style": "Playing style",
+      "effectiveness": "Effectiveness",
+      "project": "Game plan",
+      "staff": "Staff",
+      "squad": "Squad",
+      "loans": "Loans",
+      "numbers": "Numbers",
+      "playtime": "Playing time",
+      "dressing": "Dressing room",
+      "progression": "Progression",
+      "roles": "Roles",
+      "compare": "Comparison",
+      "results": "Results",
+      "diagnosis": "Diagnosis",
+      "stats": "Statistics",
+      "analysis": "Analysis",
+      "mercato": "Transfers",
+      "targets": "Targets",
+      "finances": "Finances",
+      "wages": "Wages",
+      "contracts": "Contracts"
+    },
     "subtabs": {
       "squad": "Players",
       "style": "Playing style",
@@ -2497,7 +2665,6 @@
         "motm": "Player of the match: {{name}} ({{rating}})"
       },
       "q": {
-        "label": "The three results questions",
         "what": "What happened?",
         "repeat": "What keeps happening?",
         "adjust": "What can I adjust?",
@@ -2516,6 +2683,29 @@
         "wasteful": "Work on finishing: {{goals}} goals from {{xg}} xG per match.",
         "leaky": "Tighten the defence: {{ga}} goals conceded per match."
       }
+    },
+    "reach": {
+      "level": {
+        "easy": "Easy to sign",
+        "possible": "Within your means",
+        "hard": "Difficult",
+        "out": "Out of reach"
+      },
+      "why": {
+        "free": "free agent",
+        "preContract": "contract ending: pre-contract possible",
+        "loan": "youngster at a bigger club: loan possible",
+        "listed": "transfer listed",
+        "wage": "wage above your structure",
+        "wageRoom": "you need to free up wages",
+        "fee": "fee above your budget",
+        "reputation": "too famous for your club",
+        "league": "comes from a much higher-rated league"
+      },
+      "wide": "Also show players out of reach",
+      "hidden_one": "{{count}} player out of reach hidden",
+      "hidden_other": "{{count}} players out of reach hidden",
+      "help": "The search only keeps players your club can attract and afford. Benchmarks come from your squad: a wage up to twice your highest wage, a reputation up to 1.75 times that of your three most famous players, a fee within your transfer budget. Free agents, expiring contracts (pre-contract) and youngsters at bigger clubs (loan) cost no fee. FM27 has the final say in negotiations."
     },
     "repl": {
       "open": "Replacement",
@@ -2656,7 +2846,8 @@
       "youth_one": "Look inside first: {{count}} youngster is worth it, and the line-up calls on the reserves or U19s whenever a position is short.",
       "youth_other": "Look inside first: {{count}} youngsters are worth it, and the line-up calls on the reserves or U19s whenever a position is short.",
       "noRaise": "No pay rises: extend on the same wage or not at all, the wage budget is already exceeded.",
-      "overBudget": "over budget"
+      "overBudget": "over budget",
+      "more": "what it changes"
     },
     "leave": {
       "title_one": "Announced departures · {{count}}",
@@ -3098,7 +3289,8 @@
       "savedHelp": "Every change is saved on this PC, for this save. Find the tactic by its name in the list."
     },
     "secondary": {
-      "numbers": "Assign shirt numbers"
+      "numbers": "Shirt numbers",
+      "loans": "Players out on loan"
     }
   },
   "modes": {
@@ -3421,6 +3613,8 @@
     "archives": "Past issues",
     "sendDiscord": "Send to Discord",
     "setupDiscord": "Connect Discord to share",
+    "shareReady_one": "1 picture is ready to share on Discord (below the gazette).",
+    "shareReady_other": "{{count}} pictures are ready to share on Discord (below the gazette).",
     "sent": "Gazette sent to Discord.",
     "opponentUnknown": "their opponent",
     "home": "At home",
@@ -3808,6 +4002,7 @@
     "invalid": "This is not a Discord webhook link (https://discord.com/api/webhooks/…).",
     "save": "Save",
     "remove": "Remove the link",
+    "seeOptions": "See the available settings",
     "test": "Send a test",
     "saved": "Link saved on this PC.",
     "testMessage": "FM Immersion is connected to this channel. My career gazettes will arrive here.",
@@ -3817,7 +4012,6 @@
     "privacy": "The link stays on your PC. FM Immersion sends nothing to Discord without your click, and only to Discord's webhook address.",
     "status": {
       "title": "What is connected",
-      "none": "No channel linked: nothing is sent to Discord.",
       "liveOn": "Live matches on",
       "liveOff": "Live matches off",
       "autoOn": "Automatic gazette on",
@@ -4183,7 +4377,6 @@
     "coachPlaceholder": "Discord nickname, for example",
     "anonymous": "Anonymous",
     "mine": "My running challenges",
-    "none": "No running challenge for this save. Pick one below.",
     "catalog": "Pick a challenge",
     "checked": "Checked:",
     "enroll": "Sign up",
@@ -4464,6 +4657,21 @@
     "bridgeAction": "The plugin needs an action",
     "settingsIntro": "Where FM Immersion reads your game: plugin folder, linked save, history and the FM27 plugin.",
     "manageCareers": "Manage my careers",
+    "storySub": {
+      "gazette": "Your career's newspaper, one edition per game week.",
+      "presse": "Your answers to journalists, before big matches and after every competitive game.",
+      "discord": "Live coverage of your matches and posts in your Discord channel."
+    },
+    "navShort": {
+      "tactic": "Tactics",
+      "squad": "Squad",
+      "results": "Results",
+      "mercato": "Transfers",
+      "opponent": "Opponent",
+      "gazette": "Gazette",
+      "press": "Press",
+      "discord": "Live Discord"
+    },
     "groups": {
       "club": "My club",
       "story": "My career, told",
@@ -4485,6 +4693,21 @@
       "title": "Today",
       "intro": "What your assistant spotted in your game, and the rest of your career at a glance.",
       "read": "Read",
+      "gazette": "The Gazette",
+      "staff": {
+        "title": "Staff update",
+        "back": "Back for the match",
+        "backText_one": "Still in the treatment room ({{injury}}), he will be fit tomorrow, in time for the next match.",
+        "backText_other": "Still in the treatment room ({{injury}}), he will be fit in {{count}} days, in time for the next match.",
+        "injured": "In the treatment room",
+        "injuredText_one": "{{injury}}: out for 1 more day. Plan his replacement.",
+        "injuredText_other": "{{injury}}: out for {{count}} more days. Plan his replacement.",
+        "suspended": "Suspended",
+        "suspendedText": "{{suspension}}. He will miss the next match.",
+        "form": "In great form",
+        "formText": "{{rating}} average rating over {{apps}} matches, {{goals}} goals. One to keep in the XI.",
+        "sheet": "See his profile"
+      },
       "see": "See",
       "noGazette": "The first issue comes out after your first tracked game week.",
       "challenge": "Current challenge",
@@ -4531,7 +4754,9 @@
         "squad": "The squad is fine this week: nobody to calm down or reassure.",
         "results": "Nothing worrying in the results: keep it up.",
         "mercato": "No transfer or finance decision to make this week."
-      }
+      },
+      "todo_one": "To do here",
+      "todo_other": "To do here ({{count}})"
     },
     "state": {
       "open": "FM27 open",
@@ -4549,6 +4774,7 @@
     "connect": {
       "title": "Connect FM27",
       "advanced": "Advanced options",
+      "advancedMore": "CA/PA reading, history, what the plugin reads, AI",
       "next": "Next step:",
       "ready": "All connected.",
       "createCareer": "Create my career to continue",

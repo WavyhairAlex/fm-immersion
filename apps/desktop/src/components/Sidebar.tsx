@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useUi } from '../lib/ui-store';
 import { shownGameDate, useCareer, useCareerStore } from '../lib/career';
-import { CLUB_PAGES, pageOf, type ClubPage } from '../lib/club-nav';
+import { pageOf, type ClubPage } from '../lib/club-nav';
 import { coachPhotoSource, type CoachPhotoCrop } from '../lib/coach-photo';
 import { fmData } from '../lib/data';
 import { useGameStatus } from '../lib/game';
@@ -29,6 +29,12 @@ const ICONS: Record<string, ReactNode> = {
     </>
   ),
   results: <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />,
+  press: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0014 0M12 18v3" />
+    </>
+  ),
   mercato: <path d="M4 7h13l-3-3M20 17H7l3 3" />,
   career: (
     <>
@@ -84,6 +90,9 @@ function Item({ to, icon, label, active, end, badge }: { to: string; icon: strin
   );
 }
 
+/** Mon club dans la barre, dans l'ordre de la maquette (l'adversaire est un onglet de Tactique). */
+const CLUB_ORDER = ['tactic', 'squad', 'results', 'mercato'] as const;
+
 const Count = ({ n, label }: { n: number; label: string }) =>
   n > 0 ? (
     <span className="inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-white/15 px-1.5 text-xs font-extrabold tabular-nums text-white" aria-label={label} title={label}>
@@ -127,13 +136,19 @@ export function Sidebar() {
       <nav className="mt-2 flex flex-col gap-0.5" aria-label={t('nav.modes')}>
         <Item to="/" end icon="today" label={t('layout.nav.today')} badge={<Count n={todoViews.length} label={t('fm.brief.tabBadge', { count: todoViews.length })} />} />
         <p className="nav-group">{t('layout.groups.club')}</p>
-        {CLUB_PAGES.map((p) => (
-          <Item key={p} to={`/club/${p}`} icon={p} label={t(`layout.nav.${p}`)} active={clubOpen === p} badge={<Count n={count(p)} label={t('fm.brief.tabBadge', { count: count(p) })} />} />
+        {CLUB_ORDER.map((p) => (
+          <Item key={p} to={`/club/${p}`} icon={p} label={t(`layout.navShort.${p}`)} active={clubOpen === p} badge={<Count n={count(p)} label={t('fm.brief.tabBadge', { count: count(p) })} />} />
         ))}
         <p className="nav-group">{t('layout.groups.story')}</p>
         <Item to="/carriere" icon="career" label={t('careerPage.title')} />
-        <Item to="/gazette" icon="gazette" label={t('layout.nav.story')} active={pathname === '/gazette' || pathname === '/presse' || pathname === '/discord'} />
+        <Item to="/gazette" icon="gazette" label={t('layout.navShort.gazette')} />
+        <Item to="/presse" icon="press" label={t('layout.navShort.press')} />
+        <Item to="/discord" icon="discord" label={t('layout.navShort.discord')} />
         <Item to="/defis" icon="challenges" label={t('modes.challenges.title')} />
+      </nav>
+
+      {/* Le reste (installation, réglages, défis) : en bas, plus discret, pour garder le haut court. */}
+      <nav className="mt-auto flex flex-col gap-0.5 pt-6 text-sm [&_.nav-link]:py-1.5 [&_.nav-link]:text-white/70" aria-label={t('layout.groups.game')}>
         <p className="nav-group">{t('layout.groups.game')}</p>
         <Item
           to="/visages"
@@ -156,7 +171,7 @@ export function Sidebar() {
         {t('layout.dev', { name: t('modes.world.title') })}
       </Link>
 
-      <div className="mt-auto flex items-center justify-between px-3 pt-6 text-xs font-bold text-white/60">
+      <div className="flex items-center justify-between px-3 pt-4 text-xs font-bold text-white/60">
         <button type="button" className="hover:text-white" onClick={() => i18n.changeLanguage(otherLang)}>
           {t('nav.language')}
         </button>

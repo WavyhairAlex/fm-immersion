@@ -1,14 +1,21 @@
 import {
   POS_LABEL,
+  REACH_ORDER,
   baseTarget,
+  clubReach,
   divisionLevels,
   replacementFor,
   replacementPositions,
+  reachCaps,
+  reachOf,
   storedTargets,
   type DbPlayer,
   type DivisionLevel,
   type FmPlayer,
+  type OwnAbility,
   type Project,
+  type Reach,
+  type ReachLevel,
   type ReplacementCandidate,
   type TacticEngine,
   type Target,
@@ -24,6 +31,7 @@ import { CompatTag, Empty, Fit, More, Panel, Tag, fitGap, useNames, type Tone } 
 type Engine = TacticEngine;
 
 const VERDICT_TONE: Record<'better' | 'holds' | 'recruit', Tone> = { better: 'good', holds: 'info', recruit: 'warn' };
+const REACH_TONE: Record<ReachLevel, Tone> = { easy: 'good', possible: 'info', hard: 'warn', out: 'bad' };
 
 /** Écart de note signé, en vert s'il gagne, en corail s'il perd. */
 function Gap({ d }: { d: number }) {
@@ -47,6 +55,7 @@ export function ReplacementFinder({
   squad,
   onClose,
   autoSearch = false,
+  finances = null,
 }: {
   saveId: string;
   gameDate: string;
@@ -58,6 +67,8 @@ export function ReplacementFinder({
   onClose?: () => void;
   /** Lancer d'emblée la recherche dans la base (le joueur vient d'être signalé partant : c'est son action). */
   autoSearch?: boolean;
+  /** Budget de transferts (brut du plugin) et marge salariale affichée par mois : ce que le club peut payer. */
+  finances?: { transferBudget: number | null; wageRoom: number | null } | null;
 }) {
   const { t } = useTranslation();
   const names = useNames();
@@ -66,11 +77,16 @@ export function ReplacementFinder({
   const followed = useMemo(() => storedTargets(rows ?? [], squad).filter((x) => !x.dismissed && Object.keys(x.attributes).length), [rows, squad]);
   const followedIds = new Set(followed.map((x) => x.id));
 
-  // Recherche dans la base : CA réel du partant (lu en mémoire), puis joueurs du même poste dans une bande de CA.
+  // Joueurs hors de portée du club (salaire, réputation, indemnité) : masqués sauf demande du joueur.
+  const [wide, setWide] = useState(false);
+  // Recherche dans la base : CA réel du partant (lu en mémoire), puis joueurs du même poste dans une bande de CA,
+  // plafonnés à ce que le club peut attirer et payer (repères tirés de son propre effectif lu dans la base).
   const search = useMutation({
-    mutationFn: async () => {
-      const own = await invoke<{ players: { id: number; ca: number }[] }>('fm_memory_abilities');
-      const ca = own.players.find((x) => String(x.id) === leaving.id)?.ca ?? null;
+    mutationFn: async (all: boolean) => {
+      const own = await invoke<{ players: (OwnAbility & { id: number; ca: number })[] }>('fm_memory_abilities');
+      const me = own.players.find((x) => String(x.id) === leaving.id);
+      const ca = me?.ca ?? null;
+      const club = clubReach(own.players, squad, finances, me?.wageWeekly ?? 0);
       const found = await invoke<DbPlayer[]>('fm_memory_search', {
         filter: {
           positions: replacementPositions(engine, project, leaving),
@@ -79,9 +95,10 @@ export function ReplacementFinder({
           excludeInjured: true,
           excludeOwn: true,
           limit: 300,
+          ...(all ? {} : reachCaps(club)),
         },
       });
-      return { ca, found };
+      return { ca, found, club, all };
     },
   });
   // Une seule fois par signalement : la lecture de la base reste une action du joueur.
@@ -89,7 +106,7 @@ export function ReplacementFinder({
   useEffect(() => {
     if (autoSearch && !started.current) {
       started.current = true;
-      search.mutate();
+      search.mutate(wide);
     }
   }, [autoSearch, search]);
   const add = useMutation({
@@ -98,14 +115,31 @@ export function ReplacementFinder({
   });
 
   const raw = useMemo(() => new Map((search.data?.found ?? []).map((p) => [`t${p.id}`, p])), [search.data]);
+  // Portée de chaque joueur lu dans la base ; les cibles suivies (choisies par le joueur) ne sont pas jugées.
+  const reach = useMemo(() => {
+    const d = search.data;
+    return new Map<string, Reach>(d ? d.found.map((p) => [`t${p.id}`, reachOf(p, d.club, gameDate)]) : []);
+  }, [search.data, gameDate]);
+  const hidden = wide ? 0 : [...reach.values()].filter((x) => x.level === 'out').length;
   const r = useMemo(() => {
-    const fromBase = (search.data?.found ?? []).flatMap((p) => baseTarget(p) ?? []);
+    const fromBase = (search.data?.found ?? []).flatMap((p) => baseTarget(p) ?? []).filter((x) => wide || reach.get(x.id)?.level !== 'out');
     const pool = new Map<string, Target>([...fromBase, ...followed].map((x) => [x.id, x]));
-    return replacementFor(engine, project, leaving, [...pool.values()], squad);
-  }, [engine, project, leaving, squad, followed, search.data]);
+    const res = replacementFor(engine, project, leaving, [...pool.values()], squad);
+    // À la portée du club d'abord (facile, dans ses moyens), puis difficile, puis hors de portée ; la note départage.
+    const group = (id: string) => {
+      const l = reach.get(id)?.level;
+      return l == null || l === 'easy' || l === 'possible' ? 0 : REACH_ORDER.indexOf(l) - 1;
+    };
+    const candidates = [...res.candidates].sort((a, b) => group(a.player.id) - group(b.player.id));
+    // Le meilleur choix se prend d'abord parmi les recrues à la portée du club.
+    const easy = [...pool.values()].filter((x) => group(x.id) === 0);
+    const upgrade = res.upgrade && group(res.upgrade.player.id) > 0 ? (replacementFor(engine, project, leaving, easy, squad).upgrade ?? res.upgrade) : res.upgrade;
+    return { ...res, candidates, upgrade };
+  }, [engine, project, leaving, squad, followed, search.data, reach, wide]);
 
   const line = (c: ReplacementCandidate<Target>) => {
     const d = raw.get(c.player.id);
+    const rc = reach.get(c.player.id);
     return (
       <tr key={c.player.id} className="border-b border-canard/5 last:border-0">
         <td className="py-1.5 pr-2 font-bold">
@@ -118,6 +152,16 @@ export function ReplacementFinder({
         <td className="px-2 py-1.5">
           {c.player.club ?? '–'}
           {d?.division && <div className="text-xs text-brun">{d.division}</div>}
+        </td>
+        <td className="px-2 py-1.5">
+          {rc ? (
+            <>
+              <Tag tone={REACH_TONE[rc.level]}>{t(`fm.reach.level.${rc.level}`)}</Tag>
+              {rc.why.length > 0 && <div className="text-xs text-brun">{rc.why.map((w) => t(`fm.reach.why.${w}`)).join(', ')}</div>}
+            </>
+          ) : (
+            '–'
+          )}
         </td>
         <td className="whitespace-nowrap px-2 py-1.5 tabular-nums">{d ? `${d.ca} / ${d.pa < 0 ? '?' : d.pa}` : '–'}</td>
         <td className="px-2 py-1.5"><Fit value={c.fit} /></td>
@@ -175,9 +219,22 @@ export function ReplacementFinder({
             )}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <button type="button" className="btn-secondary" disabled={search.isPending} onClick={() => search.mutate()}>
+            <button type="button" className="btn-secondary" disabled={search.isPending} onClick={() => search.mutate(wide)}>
               {search.isPending ? t('fm.repl.searching') : t('fm.repl.search')}
             </button>
+            <label className="flex items-center gap-1 text-xs text-brun">
+              <input
+                type="checkbox"
+                checked={wide}
+                onChange={(e) => {
+                  setWide(e.target.checked);
+                  // La recherche déjà lue était plafonnée : la relire sans plafond pour montrer les autres.
+                  if (e.target.checked && search.data && !search.data.all) search.mutate(true);
+                }}
+              />
+              {t('fm.reach.wide')}
+            </label>
+            {hidden > 0 && <span className="text-xs text-brun">{t('fm.reach.hidden', { count: hidden })}</span>}
             {search.data && (
               <span className="text-xs text-brun">
                 {search.data.ca == null ? t('fm.repl.foundNoCa', { count: search.data.found.length }) : t('fm.repl.found', { count: search.data.found.length, min: Math.max(0, search.data.ca - CA_BELOW), max: search.data.ca + CA_ABOVE })}
@@ -194,6 +251,7 @@ export function ReplacementFinder({
                     <th className="px-2 py-1">{t('fm.col.compat')}</th>
                     <th className="px-2 py-1">{t('fm.dbSearch.col.age')}</th>
                     <th className="px-2 py-1">{t('fm.dbSearch.col.club')}</th>
+                    <th className="px-2 py-1">{t('fm.col.reach')}</th>
                     <th className="px-2 py-1">{t('fm.dbSearch.col.caPa')}</th>
                     <th className="px-2 py-1">{t('fm.dbSearch.col.fit')}</th>
                     <th className="px-2 py-1">{t('fm.repl.gap')}</th>
@@ -206,7 +264,9 @@ export function ReplacementFinder({
           ) : (
             <p className="mt-2 text-sm text-brun">{t('fm.repl.none')}</p>
           )}
-          <More>{t('fm.repl.help')}</More>
+          <More>
+            {t('fm.repl.help')} {t('fm.reach.help')}
+          </More>
         </>
       )}
     </div>

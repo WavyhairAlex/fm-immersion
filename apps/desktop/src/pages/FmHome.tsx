@@ -18,9 +18,10 @@ import { snapshotWinterBreak,
   tacticAdvice,
 } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
-import { useCareerStore } from '../lib/career';
+import { useCareer, useCareerStore } from '../lib/career';
 import { useFmSaveScope } from '../lib/save-store';
 import { useTranslation } from 'react-i18next';
+import { GazetteUne, StaffPoint, staffStory } from '../components/HomeCards';
 import { FmBriefing } from './FmBriefing';
 import { FmDecisions, useDecisions } from './FmDecisions';
 import { Avatar } from './FmFoot';
@@ -140,10 +141,11 @@ export function FmHome({
   const alerts = h.alerts.filter((a) => a.kind !== 'condition');
   const shown = alerts.slice(0, 8);
 
-  const threadShown = useHasDecision(snap.gameDate);
+  const threadShown = useHasDecision(snap.gameDate) && detail;
+  const { saveId } = useCareer();
+  const staff = useMemo(() => staffStory(players), [players]);
   return (
     <div className="space-y-4">
-      <DayThread snap={snap} entries={entries ?? []} go={go} />
       <FmMatchCenter
         snap={snap}
         players={players}
@@ -152,6 +154,12 @@ export function FmHome({
         lineup={lineup}
         gameTactic={gameTactic}
         go={go}
+        afterHero={
+          <div className={`grid gap-4 ${staff ? 'lg:grid-cols-2' : ''}`}>
+            <StaffPoint players={players} />
+            <GazetteUne saveId={saveId} />
+          </div>
+        }
         aside={
           <FmBriefing
             key={snap.gameDate}
@@ -176,6 +184,7 @@ export function FmHome({
       <button type="button" className="chip" aria-expanded={detail} onClick={toggleDetail}>
         {t(detail ? 'fm.brief.detailHide' : 'fm.brief.detail')}
       </button>
+      {detail && <DayThread snap={snap} entries={entries ?? []} go={go} />}
       {detail && <FmDecisions list={decisionList} go={go} />}
       {detail && <FmSummary snap={snap} players={players} />}
       {detail && (<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6 xl:[&>*]:col-span-2 xl:[&>*:nth-last-child(-n+2)]:col-span-3">

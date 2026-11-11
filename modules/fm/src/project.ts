@@ -325,8 +325,11 @@ export const complexityCost = (st: StyleRef, ability: number | null) =>
 /**
  * Consignes individuelles par joueur que l'effectif peut absorber pour un style : 3 quand sa capacité tactique
  * suffit, 2 s'il lui manque un peu, 1 sinon. On en ajoute au fil de la progression plutôt que tout d'un coup.
+ * `understanding` : compréhension tactique du jeu (0-100) ; 60 et plus = 3 consignes, 40 à 59 = 2, moins = 1.
  */
-export function instructionBudget(st: StyleRef, ability: number | null): 1 | 2 | 3 {
+export function instructionBudget(st: StyleRef, ability: number | null, understanding?: number | null): 1 | 2 | 3 {
+  // Compréhension tactique mesurée par le jeu (sur 100), quand le plugin la lit : elle prime sur l'estimation.
+  if (understanding != null) return understanding >= 60 ? 3 : understanding >= 40 ? 2 : 1;
   if (ability == null) return 3;
   const gap = ability - abilityNeeded(st);
   return gap >= 0 ? 3 : gap >= -1.5 ? 2 : 1;
@@ -585,4 +588,25 @@ export function rankTargets(engine: TacticEngine, targets: Target[], project: Pr
       return { target: t, best };
     })
     .sort((a, b) => (b.best ? VERDICT_RANK[b.best.verdict] : -1) - (a.best ? VERDICT_RANK[a.best.verdict] : -1) || (b.best?.gain ?? -99) - (a.best?.gain ?? -99));
+}
+
+/**
+ * Ce que le jeu dit de la charge des consignes (sur 100) : complexité des consignes d'équipe et individuelles,
+ * et compréhension tactique du groupe. null pour ce que le plugin n'a pas lu.
+ */
+export function instructionLoad(snap: FmSnapshot | null | undefined): { team: number | null; player: number | null; understanding: number | null } {
+  const e = (snap?.effectiveness ?? null) as Record<string, unknown> | null;
+  const mid = (v: unknown): number | null => {
+    if (v == null) return null;
+    if (typeof v === 'object') {
+      const o = v as Record<string, unknown>;
+      const lo = toNumber(o.MinValue ?? o.min);
+      const hi = toNumber(o.MaxValue ?? o.max);
+      return lo != null && hi != null ? (lo + hi) / 2 : (lo ?? hi);
+    }
+    return toNumber(v);
+  };
+  const parts = (e?.complexityParts ?? {}) as Record<string, unknown>;
+  const comps = (e?.components ?? {}) as Record<string, unknown>;
+  return { team: mid(parts.teamInstructionComplexity), player: mid(parts.playerInstructionComplexity), understanding: mid(comps.tacticalUnderstanding) };
 }
