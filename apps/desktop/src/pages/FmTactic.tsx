@@ -182,7 +182,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   const field = plan.slots.filter((s) => s.pos !== 'GB');
   const shape = (ph: Phase) => shapeOf(field.map((s) => phaseXY(s, ph, block)));
   // Écarts minimum entre deux joueurs (en % du terrain) à la taille des pastilles, gardées dans le terrain.
-  const shown = spreadXY(plan.slots.map((s) => phaseXY(s, phase, block)), 26, 10).map(([x, y]) => [Math.min(86, Math.max(14, x)), Math.min(93, Math.max(6, y))] as [number, number]);
+  const shown = spreadXY(plan.slots.map((s) => phaseXY(s, phase, block)), 27, 11).map(([x, y]) => [Math.min(86, Math.max(14, x)), Math.min(93, Math.max(6, y))] as [number, number]);
   const other: Phase = phase === 'ip' ? 'oop' : 'ip';
   // Lignes du tableau rangées comme on lit un terrain : gardien, défense, milieu, attaque ; de gauche à droite dans chaque ligne.
   const ROW_ORDER: readonly PosCode[] = ['GB', 'DLG', 'DG', 'DC', 'DD', 'DLD', 'MDF', 'MG', 'MC', 'MD', 'MOG', 'MOC', 'MOD', 'BT'];
@@ -303,25 +303,29 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   </p>
                   {!gamePlan && lineupStatus && lineupStatus !== 'lue' && <p className="mt-1 text-xs text-brun">{t('fm.tac.lineupStatus', { status: lineupStatus })}</p>}
 
-                <div className="mt-4 grid gap-6 xl:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)]">
-                  {/* Terrain : d'abord la phase montrée (avec ou sans ballon), puis une pastille par joueur, poste à la couleur de sa ligne et nom. */}
+                {/* La phase montrée commande tout l'écran : le terrain et la liste ne parlent que d'elle. */}
+                <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <div className="inline-flex rounded-xl bg-creme p-1" role="tablist" aria-label={t('fm.tac.xi.phaseLabel')}>
+                    {(['ip', 'oop'] as const).map((ph) => (
+                      <button
+                        key={ph}
+                        type="button"
+                        role="tab"
+                        aria-selected={phase === ph}
+                        onClick={() => update({ phase: ph })}
+                        className={`rounded-lg px-4 py-2 text-base font-bold transition ${phase === ph ? 'bg-canard text-white shadow' : 'text-canard hover:bg-white'}`}
+                      >
+                        {t(`fm.tac.phase.${ph}`)} <span className="ml-1 font-normal opacity-75">{shape(ph)}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="min-w-[14rem] flex-1 text-sm text-brun">{t(`fm.tac.xi.phaseHelp.${phase}`)}</p>
+                </div>
+
+                <div className="mt-4 grid items-start gap-8 xl:grid-cols-[minmax(20rem,27rem)_minmax(0,1fr)]">
+                  {/* Terrain : une pastille par joueur, poste à la couleur de sa ligne et nom. */}
                   <div>
-                    <div className="flex justify-center gap-2" role="tablist" aria-label={t('fm.tac.xi.phaseLabel')}>
-                      {(['ip', 'oop'] as const).map((ph) => (
-                        <button
-                          key={ph}
-                          type="button"
-                          role="tab"
-                          aria-selected={phase === ph}
-                          onClick={() => update({ phase: ph })}
-                          className={`chip ${phase === ph ? 'chip-on' : ''}`}
-                        >
-                          {t(`fm.tac.phase.${ph}`)} <span className="ml-1 font-normal opacity-80">{shape(ph)}</span>
-                        </button>
-                      ))}
-                    </div>
-                    <p className="mt-2 text-center text-xs text-brun">{t(`fm.tac.xi.phaseHelp.${phase}`)}</p>
-                    <Pitch className="mx-auto mt-2 w-full max-w-[22rem]">
+                    <Pitch className="mx-auto w-full max-w-[27rem]">
                       {/* Au survol seulement : d'où part le joueur dans l'autre phase. */}
                       {hover != null && plan.slots[hover] && (() => {
                         const [x1, y1] = phaseXY(plan.slots[hover]!, other, block);
@@ -352,11 +356,11 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                           >
                             {/* Le poste FM27 du créneau : le rôle déplace la pastille sur le terrain, jamais le poste. */}
                             <span
-                              className={`whitespace-nowrap rounded-md px-1.5 py-0.5 text-[0.7rem] font-bold leading-none shadow ring-2 ${c.bg} ${c.text} ${hover === i ? 'ring-white' : off ? 'ring-corail' : 'ring-white/40'}`}
+                              className={`whitespace-nowrap rounded-md px-2 py-1 text-xs font-bold leading-none shadow ring-2 ${c.bg} ${c.text} ${hover === i ? 'ring-white' : off ? 'ring-corail' : 'ring-white/40'}`}
                             >
                               {POS_LABEL[sl.pos]}
                             </span>
-                            <span className="max-w-[6.5rem] truncate rounded bg-white px-1.5 py-px text-xs font-bold text-canard shadow">
+                            <span className="max-w-[8rem] truncate rounded-md bg-white px-2 py-0.5 text-sm font-bold text-canard shadow">
                               {sl.player ? shortName(sl.player.name) : t('fm.tac.nobody')}
                             </span>
                           </button>
@@ -365,81 +369,51 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                     </Pitch>
                   </div>
 
-                  {/* Liste à recopier dans FM27 : une ligne par poste, les deux rôles côte à côte, la doublure sous le titulaire. */}
+                  {/* Liste à recopier dans FM27 : une ligne par poste, le rôle de la phase montrée seulement, la doublure sous le titulaire. */}
                   <div className="min-w-0">
                     <h3 className="font-semibold">{t('fm.tac.xi.title')}</h3>
-                    <div className="mt-2 overflow-x-auto">
-                      <table className="data-table">
-                        <thead>
-                          <tr>
-                            <th className="w-16">{t('fm.tac.xi.pos')}</th>
-                            <th>{t('fm.tac.xi.player')}</th>
-                            {(['ip', 'oop'] as const).map((ph) => (
-                              <th key={ph} className={phase === ph ? 'text-canard' : ''}>
-                                <button type="button" onClick={() => update({ phase: ph })} className="uppercase hover:text-orange-fonce" title={t('fm.tac.xi.showPhase')}>
-                                  {t(`fm.tac.phase.${ph}`)}
-                                  {phase === ph && <span className="ml-1 inline-block h-1.5 w-1.5 rounded-full bg-orange align-middle" aria-hidden />}
-                                </button>
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {rows.map((i, k) => {
-                            const sl = plan.slots[i]!;
-                            const p = sl.player;
-                            const sub = (plan.subs[i] ?? [])[0];
-                            const prev = k > 0 ? plan.slots[rows[k - 1]!] : undefined;
-                            const newLine = !!prev && lineOf(prev.pos) !== lineOf(sl.pos);
-                            return (
-                              <tr
-                                key={i}
-                                className={`${newLine ? 'border-t-2 border-t-canard/15' : ''} ${hover === i ? '!bg-orange/15' : ''}`}
-                                onMouseEnter={() => setHover(i)}
-                                onMouseLeave={() => setHover(null)}
-                              >
-                                <td className="align-top">
-                                  <PosBadge pos={sl.pos} />
-                                </td>
-                                <td className="align-top">
-                                  <div className="font-bold text-canard">
-                                    {p ? <PlayerLink player={p} /> : <span className="text-corail">{t('fm.tac.nobody')}</span>}
-                                  </div>
-                                  {p?.team && <div className="text-xs text-orange-fonce">{t('fm.tac.fromTeam', { team: p.team })}</div>}
-                                  {p && !p.positions.includes(sl.pos) && <div className="text-xs font-bold text-corail">{t('fm.tac.offPos')}</div>}
-                                  {sub && (
-                                    <div className="mt-0.5 text-xs text-brun">
-                                      {t('fm.tac.xi.backupOf', { name: sub.name })}
-                                      {sub.team && <span className="ml-1 text-orange-fonce">{t('fm.tac.fromTeam', { team: sub.team })}</span>}
-                                    </div>
-                                  )}
-                                </td>
-                                {(['ip', 'oop'] as const).map((ph) => {
-                                  const code = ph === 'ip' ? sl.ip : sl.oop;
-                                  const r = engine.roles.get(code);
-                                  const name = (en ? r?.en : r?.fr) ?? r?.fr ?? code;
-                                  return (
-                                    <td key={ph} className={`align-top ${phase === ph ? 'bg-orange/[0.06]' : ''}`}>
-                                      <div className="flex items-start justify-between gap-2">
-                                        <span className="leading-snug text-canard">
-                                          {name}
-                                          {ph === 'ip' && r?.duty && <span className="block text-xs text-brun">{t(`fm.tac.duty.${r.duty}`)}</span>}
-                                        </span>
-                                        {p && (
-                                          <span className="shrink-0 whitespace-nowrap">
-                                            <Fit value={engine.roleFit(p, code, ph, sl.pos)} />
-                                          </span>
-                                        )}
-                                      </div>
-                                    </td>
-                                  );
-                                })}
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
+                    <ul className="mt-2">
+                      {rows.map((i, k) => {
+                        const sl = plan.slots[i]!;
+                        const p = sl.player;
+                        const sub = (plan.subs[i] ?? [])[0];
+                        const prev = k > 0 ? plan.slots[rows[k - 1]!] : undefined;
+                        const newLine = !!prev && lineOf(prev.pos) !== lineOf(sl.pos);
+                        const code = phase === 'ip' ? sl.ip : sl.oop;
+                        const r = engine.roles.get(code);
+                        const name = (en ? r?.en : r?.fr) ?? r?.fr ?? code;
+                        return (
+                          <li
+                            key={i}
+                            className={`grid grid-cols-[4.25rem_minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-x-3 rounded-lg px-2 py-2 ${newLine ? 'mt-4' : ''} ${hover === i ? 'bg-orange/15' : ''}`}
+                            onMouseEnter={() => setHover(i)}
+                            onMouseLeave={() => setHover(null)}
+                          >
+                            <span className="text-sm">
+                              <PosBadge pos={sl.pos} />
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block truncate text-base font-bold text-canard">
+                                {p ? <PlayerLink player={p} /> : <span className="text-corail">{t('fm.tac.nobody')}</span>}
+                              </span>
+                              {p?.team && <span className="block text-xs text-orange-fonce">{t('fm.tac.fromTeam', { team: p.team })}</span>}
+                              {p && !p.positions.includes(sl.pos) && <span className="block text-xs font-bold text-corail">{t('fm.tac.offPos')}</span>}
+                              {sub && (
+                                <span className="block truncate text-xs text-brun">
+                                  {t('fm.tac.xi.backupOf', { name: sub.name })}
+                                  {sub.team && <span className="ml-1 text-orange-fonce">{t('fm.tac.fromTeam', { team: sub.team })}</span>}
+                                </span>
+                              )}
+                            </span>
+                            <span className="min-w-0 text-base leading-snug text-canard">
+                              {name}
+                              {phase === 'ip' && r?.duty && <span className="block text-xs text-brun">{t(`fm.tac.duty.${r.duty}`)}</span>}
+                            </span>
+                            <span className="whitespace-nowrap text-right">{p && <Fit value={engine.roleFit(p, code, phase, sl.pos)} />}</span>
+                          </li>
+                        );
+                      })}
+                    </ul>
                     <More>{t(fromGame ? 'fm.tac.pitchHelpGame' : 'fm.tac.pitchHelp')}</More>
                   </div>
                 </div>

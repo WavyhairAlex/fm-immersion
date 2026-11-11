@@ -326,7 +326,6 @@
         "backup": "Doublure",
         "backupOf": "Doublure : {{name}}",
         "phaseLabel": "Phase de jeu montrée",
-        "showPhase": "Montrer cette phase sur le terrain",
         "phaseHelp": {
           "ip": "Où chacun se place quand ton équipe a le ballon. L'étiquette reste le poste à régler dans FM27.",
           "oop": "Où chacun se place quand l'adversaire a le ballon. L'étiquette reste le poste à régler dans FM27."

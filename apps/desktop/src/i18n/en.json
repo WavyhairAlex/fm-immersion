@@ -326,7 +326,6 @@
         "backup": "Backup",
         "backupOf": "Backup: {{name}}",
         "phaseLabel": "Phase shown",
-        "showPhase": "Show this phase on the pitch",
         "phaseHelp": {
           "ip": "Where each player stands when your team has the ball. The label stays the position to set in FM27.",
           "oop": "Where each player stands when the opponent has the ball. The label stays the position to set in FM27."
