@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.172",
+    "date": "2026-11-11",
+    "fr": [
+      "Le Centre de données garde toutes tes saisons : choisis une saison passée pour revoir les stats de tes joueurs telles qu'à la fin de l'année, avant que le jeu les remette à zéro."
+    ],
+    "en": [
+      "The Data centre keeps all your seasons: pick a past season to see your players' stats as they stood at the end of the year, before the game reset them."
+    ]
+  },
+  {
     "version": "0.1.171",
     "date": "2026-11-11",
     "fr": [

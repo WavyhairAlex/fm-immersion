@@ -2199,6 +2199,11 @@
           "headerPct": "Aerial duels",
           "xgPerMatch": "xG per match"
         }
+      },
+      "season": {
+        "title": "Season",
+        "current": "Current season",
+        "frozen": "{{label}} season at {{club}}: stats as of {{date}}, the last read before the game reset them. FM Immersion keeps all your seasons."
       }
     },
     "dbSearch": {

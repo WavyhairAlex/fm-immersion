@@ -3,7 +3,7 @@ import { snapshotFixtures } from './fixtures';
 import { leaguePosition } from './gazette';
 import { normalizePlayer } from './player';
 import { lineOf, type PosCode } from './positions';
-import { officialResults, type MatchResult } from './results';
+import { hasStats, officialResults, type MatchResult } from './results';
 import { competitionKind } from './rules';
 import type { FmSnapshot } from './snapshot';
 import { assignMax, FORMATIONS } from './tactic';
@@ -401,4 +401,52 @@ export function seasonSoFar(history: Entry[], date: string): SeasonReview | null
   const prev = segs.at(-2);
   if (!r.played && prev?.ended && prev.entries[0]!.data.club === r.club) return review(prev.entries);
   return r;
+}
+
+/** Saison finie dont les stats des joueurs sont gardées telles qu'à la dernière lecture avant la remise à zéro du jeu. */
+export interface SeasonArchive {
+  /** « 2026/27 », ou « 2027 » pour une saison d'année civile. */
+  label: string;
+  club: string;
+  /** Date de jeu de la dernière lecture complète de la saison (ISO). */
+  gameDate: string;
+  data: FmSnapshot;
+}
+
+/**
+ * Stats de chaque saison finie, de la plus récente à la plus ancienne. Le jeu remet les cumuls du Centre de données à
+ * zéro au début de la saison suivante : la saison est figée sur la dernière lecture complète avant cette remise à zéro
+ * (ou avant un changement de club). Les lectures sans stats (plugin interrompu) ne comptent ni pour la remise à zéro ni
+ * pour l'archive. La saison en cours n'est pas archivée.
+ */
+export function seasonArchives(history: Entry[]): SeasonArchive[] {
+  const sorted = [...history].sort((a, b) => a.gameDate.localeCompare(b.gameDate));
+  const out: SeasonArchive[] = [];
+  let first: Entry | null = null;
+  let last: Entry | null = null;
+  for (const e of sorted) {
+    if (!hasStats(e.data)) {
+      // Changement de club sans stats lues : la saison au club précédent est finie quand même.
+      if (last && e.data.club !== last.data.club) {
+        out.push(archiveOf(first!, last));
+        first = last = null;
+      }
+      continue;
+    }
+    if (last && (e.data.club !== last.data.club || statsResetBetween(last.data, e.data))) {
+      out.push(archiveOf(first!, last));
+      first = null;
+    }
+    first ??= e;
+    last = e;
+  }
+  return out.reverse();
+}
+
+function archiveOf(first: Entry, last: Entry): SeasonArchive {
+  let label = seasonLabel(first.gameDate, last.gameDate);
+  // Suivi commencé en cours de saison (après le Nouvel An) d'une saison finie avant l'été : saison à cheval.
+  const y = Number(last.gameDate.slice(0, 4));
+  if (!label.includes('/') && Number(last.gameDate.slice(5, 7)) <= 7) label = `${y - 1}/${String(y).slice(2)}`;
+  return { label, club: last.data.club, gameDate: last.gameDate, data: last.data };
 }
