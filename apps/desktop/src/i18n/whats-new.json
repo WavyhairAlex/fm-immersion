@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.162",
+    "date": "2026-11-11",
+    "fr": [
+      "Nouvel accueil « Aujourd'hui » : le prochain match en grand avec « Voir l'adversaire », le point du staff sur un joueur (blessure, retour, forme) avec sa photo et sa fiche, et la une de ta dernière gazette façon journal.",
+      "Barre latérale plus courte : Effectif, Tactique, Adversaire, Résultats et Mercato dans Mon club ; Gazette, Presse et Live Discord ont chacun leur entrée ; Défis, Visages, Photos, Sauvegardes et réglages passent en bas."
+    ],
+    "en": [
+      "New “Today” home: the next match up front with “See the opponent”, a staff update on one player (injury, return, form) with his photo and profile, and the front page of your latest gazette in newspaper style.",
+      "Shorter sidebar: Squad, Tactics, Opponent, Results and Transfers under My club; Gazette, Press and Live Discord each get their own entry; Challenges, Faces, Photos, Saves and settings move to the bottom."
+    ]
+  },
+  {
     "version": "0.1.161",
     "date": "2026-11-11",
     "fr": [

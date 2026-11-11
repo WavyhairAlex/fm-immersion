@@ -394,7 +394,10 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
                       <>
                         <header className="mb-4">
                           <h1 className="text-3xl font-semibold">{t('layout.today.title')}</h1>
-                          <p className="mt-1 text-brun first-letter:uppercase">{longDateFmt.format(new Date(shownGameDate(snapshot, sync.now) ?? snapshot.gameDate))}</p>
+                          <p className="mt-1 text-lg text-brun">
+                            {snapshot.data.club && <>{snapshot.data.club} · </>}
+                            <span className="inline-block first-letter:uppercase">{longDateFmt.format(new Date(shownGameDate(snapshot, sync.now) ?? snapshot.gameDate))}</span>
+                          </p>
                         </header>
                         <GameCompatBanner />
                         {part('home')}

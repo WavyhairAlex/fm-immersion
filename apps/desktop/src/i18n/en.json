@@ -4621,6 +4621,16 @@
     "bridgeAction": "The plugin needs an action",
     "settingsIntro": "Where FM Immersion reads your game: plugin folder, linked save, history and the FM27 plugin.",
     "manageCareers": "Manage my careers",
+    "navShort": {
+      "tactic": "Tactics",
+      "squad": "Squad",
+      "results": "Results",
+      "mercato": "Transfers",
+      "opponent": "Opponent",
+      "gazette": "Gazette",
+      "press": "Press",
+      "discord": "Live Discord"
+    },
     "groups": {
       "club": "My club",
       "story": "My career, told",
@@ -4642,6 +4652,21 @@
       "title": "Today",
       "intro": "What your assistant spotted in your game, and the rest of your career at a glance.",
       "read": "Read",
+      "gazette": "The Gazette",
+      "staff": {
+        "title": "Staff update",
+        "back": "Back for the match",
+        "backText_one": "Still in the treatment room ({{injury}}), he will be fit tomorrow, in time for the next match.",
+        "backText_other": "Still in the treatment room ({{injury}}), he will be fit in {{count}} days, in time for the next match.",
+        "injured": "In the treatment room",
+        "injuredText_one": "{{injury}}: out for 1 more day. Plan his replacement.",
+        "injuredText_other": "{{injury}}: out for {{count}} more days. Plan his replacement.",
+        "suspended": "Suspended",
+        "suspendedText": "{{suspension}}. He will miss the next match.",
+        "form": "In great form",
+        "formText": "{{rating}} average rating over {{apps}} matches, {{goals}} goals. One to keep in the XI.",
+        "sheet": "See his profile"
+      },
       "see": "See",
       "noGazette": "The first issue comes out after your first tracked game week.",
       "challenge": "Current challenge",

@@ -1,4 +1,4 @@
-import { CHALLENGES, evaluateChallenge, gazetteIssues, pendingConference, type ChallengeId } from '@fm-immersion/module-fm';
+import { CHALLENGES, evaluateChallenge, pendingConference, type ChallengeId } from '@fm-immersion/module-fm';
 import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useMemo } from 'react';
@@ -8,7 +8,6 @@ import { factsFor } from '../lib/challenges';
 import { useFacesDirs, useFacesUpdate, v2Count, pcState } from '../lib/faces';
 import { challengesData } from '../lib/data';
 import { useHistory } from '../lib/fm-cache';
-import { storyText } from '../lib/gazette-text';
 import { usePressHeld } from '../lib/press';
 
 type FacesStatus = { state: 'noGame' | 'missing' | 'original' | 'photorealV1' | 'photorealCustom' | 'unknown' };
@@ -19,7 +18,6 @@ export function TodayCards({ saveId }: { saveId: string }) {
   return (
     <div className="mt-6 grid gap-4 md:grid-cols-3">
       <PressCard saveId={saveId} />
-      <GazetteCard saveId={saveId} />
       <ChallengeCard saveId={saveId} />
       <FacesCard />
     </div>
@@ -50,21 +48,6 @@ function PressCard({ saveId }: { saveId: string }) {
       <p className="font-display text-lg font-semibold leading-snug">
         {t(pending.kind === 'pre' ? 'press.page.todayPre' : 'press.page.todayPost', { opponent: pending.opponent })}
       </p>
-    </Card>
-  );
-}
-
-function GazetteCard({ saveId }: { saveId: string }) {
-  const { t } = useTranslation();
-  const { data: history = [] } = useHistory(saveId);
-  const issue = useMemo(() => gazetteIssues(history)[0] ?? null, [history]);
-  return (
-    <Card label={issue ? `${t('modes.gazette.title')} · ${t('gazette.issue', { number: issue.number })}` : t('modes.gazette.title')} to="/gazette" action={t('layout.today.read')}>
-      {issue ? (
-        <p className="font-display text-lg font-semibold leading-snug">{storyText(t, issue.club, issue.headline).title}</p>
-      ) : (
-        <p className="text-sm text-brun">{t('layout.today.noGazette')}</p>
-      )}
     </Card>
   );
 }
