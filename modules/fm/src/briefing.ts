@@ -3,6 +3,7 @@ import { moraleLevel } from './club';
 import { competitionWeight, isFriendly } from './rules';
 import type { FmPlayer } from './player';
 import type { PlaytimeRow } from './playtime';
+import type { FacedAdvice } from './formations-faced';
 import type { TacticAdvice } from './tactic-advice';
 
 /*
@@ -31,6 +32,8 @@ export type BriefKind =
   | 'tacticSwitches'
   | 'tacticRethink'
   | 'tacticPatience'
+  | 'facedCreate'
+  | 'facedConcede'
   | 'allGood';
 export type BriefTone = 'bad' | 'warn' | 'info' | 'good';
 
@@ -64,6 +67,8 @@ export interface BriefingInput {
   finances?: { signals: string[]; detail: string } | null;
   /** Garder ou changer la tactique jouée (voir `tacticAdvice`). */
   tactic?: TacticAdvice | null;
+  /** Le prochain adversaire joue un schéma contre lequel on souffre (voir `facedAdvice`). */
+  faced?: FacedAdvice | null;
 }
 
 /** Nombre de messages au plus : un briefing se lit en quelques secondes. */
@@ -150,6 +155,7 @@ export function briefing(input: BriefingInput): BriefItem[] {
     return l != null && l <= 1;
   });
   if (unhappy.length) item('unhappy', 'warn', 'dressing', unhappy);
+  if (input.faced && input.nextMatch) out.push({ kind: input.faced.kind, tone: input.faced.tone, view: 'tactic', players: [], values: { count: 0, ...input.faced.values } });
   if (input.tactic) out.push({ kind: input.tactic.kind, tone: input.tactic.tone, view: 'effectiveness', players: [], values: { count: 0, ...input.tactic.values } });
   const over = playtime.filter((r) => r.verdict === 'over').map((r) => r.player);
   if (over.length) item('playtimeOver', 'info', 'playtime', over);

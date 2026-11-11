@@ -1862,7 +1862,17 @@
       "withoutBall": "{{value}} sans ballon",
       "adjustInXi": "Les réglages concrets pour ce match (consignes d'équipe, mentalité, marquage) sont dans Le onze, sous la tactique du match.",
       "adjustLead": "Tu as lu le rapport : adapte ton onze et tes consignes pour ce match.",
-      "adjustGo": "Ajuster mon onze pour ce match"
+      "adjustGo": "Ajuster mon onze pour ce match",
+      "facedTitle": "Tes matchs selon le schéma d'en face",
+      "faced": {
+        "create": "Tu crées une occasion franche toutes les {{count}} min en moyenne. Selon le schéma adverse sans ballon :",
+        "concede": "Tu concèdes une occasion franche toutes les {{count}} min en moyenne. Selon le schéma adverse avec ballon :",
+        "next": "prochain adversaire",
+        "createBad": "tu crées peu",
+        "concedeBad": "tu concèdes beaucoup",
+        "minutes": "{{count}} min",
+        "help": "Chiffres du Centre de données du jeu (analyse des formations). Un schéma est signalé quand l'écart à ta moyenne dépasse 30 % sur au moins 270 minutes : prépare un plan B contre lui."
+      }
     },
     "memory": {
       "open": "Essai : lire la base de FM27 directement",
@@ -3092,6 +3102,8 @@
       "tacticRethink_other": "Tu perds aux xG ({{xg}} par match sur {{count}} matchs) et l'efficacité tactique stagne à {{te}} % : ce schéma ne marche pas. Essaie un autre schéma avec les consignes par défaut, puis ajuste peu à peu, sans toucher aux rôles.",
       "tacticPatience_one": "Ta tactique est en rodage (1 match) : son efficacité monte (+{{gain}}, {{te}} %). Garde-la, une tactique chargée peut mettre 20 matchs à donner sa mesure.",
       "tacticPatience_other": "Ta tactique est en rodage ({{count}} matchs) : son efficacité monte (+{{gain}}, {{te}} %). Garde-la, une tactique chargée peut mettre 20 matchs à donner sa mesure.",
+      "facedCreate": "Ton adversaire défend en {{form}}, un schéma contre lequel tu crées peu : une occasion franche toutes les {{every}} min, contre {{avg}} d'habitude ({{minutes}} min jouées). Prépare un plan B pour ce match.",
+      "facedConcede": "Ton adversaire attaque en {{form}}, un schéma contre lequel tu concèdes beaucoup : une occasion franche toutes les {{every}} min, contre {{avg}} d'habitude ({{minutes}} min jouées). Prépare un plan B défensif pour ce match.",
       "word": "Le mot de ton adjoint",
       "week": "À suivre cette semaine",
       "progressShort": "{{done}} sur {{count}} réglés",

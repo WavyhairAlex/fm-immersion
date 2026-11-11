@@ -1862,7 +1862,17 @@
       "withoutBall": "{{value}} out of possession",
       "adjustInXi": "The concrete settings for this match (team instructions, mentality, marking) are in The XI, under the match tactic.",
       "adjustLead": "Report read: adapt your XI and instructions for this match.",
-      "adjustGo": "Adjust my XI for this match"
+      "adjustGo": "Adjust my XI for this match",
+      "facedTitle": "Your matches by opposing shape",
+      "faced": {
+        "create": "You create a clear-cut chance every {{count}} min on average. By opposing out-of-possession shape:",
+        "concede": "You concede a clear-cut chance every {{count}} min on average. By opposing in-possession shape:",
+        "next": "next opponent",
+        "createBad": "you create little",
+        "concedeBad": "you concede a lot",
+        "minutes": "{{count}} min",
+        "help": "Figures from the game's Data Hub (formation analysis). A shape is flagged when the gap to your average exceeds 30% over at least 270 minutes: prepare a plan B against it."
+      }
     },
     "memory": {
       "open": "Trial: read the FM27 database directly",
@@ -3092,6 +3102,8 @@
       "tacticRethink_other": "You are losing on xG ({{xg}} per match over {{count}} matches) and tactical effectiveness is stuck at {{te}}%: this formation isn't working. Try another formation with default instructions, then tweak slowly without changing roles.",
       "tacticPatience_one": "Your tactic is still bedding in (1 match): its effectiveness is rising (+{{gain}}, {{te}}%). Keep it; a complex tactic can take 20 matches to show its worth.",
       "tacticPatience_other": "Your tactic is still bedding in ({{count}} matches): its effectiveness is rising (+{{gain}}, {{te}}%). Keep it; a complex tactic can take 20 matches to show its worth.",
+      "facedCreate": "Your opponent defends in a {{form}}, a shape you struggle to create against: one clear-cut chance every {{every}} min, versus {{avg}} usually ({{minutes}} min played). Prepare a plan B for this match.",
+      "facedConcede": "Your opponent attacks in a {{form}}, a shape you concede a lot against: one clear-cut chance every {{every}} min, versus {{avg}} usually ({{minutes}} min played). Prepare a defensive plan B for this match.",
       "word": "A word from your assistant",
       "week": "To follow this week",
       "progressShort": "{{done}} of {{count}} sorted",

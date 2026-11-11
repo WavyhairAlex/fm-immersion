@@ -4,6 +4,7 @@ import {
   briefIsDone,
   briefKey,
   briefing,
+  facedAdvice,
   clubFinances,
   financeState,
   isBriefTask,
@@ -97,9 +98,11 @@ export function FmBriefing({
     return { signals: st.signals, detail: st.signals.map((sg) => t(`fm.brief.finSignal.${sg}`, { amount: f.money(amount[sg]) })).join(', ') };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [snap, players, i18n.resolvedLanguage]);
+  // Schéma du prochain adversaire contre lequel on crée peu ou concède beaucoup (analyse des formations du jeu).
+  const faced = useMemo(() => facedAdvice(snap), [snap]);
   const items = useMemo(
-    () => briefing({ players, nextMatch: nm, starters, decisions, playtime, setupsToChange, offseason, trialists, backForMatch, congested, finances, tactic }),
-    [players, nm, starters, decisions, playtime, setupsToChange, offseason, trialists, congested, finances, tactic],
+    () => briefing({ players, nextMatch: nm, starters, decisions, playtime, setupsToChange, offseason, trialists, backForMatch, congested, finances, tactic, faced }),
+    [players, nm, starters, decisions, playtime, setupsToChange, offseason, trialists, congested, finances, tactic, faced],
   );
   const scope = useFmSaveScope();
   const [done, setDone] = useState<BriefDone>(() => readScoped<BriefDone>(DONE_KEY, { ...scope, inheritsLegacy: false }, {}));

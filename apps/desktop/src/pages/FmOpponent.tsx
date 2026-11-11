@@ -1,12 +1,13 @@
-import { opponentReport, type FmSnapshot } from '@fm-immersion/module-fm';
+import { FACED_GAP, formationFamily, MIN_MINUTES, opponentReport, ownFormations, type FacedSide, type FmSnapshot } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Empty, Kpi, Panel } from './FmUi';
+import { Empty, Kpi, Panel, Tag } from './FmUi';
 
 /** Rapport sur le prochain adversaire : profil de l'entraîneur, joueurs clés et conseils de préparation. */
 export function FmOpponent({ snap, go }: { snap: FmSnapshot; go?: (view: string) => void }) {
   const { t, i18n } = useTranslation();
   const r = useMemo(() => opponentReport(snap), [snap]);
+  const own = useMemo(() => ownFormations(snap), [snap]);
   const nf = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 2 });
   const nf0 = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 0 });
   if (!r) return <Empty>{t('fm.opp.none')}</Empty>;
@@ -74,6 +75,41 @@ export function FmOpponent({ snap, go }: { snap: FmSnapshot; go?: (view: string)
             </table>
           </div>
           <p className="mt-2 text-xs text-brun">{t('fm.opp.formsHelp')}</p>
+        </Panel>
+      )}
+      {own && (
+        <Panel title={t('fm.opp.facedTitle')}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {(
+              [
+                ['create', own.create, r.formations.oop[0]?.form ?? r.formations.ip[0]?.form ?? r.manager.formation],
+                ['concede', own.concede, r.formations.ip[0]?.form ?? r.manager.formation],
+              ] as [string, FacedSide | null, string | null | undefined][]
+            ).map(([k, sd, oppForm]) =>
+              sd ? (
+                <div key={k}>
+                  <p className="text-sm font-bold">{t(`fm.opp.faced.${k}`, { count: sd.avgEvery })}</p>
+                  <ul className="mt-1 space-y-0.5 text-sm">
+                    {sd.rows.slice(0, 6).map((row) => {
+                      const bad = row.minutes >= MIN_MINUTES && (k === 'create' ? row.ratio >= FACED_GAP : 1 / row.ratio >= FACED_GAP);
+                      const next = !!oppForm && formationFamily(oppForm) === row.form;
+                      return (
+                        <li key={row.form} className="flex items-center justify-between gap-2">
+                          <span className={next ? 'font-bold' : ''}>
+                            {row.form} {next && <Tag tone="info">{t('fm.opp.faced.next')}</Tag>} {bad && <Tag tone="warn">{t(`fm.opp.faced.${k}Bad`)}</Tag>}
+                          </span>
+                          <span className="tabular-nums text-brun">
+                            {t('fm.opp.everyMin', { count: row.every })} · {t('fm.opp.faced.minutes', { count: row.minutes })}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ) : null,
+            )}
+          </div>
+          <p className="mt-2 text-xs text-brun">{t('fm.opp.faced.help')}</p>
         </Panel>
       )}
 

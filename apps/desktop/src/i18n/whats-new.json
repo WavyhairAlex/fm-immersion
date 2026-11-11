@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.170",
+    "date": "2026-11-11",
+    "fr": [
+      "Ton adjoint te prévient quand le prochain adversaire joue un schéma contre lequel tu crées peu d'occasions ou en concèdes beaucoup, pour préparer un plan B.",
+      "L'écran Adversaire montre tes occasions créées et concédées selon le schéma d'en face. Il faut la dernière version du plugin (ou de sa configuration) pour lire ces chiffres."
+    ],
+    "en": [
+      "Your assistant warns you when the next opponent plays a shape you create few chances against or concede a lot against, so you can prepare a plan B.",
+      "The Opponent screen shows your chances created and conceded by opposing shape. You need the latest version of the plugin (or of its configuration) to read these figures."
+    ]
+  },
+  {
     "version": "0.1.169",
     "date": "2026-11-11",
     "fr": [

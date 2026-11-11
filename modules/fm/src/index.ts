@@ -82,3 +82,4 @@ export * from './press';
 export * from './match-review';
 export * from './tactic-todo';
 export * from './engine-value';
+export * from './formations-faced';
