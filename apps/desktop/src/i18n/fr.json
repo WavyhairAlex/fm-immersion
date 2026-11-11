@@ -446,7 +446,9 @@
         "title": "Le onze à appliquer dans FM27",
         "pos": "Poste",
         "player": "Joueur",
-        "backup": "Doublure"
+        "backup": "Doublure",
+        "role": "Rôle",
+        "backupOf": "Doublure : {{name}}"
       },
       "matchTitle": "Tactique du match contre {{name}}",
       "matchSame": "Ta tactique de base, {{form}} {{style}}, reste la meilleure contre cet adversaire.",
@@ -536,7 +538,7 @@
         "xi": "Onze de base",
         "match": "Contre {{name}}",
         "balance": "Équilibre et consignes",
-        "balanceFold": "Équilibre de l'équipe et consignes d'équipe, en détail"
+        "balanceFold": "Équilibre de l'équipe, en détail"
       }
     },
     "nav": "Sections de la partie",

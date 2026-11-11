@@ -446,7 +446,9 @@
         "title": "The eleven to set in FM27",
         "pos": "Position",
         "player": "Player",
-        "backup": "Backup"
+        "backup": "Backup",
+        "role": "Role",
+        "backupOf": "Backup: {{name}}"
       },
       "matchTitle": "Match tactic against {{name}}",
       "matchSame": "Your base tactic, {{form}} {{style}}, remains the best against this opponent.",
@@ -536,7 +538,7 @@
         "xi": "Base XI",
         "match": "Against {{name}}",
         "balance": "Balance and instructions",
-        "balanceFold": "Team balance and team instructions, in detail"
+        "balanceFold": "Team balance, in detail"
       }
     },
     "nav": "Save sections",
