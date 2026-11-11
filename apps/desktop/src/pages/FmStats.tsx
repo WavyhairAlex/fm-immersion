@@ -1,4 +1,4 @@
-import { hasStats, matchStatsFull, MIN_STAT_MINUTES, RAW_GROUPS, STAT_METRICS, statsBoard, statsTrends, type FmPlayer, type FmSnapshot, type PlayerStatReport, type StatKey, type PlayerTrend, type StatMark, type StatTrend } from '@fm-immersion/module-fm';
+import { firstTeamSnapshot, hasStats, matchStatsFull, normalizePlayer, seasonArchives, squadSnapshot, withAbilities, MIN_STAT_MINUTES, RAW_GROUPS, STAT_METRICS, statsBoard, statsTrends, type FmPlayer, type FmSnapshot, type PlayerStatReport, type StatKey, type PlayerTrend, type StatMark, type StatTrend } from '@fm-immersion/module-fm';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Chips, Empty, Kpi, Panel, Pos, Tag, More, PlayerLink } from './FmUi';
@@ -24,8 +24,41 @@ function Cell({ r, k }: { r: PlayerStatReport; k: StatKey }) {
   return <span className={`num-pill ${cls}`}>{txt}</span>;
 }
 
-/** Centre de données : stats de la saison par joueur, comparées dans chaque ligne, et ce qu'elles disent à travailler. */
-export function FmStats({ snap, players, history }: { snap: FmSnapshot; players: FmPlayer[]; history?: { gameDate: string; data: FmSnapshot }[] }) {
+type History = { gameDate: string; data: FmSnapshot }[];
+
+/**
+ * Centre de données, avec les saisons passées : le jeu remet les stats à zéro à chaque nouvelle saison, FM Immersion
+ * garde la dernière lecture de chacune (`seasonArchives`) et la montre ici, sans limite de saisons.
+ */
+export function FmStats({ snap, players, history }: { snap: FmSnapshot; players: FmPlayer[]; history?: History }) {
+  const { t, i18n } = useTranslation();
+  const archives = useMemo(() => seasonArchives(history ?? []), [history]);
+  const [season, setSeason] = useState('current');
+  const archive = archives.find((a) => a.gameDate === season) ?? null;
+  const archived = useMemo(
+    () => (archive ? withAbilities(firstTeamSnapshot(squadSnapshot(archive.data))).players.map(normalizePlayer) : null),
+    [archive],
+  );
+  if (!archives.length) return <FmStatsView snap={snap} players={players} history={history} />;
+  const date = (d: string) => new Intl.DateTimeFormat(i18n.resolvedLanguage, { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(d));
+  return (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <p className="text-sm font-semibold text-canard">{t('fm.stats.season.title')}</p>
+        <Chips
+          value={archive ? archive.gameDate : 'current'}
+          options={[['current', t('fm.stats.season.current')], ...archives.map((a): [string, string] => [a.gameDate, `${a.label} · ${a.club}`])]}
+          onChange={setSeason}
+        />
+        {archive && <p className="text-xs text-brun">{t('fm.stats.season.frozen', { label: archive.label, club: archive.club, date: date(archive.gameDate) })}</p>}
+      </div>
+      {archive && archived ? <FmStatsView key={archive.gameDate} snap={archive.data} players={archived} /> : <FmStatsView snap={snap} players={players} history={history} />}
+    </div>
+  );
+}
+
+/** Stats d'une saison par joueur, comparées dans chaque ligne, et ce qu'elles disent à travailler. */
+function FmStatsView({ snap, players, history }: { snap: FmSnapshot; players: FmPlayer[]; history?: History }) {
   const { t, i18n } = useTranslation();
   // Lecture incomplète du plugin (aucun cumul dans le dernier instantané) : on montre la dernière lecture complète.
   const stale = useMemo(() => {
