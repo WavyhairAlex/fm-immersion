@@ -93,6 +93,7 @@
       "status": "Status",
       "starsHelp": "Current / potential ability stars according to your staff",
       "compat": "Project",
+      "engine": "Engine",
       "reach": "Reach",
       "apps": "Apps",
       "goals": "Goals",
@@ -235,7 +236,7 @@
       "offPos": "outside natural position (accomplished)",
       "fromTeam": "from {{team}}",
       "nobody": "Nobody",
-      "pitchHelp": "Eleven picked by fit to the style's roles, injured players left out. Dotted lines show the move from the other phase; hover a player to find them in the list.",
+      "pitchHelp": "Eleven picked by fit to the style's roles, injured players left out. Hover a player: an amber line shows where they start from in the other phase, and their row lights up in the list.",
       "balance": "Team balance",
       "balanceHelp": "Pace, pressing and aerial play are compared to your eleven's average level: green = strength, red = weakness. Each weakness lowers the team rating, which picks the formation and style: the eleven is judged as a whole, not only position by position.",
       "forms": "Formations for this style",
@@ -302,7 +303,7 @@
       "fromGame": "Game line-up",
       "fromGameHelp": "Players and positions read from your FM27 tactic. Roles and instructions: the game's when the plugin reads them, otherwise each player's best role in that position.",
       "suggestedHelpGame": "Placement computed by FM Immersion for the chosen style. “My FM27 tactic” shows your real line-up.",
-      "pitchHelpGame": "Your FM27 line-up. Dotted lines show the move from the other phase; hover a player to find them in the list. Click a formation below to compare with an eleven worked out by FM Immersion.",
+      "pitchHelpGame": "Your FM27 line-up. Hover a player: an amber line shows where they start from in the other phase, and their row lights up in the list. Click a formation below to compare with an eleven worked out by FM Immersion.",
       "lineupStatus": "Plugin line-up reading: {{status}}.",
       "duty": {
         "d": "Defend",
@@ -448,7 +449,12 @@
         "player": "Player",
         "backup": "Backup",
         "role": "Role",
-        "backupOf": "Backup: {{name}}"
+        "backupOf": "Backup: {{name}}",
+        "phaseLabel": "Phase shown",
+        "phaseHelp": {
+          "ip": "Where each player stands when your team has the ball. The label stays the position to set in FM27.",
+          "oop": "Where each player stands when the opponent has the ball. The label stays the position to set in FM27."
+        }
       },
       "matchTitle": "Match tactic against {{name}}",
       "matchSame": "Your base tactic, {{form}} {{style}}, remains the best against this opponent.",
@@ -1910,8 +1916,6 @@
         "incomeSub": "value of players to sell · wages freed: {{wages}}",
         "prospects": "Youngsters worth keeping",
         "prospectsSub": "{{loan}} of them to loan out",
-        "extend": "Contracts to renew",
-        "extendSub": "within a year of expiry: starters below, promising youngsters under \"Youngsters\"",
         "off": "Off project",
         "offSub": "profiles that don't suit the target style"
       },
@@ -1973,7 +1977,19 @@
         "offProject": "profile off the game plan",
         "loanIn": "on loan with us: counts this season, no sale or extension"
       },
-      "stayNoYouth": "Players aged 21 or under are in their own panel above."
+      "stayNoYouth": "Players aged 21 or under are in their own panel above.",
+      "moves": {
+        "title": "Moves to decide",
+        "move": "Move",
+        "who": "Player or position",
+        "status": "Status",
+        "arrival": "Signing",
+        "departure": "Departure",
+        "loan": "Loan",
+        "extension": "Extension",
+        "until": "contract until {{date}}",
+        "help": "The detail of each line (profile to look for, price, replacement) is further down. Nothing is done in the game: you decide."
+      }
     },
     "stats": {
       "stale": "The plugin could not read the stats on its last pass: these are from {{date}}. They will come back with the next full read (leave the game a few seconds on a quiet screen, or restart FM27).",
@@ -3299,6 +3315,17 @@
     "secondary": {
       "numbers": "Shirt numbers",
       "loans": "Players out on loan"
+    },
+    "engine": {
+      "badge": "Engine {{index}}",
+      "title": "Engine index {{index}}: a whole XI with this profile would win about {{index}} percentage points more matches than an XI with 12 everywhere (FM27 attribute tests, a trend).",
+      "strengths": "Strengths: {{list}}",
+      "weaknesses": "Costs matches: {{list}}",
+      "belowMin": "Below the minimum of 6: {{list}}",
+      "heading": "Engine index",
+      "help": "What his attributes really weigh in the FM27 match engine, according to FM-Arena community tests (November 2026): pace, acceleration and stamina matter most, jumping reach above 12, and he needs at least 6 in work rate, anticipation, strength, balance, concentration and natural fitness. A trend from a single series of tests, not the game's rating: the stars remain FM27's.",
+      "none": "Nothing notable.",
+      "gk": "Goalkeepers are not covered by these tests."
     }
   },
   "modes": {
@@ -3609,6 +3636,15 @@
       "moving": "Moving…",
       "copying": "Copying to the other drive: {{done}} of {{total}}",
       "hint": "Type a full path on the drive of your choice (for example D:\\FM Immersion\\photos). What is already downloaded is moved, nothing needs to be redone. Pick an empty or new folder: \"Delete everything\" will erase it entirely."
+    },
+    "hero": {
+      "eyebrow": "Photo library",
+      "last": "Latest photo: {{date}}",
+      "none": "No photo yet",
+      "missing": "Engine to download (about 34 GB), on your PC.",
+      "partial": "Engine download in progress or interrupted.",
+      "downloaded": "Engine downloaded, it still needs installing.",
+      "ready": "Engine ready: photos go into the gazette and news flashes."
     }
   },
   "gazette": {
@@ -4020,10 +4056,6 @@
     "privacy": "The link stays on your PC. FM Immersion sends nothing to Discord without your click, and only to Discord's webhook address.",
     "status": {
       "title": "What is connected",
-      "liveOn": "Live matches on",
-      "liveOff": "Live matches off",
-      "autoOn": "Automatic gazette on",
-      "autoOff": "Automatic gazette off",
       "aiOn": "Texts written by AI ({{model}}).",
       "aiOff": "Ready-made texts (AI writing off).",
       "lastSent": "Last gazette sent on its own: No. {{number}}, on {{date}}.",
@@ -4079,6 +4111,17 @@
       "off": "The gazette and breaking news keep the portrait.",
       "manual": "In \"Gazette & Discord\", a button makes the photo before sending; automatic sending goes out with the portrait. The image engine must be installed:",
       "auto": "Nothing to do: the app makes the photos by itself as soon as a front page or breaking news exists (two to four minutes each), and you discover them in the gazette. It waits if your graphics card is already used by other software; portrait if a photo fails. The image engine must be installed:"
+    },
+    "table": {
+      "what": "Post",
+      "mode": "Sending",
+      "live": "Live coverage of your matches",
+      "gazette": "Weekly gazette",
+      "breaking": "News flashes",
+      "on": "On",
+      "off": "Off",
+      "auto": "Automatic",
+      "manual": "On your click"
     }
   },
   "live": {
@@ -5256,7 +5299,6 @@
   },
   "press": {
     "page": {
-      "intro": "Before a big match and after every competitive game, journalists ask three questions about your save. Pick a tone or write your own answer: the week's gazette will quote you.",
       "pre": "Pre-match · {{opponent}}",
       "post": "Post-match · {{opponent}}",
       "date": "Match on {{date}}",
@@ -5276,7 +5318,8 @@
       "todayPre": "Pre-match press conference before {{opponent}}.",
       "todayPost": "Post-match press conference after {{opponent}}.",
       "go": "Answer",
-      "formLetters": "WDL"
+      "formLetters": "WDL",
+      "heroText": "Journalists are waiting for your answers. This week's gazette will quote you."
     },
     "tones": {
       "confident": "Confident",

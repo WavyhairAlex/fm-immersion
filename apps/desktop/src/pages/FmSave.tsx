@@ -2,6 +2,7 @@ import { GameCompatBanner, GameCompatCard } from '../components/GameCompat';
 import { AiSettingsCard } from '../components/AiSettingsCard';
 import {
   buildProject,
+  engineValue,
   isUnwanted,
   monthsBetween,
   moraleLevel,
@@ -73,7 +74,7 @@ import { FmTactic, ReserveContext, useTacticEngine } from './FmTactic';
 import { FmTargets } from './FmTargets';
 import { FmTraining } from './FmTraining';
 import { FmWages } from './FmWages';
-import { CompatTag, GradeLetter, HelpHost, PlayerLink, PlayerSheetContext, useCoach, type SheetFocus } from './FmUi';
+import { CompatTag, EngineTag, GradeLetter, HelpHost, PlayerLink, PlayerSheetContext, useCoach, type SheetFocus } from './FmUi';
 import { FmPlayerSheet } from './FmPlayerSheet';
 
 const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
@@ -669,14 +670,14 @@ function ViewHeader({ view, part }: { view: string; part: string }) {
   );
 }
 
-/** Effectif : vue terrain (par poste) ou tableau détaillé ; le choix est gardé d'une visite à l'autre. */
+/** Effectif : tableau détaillé (par défaut, comme la maquette) ou vue terrain par poste ; le choix est gardé d'une visite à l'autre. */
 function SquadViews({ players, folder, gameDate }: { players: FmPlayer[]; folder: string; gameDate: string }) {
   const { t } = useTranslation();
   const [mode, setMode] = useState<'pitch' | 'table'>(() => {
     try {
-      return localStorage.getItem('fmi.squadView') === 'table' ? 'table' : 'pitch';
+      return localStorage.getItem('fmi.squadView') === 'pitch' ? 'pitch' : 'table';
     } catch {
-      return 'pitch';
+      return 'table';
     }
   });
   const choose = (m: 'pitch' | 'table') => {
@@ -690,7 +691,7 @@ function SquadViews({ players, folder, gameDate }: { players: FmPlayer[]; folder
   return (
     <div className="space-y-3">
       <div className="flex gap-1" role="tablist" aria-label={t('fm.squadPitch.label')}>
-        {(['pitch', 'table'] as const).map((k) => (
+        {(['table', 'pitch'] as const).map((k) => (
           <button
             key={k}
             type="button"
@@ -708,7 +709,7 @@ function SquadViews({ players, folder, gameDate }: { players: FmPlayer[]; folder
   );
 }
 
-type SortKey = 'name' | 'age' | 'level' | 'grade' | 'condition' | 'contractEnd' | 'wage' | 'apps' | 'goals' | 'avgRating';
+type SortKey = 'name' | 'age' | 'level' | 'grade' | 'engine' | 'condition' | 'contractEnd' | 'wage' | 'apps' | 'goals' | 'avgRating';
 
 function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder: string; gameDate: string }) {
   const { t, i18n } = useTranslation();
@@ -719,6 +720,8 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
     const list = players.filter((p) => Object.keys(p.attributes).length);
     return compatMap(engine, buildProject(engine, list, coach), list);
   }, [engine, players, coach]);
+  // Indice moteur (tests d'attributs FM27) de chaque joueur de champ.
+  const engineVals = useMemo(() => new Map(players.map((p) => [p.id, engineValue(p)])), [players]);
   const [line, setLine] = useState<Line | null>(null);
   // Filtre par note de projet (A à E) : une lettre à la fois, un second clic l'enlève.
   const [letter, setLetter] = useState<PlanLetter | null>(null);
@@ -748,7 +751,7 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
     const byLine = line ? players.filter((p) => p.line === line) : players;
     const byLetter = letter ? byLine.filter((p) => compat.get(p.id)?.grade.letter === letter) : byLine;
     const list = watch ? byLetter.filter(watched) : byLetter;
-    const val = (p: FmPlayer) => (sort.key === 'grade' ? (compat.get(p.id)?.grade.score ?? null) : p[sort.key]);
+    const val = (p: FmPlayer) => (sort.key === 'grade' ? (compat.get(p.id)?.grade.score ?? null) : sort.key === 'engine' ? (engineVals.get(p.id)?.index ?? null) : p[sort.key]);
     return [...list].sort((a, b) => {
       const x = val(a);
       const y = val(b);
@@ -757,7 +760,7 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
       const c = typeof x === 'string' ? x.localeCompare(String(y)) : x - (y as number);
       return sort.desc ? -c : c;
     });
-  }, [players, line, sort, watch, gameDate, letter, compat]);
+  }, [players, line, sort, watch, gameDate, letter, compat, engineVals]);
 
   const head = (key: SortKey, label: string, help?: string) => (
     <th className="whitespace-nowrap px-3 py-2 text-left" title={help}>
@@ -825,6 +828,7 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
               {head('age', t('fm.col.age'))}
               {head('level', t('fm.col.level'))}
               {head('grade', t('fm.col.compat'), t('fm.compat.help'))}
+              {head('engine', t('fm.col.engine'), t('fm.engine.help'))}
               {head('condition', t('fm.col.condition'))}
               {head('apps', t('fm.col.apps'))}
               {head('goals', t('fm.col.goals'))}
@@ -850,15 +854,7 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
                       </span>
                     )}
                   </td>
-                  <td className="px-3 py-1.5">
-                    <span className="flex flex-wrap gap-1">
-                      {p.positionsLabel.split(', ').map((pos) => (
-                        <span key={pos} className="pill whitespace-nowrap">
-                          {pos}
-                        </span>
-                      ))}
-                    </span>
-                  </td>
+                  <td className="min-w-[8rem] max-w-[11rem] px-3 py-1.5 text-brun">{p.positionsLabel.replace(/ \(/g, '\u00a0(')}</td>
                   <td className="px-3 py-1.5 tabular-nums">{p.age ?? '–'}</td>
                   <td className="whitespace-nowrap px-3 py-1.5 font-bold tabular-nums">
                     {p.level != null ? nf1.format(p.level) : '–'}
@@ -871,6 +867,9 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
                   </td>
                   <td className="px-3 py-1.5 text-center">
                     <CompatTag c={compat.get(p.id)} compact />
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-1.5">
+                    <EngineTag v={engineVals.get(p.id)} />
                   </td>
                   <td className={`px-3 py-1.5 tabular-nums ${p.condition != null && p.condition < 85 ? 'font-bold text-corail' : ''}`}>{p.condition != null ? `${Math.round(p.condition)} %` : '–'}</td>
                   <td className="px-3 py-1.5 tabular-nums">{p.apps ?? '–'}</td>

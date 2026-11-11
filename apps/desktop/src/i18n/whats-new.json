@@ -1,5 +1,67 @@
 [
   {
+    "version": "0.1.170",
+    "date": "2026-11-11",
+    "fr": [
+      "Ton adjoint te prévient quand le prochain adversaire joue un schéma contre lequel tu crées peu d'occasions ou en concèdes beaucoup, pour préparer un plan B.",
+      "L'écran Adversaire montre tes occasions créées et concédées selon le schéma d'en face. Il faut la dernière version du plugin (ou de sa configuration) pour lire ces chiffres."
+    ],
+    "en": [
+      "Your assistant warns you when the next opponent plays a shape you create few chances against or concede a lot against, so you can prepare a plan B.",
+      "The Opponent screen shows your chances created and conceded by opposing shape. You need the latest version of the plugin (or of its configuration) to read these figures."
+    ]
+  },
+  {
+    "version": "0.1.169",
+    "date": "2026-11-11",
+    "fr": [
+      "Effectif s'ouvre sur le tableau des joueurs, avec les postes écrits simplement ; le terrain reste à un clic.",
+      "Résultats montre tes matchs juste sous le bilan, l'analyse vient ensuite.",
+      "Mercato commence par un tableau « Mouvements à décider » : arrivées, départs, prêts et prolongations en un coup d'œil."
+    ],
+    "en": [
+      "Squad opens on the player table, with positions written plainly; the pitch view is one click away.",
+      "Results shows your matches right under the summary, the analysis comes next.",
+      "Transfers starts with a \"Moves to decide\" table: signings, departures, loans and extensions at a glance."
+    ]
+  },
+  {
+    "version": "0.1.168",
+    "date": "2026-11-11",
+    "fr": [
+      "Ma carrière, Presse, Visages et Photos s'ouvrent sur un grand bandeau : ton club et ta saison avec ta photo de coach, la conférence qui t'attend, l'état de ton pack de visages, ta dernière photo de situation.",
+      "Live Discord montre en un petit tableau ce qui part dans ton salon : le direct de tes matchs, la gazette, les dépêches, et si c'est automatique ou sur ton clic."
+    ],
+    "en": [
+      "My career, Press, Faces and Photos open on a large banner: your club and season with your coach photo, the press conference waiting for you, the state of your faces pack, your latest situation photo.",
+      "Live Discord shows in a small table what goes to your channel: live coverage of your matches, the gazette, news flashes, and whether it is automatic or on your click."
+    ]
+  },
+  {
+    "version": "0.1.167",
+    "date": "2026-11-11",
+    "fr": [
+      "Tactique : le terrain du onze est plus grand et plus net. Chaque joueur a son poste à la couleur de sa ligne et son nom, et le trait de déplacement n'apparaît plus que pour le joueur que tu survoles.",
+      "Le choix « Avec ballon » ou « Sans ballon » est en haut, avec une phrase qui dit ce que tu regardes. La liste du onze est rangée du gardien aux attaquants."
+    ],
+    "en": [
+      "Tactics: the XI pitch is bigger and cleaner. Each player shows their position in their line's colour and their name, and the movement line only appears for the player you hover.",
+      "The \"In possession\" / \"Out of possession\" switch sits at the top, with a sentence saying what you are looking at. The XI list runs from goalkeeper to strikers."
+    ]
+  },
+  {
+    "version": "0.1.166",
+    "date": "2026-11-11",
+    "fr": [
+      "Nouvel « indice moteur » dans l'effectif, la fiche joueur, le mercato et la recherche de remplaçant : il dit ce que les attributs d'un joueur pèsent vraiment dans les matchs de FM27, d'après les tests de la communauté (vitesse, accélération et endurance d'abord).",
+      "La fiche joueur montre ses atouts, ce qui lui coûte des matchs et les attributs sous le minimum de 6."
+    ],
+    "en": [
+      "New \"engine index\" in the squad, player sheet, transfers and replacement search: it shows what a player's attributes really weigh in FM27 matches, according to community tests (pace, acceleration and stamina first).",
+      "The player sheet shows his strengths, what costs matches and the attributes below the minimum of 6."
+    ]
+  },
+  {
     "version": "0.1.164",
     "date": "2026-11-11",
     "fr": [

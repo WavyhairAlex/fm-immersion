@@ -57,9 +57,29 @@ export function Discord() {
           aria-label={t('discord.status.title')}
         >
           <p className="text-xs font-bold uppercase tracking-wide text-brun">{t('discord.status.title')}</p>
-          <p className="mt-1 font-extrabold text-eau-fonce">
-            {[t(live ? 'discord.status.liveOn' : 'discord.status.liveOff'), t(auto ? 'discord.status.autoOn' : 'discord.status.autoOff')].join(' · ')}
-          </p>
+          {/* Tableau de la maquette : chaque publication et sa diffusion. */}
+          <table className="mt-2 w-full text-left text-sm">
+            <thead>
+              <tr className="text-xs uppercase text-brun">
+                <th className="py-1.5 font-bold">{t('discord.table.what')}</th>
+                <th className="py-1.5 font-bold">{t('discord.table.mode')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(
+                [
+                  ['live', live ? 'on' : 'off'],
+                  ['gazette', auto ? 'auto' : 'manual'],
+                  ['breaking', breaking ? 'auto' : 'manual'],
+                ] as const
+              ).map(([k, mode]) => (
+                <tr key={k} className="border-t border-canard/10">
+                  <td className="py-1.5 font-bold">{t(`discord.table.${k}`)}</td>
+                  <td className={`py-1.5 ${mode === 'off' || mode === 'manual' ? 'text-brun' : 'font-bold text-eau-fonce'}`}>{t(`discord.table.${mode}`)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
           <p className="mt-1 text-sm text-brun">{ai ? t('discord.status.aiOn', { model: ai.model }) : t('discord.status.aiOff')}</p>
           {(auto || breaking) && <AutoState />}
         </section>

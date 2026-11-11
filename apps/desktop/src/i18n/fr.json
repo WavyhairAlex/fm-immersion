@@ -93,6 +93,7 @@
       "status": "Statut",
       "starsHelp": "Étoiles de niveau actuel / potentiel selon ton staff",
       "compat": "Projet",
+      "engine": "Moteur",
       "reach": "Portée",
       "apps": "Matchs",
       "goals": "Buts",
@@ -235,7 +236,7 @@
       "offPos": "hors poste naturel (accompli)",
       "fromTeam": "de {{team}}",
       "nobody": "Personne",
-      "pitchHelp": "Onze choisi par adéquation aux rôles du style, blessés exclus. Les pointillés montrent le déplacement depuis l'autre phase ; survole un joueur pour le retrouver dans la liste.",
+      "pitchHelp": "Onze choisi par adéquation aux rôles du style, blessés exclus. Survole un joueur : un trait ambre montre d'où il part dans l'autre phase, et sa ligne s'allume dans la liste.",
       "balance": "Équilibre de l'équipe",
       "balanceHelp": "Vitesse, pressing et jeu aérien sont comparés au niveau moyen de ton onze : vert = point fort, rouge = point faible. Chaque point faible baisse la note d'équipe, qui choisit le schéma et le style : le calcul juge le onze dans son ensemble, pas seulement poste par poste.",
       "forms": "Schémas pour ce style",
@@ -302,7 +303,7 @@
       "fromGame": "Compo du jeu",
       "fromGameHelp": "Joueurs et postes lus dans ta tactique FM27. Rôles et consignes : ceux du jeu quand le plugin les lit, sinon le meilleur rôle de chaque joueur à son poste.",
       "suggestedHelpGame": "Placement calculé par FM Immersion selon le style choisi. « Ma tactique FM27 » affiche ta vraie compo.",
-      "pitchHelpGame": "Ta compo FM27. Les pointillés montrent le déplacement depuis l'autre phase ; survole un joueur pour le retrouver dans la liste. Clique un schéma plus bas pour comparer avec un onze calculé par FM Immersion.",
+      "pitchHelpGame": "Ta compo FM27. Survole un joueur : un trait ambre montre d'où il part dans l'autre phase, et sa ligne s'allume dans la liste. Clique un schéma plus bas pour comparer avec un onze calculé par FM Immersion.",
       "lineupStatus": "Lecture de la compo par le plugin : {{status}}.",
       "duty": {
         "d": "Défense",
@@ -448,7 +449,12 @@
         "player": "Joueur",
         "backup": "Doublure",
         "role": "Rôle",
-        "backupOf": "Doublure : {{name}}"
+        "backupOf": "Doublure : {{name}}",
+        "phaseLabel": "Phase de jeu montrée",
+        "phaseHelp": {
+          "ip": "Où chacun se place quand ton équipe a le ballon. L'étiquette reste le poste à régler dans FM27.",
+          "oop": "Où chacun se place quand l'adversaire a le ballon. L'étiquette reste le poste à régler dans FM27."
+        }
       },
       "matchTitle": "Tactique du match contre {{name}}",
       "matchSame": "Ta tactique de base, {{form}} {{style}}, reste la meilleure contre cet adversaire.",
@@ -1910,8 +1916,6 @@
         "incomeSub": "valeur des joueurs à vendre · salaires libérés : {{wages}}",
         "prospects": "Jeunes qui valent le coup",
         "prospectsSub": "dont {{loan}} à prêter",
-        "extend": "Contrats à prolonger",
-        "extendSub": "à moins d'un an de la fin : titulaires ci-dessous, jeunes prometteurs dans « Les jeunes »",
         "off": "Hors projet",
         "offSub": "profils qui ne collent pas au style visé"
       },
@@ -1973,7 +1977,19 @@
         "offProject": "profil hors projet de jeu",
         "loanIn": "prêté chez nous : il compte cette saison, ni vente ni prolongation"
       },
-      "stayNoYouth": "Les jeunes de 21 ans ou moins sont dans leur cadre plus haut."
+      "stayNoYouth": "Les jeunes de 21 ans ou moins sont dans leur cadre plus haut.",
+      "moves": {
+        "title": "Mouvements à décider",
+        "move": "Mouvement",
+        "who": "Joueur ou poste",
+        "status": "Situation",
+        "arrival": "Arrivée",
+        "departure": "Départ",
+        "loan": "Prêt",
+        "extension": "Prolongation",
+        "until": "contrat jusqu'au {{date}}",
+        "help": "Le détail de chaque ligne (profil à chercher, prix, remplaçant) est plus bas. Rien n'est fait dans le jeu : c'est toi qui décides."
+      }
     },
     "stats": {
       "stale": "Le plugin n'a pas pu lire les stats à la dernière lecture : tu vois celles du {{date}}. Elles reviendront à la prochaine lecture complète (laisse le jeu quelques secondes sur un écran calme, ou relance FM27).",
@@ -3299,6 +3315,17 @@
     "secondary": {
       "numbers": "Numéros de maillot",
       "loans": "Joueurs prêtés"
+    },
+    "engine": {
+      "badge": "Moteur {{index}}",
+      "title": "Indice moteur {{index}} : un onze entier de ce profil gagnerait environ {{index}} points de % de matchs en plus qu'un onze à 12 partout (tests d'attributs FM27, une tendance).",
+      "strengths": "Atouts : {{list}}",
+      "weaknesses": "Coûte des matchs : {{list}}",
+      "belowMin": "Sous le minimum de 6 : {{list}}",
+      "heading": "Indice moteur",
+      "help": "Ce que ses attributs pèsent vraiment dans le moteur de match de FM27, d'après les tests de la communauté FM-Arena (novembre 2026) : vitesse, accélération et endurance comptent le plus, la détente au-dessus de 12, et il faut au moins 6 en volume de jeu, anticipation, puissance, équilibre, concentration et condition physique. Une tendance tirée d'une seule série de tests, pas la note du jeu : les étoiles restent celles de FM27.",
+      "none": "Rien de marquant.",
+      "gk": "Les gardiens ne sont pas couverts par ces tests."
     }
   },
   "modes": {
@@ -3609,6 +3636,15 @@
       "moving": "Déplacement…",
       "copying": "Copie vers l'autre disque : {{done}} sur {{total}}",
       "hint": "Tape un chemin complet sur le disque de ton choix (par exemple D:\\FM Immersion\\photos). Ce qui est déjà téléchargé est déplacé, rien n'est à refaire. Donne un dossier vide ou nouveau : « Tout supprimer » l'effacera entièrement."
+    },
+    "hero": {
+      "eyebrow": "Photothèque",
+      "last": "Dernière photo : {{date}}",
+      "none": "Pas encore de photo",
+      "missing": "Moteur à télécharger (environ 34 Go), sur ton PC.",
+      "partial": "Téléchargement du moteur en cours ou interrompu.",
+      "downloaded": "Moteur téléchargé, il reste à l'installer.",
+      "ready": "Moteur prêt : les photos vont dans la gazette et les dépêches."
     }
   },
   "gazette": {
@@ -4020,10 +4056,6 @@
     "privacy": "Le lien reste sur ton PC. FM Immersion n'envoie rien à Discord sans ton clic, et seulement vers l'adresse des webhooks de Discord.",
     "status": {
       "title": "Ce qui est branché",
-      "liveOn": "Direct des matchs activé",
-      "liveOff": "Direct des matchs désactivé",
-      "autoOn": "Gazette automatique activée",
-      "autoOff": "Gazette automatique désactivée",
       "aiOn": "Textes rédigés par l’IA ({{model}}).",
       "aiOff": "Textes tout faits (rédaction par IA coupée).",
       "lastSent": "Dernière gazette partie toute seule : n° {{number}}, le {{date}}.",
@@ -4079,6 +4111,17 @@
       "off": "La gazette et les dépêches gardent le portrait.",
       "manual": "Dans « Gazette et Discord », un bouton fait la photo avant l'envoi ; l'envoi automatique part avec le portrait. Il faut le moteur d'images installé :",
       "auto": "Tu n'as rien à faire : l'appli fait les photos toute seule dès qu'une une ou une dépêche existe (deux à quatre minutes chacune), et tu les découvres dans la gazette. Elle attend si ta carte graphique est déjà prise par un autre logiciel ; portrait si une photo échoue. Il faut le moteur d'images installé :"
+    },
+    "table": {
+      "what": "Publication",
+      "mode": "Diffusion",
+      "live": "Direct de tes matchs",
+      "gazette": "Gazette de la semaine",
+      "breaking": "Dépêches",
+      "on": "Activée",
+      "off": "Coupée",
+      "auto": "Automatique",
+      "manual": "Sur ton clic"
     }
   },
   "live": {
@@ -5256,7 +5299,6 @@
   },
   "press": {
     "page": {
-      "intro": "Avant une affiche et après chaque match officiel, les journalistes posent trois questions sur ta partie. Choisis un ton ou écris ta propre réponse : la gazette de la semaine te citera.",
       "pre": "Avant-match · {{opponent}}",
       "post": "Après-match · {{opponent}}",
       "date": "Match du {{date}}",
@@ -5276,7 +5318,8 @@
       "todayPre": "Conférence d'avant-match contre {{opponent}}.",
       "todayPost": "Conférence d'après-match contre {{opponent}}.",
       "go": "Répondre",
-      "formLetters": "VND"
+      "formLetters": "VND",
+      "heroText": "Les journalistes attendent tes réponses. La gazette de la semaine te citera."
     },
     "tones": {
       "confident": "Confiant",
