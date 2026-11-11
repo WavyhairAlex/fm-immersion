@@ -1,6 +1,7 @@
 import type { FmPlayer } from './player';
 import type { PosCode } from './positions';
 import { POSITION_OPTIONS_OFF, ROLE_LOCKS_FM27, type GamePos, type RoleLockEntry } from './instruction-locks-fm27';
+import { LEGACY_PI, piKeyGroup } from './player-instructions-fm27';
 import { INVERTED, attrOf, avg, footInfo, sideOf, slotContexts, styleBlock, type Phase, type SlotCtx, type RoleRef, type Slot, type StyleRef, type TacticEngine } from './tactic';
 
 /*
@@ -207,6 +208,24 @@ export function roleImposes(r: RoleRef | undefined, id: InstructionId, pos?: Pos
 /** Ce qu'un rôle permet (au poste donné) : la consigne n'est ni refusée ni déjà imposée. */
 export const roleAllows = (r: RoleRef | undefined, id: InstructionId, pos?: PosCode, x?: number) => !roleLocks(r, pos, x).blocked.includes(id);
 
+/* ---------- Consignes conseillées face à celles réglées dans le jeu ---------- */
+
+/** Clé du jeu (« Groupe:Option », libellé de l'écran de FM27) d'une consigne conseillée ; null si FM27 n'a pas cette consigne. */
+export const instructionKey = (id: InstructionId): string | null => LEGACY_PI[id] ?? null;
+
+/**
+ * Où en est une consigne conseillée dans la tactique du jeu : déjà réglée (`done`), réglée à l'inverse dans le
+ * même groupe (`conflict` : « Dribblez moins » alors qu'on conseille de dribbler plus), ou à ajouter (`todo`).
+ * `keys` : consignes du joueur lues dans le jeu, choisies par lui ou imposées par le rôle.
+ */
+export function instructionState(id: InstructionId, keys: readonly string[]): { state: 'done' | 'conflict' | 'todo'; other?: string } {
+  const key = instructionKey(id);
+  if (!key) return { state: 'todo' };
+  if (keys.includes(key)) return { state: 'done' };
+  const other = keys.find((k) => piKeyGroup(k) === piKeyGroup(key));
+  return other ? { state: 'conflict', other } : { state: 'todo' };
+}
+
 /* ---------- Choix des consignes ---------- */
 
 const POSSESSION = new Set(['possession', 'tikitaka', 'tikitaka-v']);
@@ -312,7 +331,8 @@ export const MAX_PER_PLAYER = 3;
 
 function pick(wanted: PlayerInstruction[], ipRole: RoleRef | undefined, oopRole: RoleRef | undefined, engine: TacticEngine, slot: Slot, maxIp: number, maxOop: number, ctx: SlotCtx, max = MAX_PER_PLAYER): PlayerAdvice {
   const seen = new Set<string>();
-  const sorted = [...wanted].sort((x, y) => y.weight - x.weight).filter((x) => !seen.has(x.id) && !!seen.add(x.id));
+  // Seules les consignes qui existent à l'écran de FM27 : « centrer plus souvent » ou « ralentir le jeu » n'y sont plus.
+  const sorted = [...wanted].sort((x, y) => y.weight - x.weight).filter((x) => !!instructionKey(x.id) && !seen.has(x.id) && !!seen.add(x.id));
   const list: PlayerInstruction[] = [];
   const switches: RoleSwitch[] = [];
   for (const x of sorted) {

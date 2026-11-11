@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.1.154",
+    "date": "2026-11-11",
+    "fr": [
+      "Mon onze : l'adjoint donne son avis sur ton onze. Un rôle qui irait mieux à un joueur, un remplaçant meilleur que le titulaire, un joueur laissé sur le banc pour sa forme, et quoi faire à un poste sans doublure (qui peut glisser, qui monter des jeunes).",
+      "Les consignes d'équipe sont jugées sur la tactique que tu joues vraiment dans FM27 : une ligne trop haute pour ta défense, un pressing trop gourmand pour ton groupe ou un bloc étiré sont signalés, chiffres à l'appui.",
+      "Les consignes individuelles sont comparées à celles réglées dans le jeu : déjà faite, à ajouter, ou réglée à l'inverse. Leur nombre suit la compréhension tactique de ton groupe."
+    ],
+    "en": [
+      "My XI: your assistant now reviews your lineup. A role that would suit a player better, a substitute better than the starter, a player left out because of his form, and what to do at a position with no backup (who can move across, who to call up from the youth team).",
+      "Team instructions are judged on the tactic you really play in FM27: a line too high for your defence, pressing too demanding for your squad or a stretched block are flagged, with the numbers.",
+      "Player instructions are compared with those set in the game: already done, to add, or set the opposite way. How many you get follows your squad's tactical understanding."
+    ]
+  },
+  {
     "version": "0.1.153",
     "date": "2026-11-11",
     "fr": [
