@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pendingConference, postMatchConference, preMatchConference, type FmSnapshot, type GazetteStory } from '../src';
+import { answerTones, pendingConference, postMatchConference, preMatchConference, type FmSnapshot, type GazetteStory } from '../src';
 
 type P = { id: string; name?: string; min: number; starts: number; tg: number; tc: number; goals?: number; injury?: string };
 
@@ -93,9 +93,75 @@ describe('conférences dans la gazette', () => {
       { kind: 'pre', matchDate: '2026-10-14', opponent: 'Genk', questions: [], answers: [] },
     ]);
     expect(out[0]!.stories).toEqual([
-      { kind: 'press', weight: 45, params: { moment: 'post', opponent: 'Eupen', quote: 'Diallo a été immense ce soir.', topic: 'hero', question: 'Q2' } },
+      { kind: 'press', weight: 45, params: { moment: 'post', opponent: 'Eupen', quote: 'Diallo a été immense ce soir.', topic: 'hero', question: 'Q2', tone: null, outlet: null, reporter: null } },
     ]);
     expect(out[1]!.stories[0]!.params.quote).toBeNull();
     expect(withPress(issues, [])).toBe(issues);
+  });
+});
+
+describe('conférences variées', () => {
+  it('chaque question vient d’une rédaction différente, avec toujours le même journaliste pour le club', () => {
+    const c = postMatchConference(history)!;
+    const outlets = c.questions.map((q) => q.outlet);
+    expect(new Set(outlets).size).toBe(outlets.length);
+    expect(c.questions.every((q) => q.reporter)).toBe(true);
+    const again = postMatchConference(history)!;
+    expect(again.questions).toEqual(c.questions);
+  });
+
+  it('parle de la vie du club : contrat qui finit, joueur au moral en berne, ancien club en face', () => {
+    const old = snap('2026-08-01', [{ id: 'gk', min: 0, starts: 0, tg: 0, tc: 0 }]);
+    const oldClub = { ...old, club: 'Eupen' } as FmSnapshot;
+    const players = [
+      { id: 'gk', min: 90, starts: 1, tg: 1, tc: 1 },
+      { id: 'st', name: 'Diallo', min: 90, starts: 1, tg: 1, tc: 1, goals: 1 },
+    ];
+    const b = snap('2026-10-18', players, {}, { nextMatch: { opponent: 'Eupen', competition: 'Pro League', inDays: 'Dans 1 jour' } });
+    const a = snap('2026-10-20', players.map((p) => ({ ...p, min: p.min * 2, starts: 2, tg: 1, tc: 3 })));
+    for (const s of [b, a]) {
+      const st = s.players.find((p) => p.id === 'st')!;
+      Object.assign(st, { contractEnd: '2027-01-31', morale: 'Très mauvais', level: 18 });
+    }
+    const h = [oldClub, b, a].map((data) => ({ gameDate: data.gameDate, data }));
+    const c = postMatchConference(h)!;
+    expect(c.questions[0]).toMatchObject({ id: 'result', params: { outcome: 'L' } });
+    // L'ancien club d'abord (le plus marquant), puis le vestiaire ou le contrat.
+    expect(c.questions[1]).toMatchObject({ id: 'exClub', params: { opponent: 'Eupen' } });
+    expect(['unhappy', 'contract']).toContain(c.questions[2]!.id);
+  });
+
+  it('ne repose pas les mêmes sujets que lors des dernières conférences', () => {
+    const fresh = postMatchConference(history)!;
+    const second = fresh.questions[1]!.id;
+    const past = [{ kind: 'post' as const, matchDate: '2026-10-10', opponent: 'Genk', questions: [{ id: second, text: '…' }], answers: [] }];
+    const c = postMatchConference(history, past)!;
+    expect(c.questions[0]!.id).toBe('result');
+    if (fresh.questions.length > 2) expect(c.questions[1]!.id).not.toBe(second);
+  });
+
+  it('se souvient : une promesse démentie par une défaite revient en question', () => {
+    const b = snap('2026-10-18', [{ id: 'gk', min: 90, starts: 1, tg: 1, tc: 1 }], {}, { nextMatch: { opponent: 'Eupen', competition: 'Pro League', inDays: 'Dans 1 jour' } });
+    const a = snap('2026-10-20', [{ id: 'gk', min: 180, starts: 2, tg: 1, tc: 3 }]);
+    const h = [b, a].map((data) => ({ gameDate: data.gameDate, data }));
+    const past = [
+      {
+        kind: 'post' as const,
+        matchDate: '2026-10-12',
+        opponent: 'Genk',
+        questions: [{ id: 'result' as const, text: 'Q' }],
+        answers: [{ question: 'result' as const, tone: 'ambitious' as const, text: 'On va tout gagner. Croyez-moi, vraiment tout.' }],
+      },
+    ];
+    const c = postMatchConference(h, past)!;
+    const fu = c.questions.find((q) => q.id === 'followUp');
+    expect(fu?.params).toMatchObject({ variant: 'broken', quote: 'On va tout gagner.', pastOpponent: 'Genk' });
+    // Trop ancien : la presse a oublié.
+    expect(postMatchConference(h, [{ ...past[0]!, matchDate: '2026-09-01' }])!.questions.some((q) => q.id === 'followUp')).toBe(false);
+  });
+
+  it('propose trois réponses qui suivent la situation', () => {
+    expect(answerTones({ id: 'result', params: { outcome: 'L' } })).toEqual(['protect', 'selfCritical', 'firm']);
+    expect(answerTones({ id: 'linked', params: {} })).toEqual(['deny', 'deflect', 'tease']);
   });
 });

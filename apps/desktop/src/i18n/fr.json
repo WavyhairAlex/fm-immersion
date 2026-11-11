@@ -3776,7 +3776,19 @@
         "title_pre": "Avant {{opponent}}, le coach prend la parole",
         "title_post": "Après {{opponent}}, le coach s'explique",
         "body": "« {{quote}} »",
-        "noComment": "Le coach n'a pas souhaité répondre aux questions des journalistes."
+        "noComment": "Le coach n'a pas souhaité répondre aux questions des journalistes.",
+        "title_confident": "Le coach affiche sa confiance",
+        "title_ambitious": "Le coach voit grand",
+        "title_firm": "Le coach hausse le ton",
+        "title_selfCritical": "Le coach fait son mea culpa",
+        "title_protect": "Le coach fait bloc avec son groupe",
+        "title_praise": "Le coach ne tarit pas d’éloges",
+        "title_deny": "Le coach dément",
+        "title_deflect": "Le coach botte en touche",
+        "title_tease": "Le coach entretient le mystère",
+        "title_humour": "Le coach la joue à l'humour",
+        "bodyOutlet_pre": "« {{quote}} », a confié le coach {{outletTo}} avant d’affronter {{opponent}}.",
+        "bodyOutlet_post": "« {{quote}} », a confié le coach {{outletTo}} après le match contre {{opponent}}."
       }
     },
     "discord": {
@@ -5326,7 +5338,7 @@
       "none": "Pas de conférence en ce moment. La prochaine aura lieu avant ta prochaine affiche ou après ton prochain match officiel.",
       "noSave": "Crée d'abord ta carrière : les questions viennent de ta partie.",
       "answer": "Ta réponse",
-      "placeholder": "Écris ta réponse, ou choisis un ton ci-dessus.",
+      "placeholder": "Écris ta réponse, ou choisis une des trois propositions ci-dessus.",
       "send": "Répondre à la presse",
       "decline": "Pas de commentaire",
       "saved": "Réponses enregistrées : elles paraîtront dans la gazette de la semaine.",
@@ -5340,60 +5352,201 @@
       "todayPost": "Conférence d'après-match contre {{opponent}}.",
       "go": "Répondre",
       "formLetters": "VND",
-      "heroText": "Les journalistes attendent tes réponses. La gazette de la semaine te citera."
+      "heroText": "Les journalistes attendent tes réponses. La gazette de la semaine te citera.",
+      "asked": "{{reporter}}, {{outlet}} ({{kind}})",
+      "aiAnswer": "Reformuler avec ton IA",
+      "aiAnswering": "Ton IA reformule ta réponse…",
+      "aiAnswerFailed": "Ton IA n'a pas gardé tes chiffres : ta réponse reste telle quelle."
     },
     "tones": {
       "confident": "Confiant",
       "calm": "Mesuré",
-      "firm": "Ferme"
+      "firm": "Ferme",
+      "ambitious": "Ambitieux",
+      "humble": "Modeste",
+      "protect": "Protéger le groupe",
+      "selfCritical": "Assumer",
+      "praise": "Saluer",
+      "deny": "Démentir",
+      "deflect": "Botter en touche",
+      "tease": "Laisser planer",
+      "humour": "Avec humour"
     },
     "q": {
-      "stakes_cup": "Coach, ce match de {{competition}} contre {{opponent}}, c'est une priorité ou vous allez faire tourner ?",
-      "stakes_europe": "Une soirée européenne face à {{opponent}} : comment abordez-vous ce rendez-vous de {{competition}} ?",
-      "stakes_top": "{{positionOrd}} contre {{opponentPositionOrd}} : ce choc face à {{opponent}} peut-il décider de la saison ?",
-      "stakes_rival": "Face à {{opponent}}, c'est un concurrent direct au classement. Un match à six points ?",
-      "theirScorer": "{{name}} a déjà marqué {{goals}} buts pour {{opponent}}. Comment comptez-vous le neutraliser ?",
-      "injuries": "Vous avez {{count}} joueurs à l'infirmerie. Est-ce que ça change vos plans pour ce match ?",
-      "form": "Votre forme récente, c'est {{wins}} victoires sur les {{games}} derniers matchs ({{form}}). Ça vous inquiète ou ça vous rassure ?",
-      "ourScorer": "{{name}} en est à {{goals}} buts. Est-ce que tout passe par lui en ce moment ?",
-      "result_W": "Victoire {{score}} contre {{opponent}}. Qu'est-ce qui a fait la différence ?",
-      "result_D": "Match nul {{score}} contre {{opponent}}. Deux points perdus ou un point pris ?",
-      "result_L": "Défaite {{score}} contre {{opponent}}. Qu'est-ce qui n'a pas marché ?",
-      "cup_W": "Vous passez en {{competition}}. Jusqu'où cette équipe peut-elle aller ?",
-      "cup_D": "Tout reste ouvert en {{competition}} face à {{opponent}}. Confiant pour la suite ?",
-      "cup_L": "C'est un coup dur en {{competition}} face à {{opponent}}. Comment l'équipe va-t-elle s'en remettre ?",
-      "hero": "{{name}} a marqué {{goals}} buts ce soir. Que dire de sa performance ?",
-      "streak_W": "{{count}} victoires de suite. Qu'est-ce qui marche si bien en ce moment ?",
-      "streak_L": "{{count}} défaites de suite. Comment sortir de cette mauvaise passe ?",
-      "streak_winless": "{{count}} matchs sans victoire. Le doute s'installe-t-il dans le vestiaire ?",
-      "streak_unbeaten": "{{count}} matchs sans défaite. Cette équipe est-elle devenue difficile à battre ?",
-      "pressure": "On dit votre poste menacé ({{status}}). Sentez-vous encore la confiance de la direction ?"
+      "stakes_cup": {
+        "tv": "Ce soir, c'est la {{competition}} face à {{opponent}}. Allez-vous aligner votre équipe type, ou la coupe passe-t-elle après le championnat ?",
+        "local": "Les supporters rêvent d'un beau parcours en {{competition}}. Contre {{opponent}}, vous jouez le coup à fond ?"
+      },
+      "stakes_europe": {
+        "tv": "Le pays entier regardera ce match de {{competition}} contre {{opponent}}. Votre équipe est-elle prête pour ce niveau ?",
+        "local": "Une soirée européenne contre {{opponent}}, la ville l'attend depuis longtemps. Comment le vivez-vous ?"
+      },
+      "stakes_top": {
+        "tv": "{{positionOrd}} contre {{opponentPositionOrd}} : ce choc face à {{opponent}} peut-il faire basculer la saison ?",
+        "local": "Tout le monde en ville ne parle que du match contre {{opponent}}. Est-ce le match de la saison pour vous ?"
+      },
+      "stakes_rival": {
+        "tv": "Face à {{opponent}}, c'est un concurrent direct. Un match à six points ?",
+        "local": "{{positionOrd}} contre {{opponentPositionOrd}}, deux places d'écart avec {{opponent}}. Ce match compte double ?"
+      },
+      "theirScorer": {
+        "radio": "{{name}}, {{goals}} buts pour {{opponent}}. Vous avez un plan précis pour l'arrêter ?",
+        "local": "Vos défenseurs vont croiser {{name}}, déjà {{goals}} buts cette saison. Allez-vous le faire marquer individuellement ?"
+      },
+      "injuries": {
+        "local": "{{count}} joueurs à l'infirmerie : est-ce que vous allez devoir bricoler votre équipe ?",
+        "radio": "{{count}} blessés, c'est beaucoup. L'effectif est-il assez profond pour encaisser ?"
+      },
+      "form": {
+        "radio": "{{wins}} victoires sur les {{games}} derniers matchs, {{form}}. Vous diriez que l'équipe va bien ?",
+        "local": "Sur les {{games}} derniers matchs, {{form}}. Qu'est-ce que ces résultats disent de votre équipe ?"
+      },
+      "ourScorer": {
+        "tv": "{{name}} en est à {{goals}} buts. Est-il en train de devenir l'homme fort de votre équipe ?",
+        "tabloid": "On dit que sans {{name}} et ses {{goals}} buts, votre équipe ne marquerait plus. Vous êtes trop dépendant de lui ?"
+      },
+      "congestion": {
+        "radio": "Deux matchs en trois jours, voire moins. Vous allez faire tourner ?",
+        "local": "Le calendrier est très serré ces jours-ci. Comment gérez-vous la fatigue du groupe ?"
+      },
+      "titleRace": {
+        "tv": "{{positionOrd}} à {{left}} journées de la fin : avez-vous le droit de parler de titre ?",
+        "tabloid": "{{positionOrd}}, {{left}} matchs à jouer. Vous avez déjà commandé le champagne ?"
+      },
+      "result_W": {
+        "local": "Victoire {{score}} contre {{opponent}}. Qu'est-ce qui a fait la différence ce soir ?",
+        "radio": "{{score}} contre {{opponent}}, c'est une soirée réussie. Votre premier mot à chaud ?"
+      },
+      "result_D": {
+        "local": "Match nul {{score}} contre {{opponent}}. Deux points perdus ou un point pris ?",
+        "radio": "{{score}} face à {{opponent}}. Frustré ou soulagé, à chaud ?"
+      },
+      "result_L": {
+        "local": "Défaite {{score}} contre {{opponent}}. Qu'est-ce qui n'a pas marché ?",
+        "radio": "{{score}} contre {{opponent}}, les supporters sont déçus. Que leur dites-vous ?"
+      },
+      "cup_W": {
+        "tv": "Vous passez en {{competition}}. Jusqu'où cette équipe peut-elle aller ?",
+        "radio": "Qualifiés en {{competition}} ! Vous visez le trophée ?"
+      },
+      "cup_D": {
+        "tv": "Tout reste ouvert en {{competition}} face à {{opponent}}. Confiant pour la suite ?",
+        "radio": "Rien n'est joué contre {{opponent}}. Vous signez pour ce résultat ?"
+      },
+      "cup_L": {
+        "tv": "C'est la fin du parcours en {{competition}} face à {{opponent}}. Comment l'équipe va-t-elle s'en remettre ?",
+        "radio": "Éliminés de la {{competition}} par {{opponent}}. Une grosse déception ?"
+      },
+      "hero": {
+        "radio": "{{name}}, {{goals}} buts ce soir ! Il mérite un mot ?",
+        "tv": "{{goals}} buts pour {{name}} ce soir. Est-il prêt pour un niveau supérieur ?"
+      },
+      "streak_W": {
+        "tv": "{{count}} victoires de suite. Votre équipe est-elle devenue la meilleure du pays en ce moment ?",
+        "radio": "{{count}} victoires d'affilée ! C'est quoi, le secret ?"
+      },
+      "streak_L": {
+        "tv": "{{count}} défaites de suite. Comment sortir de cette spirale ?",
+        "radio": "{{count}} défaites d'affilée. Vous dormez encore la nuit ?"
+      },
+      "streak_winless": {
+        "tv": "{{count}} matchs sans victoire. Le doute s'installe-t-il dans le vestiaire ?",
+        "radio": "{{count}} matchs sans gagner. Qu'est-ce qui coince ?"
+      },
+      "streak_unbeaten": {
+        "tv": "{{count}} matchs sans défaite. Cette équipe est-elle devenue imbattable ?",
+        "radio": "{{count}} matchs sans perdre ! Vous touchez du bois ?"
+      },
+      "youthDebut": {
+        "local": "{{name}}, {{age}} ans, a joué son premier match avec les pros. Le club a-t-il trouvé une pépite ?",
+        "tv": "À {{age}} ans, {{name}} découvre le haut niveau. Avez-vous hésité à le lancer ?"
+      },
+      "bigWin": {
+        "tv": "{{score}} contre {{opponent}}, votre plus large victoire de la saison. Un message envoyé aux autres ?",
+        "local": "{{score}} : les tribunes ont vibré contre {{opponent}}. Le meilleur match de votre équipe cette saison ?"
+      },
+      "runEnded": {
+        "local": "Après {{count}} matchs sans victoire, vous gagnez enfin. C'est un soulagement ?",
+        "radio": "Fini, la série de {{count}} matchs sans victoire ! Vous l'avez fêté dans le vestiaire ?"
+      },
+      "pressure": {
+        "tabloid": "Votre poste serait menacé ({{status}}). Avez-vous peur d'être limogé ?",
+        "tv": "La direction s'interroge, dit-on ({{status}}). Avez-vous encore sa confiance ?"
+      },
+      "fans": {
+        "local": "Les supporters sont mécontents ({{status}}). Avez-vous un message pour eux ?",
+        "tabloid": "En tribune, ça siffle ({{status}}). Vous entendez la colère des supporters ?"
+      },
+      "exClub": {
+        "tabloid": "Vous retrouvez {{opponent}}, votre ancien club. Une revanche à prendre ?",
+        "tv": "Face à {{opponent}}, c'est un retour sur votre passé. Quel souvenir gardez-vous de ce club ?"
+      },
+      "contract": {
+        "local": "Le contrat de {{name}} se termine dans {{months}} mois. Va-t-il prolonger ?",
+        "tabloid": "{{name}} serait prêt à partir libre dans {{months}} mois. Vous êtes en train de le perdre ?"
+      },
+      "unhappy": {
+        "tabloid": "On dit que {{name}} fait la tête et ne se sent pas à sa place. Il y a un problème dans le vestiaire ?",
+        "radio": "{{name}} n'a pas l'air heureux en ce moment. Vous lui avez parlé ?"
+      },
+      "signing": {
+        "local": "{{name}} vient d'arriver au club. Quel rôle aura-t-il dans votre équipe ?",
+        "tv": "L'arrivée de {{name}} fait parler. Est-ce le renfort qui vous manquait ?"
+      },
+      "exit": {
+        "tabloid": "{{name}} est parti. On dit que vous l'avez poussé vers la sortie ?",
+        "local": "Le départ de {{name}} laisse un vide. Comment allez-vous le remplacer ?"
+      },
+      "longInjury": {
+        "local": "{{name}} est absent pour plusieurs semaines. C'est un coup dur ?",
+        "radio": "Sans {{name}} pour un bon moment, qui prend sa place ?"
+      },
+      "linked": {
+        "tabloid": "On vous annonce du côté de {{other}}. Vous confirmez des contacts ?",
+        "tv": "Votre nom circule à {{other}}. Pouvez-vous garantir que vous serez encore là la saison prochaine ?"
+      },
+      "followUp_broken": {
+        "tabloid": "Avant {{pastOpponent}}, vous disiez : « {{quote}} » Après cette défaite, vous le maintenez ?",
+        "radio": "Vous aviez dit : « {{quote}} » Ce soir, ces mots sonnent un peu creux, non ?"
+      },
+      "followUp_kept": {
+        "tabloid": "Après {{pastOpponent}}, vous aviez lâché : « {{quote}} » Ce soir, la réaction est là. C'était un message aux joueurs ?",
+        "radio": "« {{quote}} », disiez-vous après {{pastOpponent}}. Le message est passé, visiblement ?"
+      },
+      "followUp_denied": {
+        "tabloid": "Il y a peu, vous disiez : « {{quote}} » Et pourtant votre nom revient encore. Vous nous avez menti ?",
+        "radio": "Vous aviez démenti : « {{quote}} » La rumeur revient pourtant. Toujours la même réponse ?"
+      },
+      "followUp_again": {
+        "tabloid": "La dernière fois, contre {{pastOpponent}}, vous disiez : « {{quote}} » C'est le moment de le prouver ?",
+        "radio": "« {{quote}} » : c'était votre phrase après {{pastOpponent}}. Elle vaut toujours pour ce match ?"
+      }
     },
     "a": {
       "stakes_cup": {
-        "confident": "On veut aller loin dans cette coupe, on alignera une équipe pour gagner.",
-        "calm": "C'est un match important, on va le préparer comme les autres.",
-        "firm": "Il n'y a pas de petit match. Ceux qui joueront devront tout donner."
+        "ambitious": "On veut aller au bout dans cette coupe. On alignera une équipe pour gagner.",
+        "humble": "Chaque tour est un piège. On respecte cet adversaire et on fera notre match.",
+        "humour": "Une coupe, ça se gagne en jouant tous les tours. Je n'ai pas trouvé d'autre méthode."
       },
       "stakes_europe": {
-        "confident": "Ces soirées-là, on les attend toute l'année. On va jouer pour gagner.",
-        "calm": "On respecte l'adversaire, on sait ce qu'on doit faire.",
-        "firm": "L'Europe ne pardonne rien. On devra être parfaits pendant 90 minutes."
+        "ambitious": "Ces soirées, on les attend toute l'année. On va jouer pour gagner, pas pour faire de la figuration.",
+        "humble": "On découvre ce niveau. On va apprendre, et on va se battre.",
+        "humour": "J'ai prévenu les joueurs : en Europe, le ballon est le même. Il va juste plus vite."
       },
       "stakes_top": {
-        "confident": "On n'a peur de personne. Si on joue notre football, on peut gagner.",
-        "calm": "C'est un match important, mais la saison est encore longue.",
-        "firm": "Ce sont ces matchs qui disent qui on est vraiment. J'attends une réponse."
+        "ambitious": "On n'a peur de personne. Si on joue notre football, on peut gagner ce match.",
+        "humble": "Ils ont une très belle équipe. On va devoir être parfaits.",
+        "humour": "Si on gagne, c'est un grand match. Si on perd, la saison continue. Je préfère la première option."
       },
       "stakes_rival": {
-        "confident": "On est prêts. Gagner ce match nous donnerait de l'air.",
-        "calm": "Trois points comme les autres, même si on sait ce qu'ils représentent.",
-        "firm": "On n'a pas le droit de passer à côté. Tout le monde le sait."
+        "ambitious": "Gagner ce match nous donnerait de l'air. On est prêts.",
+        "humble": "Trois points comme les autres, même si on sait ce qu'ils représentent.",
+        "humour": "Six points, trois points… je laisse les calculs aux journalistes. Moi, je veux juste gagner."
       },
       "theirScorer": {
         "confident": "On a un plan. Il aura très peu de ballons.",
         "calm": "C'est un très bon joueur, on va être attentifs collectivement.",
-        "firm": "Je ne parle pas des adversaires. Je parle de mon équipe."
+        "deflect": "Je ne parle pas des joueurs adverses. Je parle de mon équipe."
       },
       "injuries": {
         "confident": "L'effectif est assez profond. Ceux qui joueront sont prêts.",
@@ -5410,10 +5563,20 @@
         "calm": "Il marque, tant mieux, mais c'est tout le groupe qui travaille.",
         "firm": "Personne n'est au-dessus de l'équipe. Les buts viendront de partout."
       },
+      "congestion": {
+        "confident": "On a un groupe pour ça. Tout le monde aura sa chance.",
+        "calm": "On gère les minutes au jour le jour avec le staff médical.",
+        "firm": "La fatigue n'est pas une excuse. Ceux qui jouent devront tout donner."
+      },
+      "titleRace": {
+        "ambitious": "Oui, on y pense. On serait fous de ne pas y penser.",
+        "humble": "Il reste trop de matchs. Le titre, on en parlera s'il arrive.",
+        "humour": "Le champagne reste au frais. Très au frais. Au fond du frigo."
+      },
       "result_W": {
-        "confident": "On a été meilleurs du début à la fin. Je suis fier des joueurs.",
+        "praise": "Les joueurs ont été remarquables ce soir. Cette victoire leur appartient.",
         "calm": "Une bonne victoire, mais il y a encore des choses à corriger.",
-        "firm": "C'est ce que j'attends chaque semaine. Rien de plus."
+        "ambitious": "C'est ce que j'attends chaque semaine. Et on peut faire encore mieux."
       },
       "result_D": {
         "confident": "On a eu les occasions, la victoire viendra la prochaine fois.",
@@ -5421,55 +5584,148 @@
         "firm": "Ce n'est pas assez. On aurait dû gagner ce match."
       },
       "result_L": {
-        "confident": "Une défaite ne remet pas tout en cause. On va rebondir.",
-        "calm": "On va analyser le match calmement et corriger nos erreurs.",
+        "protect": "Je ne laisserai personne accabler mes joueurs. On perd ensemble.",
+        "selfCritical": "J'ai fait de mauvais choix ce soir. C'est ma responsabilité.",
         "firm": "C'est inacceptable. Je vais avoir une discussion avec le groupe."
       },
       "cup_W": {
-        "confident": "On n'a pas de limite. On joue chaque tour pour le gagner.",
-        "calm": "On prend les tours un par un, sans s'enflammer.",
-        "firm": "Se qualifier, c'était le minimum. On veut plus."
+        "ambitious": "On n'a pas de limite. On joue chaque tour pour le gagner.",
+        "humble": "On prend les tours un par un, sans s'enflammer.",
+        "humour": "Le tirage au sort, je le regarderai demain. Ce soir, on savoure."
       },
       "cup_D": {
-        "confident": "On a les moyens de finir le travail.",
-        "calm": "Rien n'est fait, dans un sens comme dans l'autre.",
-        "firm": "Il faudra être bien meilleurs au prochain match."
+        "ambitious": "On a les moyens de finir le travail.",
+        "humble": "Rien n'est fait, dans un sens comme dans l'autre.",
+        "humour": "Il faudra revenir. Ça tombe bien, on aime ce stade."
       },
       "cup_L": {
-        "confident": "On va vite rebondir, il reste beaucoup à jouer cette saison.",
-        "calm": "C'est une déception, mais on retient les leçons.",
-        "firm": "On n'était pas au niveau. J'en prends ma part."
+        "protect": "Les joueurs ont tout donné. On rebondira ensemble.",
+        "selfCritical": "On n'était pas au niveau, et j'en prends ma part.",
+        "firm": "Une élimination comme ça ne doit plus jamais arriver."
       },
       "hero": {
-        "confident": "Il est en train de devenir un très grand joueur.",
+        "praise": "Il est en train de devenir un très grand joueur.",
         "calm": "Il a fait un bon match, comme toute l'équipe.",
         "firm": "Je suis content pour lui, mais il doit continuer à travailler."
       },
       "streak_W": {
-        "confident": "On est en confiance et ça se voit sur le terrain.",
-        "calm": "On ne regarde pas la série, seulement le prochain match.",
-        "firm": "Personne ne doit se relâcher. Une série, ça s'arrête vite."
+        "ambitious": "On est en confiance et on ne compte pas s'arrêter.",
+        "humble": "On ne regarde pas la série, seulement le prochain match.",
+        "humour": "Je ne change plus de chaussettes depuis un mois. À la maison, on est moins ravis que moi."
       },
       "streak_L": {
-        "confident": "On est plus proches de la victoire qu'on ne le pense.",
-        "calm": "On travaille. Le travail finira par payer.",
+        "protect": "Le groupe reste uni. Je ne lâcherai pas mes joueurs.",
+        "selfCritical": "Je dois trouver des solutions. C'est mon travail et je ne le fais pas assez bien.",
         "firm": "Ça suffit. Il faut des changements, et il y en aura."
       },
       "streak_winless": {
-        "confident": "Le groupe reste uni, la victoire va arriver.",
-        "calm": "Les matchs ont été serrés. Il manque peu de chose.",
+        "protect": "Le groupe travaille bien. La victoire va arriver.",
+        "selfCritical": "Je cherche encore la bonne formule. J'assume.",
         "firm": "Il faut retrouver de l'envie. Tout le monde est concerné, moi d'abord."
       },
       "streak_unbeaten": {
-        "confident": "On est devenus une équipe très solide.",
-        "calm": "On est contents, mais la saison est longue.",
-        "firm": "Ne pas perdre, c'est bien. Gagner plus souvent, c'est mieux."
+        "ambitious": "On est devenus une équipe très solide, et on veut continuer.",
+        "humble": "On est contents, mais la saison est longue.",
+        "humour": "Imbattables ? Je préfère ne pas le dire trop fort, on a un match dans trois jours."
+      },
+      "youthDebut": {
+        "praise": "Il a un talent rare. Je suis fier qu'il ait débuté avec nous.",
+        "calm": "Un premier match, c'est une étape. Le plus dur commence maintenant.",
+        "firm": "Il a mérité sa chance à l'entraînement. Il devra la mériter encore."
+      },
+      "bigWin": {
+        "praise": "On a vu ce dont cette équipe est capable. Les joueurs ont été énormes.",
+        "humble": "Un grand score ne rapporte que trois points. On garde les pieds sur terre.",
+        "humour": "J'ai demandé aux joueurs d'en garder un peu pour le prochain match."
+      },
+      "runEnded": {
+        "protect": "Je n'ai jamais douté de ce groupe. Ils méritaient cette victoire.",
+        "calm": "Ça fait du bien, mais ce n'est qu'une victoire. Il faut confirmer.",
+        "humour": "On avait presque oublié le goût. Ça revient vite."
       },
       "pressure": {
         "confident": "J'ai la confiance du président et des joueurs. Je suis serein.",
-        "calm": "Je me concentre sur mon travail, le reste ne dépend pas de moi.",
-        "firm": "Je ne vais pas commenter des rumeurs. Les résultats parleront."
+        "selfCritical": "Les résultats ne sont pas là, je le sais. À moi de les changer.",
+        "firm": "Je ne commente pas les rumeurs. Je travaille."
+      },
+      "fans": {
+        "confident": "Ils ont raison d'être exigeants. On va leur rendre le sourire.",
+        "selfCritical": "Je comprends leur colère. Ils méritent mieux que ça.",
+        "firm": "J'entends les sifflets. Je demande juste aux supporters de soutenir l'équipe pendant 90 minutes."
+      },
+      "exClub": {
+        "humble": "J'ai beaucoup de respect pour ce club et ses supporters. Mais je suis ici, maintenant.",
+        "deflect": "C'est un match comme un autre. Ce qui compte, c'est mon équipe.",
+        "tease": "Une revanche ? Disons que je connais très bien le chemin du vestiaire visiteur."
+      },
+      "contract": {
+        "confident": "On discute, et je suis confiant. Il se sent bien ici.",
+        "deflect": "Les contrats se discutent dans les bureaux, pas devant les micros.",
+        "firm": "Personne n'est plus grand que le club. S'il veut rester, la porte est ouverte."
+      },
+      "unhappy": {
+        "protect": "Je le soutiens à cent pour cent. Il traverse un moment difficile, on va l'aider.",
+        "deny": "Il n'y a aucun problème. Vous l'auriez vu sourire à l'entraînement ce matin.",
+        "firm": "S'il n'est pas content, mon bureau est ouvert. Mais c'est le terrain qui décide."
+      },
+      "signing": {
+        "ambitious": "C'est un joueur qui va nous faire passer un cap.",
+        "calm": "Il doit d'abord trouver ses repères. On ne va pas lui mettre de pression.",
+        "praise": "Un garçon de grande qualité, et une excellente personne. On est ravis."
+      },
+      "exit": {
+        "praise": "Je le remercie pour tout ce qu'il a apporté. Je lui souhaite le meilleur.",
+        "deflect": "C'était la meilleure décision pour tout le monde. Je n'en dirai pas plus.",
+        "firm": "Personne n'est irremplaçable. On a ce qu'il faut dans l'effectif."
+      },
+      "longInjury": {
+        "confident": "On a des solutions. Un autre va saisir sa chance.",
+        "calm": "C'est dur pour lui. On va l'accompagner jusqu'à son retour.",
+        "firm": "On ne pleure pas. Le groupe doit compenser."
+      },
+      "linked": {
+        "deny": "Je suis concentré à cent pour cent sur mon club. Il n'y a rien.",
+        "deflect": "Je ne vais pas commenter des rumeurs. Le prochain match, c'est tout ce qui compte.",
+        "tease": "Mon téléphone sonne souvent. Je ne réponds pas toujours."
+      },
+      "followUp_broken": {
+        "confident": "Je le maintiens. Une défaite ne change pas ce que je pense de cette équipe.",
+        "selfCritical": "J'ai sans doute parlé trop vite. Les faits m'ont donné tort ce soir.",
+        "humour": "Je vois que vous prenez des notes. Je vais devoir faire attention à ce que je dis."
+      },
+      "followUp_kept": {
+        "praise": "Les joueurs ont répondu sur le terrain. C'est tout ce que je demandais.",
+        "humble": "Une victoire ne règle pas tout. On doit continuer comme ça.",
+        "firm": "Le message était clair. Je ne veux plus revoir le match d'avant."
+      },
+      "followUp_denied": {
+        "deny": "Ma réponse n'a pas changé. Je suis ici et je reste concentré.",
+        "humour": "Si on me nomme partout où on m'annonce, je vais entraîner la moitié de l'Europe.",
+        "tease": "Je n'ai jamais dit jamais. Mais aujourd'hui, je suis ici."
+      },
+      "followUp_again": {
+        "confident": "Oui, et je le pense encore plus aujourd'hui.",
+        "selfCritical": "Les mots ne servent à rien si on ne montre rien sur le terrain. À nous de le prouver.",
+        "humour": "Vous avez une bonne mémoire. J'espère que les joueurs aussi."
       }
+    },
+    "outlets": {
+      "local": "L'Écho de {{club}}",
+      "radio": "Radio Vestiaire",
+      "tabloid": "Le Crampon",
+      "tv": "Grand Stade TV"
+    },
+    "outletKinds": {
+      "local": "quotidien local",
+      "radio": "radio",
+      "tabloid": "presse à scandale",
+      "tv": "télé nationale"
+    },
+    "outletsTo": {
+      "local": "à L'Écho de {{club}}",
+      "radio": "à Radio Vestiaire",
+      "tabloid": "au Crampon",
+      "tv": "à Grand Stade TV"
     }
   }
 }

@@ -1,4 +1,4 @@
-import { ANSWER_TONES, pendingConference, type AnswerTone, type PressAnswer, type PressConference } from '@fm-immersion/module-fm';
+import { answerTones, pendingConference, type AnswerTone, type PressAnswer, type PressAsked, type PressConference } from '@fm-immersion/module-fm';
 import { PageHero } from '../components/PageHero';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { useCareer } from '../lib/career';
 import { fmData } from '../lib/data';
 import { useHistory } from '../lib/fm-cache';
-import { answerText, pressKeyOf, usePressHeld, usePressQuestions } from '../lib/press';
+import { answerText, askedBy, pressAiOn, pressKeyOf, rewordAnswer, usePressHeld, usePressQuestions } from '../lib/press';
 
 /** Conférence de presse : la presse interroge le coach avant une affiche et après chaque match officiel. */
 export function Press() {
@@ -16,8 +16,9 @@ export function Press() {
   const { data: history = [], isLoading } = useHistory(saveId);
   const { data: held = [], isLoading: heldLoading } = usePressHeld(saveId);
   const done = useMemo(() => new Set(held.map((h) => h.key)), [held]);
-  const pending = useMemo(() => (heldLoading ? null : pendingConference(history, done)), [history, done, heldLoading]);
+  const pending = useMemo(() => (heldLoading ? null : pendingConference(history, done, held)), [history, done, held, heldLoading]);
   const [note, setNote] = useState<'saved' | 'declined' | null>(null);
+  const club = history.at(-1)?.data.club ?? '';
   useEffect(() => setNote(null), [saveId]);
 
   return (
@@ -58,7 +59,7 @@ export function Press() {
                   <dl className="mt-3 space-y-3 text-sm">
                     {h.answers.map((a) => (
                       <div key={a.question}>
-                        <dt className="text-brun">{h.questions.find((q) => q.id === a.question)?.text}</dt>
+                        <PastQuestion q={h.questions.find((q) => q.id === a.question)} club={club} />
                         <dd className="mt-1 font-semibold">« {a.text} »</dd>
                       </div>
                     ))}
@@ -72,6 +73,18 @@ export function Press() {
         </section>
       )}
     </div>
+  );
+}
+
+/** Question d'une conférence passée, avec le journaliste qui l'a posée (conférences tenues depuis les rédactions). */
+function PastQuestion({ q, club }: { q: PressAsked | undefined; club: string }) {
+  const { t } = useTranslation();
+  if (!q) return null;
+  return (
+    <dt className="text-brun">
+      {q.reporter && <span className="block text-xs font-bold uppercase tracking-wide">{askedBy(t, q, club)}</span>}
+      {q.text}
+    </dt>
   );
 }
 
@@ -97,7 +110,7 @@ function Conference({ saveId, club, conference: c, onDone }: { saveId: string; c
         club: c.club,
         opponent: c.opponent,
         competition: c.competition,
-        questions: c.questions.map((q, i) => ({ id: q.id, text: texts[i]! })),
+        questions: c.questions.map((q, i) => ({ id: q.id, text: texts[i]!, ...(q.outlet ? { outlet: q.outlet } : {}), ...(q.reporter ? { reporter: q.reporter } : {}) })),
         answers: out,
       });
       return out.length ? 'saved' : 'declined';
@@ -112,6 +125,17 @@ function Conference({ saveId, club, conference: c, onDone }: { saveId: string; c
     setAnswers((x) => x.map((v, j) => (j === i ? answerText(t, c.questions[i]!, tone, lang) : v)));
   };
   const any = answers.some((a) => a.trim());
+  const aiOn = pressAiOn();
+  const [rewordingAnswer, setRewordingAnswer] = useState<number | null>(null);
+  const [rewordFailed, setRewordFailed] = useState<number | null>(null);
+  const reword = async (i: number) => {
+    setRewordingAnswer(i);
+    setRewordFailed(null);
+    const out = await rewordAnswer(club, texts[i]!, answers[i]!, lang).catch(() => null);
+    setRewordingAnswer(null);
+    if (out) setAnswers((x) => x.map((v, j) => (j === i ? out : v)));
+    else setRewordFailed(i);
+  };
 
   return (
     <section className="card mt-6" aria-labelledby="press-now">
@@ -126,9 +150,10 @@ function Conference({ saveId, club, conference: c, onDone }: { saveId: string; c
       <ol className="mt-4 space-y-5">
         {c.questions.map((q, i) => (
           <li key={q.id}>
-            <p className="font-semibold">{texts[i]}</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-orange-fonce">{askedBy(t, q, club)}</p>
+            <p className="mt-1 font-semibold">{texts[i]}</p>
             <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label={t('press.page.answer')}>
-              {ANSWER_TONES.map((tone) => (
+              {answerTones(q).map((tone) => (
                 <button key={tone} type="button" className={`chip ${tones[i] === tone ? 'chip-on' : ''}`} onClick={() => pick(i, tone)}>
                   {t(`press.tones.${tone}`)}
                 </button>
@@ -148,6 +173,12 @@ function Conference({ saveId, club, conference: c, onDone }: { saveId: string; c
                 }}
               />
             </label>
+            {aiOn && answers[i]!.trim() && (
+              <button type="button" className="mt-1 text-xs font-bold text-orange-fonce underline disabled:opacity-50" disabled={rewordingAnswer != null} onClick={() => void reword(i)}>
+                {rewordingAnswer === i ? t('press.page.aiAnswering') : t('press.page.aiAnswer')}
+              </button>
+            )}
+            {rewordFailed === i && <p className="mt-1 text-xs text-brun">{t('press.page.aiAnswerFailed')}</p>}
           </li>
         ))}
       </ol>
