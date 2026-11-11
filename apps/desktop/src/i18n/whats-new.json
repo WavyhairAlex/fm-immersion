@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.152",
+    "date": "2026-11-11",
+    "fr": [
+      "Entraînement : moins de séances tactiques une fois ta tactique comprise à 50 %. Au-delà, elles ne font presque plus gagner de matchs et coûtent des blessures. La progression reprend la main.",
+      "Le lendemain d'un match devient un jour de repos complet, et l'onglet « Comprendre » explique d'où vient l'efficacité tactique."
+    ],
+    "en": [
+      "Training: fewer tactical sessions once your tactic is 50% understood. Beyond that they barely win more matches and cost injuries, so development takes over.",
+      "The day after a match is now a full rest day, and the \"Understand\" tab explains where tactical effectiveness comes from."
+    ]
+  },
+  {
     "version": "0.1.150",
     "date": "2026-11-10",
     "fr": [
