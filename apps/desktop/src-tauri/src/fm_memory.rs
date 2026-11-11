@@ -1401,6 +1401,9 @@ pub struct SearchFilter {
     pub division: Option<String>,
     /// Réputation minimale de la division (niveau du championnat).
     pub min_division_reputation: Option<i16>,
+    /// Réputation actuelle maximale du joueur (celles que le jeu laisse à 0 ou moins, non lues, sont gardées) :
+    /// écarte d'emblée les vedettes qu'un petit club n'attirera pas, avant que la limite de 300 ne les garde.
+    pub max_reputation: Option<i16>,
     pub limit: Option<usize>,
 }
 
@@ -1423,6 +1426,7 @@ impl SearchFilter {
             && matches(&self.nation, &p.nation)
             && matches(&self.division, &p.division)
             && self.min_division_reputation.map_or(true, |m| p.division_reputation.is_some_and(|r| r >= m))
+            && self.max_reputation.map_or(true, |m| p.reputation[1] <= 0 || p.reputation[1] <= m)
     }
 }
 
@@ -1451,6 +1455,12 @@ pub struct Ability {
     pub id: i32,
     pub ca: i16,
     pub pa: i16,
+    /// Réputation actuelle, salaire par semaine et valeur (monnaie de base) : repères de ce que le club peut
+    /// attirer et payer, comparés à ceux des recrues trouvées dans la base.
+    pub reputation: i16,
+    pub wage_weekly: Option<i32>,
+    pub value_raw: Option<i32>,
+    pub division_reputation: Option<i16>,
 }
 
 /// CA/PA de l'effectif du manager humain, à la date de la partie en cours.
@@ -1467,7 +1477,15 @@ pub fn squad_abilities<M: Mem>(db: &mut Database<M>) -> SquadAbilities {
         Some(club) => db
             .players(120, |p| p.club_id == Some(club) || p.loan_club_id == Some(club))
             .into_iter()
-            .map(|p| Ability { id: p.id, ca: p.ca, pa: p.pa })
+            .map(|p| Ability {
+                id: p.id,
+                ca: p.ca,
+                pa: p.pa,
+                reputation: p.reputation[1],
+                wage_weekly: p.wage_weekly,
+                value_raw: p.value_raw,
+                division_reputation: p.division_reputation,
+            })
             .collect(),
         None => Vec::new(),
     };
@@ -1695,6 +1713,8 @@ mod tests {
         assert_eq!(run(&mut db, SearchFilter { max_age: Some(25), ..Default::default() }), 0);
         assert_eq!(run(&mut db, SearchFilter { exclude_club_id: Some(7_001), ..Default::default() }), 0);
         assert_eq!(run(&mut db, SearchFilter { max_wage_weekly: Some(4_000), ..Default::default() }), 0);
+        // Réputation non lue (0) : le joueur reste, le plafond ne joue que sur une réputation connue.
+        assert_eq!(run(&mut db, SearchFilter { max_reputation: Some(1), ..Default::default() }), 1);
         assert_eq!(run(&mut db, SearchFilter { free_only: true, ..Default::default() }), 0);
         assert_eq!(run(&mut db, SearchFilter { transfer_listed_only: true, ..Default::default() }), 0);
         let f = |n: &str, d: &str, r| SearchFilter {

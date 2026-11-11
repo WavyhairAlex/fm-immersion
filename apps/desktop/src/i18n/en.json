@@ -93,6 +93,7 @@
       "status": "Status",
       "starsHelp": "Current / potential ability stars according to your staff",
       "compat": "Project",
+      "reach": "Reach",
       "apps": "Apps",
       "goals": "Goals",
       "avgRating": "Avg rating"
@@ -295,12 +296,12 @@
         }
       },
       "source": {
-        "game": "Game XI",
-        "simloom": "FM Immersion XI"
+        "game": "My FM27 tactic",
+        "simloom": "App's suggestion"
       },
       "fromGame": "Game line-up",
       "fromGameHelp": "Players and positions read from your FM27 tactic. Roles and instructions: the game's when the plugin reads them, otherwise each player's best role in that position.",
-      "suggestedHelpGame": "Placement computed by FM Immersion for the chosen style. “Game XI” shows your real FM27 line-up.",
+      "suggestedHelpGame": "Placement computed by FM Immersion for the chosen style. “My FM27 tactic” shows your real line-up.",
       "pitchHelpGame": "Your FM27 line-up. Dotted lines show the move from the other phase; hover a player to find them in the list. Click a formation below to compare with an eleven worked out by FM Immersion.",
       "lineupStatus": "Plugin line-up reading: {{status}}.",
       "duty": {
@@ -311,6 +312,31 @@
       "auto": "Automatic: best choice",
       "styles": "Playing styles",
       "myTactics": "My tactics (Build)",
+      "todo": {
+        "title": "To change in FM27",
+        "intro": "What the app advises you to change in “{{tactic}}”, most important first.",
+        "introNoName": "What the app advises you to change in your tactic, most important first.",
+        "none": "Nothing to change: your FM27 tactic is set as advised.",
+        "tag": {
+          "team": "Team instruction",
+          "starter": "Starter",
+          "player": "Player instruction",
+          "role": "Role"
+        },
+        "team": "{{title}}: go from “{{from}}” to “{{to}}”",
+        "starter": "{{pos}}: start {{better}} instead of {{starter}}",
+        "starterWhy": "{{better}} rates {{betterFit}} in these roles against {{starterFit}}, today's form included",
+        "piChange": "{{player}}: replace “{{from}}” with “{{to}}”",
+        "piAdd": "{{player}}: add “{{to}}”",
+        "piRemove": "{{player}}: remove {{labels}}",
+        "piRemoveWhy": "{{count}} instructions set for {{budget}} advised: his attributes do not back these",
+        "role": "{{player}}, {{phase}}: “{{to}}” instead of “{{from}}”",
+        "roleWhy": "rated {{toFit}} against {{fromFit}}; do it away from a big match, familiarity with the role starts again from zero",
+        "help": "This list gathers the advice from the boxes below (last matches, team instructions, player instructions, assistant's view), in the order they weigh on your results. It empties as you set your tactic in FM27 and the app reads the save again. Nothing is changed in the game: you decide.",
+        "more_one": "Show the {{count}} other point",
+        "more_other": "Show the {{count}} other points",
+        "less": "Shorten the list"
+      },
       "review": {
         "title": "What your last matches say",
         "tooFew_one": "{{count}} official match read so far: it takes 3 to judge the tactic on what it produces.",
@@ -509,7 +535,8 @@
       "sections": {
         "xi": "Base XI",
         "match": "Against {{name}}",
-        "balance": "Balance and instructions"
+        "balance": "Balance and instructions",
+        "balanceFold": "Team balance and team instructions, in detail"
       }
     },
     "nav": "Save sections",
@@ -2620,6 +2647,29 @@
         "wasteful": "Work on finishing: {{goals}} goals from {{xg}} xG per match.",
         "leaky": "Tighten the defence: {{ga}} goals conceded per match."
       }
+    },
+    "reach": {
+      "level": {
+        "easy": "Easy to sign",
+        "possible": "Within your means",
+        "hard": "Difficult",
+        "out": "Out of reach"
+      },
+      "why": {
+        "free": "free agent",
+        "preContract": "contract ending: pre-contract possible",
+        "loan": "youngster at a bigger club: loan possible",
+        "listed": "transfer listed",
+        "wage": "wage above your structure",
+        "wageRoom": "you need to free up wages",
+        "fee": "fee above your budget",
+        "reputation": "too famous for your club",
+        "league": "comes from a much higher-rated league"
+      },
+      "wide": "Also show players out of reach",
+      "hidden_one": "{{count}} player out of reach hidden",
+      "hidden_other": "{{count}} players out of reach hidden",
+      "help": "The search only keeps players your club can attract and afford. Benchmarks come from your squad: a wage up to twice your highest wage, a reputation up to 1.75 times that of your three most famous players, a fee within your transfer budget. Free agents, expiring contracts (pre-contract) and youngsters at bigger clubs (loan) cost no fee. FM27 has the final say in negotiations."
     },
     "repl": {
       "open": "Replacement",
