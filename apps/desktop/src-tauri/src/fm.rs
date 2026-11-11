@@ -145,6 +145,77 @@ pub fn fm_write_coach_photo(folder: String, png: Option<Vec<u8>>) -> Result<(), 
     write_coach_photo(Path::new(&folder), png.as_deref())
 }
 
+/// Conférence de presse à afficher dans FM27 (plugin 0.6.0) : nom fixe, la commande ne peut écrire aucun autre fichier.
+pub const PRESS_FILE: &str = "fmimmersion-presse.json";
+/// Réponses du coach données dans FM27, écrites par le plugin.
+pub const PRESS_ANSWER_FILE: &str = "fmimmersion-presse-reponse.json";
+/// Une conférence de trois questions pèse quelques Ko ; au-delà, ce n'est pas elle.
+const MAX_PRESS_BYTES: usize = 256 * 1024;
+
+#[derive(Debug, thiserror::Error)]
+pub enum PressFileError {
+    #[error("dossier invalide")]
+    InvalidFolder,
+    #[error("conférence trop volumineuse")]
+    TooLarge,
+    #[error("conférence illisible : {0}")]
+    BadJson(String),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+}
+
+impl Serialize for PressFileError {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        s.serialize_str(&self.to_string())
+    }
+}
+
+/// Écrit (ou retire, `json` vide) la conférence du moment dans le dossier du plugin. Rien n'est réécrit si le
+/// contenu n'a pas changé (le plugin ne rouvre pas la fenêtre pour rien).
+pub fn write_press(folder: &Path, json: Option<&str>) -> Result<(), PressFileError> {
+    if !folder.is_absolute() || !folder.is_dir() {
+        return Err(PressFileError::InvalidFolder);
+    }
+    let path = folder.join(PRESS_FILE);
+    match json {
+        None => match std::fs::remove_file(&path) {
+            Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e.into()),
+            _ => Ok(()),
+        },
+        Some(text) => {
+            if text.len() > MAX_PRESS_BYTES {
+                return Err(PressFileError::TooLarge);
+            }
+            let v: serde_json::Value = serde_json::from_str(text).map_err(|e| PressFileError::BadJson(e.to_string()))?;
+            if v.get("format").and_then(|f| f.as_str()) != Some("fmi-presse/1") {
+                return Err(PressFileError::BadJson("format".into()));
+            }
+            if std::fs::read_to_string(&path).map(|old| old == text).unwrap_or(false) {
+                return Ok(());
+            }
+            let tmp = folder.join(format!("{PRESS_FILE}.tmp"));
+            std::fs::write(&tmp, text)?;
+            std::fs::rename(&tmp, &path)?;
+            Ok(())
+        }
+    }
+}
+
+#[tauri::command]
+pub fn fm_write_press(folder: String, json: Option<String>) -> Result<(), PressFileError> {
+    write_press(Path::new(&folder), json.as_deref())
+}
+
+/// Réponses données dans FM27 (`fmimmersion-presse-reponse.json`), ou rien.
+#[tauri::command]
+pub fn fm_read_press_answer(folder: String) -> Result<Option<String>, FmError> {
+    match read_fixed(Path::new(&folder), PRESS_ANSWER_FILE) {
+        Ok(s) => Ok(Some(s)),
+        Err(FmError::NotFound) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
 /// Instantané daté gardé par le plugin (`archivix-AAAA-MM-JJ.json`, un par jour de jeu) : date, club, taille.
 #[derive(Debug, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -305,6 +376,25 @@ mod tests {
         write_coach_photo(&dir, None).unwrap();
         assert!(!dir.join(COACH_PHOTO_FILE).exists());
         write_coach_photo(&dir, None).unwrap(); // déjà retirée : pas d'erreur
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn ecrit_et_retire_la_conference_de_presse() {
+        let dir = std::env::temp_dir().join(format!("fmi-presse-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let json = r#"{"format":"fmi-presse/1","key":"post|A|B|2026-08-01","questions":[]}"#;
+        write_press(&dir, Some(json)).unwrap();
+        assert_eq!(std::fs::read_to_string(dir.join(PRESS_FILE)).unwrap(), json);
+        assert!(matches!(write_press(&dir, Some("pas du json")), Err(PressFileError::BadJson(_))));
+        assert!(matches!(write_press(&dir, Some(r#"{"format":"autre"}"#)), Err(PressFileError::BadJson(_))));
+        assert!(matches!(write_press(Path::new("relatif"), Some(json)), Err(PressFileError::InvalidFolder)));
+        assert_eq!(fm_read_press_answer(dir.to_string_lossy().into_owned()).unwrap(), None);
+        std::fs::write(dir.join(PRESS_ANSWER_FILE), r#"{"key":"k"}"#).unwrap();
+        assert_eq!(fm_read_press_answer(dir.to_string_lossy().into_owned()).unwrap().as_deref(), Some(r#"{"key":"k"}"#));
+        write_press(&dir, None).unwrap();
+        assert!(!dir.join(PRESS_FILE).exists());
+        write_press(&dir, None).unwrap();
         std::fs::remove_dir_all(&dir).unwrap();
     }
 

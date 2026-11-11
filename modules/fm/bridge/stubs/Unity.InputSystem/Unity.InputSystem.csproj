@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><AssemblyName>Unity.InputSystem</AssemblyName><RootNamespace>UnityEngine.InputSystem</RootNamespace><AssemblyVersion>0.0.0.0</AssemblyVersion></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Il2CppInterop.Runtime" Version="1.5.3" />
+    <ProjectReference Include="..\Il2Cppmscorlib\Il2Cppmscorlib.csproj" />
+  </ItemGroup>
+</Project>

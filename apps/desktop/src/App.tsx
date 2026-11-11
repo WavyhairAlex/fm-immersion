@@ -10,6 +10,7 @@ import { useGameRequests } from './lib/game-request';
 import { useAutoBackups } from './lib/save-backup';
 import { useGazetteAuto } from './lib/gazette-auto';
 import { useLiveDiscord } from './lib/live-discord';
+import { usePressInGame } from './lib/press-ingame';
 import { Career } from './pages/Career';
 import { Challenges } from './pages/Challenges';
 import { Faces } from './pages/Faces';
@@ -26,6 +27,7 @@ export function App() {
   useLiveDiscord();
   useGazetteAuto();
   useFmSync();
+  usePressInGame();
   useGameRequests();
   useAutoBackups();
   return (

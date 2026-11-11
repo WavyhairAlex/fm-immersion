@@ -5732,6 +5732,14 @@
       "radio": "Dressing Room Radio",
       "tabloid": "The Studs",
       "tv": "Grand Stadium TV"
+    },
+    "ingame": {
+      "free": "Or in your own words:",
+      "send": "Answer",
+      "skip": "Next question",
+      "later": "Later",
+      "thanks": "Answers sent to FM Immersion. Thanks, boss!",
+      "inGame": "You can also answer right inside FM27: the press window opens over the game (F8 key)."
     }
   }
 }
