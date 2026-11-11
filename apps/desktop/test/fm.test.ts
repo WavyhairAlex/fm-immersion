@@ -171,6 +171,25 @@ describe('instantanés Football Manager', () => {
     expect((await fm.history(save.id)).length).toBe(3);
   });
 
+  it("ne prend pas dans une carrière neuve le relevé encore laissé par la sauvegarde d'une autre carrière", async () => {
+    const ancienne = await saves.create({ gameId: 'fm', name: 'test' });
+    await fm.importSnapshot(ancienne.id, snap('2028-03-11', ['A']));
+    const neuve = await saves.create({ gameId: 'fm', name: 'New One' });
+    const err = await fm.importSnapshot(neuve.id, snap('2028-03-11', ['A'])).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(FmOtherSaveError);
+    expect((err as FmOtherSaveError).career).toBe('test');
+    expect(await fm.latest(neuve.id)).toBeNull();
+    expect((await fm.settings(neuve.id)).fmClub).toBeUndefined();
+    // Premier relevé de la nouvelle sauvegarde (autre date) : pris tout seul.
+    await fm.importSnapshot(neuve.id, snap('2026-07-21', ['B']));
+    expect((await fm.latest(neuve.id))?.gameDate).toBe('2026-07-21');
+    expect([...(await fm.datesElsewhere(neuve.id, 'Vänersborgs IF'))]).toEqual(['2028-03-11']);
+    // Confirmé par le joueur (deux carrières pour la même sauvegarde) : accepté.
+    const copie = await saves.create({ gameId: 'fm', name: 'Copie' });
+    await fm.importSnapshot(copie.id, snap('2028-03-11', ['A']), { force: true });
+    expect((await fm.latest(copie.id))?.gameDate).toBe('2028-03-11');
+  });
+
   it('reprend le club des instantanés déjà importés avant le lien', async () => {
     const save = await saves.create({ gameId: 'fm', name: 'V' });
     await fm.importSnapshot(save.id, snap('2026-08-29', ['A']));

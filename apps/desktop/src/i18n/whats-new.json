@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.177",
+    "date": "2026-11-11",
+    "fr": [
+      "Une nouvelle carrière ne reprend plus les données de ton ancienne partie : elle attend que FM27 ait écrit quelque chose pour la nouvelle sauvegarde. Une partie commencée sans emploi est aussi bien reconnue (plugin 0.6.1)."
+    ],
+    "en": [
+      "A new career no longer picks up data from your previous save: it waits until FM27 has written something for the new save. A game started without a job is also recognised (plugin 0.6.1)."
+    ]
+  },
+  {
     "version": "0.1.175",
     "date": "2026-11-11",
     "fr": [
