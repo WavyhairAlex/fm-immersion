@@ -313,8 +313,8 @@
       "myTactics": "My tactics (Build)",
       "todo": {
         "title": "To change in FM27",
-        "intro": "Everything the app advises you to change in “{{tactic}}”, most important first. The detail of each point is further down.",
-        "introNoName": "Everything the app advises you to change in your tactic, most important first. The detail of each point is further down.",
+        "intro": "What the app advises you to change in “{{tactic}}”, most important first.",
+        "introNoName": "What the app advises you to change in your tactic, most important first.",
         "none": "Nothing to change: your FM27 tactic is set as advised.",
         "tag": {
           "team": "Team instruction",
@@ -331,7 +331,10 @@
         "piRemoveWhy": "{{count}} instructions set for {{budget}} advised: his attributes do not back these",
         "role": "{{player}}, {{phase}}: “{{to}}” instead of “{{from}}”",
         "roleWhy": "rated {{toFit}} against {{fromFit}}; do it away from a big match, familiarity with the role starts again from zero",
-        "help": "This list gathers the advice from the boxes below (last matches, team instructions, player instructions, assistant's view), in the order they weigh on your results. It empties as you set your tactic in FM27 and the app reads the save again. Nothing is changed in the game: you decide."
+        "help": "This list gathers the advice from the boxes below (last matches, team instructions, player instructions, assistant's view), in the order they weigh on your results. It empties as you set your tactic in FM27 and the app reads the save again. Nothing is changed in the game: you decide.",
+        "more_one": "Show the {{count}} other point",
+        "more_other": "Show the {{count}} other points",
+        "less": "Shorten the list"
       },
       "review": {
         "title": "What your last matches say",
@@ -531,7 +534,8 @@
       "sections": {
         "xi": "Base XI",
         "match": "Against {{name}}",
-        "balance": "Balance and instructions"
+        "balance": "Balance and instructions",
+        "balanceFold": "Team balance and team instructions, in detail"
       }
     },
     "nav": "Save sections",

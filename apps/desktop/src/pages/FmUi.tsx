@@ -398,17 +398,30 @@ export function More({ children }: { children: ReactNode }) {
  * Sections d'un long onglet, montrées une à la fois derrière une rangée de pastilles : moins de défilement, et le
  * choix est retenu (par onglet) d'une visite à l'autre.
  */
-/** Les mêmes sections, l'une sous l'autre sur une seule page : pas de bouton à cliquer pour voir la suite. */
-export function SectionStack({ sections }: { sections: { id: string; label: string; node: ReactNode }[] }) {
+/**
+ * Les mêmes sections, l'une sous l'autre sur une seule page. Une section `fold` est repliée par défaut derrière son
+ * titre : le détail reste à un clic sans allonger la page.
+ */
+export function SectionStack({ sections }: { sections: { id: string; label: string; fold?: boolean; node: ReactNode }[] }) {
   return (
     <div className="space-y-4">
       {sections
         .filter((s) => s.node)
-        .map((s) => (
-          <div key={s.id} className="space-y-4">
-            {s.node}
-          </div>
-        ))}
+        .map((s) =>
+          s.fold ? (
+            <details key={s.id} className="group">
+              <summary className="card cursor-pointer list-none py-3 font-bold text-canard marker:hidden">
+                <span className="mr-2 inline-block transition-transform group-open:rotate-90">▸</span>
+                {s.label}
+              </summary>
+              <div className="mt-4 space-y-4">{s.node}</div>
+            </details>
+          ) : (
+            <div key={s.id} className="space-y-4">
+              {s.node}
+            </div>
+          ),
+        )}
     </div>
   );
 }

@@ -306,8 +306,12 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
             node: (
               <>
               {/* D'abord ce que disent les matchs et ce qu'il faut changer dans le jeu ; le onze et son détail ensuite. */}
-              {team === 'A' && <MatchReviewCard review={review} tactic={gameTactic} fromGame={fromGame} />}
-              {team === 'A' && fromGame && planA && <TodoCard items={todo} plan={planA} engine={engine} tactic={gameTactic} />}
+              {team === 'A' && (
+                <div className={`grid items-start gap-4 ${fromGame && review.recent.length ? 'xl:grid-cols-[2fr_3fr]' : ''}`}>
+                  <MatchReviewCard review={review} tactic={gameTactic} fromGame={fromGame} />
+                  {fromGame && planA && <TodoCard items={todo} plan={planA} engine={engine} tactic={gameTactic} />}
+                </div>
+              )}
               {/* Le onze : terrain compact à gauche, liste prête à appliquer dans FM27 à droite. Survoler l'un met l'autre en évidence. */}
               <section className="card">
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -456,6 +460,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
           {
             id: 'match',
             label: t('fm.tac.sections.match', { name: opp?.name ?? t('fm.opp.club') }),
+            fold: true,
             node:
               opp && !fromGame ? (
                 <>
@@ -597,7 +602,8 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
           },
           {
             id: 'balance',
-            label: t('fm.tac.sections.balance'),
+            label: t('fm.tac.sections.balanceFold'),
+            fold: true,
             node: (
               <>
               <div className="grid gap-4 lg:grid-cols-2">

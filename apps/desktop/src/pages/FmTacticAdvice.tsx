@@ -11,6 +11,7 @@ import {
   type TeamAdvice,
   type TodoItem,
 } from '@fm-immersion/module-fm';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { fitPct, More } from './FmUi';
 
@@ -168,6 +169,8 @@ export function MatchReviewCard({ review, tactic, fromGame }: { review: MatchRev
   );
 }
 
+/** Lignes montrées d'emblée dans « À changer dans FM27 ». */
+const TODO_SHOWN = 5;
 const TODO_TAG: Record<TodoItem['kind'], string> = { team: 'team', starter: 'starter', piChange: 'player', piAdd: 'player', piRemove: 'player', role: 'role' };
 
 /**
@@ -179,6 +182,9 @@ export function TodoCard({ items, plan, engine, tactic }: { items: TodoItem[]; p
   const en = i18n.resolvedLanguage === 'en';
   const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 2 });
   const fmt = (vals: Record<string, number | string>) => Object.fromEntries(Object.entries(vals).map(([k, v]) => [k, typeof v === 'number' ? nf1.format(v) : v]));
+  // Les plus importants d'abord : la suite s'ouvre sur demande, pour ne pas allonger la page.
+  const [all, setAll] = useState(false);
+  const shown = all ? items : items.slice(0, TODO_SHOWN);
   const role = (code: string) => {
     const r = engine.roles.get(code);
     return (en ? r?.en : r?.fr) ?? r?.fr ?? code;
@@ -224,13 +230,13 @@ export function TodoCard({ items, plan, engine, tactic }: { items: TodoItem[]; p
       <p className="mt-1 text-sm text-brun">{t(tactic ? 'fm.tac.todo.intro' : 'fm.tac.todo.introNoName', { tactic: tactic ?? '' })}</p>
       {items.length ? (
         <ol className="mt-3 space-y-1.5 text-sm">
-          {items.map((it, i) => {
+          {shown.map((it, i) => {
             const l = line(it);
             return (
               <li key={i} className="flex items-start gap-3 rounded-xl bg-creme/50 px-3 py-2">
-                <span className="mt-0.5 w-6 shrink-0 text-right font-bold text-canard/50">{i + 1}</span>
-                <span className="mt-0.5 w-36 shrink-0 text-xs font-bold uppercase tracking-wide text-orange-fonce">{t(`fm.tac.todo.tag.${TODO_TAG[it.kind]}`)}</span>
+                <span className="w-5 shrink-0 text-right font-bold text-canard/50">{i + 1}</span>
                 <span>
+                  <span className="mr-2 text-xs font-bold uppercase tracking-wide text-orange-fonce">{t(`fm.tac.todo.tag.${TODO_TAG[it.kind]}`)}</span>
                   <b className="text-canard">{l.what}</b>
                   <span className="block text-xs text-brun first-letter:uppercase">{l.why}</span>
                 </span>
@@ -240,6 +246,11 @@ export function TodoCard({ items, plan, engine, tactic }: { items: TodoItem[]; p
         </ol>
       ) : (
         <p className="mt-2 rounded-xl bg-eau/15 px-3 py-2 text-sm">{t('fm.tac.todo.none')}</p>
+      )}
+      {items.length > TODO_SHOWN && (
+        <button type="button" className="mt-2 text-sm font-bold text-orange-fonce underline" onClick={() => setAll(!all)}>
+          {all ? t('fm.tac.todo.less') : t('fm.tac.todo.more', { count: items.length - TODO_SHOWN })}
+        </button>
       )}
       <More>{t('fm.tac.todo.help')}</More>
     </section>

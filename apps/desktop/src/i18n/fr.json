@@ -313,8 +313,8 @@
       "myTactics": "Mes tactiques (Construire)",
       "todo": {
         "title": "À changer dans FM27",
-        "intro": "Tout ce que l'appli te conseille de modifier dans « {{tactic}} », du plus important au moins important. Le détail de chaque point est plus bas.",
-        "introNoName": "Tout ce que l'appli te conseille de modifier dans ta tactique, du plus important au moins important. Le détail de chaque point est plus bas.",
+        "intro": "Ce que l'appli te conseille de modifier dans « {{tactic}} », le plus important d'abord.",
+        "introNoName": "Ce que l'appli te conseille de modifier dans ta tactique, le plus important d'abord.",
         "none": "Rien à changer : ta tactique FM27 est réglée comme conseillé.",
         "tag": {
           "team": "Consigne d'équipe",
@@ -331,7 +331,10 @@
         "piRemoveWhy": "{{count}} consignes réglées pour {{budget}} conseillées : ses attributs n'appuient pas celles-ci",
         "role": "{{player}}, {{phase}} : « {{to}} » au lieu de « {{from}} »",
         "roleWhy": "noté {{toFit}} contre {{fromFit}} ; à faire loin d'un gros match, la familiarité avec le rôle repart de zéro",
-        "help": "Cette liste reprend les conseils des cadres plus bas (derniers matchs, consignes d'équipe, consignes individuelles, avis de l'adjoint), dans l'ordre où ils pèsent sur tes résultats. Elle se vide à mesure que tu règles ta tactique dans FM27 et que l'appli relit la partie. Rien n'est modifié dans le jeu : c'est toi qui décides."
+        "help": "Cette liste reprend les conseils des cadres plus bas (derniers matchs, consignes d'équipe, consignes individuelles, avis de l'adjoint), dans l'ordre où ils pèsent sur tes résultats. Elle se vide à mesure que tu règles ta tactique dans FM27 et que l'appli relit la partie. Rien n'est modifié dans le jeu : c'est toi qui décides.",
+        "more_one": "Voir le {{count}} autre point",
+        "more_other": "Voir les {{count}} autres points",
+        "less": "Réduire la liste"
       },
       "review": {
         "title": "Ce que disent tes derniers matchs",
@@ -531,7 +534,8 @@
       "sections": {
         "xi": "Onze de base",
         "match": "Contre {{name}}",
-        "balance": "Équilibre et consignes"
+        "balance": "Équilibre et consignes",
+        "balanceFold": "Équilibre de l'équipe et consignes d'équipe, en détail"
       }
     },
     "nav": "Sections de la partie",
