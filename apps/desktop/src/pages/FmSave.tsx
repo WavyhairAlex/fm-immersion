@@ -539,8 +539,11 @@ function SettingsPage({
 
       <GameCompatCard />
 
-      <section className="space-y-4" aria-labelledby="advanced">
-        <h2 id="advanced" className="text-lg">{t('layout.connect.advanced')}</h2>
+      {/* Réglages rarement touchés : repliés, l'écran montre d'abord l'état et la prochaine étape. */}
+      <details className="group space-y-4" aria-labelledby="advanced">
+        <summary id="advanced" className="cursor-pointer font-display text-lg font-semibold">
+          {t('layout.connect.advanced')} <span className="font-sans text-sm font-normal text-brun group-open:hidden">· {t('layout.connect.advancedMore')}</span>
+        </summary>
         <div className="card space-y-3 p-4">
           <label className="flex items-center gap-1.5 text-sm text-canard" title={t('fm.abilities.help')}>
             <input
@@ -558,7 +561,7 @@ function SettingsPage({
         </div>
         <FmBridgeOptions />
         <AiSettingsCard />
-      </section>
+      </details>
     </div>
   );
 }

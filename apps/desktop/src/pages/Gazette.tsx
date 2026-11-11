@@ -119,6 +119,18 @@ export function Gazette() {
   const unePhotoKey = ['gazette', 'une-photo', saveId, issue?.number, issue?.weekStart] as const;
   const { data: unePhoto = null } = useQuery({ queryKey: unePhotoKey, queryFn: () => gazettePhoto(saveId, issue!, false), enabled: !!issue });
 
+  // Ce qui attend un clic (images à envoyer) passe en tête quand le salon est relié ;
+  // sinon une seule ligne en tête, et les images sous la gazette.
+  const linked = isWebhook(getWebhook());
+  const shareable = (big ? 1 : 0) + records.length + breaking.length;
+  const extras = (
+    <>
+      {big && <BigMatchSection saveId={saveId} match={big} looks={looksReady} />}
+      {records.length > 0 && <RecordSection saveId={saveId} news={records} looks={looksReady} />}
+      {breaking.length > 0 && <BreakingSection saveId={saveId} news={breaking} looks={looksReady} />}
+    </>
+  );
+
   return (
     <div className="w-full">
       {!issue && <p className="max-w-3xl text-brun">{t('modes.gazette.details')}</p>}
@@ -140,9 +152,16 @@ export function Gazette() {
       )}
 
       {exitFresh && <FarewellSection saveId={saveId} exits={exits} looks={looksReady} />}
-      {big && <BigMatchSection saveId={saveId} match={big} looks={looksReady} />}
-      {records.length > 0 && <RecordSection saveId={saveId} news={records} looks={looksReady} />}
-      {breaking.length > 0 && <BreakingSection saveId={saveId} news={breaking} looks={looksReady} />}
+      {linked
+        ? extras
+        : shareable > 0 && (
+            <section className="card mt-6 flex flex-wrap items-center justify-between gap-3 p-4">
+              <p className="text-sm">{t('gazette.shareReady', { count: shareable })}</p>
+              <Link to="/discord" className="btn-secondary text-sm">
+                {t('gazette.setupDiscord')}
+              </Link>
+            </section>
+          )}
 
       {issue && (
         <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
@@ -182,6 +201,7 @@ export function Gazette() {
         </div>
       )}
 
+      {!linked && extras}
       {cards.length > 0 && <SeasonCard saveId={saveId} seasons={cards} />}
       {season && <SeasonSection saveId={saveId} review={season} />}
       {exits.length > 0 && !exitFresh && (
@@ -583,14 +603,10 @@ function BreakingSection({ saveId, news, looks }: { saveId: string; news: Breaki
         )}
         {makePhoto.isSuccess && !photo && <p className="text-xs text-brun">{t('breaking.photoNone')}</p>}
         {makePhoto.isError && <p className="text-xs font-bold text-corail">{String(makePhoto.error)}</p>}
-        {isWebhook(getWebhook()) ? (
+        {isWebhook(getWebhook()) && (
           <button type="button" className="btn-primary mt-2 text-sm" disabled={send.isPending || makePhoto.isPending} onClick={() => send.mutate()}>
             {t('breaking.send')}
           </button>
-        ) : (
-          <Link to="/discord" className="btn-secondary mt-2 text-sm">
-            {t('gazette.setupDiscord')}
-          </Link>
         )}
         {send.isSuccess && <p className="text-xs font-bold text-eau-fonce">{t('breaking.sent')}</p>}
         {send.isError && <p className="text-xs font-bold text-corail">{String(send.error)}</p>}
@@ -625,14 +641,10 @@ function BigMatchSection({ saveId, match, looks }: { saveId: string; match: BigM
       </div>
       <aside className="flex flex-col gap-2 xl:pt-7">
         <p className="text-xs text-brun">{t('bigmatch.sectionHelp')}</p>
-        {isWebhook(getWebhook()) ? (
+        {isWebhook(getWebhook()) && (
           <button type="button" className="btn-primary mt-2 text-sm" disabled={send.isPending} onClick={() => send.mutate()}>
             {t('bigmatch.send')}
           </button>
-        ) : (
-          <Link to="/discord" className="btn-secondary mt-2 text-sm">
-            {t('gazette.setupDiscord')}
-          </Link>
         )}
         {send.isSuccess && <p className="text-xs font-bold text-eau-fonce">{t('bigmatch.sent')}</p>}
         {send.isError && <p className="text-xs font-bold text-corail">{String(send.error)}</p>}
@@ -686,14 +698,10 @@ function RecordSection({ saveId, news, looks }: { saveId: string; news: RecordNe
             ))}
           </ul>
         )}
-        {isWebhook(getWebhook()) ? (
+        {isWebhook(getWebhook()) && (
           <button type="button" className="btn-primary mt-2 text-sm" disabled={send.isPending} onClick={() => send.mutate()}>
             {t('records.send')}
           </button>
-        ) : (
-          <Link to="/discord" className="btn-secondary mt-2 text-sm">
-            {t('gazette.setupDiscord')}
-          </Link>
         )}
         {send.isSuccess && <p className="text-xs font-bold text-eau-fonce">{t('records.sent')}</p>}
         {send.isError && <p className="text-xs font-bold text-corail">{String(send.error)}</p>}
