@@ -93,6 +93,7 @@
       "status": "Statut",
       "starsHelp": "Étoiles de niveau actuel / potentiel selon ton staff",
       "compat": "Projet",
+      "engine": "Moteur",
       "reach": "Portée",
       "apps": "Matchs",
       "goals": "Buts",
@@ -3287,6 +3288,17 @@
     "secondary": {
       "numbers": "Numéros de maillot",
       "loans": "Joueurs prêtés"
+    },
+    "engine": {
+      "badge": "Moteur {{index}}",
+      "title": "Indice moteur {{index}} : un onze entier de ce profil gagnerait environ {{index}} points de % de matchs en plus qu'un onze à 12 partout (tests d'attributs FM27, une tendance).",
+      "strengths": "Atouts : {{list}}",
+      "weaknesses": "Coûte des matchs : {{list}}",
+      "belowMin": "Sous le minimum de 6 : {{list}}",
+      "heading": "Indice moteur",
+      "help": "Ce que ses attributs pèsent vraiment dans le moteur de match de FM27, d'après les tests de la communauté FM-Arena (novembre 2026) : vitesse, accélération et endurance comptent le plus, la détente au-dessus de 12, et il faut au moins 6 en volume de jeu, anticipation, puissance, équilibre, concentration et condition physique. Une tendance tirée d'une seule série de tests, pas la note du jeu : les étoiles restent celles de FM27.",
+      "none": "Rien de marquant.",
+      "gk": "Les gardiens ne sont pas couverts par ces tests."
     }
   },
   "modes": {

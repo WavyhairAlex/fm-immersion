@@ -93,6 +93,7 @@
       "status": "Status",
       "starsHelp": "Current / potential ability stars according to your staff",
       "compat": "Project",
+      "engine": "Engine",
       "reach": "Reach",
       "apps": "Apps",
       "goals": "Goals",
@@ -3287,6 +3288,17 @@
     "secondary": {
       "numbers": "Shirt numbers",
       "loans": "Players out on loan"
+    },
+    "engine": {
+      "badge": "Engine {{index}}",
+      "title": "Engine index {{index}}: a whole XI with this profile would win about {{index}} percentage points more matches than an XI with 12 everywhere (FM27 attribute tests, a trend).",
+      "strengths": "Strengths: {{list}}",
+      "weaknesses": "Costs matches: {{list}}",
+      "belowMin": "Below the minimum of 6: {{list}}",
+      "heading": "Engine index",
+      "help": "What his attributes really weigh in the FM27 match engine, according to FM-Arena community tests (November 2026): pace, acceleration and stamina matter most, jumping reach above 12, and he needs at least 6 in work rate, anticipation, strength, balance, concentration and natural fitness. A trend from a single series of tests, not the game's rating: the stars remain FM27's.",
+      "none": "Nothing notable.",
+      "gk": "Goalkeepers are not covered by these tests."
     }
   },
   "modes": {
