@@ -17,6 +17,7 @@ export function NeedsPanel({
   engine,
   project,
   squad,
+  finances = null,
 }: {
   needs: RecruitNeed[];
   saveId: string;
@@ -24,6 +25,7 @@ export function NeedsPanel({
   engine: TacticEngine;
   project: Project | null;
   squad: FmPlayer[];
+  finances?: { transferBudget: number | null; wageRoom: number | null } | null;
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState<number | null>(null);
@@ -56,7 +58,7 @@ export function NeedsPanel({
             </div>
             {n.attrs.length > 0 && <p className="text-xs text-brun">{t('fm.needs.attrs', { list: n.attrs.map(attr).join(', ') })}</p>}
             {project && n.player && open === i && (
-              <ReplacementFinder saveId={saveId} gameDate={gameDate} engine={engine} project={project} leaving={n.player} squad={squad} onClose={() => setOpen(null)} />
+              <ReplacementFinder saveId={saveId} gameDate={gameDate} engine={engine} project={project} leaving={n.player} squad={squad} onClose={() => setOpen(null)} finances={finances} />
             )}
           </div>
         ))
