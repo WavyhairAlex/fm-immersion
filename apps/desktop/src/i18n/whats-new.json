@@ -1,6 +1,6 @@
 [
   {
-    "version": "0.1.164",
+    "version": "0.1.165",
     "date": "2026-11-11",
     "fr": [
       "Ma carrière, Presse, Visages et Photos s'ouvrent sur un grand bandeau : ton club et ta saison avec ta photo de coach, la conférence qui t'attend, l'état de ton pack de visages, ta dernière photo de situation.",
@@ -9,6 +9,18 @@
     "en": [
       "My career, Press, Faces and Photos open on a large banner: your club and season with your coach photo, the press conference waiting for you, the state of your faces pack, your latest situation photo.",
       "Live Discord shows in a small table what goes to your channel: live coverage of your matches, the gazette, news flashes, and whether it is automatic or on your click."
+    ]
+  },
+  {
+    "version": "0.1.164",
+    "date": "2026-11-11",
+    "fr": [
+      "Tactique suit la nouvelle maquette. Le tableau du onze tient en trois colonnes, Poste, Joueur et Rôle : les deux rôles (avec et sans ballon) sont dans la même case, et la doublure est sous le nom du joueur.",
+      "Les consignes d'équipe conseillées quittent l'écran du onze : elles sont maintenant en tête de Consignes, au-dessus des consignes individuelles. Tout ce qui se règle dans le jeu est au même endroit."
+    ],
+    "en": [
+      "Tactics follows the new mock-up. The XI table fits in three columns, Position, Player and Role: both roles (in and out of possession) share one cell, and the backup sits under the player's name.",
+      "Advised team instructions leave the XI screen: they now open Instructions, above the player instructions. Everything you set in the game is in one place."
     ]
   },
   {
