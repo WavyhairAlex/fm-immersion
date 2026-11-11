@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.1.174",
+    "date": "2026-11-11",
+    "fr": [
+      "Les conférences de presse se renouvellent : la presse t'interroge aussi sur tes recrues, les départs, les blessés, les contrats qui finissent, un joueur qui fait la tête, un jeune qui débute, ton ancien club, la course au titre ou la colère des supporters.",
+      "Quatre rédactions te suivent, chacune avec son journaliste et son style, de L'Écho local à la presse à scandale. Elles se souviennent de tes réponses et te les ressortent quand les résultats ne suivent pas.",
+      "Chaque question propose trois réponses qui collent à la situation (démentir, assumer, protéger le groupe, avec humour…), et ton IA peut reformuler la tienne. La Gazette titre sur ta phrase la plus forte."
+    ],
+    "en": [
+      "Press conferences are fresh again: the press also asks about your signings, departures, injuries, expiring contracts, a sulking player, a youngster's debut, your old club, the title race or angry fans.",
+      "Four outlets follow you, each with its own reporter and style, from the local Echo to the tabloids. They remember your answers and bring them back when results don't follow.",
+      "Each question offers three answers that fit the situation (deny, take the blame, protect the group, with humour…), and your AI can reword yours. The Gazette headlines your strongest line."
+    ]
+  },
+  {
     "version": "0.1.173",
     "date": "2026-11-11",
     "fr": [

@@ -41,7 +41,7 @@ function PressCard({ saveId }: { saveId: string }) {
   const { t } = useTranslation();
   const { data: history = [] } = useHistory(saveId);
   const { data: held } = usePressHeld(saveId);
-  const pending = useMemo(() => (held ? pendingConference(history, new Set(held.map((h) => h.key))) : null), [history, held]);
+  const pending = useMemo(() => (held ? pendingConference(history, new Set(held.map((h) => h.key)), held) : null), [history, held]);
   if (!pending) return null;
   return (
     <Card label={t('press.page.today')} to="/presse" action={t('press.page.go')}>

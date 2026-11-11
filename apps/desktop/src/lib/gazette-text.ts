@@ -56,6 +56,9 @@ function opponentPreview(t: TFunction, p: GazetteStory['params']): string {
   return [sentence, p.threat ? String(p.threat) : ''].filter(Boolean).join(' ');
 }
 
+/** Tons de réponse qui donnent leur titre à la citation du coach dans la gazette (les autres gardent le titre du match). */
+const TONED_TITLES = new Set(['confident', 'ambitious', 'firm', 'selfCritical', 'protect', 'praise', 'deny', 'deflect', 'tease', 'humour']);
+
 /** Met une brève de la gazette en mots (FR/EN), avec le nom du club pour les titres. */
 export function storyText(t: TFunction, club: string, s: GazetteStory, lang?: string): StoryText {
   const p = s.params;
@@ -101,8 +104,17 @@ export function storyText(t: TFunction, club: string, s: GazetteStory, lang?: st
     }
     case 'press': {
       // Paroles du coach en conférence de presse, citées telles qu'il les a dites (ou son refus de répondre).
+      // Le titre reprend le ton de la phrase citée (« Le coach hausse le ton »), le texte la rédaction qui l'a recueillie.
       const opponent = str(p.opponent) ?? t('gazette.opponentUnknown');
-      return { title: k(`title_${p.moment === 'pre' ? 'pre' : 'post'}`, { opponent }), body: p.quote ? k('body', { quote: p.quote }) : k('noComment') };
+      const moment = p.moment === 'pre' ? 'pre' : 'post';
+      const toned = p.quote && TONED_TITLES.has(String(p.tone)) ? k(`title_${p.tone}`, { opponent }) : null;
+      const outlet = str(p.outlet);
+      const body = !p.quote
+        ? k('noComment')
+        : outlet && /^(local|radio|tabloid|tv)$/.test(outlet)
+          ? k(`bodyOutlet_${moment}`, { quote: p.quote, opponent, outletTo: t(`press.outletsTo.${outlet}`, { club }) })
+          : k('body', { quote: p.quote });
+      return { title: toned ?? k(`title_${moment}`, { opponent }), body };
     }
     case 'injury': {
       const days = Number(p.days);
