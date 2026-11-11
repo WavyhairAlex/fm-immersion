@@ -1,6 +1,6 @@
 [
   {
-    "version": "0.1.162",
+    "version": "0.1.164",
     "date": "2026-11-11",
     "fr": [
       "Tactique suit la nouvelle maquette. Le tableau du onze tient en trois colonnes, Poste, Joueur et Rôle : les deux rôles (avec et sans ballon) sont dans la même case, et la doublure est sous le nom du joueur.",
@@ -9,6 +9,30 @@
     "en": [
       "Tactics follows the new mock-up. The XI table fits in three columns, Position, Player and Role: both roles (in and out of possession) share one cell, and the backup sits under the player's name.",
       "Advised team instructions leave the XI screen: they now open Instructions, above the player instructions. Everything you set in the game is in one place."
+    ]
+  },
+  {
+    "version": "0.1.163",
+    "date": "2026-11-11",
+    "fr": [
+      "La barre latérale suit la nouvelle maquette : Tactique, Effectif, Résultats et Mercato, puis Ma carrière, Gazette, Presse, Live Discord et Défis, puis Visages, Photos, Sauvegardes et réglages.",
+      "Chaque écran du club a une seule rangée d'onglets, un par partie (par exemple Adversaire, Calendrier ou Entraînement dans Tactique), et le titre dit la partie que tu regardes."
+    ],
+    "en": [
+      "The sidebar follows the new design: Tactics, Squad, Results and Transfers, then My career, Gazette, Press, Live Discord and Challenges, then Faces, Photos, Saves and settings.",
+      "Each club screen has a single row of tabs, one per section (for example Opponent, Calendar or Training in Tactics), and the title names the section you are looking at."
+    ]
+  },
+  {
+    "version": "0.1.162",
+    "date": "2026-11-11",
+    "fr": [
+      "Nouvel accueil « Aujourd'hui » : le prochain match en grand avec « Voir l'adversaire », le point du staff sur un joueur (blessure, retour, forme) avec sa photo et sa fiche, et la une de ta dernière gazette façon journal.",
+      "Barre latérale plus courte : Effectif, Tactique, Adversaire, Résultats et Mercato dans Mon club ; Gazette, Presse et Live Discord ont chacun leur entrée ; Défis, Visages, Photos, Sauvegardes et réglages passent en bas."
+    ],
+    "en": [
+      "New “Today” home: the next match up front with “See the opponent”, a staff update on one player (injury, return, form) with his photo and profile, and the front page of your latest gazette in newspaper style.",
+      "Shorter sidebar: Squad, Tactics, Opponent, Results and Transfers under My club; Gazette, Press and Live Discord each get their own entry; Challenges, Faces, Photos, Saves and settings move to the bottom."
     ]
   },
   {
