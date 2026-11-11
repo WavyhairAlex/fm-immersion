@@ -23,6 +23,7 @@ const imported: string[] = [];
 vi.mock('../src/lib/data', () => ({
   fmData: {
     history: async () => [{ gameDate: '2027-08-10', playerCount: 20 }],
+    datesElsewhere: async (saveId: string) => new Set<string>(saveId === 'neuve' ? ['2027-08-12'] : []),
     importSnapshot: async (_s: string, raw: { gameDate: string }) => {
       imported.push(raw.gameDate);
       return raw;
@@ -43,5 +44,11 @@ describe('historique automatique depuis les fichiers datés du plugin', () => {
     imported.length = 0;
     expect(await importMissingHistory('s', 'D:\\archivix', 'Malženice', 1)).toBe(1);
     expect(imported).toEqual(['2027-08-12']);
+  });
+
+  it("saute les jours déjà enregistrés dans une autre carrière (fichiers communs à toutes les sauvegardes)", async () => {
+    imported.length = 0;
+    expect(await importMissingHistory('neuve', 'D:\\archivix', 'Malženice')).toBe(1);
+    expect(imported).toEqual(['2027-08-15']);
   });
 });

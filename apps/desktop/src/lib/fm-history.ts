@@ -17,7 +17,9 @@ export async function importMissingHistory(saveId: string, folder: string, club:
   if (!club) return 0;
   const files = await invoke<FmHistoryFile[]>('fm_history_list', { folder });
   const have = new Set((await fmData.history(saveId)).map((h) => h.gameDate.slice(0, 10)));
-  const missing = files.filter((f) => f.club === club && !have.has(f.gameDate)).slice(0, limit);
+  // Les fichiers du plugin sont communs à toutes les sauvegardes : un jour déjà dans une autre carrière vient d'elle.
+  const elsewhere = await fmData.datesElsewhere(saveId, club);
+  const missing = files.filter((f) => f.club === club && !have.has(f.gameDate) && !elsewhere.has(f.gameDate)).slice(0, limit);
   let imported = 0;
   for (const f of missing) {
     try {

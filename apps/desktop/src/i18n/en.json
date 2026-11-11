@@ -62,6 +62,7 @@
       "missing": "{{name}} (not found)",
       "saved": "saved {{date}}",
       "other": "FM27 has loaded a save with {{club}}, but this career follows {{expected}}: nothing is imported here. Open the FM Immersion career for that save, or import anyway if you changed clubs.",
+      "otherCareer": "This {{club}} reading belongs to your “{{career}}” career: FM27 hasn't written anything for this new save yet. Load it in FM27 and advance one day, it will be read automatically.",
       "importAnyway": "Import anyway ({{club}})",
       "free": "Without a club since {{date}}: your next club will be picked up automatically"
     },

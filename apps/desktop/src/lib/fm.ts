@@ -1,7 +1,7 @@
 import { saves } from '@fm-immersion/db';
 import { addBaseTarget, carryRoleStars, fmSnapshotSchema, fmStatusSchema, type DbPlayer, type FmStatus, type GazetteWriting, type LeavingMark, type LeavingMarks, mergeTargets, type FmSnapshot, type TargetRecord } from '@fm-immersion/module-fm';
 import { fmGazetteWriting, fmPressConferences, fmSnapshots, fmTargets, type FmPressConferenceRow } from '@fm-immersion/module-fm/schema';
-import { and, asc, desc, eq, lte } from 'drizzle-orm';
+import { and, asc, desc, eq, lte, ne } from 'drizzle-orm';
 import { challengesRepo } from './challenges';
 import type { Db } from './db';
 
@@ -50,8 +50,10 @@ export class FmOtherSaveError extends Error {
   constructor(
     readonly club: string,
     readonly expected: string,
+    /** Autre carrière FM Immersion qui a déjà ce jour de ce club : le relevé vient de sa sauvegarde, pas de la nouvelle. */
+    readonly career?: string,
   ) {
-    super(`instantané de ${club}, la partie suit ${expected}`);
+    super(career ? `instantané de ${club}, déjà dans la carrière ${career}` : `instantané de ${club}, la partie suit ${expected}`);
     this.name = 'FmOtherSaveError';
   }
 }
@@ -83,6 +85,29 @@ export function fmRepo(db: Db) {
         .orderBy(desc(fmSnapshots.gameDate));
     },
 
+    /**
+     * Nom de l'autre carrière qui a déjà ce club à cette date (le même relevé du plugin), ou null. Les fichiers du plugin
+     * sont communs à toutes les sauvegardes : c'est ainsi qu'on reconnaît ceux d'une autre partie.
+     */
+    async ownerElsewhere(saveId: string, club: string, gameDate: string): Promise<string | null> {
+      const [row] = await db
+        .select({ name: saves.name })
+        .from(fmSnapshots)
+        .innerJoin(saves, eq(saves.id, fmSnapshots.saveId))
+        .where(and(ne(fmSnapshots.saveId, saveId), eq(fmSnapshots.club, club), eq(fmSnapshots.gameDate, gameDate)))
+        .limit(1);
+      return row ? row.name : null;
+    },
+
+    /** Jours (AAAA-MM-JJ) de ce club déjà enregistrés dans une autre carrière : ils ne sont pas rattrapés ici. */
+    async datesElsewhere(saveId: string, club: string): Promise<Set<string>> {
+      const rows = await db
+        .select({ gameDate: fmSnapshots.gameDate })
+        .from(fmSnapshots)
+        .where(and(ne(fmSnapshots.saveId, saveId), eq(fmSnapshots.club, club)));
+      return new Set(rows.map((r) => r.gameDate.slice(0, 10)));
+    },
+
     /** Tous les instantanés de la partie, du plus ancien au plus récent, pour les courbes et projections. */
     async all(saveId: string) {
       return db
@@ -106,6 +131,13 @@ export function fmRepo(db: Db) {
       // Après une période sans club dans cette carrière, le nouveau club est accepté sans confirmation.
       const newJob = !!settings.fmFreeSince && parsed.gameDate >= settings.fmFreeSince;
       if (expected && parsed.club !== expected && !opts.force && !newJob) throw new FmOtherSaveError(parsed.club, expected);
+      // Carrière toute neuve (11/11/2026, partie « New One ») : tant que FM27 n'a rien écrit pour la nouvelle sauvegarde,
+      // le fichier du plugin est encore celui de l'ancienne. Un jour de club déjà enregistré dans une autre carrière
+      // vient de cette autre sauvegarde : il n'est pas pris sans confirmation.
+      if (!prev && !opts.force) {
+        const owner = await this.ownerElsewhere(saveId, parsed.club, parsed.gameDate);
+        if (owner !== null) throw new FmOtherSaveError(parsed.club, '', owner);
+      }
       // Un ancien instantané (d'avant le départ) ne met pas fin à la période sans club, et un jour plus ancien que le
       // dernier (ancien club importé depuis « Ma carrière ») ne change pas le club suivi par la partie.
       const older = !!prev && parsed.gameDate < prev.gameDate;

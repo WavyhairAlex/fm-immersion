@@ -113,6 +113,16 @@ public class FmBindingReader : IGameReader
         return d == null || d.StartsWith("1900") ? null : d;
     }
 
+    // 0.6.1 (partie « New One » commencée sans emploi, 11/11/2026) : au début d'une partie sans club, le jeu renvoie
+    // quand même une équipe, mais sans nom ni joueurs. Vrai quand le jeu répond sur la date et pas sur le nom : on la
+    // traite alors comme « sans club » (archivix-status.json avec club null) au lieu d'attendre un effectif qui ne vient pas.
+    public static bool TeamWithoutName()
+    {
+        var r = Batch.Run(new[] { new Req(null, Team + "/Name"), new Req(null, "game.CurrentGameDate") }, 3000);
+        var d = DecodeDate(r[1] as string);
+        return d != null && !d.StartsWith("1900") && string.IsNullOrEmpty(CleanName(r[0] as string));
+    }
+
     // Date de jeu et club du manager en une seule requête (0.5.3, DateLoop). (null, null) sans équipe chargée.
     public static (string? Date, string? Club) CurrentDateAndClub()
     {

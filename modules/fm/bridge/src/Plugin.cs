@@ -18,7 +18,7 @@ namespace Archivix;
 [BepInPlugin("fr.archivix.bridge", "Archivix Bridge", Version)]
 public class Plugin : BasePlugin
 {
-    public const string Version = "0.5.9";
+    public const string Version = "0.6.1";
     internal static ManualLogSource Log = null!;
     // Dossier où le plugin écrit ses instantanés (réglage BepInEx\config\fr.archivix.bridge.cfg,
     // que FM Immersion renseigne à l'installation ; par défaut le dossier de données FM27 dans Documents).
@@ -114,6 +114,7 @@ public class Plugin : BasePlugin
             try
             {
                 var date = FmBindingReader.CurrentDate();
+                if (date != null && FmBindingReader.TeamWithoutName()) date = null;   // 0.6.1 : sans club dès le début de la partie
                 if (date == null)   // pas d'équipe chargée : menu, chargement, ou manager sans club
                 {
                     lastDate = null; loadedSince = null;

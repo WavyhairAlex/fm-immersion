@@ -360,7 +360,9 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
         {other && (
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl bg-white px-4 py-3 text-sm ring-1 ring-corail/40" role="alert">
             <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-full bg-ambre" aria-hidden />
-            <span className="text-canard">{t('fm.saveFile.other', { club: other.club, expected: other.expected })}</span>
+            <span className="text-canard">
+              {other.career ? t('fm.saveFile.otherCareer', { club: other.club, career: other.career }) : t('fm.saveFile.other', { club: other.club, expected: other.expected })}
+            </span>
             <button type="button" className="btn-secondary px-3 py-1 text-xs" disabled={importSnap.isPending} onClick={() => importSnap.mutate({ force: true })}>
               {t('fm.saveFile.importAnyway', { club: other.club })}
             </button>
