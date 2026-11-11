@@ -85,27 +85,30 @@ export function Challenges() {
 
       {!!saveId && (
         <>
-          <label className="mt-6 block max-w-sm">
-            <span className="text-sm font-bold">{t('challenges.coach')}</span>
-            <input
-              className="input mt-1"
-              value={coach}
-              maxLength={40}
-              placeholder={t('challenges.coachPlaceholder')}
-              onChange={(e) => {
-                setCoach(e.target.value);
-                write(COACH_KEY, e.target.value.trim());
-              }}
-            />
-          </label>
-
-          <h2 className="mt-8 text-xl font-semibold">{t('challenges.mine')}</h2>
-          {!active.length && <p className="mt-2 text-brun">{t('challenges.none')}</p>}
-          <div className="mt-3 grid gap-4 xl:grid-cols-2">
-            {active.map((c) => (
-              <Enrolled key={c.id} row={c} history={history} coach={coach.trim()} />
-            ))}
-          </div>
+          {/* Défis en cours d'abord ; le pseudo ne sert qu'à leurs certificats, il vient avec eux. */}
+          {active.length > 0 && (
+            <>
+              <h2 className="mt-8 text-xl font-semibold">{t('challenges.mine')}</h2>
+              <div className="mt-3 grid gap-4 xl:grid-cols-2">
+                {active.map((c) => (
+                  <Enrolled key={c.id} row={c} history={history} coach={coach.trim()} />
+                ))}
+              </div>
+              <label className="mt-4 block max-w-sm">
+                <span className="text-sm font-bold">{t('challenges.coach')}</span>
+                <input
+                  className="input mt-1"
+                  value={coach}
+                  maxLength={40}
+                  placeholder={t('challenges.coachPlaceholder')}
+                  onChange={(e) => {
+                    setCoach(e.target.value);
+                    write(COACH_KEY, e.target.value.trim());
+                  }}
+                />
+              </label>
+            </>
+          )}
 
           <h2 className="mt-8 text-xl font-semibold">{t('challenges.catalog')}</h2>
           <div className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-3">

@@ -589,23 +589,24 @@ function isSlow(a: Record<string, number> | undefined): boolean {
 
 /**
  * Régime tactique de la semaine, d'après l'efficacité tactique lue dans le jeu (0-100) :
- * - « learn » sous 60 : la tactique n'est pas encore comprise, les séances tactiques passent en premier ;
- * - « build » de 60 à 79 : on continue de construire, en gardant la progression ;
- * - « keep » à 80 et plus : on entretient (ce qui est appris s'efface), la progression reprend la main ;
- * - « unknown » : jauge non lue, compromis de 4 séances.
- * Repère (test sur le code d'entraînement de FM27, publié avec le banc d'essai de jamiebolden) : il faut environ 7
- * séances tactiques par semaine, en rotation, pour garder toutes les zones au-dessus de 80 ; passer l'efficacité de 50
- * à 100 rapporte environ +0,15 point par match.
+ * - « learn » sous 25 : c'est là que l'efficacité rapporte le plus (de 0 à 20 : +15 % de victoires), on la monte vite ;
+ * - « build » de 25 à 49 : petit gain encore (de 40 à 50 : +3 %), on la pousse jusqu'à 50 ;
+ * - « keep » à 50 et plus : au-delà, presque plus rien (de 50 à 100 : +1,6 %), la progression reprend la main et les
+ *   matchs entretiennent l'essentiel ;
+ * - « unknown » : jauge non lue, compromis.
+ * Repères : courbe victoires / efficacité d'harvestgreen22 et du forum playgm (reprise par ZaZ sur FM-Arena, 2026) ;
+ * banc d'essai de jamiebolden : 8 séances tactiques par mois font l'essentiel du gain (+4,3 points), 24 n'ajoutent
+ * que +1,3 point pour presque deux fois plus de jours de blessure.
  */
 export type TacticalMode = 'learn' | 'build' | 'keep' | 'unknown';
-export const TE_LEARN_BELOW = 60;
-export const TE_KEEP_FROM = 80;
+export const TE_LEARN_BELOW = 25;
+export const TE_KEEP_FROM = 50;
 export function tacticalMode(te: number | null | undefined): TacticalMode {
   if (te == null || !Number.isFinite(te)) return 'unknown';
   return te < TE_LEARN_BELOW ? 'learn' : te < TE_KEEP_FROM ? 'build' : 'keep';
 }
 /** Séances tactiques visées par semaine selon le régime (la place disponible peut en laisser moins). */
-export const TACTICAL_TARGET: Record<TacticalMode, number> = { learn: 7, build: 5, keep: 3, unknown: 4 };
+export const TACTICAL_TARGET: Record<TacticalMode, number> = { learn: 6, build: 4, keep: 2, unknown: 3 };
 /** Équipes de jeunes : la progression d'abord. */
 export const YOUTH_TACTICAL = 2;
 /**
@@ -716,7 +717,8 @@ function buildCoachWeek(input: TrainingInput): TrainingWeek {
     used.add(a);
     tactical.push({ s: a, why });
   };
-  for (let i = 0; i < Math.min(PRESSING_TRAP_SESSIONS, tacticalCount - (top && tacticalCount <= 2 ? 1 : 0)); i++) tactical.push({ s: 'pressingTrap', why: 'press' });
+  // Deux séances tactiques ou moins : un seul Piège du pressing, l'autre séance pour une zone (sinon rien ne tourne).
+  for (let i = 0; i < Math.min(PRESSING_TRAP_SESSIONS, tacticalCount <= 2 ? 1 : tacticalCount); i++) tactical.push({ s: 'pressingTrap', why: 'press' });
   used.add('pressingTrap');
   for (const a of weak) add(a, 'weak');
   if (top) add(top, 'top');
@@ -738,7 +740,9 @@ function buildCoachWeek(input: TrainingInput): TrainingWeek {
     let why: NonNullable<TrainingDay['why']> = [null, null, null];
     if (kind === 'match') sessions = ['match', null, null];
     else if (kind === 'recovery') {
-      sessions = ['rest', 'recovery', null];
+      // Repos complet le lendemain du match : pas de contrôle de blessure ce jour-là, et la séance Récupération ne
+      // rapporte pas plus que le repos (11,0 contre 10,7 chez harvestgreen22). Ce jour-là ne coûte pas de rythme.
+      sessions = ['rest', 'rest', null];
       why = ['recover', 'recover', null];
     } else if (kind === 'rest') {
       sessions = ['rest', 'rest', null];
@@ -774,7 +778,7 @@ function buildCoachWeek(input: TrainingInput): TrainingWeek {
   if (devCount >= 2) lessons.push({ id: 'devBlock', params: { count: devCount } });
   else lessons.push({ id: 'devShort', params: { count: devCount } });
   if (tacticalCount < target) lessons.push({ id: 'tacticalShort', params: { count: tacticalCount, target } });
-  if (tactical.some((x) => x.s === 'pressingTrap')) lessons.push({ id: 'pressTrap' });
+  if (tactical.filter((x) => x.s === 'pressingTrap').length >= 2) lessons.push({ id: 'pressTrap' });
   if (tactical.some((x) => x.why === 'rotate')) lessons.push({ id: 'rotation' });
   if (kinds.includes('prep')) lessons.push({ id: 'prep' });
   if (kinds.includes('recovery')) lessons.push({ id: 'recover' });

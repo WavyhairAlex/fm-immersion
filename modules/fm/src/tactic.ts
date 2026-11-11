@@ -220,13 +220,19 @@ function thresholdFactor(p: FmPlayer, gameCode: string): number {
  * l'adéquation au rôle affichée.
  */
 export function readiness(p: FmPlayer): number {
-  const cond = p.condition != null && p.condition < 95 ? -(95 - p.condition) * 0.1 : 0;
-  const sharp = p.sharpness != null && p.sharpness < 90 ? -(90 - p.sharpness) * 0.05 : 0;
+  const r = readinessParts(p);
+  return r.condition + r.sharpness + r.morale + r.leader;
+}
+
+/** Détail de la forme du jour, pour dire pourquoi un joueur est écarté (fatigue, manque de rythme, moral). */
+export function readinessParts(p: FmPlayer): { condition: number; sharpness: number; morale: number; leader: number } {
+  const condition = p.condition != null && p.condition < 95 ? -(95 - p.condition) * 0.1 : 0;
+  const sharpness = p.sharpness != null && p.sharpness < 90 ? -(90 - p.sharpness) * 0.05 : 0;
   const m = moraleLevel(p.morale);
-  const mor = m == null ? 0 : ([-1.2, -0.7, -0.3, 0, 0.2, 0.4] as const)[m]!;
+  const morale = m == null ? 0 : ([-1.2, -0.7, -0.3, 0, 0.2, 0.4] as const)[m]!;
   // Faire jouer les leaders du vestiaire soutient le moral du groupe.
-  const lead = /leader|meneur|chef/i.test(p.hierarchy ?? '') ? 0.2 : /influen/i.test(p.hierarchy ?? '') ? 0.1 : 0;
-  return cond + sharp + mor + lead;
+  const leader = /leader|meneur|chef/i.test(p.hierarchy ?? '') ? 0.2 : /influen/i.test(p.hierarchy ?? '') ? 0.1 : 0;
+  return { condition, sharpness, morale, leader };
 }
 
 export class TacticEngine {
@@ -799,6 +805,8 @@ const BOX = new Set(['CF', 'POA', 'TF', 'CHF', 'DLF', 'IF', 'WF', 'SS', 'BBM']);
 
 export interface Slot {
   pos: PosCode;
+  /** Poste sans ballon quand il diffère (FM27 place chaque joueur deux fois : un MO (D) peut défendre en M (D)). */
+  posOOP?: PosCode;
   x: number;
   y: number;
   /** Rôle avec ballon (code du repère). */
@@ -810,6 +818,13 @@ export interface Slot {
   fit: number | null;
   /** Lu dans le jeu (onze du jeu) : rôle personnalisé et consignes individuelles réelles. */
   game?: { custom: boolean; instructions: { ip: string[]; oop: string[] } };
+}
+
+/** Adéquation moyenne d'un joueur aux deux rôles d'un créneau (le rôle sans ballon jugé à son poste sans ballon), sur 20. */
+export function slotFit(engine: TacticEngine, p: FmPlayer, sl: Pick<Slot, 'pos' | 'posOOP' | 'ip' | 'oop'>): number | null {
+  const a = engine.roleFit(p, sl.ip, 'ip', sl.pos);
+  const b = engine.roleFit(p, sl.oop, 'oop', sl.posOOP ?? sl.pos);
+  return a != null && b != null ? (a + b) / 2 : (a ?? b);
 }
 
 export interface FormationPlan {

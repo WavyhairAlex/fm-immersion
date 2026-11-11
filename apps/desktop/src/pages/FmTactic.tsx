@@ -34,12 +34,14 @@ import {
 } from '@fm-immersion/module-fm';
 import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
+import { gameInstructions, gamePlayerInstructions, instructionLoad, lineupAdvice, matchReview, matchStats, tacticTodo, teamAdvice, TEAM_INSTRUCTIONS_FM27, type PlayerStats } from '@fm-immersion/module-fm';
+import { GamePiLine, LineupAdviceCard, MatchReviewCard, PiState, TeamAdviceBlock, TodoCard } from './FmTacticAdvice';
 import { createContext, useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
 import { readBuiltTactics } from './FmBuilder';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
-import { fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach, SectionTabs } from './FmUi';
+import { fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach, SectionStack } from './FmUi';
 
 // v2 : le choix automatique (meilleure tactique applicable) devient la valeur par défaut.
 const PREFS_KEY = 'fmi.tactic.v2';
@@ -115,7 +117,7 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
   const natural = (style && STYLE_FORMS[style.id]?.filter((f) => FORMATIONS[f])) || ['4-3-3'];
   const form = prefs.form && FORMATIONS[prefs.form] ? prefs.form : auto && pick ? pick.form : (gameForm ?? natural[0] ?? '4-3-3');
   const plans = useMemo(() => ranked.find((r) => r.style.id === style?.id)?.plans ?? [], [ranked, style]);
-  const gamePlan = useMemo(() => (lineup ? planFromLineup(engine, lineup, players, gameForm ?? gameFormation) : null), [engine, lineup, players, gameForm, gameFormation]);
+  const gamePlan = useMemo(() => (lineup ? planFromLineup(engine, lineup, players, gameForm ?? gameFormation, reserve) : null), [engine, lineup, players, gameForm, gameFormation, reserve]);
   const builtPlanA = useMemo(() => (built ? builtPlan(engine, built, avail, reserve) : null), [engine, built, avail, reserve]);
   const fromGame = !!gamePlan && prefs.source !== 'simloom' && !built;
   const plan = builtPlanA ?? (fromGame ? gamePlan : plans.find((p) => p.form === form));
@@ -126,7 +128,7 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
 const DOT: Record<BalanceCheck['status'], string> = { good: 'bg-eau', warn: 'bg-ambre', bad: 'bg-corail' };
 
 /** Tactique : style conseillé, schéma, onze par rôles, formes avec et sans ballon, équilibre. */
-export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupStatus, go, part }: { snap?: FmSnapshot; players: FmPlayer[]; folder: string; gameFormation: string | null; lineup: GameSlot[] | null; lineupStatus?: string | null; go?: (view: string) => void; part?: 'lineup' | 'instructions' }) {
+export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupStatus, go, part, matches }: { matches?: { gameDate: string; data: FmSnapshot }[]; snap?: FmSnapshot; players: FmPlayer[]; folder: string; gameFormation: string | null; lineup: GameSlot[] | null; lineupStatus?: string | null; go?: (view: string) => void; part?: 'lineup' | 'instructions' }) {
   // Sous-onglet affiché : le onze (et ses consignes d'équipe) ou les consignes individuelles ; les deux sans `part`.
   const showLineup = part !== 'instructions';
   const showPi = part !== 'lineup';
@@ -161,11 +163,44 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   // Poste survolé : mis en évidence à la fois sur le terrain et dans la liste.
   const [hover, setHover] = useState<number | null>(null);
 
+  // Ce que le plugin a lu de la tactique réglée dans FM27 : consignes d'équipe, consignes individuelles par joueur, charge.
+  const gameTi = useMemo(() => gameInstructions(snap), [snap]);
+  const gamePi = useMemo(() => gamePlayerInstructions(snap), [snap]);
+  const load = useMemo(() => instructionLoad(snap), [snap]);
+  // L'avis de l'adjoint porte sur le onze de base (équipe A) : rôles à revoir, titulaires, joueurs à relancer, doublures.
+  const advice = useMemo(() => (planA ? lineupAdvice(engine, planA, avail, built ? 'built' : fromGame ? 'game' : 'suggested') : null), [engine, planA, avail, built, fromGame]);
+  // Onze du jeu : on part des consignes réglées dans FM27, pas de celles d'un style que le joueur n'a pas choisi.
+  const tiBase: 'style' | 'game' = fromGame && gameTi && Object.keys(gameTi.ti).length > 0 ? 'game' : 'style';
+  // Ce que les derniers matchs disent de la tactique jouée, et les stats de la saison de chaque joueur.
+  const review = useMemo(() => matchReview(matches ?? [], gameTactic), [matches, gameTactic]);
+  const seasonStats = useMemo(() => (snap ? matchStats(snap) : new Map<string, PlayerStats>()), [snap]);
+  // Les corrections tirées des matchs ne valent que pour la tactique qui les a joués : celle du jeu.
+  const tiAdvice = useMemo(() => (planA && style ? teamAdvice(planA, style, gameTi, tiBase, tiBase === 'game' && review.scoped ? review.findings : []) : null), [planA, style, gameTi, tiBase, review]);
+  const gameTiLabels = useMemo(() => {
+    const of = (oop: boolean) => TEAM_INSTRUCTIONS_FM27.filter((d) => (d.phase === 'oop' || d.code === 'DefensiveTransition') === oop).flatMap((d) => {
+      const l = gameTi ? d.options[gameTi.ti[d.id] ?? -1] : null;
+      return l ? [l] : [];
+    });
+    return { ip: of(false), oop: of(true) };
+  }, [gameTi]);
+
   if (!avail.length || !style || !plan) return <p className="card mt-6 text-brun">{t('fm.tac.noAttributes')}</p>;
 
   const block = styleBlock(style);
   // Complexité : moins l'effectif lit le jeu, moins on charge chaque joueur de consignes individuelles.
-  const budget = instructionBudget(style, tactAbility(avail));
+  const budget = instructionBudget(style, tactAbility(avail), load.understanding);
+  // « À changer dans FM27 » : tout ce que les conseils demandent de modifier dans la tactique du jeu, en une liste.
+  // (calcul direct : on est après le retour anticipé, un hook n'a pas sa place ici)
+  const todo = (() => {
+    if (!planA || !fromGame) return [];
+    const players = planA.slots.flatMap((sl) => {
+      if (!sl.player) return [];
+      const st = seasonStats.get(sl.player.id);
+      const supported = playerInstructions(engine, sl, style, planA.slots, 3, st).list;
+      return [{ player: sl.player, list: budget < 3 ? playerInstructions(engine, sl, style, planA.slots, budget, st).list : supported, supported, game: gamePi.get(sl.player.id) ?? null }];
+    });
+    return tacticTodo({ team: tiBase === 'game' ? tiAdvice : null, lineup: advice, players, budget });
+  })();
   // Rôle avec ballon : FM27 fixe la mission d'après le rôle, on l'affiche à côté (« Milieu axial (Soutien) »).
   const roleName = (code: string, ph?: Phase) => {
     const r = engine.roles.get(code);
@@ -186,6 +221,26 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
+        {/* D'abord : de quelle tactique parle-t-on ? La tienne (lue dans FM27) ou la proposition de l'appli. */}
+        {gamePlan && (
+          <div className="flex gap-1" role="tablist">
+            {(['game', 'simloom'] as const).map((src) => (
+              <button
+                key={src}
+                type="button"
+                role="tab"
+                aria-selected={!built && (src === 'game') === fromGame}
+                onClick={() => update({ source: src })}
+                className={`chip ${!built && (src === 'game') === fromGame ? 'chip-on' : ''}`}
+              >
+                {t(`fm.tac.source.${src}`)}
+              </button>
+            ))}
+          </div>
+        )}
+        {fromGame && gameTactic && <span className="text-sm font-bold text-canard">{gameTactic}</span>}
+        {/* Style et schéma ne se choisissent que pour la proposition de l'appli : ta tactique FM27 a déjà les siens. */}
+        {!fromGame && (<>
         <label className="flex items-center gap-2 whitespace-nowrap text-sm font-bold" title={style.summary ?? undefined}>
           {t('fm.tac.style')}
           <select
@@ -227,22 +282,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
             ))}
           </select>
         </label>
-        {gamePlan && (
-          <div className="flex gap-1" role="tablist">
-            {(['game', 'simloom'] as const).map((src) => (
-              <button
-                key={src}
-                type="button"
-                role="tab"
-                aria-selected={!built && (src === 'game') === fromGame}
-                onClick={() => update({ source: src })}
-                className={`chip ${!built && (src === 'game') === fromGame ? 'chip-on' : ''}`}
-              >
-                {t(`fm.tac.source.${src}`)}
-              </button>
-            ))}
-          </div>
-        )}
+        </>)}
         {auto && pick && !fromGame && (
           <span className="rounded-md bg-eau/20 px-1.5 py-0.5 text-xs font-bold text-canard">{t(pick.kept ? 'fm.tac.baseKept' : pick.project ? 'fm.tac.projectBest' : 'fm.tac.bestNow')}</span>
         )}
@@ -258,19 +298,25 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
       
 
       {showLineup && (
-      <SectionTabs
-        id="tactic"
+      <SectionStack
         sections={[
           {
             id: 'xi',
             label: t('fm.tac.sections.xi'),
             node: (
               <>
+              {/* D'abord ce que disent les matchs et ce qu'il faut changer dans le jeu ; le onze et son détail ensuite. */}
+              {team === 'A' && (
+                <div className={`grid items-start gap-4 ${fromGame && review.recent.length ? 'xl:grid-cols-[2fr_3fr]' : ''}`}>
+                  <MatchReviewCard review={review} tactic={gameTactic} fromGame={fromGame} />
+                  {fromGame && planA && <TodoCard items={todo} plan={planA} engine={engine} tactic={gameTactic} />}
+                </div>
+              )}
               {/* Le onze : terrain compact à gauche, liste prête à appliquer dans FM27 à droite. Survoler l'un met l'autre en évidence. */}
               <section className="card">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <h2 className="text-xl font-semibold">
-                      {team === 'B' ? plan.form : form} · {styleName(style)} <span className="text-sm font-normal text-brun">{t('fm.tac.fit', { value: note(plan.score) })}</span>
+                      {team === 'B' ? plan.form : form} · {fromGame && team === 'A' && gameTactic ? gameTactic : styleName(style)} <span className="text-sm font-normal text-brun">{t('fm.tac.fit', { value: note(plan.score) })}</span>
                     </h2>
                     <div className="flex gap-1" role="tablist" aria-label={t('fm.tac.team.label')}>
                       {(['A', 'B'] as const).map((k) => (
@@ -407,12 +453,14 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   </div>
                 </div>
               </section>
+              {team === 'A' && advice && planA && <LineupAdviceCard advice={advice} plan={planA} engine={engine} />}
               </>
             ),
           },
           {
             id: 'match',
             label: t('fm.tac.sections.match', { name: opp?.name ?? t('fm.opp.club') }),
+            fold: true,
             node:
               opp && !fromGame ? (
                 <>
@@ -554,7 +602,8 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
           },
           {
             id: 'balance',
-            label: t('fm.tac.sections.balance'),
+            label: t('fm.tac.sections.balanceFold'),
+            fold: true,
             node: (
               <>
               <div className="grid gap-4 lg:grid-cols-2">
@@ -597,12 +646,17 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   </ol>
                 </section>
                 <section className="card">
-                  <h2 className="text-xl font-semibold">{t('fm.tac.teamTitle', { style: styleName(style) })}</h2>
-                  {style.mentality && <p className="mt-1 text-sm">{t('fm.style.mentality', { value: style.mentality })}</p>}
+                  <h2 className="text-xl font-semibold">{t('fm.tac.teamTitle', { style: tiBase === 'game' ? (gameTactic ?? t('fm.tac.tiAdvice.gameTactic')) : styleName(style) })}</h2>
+                  {tiBase === 'game' ? (
+                    <p className="mt-1 text-sm text-brun">{t('fm.tac.tiAdvice.gameIntro')}</p>
+                  ) : (
+                    style.mentality && <p className="mt-1 text-sm">{t('fm.style.mentality', { value: style.mentality })}</p>
+                  )}
                   <div className="mt-3">
-                    <TeamCards inPossession={style.inPossession} outOfPossession={style.outOfPossession} />
+                    {tiBase === 'game' ? <TeamCards inPossession={gameTiLabels.ip} outOfPossession={gameTiLabels.oop} /> : <TeamCards inPossession={style.inPossession} outOfPossession={style.outOfPossession} />}
                   </div>
-                  <p className="mt-3 text-xs text-brun">{t('fm.tac.teamHelp')}</p>
+                  <p className="mt-3 text-xs text-brun">{t(tiBase === 'game' ? 'fm.tac.tiAdvice.gameHelp' : 'fm.tac.teamHelp')}</p>
+                  {tiAdvice && <TeamAdviceBlock advice={tiAdvice} base={tiBase} load={load} />}
                 </section>
               </div>
               </>
@@ -615,12 +669,20 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
       {showPi && (
       <section className="card">
         <h2 className="text-xl font-semibold">{t('fm.pi.title')}</h2>
-        <p className="mt-1 text-sm text-brun">{budget < 3 ? t('fm.pi.budgetLow', { count: budget }) : t('fm.pi.budgetFull')}</p>
+        <p className="mt-1 text-sm text-brun">
+          {load.understanding != null ? t('fm.pi.budgetGame', { count: budget, understanding: Math.round(load.understanding) }) : budget < 3 ? t('fm.pi.budgetLow', { count: budget }) : t('fm.pi.budgetFull')}
+        </p>
+        {load.player != null && load.player >= 60 && (load.understanding ?? 100) < 50 && (
+          <p className="mt-2 rounded-xl bg-ambre/20 px-3 py-2 text-sm">{t('fm.pi.heavy', { complexity: Math.round(load.player), understanding: Math.round(load.understanding!) })}</p>
+        )}
         <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {plan.slots
             .filter((sl) => sl.player)
             .map((sl, i) => {
-              const adv = playerInstructions(engine, sl, style, plan.slots, budget);
+              const adv = playerInstructions(engine, sl, style, plan.slots, budget, sl.player ? seasonStats.get(sl.player.id) : null);
+              // Ce que le joueur a déjà réglé dans FM27 pour lui (toutes compos), et ce que son rôle impose.
+              const inGame = gamePi.get(sl.player!.id) ?? null;
+              const gameKeys = inGame ? [...inGame.mine, ...inGame.imposed] : null;
               return (
                 <div key={i} className="rounded-xl bg-creme/50 px-3 py-2 text-sm">
                   <div className="flex items-baseline gap-2">
@@ -631,10 +693,14 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                     {roleName(sl.ip, 'ip')} · {roleName(sl.oop)}
                     {sl.game?.custom && <span className="ml-1 rounded-full bg-canard/10 px-1.5 text-canard">{t('fm.pi.custom')}</span>}
                   </p>
-                  {sl.game && (sl.game.instructions.ip.length > 0 || sl.game.instructions.oop.length > 0) && (
-                    <p className="mb-1 text-xs text-canard">
-                      <b>{t('fm.pi.inGame')}</b> {[...sl.game.instructions.ip, ...sl.game.instructions.oop].join(' · ')}
-                    </p>
+                  {inGame ? (
+                    <GamePiLine mine={inGame.mine} supported={budget < 3 ? playerInstructions(engine, sl, style, plan.slots, 3, sl.player ? seasonStats.get(sl.player.id) : null).list : adv.list} budget={budget} />
+                  ) : (
+                    sl.game && (sl.game.instructions.ip.length > 0 || sl.game.instructions.oop.length > 0) && (
+                      <p className="mb-1 text-xs text-canard">
+                        <b>{t('fm.pi.inGame')}</b> {[...sl.game.instructions.ip, ...sl.game.instructions.oop].join(' · ')}
+                      </p>
+                    )
                   )}
                   {adv.list.length ? (
                     adv.list.map((x) => (
@@ -644,6 +710,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                         </span>
                         <b className="text-canard">{t(`fm.pi.id.${x.id}`)}</b>{' '}
                         <span className="text-xs text-brun">{t(`fm.pi.why.${x.why}`, fmtVals(x.vals, nf1))}</span>
+                        <PiState x={x} keys={gameKeys} />
                       </div>
                     ))
                   ) : (
