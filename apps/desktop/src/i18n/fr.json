@@ -62,6 +62,7 @@
       "missing": "{{name}} (introuvable)",
       "saved": "enregistrée le {{date}}",
       "other": "FM27 a chargé une sauvegarde de {{club}}, alors que cette partie suit {{expected}} : rien n'est importé ici. Ouvre la partie FM Immersion de cette sauvegarde, ou importe quand même si tu as changé de club.",
+      "otherCareer": "Ce relevé de {{club}} est celui de ta carrière « {{career}} » : FM27 n'a encore rien écrit pour cette nouvelle partie. Charge-la dans FM27 et avance d'un jour, elle sera lue toute seule.",
       "importAnyway": "Importer quand même ({{club}})",
       "free": "Sans club depuis le {{date}} : ton prochain club sera repris tout seul"
     },

@@ -1,14 +1,24 @@
 [
   {
-    "version": "0.1.176",
+    "version": "0.1.178",
     "date": "2026-11-11",
     "fr": [
       "Les conférences de presse de FM Immersion s'ouvrent maintenant directement dans FM27, par-dessus le jeu : les questions de tes quatre rédactions, trois réponses proposées ou tes propres mots. Elles arrivent dans la Gazette et sur Discord comme si tu avais répondu dans l'appli.",
-      "Il faut le plugin FM27 0.6.0 (à installer depuis « Plugin et réglages », FM27 fermé). La touche F8 ouvre ou ferme la fenêtre. Ça ne change rien à ta partie."
+      "Il faut le plugin FM27 0.6.2 (à installer depuis « Plugin et réglages », FM27 fermé). La touche F8 ouvre ou ferme la fenêtre. Ça ne change rien à ta partie."
     ],
     "en": [
       "FM Immersion press conferences now open right inside FM27, on top of the game: questions from your four outlets, three suggested answers or your own words. They reach the Gazette and Discord just as if you had answered in the app.",
-      "You need the FM27 plugin 0.6.0 (install it from \"Plugin and settings\" with FM27 closed). The F8 key opens or closes the window. It doesn't change anything in your save."
+      "You need the FM27 plugin 0.6.2 (install it from \"Plugin and settings\" with FM27 closed). The F8 key opens or closes the window. It doesn't change anything in your save."
+    ]
+  },
+  {
+    "version": "0.1.177",
+    "date": "2026-11-11",
+    "fr": [
+      "Une nouvelle carrière ne reprend plus les données de ton ancienne partie : elle attend que FM27 ait écrit quelque chose pour la nouvelle sauvegarde. Une partie commencée sans emploi est aussi bien reconnue (plugin 0.6.1)."
+    ],
+    "en": [
+      "A new career no longer picks up data from your previous save: it waits until FM27 has written something for the new save. A game started without a job is also recognised (plugin 0.6.1)."
     ]
   },
   {

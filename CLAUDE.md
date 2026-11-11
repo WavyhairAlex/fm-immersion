@@ -50,7 +50,7 @@ extraite avec son historique ; Simloom garde Planet Zoo 2 et Transport Fever 3.
   propriétaire, réputation vérifiable avant candidature, section « Code signing policy » et déclaration de
   confidentialité (dans le README). Tant que ce n'est pas accepté, l'installeur n'est pas signé.
 - **Lecture des sauvegardes** des jeux : côté Rust, en local. Jamais d'envoi des fichiers.
-- **Conférence de presse dans FM27** (`src/lib/press-ingame.ts`, plugin 0.6.0 `modules/fm/bridge/src/PressWindow.cs`) : l'appli écrit la
+- **Conférence de presse dans FM27** (`src/lib/press-ingame.ts`, plugin 0.6.2 `modules/fm/bridge/src/PressWindow.cs`) : l'appli écrit la
   conférence du moment dans `fmimmersion-presse.json` du dossier du plugin (`fm_write_press`), le plugin l'affiche par-dessus le jeu
   (UI Toolkit, FM27 n'a plus IMGUI) et écrit `fmimmersion-presse-reponse.json`, relu par l'appli. Rien n'est envoyé au jeu.
 - **Suivi des sauvegardes** (écran `/sauvegardes`, `src/lib/save-files.ts`) : nom, taille et date des `.fm` du dossier

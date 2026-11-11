@@ -80,6 +80,11 @@ envoie ses requêtes par tranches de 50 ; le reste attend l'image suivante. `col
 la durée de chaque lecture et le temps pris au thread du jeu (total, et pire image). Quatre lectures qui ne répondaient
 jamais sont retirées de `chemins.json` (`pretEntrant`, `equipeTypeBrut`, `equipeContexte`, `resultatsImposes`).
 
+**0.6.1** : partie commencée sans emploi. Au début d'une partie sans club, le jeu renvoie une équipe vide (sans nom ni
+joueurs) : le plugin la prenait pour un club, attendait un effectif qui ne venait pas et n'écrivait ni instantané ni
+`archivix-status.json`. FM Immersion restait sur l'ancienne sauvegarde. Une équipe sans nom compte maintenant comme
+« sans club » (état écrit avec `club: null`).
+
 ## Garde-fou « écran Tactique » (0.3.0)
 
 Toute lecture liée à la tactique (`LireTactique`, `LireEfficacite`, `LireCompo`, section `tactique` de `chemins.json`,
@@ -224,7 +229,7 @@ de la section `joueur` de `config/chemins.json` (70 propriétés de `PersonRefer
 et les pourcentages. Aucune recompilation ; aucune lecture liée à la tactique. Import : `modules/fm/src/stats.ts`,
 page Effectif > Centre de données.
 
-**0.6.0** : conférence de presse dans le jeu. FM Immersion dépose la conférence du moment dans
+**0.6.2** : conférence de presse dans le jeu. FM Immersion dépose la conférence du moment dans
 `<Dossier>\fmimmersion-presse.json` (format `fmi-presse/1` : `key`, `title`, `subtitle`, `questions[{id, by, text,
 answers[{tone, label, text}]}]`, `ui` ; tous les textes déjà rédigés dans la langue du joueur) et le retire quand il n'y a
 plus de conférence. Le plugin le relit toutes les 5 s sur un thread à part ; une nouvelle conférence ouvre la fenêtre

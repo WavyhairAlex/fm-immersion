@@ -12,7 +12,7 @@ using FontAsset = UnityEngine.TextCore.Text.FontAsset;
 
 namespace Archivix;
 
-// Conférence de presse FM Immersion dans FM27 (0.6.0). Fenêtre posée PAR-DESSUS l'interface du jeu : elle n'envoie
+// Conférence de presse FM Immersion dans FM27 (0.6.2). Fenêtre posée PAR-DESSUS l'interface du jeu : elle n'envoie
 // aucun événement au jeu et ne change rien à la partie (pas de moral, pas de réputation : ce n'est pas la conférence de FM).
 //
 // - FM Immersion écrit la conférence du moment dans <Dossier>\fmimmersion-presse.json (format fmi-presse/1 : textes déjà
