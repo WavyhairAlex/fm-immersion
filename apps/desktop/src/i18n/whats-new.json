@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.175",
+    "date": "2026-11-11",
+    "fr": [
+      "Nouveau bouton « FM Immersion » sur la fiche d'un joueur dans FM27 (avec le module Fiche) : un clic et FM Immersion s'ouvre directement sur la fiche de ce joueur."
+    ],
+    "en": [
+      "New \"FM Immersion\" button on a player's profile in FM27 (with the Profile module): one click and FM Immersion opens straight on that player's sheet."
+    ]
+  },
+  {
     "version": "0.1.174",
     "date": "2026-11-11",
     "fr": [
