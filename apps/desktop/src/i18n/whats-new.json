@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.153",
+    "date": "2026-11-11",
+    "fr": [
+      "La gazette part de nouveau à l'heure sur Discord : si la photo de situation de la une tarde plus de cinq minutes, la gazette part avec le portrait au lieu d'attendre.",
+      "Les photos faites toutes seules en arrière-plan ne retardent plus les envois automatiques."
+    ],
+    "en": [
+      "The gazette goes out on time on Discord again: if the front-page situation photo takes more than five minutes, the gazette goes with the portrait instead of waiting.",
+      "Photos made on their own in the background no longer delay automatic posts."
+    ]
+  },
+  {
     "version": "0.1.152",
     "date": "2026-11-11",
     "fr": [
