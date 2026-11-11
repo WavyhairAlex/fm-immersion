@@ -1,4 +1,4 @@
-import { POS_LABEL, teamInstructionCards, teamInstructionOf, type CoachPrefs, type FmPlayer, type PlanLetter, type Project, type ProjectCompat, type TacticEngine } from '@fm-immersion/module-fm';
+import { engineTier, POS_LABEL, teamInstructionCards, teamInstructionOf, type CoachPrefs, type EngineTier, type EngineValue, type FmPlayer, type PlanLetter, type Project, type ProjectCompat, type TacticEngine } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
@@ -86,6 +86,31 @@ export function CompatTag({ c, compact = false }: { c: ProjectCompat | null | un
     </span>
   );
 }
+
+const ENGINE_TONE: Record<EngineTier, Tone> = { top: 'good', good: 'good', average: 'info', poor: 'warn' };
+
+/** Pastille de l'indice moteur (tests d'attributs FM27) : atouts et points faibles en infobulle. */
+export function EngineTag({ v }: { v: EngineValue | null | undefined }) {
+  const { t } = useTranslation();
+  if (!v) return null;
+  const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
+  const title = [
+    t('fm.engine.title', { index: signed(v.index) }),
+    v.strengths.length > 0 && t('fm.engine.strengths', { list: v.strengths.map((f) => `${attr(f.attr)} ${f.value}`).join(', ') }),
+    v.weaknesses.length > 0 && t('fm.engine.weaknesses', { list: v.weaknesses.map((f) => `${attr(f.attr)} ${f.value}`).join(', ') }),
+    v.belowMin.length > 0 && t('fm.engine.belowMin', { list: v.belowMin.map((f) => `${attr(f.attr)} ${f.value}`).join(', ') }),
+  ]
+    .filter(Boolean)
+    .join('\n');
+  return (
+    <span title={title}>
+      <Tag tone={v.belowMin.length ? 'warn' : ENGINE_TONE[engineTier(v.index)]}>{t('fm.engine.badge', { index: signed(v.index) })}</Tag>
+    </span>
+  );
+}
+
+/** Nombre avec son signe (+3, −4, 0). */
+export const signed = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0');
 
 /** Grande lettre de la note de projet. */
 export function GradeLetter({ letter, size = 'md' }: { letter: PlanLetter; size?: 'md' | 'lg' }) {

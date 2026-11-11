@@ -1,6 +1,7 @@
 import {
   ATTR_GROUPS,
   buildProject,
+  engineValue,
   levelSeries,
   matchStatsFull,
   mercatoAdvice,
@@ -30,7 +31,7 @@ import { LeaveButton, useLeaving } from './FmLeaving';
 import { TONE, useReason } from './FmMercato';
 import { Spark } from './FmProgression';
 import { useTacticEngine } from './FmTactic';
-import { CompatTag, fitPct, Level, PlanGradeCard, Tag, useCoach, useFormat, useNames, type SheetFocus } from './FmUi';
+import { CompatTag, EngineTag, fitPct, Level, PlanGradeCard, signed, Tag, useCoach, useFormat, useNames, type SheetFocus } from './FmUi';
 
 const PCT = new Set<StatKey>(['passPct', 'tacklePct', 'headerPct', 'shotsOnTargetPct', 'savePct']);
 
@@ -109,6 +110,7 @@ export function FmPlayerSheet({
   // Note de projet (A à E) : même projet que le mercato (effectif avec attributs, partants exclus).
   const project = useMemo(() => buildProject(engine, players.filter((x) => Object.keys(x.attributes).length && !leavingIds.has(x.id)), coach), [engine, players, coach, leavingIds]);
   const fitProject = useMemo(() => advice?.compat ?? (project && p && Object.keys(p.attributes).length ? projectCompat(engine, project, p) : null), [advice, project, p, engine]);
+  const engineVal = useMemo(() => (p ? engineValue(p) : null), [p]);
   const series = useMemo(() => levelSeries(history, id), [history, id]);
   const scope = useFmSaveScope();
   const play = useMemo(() => playingTime(players, entries).rows.find((r) => r.player.id === id) ?? null, [players, entries, id]);
@@ -344,6 +346,30 @@ export function FmPlayerSheet({
                   </div>
                 ))}
               </div>
+            </section>
+          )}
+
+          {/* Indice moteur : le poids réel de ses attributs dans le moteur de FM27 (tests de la communauté). */}
+          {Object.keys(p.attributes).length > 0 && (
+            <section className="card p-4" aria-labelledby="sheet-engine">
+              <h3 id="sheet-engine" className="flex flex-wrap items-center gap-2 font-semibold">
+                {t('fm.engine.heading')} {engineVal && <EngineTag v={engineVal} />}
+              </h3>
+              <p className="text-xs text-brun">{t('fm.engine.help')}</p>
+              {!engineVal ? (
+                <p className="mt-2 text-sm text-brun">{p.positions.every((x) => x === 'GB') ? t('fm.engine.gk') : t('fm.engine.none')}</p>
+              ) : (
+                <ul className="mt-2 space-y-1 text-sm">
+                  {engineVal.strengths.length > 0 && <li>{t('fm.engine.strengths', { list: engineVal.strengths.map((f) => `${t(`fm.attr.${f.attr}`, { defaultValue: f.attr })} ${f.value} (${signed(Math.round(f.effect))})`).join(', ') })}</li>}
+                  {engineVal.weaknesses.length > 0 && <li>{t('fm.engine.weaknesses', { list: engineVal.weaknesses.map((f) => `${t(`fm.attr.${f.attr}`, { defaultValue: f.attr })} ${f.value} (${signed(Math.round(f.effect))})`).join(', ') })}</li>}
+                  {engineVal.belowMin.length > 0 && (
+                    <li>
+                      <Tag tone="warn">{t('fm.engine.belowMin', { list: engineVal.belowMin.map((f) => `${t(`fm.attr.${f.attr}`, { defaultValue: f.attr })} ${f.value}`).join(', ') })}</Tag>
+                    </li>
+                  )}
+                  {!engineVal.strengths.length && !engineVal.weaknesses.length && !engineVal.belowMin.length && <li className="text-brun">{t('fm.engine.none')}</li>}
+                </ul>
+              )}
             </section>
           )}
 

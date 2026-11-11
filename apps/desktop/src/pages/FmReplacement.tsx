@@ -1,4 +1,5 @@
 import {
+  engineValue,
   POS_LABEL,
   REACH_ORDER,
   baseTarget,
@@ -26,7 +27,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
 import { fmData } from '../lib/data';
-import { CompatTag, Empty, Fit, More, Panel, Tag, fitGap, useNames, type Tone } from './FmUi';
+import { CompatTag, EngineTag, Empty, Fit, More, Panel, Tag, fitGap, useNames, type Tone } from './FmUi';
 
 type Engine = TacticEngine;
 
@@ -147,7 +148,7 @@ export function ReplacementFinder({
           {followedIds.has(c.player.id) && <> <Tag tone="good">{t('fm.dbSearch.followed')}</Tag></>}
           {r.upgrade?.player.id === c.player.id && <> <Tag tone="good">{t('fm.repl.best')}</Tag></>}
         </td>
-        <td className="px-2 py-1.5"><CompatTag c={c.compat} /></td>
+        <td className="px-2 py-1.5"><CompatTag c={c.compat} /> <EngineTag v={engineValue(c.player)} /></td>
         <td className="px-2 py-1.5 tabular-nums">{c.player.age ?? '–'}</td>
         <td className="px-2 py-1.5">
           {c.player.club ?? '–'}
