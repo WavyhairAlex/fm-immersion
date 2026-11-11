@@ -1,5 +1,6 @@
 import type { GameInstructions } from './game-instructions';
 import { styleOptions } from './match-plan';
+import type { ReviewFinding } from './match-review';
 import type { FmPlayer } from './player';
 import { attrOf, avg, sideOf, type FormationPlan, type Slot, type StyleRef } from './tactic';
 import { TEAM_INSTRUCTIONS_FM27, type TeamInstructionDef } from './team-instructions-fm27';
@@ -10,10 +11,15 @@ import { TEAM_INSTRUCTIONS_FM27, type TeamInstructionDef } from './team-instruct
  * style de centres d'après les attaquants. Quand le plugin a lu les consignes réglées dans FM27, chaque case est
  * comparée à ce qui est conseillé. Purement consultatif.
  *
+ * Avec les derniers matchs (`findings`, voir match-review.ts), les consignes sont aussi corrigées d'après ce que
+ * l'équipe a vraiment produit : pressing qui ne récupère rien, occasions concédées, possession stérile, tirs de loin.
+ *
  * Comme pour l'équilibre du onze, vitesse, volume de jeu et jeu de tête sont comparés au niveau moyen du onze.
  */
 
-export type TeamAdviceReason = 'slowLine' | 'lowPress' | 'lowPressBlock' | 'stretched' | 'aerialStriker' | 'smallStrikers' | 'noHighBlock';
+export type TeamAdviceReason = 'slowLine' | 'lowPress' | 'lowPressBlock' | 'stretched' | 'aerialStriker' | 'smallStrikers' | 'noHighBlock'
+  // D'après les derniers matchs
+  | 'pressFails' | 'leakyLine' | 'leakyBlock' | 'ballsBehind' | 'sterile' | 'longShots';
 
 export interface TeamAdviceRow {
   def: TeamInstructionDef;
@@ -52,7 +58,7 @@ const CROSSERS = new Set(['FB', 'WB', 'AWB', 'WM', 'W', 'WF', 'OCB']);
  * tactique construite. « game » : celles réglées dans FM27, pour le onze du jeu ; on ne compare alors pas la tactique
  * du joueur à un style qu'il n'a pas choisi, on signale seulement ce que son effectif ne peut pas tenir.
  */
-export function teamAdvice(plan: FormationPlan, style: StyleRef, game?: GameInstructions | null, base: 'style' | 'game' = 'style'): TeamAdvice {
+export function teamAdvice(plan: FormationPlan, style: StyleRef, game?: GameInstructions | null, base: 'style' | 'game' = 'style', findings: ReviewFinding[] = []): TeamAdvice {
   const fromGame = base === 'game' && !!game && Object.keys(game.ti).length > 0;
   const wanted = fromGame
     ? new Map(TEAM_INSTRUCTIONS_FM27.flatMap((d) => (game!.ti[d.id] != null && game!.ti[d.id] !== defaultOf(d) ? [[d.id, game!.ti[d.id]!] as [number, number]] : [])))
@@ -86,6 +92,23 @@ export function teamAdvice(plan: FormationPlan, style: StyleRef, game?: GameInst
       if (opt('DefensiveTransition') === 2) set('DefensiveTransition', 1, 'lowPress', vals);
       if (vPress < lvl - 1.5 && opt('LineOfEngagement') === 2) set('LineOfEngagement', 1, 'lowPressBlock', vals);
     }
+    // Ce que les derniers matchs ont montré, quand l'effectif n'a pas déjà fait corriger la même case.
+    const found = (id: ReviewFinding['id']) => findings.find((f) => f.id === id);
+    const free = (code: string) => !why.has(byCode.get(code)!.id);
+    const press = found('pressFails');
+    if (press && free('PressingTrigger') && opt('PressingTrigger') >= 3) set('PressingTrigger', 2, 'pressFails', press.vals);
+    const leaky = found('leaky');
+    if (leaky) {
+      if (free('DefensiveLine') && opt('DefensiveLine') >= 3) set('DefensiveLine', 2, 'leakyLine', leaky.vals);
+      else if (free('LineOfEngagement') && opt('LineOfEngagement') === 2) set('LineOfEngagement', 1, 'leakyBlock', leaky.vals);
+    }
+    const behind = found('bigChancesAgainst');
+    if (behind && free('DefensiveLine') && opt('DefensiveLine') >= 3) set('DefensiveLine', 2, 'ballsBehind', behind.vals);
+    const sterile = found('sterile');
+    if (sterile && opt('Tempo') <= 2) set('Tempo', opt('Tempo') + 1, 'sterile', sterile.vals);
+    const far = found('longShots');
+    if (far && opt('ShotsFromDistance') >= 1) set('ShotsFromDistance', 0, 'longShots', far.vals);
+
     // Pressing haut avec une ligne défensive basse : le bloc s'étire et laisse un grand espace entre les lignes.
     if (opt('LineOfEngagement') === 2 && opt('DefensiveLine') <= 1) set('DefensiveLine', 2, 'stretched');
     // « Empêcher les relances courtes du GB » n'existe qu'en pressing haut.

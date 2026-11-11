@@ -2,6 +2,7 @@ import type { FmPlayer } from './player';
 import type { PosCode } from './positions';
 import { POSITION_OPTIONS_OFF, ROLE_LOCKS_FM27, type GamePos, type RoleLockEntry } from './instruction-locks-fm27';
 import { LEGACY_PI, piKeyGroup } from './player-instructions-fm27';
+import { MIN_STAT_MINUTES, type PlayerStats } from './stats';
 import { INVERTED, attrOf, avg, footInfo, sideOf, slotContexts, styleBlock, type Phase, type SlotCtx, type RoleRef, type Slot, type StyleRef, type TacticEngine } from './tactic';
 
 /*
@@ -239,7 +240,7 @@ const r1 = (x: number | null) => (x == null ? '–' : Math.round(x * 10) / 10);
  * d'abord. Les consignes avec ballon tiennent compte du rôle avec ballon, celles sans ballon du rôle
  * sans ballon. Une consigne verrouillée par le rôle devient un changement de rôle proposé.
  */
-export function playerInstructions(engine: TacticEngine, slot: Slot, style: StyleRef | null, team: Slot[] = [], max = MAX_PER_PLAYER): PlayerAdvice {
+export function playerInstructions(engine: TacticEngine, slot: Slot, style: StyleRef | null, team: Slot[] = [], max = MAX_PER_PLAYER, stats?: PlayerStats | null): PlayerAdvice {
   const p = slot.player;
   if (!p || !Object.keys(p.attributes).length) return { list: [], switches: [] };
   const ipRole = engine.roles.get(slot.ip);
@@ -315,7 +316,42 @@ export function playerInstructions(engine: TacticEngine, slot: Slot, style: Styl
   else if (lo('Tackling') && (g === 'CB' || g === 'FB' || g === 'DM')) add('tackleLess', 'oop', lv - a('Tackling')!, 'tackleLess');
   if (strong(['Marking', 'Strength'], 2) && (g === 'CB' || g === 'FB' || g === 'DM')) add('markTighter', 'oop', m('Marking', 'Strength') - lv, 'markTighter', { a: r1(a('Marking')), b: r1(a('Strength')) });
 
+  // Ce que ses matchs montrent passe avant ce que ses attributs laissent supposer.
+  for (const x of statInstructions(stats)) {
+    const opposite = OPPOSITE[x.id];
+    for (let i = wanted.length - 1; i >= 0; i--) if (wanted[i]!.id === x.id || wanted[i]!.id === opposite) wanted.splice(i, 1);
+    wanted.push(x);
+  }
+
   return pick(wanted, ipRole, oopRole, engine, slot, 3, 2, ctxOf(slot, team), max);
+}
+
+const OPPOSITE: Partial<Record<InstructionId, InstructionId>> = { shootLess: 'shootMore', riskLess: 'riskMore', tackleLess: 'tackleHarder' };
+/** Poids d'une consigne tirée des stats de match : devant celles tirées des attributs. */
+const STAT_WEIGHT = 5;
+/** Tirs par 90 min à partir desquels on regarde leur qualité, et xG par tir en dessous duquel il frappe de trop loin. */
+export const STAT_SHOTS = 1.5;
+export const STAT_SHOT_QUALITY = 0.06;
+/** Passes réussies (%) en dessous desquelles un joueur de champ perd trop de ballons. */
+export const STAT_PASS_PCT = 75;
+/** Cartons jaunes par 90 min (au moins 3 jaunes) au-dessus desquels il se met en danger. */
+export const STAT_YELLOW_90 = 0.3;
+
+/**
+ * Consignes que les stats de la saison d'un joueur de champ justifient (au moins MIN_STAT_MINUTES jouées) : il tire
+ * beaucoup pour peu de danger, perd trop de passes, ou prend trop de cartons.
+ */
+export function statInstructions(stats: PlayerStats | null | undefined): PlayerInstruction[] {
+  const s = stats;
+  if (!s || (s.minutes ?? 0) < MIN_STAT_MINUTES) return [];
+  const out: PlayerInstruction[] = [];
+  const xg90 = s.npxg90 ?? s.xgPer90;
+  if (s.shots90 != null && xg90 != null && s.shots90 >= STAT_SHOTS && xg90 / s.shots90 < STAT_SHOT_QUALITY)
+    out.push({ id: 'shootLess', phase: 'ip', weight: STAT_WEIGHT + s.shots90, why: 'statShootLess', vals: { a: r1(s.shots90), b: Math.round((100 * xg90) / s.shots90) / 100 } });
+  if (s.passPct != null && s.passPct < STAT_PASS_PCT) out.push({ id: 'riskLess', phase: 'ip', weight: STAT_WEIGHT, why: 'statRiskLess', vals: { a: Math.round(s.passPct) } });
+  const y90 = s.yellow != null ? (90 * s.yellow) / s.minutes! : 0;
+  if ((s.yellow ?? 0) >= 3 && y90 >= STAT_YELLOW_90) out.push({ id: 'tackleLess', phase: 'oop', weight: STAT_WEIGHT, why: 'statTackleLess', vals: { a: s.yellow!, b: Math.round(s.minutes! / 90) } });
+  return out;
 }
 
 const SWITCHABLE = new Set<InstructionId>(['pressMore', 'pressLess', 'markTighter', 'riskMore', 'riskLess', 'dribbleMore', 'dribbleLess', 'shortPass', 'directPass']);

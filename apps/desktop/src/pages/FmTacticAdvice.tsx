@@ -5,6 +5,7 @@ import {
   piLabel,
   type FormationPlan,
   type LineupAdvice,
+  type MatchReview,
   type PlayerInstruction,
   type TacticEngine,
   type TeamAdvice,
@@ -13,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { fitPct, More } from './FmUi';
 
 /*
- * Mon onze : ce que l'adjoint dit du onze affiché (rôles à revoir, titulaires, joueurs à relancer, doublures),
+ * Mon onze : ce que les derniers matchs disent de la tactique jouée, ce que l'adjoint dit du onze affiché (rôles à revoir, titulaires, joueurs à relancer, doublures),
  * des consignes d'équipe (adaptées à l'effectif, comparées à FM27) et des consignes individuelles réglées dans le jeu.
  */
 
@@ -85,6 +86,83 @@ export function LineupAdviceCard({ advice, plan, engine }: { advice: LineupAdvic
         </div>
       )}
       <More>{t('fm.tac.advice.help')}</More>
+    </section>
+  );
+}
+
+const TONE = { good: 'bg-eau', warn: 'bg-ambre', info: 'bg-canard/30' } as const;
+
+/**
+ * Ce que disent les derniers matchs : bilan et occasions (xG) de la tactique jouée, verdict (la garder et la
+ * corriger, ou la remettre en cause), constats chiffrés, puis le bilan de chaque tactique essayée cette saison.
+ */
+export function MatchReviewCard({ review, tactic, fromGame }: { review: MatchReview; tactic: string | null; fromGame: boolean }) {
+  const { t, i18n } = useTranslation();
+  const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { maximumFractionDigits: 1 });
+  const nf2 = new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const signed = new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'always' });
+  const tr = review.trend;
+  const fmt = (vals: Record<string, number>) => Object.fromEntries(Object.entries(vals).map(([k, v]) => [k, Number.isInteger(v) ? v : k === 'shots' ? nf1.format(v) : nf2.format(v)]));
+  if (!review.recent.length) return null;
+  return (
+    <section className="card">
+      <h2 className="text-xl font-semibold">{t('fm.tac.review.title')}</h2>
+      {!tr ? (
+        <p className="mt-2 text-sm">{t('fm.tac.review.tooFew', { count: review.recent.length })}</p>
+      ) : (
+        <>
+          <p className="mt-2 text-sm">
+            <b>{review.scoped && tactic ? t('fm.tac.review.scopeTactic', { count: tr.matches, tactic }) : t('fm.tac.review.scopeAll', { count: tr.matches })}</b>{' '}
+            {t('fm.tac.review.record', { wins: tr.wins, draws: tr.draws, losses: tr.losses, gf: nf1.format(tr.goalsFor), ga: nf1.format(tr.goalsAgainst) })}
+            {tr.xgFor != null && tr.xgAgainst != null && <> {t('fm.tac.review.xg', { xgFor: nf2.format(tr.xgFor), xgAgainst: nf2.format(tr.xgAgainst) })}</>}
+          </p>
+          {review.scoped && review.verdict !== 'open' && review.verdict !== 'early' && (
+            <p className={`mt-2 rounded-xl px-3 py-2 text-sm ${review.verdict === 'keep' ? 'bg-eau/15' : 'bg-ambre/20'}`}>
+              {t(`fm.tac.review.verdict.${review.verdict}${review.verdict === 'keep' && !fromGame ? 'Other' : ''}`, { tactic: tactic ?? '' })}
+            </p>
+          )}
+          {!review.scoped && tactic && <p className="mt-2 text-xs text-brun">{t('fm.tac.review.early', { tactic, count: review.current?.matches ?? 0 })}</p>}
+          {review.findings.length > 0 && (
+            <ul className="mt-3 space-y-1.5 text-sm">
+              {review.findings.map((f) => (
+                <li key={f.id} className="flex gap-2 rounded-xl bg-creme/50 px-3 py-2">
+                  <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${TONE[f.tone]}`} />
+                  <span>{t(`fm.tac.review.finding.${f.id}`, fmt(f.vals))}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+      {review.tactics.length > 1 && (
+        <details className="mt-3 text-sm">
+          <summary className="cursor-pointer font-bold text-orange-fonce">{t('fm.tac.review.byTactic')}</summary>
+          <table className="data-table mt-1">
+            <thead>
+              <tr>
+                <th>{t('fm.tac.review.col.tactic')}</th>
+                <th>{t('fm.tac.review.col.matches')}</th>
+                <th>{t('fm.tac.review.col.record')}</th>
+                <th>{t('fm.tac.review.col.ppm')}</th>
+                <th>{t('fm.tac.review.col.xg')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {review.tactics.map((f) => (
+                <tr key={f.tactic}>
+                  <td className={f === review.current ? 'font-bold text-canard' : ''}>{f.tactic}</td>
+                  <td>{f.matches}</td>
+                  <td>{t('fm.tac.review.wdl', { wins: f.wins, draws: f.draws, losses: f.losses })}</td>
+                  <td>{nf2.format(f.ppm)}</td>
+                  <td>{f.xgDiff != null ? signed.format(f.xgDiff) : '–'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="mt-1 text-xs text-brun">{t('fm.tac.review.byTacticNote')}</p>
+        </details>
+      )}
+      <More>{t('fm.tac.review.help')}</More>
     </section>
   );
 }

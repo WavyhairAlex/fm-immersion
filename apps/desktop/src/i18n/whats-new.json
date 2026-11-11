@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.1.155",
+    "date": "2026-11-11",
+    "fr": [
+      "Mon onze regarde maintenant tes derniers matchs. Un nouveau cadre « Ce que disent tes derniers matchs » compare les occasions que tu crées à celles que tu concèdes avec ta tactique, et te dit si elle fait ses preuves ou non. Une tactique qui marche est gardée et corrigée, pas remplacée.",
+      "Les consignes d'équipe conseillées tiennent compte de ces matchs : pressing qui ne récupère rien, trop d'occasions concédées, possession sans danger, tirs de trop loin. Le bilan de chaque tactique essayée cette saison est juste en dessous.",
+      "Les consignes individuelles suivent aussi les stats de la saison : un joueur qui tire beaucoup pour rien, perd trop de passes ou collectionne les cartons reçoit la consigne qui va avec, chiffres à l'appui."
+    ],
+    "en": [
+      "My XI now looks at your last matches. A new “What your last matches say” box compares the chances you create with those you concede with your tactic, and tells you whether it is proving itself or not. A tactic that works is kept and fixed, not replaced.",
+      "Advised team instructions take these matches into account: pressing that wins nothing, too many chances conceded, harmless possession, shots from too far. The record of each tactic tried this season is just below.",
+      "Player instructions follow the season's stats too: a player who shoots a lot for nothing, loses too many passes or collects cards gets the matching instruction, with the numbers."
+    ]
+  },
+  {
     "version": "0.1.154",
     "date": "2026-11-11",
     "fr": [

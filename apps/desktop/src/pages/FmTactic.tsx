@@ -34,8 +34,8 @@ import {
 } from '@fm-immersion/module-fm';
 import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
-import { gameInstructions, gamePlayerInstructions, instructionLoad, lineupAdvice, teamAdvice, TEAM_INSTRUCTIONS_FM27 } from '@fm-immersion/module-fm';
-import { GamePiLine, LineupAdviceCard, PiState, TeamAdviceBlock } from './FmTacticAdvice';
+import { gameInstructions, gamePlayerInstructions, instructionLoad, lineupAdvice, matchReview, matchStats, teamAdvice, TEAM_INSTRUCTIONS_FM27, type PlayerStats } from '@fm-immersion/module-fm';
+import { GamePiLine, LineupAdviceCard, MatchReviewCard, PiState, TeamAdviceBlock } from './FmTacticAdvice';
 import { createContext, useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
@@ -128,7 +128,7 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
 const DOT: Record<BalanceCheck['status'], string> = { good: 'bg-eau', warn: 'bg-ambre', bad: 'bg-corail' };
 
 /** Tactique : style conseillé, schéma, onze par rôles, formes avec et sans ballon, équilibre. */
-export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupStatus, go, part }: { snap?: FmSnapshot; players: FmPlayer[]; folder: string; gameFormation: string | null; lineup: GameSlot[] | null; lineupStatus?: string | null; go?: (view: string) => void; part?: 'lineup' | 'instructions' }) {
+export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupStatus, go, part, matches }: { matches?: { gameDate: string; data: FmSnapshot }[]; snap?: FmSnapshot; players: FmPlayer[]; folder: string; gameFormation: string | null; lineup: GameSlot[] | null; lineupStatus?: string | null; go?: (view: string) => void; part?: 'lineup' | 'instructions' }) {
   // Sous-onglet affiché : le onze (et ses consignes d'équipe) ou les consignes individuelles ; les deux sans `part`.
   const showLineup = part !== 'instructions';
   const showPi = part !== 'lineup';
@@ -171,7 +171,11 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
   const advice = useMemo(() => (planA ? lineupAdvice(engine, planA, avail, built ? 'built' : fromGame ? 'game' : 'suggested') : null), [engine, planA, avail, built, fromGame]);
   // Onze du jeu : on part des consignes réglées dans FM27, pas de celles d'un style que le joueur n'a pas choisi.
   const tiBase: 'style' | 'game' = fromGame && gameTi && Object.keys(gameTi.ti).length > 0 ? 'game' : 'style';
-  const tiAdvice = useMemo(() => (planA && style ? teamAdvice(planA, style, gameTi, tiBase) : null), [planA, style, gameTi, tiBase]);
+  // Ce que les derniers matchs disent de la tactique jouée, et les stats de la saison de chaque joueur.
+  const review = useMemo(() => matchReview(matches ?? [], gameTactic), [matches, gameTactic]);
+  const seasonStats = useMemo(() => (snap ? matchStats(snap) : new Map<string, PlayerStats>()), [snap]);
+  // Les corrections tirées des matchs ne valent que pour la tactique qui les a joués : celle du jeu.
+  const tiAdvice = useMemo(() => (planA && style ? teamAdvice(planA, style, gameTi, tiBase, tiBase === 'game' && review.scoped ? review.findings : []) : null), [planA, style, gameTi, tiBase, review]);
   const gameTiLabels = useMemo(() => {
     const of = (oop: boolean) => TEAM_INSTRUCTIONS_FM27.filter((d) => (d.phase === 'oop' || d.code === 'DefensiveTransition') === oop).flatMap((d) => {
       const l = gameTi ? d.options[gameTi.ti[d.id] ?? -1] : null;
@@ -426,6 +430,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                   </div>
                 </div>
               </section>
+              {team === 'A' && <MatchReviewCard review={review} tactic={gameTactic} fromGame={fromGame} />}
               {team === 'A' && advice && planA && <LineupAdviceCard advice={advice} plan={planA} engine={engine} />}
               </>
             ),
@@ -650,7 +655,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
           {plan.slots
             .filter((sl) => sl.player)
             .map((sl, i) => {
-              const adv = playerInstructions(engine, sl, style, plan.slots, budget);
+              const adv = playerInstructions(engine, sl, style, plan.slots, budget, sl.player ? seasonStats.get(sl.player.id) : null);
               // Ce que le joueur a déjà réglé dans FM27 pour lui (toutes compos), et ce que son rôle impose.
               const inGame = gamePi.get(sl.player!.id) ?? null;
               const gameKeys = inGame ? [...inGame.mine, ...inGame.imposed] : null;
@@ -665,7 +670,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                     {sl.game?.custom && <span className="ml-1 rounded-full bg-canard/10 px-1.5 text-canard">{t('fm.pi.custom')}</span>}
                   </p>
                   {inGame ? (
-                    <GamePiLine mine={inGame.mine} supported={budget < 3 ? playerInstructions(engine, sl, style, plan.slots, 3).list : adv.list} budget={budget} />
+                    <GamePiLine mine={inGame.mine} supported={budget < 3 ? playerInstructions(engine, sl, style, plan.slots, 3, sl.player ? seasonStats.get(sl.player.id) : null).list : adv.list} budget={budget} />
                   ) : (
                     sl.game && (sl.game.instructions.ip.length > 0 || sl.game.instructions.oop.length > 0) && (
                       <p className="mb-1 text-xs text-canard">
