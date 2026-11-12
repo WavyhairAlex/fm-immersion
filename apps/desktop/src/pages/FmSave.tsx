@@ -128,6 +128,9 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
   // Fiche demandée par la recherche rapide (Ctrl+K).
   const wanted = useUi((s) => s.openPlayer);
   const setWanted = useUi((s) => s.setOpenPlayer);
+  // Joueur d'un autre club demandé depuis FM27.
+  const external = useUi((s) => s.externalPlayer);
+  const setExternal = useUi((s) => s.setExternalPlayer);
   useEffect(() => {
     if (!wanted) return;
     setSheet(wanted);
@@ -421,13 +424,17 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
                         id={sheet.id}
                         focus={sheet.focus}
                         players={players}
+                        extra={external}
                         snap={snapshot.data}
                         history={history}
                         entries={all as { gameDate: string; data: FmSnapshot }[] | undefined}
                         folder={folder}
                         gameDate={snapshot.gameDate}
                         go={go}
-                        onClose={() => setSheetState(null)}
+                        onClose={() => {
+                          setSheetState(null);
+                          setExternal(null);
+                        }}
                       />
                     )}
                   </PlayerSheetContext.Provider>
