@@ -27,10 +27,13 @@ export type PlayRole = 'starter' | 'backup' | 'none';
 /** Part de la progression gardée selon le temps de jeu (un prêt fait jouer, mais moins encadré). */
 export const PLAY_GROWTH: Record<PlayRole, number> = { starter: 1, backup: 0.7, none: 0.6 };
 
+/** Points de CA gagnés par saison selon l'âge : repères génériques, ou mesurés dans la partie (`measuredGrowth`). */
+export type Growth = (age: number) => number;
+
 /** CA projeté dans `years` saisons, plafonné par le PA ; `rate` : part de la progression (temps de jeu). */
-export function projectCa(ca: number, pa: number, age: number, years: number, rate = 1): number {
+export function projectCa(ca: number, pa: number, age: number, years: number, rate = 1, growth: Growth = caGrowth): number {
   let x = ca;
-  for (let y = 0; y < years; y++) x += caGrowth(age + y) * rate;
+  for (let y = 0; y < years; y++) x += growth(age + y) * rate;
   return Math.min(Math.max(ca, pa), x);
 }
 
@@ -119,7 +122,7 @@ export interface TradeIdea {
   kinds: TradeKind[];
 }
 
-export type TradeKind = 'nugget' | 'undervalued' | 'expiring' | 'free';
+export type TradeKind = 'nugget' | 'undervalued' | 'expiring' | 'free' | 'profile';
 export const NUGGET_MAX_AGE = 21;
 export const NUGGET_MARGIN = 15;
 export const UNDERVALUED_RATIO = 0.8;
@@ -130,7 +133,14 @@ export interface TradeOpts {
   maxYears?: number;
   /** Temps de jeu de chaque joueur chez nous, par id de la base. */
   play?: Map<string, PlayRole>;
+  /** Progression par âge (repères génériques par défaut). */
+  growth?: Growth;
+  /** Avance de note sur 20 dans le projet par rapport à son CA (`profileEdge`), par id de la base. */
+  edge?: Map<string, number>;
 }
+
+/** Avance de note (sur 20) au-delà de laquelle un profil est sous-estimé par son CA. */
+export const PROFILE_EDGE = 1;
 
 /**
  * Idées d'achat-revente parmi des joueurs de la base, de la plus rentable à la moins rentable. On ne garde que les
@@ -163,9 +173,11 @@ export function tradeIdeas(players: DbPlayer[], club: ClubReach, gameDate: strin
     if (priceRatio != null && priceRatio < UNDERVALUED_RATIO) kinds.push('undervalued');
     if (months != null && months <= EXPIRING_MONTHS && buy > 0) kinds.push('expiring');
     if (buy === 0) kinds.push('free');
+    const edge = opts.edge?.get(String(p.id));
+    if (edge != null && edge >= PROFILE_EDGE) kinds.push('profile');
     let best: TradeIdea | null = null;
     for (let y = 1; y <= maxYears; y++) {
-      const caAtSale = projectCa(p.ca, pa, p.age, y, rate);
+      const caAtSale = projectCa(p.ca, pa, p.age, y, rate, opts.growth);
       const ageAtSale = p.age + y;
       // Revente sous contrat long (signé à l'achat) : les jeunes se vendent au-dessus de leur valeur.
       const sale = model.value(caAtSale, ageAtSale) * premium * (ageAtSale <= 23 ? 1.25 : 1);
@@ -192,7 +204,8 @@ export function tradeIdeas(players: DbPlayer[], club: ClubReach, gameDate: strin
       // Rendement par saison : une revente rapide vaut mieux qu'une plus grosse trois ans plus tard.
       if (!best || profit / y > best.profit / best.years) best = idea;
     }
-    if (best && best.profit > 0) out.push(best);
+    // Un profil sous-estimé reste dans la liste même sans gain à la revente : il vaut plus chez nous que sur le marché.
+    if (best && (best.profit > 0 || kinds.includes('profile'))) out.push(best);
   }
   return out.sort((a, b) => b.profit / b.years - a.profit / a.years);
 }

@@ -1404,6 +1404,8 @@ pub struct SearchFilter {
     /// Réputation actuelle maximale du joueur (celles que le jeu laisse à 0 ou moins, non lues, sont gardées) :
     /// écarte d'emblée les vedettes qu'un petit club n'attirera pas, avant que la limite de 300 ne les garde.
     pub max_reputation: Option<i16>,
+    /// Seulement ces joueurs (identifiants du jeu) : relecture des joueurs suivis. Vide = tous.
+    pub ids: Vec<i32>,
     pub limit: Option<usize>,
 }
 
@@ -1417,7 +1419,8 @@ impl SearchFilter {
                 || self.positions.iter().any(|c| p.position_ratings.get(c.as_str()).is_some_and(|&v| v >= min)))
     }
     fn keep(&self, p: &DbPlayer) -> bool {
-        self.max_age.map_or(true, |m| p.age.is_some_and(|a| a <= m))
+        (self.ids.is_empty() || self.ids.contains(&p.id))
+            && self.max_age.map_or(true, |m| p.age.is_some_and(|a| a <= m))
             && self.max_wage_weekly.map_or(true, |m| p.wage_weekly.map_or(true, |w| w <= m))
             && self.exclude_club_id.map_or(true, |c| p.club_id != Some(c) && p.loan_club_id != Some(c))
             && (!self.free_only || (p.club_id.is_none() && p.loan_club_id.is_none()))
@@ -1730,6 +1733,10 @@ mod tests {
         assert_eq!(run(&mut db, f("", "", Some(100))), 0);
         // Potentiel négatif (fourchette du jeu) : gardé.
         assert_eq!(run(&mut db, SearchFilter { min_pa: Some(170), ..Default::default() }), 1);
+        // Relecture des joueurs suivis, par identifiant.
+        let id = db.search(1, &|_| true, |_| true)[0].id;
+        assert_eq!(run(&mut db, SearchFilter { ids: vec![id], ..Default::default() }), 1);
+        assert_eq!(run(&mut db, SearchFilter { ids: vec![id + 1], ..Default::default() }), 0);
     }
 
     #[test]

@@ -4,6 +4,8 @@ import { normalizePlayer, toNumber, type FmPlayer } from './player';
 import { range, type Range } from './project';
 import { fmPlayerSchema, LOAN_SOURCE, loanShortlist, type FmSnapshot } from './snapshot';
 
+import { trackOf, trackPoint, withTrack } from './scouting';
+
 /**
  * Cibles du mercato : joueurs d'autres clubs que le joueur suit dans FM27 (liste de suivi, cibles du recrutement),
  * lus par le plugin 0.4.0 (réglage LireCibles, bloc `shortlist` de l'instantané). FM Immersion les garde dans sa base
@@ -285,6 +287,8 @@ export function mergeTargets(known: TargetRecord[], snap: FmSnapshot): TargetRec
       const sources = Array.isArray((x as Raw).sources) ? ((x as Raw).sources as unknown[]) : [];
       x = { ...(prev.data as Raw), ...(x as Raw), sources: [...new Set([...sources, 'base'])] };
     }
+    // Le suivi relu dans la base (prix, CA, contrat) survit aux listes du jeu.
+    if (prev && trackOf(prev).length) x = { ...(x as Raw), track: trackOf(prev) };
     out.push({
       playerId: id,
       name: r.data.name.replace(/<[^>]*>/g, '').trim(),
@@ -395,6 +399,28 @@ export function addBaseTarget(known: TargetRecord[], p: DbPlayer, date: string):
     lastSeen: prev && prev.lastSeen > date ? prev.lastSeen : date,
     inList: true,
     dismissed: false,
-    data: { ...prevData, ...data, sources: [...new Set([...sources, 'base'])] },
+    data: { ...prevData, ...data, sources: [...new Set([...sources, 'base'])], track: withTrack(trackOf(prev ?? ({ data: prevData } as TargetRecord)), trackPoint(p, date)) },
   };
+}
+
+/**
+ * Relecture d'un joueur déjà suivi : ses données et son suivi (prix, CA, contrat) sont mis à jour, sans le remettre
+ * en liste s'il a été écarté.
+ */
+export function refreshBaseTarget(prev: TargetRecord, p: DbPlayer, date: string): TargetRecord {
+  const prevData = (prev.data ?? {}) as Raw;
+  return {
+    ...prev,
+    name: p.name,
+    club: p.club ?? p.loanClub,
+    lastSeen: prev.lastSeen > date ? prev.lastSeen : date,
+    data: { ...prevData, ...baseTargetData(p), sources: prevData.sources ?? ['base'], track: withTrack(trackOf(prev), trackPoint(p, date)) },
+  };
+}
+
+/** Joueurs suivis venus de la base (ou relus dedans) : ceux qu'on peut relire par leur identifiant. */
+export function baseTargetIds(known: TargetRecord[]): number[] {
+  return known
+    .filter((r) => !r.dismissed && /^\d+$/.test(r.playerId))
+    .map((r) => Number(r.playerId));
 }

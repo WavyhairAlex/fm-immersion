@@ -1,5 +1,5 @@
 import { saves } from '@fm-immersion/db';
-import { addBaseTarget, carryRoleStars, fmSnapshotSchema, fmStatusSchema, type DbPlayer, type FmStatus, type GazetteWriting, type LeavingMark, type LeavingMarks, mergeTargets, type FmSnapshot, type TargetRecord } from '@fm-immersion/module-fm';
+import { addBaseTarget, refreshBaseTarget, carryRoleStars, fmSnapshotSchema, fmStatusSchema, type DbPlayer, type FmStatus, type GazetteWriting, type LeavingMark, type LeavingMarks, mergeTargets, type FmSnapshot, type TargetRecord } from '@fm-immersion/module-fm';
 import { fmGazetteWriting, fmPressConferences, fmSnapshots, fmTargets, type FmPressConferenceRow } from '@fm-immersion/module-fm/schema';
 import { and, asc, desc, eq, lte, ne } from 'drizzle-orm';
 import { challengesRepo } from './challenges';
@@ -210,6 +210,24 @@ export function fmRepo(db: Db) {
           target: [fmTargets.saveId, fmTargets.playerId],
           set: { name: row.name, club: row.club, firstSeen: row.firstSeen, lastSeen: row.lastSeen, inList: true, dismissed: false, data: row.data, updatedAt: now },
         });
+    },
+
+    /** Relecture des joueurs suivis dans la base du jeu : prix, CA et contrat ajoutés à leur suivi. */
+    async refreshBaseTargets(saveId: string, found: DbPlayer[], gameDate: string) {
+      const known = new Map((await this.targets(saveId)).map((r) => [r.playerId, r]));
+      const now = new Date().toISOString();
+      let n = 0;
+      for (const p of found) {
+        const prev = known.get(String(p.id));
+        if (!prev) continue;
+        const c = refreshBaseTarget(prev, p, gameDate);
+        await db
+          .update(fmTargets)
+          .set({ name: c.name, club: c.club, lastSeen: c.lastSeen, data: c.data, updatedAt: now })
+          .where(and(eq(fmTargets.saveId, saveId), eq(fmTargets.playerId, c.playerId)));
+        n++;
+      }
+      return n;
     },
 
     /** Gazette déjà rédigée par l'IA pour cette semaine, si les faits n'ont pas changé depuis. */

@@ -3596,14 +3596,16 @@
         "nugget": "Gems to sell on",
         "undervalued": "Undervalued",
         "expiring": "Contracts ending",
-        "free": "Free agents"
+        "free": "Free agents",
+        "profile": "Underrated profiles"
       },
       "presetHelp": {
         "all": "Players aged 25 and under within your reach, ranked by profit per season.",
         "nugget": "21 and under with at least 15 points between CA and PA: the ones who gain the most value.",
         "undervalued": "24 and under, priced at least 20% below a player of the same level and age.",
         "expiring": "A year or less left on their contract: their club sells them cheap.",
-        "free": "No club: no fee, only the wage."
+        "free": "No club: no fee, only the wage.",
+        "profile": "29 and under, rated higher out of 20 in your project than their CA suggests: worth more to you than on the market."
       },
       "positions": "Positions (none = all)",
       "run": "Start scouting",
@@ -3646,7 +3648,9 @@
         "nugget": "gem",
         "undervalued": "undervalued",
         "expiring": "contract ending",
-        "free": "no fee"
+        "free": "no fee",
+        "profile": "underrated profile",
+        "profileEdge": "+{{edge}} pt for his CA"
       },
       "role": {
         "starter": "starter",
@@ -3663,7 +3667,87 @@
       "saleAt": "at {{age}}",
       "roi": "return {{pct}}%",
       "roiFree": "nothing to pay up front",
-      "more": "Show {{count}} more"
+      "more": "Show {{count}} more",
+      "tabs": {
+        "deals": "Good deals",
+        "watch": "Followed players",
+        "sell": "When to sell",
+        "markets": "Markets"
+      },
+      "growth": {
+        "measured_one": "Growth measured in your save on {{count}} player",
+        "measured_other": "Growth measured in your save on {{count}} players",
+        "generic": "Growth: generic benchmarks (at least 4 months of CA read in your save, “Read CA/PA” option, are needed to measure it)",
+        "bucket": "{{from}}-{{to}} y.o.: +{{pts}}/season",
+        "detail": "{{from}}-{{to}} y.o.: {{measured}} measured (benchmark {{base}}, {{count}} players)"
+      },
+      "watch": {
+        "title": "Your followed players",
+        "lead": "Every player in your targets is read again in the FM27 database: price, CA and contract since you started following him. With “Read CA/PA” on, it happens on its own at each game date.",
+        "reread_one": "Read {{count}} player again",
+        "reread_other": "Read {{count}} players again",
+        "none": "No followed player read yet. Add players from the good deals (“Follow”), then read them again.",
+        "flagged": "{{count}} of {{total}} need your attention",
+        "quiet": "nothing new",
+        "col": {
+          "player": "Player",
+          "since": "Followed since",
+          "ca": "CA",
+          "value": "Price",
+          "contract": "Contract",
+          "signals": "Worth knowing"
+        },
+        "signal": {
+          "priceDrop": "price dropping",
+          "preContract": "pre-contract possible",
+          "contractEnding": "contract ends within a year",
+          "listed": "transfer listed",
+          "free": "free agent",
+          "ahead": "growing faster than expected",
+          "stalled": "stopped growing",
+          "moved": "changed club"
+        },
+        "help": "Price dropping: 20% below the highest read. Pre-contract: 6 months or less left. Growth: compared to what his age should give (faster: at least 1.5 times and 3 points; stalled: nothing gained in 4 months when he should have). Read from FM27's memory, read-only."
+      },
+      "sell": {
+        "title": "When to sell your players",
+        "lead": "{{sell}} to sell before their value drops, {{hold}} worth clearly more later.",
+        "calls": "To decide",
+        "all": "Whole squad",
+        "noCa": "Your players' CA is needed: turn on “Read CA/PA” in Plugin and settings, then play a day.",
+        "col": {
+          "player": "Player",
+          "now": "Today",
+          "y1": "In 1 season",
+          "y2": "In 2 seasons",
+          "y3": "In 3 seasons",
+          "call": "Advice"
+        },
+        "call": {
+          "sellNow": "Sell: value dropping",
+          "hold_one": "Keep: peak in {{count}} season",
+          "hold_other": "Keep: peak in {{count}} seasons",
+          "stable": "Stable value"
+        },
+        "help": "Future value: that of a player of his projected CA and age, at your squad's prices, keeping half of his own premium. Sell: he will lose at least 10% within a year. Keep: he will be worth at least 15% more at his peak. It says nothing about his use on the pitch: a starter can be worth more than a cheque."
+      },
+      "market": {
+        "title": "Where to buy",
+        "lead": "The leagues where a player costs least for his level and age, from the players read in the last scouting run.",
+        "first": "Run a scouting search in Good deals first: the map is built on the players read.",
+        "none": "Not enough players per league in this read (at least 4). Try the “Everything” filter.",
+        "col": {
+          "division": "League",
+          "index": "Price",
+          "n": "Players read",
+          "ca": "Median CA",
+          "age": "Median age"
+        },
+        "cheaper": "{{pct}}% cheaper",
+        "dearer": "{{pct}}% dearer",
+        "par": "market price",
+        "help": "Median price of the league's players compared to the value of a player of the same CA and age across the whole market read. A lower-rated league sells cheaper: that's where your scouts will find bargains."
+      }
     }
   },
   "modes": {
