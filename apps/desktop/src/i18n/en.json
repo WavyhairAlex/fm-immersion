@@ -1993,20 +1993,20 @@
         "wageOver": "over budget, per month",
         "wageLeft": "room under budget, per month",
         "balance": "Club balance",
-        "tightLine": "No purchases: look for free agents or loans, and sell before you sign.",
         "in": "Bring in",
         "out": "Let go",
         "extend": "Extend",
         "noIn": "No position to strengthen for now.",
         "noOut": "Nobody to let go for now.",
         "noExtend": "No contract to extend for now.",
-        "profile": "Profile to look for",
         "until": "contract ends {{date}}",
         "urgent": "Settle soon",
-        "season": "This season",
-        "more": "+ {{count}} more",
         "less": "Show less",
-        "detail": "The detail"
+        "hint": "Click a line to see the detail and act.",
+        "detailOpen": "All the detail: youngsters, replacement search, division level ▾",
+        "detailClose": "Fold the detail ▴",
+        "more_one": "+ {{count}} more",
+        "more_other": "+ {{count}} more"
       }
     },
     "stats": {

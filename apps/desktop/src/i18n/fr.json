@@ -1993,20 +1993,20 @@
         "wageOver": "au-dessus du budget, par mois",
         "wageLeft": "de marge sous le budget, par mois",
         "balance": "Solde du club",
-        "tightLine": "Pas d'achat : cherche des joueurs libres ou en prêt, et vends avant de recruter.",
         "in": "Faire venir",
         "out": "Faire partir",
         "extend": "Prolonger",
         "noIn": "Aucun poste à renforcer pour l'instant.",
         "noOut": "Personne à faire partir pour l'instant.",
         "noExtend": "Aucun contrat à prolonger pour l'instant.",
-        "profile": "Profil à chercher",
         "until": "fin de contrat le {{date}}",
         "urgent": "À régler vite",
-        "season": "Cette saison",
-        "more": "+ {{count}} autres",
         "less": "Montrer moins",
-        "detail": "Le détail"
+        "hint": "Clique sur une ligne pour voir le détail et agir.",
+        "detailOpen": "Tout le détail : jeunes, recherche de remplaçants, niveau de la division ▾",
+        "detailClose": "Replier le détail ▴",
+        "more_one": "+ {{count}} autre",
+        "more_other": "+ {{count}} autres"
       }
     },
     "stats": {
