@@ -1,4 +1,4 @@
-import { engineTier, POS_LABEL, type Reliability, teamInstructionCards, teamInstructionOf, type CoachPrefs, type EngineTier, type EngineValue, type FmPlayer, type PlanLetter, type Project, type ProjectCompat, type TacticEngine } from '@fm-immersion/module-fm';
+import { engineTier, POS_LABEL, type Reliability, teamInstructionCards, teamInstructionOf, type CoachPrefs, type ProjectTemplate, type EngineTier, type EngineValue, type FmPlayer, type PlanLetter, type Project, type ProjectCompat, type TacticEngine } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
@@ -301,9 +301,23 @@ export function ReliabilityLine({ r }: { r: Reliability }) {
   );
 }
 
-/** Choix du coach (style aimé, schéma, niveau visé), partagés entre « Mon projet » et « Cibles », par partie. */
-const COACH_KEY = 'fmi.coach';
+/** Projet de jeu : la tactique choisie dans Tactique, fournie par l'écran de la partie à tous les autres écrans. */
+export const ProjectTemplateContext = createContext<ProjectTemplate | null>(null);
+
+/**
+ * Choix du coach (niveau visé, entraînement…), par partie, avec le projet de jeu : la tactique choisie dans Tactique.
+ * Mercato, entraînement, repérage et fiches s'appuient tous dessus.
+ */
 export function useCoach() {
+  const [coach, update] = useCoachRaw();
+  const template = useContext(ProjectTemplateContext);
+  const merged = useMemo(() => (template ? { ...coach, template } : coach), [coach, template]);
+  return [merged, update] as const;
+}
+
+/** Choix du coach tels qu'enregistrés, sans le projet de jeu (pour choisir la tactique elle-même). */
+const COACH_KEY = 'fmi.coach';
+export function useCoachRaw() {
   const scope = useFmSaveScope();
   const [coach, setCoach] = useState<CoachPrefs>(() => readScoped<CoachPrefs>(COACH_KEY, scope, {}));
   const update = (p: CoachPrefs) => {

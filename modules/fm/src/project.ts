@@ -3,6 +3,7 @@ import { POS_ORDER, type PosCode } from './positions';
 import { projectLevel, type SquadAt } from './progress';
 import type { FmSnapshot } from './snapshot';
 import type { Target } from './targets';
+import { builtPlan, type BuiltTactic } from './tactic-builder';
 import { FORMATIONS, STYLE_FORMS, attrKey, attrOf, avg, type FormationPlan, type Phase, type RoleRef, type Slot, type StyleRef, type TacticEngine } from './tactic';
 
 /**
@@ -168,8 +169,31 @@ export interface CoachPrefs {
   trainingDays?: number[];
   /** Méthode des semaines de saison (« meta » par défaut, ou « freedom »). */
   trainingMethod?: 'metaAdapt' | 'meta' | 'freedom' | 'harvestgreen';
+  /**
+   * Projet de jeu = la tactique choisie dans Tactique (style, schéma, rôles de chaque poste). Fourni par l'écran de la
+   * partie ; tout ce qui s'appuie sur le projet (mercato, entraînement, repérage, fiches) en découle.
+   */
+  template?: ProjectTemplate | null;
+}
+
+/** La tactique retenue, réduite à ce qui fait le projet : style, schéma et rôle de chaque poste. */
+export interface ProjectTemplate {
+  style: StyleRef;
+  form: string;
+  slots: { pos: PosCode; posOOP?: PosCode; ip: string; oop: string }[];
+  /** D'où vient la tactique : lue dans le jeu, conseillée par l'appli, choisie par style, ou construite. */
+  source: 'game' | 'auto' | 'style' | 'built';
+}
+
+/** Onze d'un projet : postes et rôles de la tactique choisie, meilleure attribution des joueurs. */
+export function templatePlan(engine: TacticEngine, t: ProjectTemplate, list: FmPlayer[], reserve: FmPlayer[] = []): FormationPlan {
+  const tactic = { slots: t.slots.map((s) => ({ pos: s.pos, posOOP: s.posOOP ?? s.pos, ip: s.ip, oop: s.oop })) } as unknown as BuiltTactic;
+  return { ...builtPlan(engine, tactic, list, reserve), form: t.form };
 }
 export const TARGETS = [45, 50, 55, 60, 65, 70];
+
+/** Style du projet de jeu : celui de la tactique choisie, sinon le style aimé du coach. */
+export const projectStyle = (engine: TacticEngine, coach: CoachPrefs): StyleRef | undefined => coach.template?.style ?? engine.ref.styles.find((s) => s.id === coach.style) ?? engine.ref.styles[0];
 
 export type SlotStatus = 'ready' | 'develop' | 'recruit';
 export interface ProjectSlot extends Slot {
@@ -215,13 +239,14 @@ export const recruitAttrs = (engine: TacticEngine, sl: Slot) => [...new Set([...
 const canPlay = (engine: TacticEngine, p: FmPlayer, r: RoleRef) => engine.rolePositions(r).some((pos) => p.positions.includes(pos));
 
 export function buildProject(engine: TacticEngine, list: FmPlayer[], prefs: CoachPrefs): Project | null {
-  const style = engine.ref.styles.find((s) => s.id === prefs.style) ?? engine.ref.styles[0];
+  const tpl = prefs.template?.slots.length === 11 ? prefs.template : null;
+  const style = tpl?.style ?? engine.ref.styles.find((s) => s.id === prefs.style) ?? engine.ref.styles[0];
   if (!style) return null;
-  const forms = (STYLE_FORMS[style.id] ?? []).filter((f) => FORMATIONS[f]);
-  const form = prefs.form && FORMATIONS[prefs.form] ? prefs.form : (forms[0] ?? '4-3-3');
+  const forms = tpl ? [tpl.form] : (STYLE_FORMS[style.id] ?? []).filter((f) => FORMATIONS[f]);
+  const form = tpl ? tpl.form : prefs.form && FORMATIONS[prefs.form] ? prefs.form : (forms[0] ?? '4-3-3');
   const target = prefs.target ?? 55;
   const T = (target / 100) * 20;
-  const plan = engine.formationPlan(form, style, list);
+  const plan = tpl ? templatePlan(engine, tpl, list) : engine.formationPlan(form, style, list);
   const slots: ProjectSlot[] = plan.slots.map((sl) => {
     if (!sl.player || sl.fit == null) return { ...sl, status: 'recruit', tone: 'bad' };
     if (sl.fit >= T) return { ...sl, status: 'ready', tone: 'good' };
@@ -368,6 +393,9 @@ export function rankTactics(engine: TacticEngine, list: FmPlayer[], reserve: FmP
  * vaut le meilleur (à TACTIC_TIE près), il devient automatiquement la tactique conseillée.
  */
 export function bestTactic(engine: TacticEngine, list: FmPlayer[], coach: CoachPrefs = {}, ranked = rankTactics(engine, list), base?: StyleRef | null, baseForm?: string | null): TacticPick | null {
+  // Projet de jeu fixé (la tactique choisie) : c'est elle qu'on joue, avec l'effectif donné.
+  const tpl = coach.template?.slots.length === 11 ? coach.template : null;
+  if (tpl) return { style: tpl.style, form: tpl.form, plan: templatePlan(engine, tpl, list), project: true };
   const top = ranked[0];
   if (!top) return null;
   let best: TacticPick = { style: top.style, form: top.form, plan: top.plan, project: false };

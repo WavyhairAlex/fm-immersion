@@ -31,6 +31,8 @@ import {
   type FmPlayer,
   type FmSnapshot,
   type GameSlot,
+  type FormationPlan,
+  type ProjectTemplate,
   type Phase,
   type PosCode,
   type TacticReference,
@@ -39,15 +41,17 @@ import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { gameInstructions, gamePlayerInstructions, instructionLoad, lineupAdvice, matchReview, matchStats, tacticTodo, teamAdvice, TEAM_INSTRUCTIONS_FM27, type PlayerStats } from '@fm-immersion/module-fm';
 import { GamePiLine, LineupAdviceCard, MatchReviewCard, PiState, TeamAdviceBlock, TodoCard } from './FmTacticAdvice';
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { LINE_COLOR, Pitch, PosBadge } from './FmFoot';
 import { readBuiltTactics } from './FmBuilder';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
-import { fitPct, More, PlayerLink, TeamCards, useCoach, SectionStack } from './FmUi';
+import { fitPct, More, PlayerLink, TeamCards, useCoachRaw, SectionStack, ProjectTemplateContext } from './FmUi';
 
 // v2 : le choix automatique (meilleure tactique applicable) devient la valeur par défaut.
 const PREFS_KEY = 'fmi.tactic.v2';
+/** Signalé quand la tactique choisie (ou une tactique construite) change. */
+export const TACTIC_EVENT = 'fmi:tactic';
 interface Prefs {
   style?: string;
   form?: string;
@@ -97,18 +101,30 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
     const next = { ...prefs, ...p };
     setPrefs(next);
     writeScoped(PREFS_KEY, scope, next);
+    // Les autres écrans ouverts (dont le projet de jeu de toute l'appli) suivent le nouveau choix.
+    window.dispatchEvent(new Event(TACTIC_EVENT));
   };
+  const [builtRev, setBuiltRev] = useState(0);
+  useEffect(() => {
+    const on = () => {
+      setPrefs(readScoped<Prefs>(PREFS_KEY, scope, {}));
+      setBuiltRev((n) => n + 1);
+    };
+    window.addEventListener(TACTIC_EVENT, on);
+    return () => window.removeEventListener(TACTIC_EVENT, on);
+  }, [scope]);
   const avail = useMemo(() => players.filter((p) => !unavailable(p) && Object.keys(p.attributes).length > 0), [players]);
   // Classement commun à tous les onglets : chaque style avec la note d'équipe de son meilleur onze.
   const ranked = useMemo(() => rankTactics(engine, avail, reserve), [engine, avail, reserve]);
-  const [coach] = useCoach();
+  const [coach] = useCoachRaw();
   // Sans choix du joueur : la meilleure tactique applicable, ou le projet dès qu'il devient le meilleur.
   // Tactique de base : celle jouée dans FM27 (d'après son nom), gardée tant qu'une autre ne gagne pas nettement.
   const base = useMemo(() => styleOfGameTactic(gameTactic, engine.ref.styles), [gameTactic, engine]);
   const gameForm0 = knownFormation(gameFormation);
   const pick = useMemo(() => bestTactic(engine, avail, coach, ranked, base, gameForm0), [engine, avail, coach, ranked, base, gameForm0]);
   // Tactiques construites dans Tactique > Construire : on peut en choisir une à la place d'un style.
-  const builtList = useMemo(() => readBuiltTactics(scope), [scope]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const builtList = useMemo(() => readBuiltTactics(scope), [scope, builtRev]);
   const built = prefs.source === 'built' ? (builtList.find((b) => b.id === prefs.built) ?? null) : null;
   const builtStyleRef = useMemo(() => (built ? builtStyle(built) : null), [built]);
   const auto = !prefs.style && !built;
@@ -123,6 +139,24 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
   const plan = builtPlanA ?? (fromGame ? gamePlan : plans.find((p) => p.form === form));
   const shownForm = builtPlanA ? builtPlanA.form : fromGame ? gamePlan.form || form : form;
   return { engine, local, prefs, update, avail, reserve, ranked, style, natural, form: shownForm, plans, plan, gamePlan, fromGame, auto, pick, built, builtList };
+}
+
+/**
+ * Projet de jeu de toute l'appli : la tactique choisie en Tactique (lue dans le jeu, conseillée, choisie par style ou
+ * construite), réduite à son style, son schéma et le rôle de chaque poste.
+ */
+export function ProjectProvider({ players, folder, gameFormation, lineup, gameTactic, children }: { players: FmPlayer[]; folder: string; gameFormation: string | null; lineup: GameSlot[] | null; gameTactic: string | null; children: ReactNode }) {
+  const { engine, style, form, plan, fromGame, auto, built, avail } = useTacticChoice(players, folder, gameFormation, lineup, gameTactic);
+  const template = useMemo<ProjectTemplate | null>(() => {
+    if (!style) return null;
+    const source: ProjectTemplate['source'] = built ? 'built' : fromGame ? 'game' : auto ? 'auto' : 'style';
+    const full = (p: FormationPlan | null | undefined) => p && p.slots.length === 11 && p.slots.every((s) => s.ip && s.oop);
+    // Rôles du jeu inconnus à un poste : on retombe sur ceux du style dans le même schéma.
+    const src = full(plan) ? plan! : FORMATIONS[form] ? engine.formationPlan(form, style, avail) : null;
+    if (!full(src)) return null;
+    return { style, form, source, slots: src!.slots.map((s) => ({ pos: s.pos, ...(s.posOOP ? { posOOP: s.posOOP } : {}), ip: s.ip, oop: s.oop })) };
+  }, [engine, style, form, plan, fromGame, auto, built, avail]);
+  return <ProjectTemplateContext.Provider value={template}>{children}</ProjectTemplateContext.Provider>;
 }
 
 const DOT: Record<BalanceCheck['status'], string> = { good: 'bg-eau', warn: 'bg-ambre', bad: 'bg-corail' };

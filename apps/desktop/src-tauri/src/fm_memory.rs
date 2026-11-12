@@ -1380,6 +1380,7 @@ pub struct SearchFilter {
     /// Postes FM Immersion (`DC`, `MC`…) : au moins un tenu à `min_rating` ou plus (15 par défaut).
     pub positions: Vec<String>,
     pub min_rating: Option<u8>,
+    pub min_age: Option<u16>,
     pub max_age: Option<u16>,
     pub min_ca: Option<i16>,
     pub max_ca: Option<i16>,
@@ -1406,6 +1407,10 @@ pub struct SearchFilter {
     pub max_reputation: Option<i16>,
     /// Seulement ces joueurs (identifiants du jeu) : relecture des joueurs suivis. Vide = tous.
     pub ids: Vec<i32>,
+    /// Football féminin ou masculin (rempli d'après le club du manager) : on ne propose que des joueurs de la même
+    /// catégorie. `None` : pas de tri.
+    #[serde(skip)]
+    pub women: Option<bool>,
     pub limit: Option<usize>,
 }
 
@@ -1420,6 +1425,8 @@ impl SearchFilter {
     }
     fn keep(&self, p: &DbPlayer) -> bool {
         (self.ids.is_empty() || self.ids.contains(&p.id))
+            && self.women.map_or(true, |w| is_women_player(p) == w || (w && p.club_id.is_none()))
+            && self.min_age.map_or(true, |m| p.age.is_some_and(|a| a >= m))
             && self.max_age.map_or(true, |m| p.age.is_some_and(|a| a <= m))
             && self.max_wage_weekly.map_or(true, |m| p.wage_weekly.map_or(true, |w| w <= m))
             && self.exclude_club_id.map_or(true, |c| p.club_id != Some(c) && p.loan_club_id != Some(c))
@@ -1433,6 +1440,23 @@ impl SearchFilter {
     }
 }
 
+/// Mots qui désignent le football féminin dans un nom de club ou de championnat (texte replié, sans accents).
+/// La base lue ne dit pas le sexe d'un joueur : on le déduit de son club et de son championnat.
+const WOMEN_MARKS: &[&str] = &[
+    "women", "woman", "ladies", "femin", "femmin", "femenil", "femeni", "frauen", "vrouwen", "damallsvenskan", "toppserien",
+    "kvinde", "naisten", "kobiet", "zeny", "nwsl", "wsl", "liga f", "arkema", "(f)", "(w)",
+];
+
+pub fn is_women_name(name: &str) -> bool {
+    let f = fold(name);
+    WOMEN_MARKS.iter().any(|m| f.contains(m)) || f.ends_with(" w") || f.ends_with(" f")
+}
+
+/// Joueur d'une équipe ou d'un championnat féminin (club propriétaire, club de prêt ou division).
+pub fn is_women_player(p: &DbPlayer) -> bool {
+    [&p.club, &p.loan_club, &p.division].iter().any(|x| x.as_deref().is_some_and(is_women_name))
+}
+
 /// Recherche dans toute la base (lecture seule, à la demande) : 300 joueurs au plus, meilleurs CA d'abord.
 #[tauri::command]
 pub async fn fm_memory_search(filter: SearchFilter) -> Result<Vec<DbPlayer>, MemError> {
@@ -1440,8 +1464,15 @@ pub async fn fm_memory_search(filter: SearchFilter) -> Result<Vec<DbPlayer>, Mem
         with_database(|db, _| {
             db.check()?;
             let mut filter = filter;
+            let own_club = db.humans().iter().find_map(|h| h.club_id);
             if filter.exclude_own && filter.exclude_club_id.is_none() {
-                filter.exclude_club_id = db.humans().iter().find_map(|h| h.club_id);
+                filter.exclude_club_id = own_club;
+            }
+            // Même catégorie que l'équipe du manager (relecture des suivis par identifiant : pas de tri).
+            if filter.ids.is_empty() {
+                if let Some(c) = own_club {
+                    filter.women = db.players(1, |p| p.club_id == Some(c) && p.loan_club_id.is_none()).pop().map(|p| is_women_player(&p));
+                }
             }
             let limit = filter.limit.unwrap_or(100).min(300);
             Ok(db.search(limit, &|p| filter.pre(p), |p| filter.keep(p)))
@@ -1714,6 +1745,8 @@ mod tests {
         // MDF à 8 seulement, sous le seuil de 15.
         assert_eq!(run(&mut db, SearchFilter { positions: vec!["MDF".into()], ..Default::default() }), 0);
         assert_eq!(run(&mut db, SearchFilter { max_age: Some(25), ..Default::default() }), 0);
+        assert_eq!(run(&mut db, SearchFilter { min_age: Some(40), ..Default::default() }), 0);
+        assert_eq!(run(&mut db, SearchFilter { min_age: Some(18), ..Default::default() }), 1);
         assert_eq!(run(&mut db, SearchFilter { exclude_club_id: Some(7_001), ..Default::default() }), 0);
         assert_eq!(run(&mut db, SearchFilter { max_wage_weekly: Some(4_000), ..Default::default() }), 0);
         // Réputation non lue (0) : le joueur reste, le plafond ne joue que sur une réputation connue.
@@ -1733,6 +1766,11 @@ mod tests {
         assert_eq!(run(&mut db, f("", "", Some(100))), 0);
         // Potentiel négatif (fourchette du jeu) : gardé.
         assert_eq!(run(&mut db, SearchFilter { min_pa: Some(170), ..Default::default() }), 1);
+        // Joueur de club féminin : écarté pour une équipe masculine, seul gardé pour une équipe féminine.
+        assert_eq!(run(&mut db, SearchFilter { women: Some(false), ..Default::default() }), 1);
+        assert_eq!(run(&mut db, SearchFilter { women: Some(true), ..Default::default() }), 0);
+        assert!(is_women_name("Arsenal Women") && is_women_name("Olympique Lyonnais Féminin") && is_women_name("Liga F") && is_women_name("Frauen-Bundesliga"));
+        assert!(is_women_name("Lyon (F)") && !is_women_name("Toulouse FC") && !is_women_name("Malženice") && !is_women_name("Fenerbahçe"));
         // Relecture des joueurs suivis, par identifiant.
         let id = db.search(1, &|_| true, |_| true)[0].id;
         assert_eq!(run(&mut db, SearchFilter { ids: vec![id], ..Default::default() }), 1);

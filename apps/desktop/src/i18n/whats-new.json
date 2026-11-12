@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.185",
+    "date": "2026-11-12",
+    "fr": [
+      "Ta tactique devient ton projet de jeu : celle choisie dans Tactique (jouée dans FM27, conseillée, choisie par style ou construite) guide maintenant le Mercato, l'entraînement, le Repérage et les fiches des joueurs.",
+      "Le Repérage ne te propose plus de joueuses pour une équipe masculine (ni l'inverse), et gagne des filtres : âge, CA, PA, nationalité, championnat, liste des transferts."
+    ],
+    "en": [
+      "Your tactic becomes your game plan: the one chosen in Tactic (played in FM27, recommended, picked by style or built) now drives the Mercato, training, Scouting and player pages.",
+      "Scouting no longer suggests women players for a men's team (or the other way round), and gets new filters: age, CA, PA, nationality, league, transfer list."
+    ]
+  },
+  {
     "version": "0.1.184",
     "date": "2026-11-12",
     "fr": [
