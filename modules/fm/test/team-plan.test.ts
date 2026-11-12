@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { teamPlan, type Project, type Target, type TacticEngine } from '../src';
+import { marketModel, teamPlan, type Project, type Target, type TacticEngine } from '../src';
 
 // Moteur factice : la note d'un joueur dans un rôle est sa propriété `n`.
 const engine = { roleFit: (p: { n: number }) => p.n } as unknown as TacticEngine;
@@ -33,5 +33,20 @@ describe('teamPlan (formule FM Notebook)', () => {
     const p = teamPlan(engine, project, [tgt('a', 'GB', 14, 1, 5000), tgt('b', 'GB', 13, 1, 500)], 12, { budget: null, wageRoom: 1000 });
     expect(p.upgrades.map((u) => u.player.id)).toEqual(['b']);
     expect(p.floor).toBe(10);
+  });
+});
+
+describe('marketModel (moneyball)', () => {
+  it('repère une cible qui coûte bien moins que son niveau sur ce marché', () => {
+    const pts = [10, 11, 12, 13, 14, 15].map((fit) => ({ fit, price: 1000 * 2 ** (fit - 10) }));
+    const m = marketModel(pts)!;
+    expect(m.n).toBe(6);
+    expect(m.verdict(14, 16000)!.verdict).toBe('fair');
+    expect(m.verdict(14, 4000)!.verdict).toBe('bargain');
+    expect(m.verdict(12, 20000)!.verdict).toBe('pricey');
+    expect(m.verdict(12, null)).toBeNull();
+  });
+  it('ne conclut rien sur trop peu de prix connus', () => {
+    expect(marketModel([{ fit: 12, price: 1000 }, { fit: 13, price: null }])).toBeNull();
   });
 });

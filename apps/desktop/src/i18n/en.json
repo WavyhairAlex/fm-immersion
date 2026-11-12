@@ -2092,7 +2092,17 @@
         "spent": "the plan spends {{amount}} and {{wages}} in wages",
         "tooDear": "Too expensive for the money or wage room left:",
         "unpriced": "Price unknown, ask your scouts for a valuation:",
-        "knownLow": "Your scouts barely know this player yet: his rating may change."
+        "knownLow": "Your scouts barely know this player yet: his rating may change.",
+        "price": {
+          "bargain": "bargain",
+          "pricey": "pricey"
+        },
+        "radar": {
+          "title_one": "Under the radar: {{count}} target rated well for its price",
+          "title_other": "Under the radar: {{count}} targets rated well for their price",
+          "help": "Fair price worked out from your {{count}} priced targets: these players cost far less than their rating in your XI is worth, often well-rounded profiles the market undervalues.",
+          "line": "{{price}} for a fair price of {{fair}} ({{ratio}}%)"
+        }
       }
     },
     "stats": {

@@ -133,3 +133,57 @@ export function teamPlan(engine: TacticEngine, project: Project, pool: Target[],
   };
   return { xiAvg, floor, target, reachable, reached, upgrades, toTarget, unpriced: open(unpriced), tooDear: open(tooDear), spent, wages };
 }
+
+/**
+ * « Moneyball » : juste prix calibré sur ton marché (tes cibles chiffrées), pas sur une grille fixe.
+ * On ajuste log(prix) = a + b × note sur les cibles dont le prix est connu ; une cible qui coûte nettement moins
+ * que le prix attendu pour sa note est une bonne affaire (souvent un joueur au profil bien réparti que le marché
+ * sous-cote), nettement plus est chère. Seuils repris de FM Notebook : ≤ 0,6 × et ≥ 1,6 ×.
+ */
+export type PriceVerdict = 'bargain' | 'fair' | 'pricey';
+export interface MarketModel {
+  fair: (fit: number) => number;
+  verdict: (fit: number, price: number | null) => { verdict: PriceVerdict; ratio: number } | null;
+  /** Nombre de cibles chiffrées ayant servi au calcul. */
+  n: number;
+}
+export const BARGAIN_RATIO = 0.6;
+export const PRICEY_RATIO = 1.6;
+const MIN_MARKET = 6;
+
+export function marketModel(points: { fit: number; price: number | null }[]): MarketModel | null {
+  const pts = points.filter((p): p is { fit: number; price: number } => p.price != null && p.price > 0);
+  if (pts.length < MIN_MARKET) return null;
+  const xs = pts.map((p) => p.fit);
+  const ys = pts.map((p) => Math.log(p.price));
+  const mx = xs.reduce((a, b) => a + b, 0) / xs.length;
+  const my = ys.reduce((a, b) => a + b, 0) / ys.length;
+  const sxx = xs.reduce((a, x) => a + (x - mx) ** 2, 0);
+  // Pente au moins nulle : un meilleur joueur ne doit pas valoir moins (petit échantillon bruité).
+  const b = sxx > 0 ? Math.max(0, xs.reduce((a, x, i) => a + (x - mx) * (ys[i]! - my), 0) / sxx) : 0;
+  const a = my - b * mx;
+  const fair = (fit: number) => Math.exp(a + b * fit);
+  return {
+    n: pts.length,
+    fair,
+    verdict: (fit, price) => {
+      if (price == null || price <= 0) return null;
+      const ratio = price / fair(fit);
+      return { ratio, verdict: ratio <= BARGAIN_RATIO ? 'bargain' : ratio >= PRICEY_RATIO ? 'pricey' : 'fair' };
+    },
+  };
+}
+
+/** Meilleure note d'une cible sur les postes du onze du projet (null si aucun poste ne lui va). */
+export function bestSlotFit(engine: TacticEngine, project: Project, p: FmPlayer): { slot: ProjectSlot; fit: number } | null {
+  let best: { slot: ProjectSlot; fit: number } | null = null;
+  for (const sl of project.slots) {
+    if (!p.positions.includes(sl.pos)) continue;
+    const a = engine.roleFit(p, sl.ip, 'ip', sl.pos);
+    const b = engine.roleFit(p, sl.oop, 'oop', sl.posOOP ?? sl.pos);
+    if (a == null || b == null) continue;
+    const fit = (a + b) / 2;
+    if (!best || fit > best.fit) best = { slot: sl, fit };
+  }
+  return best;
+}

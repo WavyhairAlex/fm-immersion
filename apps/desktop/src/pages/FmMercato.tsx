@@ -1,4 +1,4 @@
-import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, POS_ORDER, lineOf, type Line, type PosCode, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type Project, type Target, type TacticEngine, teamPlan, storedTargets, type TeamPlanLimits, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
+import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, POS_ORDER, lineOf, type Line, type PosCode, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type Project, type Target, type TacticEngine, teamPlan, storedTargets, type TeamPlanLimits, marketModel, bestSlotFit, targetPrice, type PriceVerdict, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -222,6 +222,19 @@ function TeamTarget({ pr, engine, pool, limits }: { pr: Project; engine: TacticE
   // Par défaut, le palier juste au-dessus de la moyenne actuelle : un objectif atteignable.
   const T = coach.teamTarget ?? options.find((o) => o > now + 0.01) ?? options.at(-1)!;
   const plan = useMemo(() => teamPlan(engine, pr, pool, T, limits), [engine, pr, pool, T, limits]);
+  // Moneyball : juste prix calibré sur tes cibles chiffrées ; « sous les radars » = bonne note pour bien moins cher.
+  const scored = useMemo(
+    () => pool.map((p) => ({ p, best: bestSlotFit(engine, pr, p), ...targetPrice(p) })).filter((x) => x.best != null && Object.keys(x.p.attributes).length),
+    [engine, pr, pool],
+  );
+  const market = useMemo(() => marketModel(scored.map((x) => ({ fit: x.best!.fit, price: x.price }))), [scored]);
+  const radar = market
+    ? scored
+        .map((x) => ({ ...x, v: market.verdict(x.best!.fit, x.price) }))
+        .filter((x) => x.v?.verdict === 'bargain')
+        .sort((a, b) => a.v!.ratio - b.v!.ratio)
+        .slice(0, 5)
+    : [];
   const done = plan.xiAvg >= T;
   const rows = plan.toTarget.length ? plan.toTarget : plan.upgrades.slice(0, 6);
   const verdict = done ? 'done' : plan.reached ? 'reachable' : 'out';
@@ -302,6 +315,7 @@ function TeamTarget({ pr, engine, pool, limits }: { pr: Project; engine: TacticE
                   <td className="py-1.5 pr-3 font-bold tabular-nums text-eau-fonce">+{fitGap(u.delta)}</td>
                   <td className="py-1.5 pr-3 text-right tabular-nums" title={u.priceIsEst ? t('fm.merc.target.priceEst') : undefined}>
                     {u.price == null ? '–' : `${u.priceIsEst ? '~' : ''}${f.money(u.price)}`}
+                    {market && <PriceTag2 v={market.verdict(u.fit, u.price)?.verdict ?? null} />}
                   </td>
                   <td className="py-1.5 pr-3 text-right tabular-nums">{u.wage == null ? '–' : f.money(u.wage)}</td>
                   <td className="py-1.5 pr-3 text-right"><Known value={u.knowledge} /></td>
@@ -318,6 +332,25 @@ function TeamTarget({ pr, engine, pool, limits }: { pr: Project; engine: TacticE
           <span className="text-brun">{plan.tooDear.slice(0, 4).map((u) => `${u.player.name} (${POS_LABEL[u.slot.pos]}, +${fitGap(u.delta)}, ${u.price == null ? '–' : f.money(u.price)})`).join(' · ')}</span>
         </p>
       )}
+      {radar.length > 0 && (
+        <div className="mt-4 rounded-lg border border-eau-fonce/30 bg-eau/10 p-3">
+          <p className="text-sm font-bold">{t('fm.merc.target.radar.title', { count: radar.length })}</p>
+          <p className="text-xs text-brun">{t('fm.merc.target.radar.help', { count: market!.n })}</p>
+          <ul className="mt-2 space-y-1 text-sm">
+            {radar.map((x) => (
+              <li key={x.p.id} className="flex flex-wrap items-center gap-2">
+                <span className="pill">{POS_LABEL[x.best!.slot.pos]}</span>
+                <PlayerLink player={x.p} />
+                <Fit value={x.best!.fit} />
+                <span className="text-brun">
+                  {t('fm.merc.target.radar.line', { price: `${x.isEst ? '~' : ''}${f.money(x.price)}`, fair: f.money(market!.fair(x.best!.fit)), ratio: Math.round(x.v!.ratio * 100) })}
+                </span>
+                <Known value={x.p.scout?.knowledge ?? null} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {!done && plan.unpriced.length > 0 && (
         <p className="mt-2 text-sm">
           <span className="font-bold">{t('fm.merc.target.unpriced')}</span>{' '}
@@ -326,6 +359,13 @@ function TeamTarget({ pr, engine, pool, limits }: { pr: Project; engine: TacticE
       )}
     </section>
   );
+}
+
+/** Verdict de prix face au marché de tes cibles : bonne affaire ou cher (rien quand le prix est dans la norme). */
+function PriceTag2({ v }: { v: PriceVerdict | null }) {
+  const { t } = useTranslation();
+  if (!v || v === 'fair') return null;
+  return <span className={`ml-1.5 rounded px-1.5 py-0.5 text-[11px] font-bold ${v === 'bargain' ? 'bg-eau/40 text-canard' : 'bg-corail/15 text-canard'}`}>{t(`fm.merc.target.price.${v}`)}</span>;
 }
 
 /** Connaissance d'une cible par tes recruteurs : sous 50 %, sa note est encore incertaine. */

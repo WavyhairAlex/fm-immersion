@@ -2092,7 +2092,17 @@
         "spent": "le plan dépense {{amount}} et {{wages}} de salaires",
         "tooDear": "Trop chères pour l'argent ou la marge salariale qui restent :",
         "unpriced": "Prix inconnu, à faire chiffrer par tes recruteurs :",
-        "knownLow": "Tes recruteurs connaissent encore peu ce joueur : sa note peut bouger."
+        "knownLow": "Tes recruteurs connaissent encore peu ce joueur : sa note peut bouger.",
+        "price": {
+          "bargain": "bonne affaire",
+          "pricey": "cher"
+        },
+        "radar": {
+          "title_one": "Sous les radars : {{count}} cible bien notée pour son prix",
+          "title_other": "Sous les radars : {{count}} cibles bien notées pour leur prix",
+          "help": "Juste prix calculé sur tes {{count}} cibles chiffrées : ces joueurs coûtent bien moins que ce que vaut leur note dans ton onze, souvent des profils équilibrés que le marché sous-cote.",
+          "line": "{{price}} pour un juste prix de {{fair}} ({{ratio}} %)"
+        }
       }
     },
     "stats": {
