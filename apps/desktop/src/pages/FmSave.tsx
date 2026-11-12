@@ -72,7 +72,7 @@ import { FmResults } from './FmResults';
 import { FmDiagnosis } from './FmDiagnosis';
 import { FmStyle } from './FmStyle';
 import { FmBuilder } from './FmBuilder';
-import { FmTactic, ReserveContext, useTacticEngine } from './FmTactic';
+import { FmTactic, ProjectProvider, ReserveContext, useTacticEngine } from './FmTactic';
 import { FmTargets } from './FmTargets';
 import { FmScouting } from './FmScouting';
 import { FmTraining } from './FmTraining';
@@ -400,6 +400,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
             {snapshot && players.length > 0 && scope && (
               <FmSaveScopeContext.Provider value={scope}>
                 <ReserveContext.Provider value={reserve}>
+                  <ProjectProvider players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameTactic={typeof snapshot.data.tactic?.name === 'string' ? snapshot.data.tactic.name : null}>
                   <PlayerSheetContext.Provider value={setSheet}>
                     {view === 'home' ? (
                       <>
@@ -442,6 +443,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
                       />
                     )}
                   </PlayerSheetContext.Provider>
+                  </ProjectProvider>
                 </ReserveContext.Provider>
               </FmSaveScopeContext.Provider>
             )}

@@ -53,6 +53,21 @@ const PRESET_FILTER: Record<Preset, { maxAge?: number; freeOnly?: boolean }> = {
 };
 type Sort = 'perYear' | 'profit' | 'roi';
 
+/** Filtres du joueur, en plus du repère : vides = ceux du repère. */
+type Filters = { minAge: string; maxAge: string; nation: string; division: string; minCa: string; maxCa: string; minPa: string; listed: boolean };
+const NO_FILTERS: Filters = { minAge: '', maxAge: '', nation: '', division: '', minCa: '', maxCa: '', minPa: '', listed: false };
+const num = (v: string) => (v.trim() && Number.isFinite(Number(v)) ? Number(v) : undefined);
+const filterArgs = (f: Filters) => ({
+  ...(num(f.minAge) != null ? { minAge: num(f.minAge) } : {}),
+  ...(num(f.maxAge) != null ? { maxAge: num(f.maxAge) } : {}),
+  ...(f.nation.trim() ? { nation: f.nation.trim() } : {}),
+  ...(f.division.trim() ? { division: f.division.trim() } : {}),
+  ...(num(f.minCa) != null ? { minCa: num(f.minCa) } : {}),
+  ...(num(f.maxCa) != null ? { maxCa: num(f.maxCa) } : {}),
+  ...(num(f.minPa) != null ? { minPa: num(f.minPa) } : {}),
+  ...(f.listed ? { transferListedOnly: true } : {}),
+});
+
 const KIND_TONE: Record<TradeKind, Tone> = { nugget: 'good', undervalued: 'good', expiring: 'info', free: 'info', profile: 'good' };
 const SIGNAL_TONE: Record<WatchSignal, Tone> = { priceDrop: 'good', preContract: 'good', contractEnding: 'info', listed: 'good', free: 'good', ahead: 'good', stalled: 'warn', moved: 'info' };
 const CALL_TONE: Record<SellCall, Tone> = { sellNow: 'bad', hold: 'good', stable: 'info' };
@@ -77,6 +92,7 @@ export function FmScouting({ saveId, snap, players, folder, gameDate, history }:
   const [positions, setPositions] = useState<PosCode[]>([]);
   const [sort, setSort] = useState<Sort>('perYear');
   const [shown, setShown] = useState(25);
+  const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   // Progression mesurée dans la partie (CA lu à chaque date de jeu), mêlée aux repères génériques.
   const curve = useMemo(() => measuredGrowth(history), [history]);
 
@@ -88,18 +104,18 @@ export function FmScouting({ saveId, snap, players, folder, gameDate, history }:
   });
 
   const search = useMutation({
-    mutationFn: async ({ preset, positions }: { preset: Preset; positions: PosCode[] }) => {
+    mutationFn: async ({ preset, positions, filters }: { preset: Preset; positions: PosCode[]; filters: Filters }) => {
       const mine = await invoke<{ players: (OwnAbility & { id: number; ca: number })[] }>('fm_memory_abilities');
       const club: ClubReach = clubReach(mine.players, players, fin);
       const found = await invoke<DbPlayer[]>('fm_memory_search', {
-        filter: { positions, excludeInjured: true, excludeOwn: true, limit: 300, ...PRESET_FILTER[preset], ...reachCaps(club) },
+        filter: { positions, excludeInjured: true, excludeOwn: true, limit: 300, ...PRESET_FILTER[preset], ...reachCaps(club), ...filterArgs(filters) },
       });
       return { club, found, preset };
     },
   });
   const run = (p: Preset, pos: PosCode[]) => {
     setShown(25);
-    search.mutate({ preset: p, positions: pos });
+    search.mutate({ preset: p, positions: pos, filters });
   };
 
   const result = useMemo(() => {
@@ -117,6 +133,19 @@ export function FmScouting({ saveId, snap, players, folder, gameDate, history }:
     return { ideas, fit, edge, read: d.found.length, model: valueModel(d.found) };
   }, [search.data, engine, pr, own, gameDate, sort, curve]);
 
+  const setF = <K extends keyof Filters>(k: K, v: Filters[K]) => setFilters((x) => ({ ...x, [k]: v }));
+  const field = (k: 'minAge' | 'maxAge' | 'minCa' | 'maxCa' | 'minPa', w = 'w-20') => (
+    <label className="flex flex-col text-xs font-bold text-canard">
+      {t(`fm.scout.f.${k}`)}
+      <input className={`input mt-1 ${w} font-normal`} inputMode="numeric" value={filters[k]} onChange={(e) => setF(k, e.target.value)} />
+    </label>
+  );
+  const text = (k: 'nation' | 'division') => (
+    <label className="flex flex-col text-xs font-bold text-canard">
+      {t(`fm.scout.f.${k}`)}
+      <input className="input mt-1 w-48 font-normal" placeholder={t(`fm.scout.f.${k}Hint`)} value={filters[k]} onChange={(e) => setF(k, e.target.value)} />
+    </label>
+  );
   const togglePos = (p: PosCode) => setPositions((xs) => (xs.includes(p) ? xs.filter((x) => x !== p) : [...xs, p]));
   const best = result?.ideas[0];
   const freeCount = result?.ideas.filter((x) => x.buy === 0).length ?? 0;
@@ -148,6 +177,24 @@ export function FmScouting({ saveId, snap, players, folder, gameDate, history }:
               </button>
             ))}
           </div>
+        </div>
+        <div className="mt-3 flex flex-wrap items-end gap-3">
+          {field('minAge')}
+          {field('maxAge')}
+          {field('minCa')}
+          {field('maxCa')}
+          {field('minPa')}
+          {text('nation')}
+          {text('division')}
+          <label className="flex items-center gap-2 pb-2 text-sm text-canard">
+            <input type="checkbox" checked={filters.listed} onChange={(e) => setF('listed', e.target.checked)} />
+            {t('fm.scout.f.listed')}
+          </label>
+          {JSON.stringify(filters) !== JSON.stringify(NO_FILTERS) && (
+            <button type="button" className="pb-2 text-xs font-bold text-orange-fonce hover:underline" onClick={() => setFilters(NO_FILTERS)}>
+              {t('fm.scout.f.clear')}
+            </button>
+          )}
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button type="button" className="btn-primary" disabled={search.isPending} onClick={() => run(preset, positions)}>

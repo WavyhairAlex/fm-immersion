@@ -1,5 +1,7 @@
 import { reliability, FORMATIONS, POS_LABEL, TARGETS, buildProject, evolutionPlan, recruitAttrs, styleOfGameTactic, switchAnalysis, trainingFor, type FmPlayer, type FmSnapshot, type SquadAt } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { clubPath } from '../lib/club-nav';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
 import { useLeaving } from './FmLeaving';
@@ -16,6 +18,9 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
   const names = useNames();
   const { engine } = useTacticEngine(folder, players);
   const [coach, setCoach] = useCoach();
+  // Projet de jeu = la tactique choisie dans Tactique : style et schéma ne se règlent plus ici.
+  const tpl = coach.template ?? null;
+  const navigate = useNavigate();
   const list = useMemo(() => players.filter((p) => Object.keys(p.attributes).length), [players]);
   const pr = useMemo(() => buildProject(engine, list, coach), [engine, list, coach]);
   const sw = useMemo(() => switchAnalysis(engine, list, coach, history), [engine, list, coach, history]);
@@ -54,7 +59,17 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
           node: (
             <>
               <Panel title={t('fm.proj.coach')}>
+                {tpl && (
+                  <p className="mb-3 rounded-xl bg-orange-clair px-3 py-2 text-sm text-canard">
+                    {t('fm.proj.fromTactic', { style: names.style(tpl.style), form: tpl.form, source: t(`fm.proj.source.${tpl.source}`) })}{' '}
+                    <button type="button" className="font-bold text-orange-fonce hover:underline" onClick={() => navigate(clubPath('tactic'))}>
+                      {t('fm.proj.changeTactic')}
+                    </button>
+                  </p>
+                )}
                 <div className="flex flex-wrap gap-3">
+                  {!tpl && (
+                  <>
                   <label className="flex flex-col text-xs font-bold text-canard/70">
                     {t('fm.proj.style')}
                     <select className={select} value={pr.style.id} onChange={(e) => setCoach({ style: e.target.value, form: null })}>
@@ -73,6 +88,8 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
                       ))}
                     </select>
                   </label>
+                  </>
+                  )}
                   <label className="flex flex-col text-xs font-bold text-canard/70">
                     {t('fm.proj.target')}
                     <select className={select} value={pr.target} onChange={(e) => setCoach({ target: Number(e.target.value) })}>
@@ -84,16 +101,17 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
                     </select>
                   </label>
                 </div>
-                <p className="mt-2 text-xs text-brun">{t('fm.proj.help', { forms: pr.forms.join(', ') })}</p>
+                {!tpl && <p className="mt-2 text-xs text-brun">{t('fm.proj.help', { forms: pr.forms.join(', ') })}</p>}
                 <ReliabilityLine r={reliability(players, { snapshots: history.length })} />
                 <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   <Kpi label={t('fm.proj.ready')} value={`${count('ready')} / 11`} sub={t('fm.proj.readySub', { value: nf1.format(pr.target / 5) })} />
                   <Kpi label={t('fm.proj.develop')} value={count('develop')} sub={t('fm.proj.developSub')} />
                   <Kpi label={t('fm.proj.recruit')} value={count('recruit')} tone={count('recruit') ? 'bad' : undefined} sub={t('fm.proj.recruitSub')} />
-                  <Kpi label={t('fm.style.ability')} value={now.target.ability == null ? '–' : nf1.format(now.target.ability)} sub={t('fm.style.abilitySub', { value: nf1.format(now.target.need) })} />
+                  {!tpl && <Kpi label={t('fm.style.ability')} value={now.target.ability == null ? '–' : nf1.format(now.target.ability)} sub={t('fm.style.abilitySub', { value: nf1.format(now.target.need) })} />}
                 </div>
               </Panel>
 
+              {!tpl && (
               <Panel title={t('fm.proj.switch', { style: names.style(sw.target) })}>
                 <p
                   className={`-mt-1 mb-3 rounded-xl px-3 py-2 font-semibold ${now.verdict === 'go' ? 'bg-eau/25' : now.verdict === 'step' ? 'bg-canard/10' : 'bg-corail/15'}`}
@@ -175,6 +193,7 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
                 </div>
                 <p className="mt-2 text-xs text-brun">{t('fm.proj.switchHelp')}</p>
               </Panel>
+              )}
             </>
           ),
         },

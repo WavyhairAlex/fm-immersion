@@ -1108,6 +1108,14 @@
         "plan": "Le projet",
         "xi": "Onze cible et entraînement",
         "evo": "Évolution de l'effectif"
+      },
+      "fromTactic": "Ton projet de jeu, c'est ta tactique : {{style}} en {{form}} ({{source}}). Mercato, entraînement, repérage et fiches des joueurs s'appuient tous dessus.",
+      "changeTactic": "Changer de tactique →",
+      "source": {
+        "game": "celle jouée dans FM27",
+        "auto": "celle conseillée par l'appli",
+        "style": "le style choisi dans Tactique",
+        "built": "ta tactique construite"
       }
     },
     "targets": {
@@ -3747,6 +3755,19 @@
         "dearer": "{{pct}} % plus cher",
         "par": "au prix du marché",
         "help": "Prix médian des joueurs du championnat comparé à la valeur d'un joueur de même CA et même âge sur tout le marché lu. Un championnat peu coté vend moins cher : c'est là que tes recruteurs trouveront les bonnes affaires."
+      },
+      "f": {
+        "minAge": "Âge min.",
+        "maxAge": "Âge max.",
+        "minCa": "CA min.",
+        "maxCa": "CA max.",
+        "minPa": "PA min.",
+        "nation": "Nationalité",
+        "nationHint": "ex. Slovaquie, Tchéquie",
+        "division": "Championnat",
+        "divisionHint": "ex. Niké liga",
+        "listed": "Sur la liste des transferts",
+        "clear": "Effacer les filtres"
       }
     }
   },

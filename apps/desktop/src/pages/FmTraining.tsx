@@ -67,6 +67,7 @@ import { roleCeiling, snapshotWinterBreak,
   yieldDaysMissing,
   type SquadAt,
 } from '@fm-immersion/module-fm';
+import { projectStyle } from '@fm-immersion/module-fm';
 import { useContext, useMemo, useState, type ReactNode } from 'react';
 import type { SeasonWeekKind } from '@fm-immersion/module-fm';
 import { useTranslation } from 'react-i18next';
@@ -285,7 +286,7 @@ export function FmTraining({ snap, players, folder, history = [] }: { snap: FmSn
   const matchDays = manualDays ?? (hasCalendar ? cal.days : defaultMatchDays(phase, week, phase === 'A' || phase === 'B' || phase === 'C' ? 1 : 0));
   const before = eve ?? (hasCalendar ? cal.before : false);
 
-  const style = engine.ref.styles.find((s) => s.id === coach.style) ?? engine.ref.styles[0];
+  const style = projectStyle(engine, coach);
   // Zones à travailler : la n° 1 du style visé, puis les zones les moins comprises d'après le jeu, puis le reste du style.
   const styleAreas = style ? trainingFor(style) : [];
   const gauges = effectiveness(snap);

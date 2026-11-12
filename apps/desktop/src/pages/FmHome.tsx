@@ -17,6 +17,7 @@ import { snapshotWinterBreak,
   type SquadAt,
   tacticAdvice,
 } from '@fm-immersion/module-fm';
+import { projectStyle } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useCareer, useCareerStore } from '../lib/career';
 import { useFmSaveScope } from '../lib/save-store';
@@ -97,7 +98,7 @@ export function FmHome({
       return !d;
     });
   const [coach] = useCoach();
-  const style = engine.ref.styles.find((s) => s.id === coach.style) ?? engine.ref.styles[0];
+  const style = projectStyle(engine, coach);
   const week = useMemo(
     () =>
       currentTrainingWeek({

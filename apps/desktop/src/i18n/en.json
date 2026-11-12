@@ -1108,6 +1108,14 @@
         "plan": "The project",
         "xi": "Target XI and training",
         "evo": "Squad evolution"
+      },
+      "fromTactic": "Your game plan is your tactic: {{style}} in {{form}} ({{source}}). Mercato, training, scouting and player pages all build on it.",
+      "changeTactic": "Change tactic →",
+      "source": {
+        "game": "the one played in FM27",
+        "auto": "the one the app recommends",
+        "style": "the style chosen in Tactic",
+        "built": "your built tactic"
       }
     },
     "targets": {
@@ -3747,6 +3755,19 @@
         "dearer": "{{pct}}% dearer",
         "par": "market price",
         "help": "Median price of the league's players compared to the value of a player of the same CA and age across the whole market read. A lower-rated league sells cheaper: that's where your scouts will find bargains."
+      },
+      "f": {
+        "minAge": "Min age",
+        "maxAge": "Max age",
+        "minCa": "Min CA",
+        "maxCa": "Max CA",
+        "minPa": "Min PA",
+        "nation": "Nationality",
+        "nationHint": "e.g. Slovakia, Czech Republic",
+        "division": "League",
+        "divisionHint": "e.g. Niké liga",
+        "listed": "Transfer listed",
+        "clear": "Clear filters"
       }
     }
   },

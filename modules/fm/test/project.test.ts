@@ -23,6 +23,20 @@ const squad = [
 ];
 
 describe('projet du coach', () => {
+  it('suit la tactique choisie quand elle est fournie : style, schéma et rôles', async () => {
+    const { bestTactic } = await import('../src/project');
+    const base = buildProject(engine, squad, { style: 'possession', target: 55 })!;
+    const other = engine.ref.styles.find((x) => x.id !== base.style.id)!;
+    const template = { style: other, form: '4-4-2', source: 'game' as const, slots: base.slots.map((x) => ({ pos: x.pos, ip: x.ip, oop: x.oop })) };
+    const pr = buildProject(engine, squad, { style: 'possession', target: 55, template })!;
+    expect(pr.style.id).toBe(other.id);
+    expect(pr.form).toBe('4-4-2');
+    expect(pr.slots.map((x) => x.ip)).toEqual(base.slots.map((x) => x.ip));
+    const pick = bestTactic(engine, squad, { template })!;
+    expect(pick.style.id).toBe(other.id);
+    expect(pick.plan.slots).toHaveLength(11);
+  });
+
   it('classe chaque poste du onze cible : prêt, à faire progresser ou à recruter', () => {
     const pr = buildProject(engine, squad, { style: 'possession', target: 55 })!;
     expect(pr.form).toBe('4-3-3');
