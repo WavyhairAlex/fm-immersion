@@ -157,6 +157,8 @@ export interface CoachPrefs {
   form?: string | null;
   /** Niveau visé, en % d'adéquation au rôle. */
   target?: number;
+  /** Note visée pour la moyenne du onze au mercato, sur 20 (choisie dans l'unité affichée : étoiles ou %). */
+  teamTarget?: number;
   /** Mois de reprise du championnat (1 à 12), pour situer la phase d'entraînement. */
   seasonStart?: number;
   /** Trêve hivernale (MM-JJ) : repos complet puis mini-présaison avant la reprise. */

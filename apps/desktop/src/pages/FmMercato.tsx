@@ -1,4 +1,4 @@
-import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, POS_ORDER, lineOf, type Line, type PosCode, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
+import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, POS_ORDER, lineOf, type Line, type PosCode, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type Project, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +7,7 @@ import { useTacticEngine } from './FmTactic';
 import { LeaveButton, useLeaving } from './FmLeaving';
 import { NeedsPanel } from './FmNeeds';
 import { DivisionLevelPanel, ReplacementFinder } from './FmReplacement';
-import { CompatTag, EngineTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone, More, PlayerLink } from './FmUi';
+import { CompatTag, EngineTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone, More, PlayerLink, Fit, fitPct, fitGap, fitInStars } from './FmUi';
 
 export const TONE: Record<MercatoVerdict, Tone> = { sell: 'bad', release: 'bad', loan: 'warn', extend: 'warn', develop: 'good', replace: 'warn', backup: 'info', core: 'good' };
 /** Groupes affichés en détail : ce qui demande une décision au mercato. */
@@ -51,7 +51,7 @@ function PlanRows({ rows }: { rows: PlanRow[] }) {
  * Le plan du mercato, hiérarchisé : 1) la priorité, en grand, avec l'argent disponible ; 2) les décisions regroupées
  * par type, dans l'ordre où les prendre (une ligne par groupe) ; 3) au clic, chaque joueur ou poste ; le reste est replié.
  */
-function MercatoPlan({ r, needs, fin, gameDate, onMarked }: { r: MercatoReport; needs: RecruitNeed[]; fin: ClubFinances | null; gameDate: string; onMarked: (id: string) => void }) {
+function MercatoPlan({ r, pr, needs, fin, gameDate, onMarked }: { r: MercatoReport; pr: Project | null; needs: RecruitNeed[]; fin: ClubFinances | null; gameDate: string; onMarked: (id: string) => void }) {
   const { t } = useTranslation();
   const f = useFormat();
   const reason = useReason();
@@ -154,10 +154,13 @@ function MercatoPlan({ r, needs, fin, gameDate, onMarked }: { r: MercatoReport; 
         </p>
       )}
 
-      {/* 2. Vue d'ensemble : tout l'effectif par ligne, avec ce qui reste, part, se prolonge et manque. */}
+      {/* 2. Le niveau du onze face à la note visée, et l'argent réparti pour combler l'écart. */}
+      {pr && <TeamTarget pr={pr} fin={fin} income={r.income} />}
+
+      {/* 3. Vue d'ensemble : tout l'effectif par ligne, avec ce qui reste, part, se prolonge et manque. */}
       <SquadOverview r={r} needs={needs} />
 
-      {/* 3. Les décisions, dans l'ordre ; le détail s'ouvre sous le groupe. */}
+      {/* 4. Les décisions, dans l'ordre ; le détail s'ouvre sous le groupe. */}
       {groups.length > 0 ? (
         <section className="card !p-0" aria-labelledby="merc-next">
           <h2 id="merc-next" className="px-4 pb-2 pt-4 text-xs font-extrabold uppercase tracking-widest text-canard">
@@ -190,6 +193,121 @@ function MercatoPlan({ r, needs, fin, gameDate, onMarked }: { r: MercatoReport; 
         </p>
       )}
     </div>
+  );
+}
+
+/**
+ * Le onze du projet face à la note visée : moyenne actuelle, note visée, et l'argent disponible (budget + ventes)
+ * réparti entre les postes sous la note, au prorata de l'écart (indicatif : le marché décide du prix).
+ */
+function TeamTarget({ pr, fin, income }: { pr: Project; fin: ClubFinances | null; income: number }) {
+  const { t } = useTranslation();
+  const f = useFormat();
+  const names = useNames();
+  const [coach, setCoach] = useCoach();
+  const avg = (xs: (number | null)[]) => {
+    const v = xs.map((x) => x ?? 0);
+    return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+  };
+  const now = avg(pr.slots.map((s) => s.fit));
+  // Notes proposées dans l'unité affichée (sur 20 en interne) : par demi-étoile, ou par 5 %.
+  const options = fitInStars() ? [2.5, 3, 3.5, 4, 4.5, 5].map((x) => 10 + x * 2) : [50, 55, 60, 65, 70, 75, 80, 85, 90].map((x) => x / 5);
+  // Par défaut, le palier juste au-dessus de la moyenne actuelle : un objectif atteignable.
+  const T = coach.teamTarget ?? options.find((o) => now == null || o > now + 0.01) ?? options.at(-1)!;
+  const planOf = (s: Project['slots'][number]): 'ready' | 'develop' | 'recruit' =>
+    s.fit != null && s.fit >= T ? 'ready' : s.player && s.fit != null && (s.player.age ?? 99) <= 23 && s.fit >= T - 1 ? 'develop' : 'recruit';
+  const TONE_OF = { ready: 'good', develop: 'info', recruit: 'warn' } as const;
+  // Postes à combler par le mercato : sous la note et pas un jeune en passe d'y arriver.
+  const gaps = pr.slots.map((s) => ({ s, gap: planOf(s) === 'recruit' ? Math.max(0, T - (s.fit ?? 0)) : 0 }));
+  const after = avg(pr.slots.map((s, i) => (gaps[i]!.gap > 0 ? T : s.fit)));
+  const total = gaps.reduce((a, g) => a + g.gap, 0);
+  const pot = Math.max(0, fin?.transferBudget ?? 0) + income;
+  const wages = Math.max(0, fin?.wageRoom ?? 0);
+  const rows = gaps
+    .map((g, i) => ({ ...g, i, share: total > 0 ? g.gap / total : 0 }))
+    .sort((a, b) => b.gap - a.gap || a.i - b.i);
+  const toFill = rows.filter((x) => x.gap > 0).length;
+
+  return (
+    <section className="card" aria-labelledby="merc-target">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 id="merc-target" className="font-display text-xl font-semibold">{t('fm.merc.target.title')}</h2>
+          <p className="text-sm text-brun">{t('fm.merc.target.help', { style: names.style(pr.style), form: pr.form })}</p>
+        </div>
+        <label className="text-xs font-bold text-canard">
+          {t('fm.merc.target.aim')}{' '}
+          <select className="input ml-1 inline-block w-auto py-1 font-normal" value={T} onChange={(e) => setCoach({ teamTarget: Number(e.target.value) })}>
+            {(options.includes(T) ? options : [...options, T].sort((a, b) => a - b)).map((v) => (
+              <option key={v} value={v}>{fitPct(v)}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      {/* Les trois chiffres qui résument tout : où on est, où on vise, où on arrive si on comble les postes. */}
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-lg bg-canard/5 p-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.merc.target.now')}</p>
+          <p className="mt-1 font-display text-3xl font-semibold tabular-nums">{fitPct(now)}</p>
+          <p className="text-xs text-brun">{t('fm.merc.target.ready', { count: pr.slots.filter((s) => planOf(s) === 'ready').length })}</p>
+        </div>
+        <div className="rounded-lg bg-orange-clair p-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.merc.target.aimed')}</p>
+          <p className="mt-1 font-display text-3xl font-semibold tabular-nums">{fitPct(T)}</p>
+          <p className="text-xs text-brun">{now != null && now < T ? t('fm.merc.target.missing', { gap: fitGap(T - now) }) : t('fm.merc.target.reached')}</p>
+        </div>
+        <div className="rounded-lg bg-eau/15 p-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.merc.target.after')}</p>
+          <p className="mt-1 font-display text-3xl font-semibold tabular-nums">{fitPct(after)}</p>
+          <p className="text-xs text-brun">{t('fm.merc.target.afterSub', { count: toFill })}</p>
+        </div>
+      </div>
+
+      {/* Le onze poste par poste, du plus gros écart au plus petit, avec sa part de l'argent disponible. */}
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-canard/15 text-left text-xs uppercase tracking-wide text-canard/60">
+              <th className="py-1.5 pr-3">{t('fm.merc.target.col.pos')}</th>
+              <th className="py-1.5 pr-3">{t('fm.merc.target.col.player')}</th>
+              <th className="py-1.5 pr-3">{t('fm.merc.target.col.fit')}</th>
+              <th className="py-1.5 pr-3">{t('fm.merc.target.col.gap')}</th>
+              <th className="py-1.5 pr-3">{t('fm.merc.target.col.plan')}</th>
+              <th className="py-1.5 pr-3 text-right">{t('fm.merc.target.col.budget')}</th>
+              <th className="py-1.5 text-right">{t('fm.merc.target.col.wage')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(({ s, gap, share, i }) => (
+              <tr key={i} className="border-b border-canard/5 last:border-0">
+                <td className="py-1.5 pr-3"><span className="pill">{POS_LABEL[s.pos]}</span></td>
+                <td className="py-1.5 pr-3">{s.player ? <PlayerLink player={s.player} /> : <span className="text-brun">{t('fm.merc.target.empty')}</span>}</td>
+                <td className="py-1.5 pr-3"><Fit value={s.fit} /></td>
+                <td className={`py-1.5 pr-3 tabular-nums ${gap > 0 ? 'font-bold text-corail' : s.fit != null && s.fit < T ? 'text-brun' : 'text-eau-fonce'}`}>
+                  {s.fit == null ? '–' : s.fit >= T ? `+${fitGap(s.fit - T)}` : `−${fitGap(T - s.fit)}`}
+                </td>
+                <td className="py-1.5 pr-3"><Tag tone={TONE_OF[planOf(s)]}>{t(`fm.merc.target.plan.${planOf(s)}`)}</Tag></td>
+                <td className="py-1.5 pr-3 text-right tabular-nums">{gap > 0 ? (pot > 0 ? f.money(pot * share) : '–') : ''}</td>
+                <td className="py-1.5 text-right tabular-nums">{gap > 0 ? (wages > 0 ? f.money(wages * share) : '–') : ''}</td>
+              </tr>
+            ))}
+          </tbody>
+          {toFill > 0 && (
+            <tfoot>
+              <tr className="border-t border-canard/15 font-bold">
+                <td className="py-1.5 pr-3" colSpan={5}>{t('fm.merc.target.total', { count: toFill })}</td>
+                <td className="py-1.5 pr-3 text-right tabular-nums">{f.money(pot)}</td>
+                <td className="py-1.5 text-right tabular-nums">{f.money(wages)}</td>
+              </tr>
+            </tfoot>
+          )}
+        </table>
+      </div>
+      <p className="mt-2 text-xs text-brun">
+        {toFill === 0 ? t('fm.merc.target.none') : pot > 0 ? t('fm.merc.target.split', { budget: f.money(Math.max(0, fin?.transferBudget ?? 0)), income: f.money(income) }) : t('fm.merc.target.noMoney')}
+      </p>
+    </section>
   );
 }
 
@@ -470,7 +588,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
 
   return (
     <div className="space-y-4">
-      <MercatoPlan r={r} needs={needs?.needs ?? []} fin={fin} gameDate={gameDate} onMarked={setJustMarked} />
+      <MercatoPlan r={r} pr={pr} needs={needs?.needs ?? []} fin={fin} gameDate={gameDate} onMarked={setJustMarked} />
       {/* Le reste (jeunes, recherche de remplaçants, niveau de la division…) replié : l'écran tient sur une page. */}
       <details className="group">
         <summary className="cursor-pointer text-sm font-bold text-orange-fonce hover:underline">

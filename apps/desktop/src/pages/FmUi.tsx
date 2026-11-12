@@ -280,6 +280,8 @@ let starScale = false;
 export const setFitScale = (stars: boolean) => {
   starScale = stars;
 };
+/** Vrai quand les notes s'affichent en étoiles (sinon en %). */
+export const fitInStars = () => starScale;
 const toStars = (f: number) => Math.max(0, Math.min(5, (f - 10) / 2));
 export const fitPct = (f: number | null | undefined) =>
   f == null ? '–' : starScale ? `${toStars(f).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ★` : `${Math.round((f / 20) * 100)} %`;

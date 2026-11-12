@@ -2046,6 +2046,40 @@
           "balance": "Club balance"
         },
         "noNeeds": "no position to fill"
+      },
+      "target": {
+        "title": "Your XI against the target rating",
+        "help": "Project XI ({{style}}, {{form}}): each position's rating is the starter's fit to the role.",
+        "aim": "Target rating",
+        "now": "XI average today",
+        "ready_one": "{{count}} position at the level out of 11",
+        "ready_other": "{{count}} positions at the level out of 11",
+        "aimed": "Target rating",
+        "missing": "{{gap}} short on average",
+        "reached": "reached",
+        "after": "After the window",
+        "afterSub_one": "if you fill the position below target",
+        "afterSub_other": "if you fill the {{count}} positions below target",
+        "col": {
+          "pos": "Position",
+          "player": "Starter",
+          "fit": "Rating",
+          "gap": "Gap to target",
+          "plan": "Plan",
+          "budget": "Budget share",
+          "wage": "Wage room share"
+        },
+        "plan": {
+          "ready": "At the level",
+          "develop": "Youngster to develop",
+          "recruit": "To sign"
+        },
+        "empty": "nobody",
+        "total_one": "Total for {{count}} position to fill",
+        "total_other": "Total for {{count}} positions to fill",
+        "split": "Money available = transfer budget ({{budget}}) + possible sales ({{income}}), split by each position's gap. A guide only: real prices depend on the market.",
+        "noMoney": "Nothing to split for now: no transfer budget and no possible sale. Aim for free agents or loans.",
+        "none": "Every XI position is at the target level: the budget can go to the bench or youngsters."
       }
     },
     "stats": {

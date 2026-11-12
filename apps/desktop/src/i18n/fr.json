@@ -2046,6 +2046,40 @@
           "balance": "Solde du club"
         },
         "noNeeds": "aucun poste à pourvoir"
+      },
+      "target": {
+        "title": "Ton onze face à la note visée",
+        "help": "Onze du projet ({{style}}, {{form}}) : la note de chaque poste est l'adéquation du titulaire à son rôle.",
+        "aim": "Note visée",
+        "now": "Moyenne du onze aujourd'hui",
+        "ready_one": "{{count}} poste au niveau sur 11",
+        "ready_other": "{{count}} postes au niveau sur 11",
+        "aimed": "Note visée",
+        "missing": "il manque {{gap}} en moyenne",
+        "reached": "atteinte",
+        "after": "Après le mercato",
+        "afterSub_one": "si tu combles le poste sous la note",
+        "afterSub_other": "si tu combles les {{count}} postes sous la note",
+        "col": {
+          "pos": "Poste",
+          "player": "Titulaire",
+          "fit": "Note",
+          "gap": "Écart à la note visée",
+          "plan": "Plan",
+          "budget": "Part du budget",
+          "wage": "Part de la marge salariale"
+        },
+        "plan": {
+          "ready": "Au niveau",
+          "develop": "Jeune à faire progresser",
+          "recruit": "À recruter"
+        },
+        "empty": "personne",
+        "total_one": "Total pour {{count}} poste à combler",
+        "total_other": "Total pour {{count}} postes à combler",
+        "split": "Argent disponible = budget transferts ({{budget}}) + ventes possibles ({{income}}), réparti selon l'écart de chaque poste. C'est un repère : le prix réel dépend du marché.",
+        "noMoney": "Rien à répartir pour l'instant : pas de budget transferts ni de vente possible. Vise des joueurs libres ou des prêts.",
+        "none": "Tous les postes du onze sont au niveau visé : le budget peut aller au banc ou aux jeunes."
       }
     },
     "stats": {
