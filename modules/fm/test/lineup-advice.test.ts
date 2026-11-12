@@ -167,6 +167,18 @@ describe('consignes individuelles face au jeu', () => {
     expect(gamePlayerInstructions({ lineup: [{ index: 0, playerId: 7 }] }).size).toBe(0);
   });
 
+  it('conseille la largeur du jeu offensif : espaces pour un attaquant vif, touche pour un bon centreur', () => {
+    const fast = mk(10, 'BT', 12, {}, { OffTheBall: 16, Acceleration: 16, Stamina: 15 });
+    const crosser = mk(11, 'MO (D)', 12, { rightFoot: 20, leftFoot: 8 }, { Crossing: 16 });
+    const plan = builtPlan(engine, tactic(), squad([], { 10: fast, 11: crosser }));
+    const ids = (pos: string) => playerInstructions(engine, plan.slots.find((s) => s.pos === pos)!, style, plan.slots, 3).list.map((x) => x.id);
+    const all = [...ids('BT'), ...ids('MOD')];
+    expect(all.some((x) => x === 'moveChannels' || x === 'stayWider')).toBe(true);
+    expect(instructionKey('moveChannels')).toBe('AttackingWidth:Prenez les espaces');
+    expect(instructionKey('stayWider')).toBe('AttackingWidth:Restez excentrés');
+    expect(instructionKey('sitNarrower')).toBe("AttackingWidth:Restez plus dans l'axe");
+  });
+
   it('règle le nombre de consignes sur la compréhension tactique du jeu', () => {
     expect(instructionBudget(style, 1, 70)).toBe(3);
     expect(instructionBudget(style, 20, 45)).toBe(2);

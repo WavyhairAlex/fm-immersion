@@ -16,6 +16,7 @@ export type InstructionId =
   | 'gkShort' | 'gkLong' | 'slowDown' | 'rushOut'
   | 'shootMore' | 'shootLess' | 'dribbleMore' | 'dribbleLess' | 'riskMore' | 'riskLess'
   | 'shortPass' | 'directPass' | 'cutInside' | 'crossMore' | 'crossByline' | 'crossToTarget' | 'crossLess'
+  | 'stayWider' | 'sitNarrower' | 'moveChannels' | 'runWide' | 'getForward'
   | 'holdPosition' | 'holdBall' | 'runBehind' | 'farPost' | 'nearPost' | 'roam' | 'lateRuns'
   | 'pressMore' | 'pressLess' | 'tackleHarder' | 'tackleLess' | 'markTighter';
 
@@ -65,6 +66,7 @@ export const INSTRUCTION_GROUP: Partial<Record<InstructionId, InstructionGroup>>
   cutInside: 'DribblingDirection', crossByline: 'CrossFrom', crossToTarget: 'CrossingStrategy',
   holdPosition: 'ForwardRuns', lateRuns: 'AttackBoxDepth', runBehind: 'AttackBoxDepth', holdBall: 'HoldUpBall', roam: 'FreedomOfMovement',
   farPost: 'AttackBoxSide', nearPost: 'AttackBoxSide',
+  stayWider: 'AttackingWidth', sitNarrower: 'AttackingWidth', moveChannels: 'AttackingWidth', runWide: 'DribblingDirection', getForward: 'ForwardRuns',
   pressMore: 'TriggerPress', pressLess: 'TriggerPress', tackleHarder: 'Tackling', tackleLess: 'Tackling', markTighter: 'Marking',
 };
 
@@ -74,6 +76,7 @@ const INSTRUCTION_OPTION: Partial<Record<InstructionId, string>> = {
   cutInside: "Repiquez dans l'axe", holdPosition: 'Effectuez moins de courses', holdBall: 'Oui', roam: 'Décrochez plus souvent',
   lateRuns: 'Arriver en retard dans la surface', runBehind: 'Attaquer la ligne défensive', farPost: 'Second poteau', nearPost: 'Premier poteau',
   pressMore: 'Plus souvent', pressLess: 'Moins souvent',
+  stayWider: 'Restez excentrés', sitNarrower: "Restez plus dans l'axe", moveChannels: 'Prenez les espaces', runWide: 'Prenez les couloirs', getForward: 'Effectuez plus de courses',
 };
 
 /** Poste du jeu, avec son côté pour un poste axial placé excentré (x de gauche à droite, en %). */
@@ -283,9 +286,14 @@ export function playerInstructions(engine: TacticEngine, slot: Slot, style: Styl
   if (side && g !== 'CB') {
     const fi = footInfo(p);
     const strongSide = fi.strong === 'L' || fi.strong === 'R' ? fi.strong : null;
-    if (INVERTED.has(slot.ip) || (strongSide && strongSide !== side && m('Dribbling', 'Finishing') >= lv))
+    if (INVERTED.has(slot.ip) || (strongSide && strongSide !== side && m('Dribbling', 'Finishing') >= lv)) {
       add('cutInside', 'ip', 1.5, `cutInside.${strongSide ?? (side === 'L' ? 'R' : 'L')}${side}`);
-    else if (hi('Crossing', 1.5)) {
+      // Largeur du jeu offensif : un joueur qui rentre et sait jouer entre les lignes se place plus dans l'axe.
+      if (attack && m('Passing', 'Vision', 'Finishing') >= lv + 1) add('sitNarrower', 'ip', m('Passing', 'Vision', 'Finishing') - lv, 'sitNarrower');
+    } else if (hi('Crossing', 1.5)) {
+      // Largeur du jeu offensif : un bon centreur sur son bon pied étire la défense depuis la ligne de touche.
+      add('stayWider', 'ip', a('Crossing')! - lv, 'stayWider', { a: r1(a('Crossing')) });
+      if (strongSide === side && strong(['Dribbling', 'Pace'], 1.5)) add('runWide', 'ip', m('Dribbling', 'Pace') - lv - 0.5, 'runWide');
       add('crossMore', 'ip', a('Crossing')! - lv, 'crossMore', { a: r1(a('Crossing')) });
       if (hi('Acceleration', 1.5) || hi('Pace', 1.5)) add('crossByline', 'ip', m('Pace', 'Acceleration') - lv, 'crossByline');
       const tgt = team
@@ -295,10 +303,13 @@ export function playerInstructions(engine: TacticEngine, slot: Slot, style: Styl
       if (tgt && (attrOf(tgt, 'Heading') ?? 0) >= (tgt.level ?? 10) + 1.5) add('crossToTarget', 'ip', 1.2, 'crossToTarget', { name: tgt.name.split(' ').at(-1)! });
     } else if (lo('Crossing', 2)) add('crossLess', 'ip', lv - a('Crossing')!, 'crossLess', { a: r1(a('Crossing')) });
     if (FULL_BACK.has(slot.ip) && m('Pace', 'Stamina') <= lv - 1.5) add('holdPosition', 'ip', lv - m('Pace', 'Stamina'), 'holdPositionFb');
+    else if ((FULL_BACK.has(slot.ip) || slot.ip === 'WM') && strong(['Pace', 'Stamina', 'WorkRate'], 1.5)) add('getForward', 'ip', m('Pace', 'Stamina', 'WorkRate') - lv, 'getForward');
   }
   if (g === 'ST' || slot.ip === 'SS') {
     if (strong(['Strength', 'Balance', 'FirstTouch'], 1.5)) add('holdBall', 'ip', m('Strength', 'Balance', 'FirstTouch') - lv, 'holdBall', { a: r1(a('Strength')), b: r1(a('FirstTouch')) });
     if (strong(['Movement', 'Anticipation', 'Acceleration'], 1.5)) add('runBehind', 'ip', m('Movement', 'Anticipation', 'Acceleration') - lv, 'runBehind');
+    // Largeur du jeu offensif : un attaquant vif et endurant court entre le central et le latéral adverses.
+    if (strong(['Movement', 'Acceleration', 'Stamina'], 1.5)) add('moveChannels', 'ip', m('Movement', 'Acceleration', 'Stamina') - lv - 0.25, 'moveChannels', { a: r1(a('Movement')), b: r1(a('Acceleration')) });
     if (hi('Heading', 2)) add('farPost', 'ip', a('Heading')! - lv, 'farPost', { a: r1(a('Heading')) });
     else if (strong(['Acceleration', 'Movement'], 1.5)) add('nearPost', 'ip', m('Acceleration', 'Movement') - lv - 0.5, 'nearPost');
     if (strong(['Movement', 'Vision', 'Flair'], 2.5)) add('roam', 'ip', m('Movement', 'Vision', 'Flair') - lv, 'roam');

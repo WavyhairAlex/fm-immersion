@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.179",
+    "date": "2026-11-12",
+    "fr": [
+      "Tactique : le poste sans ballon de FM27 est maintenant montré. Un MO (D) qui défend en M (D) redescend sur la ligne du milieu dans la vue « Sans ballon », avec son vrai poste sur la pastille et dans le tableau, et sa note est calculée à ce poste.",
+      "Consignes individuelles : l'appli conseille aussi la « Largeur du jeu offensif » (rester excentré, rester plus dans l'axe, prendre les espaces), « Prendre le couloir » balle au pied et « Faire plus de courses vers l'avant »."
+    ],
+    "en": [
+      "Tactics: FM27's out-of-possession position is now shown. An AM (R) who defends as M (R) drops to the midfield line in the “Out of possession” view, with his real position on the marker and in the table, and his rating is computed for that position.",
+      "Player instructions: the app now also advises “Attacking width” (stay wider, sit narrower, move into channels), “Run wide with ball” and “Get further forward”."
+    ]
+  },
+  {
     "version": "0.1.178",
     "date": "2026-11-11",
     "fr": [

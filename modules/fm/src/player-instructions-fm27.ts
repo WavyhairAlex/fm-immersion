@@ -73,6 +73,8 @@ export const LEGACY_PI: Record<string, string> = {
   nearPost: 'AttackBoxSide:Premier poteau', farPost: 'AttackBoxSide:Second poteau', crossByline: 'CrossFrom:Ligne de but', crossToTarget: 'CrossingStrategy:Attaquant pivot',
   pressMore: 'TriggerPress:Plus souvent', pressLess: 'TriggerPress:Moins souvent', tackleHarder: 'Tackling:Taclez plus durement', tackleLess: 'Tackling:Taclez moins durement',
   markTighter: 'Marking:Marquez de plus près',
+  stayWider: 'AttackingWidth:Restez excentrés', sitNarrower: "AttackingWidth:Restez plus dans l'axe", moveChannels: 'AttackingWidth:Prenez les espaces',
+  runWide: 'DribblingDirection:Prenez les couloirs', getForward: 'ForwardRuns:Effectuez plus de courses',
 };
 
 /** Libellé d'une consigne choisie dans la langue voulue. */
