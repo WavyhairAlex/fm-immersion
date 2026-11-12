@@ -62,6 +62,7 @@ export * from './gazette';
 export * from './live';
 export * from './season';
 export * from './game-request';
+export * from './player-history';
 export * from './farewell';
 export * from './breaking';
 export * from './coach-news';

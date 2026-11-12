@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.180",
+    "date": "2026-11-12",
+    "fr": [
+      "Le bouton FM Immersion de la fiche d'un joueur dans FM27 marche aussi pour les joueurs des autres clubs : sa fiche s'ouvre avec sa place s'il venait chez toi.",
+      "La fiche joueur est refaite en quatre onglets : vue d'ensemble, attributs comparés à sa ligne, matchs et stats (derniers matchs avec notes), carrière (ses saisons, CA/PA, attributs qui ont bougé)."
+    ],
+    "en": [
+      "The FM Immersion button on a player's profile in FM27 now also works for players from other clubs: his sheet opens with where he would rank in your squad.",
+      "The player sheet is redesigned in four tabs: overview, attributes compared to his line, matches and stats (recent matches with ratings), career (his seasons, CA/PA, attributes that changed)."
+    ]
+  },
+  {
     "version": "0.1.179",
     "date": "2026-11-12",
     "fr": [

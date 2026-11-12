@@ -1,4 +1,4 @@
-import { parseGameRequest, playerForRequest } from '@fm-immersion/module-fm';
+import { baseTarget, parseGameRequest, playerForRequest, storedTargets, type DbPlayer, type Target } from '@fm-immersion/module-fm';
 import { invoke } from '@tauri-apps/api/core';
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { useEffect } from 'react';
@@ -28,9 +28,36 @@ const remember = (id: string) => {
   }
 };
 
+/** Nom de famille du nom affiché dans le jeu (« D. Húska » → « Húska ») : la recherche dans la base porte dessus. */
+const lastWord = (nom: string) => nom.replace(/<[^>]*>/g, ' ').trim().split(/\s+/).at(-1) ?? '';
+
+/**
+ * Joueur d'un autre club : d'abord la base du jeu lue en mémoire (FM27 est forcément ouvert, on vient d'y cliquer),
+ * sinon les cibles suivies au mercato. Null si personne ou plusieurs homonymes.
+ */
+async function externalFor(saveId: string, nom: string, squad: { id: string }[]): Promise<Target | null> {
+  const query = lastWord(nom);
+  if (query.length >= 3) {
+    try {
+      const found = await invoke<DbPlayer[]>('fm_memory_find', { query });
+      const db = playerForRequest(
+        found.map((p) => ({ ...p, id: String(p.id) })),
+        nom,
+      );
+      const t = db ? baseTarget({ ...db, id: Number(db.id) }) : null;
+      if (t) return t;
+    } catch {
+      /* version du jeu pas encore reconnue : on tente les cibles */
+    }
+  }
+  const targets = storedTargets(await fmData.targets(saveId), squad);
+  return playerForRequest(targets, nom);
+}
+
 /**
  * Bouton « FM Immersion » de la fiche d'un joueur dans FM27 : le plugin écrit `fmimmersion-demande.json` (nom du
- * joueur affiché) ; l'appli passe au premier plan et ouvre la fiche de ce joueur. Lecture seule du fichier.
+ * joueur affiché) ; l'appli passe au premier plan et ouvre la fiche de ce joueur, qu'il soit chez nous ou dans un
+ * autre club. Lecture seule du fichier et de la mémoire du jeu.
  */
 export function useGameRequests() {
   const { saveId } = useCareer();
@@ -47,9 +74,14 @@ export function useGameRequests() {
         remember(req.id);
         const snap = await fmData.latest(saveId);
         const players = (snap?.data.players ?? []).map((p) => ({ id: String(p.id), name: p.name }));
+        const ui = useUi.getState();
         const player = playerForRequest(players, req.nom);
+        const external = player ? null : await externalFor(saveId, req.nom, players);
+        if (stop) return;
         navigate(clubPath('squad'));
-        if (player) useUi.getState().setOpenPlayer(player.id);
+        ui.setExternalPlayer(external);
+        if (player ?? external) ui.setOpenPlayer((player ?? external)!.id);
+        else ui.setSearchOpen(true);
         const w = getCurrentWindow();
         await w.unminimize().catch(() => {});
         await w.setFocus().catch(() => {});
