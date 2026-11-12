@@ -1,4 +1,4 @@
-import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt } from '@fm-immersion/module-fm';
+import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTacticEngine } from './FmTactic';
@@ -13,52 +13,117 @@ const ACTION: MercatoVerdict[] = ['sell', 'release', 'loan', 'extend', 'replace'
 /** Groupes où l'on cherche un remplaçant : le joueur part, ou il faut mieux à son poste. */
 const REPLACE: MercatoVerdict[] = ['sell', 'release', 'replace'];
 
-/** Mouvement affiché dans le tableau de synthèse pour chaque verdict qui appelle une décision. */
-const MOVE: Partial<Record<MercatoVerdict, 'departure' | 'loan' | 'extension'>> = { sell: 'departure', release: 'departure', loan: 'loan', extend: 'extension' };
+/** Fins de contrat à six mois ou moins : à régler avant que le joueur puisse signer ailleurs. */
+const URGENT_MONTHS = 6;
+/** Lignes montrées par colonne avant « + N autres ». */
+const COLUMN_ROWS = 4;
 
-/** Synthèse du mercato, comme la maquette : un tableau Mouvement / Joueur ou poste / Situation, le détail plus bas. */
-function MovesTable({ r, needs }: { r: MercatoReport; needs: RecruitNeed[] }) {
+/** Une colonne du bureau du mercato : titre, compteur, lignes (les premières, puis « + N autres » à déplier). */
+function BoardColumn({ title, rows, empty }: { title: string; rows: ReactNode[]; empty: string }) {
+  const { t } = useTranslation();
+  const [all, setAll] = useState(false);
+  const shown = all ? rows : rows.slice(0, COLUMN_ROWS);
+  return (
+    <section className="card min-w-0 !p-4">
+      <h3 className="mb-1 flex items-center justify-between text-xs font-extrabold uppercase tracking-widest text-canard">
+        {title} <span className="rounded-full bg-canard px-2 text-white">{rows.length}</span>
+      </h3>
+      {rows.length ? (
+        <ul className="divide-y divide-canard/10">{shown}</ul>
+      ) : (
+        <p className="py-2 text-sm text-brun">{empty}</p>
+      )}
+      {rows.length > COLUMN_ROWS && (
+        <button type="button" className="mt-1 text-sm font-bold text-orange-fonce hover:underline" onClick={() => setAll(!all)}>
+          {all ? t('fm.merc.board.less') : t('fm.merc.board.more', { count: rows.length - COLUMN_ROWS })}
+        </button>
+      )}
+    </section>
+  );
+}
+
+/**
+ * Le bureau du mercato, comme la maquette choisie par le joueur : l'argent disponible en tête, puis trois colonnes
+ * (faire venir, faire partir, prolonger), une raison et une action par ligne. Le détail est plus bas.
+ */
+function MercatoBoard({ r, needs, fin, gameDate, onMarked }: { r: MercatoReport; needs: RecruitNeed[]; fin: ClubFinances | null; gameDate: string; onMarked: (id: string) => void }) {
   const { t } = useTranslation();
   const f = useFormat();
-  const rows: { key: string; move: string; who: ReactNode; status: ReactNode }[] = [
-    ...needs.map((n, i) => ({
-      key: `need-${n.pos}-${i}`,
-      move: t('fm.merc.moves.arrival'),
-      who: <b>{POS_LABEL[n.pos]}</b>,
-      status: [t(`fm.needs.priority.${n.priority}`), n.why[0] && t(`fm.needs.why.${n.why[0]}`, { name: n.player?.name ?? '' })].filter(Boolean).join(' · '),
-    })),
-    ...(['sell', 'release', 'loan', 'extend'] as const).flatMap((v) =>
-      r.byVerdict[v].map((a) => ({
-        key: `${v}-${a.player.id}`,
-        move: t(`fm.merc.moves.${MOVE[v]}`),
-        who: <PlayerLink player={a.player} />,
-        status: v === 'extend' && a.player.contractEnd ? `${t(`fm.merc.verdict.${v}`)} · ${t('fm.merc.moves.until', { date: f.date(a.player.contractEnd) })}` : t(`fm.merc.verdict.${v}`),
-      })),
-    ),
-  ];
-  if (!rows.length) return null;
+  const reason = useReason();
+  const toDetail = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const arrivals = needs.map((n, i) => (
+    <li key={`need-${n.pos}-${i}`} className="space-y-0.5 py-2">
+      <p className="flex flex-wrap items-center gap-1.5 font-bold">
+        <span className="pill">{POS_LABEL[n.pos]}</span>
+        {n.player ? <PlayerLink player={n.player} /> : null}
+      </p>
+      {n.why[0] && <p className="text-sm text-brun">{t(`fm.needs.why.${n.why[0]}`, { name: n.player?.name ?? '' })}</p>}
+      <p className="flex flex-wrap items-center gap-2">
+        <Tag tone={n.priority === 1 ? 'bad' : n.priority === 2 ? 'warn' : undefined}>{t(`fm.needs.priority.${n.priority}`)}</Tag>
+        <button type="button" className="text-sm font-bold text-orange-fonce hover:underline" onClick={() => toDetail('merc-needs')}>
+          {t('fm.merc.board.profile')} →
+        </button>
+      </p>
+    </li>
+  ));
+  const departures = (['sell', 'release', 'loan'] as const).flatMap((v) =>
+    r.byVerdict[v].map((a) => (
+      <li key={`${v}-${a.player.id}`} className="space-y-0.5 py-2">
+        <p className="flex flex-wrap items-center gap-1.5 font-bold">
+          <PlayerLink player={a.player} /> <Pos player={a.player} />
+        </p>
+        {a.reasons[0] && <p className="text-sm text-brun">{reason(a.reasons[0])}</p>}
+        <p className="flex flex-wrap items-center gap-2">
+          <Tag tone={TONE[v]}>{t(`fm.merc.verdict.${v}`)}</Tag>
+          <LeaveButton player={a.player} gameDate={gameDate} onMarked={onMarked} />
+        </p>
+      </li>
+    )),
+  );
+  const extensions = [...r.byVerdict.extend]
+    .sort((x, y) => (x.months ?? 99) - (y.months ?? 99))
+    .map((a) => (
+      <li key={`extend-${a.player.id}`} className="space-y-0.5 py-2">
+        <p className="flex flex-wrap items-center gap-1.5 font-bold">
+          <PlayerLink player={a.player} /> <Pos player={a.player} />
+        </p>
+        <p className="text-sm text-brun">
+          {[t('fm.contracts.age', { count: a.player.age ?? 0 }), a.player.contractEnd ? t('fm.merc.board.until', { date: f.date(a.player.contractEnd) }) : null].filter(Boolean).join(' · ')}
+        </p>
+        <p>
+          <Tag tone={a.months != null && a.months <= URGENT_MONTHS ? 'bad' : 'warn'}>
+            {t(a.months != null && a.months <= URGENT_MONTHS ? 'fm.merc.board.urgent' : 'fm.merc.board.season')}
+          </Tag>
+        </p>
+      </li>
+    ));
+  const st = fin ? financeState(fin) : null;
   return (
-    <Panel title={t('fm.merc.moves.title')}>
-      <table className="w-full text-sm">
-        <thead className="text-left text-xs uppercase tracking-wide text-brun">
-          <tr>
-            <th className="px-3 py-2 font-bold">{t('fm.merc.moves.move')}</th>
-            <th className="px-3 py-2 font-bold">{t('fm.merc.moves.who')}</th>
-            <th className="px-3 py-2 font-bold">{t('fm.merc.moves.status')}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.key} className="border-t border-canard/5 odd:bg-creme/40">
-              <td className="px-3 py-1.5">{row.move}</td>
-              <td className="px-3 py-1.5">{row.who}</td>
-              <td className="px-3 py-1.5 text-brun">{row.status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <More>{t('fm.merc.moves.help')}</More>
-    </Panel>
+    <div className="space-y-3">
+      {fin && (
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Kpi label={t('fm.merc.board.transfer')} value={f.money(fin.transferBudget)} tone={fin.transferBudget != null && fin.transferBudget <= 0 ? 'bad' : undefined} dim={false} />
+          <Kpi
+            label={t('fm.merc.board.wageRoom')}
+            value={fin.wageRoom == null ? f.money(null) : f.money(Math.abs(fin.wageRoom))}
+            sub={t(fin.wageRoom != null && fin.wageRoom < 0 ? 'fm.merc.board.wageOver' : 'fm.merc.board.wageLeft')}
+            tone={fin.wageRoom != null && fin.wageRoom < 0 ? 'bad' : undefined}
+            dim={false}
+          />
+          <Kpi label={t('fm.merc.board.balance')} value={f.money(fin.balance)} tone={fin.balance != null && fin.balance < 0 ? 'bad' : undefined} dim={false} />
+        </div>
+      )}
+      {st?.tight && (
+        <p className="rounded-lg bg-orange-clair px-4 py-2.5 text-sm">
+          <b>{t('fm.tight.title')}.</b> {t('fm.merc.board.tightLine')}
+        </p>
+      )}
+      <div className="grid items-start gap-3 lg:grid-cols-3">
+        <BoardColumn title={t('fm.merc.board.in')} rows={arrivals} empty={t('fm.merc.board.noIn')} />
+        <BoardColumn title={t('fm.merc.board.out')} rows={departures} empty={t('fm.merc.board.noOut')} />
+        <BoardColumn title={t('fm.merc.board.extend')} rows={extensions} empty={t('fm.merc.board.noExtend')} />
+      </div>
+    </div>
   );
 }
 
@@ -249,6 +314,8 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
 
   return (
     <div className="space-y-4">
+      <MercatoBoard r={r} needs={needs?.needs ?? []} fin={fin} gameDate={gameDate} onMarked={setJustMarked} />
+      <h2 className="pt-4 text-xl font-semibold">{t('fm.merc.board.detail')}</h2>
       {/* Finances serrées : l'adjoint le dit déjà en tête ; le détail reste à portée, replié. */}
       {tight && (
         <details className="card group p-5">
@@ -268,7 +335,6 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
           </ul>
         </details>
       )}
-      <MovesTable r={r} needs={needs?.needs ?? []} />
       {pr && r.leaving.length > 0 && (
         <Panel title={t('fm.leave.title', { count: r.leaving.length })}>
           <More>{t('fm.leave.help')}</More>
@@ -299,7 +365,6 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
       {(() => {
         const off = r.advice.filter((a) => a.compat?.compat === 'no').length;
         const tiles = [
-          n('sell') + n('release') > 0 && <Kpi key="leave" label={t('fm.merc.kpi.leave')} value={n('sell') + n('release')} tone="bad" sub={t('fm.merc.kpi.leaveSub', { sell: n('sell'), release: n('release') })} />,
           r.income > 0 && <Kpi key="income" label={t('fm.merc.kpi.income')} value={f.money(r.income)} sub={t('fm.merc.kpi.incomeSub', { wages: f.money(r.wagesFreed) })} />,
           prospects.length > 0 && <Kpi key="prospects" label={t('fm.merc.kpi.prospects')} value={prospects.length} sub={n('loan') > 0 ? t('fm.merc.kpi.prospectsSub', { loan: n('loan') }) : undefined} />,
           off > 0 && <Kpi key="off" label={t('fm.merc.kpi.off')} value={off} sub={t('fm.merc.kpi.offSub')} />,
@@ -308,7 +373,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
       })()}
       <More>{t('fm.merc.help', { form: r.nowForm ?? '–', style: names.style(style), projectForm: r.projectForm ?? '–' })}</More>
 
-      {needs && <NeedsPanel needs={needs.needs} saveId={saveId} gameDate={gameDate} engine={engine} project={pr} squad={own.filter((x) => !leavingIds.has(x.id))} finances={fin} />}
+      {needs && <div id="merc-needs" className="scroll-mt-28"><NeedsPanel needs={needs.needs} saveId={saveId} gameDate={gameDate} engine={engine} project={pr} squad={own.filter((x) => !leavingIds.has(x.id))} finances={fin} /></div>}
 
       <Panel title={t('fm.merc.youth', { count: r.youth.length })}>
         {r.youth.length ? r.youth.map((a) => <AdviceLine key={a.player.id} a={a} tag={<Tag tone={TONE[a.verdict]}>{t(`fm.merc.verdict.${a.verdict}`)}</Tag>} />) : <Empty>{t('fm.merc.noYouth')}</Empty>}

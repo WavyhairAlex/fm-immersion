@@ -1921,8 +1921,6 @@
     "merc": {
       "help": "Based on the imported squad, in two elevens: the one to play today ({{form}}) and the project one ({{style}} {{projectForm}}). At each position we keep the starters plus one backup per slot (two backup keepers); anyone beyond that is surplus. Stars are the staff's (current → potential, relative to the club); level is projected two seasons ahead.",
       "kpi": {
-        "leave": "To move on",
-        "leaveSub": "{{sell}} to sell, {{release}} at contract end",
         "income": "Possible income",
         "incomeSub": "value of players to sell · wages freed: {{wages}}",
         "prospects": "Youngsters worth keeping",
@@ -1989,17 +1987,26 @@
         "loanIn": "on loan with us: counts this season, no sale or extension"
       },
       "stayNoYouth": "Players aged 21 or under are in their own panel above.",
-      "moves": {
-        "title": "Moves to decide",
-        "move": "Move",
-        "who": "Player or position",
-        "status": "Status",
-        "arrival": "Signing",
-        "departure": "Departure",
-        "loan": "Loan",
-        "extension": "Extension",
-        "until": "contract until {{date}}",
-        "help": "The detail of each line (profile to look for, price, replacement) is further down. Nothing is done in the game: you decide."
+      "board": {
+        "transfer": "Transfer budget",
+        "wageRoom": "Wage bill",
+        "wageOver": "over budget, per month",
+        "wageLeft": "room under budget, per month",
+        "balance": "Club balance",
+        "tightLine": "No purchases: look for free agents or loans, and sell before you sign.",
+        "in": "Bring in",
+        "out": "Let go",
+        "extend": "Extend",
+        "noIn": "No position to strengthen for now.",
+        "noOut": "Nobody to let go for now.",
+        "noExtend": "No contract to extend for now.",
+        "profile": "Profile to look for",
+        "until": "contract ends {{date}}",
+        "urgent": "Settle soon",
+        "season": "This season",
+        "more": "+ {{count}} more",
+        "less": "Show less",
+        "detail": "The detail"
       }
     },
     "stats": {
