@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.183",
+    "date": "2026-11-12",
+    "fr": [
+      "Nouvel onglet Repérage dans Mercato : toute la base de FM27 passée au crible pour trouver les joueurs à acheter peu cher, faire progresser puis revendre.",
+      "Pour chacun : prix d'achat, salaires, niveau à la revente, valeur de revente et gain estimés, avec sa place dans ton équipe. Cherche les pépites, les sous-cotés, les fins de contrat ou les libres."
+    ],
+    "en": [
+      "New Scouting tab in Mercato: the whole FM27 database screened for players to buy cheap, develop and sell on.",
+      "For each one: estimated buy price, wages, level at sale, resale value and profit, with his place in your team. Look for gems, undervalued players, contracts ending or free agents."
+    ]
+  },
+  {
     "version": "0.1.182",
     "date": "2026-11-12",
     "fr": [
