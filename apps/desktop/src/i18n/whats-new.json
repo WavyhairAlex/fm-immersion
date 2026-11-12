@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.181",
+    "date": "2026-11-12",
+    "fr": [
+      "Mercato s'ouvre sur ton argent disponible (budget transferts, masse salariale, solde du club), puis trois colonnes : Faire venir, Faire partir, Prolonger. Une raison et une action par ligne, le détail est plus bas."
+    ],
+    "en": [
+      "Transfers opens on the money you have (transfer budget, wage bill, club balance), then three columns: Bring in, Let go, Extend. One reason and one action per line, the detail is further down."
+    ]
+  },
+  {
     "version": "0.1.180",
     "date": "2026-11-12",
     "fr": [

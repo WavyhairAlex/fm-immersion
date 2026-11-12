@@ -1921,8 +1921,6 @@
     "merc": {
       "help": "Calculé sur l'effectif importé, dans deux onze : celui à jouer aujourd'hui ({{form}}) et celui du projet ({{style}} {{projectForm}}). À chaque poste, on garde les titulaires et une doublure par place (deux gardiens remplaçants) ; au-delà, le joueur est en trop. Les étoiles sont celles du staff (niveau → potentiel, par rapport au club) ; le niveau est projeté dans deux saisons.",
       "kpi": {
-        "leave": "À faire partir",
-        "leaveSub": "{{sell}} à vendre, {{release}} en fin de contrat",
         "income": "Recette possible",
         "incomeSub": "valeur des joueurs à vendre · salaires libérés : {{wages}}",
         "prospects": "Jeunes qui valent le coup",
@@ -1989,17 +1987,26 @@
         "loanIn": "prêté chez nous : il compte cette saison, ni vente ni prolongation"
       },
       "stayNoYouth": "Les jeunes de 21 ans ou moins sont dans leur cadre plus haut.",
-      "moves": {
-        "title": "Mouvements à décider",
-        "move": "Mouvement",
-        "who": "Joueur ou poste",
-        "status": "Situation",
-        "arrival": "Arrivée",
-        "departure": "Départ",
-        "loan": "Prêt",
-        "extension": "Prolongation",
-        "until": "contrat jusqu'au {{date}}",
-        "help": "Le détail de chaque ligne (profil à chercher, prix, remplaçant) est plus bas. Rien n'est fait dans le jeu : c'est toi qui décides."
+      "board": {
+        "transfer": "Budget transferts",
+        "wageRoom": "Masse salariale",
+        "wageOver": "au-dessus du budget, par mois",
+        "wageLeft": "de marge sous le budget, par mois",
+        "balance": "Solde du club",
+        "tightLine": "Pas d'achat : cherche des joueurs libres ou en prêt, et vends avant de recruter.",
+        "in": "Faire venir",
+        "out": "Faire partir",
+        "extend": "Prolonger",
+        "noIn": "Aucun poste à renforcer pour l'instant.",
+        "noOut": "Personne à faire partir pour l'instant.",
+        "noExtend": "Aucun contrat à prolonger pour l'instant.",
+        "profile": "Profil à chercher",
+        "until": "fin de contrat le {{date}}",
+        "urgent": "À régler vite",
+        "season": "Cette saison",
+        "more": "+ {{count}} autres",
+        "less": "Montrer moins",
+        "detail": "Le détail"
       }
     },
     "stats": {
