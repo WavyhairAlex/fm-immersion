@@ -1,4 +1,4 @@
-import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, POS_ORDER, lineOf, type Line, type PosCode, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type Project, type Target, type TacticEngine, teamPlan, storedTargets, type TeamPlanLimits, marketModel, bestSlotFit, targetPrice, type PriceVerdict, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
+import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, POS_ORDER, lineOf, type Line, type PosCode, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type Project, type Target, type TacticEngine, teamPlan, storedTargets, type TeamPlanLimits, marketModel, bestSlotFit, targetPrice, roleCeiling, valueScore, slotFit, type PriceVerdict, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -9,7 +9,7 @@ import { useTacticEngine } from './FmTactic';
 import { LeaveButton, useLeaving } from './FmLeaving';
 import { NeedsPanel } from './FmNeeds';
 import { DivisionLevelPanel, ReplacementFinder } from './FmReplacement';
-import { CompatTag, EngineTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone, More, PlayerLink, Fit, fitPct, fitGap, fitInStars } from './FmUi';
+import { CompatTag, EngineTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone, More, PlayerLink, Chips } from './FmUi';
 
 export const TONE: Record<MercatoVerdict, Tone> = { sell: 'bad', release: 'bad', loan: 'warn', extend: 'warn', develop: 'good', replace: 'warn', backup: 'info', core: 'good' };
 /** Groupes affichés en détail : ce qui demande une décision au mercato. */
@@ -211,14 +211,21 @@ function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked }: { 
  * les recrues abordables (parmi tes cibles suivies) qui font monter la moyenne, de la plus utile à la moins utile,
  * jusqu'à passer la barre.
  */
-function TeamTarget({ pr, engine, pool, limits }: { pr: Project; engine: TacticEngine; pool: Target[]; limits: TeamPlanLimits }) {
+function TeamTarget({ pr: pr0, engine: engine0, pool, limits }: { pr: Project; engine: TacticEngine; pool: Target[]; limits: TeamPlanLimits }) {
+  // Notes absolues (attributs seuls, comme FM Notebook) : les étoiles du jeu sont relatives à l'effectif et ne disent
+  // pas si une recrue d'un autre club apporte quelque chose.
+  const { engine, pr } = useMemo(() => {
+    const abs = engine0.absolute();
+    return { engine: abs, pr: { ...pr0, slots: pr0.slots.map((sl) => ({ ...sl, fit: sl.player ? slotFit(abs, sl.player, sl) : null })) } };
+  }, [engine0, pr0]);
   const { t } = useTranslation();
   const f = useFormat();
   const names = useNames();
   const [coach, setCoach] = useCoach();
   const now = pr.slots.reduce((s, sl) => s + (sl.fit ?? 0), 0) / (pr.slots.length || 11);
   // Notes proposées dans l'unité affichée (sur 20 en interne) : par demi-étoile, ou par 5 %.
-  const options = fitInStars() ? [2.5, 3, 3.5, 4, 4.5, 5].map((x) => 10 + x * 2) : [50, 55, 60, 65, 70, 75, 80, 85, 90].map((x) => x / 5);
+  // Notes sur 20 dans le rôle (comme FM Notebook) : les étoiles, relatives à l'effectif, ne disent pas si une recrue apporte.
+  const options = Array.from({ length: 17 }, (_, i) => 10 + i / 2);
   // Par défaut, le palier juste au-dessus de la moyenne actuelle : un objectif atteignable.
   const T = coach.teamTarget ?? options.find((o) => o > now + 0.01) ?? options.at(-1)!;
   const plan = useMemo(() => teamPlan(engine, pr, pool, T, limits), [engine, pr, pool, T, limits]);
@@ -238,13 +245,18 @@ function TeamTarget({ pr, engine, pool, limits }: { pr: Project; engine: TacticE
   const done = plan.xiAvg >= T;
   const rows = plan.toTarget.length ? plan.toTarget : plan.upgrades.slice(0, 6);
   const [showAll, setShowAll] = useState(false);
-  type Cand = { key: string; status: CandStatus; pos: PosCode; player: Target; starter: FmPlayer | null; starterFit: number; fit: number; delta: number; after: number | null; price: number | null; isEst: boolean; wage: number | null; knowledge: number | null };
+  const [sort, setSort] = useState<CandSort>('status');
+  // Potentiel du onze : moyenne des plafonds des titulaires dans leur rôle.
+  const xiCeil = pr.slots.reduce((s, sl) => s + (roleCeiling(sl.fit, sl.player ?? { age: null, ca: null, pa: null, stars: null }) ?? sl.fit ?? 0), 0) / (pr.slots.length || 11);
+  type Cand = { key: string; status: CandStatus; pos: PosCode; player: Target; starter: FmPlayer | null; starterFit: number; fit: number; delta: number; after: number | null; price: number | null; isEst: boolean; wage: number | null; knowledge: number | null; ceil: number; starterCeil: number };
   const cands: Cand[] = [];
   const seen = new Set<string>();
-  const add = (c: Cand) => {
+  const add = (c: Omit<Cand, 'ceil' | 'starterCeil'>) => {
     if (seen.has(c.player.id)) return;
     seen.add(c.player.id);
-    cands.push(c);
+    const ceil = roleCeiling(c.fit, c.player) ?? c.fit;
+    const starterCeil = c.starter ? (roleCeiling(c.starterFit, c.starter) ?? c.starterFit) : c.starterFit;
+    cands.push({ ...c, ceil, starterCeil });
   };
   for (const u of rows) add({ key: `p-${u.player.id}`, status: 'plan', pos: u.slot.pos, player: u.player, starter: u.starter, starterFit: u.starterFit, fit: u.fit, delta: u.delta, after: u.after, price: u.price, isEst: u.priceIsEst, wage: u.wage, knowledge: u.knowledge });
   for (const x of radar) {
@@ -254,6 +266,12 @@ function TeamTarget({ pr, engine, pool, limits }: { pr: Project; engine: TacticE
   for (const u of plan.tooDear) add({ key: `d-${u.player.id}`, status: 'dear', pos: u.slot.pos, player: u.player, starter: u.starter, starterFit: u.starterFit, fit: u.fit, delta: u.delta, after: null, price: u.price, isEst: u.priceIsEst, wage: u.wage, knowledge: u.knowledge });
   for (const u of plan.unpriced) add({ key: `u-${u.player.id}`, status: 'unpriced', pos: u.slot.pos, player: u.player, starter: u.starter, starterFit: u.starterFit, fit: u.fit, delta: u.delta, after: null, price: null, isEst: false, wage: u.wage, knowledge: u.knowledge });
   const verdict = done ? 'done' : plan.reached ? 'reachable' : 'out';
+  const sorted =
+    sort === 'status'
+      ? cands
+      : [...cands].sort((a, b) =>
+          sort === 'now' ? b.fit - a.fit : sort === 'potential' ? b.ceil - a.ceil || b.fit - a.fit : valueScore(b.fit, b.delta, b.price) - valueScore(a.fit, a.delta, a.price),
+        );
 
   return (
     <section className="card" aria-labelledby="merc-target">
@@ -266,7 +284,7 @@ function TeamTarget({ pr, engine, pool, limits }: { pr: Project; engine: TacticE
           {t('fm.merc.target.aim')}{' '}
           <select className="input ml-1 inline-block w-auto py-1 font-normal" value={T} onChange={(e) => setCoach({ teamTarget: Number(e.target.value) })}>
             {(options.includes(T) ? options : [...options, T].sort((a, b) => a - b)).map((v) => (
-              <option key={v} value={v}>{fitPct(v)}</option>
+              <option key={v} value={v}>{n20(v)} / 20</option>
             ))}
           </select>
         </label>
@@ -276,17 +294,18 @@ function TeamTarget({ pr, engine, pool, limits }: { pr: Project; engine: TacticE
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         <div className="rounded-lg bg-canard/5 p-3">
           <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.merc.target.now')}</p>
-          <p className="mt-1 font-display text-3xl font-semibold tabular-nums">{fitPct(plan.xiAvg)}</p>
-          <p className="text-xs text-brun">{t('fm.merc.target.ready', { count: pr.slots.filter((s) => s.fit != null && s.fit >= T).length })} · {t('fm.merc.target.floor', { value: fitPct(plan.floor) })}</p>
+          <p className="mt-1 font-display text-3xl font-semibold tabular-nums"><Big v={plan.xiAvg} /></p>
+          <p className="text-xs text-brun">{t('fm.merc.target.ready', { count: pr.slots.filter((s) => s.fit != null && s.fit >= T).length })} · {t('fm.merc.target.floor', { value: n20(plan.floor) })}</p>
+          {xiCeil - plan.xiAvg >= 0.1 && <p className="text-xs text-eau-fonce">{t('fm.merc.target.xiCeil', { value: n20(xiCeil) })}</p>}
         </div>
         <div className="rounded-lg bg-orange-clair p-3">
           <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.merc.target.aimed')}</p>
-          <p className="mt-1 font-display text-3xl font-semibold tabular-nums">{fitPct(T)}</p>
-          <p className="text-xs text-brun">{done ? t('fm.merc.target.reached') : t('fm.merc.target.missing', { gap: fitGap(T - plan.xiAvg) })}</p>
+          <p className="mt-1 font-display text-3xl font-semibold tabular-nums"><Big v={T} /></p>
+          <p className="text-xs text-brun">{done ? t('fm.merc.target.reached') : t('fm.merc.target.missing', { gap: n20(T - plan.xiAvg) })}</p>
         </div>
         <div className={`rounded-lg p-3 ${verdict === 'out' ? 'bg-corail/10' : 'bg-eau/15'}`}>
           <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.merc.target.reachable')}</p>
-          <p className="mt-1 font-display text-3xl font-semibold tabular-nums">{fitPct(plan.reachable)}</p>
+          <p className="mt-1 font-display text-3xl font-semibold tabular-nums"><Big v={plan.reachable} /></p>
           <p className={`text-xs font-bold ${verdict === 'out' ? 'text-corail' : 'text-eau-fonce'}`}>
             {t(`fm.merc.target.verdict.${verdict}`, { count: plan.toTarget.length })}
           </p>
@@ -306,14 +325,21 @@ function TeamTarget({ pr, engine, pool, limits }: { pr: Project; engine: TacticE
         <p className="mt-3 text-sm text-brun">{t('fm.merc.target.noUpgrade')}</p>
       ) : (
         <div className="mt-4 overflow-x-auto">
-          <p className="mb-1 text-sm font-bold">{t('fm.merc.target.listTitle')}</p>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-bold">{t('fm.merc.target.listTitle')}</p>
+            <div className="flex items-center gap-2 text-xs text-brun">
+              {t('fm.merc.target.sort.label')}
+              <Chips<CandSort> value={sort} onChange={setSort} options={CAND_SORTS.map((k) => [k, t(`fm.merc.target.sort.${k}`)])} />
+            </div>
+          </div>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-canard/15 text-left text-xs uppercase tracking-wide text-canard/60">
                 <th className="py-1.5 pr-3">{t('fm.merc.target.col.status')}</th>
                 <th className="py-1.5 pr-3">{t('fm.merc.target.col.pos')}</th>
                 <th className="py-1.5 pr-3">{t('fm.merc.target.col.recruit')}</th>
-                <th className="py-1.5 pr-3">{t('fm.merc.target.col.fit')}</th>
+                <th className="py-1.5 pr-3" title={t('fm.merc.target.col.fitHint')}>{t('fm.merc.target.col.fit')}</th>
+                <th className="py-1.5 pr-3" title={t('fm.merc.target.col.potentialHint')}>{t('fm.merc.target.col.potential')}</th>
                 <th className="py-1.5 pr-3">{t('fm.merc.target.col.gain')}</th>
                 <th className="py-1.5 pr-3 text-right">{t('fm.merc.target.col.price')}</th>
                 <th className="py-1.5 pr-3 text-right">{t('fm.merc.target.col.wage')}</th>
@@ -321,18 +347,22 @@ function TeamTarget({ pr, engine, pool, limits }: { pr: Project; engine: TacticE
               </tr>
             </thead>
             <tbody>
-              {(showAll ? cands : cands.slice(0, CAND_MAX)).map((c) => (
+              {(showAll ? sorted : sorted.slice(0, CAND_MAX)).map((c) => (
                 <tr key={c.key} className={`border-b border-canard/5 last:border-0 ${c.status === 'plan' ? 'bg-eau/10' : ''}`}>
                   <td className="py-1.5 pr-3"><span className={`whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-bold ${STATUS_CLS[c.status]}`}>{t(`fm.merc.target.status.${c.status}`)}</span></td>
                   <td className="py-1.5 pr-3"><span className="pill">{POS_LABEL[c.pos]}</span></td>
                   <td className="py-1.5 pr-3">
                     <PlayerLink player={c.player} />
-                    {c.starter && <span className="block text-xs text-brun">{t(c.delta > 0 ? 'fm.merc.target.replaces' : 'fm.merc.target.backupOf', { name: c.starter.name, fit: fitPct(c.starterFit) })}</span>}
+                    {c.starter && <span className="block text-xs text-brun">{t(c.delta > 0 ? 'fm.merc.target.replaces' : 'fm.merc.target.backupOf', { name: c.starter.name, fit: c.starterCeil - c.starterFit >= 0.4 ? `${n20(c.starterFit)} → ${n20(c.starterCeil)}` : n20(c.starterFit) })}</span>}
                   </td>
-                  <td className="py-1.5 pr-3"><Fit value={c.fit} /></td>
+                  <td className="py-1.5 pr-3"><Note v={c.fit} aim={T} /></td>
                   <td className="py-1.5 pr-3 tabular-nums">
-                    {c.delta > 0 ? <span className="font-bold text-eau-fonce">+{fitGap(c.delta)}</span> : <span className="text-brun">{t('fm.merc.target.depth')}</span>}
-                    {c.after != null && <span className="block text-xs text-brun">{t('fm.merc.target.afterShort', { value: fitPct(c.after) })}</span>}
+                    {c.ceil - c.fit >= 0.4 ? <span className="font-bold text-eau-fonce">→ {n20(c.ceil)}</span> : <span className="text-brun" title={t('fm.merc.target.ceilSameHint')}>{t('fm.merc.target.ceilSame')}</span>}
+                  </td>
+                  <td className="py-1.5 pr-3 tabular-nums">
+                    {c.delta > 0 ? <span className="font-bold text-eau-fonce">+{n20(c.delta)}</span> : <span className="text-brun">{t('fm.merc.target.depth')}</span>}
+                    {c.after != null && <span className="block text-xs text-brun">{t('fm.merc.target.afterShort', { value: n20(c.after) })}</span>}
+                    {c.ceil - c.starterCeil > Math.max(0, c.delta) + 0.3 && <span className="block text-xs text-eau-fonce">{t('fm.merc.target.later', { gain: `${c.ceil - c.starterCeil > 0 ? '+' : ''}${n20(c.ceil - c.starterCeil)}` })}</span>}
                   </td>
                   <td className="py-1.5 pr-3 text-right tabular-nums">
                     {c.price == null ? '–' : `${c.isEst ? '~' : ''}${f.money(c.price)}`}
@@ -350,7 +380,8 @@ function TeamTarget({ pr, engine, pool, limits }: { pr: Project; engine: TacticE
               {showAll ? t('fm.merc.target.less') : t('fm.merc.target.more', { count: cands.length - CAND_MAX })}
             </button>
           )}
-          <p className="mt-2 text-xs text-brun">{market ? t('fm.merc.target.marketHelp', { count: market.n }) : t('fm.merc.target.marketNone')}</p>
+          <p className="mt-2 text-xs text-brun">{t('fm.merc.target.scaleHelp')}</p>
+          <p className="mt-1 text-xs text-brun">{market ? t('fm.merc.target.marketHelp', { count: market.n }) : t('fm.merc.target.marketNone')}</p>
         </div>
       )}
     </section>
@@ -365,6 +396,25 @@ const STATUS_CLS: Record<CandStatus, string> = {
   unpriced: 'bg-canard/10 text-canard',
 };
 const CAND_MAX = 8;
+type CandSort = 'status' | 'now' | 'potential' | 'value';
+const CAND_SORTS: CandSort[] = ['status', 'now', 'potential', 'value'];
+
+/** Note sur 20 à une décimale. */
+const n20 = (v: number | null | undefined) => (v == null ? '–' : v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }));
+/** Grand chiffre sur 20 des cadres du haut. */
+function Big({ v }: { v: number }) {
+  return (
+    <>
+      {n20(v)}
+      <span className="ml-0.5 text-base font-normal text-brun">/20</span>
+    </>
+  );
+}
+/** Pastille de note sur 20 colorée face à la note visée : au-dessus, juste en dessous, loin en dessous. */
+function Note({ v, aim }: { v: number; aim: number }) {
+  const cls = v >= aim ? 'bg-eau-fonce text-white' : v >= aim - 1 ? 'bg-eau/40 text-canard' : v >= aim - 2 ? 'bg-canard/10 text-canard' : 'bg-corail/20 text-canard';
+  return <span className={`num-pill ${cls}`}>{n20(v)}</span>;
+}
 
 /** Verdict de prix face au marché de tes cibles : bonne affaire ou cher (rien quand le prix est dans la norme). */
 function PriceTag2({ v }: { v: PriceVerdict | null }) {

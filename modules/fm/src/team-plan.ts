@@ -187,3 +187,26 @@ export function bestSlotFit(engine: TacticEngine, project: Project, p: FmPlayer)
   }
   return best;
 }
+
+/* ---------- Note actuelle et potentiel atteignable (sur 20) ---------- */
+
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+/**
+ * Potentiel atteignable dans le rôle, sur 20 (formule de FM Notebook) : le plafond est tiré du PA quand il est lu en
+ * mémoire (note × PA / CA), sinon des étoiles de potentiel du staff ou des recruteurs (8 + 2 × étoiles, 5 étoiles = 18).
+ * Plus le joueur est jeune, plus il a de chances d'y arriver : poids (25 − âge) / 11, plafonné à 0,88 ; à 25 ans et
+ * plus, le potentiel est la note actuelle. Jamais sous la note actuelle.
+ */
+export function roleCeiling(fit: number | null, p: Pick<FmPlayer, 'age' | 'ca' | 'pa' | 'stars'> & { scout?: { stars: { potential: number | null } | null } | null }): number | null {
+  if (fit == null) return null;
+  const w = clamp((25 - (p.age ?? 25)) / 11, 0, 0.88);
+  if (!w) return fit;
+  const potStars = p.scout?.stars?.potential ?? p.stars?.potential ?? null;
+  const cap = p.ca != null && p.pa != null && p.ca > 0 ? Math.min(20, (fit * Math.max(p.pa, p.ca)) / p.ca) : potStars != null ? 8 + 2 * potStars : null;
+  if (cap == null) return fit;
+  return fit * (1 - w) + Math.max(fit, cap) * w;
+}
+
+/** Score « moneyball » de FM Notebook : note + 0,4 × gain − 1,5 × log10(prix en M€ + 1). */
+export const valueScore = (fit: number, delta: number, price: number | null) => fit + 0.4 * Math.max(0, delta) - 1.5 * Math.log10((price ?? 0) / 1e6 + 1);

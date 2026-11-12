@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { marketModel, teamPlan, type Project, type Target, type TacticEngine } from '../src';
+import { marketModel, roleCeiling, teamPlan, type Project, type Target, type TacticEngine } from '../src';
 
 // Moteur factice : la note d'un joueur dans un rôle est sa propriété `n`.
 const engine = { roleFit: (p: { n: number }) => p.n } as unknown as TacticEngine;
@@ -48,5 +48,19 @@ describe('marketModel (moneyball)', () => {
   });
   it('ne conclut rien sur trop peu de prix connus', () => {
     expect(marketModel([{ fit: 12, price: 1000 }, { fit: 13, price: null }])).toBeNull();
+  });
+});
+
+describe('roleCeiling', () => {
+  it('ne bouge pas à 25 ans et plus', () => {
+    expect(roleCeiling(13, { age: 27, ca: 120, pa: 160, stars: null })).toBe(13);
+  });
+  it('vise le PA chez un jeune, pondéré par l’âge', () => {
+    // 18 ans : poids 7/11 ; plafond 12 × 150/100 = 18.
+    expect(roleCeiling(12, { age: 18, ca: 100, pa: 150, stars: null })).toBeCloseTo(12 * (4 / 11) + 18 * (7 / 11), 5);
+  });
+  it('se rabat sur les étoiles de potentiel, jamais sous la note actuelle', () => {
+    expect(roleCeiling(12, { age: 19, ca: null, pa: null, stars: { current: 2, potential: 4 } })).toBeCloseTo(12 * (5 / 11) + 16 * (6 / 11), 5);
+    expect(roleCeiling(15, { age: 19, ca: null, pa: null, stars: { current: 2, potential: 2 } })).toBe(15);
   });
 });

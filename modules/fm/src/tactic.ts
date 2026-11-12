@@ -242,6 +242,19 @@ export class TacticEngine {
     this.roles = new Map(ref.roles.map((r) => [r.code, r]));
   }
 
+  /** Notes calculées sur les seuls attributs, sans valeurs lues ni étoiles du jeu (voir `absolute`). */
+  private raw = false;
+
+  /**
+   * Même moteur, notes sur une échelle fixe : moyenne pondérée des attributs du rôle, sur 20, comparable d'un club à
+   * l'autre. Les étoiles du jeu sont rapportées à l'effectif ; pour juger une recrue d'un autre club, il faut l'absolu.
+   */
+  absolute(): TacticEngine {
+    const e = new TacticEngine(this.ref);
+    e.raw = true;
+    return e;
+  }
+
   /** Postes où le jeu propose le rôle ; sans phase, tous ses postes. */
   rolePositions(r: RoleRef, phase?: Phase): PosCode[] {
     const raw = phase === 'oop' && r.positionsOOP ? r.positionsOOP : phase === undefined && r.positionsOOP ? [...new Set([...r.positions, ...r.positionsOOP])] : r.positions;
@@ -266,6 +279,7 @@ export class TacticEngine {
   roleFit(p: FmPlayer, code: string, phase: Phase, pos?: PosCode): number | null {
     const r = this.roles.get(code);
     if (!r) return null;
+    if (this.raw) return this.computedFit(p, code, phase, pos);
     // Valeur lue dans le jeu pour ce joueur, ce poste et cette phase : elle prime sur tout calcul.
     const read = this.readFit(p, r, phase, pos);
     if (read != null) return read;

@@ -2055,19 +2055,22 @@
         "ready_one": "{{count}} position at the level out of 11",
         "ready_other": "{{count}} positions at the level out of 11",
         "aimed": "Target rating",
-        "missing": "{{gap}} short on average",
+        "missing": "{{gap}} pts short on average",
         "reached": "reached",
         "col": {
           "pos": "Position",
           "recruit": "Signing",
-          "fit": "Rating",
+          "fit": "Rating /20",
           "replaces": "Replaces",
           "gain": "Gain",
           "price": "Price",
           "after": "XI average after",
           "wage": "Wage",
           "known": "Known",
-          "status": "Status"
+          "status": "Status",
+          "fitHint": "Current rating in the role, out of 20",
+          "potential": "Potential",
+          "potentialHint": "Rating he can reach in time, out of 20"
         },
         "empty": "nobody",
         "reachable": "Reachable with your targets",
@@ -2109,7 +2112,19 @@
         "backupOf": "backup to {{name}} ({{fit}})",
         "overBudget": "above your budget",
         "more_one": "Show 1 more",
-        "more_other": "Show {{count}} more"
+        "more_other": "Show {{count}} more",
+        "xiCeil": "XI potential: {{value}}",
+        "ceilSame": "= rating",
+        "ceilSameHint": "Already at his ceiling (25 or older, or potential reached).",
+        "later": "long term {{gain}}",
+        "scaleHelp": "Ratings out of 20 in your system's role, dark green = at your target. Potential: what the player can reach given his age and potential (PA read from memory, otherwise your scouts' stars); from 25 on, it's his current rating.",
+        "sort": {
+          "label": "Sort:",
+          "status": "Status",
+          "now": "Current rating",
+          "potential": "Potential",
+          "value": "Value for money"
+        }
       }
     },
     "stats": {

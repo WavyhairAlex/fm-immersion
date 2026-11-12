@@ -2055,19 +2055,22 @@
         "ready_one": "{{count}} poste au niveau sur 11",
         "ready_other": "{{count}} postes au niveau sur 11",
         "aimed": "Note visée",
-        "missing": "il manque {{gap}} en moyenne",
+        "missing": "il manque {{gap}} pt en moyenne",
         "reached": "atteinte",
         "col": {
           "pos": "Poste",
           "recruit": "Recrue",
-          "fit": "Note",
+          "fit": "Note /20",
           "replaces": "Remplace",
           "gain": "Gain",
           "price": "Prix",
           "after": "Moyenne du onze après",
           "wage": "Salaire",
           "known": "Connu à",
-          "status": "Statut"
+          "status": "Statut",
+          "fitHint": "Note actuelle dans le rôle, sur 20",
+          "potential": "Potentiel",
+          "potentialHint": "Note qu'il peut atteindre à terme, sur 20"
         },
         "empty": "personne",
         "reachable": "Atteignable avec tes cibles",
@@ -2109,7 +2112,19 @@
         "backupOf": "doublure de {{name}} ({{fit}})",
         "overBudget": "au-dessus de ton budget",
         "more_one": "Voir l'autre",
-        "more_other": "Voir les {{count}} autres"
+        "more_other": "Voir les {{count}} autres",
+        "xiCeil": "potentiel du onze : {{value}}",
+        "ceilSame": "= sa note",
+        "ceilSameHint": "Déjà à son plafond (25 ans ou plus, ou potentiel atteint).",
+        "later": "à terme {{gain}}",
+        "scaleHelp": "Notes sur 20 dans le rôle de ton schéma, vert foncé = au niveau visé. Potentiel : ce que le joueur peut atteindre selon son âge et son potentiel (PA lu en mémoire, sinon étoiles de tes recruteurs) ; à 25 ans et plus, c'est sa note actuelle.",
+        "sort": {
+          "label": "Trier :",
+          "status": "Statut",
+          "now": "Note actuelle",
+          "potential": "Potentiel",
+          "value": "Rapport qualité-prix"
+        }
       }
     },
     "stats": {
