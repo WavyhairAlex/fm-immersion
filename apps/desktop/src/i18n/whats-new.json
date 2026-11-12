@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.1.182",
+    "date": "2026-11-12",
+    "fr": [
+      "Toutes les notes sont maintenant sur 20, calculées sur les attributs : la même échelle pour tes joueurs et ceux des autres clubs. Les étoiles disparaissent, remplacées par le potentiel que chaque joueur peut atteindre.",
+      "Mercato : ton onze face à une note visée, les recrues qui la font monter (note, potentiel, gain, prix, salaire), les bonnes affaires « sous les radars », et ta liste d'inscription (formés localement, hors UE, moins de 21 ans).",
+      "Tactique, Profondeur : tes tireurs (penaltys, coups francs, corners, touches longues) et ton capitaine. Un voyant de fiabilité des données t'indique quand nuancer les conseils."
+    ],
+    "en": [
+      "All ratings are now out of 20, computed from attributes: the same scale for your players and other clubs'. Stars are gone, replaced by the potential each player can reach.",
+      "Transfers: your XI against a target rating, the signings that raise it (rating, potential, gain, price, wage), under-the-radar bargains, and your registration list (home-grown, non-EU, under 21).",
+      "Tactics, Depth: your set-piece takers (penalties, free kicks, corners, long throws) and captain. A data reliability light tells you when to take the advice with caution."
+    ]
+  },
+  {
     "version": "0.1.181",
     "date": "2026-11-12",
     "fr": [
