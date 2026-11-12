@@ -10,7 +10,7 @@ export const PARTS: Record<ClubPage, readonly string[]> = {
   tactic: ['tactic', 'instructions', 'builder', 'opponent', 'depth', 'calendar', 'style', 'effectiveness', 'project', 'training', 'staff'],
   squad: ['squad', 'playtime', 'dressing', 'progression', 'roles', 'compare', 'numbers', 'loans'],
   results: ['results', 'diagnosis', 'stats', 'analysis'],
-  mercato: ['mercato', 'targets', 'finances', 'wages', 'contracts'],
+  mercato: ['mercato', 'scouting', 'targets', 'finances', 'wages', 'contracts'],
 };
 
 /**
@@ -21,7 +21,7 @@ export const TABS: Record<ClubPage, readonly (readonly string[])[]> = {
   tactic: ['tactic', 'instructions', 'builder', 'opponent', 'calendar', 'training', 'depth', 'style', 'effectiveness', 'project', 'staff'].map((v) => [v]),
   squad: ['squad', 'loans', 'numbers', 'playtime', 'dressing', 'progression', 'roles', 'compare'].map((v) => [v]),
   results: [['results'], ['diagnosis'], ['stats'], ['analysis']],
-  mercato: [['mercato'], ['targets'], ['finances'], ['wages'], ['contracts']],
+  mercato: [['mercato'], ['scouting'], ['targets'], ['finances'], ['wages'], ['contracts']],
 };
 
 /** Sous-onglet qui contient une partie (le premier de l'écran à défaut). */

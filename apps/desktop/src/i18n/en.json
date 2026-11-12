@@ -581,6 +581,7 @@
       "progression": "Progression",
       "training": "Training",
       "mercato": "Departures and youth",
+      "scouting": "Scouting good deals",
       "targets": "Transfer targets",
       "instructions": "Player instructions",
       "results": "Results",
@@ -1809,6 +1810,7 @@
       "progression": "Each player's level since the first snapshot.",
       "opponent": "The next opponent as the game's team report describes it, and how to play them.",
       "mercato": "Your money, your XI against the target rating, the signings that lift it, then your decisions in order.",
+      "scouting": "Players from the whole database to buy cheap, develop and sell on: estimated cost, growth, sale and profit.",
       "instructions": "Up to 3 instructions per starter, to fit the style without overloading tactical familiarity.",
       "results": "Matches played since FM Immersion started following the save: score, eleven, each player's rating, and what earns points.",
       "diagnosis": "Starters below the eleven's average, and why.",
@@ -2612,6 +2614,7 @@
       "stats": "Statistics",
       "analysis": "Analysis",
       "mercato": "Transfers",
+      "scouting": "Scouting",
       "targets": "Targets",
       "finances": "Finances",
       "wages": "Wages",
@@ -3583,6 +3586,84 @@
         "shortHistory": "a single snapshot: progression from age, not measured",
         "targetsUnknown": "{{count}} of {{total}} targets under 50% known: their rating may move"
       }
+    },
+    "scout": {
+      "title": "Scouting: buy, develop, sell",
+      "lead": "The whole FM27 database, read from memory when you ask: players your club can afford who still have room to grow. For each one: what they cost, what they will become, what they will bring in when sold.",
+      "preset": "What you are looking for",
+      "presets": {
+        "all": "Everything (25 and under)",
+        "nugget": "Gems to sell on",
+        "undervalued": "Undervalued",
+        "expiring": "Contracts ending",
+        "free": "Free agents"
+      },
+      "presetHelp": {
+        "all": "Players aged 25 and under within your reach, ranked by profit per season.",
+        "nugget": "21 and under with at least 15 points between CA and PA: the ones who gain the most value.",
+        "undervalued": "24 and under, priced at least 20% below a player of the same level and age.",
+        "expiring": "A year or less left on their contract: their club sells them cheap.",
+        "free": "No club: no fee, only the wage."
+      },
+      "positions": "Positions (none = all)",
+      "run": "Start scouting",
+      "rerun": "Run again",
+      "help": "The figures come from the game's real values (CA, PA, age, value, wage, contract), not from scout opinions. Growth: CA rises every season, fast before 21 then less and less, never above PA, and less if he doesn't play for you (backup: 70%, to loan out: 60%). Sale: the value of a player of that level and age on the market read, a bit more for a youngster on a long contract. Buy: his value, more with a long contract, less near the end of it, free if he has no club. Profit: sale − buy − wages. These are FM Immersion estimates to know where to look: real negotiations and growth are the game's.",
+      "kpi": {
+        "ideas": "Good deals",
+        "read": "out of {{count}} players read",
+        "best": "Best profit",
+        "bestSub_one": "{{name}}, sold in {{count}} season",
+        "bestSub_other": "{{name}}, sold in {{count}} seasons",
+        "free": "No fee",
+        "freeSub": "free agents or pre-contracts",
+        "model": "Market prices",
+        "modelFit": "Measured",
+        "modelSub": "from {{count}} valued players",
+        "modelGeneric": "Approximate",
+        "modelGenericSub": "too few values read: generic curve"
+      },
+      "list": "The good deals",
+      "sort": {
+        "perYear": "Profit per season",
+        "profit": "Total profit",
+        "roi": "Return"
+      },
+      "none": "No player brings in more than he costs in this search. Try another filter or other positions.",
+      "col": {
+        "player": "Player",
+        "role": "For you",
+        "growth": "CA → at sale",
+        "buy": "Buy",
+        "wages": "Wages",
+        "sale": "Sale",
+        "profit": "Profit",
+        "reach": "Reach"
+      },
+      "age_one": "{{count}} year old",
+      "age_other": "{{count}} years old",
+      "kind": {
+        "nugget": "gem",
+        "undervalued": "undervalued",
+        "expiring": "contract ending",
+        "free": "no fee"
+      },
+      "role": {
+        "starter": "starter",
+        "backup": "backup",
+        "none": "loan out to play"
+      },
+      "pa": "PA {{pa}}",
+      "costless": "€0",
+      "ratio": "{{pct}}% of his value",
+      "months_one": "{{count}} month left",
+      "months_other": "{{count}} months left",
+      "seasons_one": "over {{count}} season",
+      "seasons_other": "over {{count}} seasons",
+      "saleAt": "at {{age}}",
+      "roi": "return {{pct}}%",
+      "roiFree": "nothing to pay up front",
+      "more": "Show {{count}} more"
     }
   },
   "modes": {
