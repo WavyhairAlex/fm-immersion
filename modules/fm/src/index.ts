@@ -77,6 +77,7 @@ export * from './playtime';
 export * from './pricing';
 export * from './reach';
 export * from './trading';
+export * from './scouting';
 export * from './briefing';
 export * from './matchday';
 export * from './challenges';

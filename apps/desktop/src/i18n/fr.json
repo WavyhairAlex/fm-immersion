@@ -3596,14 +3596,16 @@
         "nugget": "Pépites à revendre",
         "undervalued": "Sous-cotés",
         "expiring": "Fins de contrat",
-        "free": "Libres"
+        "free": "Libres",
+        "profile": "Profils sous-estimés"
       },
       "presetHelp": {
         "all": "Joueurs de 25 ans et moins à ta portée, classés par gain par saison.",
         "nugget": "21 ans et moins avec au moins 15 points d'écart entre CA et PA : ceux qui prennent le plus de valeur.",
         "undervalued": "24 ans et moins, vendus au moins 20 % sous la valeur d'un joueur de même niveau et même âge.",
         "expiring": "Plus qu'un an de contrat ou moins : leur club les brade.",
-        "free": "Sans club : aucune indemnité, seulement le salaire."
+        "free": "Sans club : aucune indemnité, seulement le salaire.",
+        "profile": "29 ans et moins, mieux notés sur 20 dans ton projet que ce que leur CA laisse attendre : ils valent plus chez toi que sur le marché."
       },
       "positions": "Postes (aucun = tous)",
       "run": "Lancer le repérage",
@@ -3646,7 +3648,9 @@
         "nugget": "pépite",
         "undervalued": "sous-coté",
         "expiring": "fin de contrat",
-        "free": "sans indemnité"
+        "free": "sans indemnité",
+        "profile": "profil sous-estimé",
+        "profileEdge": "+{{edge}} pt pour son CA"
       },
       "role": {
         "starter": "titulaire",
@@ -3663,7 +3667,87 @@
       "saleAt": "à {{age}} ans",
       "roi": "rendement {{pct}} %",
       "roiFree": "rien à avancer",
-      "more": "Voir {{count}} de plus"
+      "more": "Voir {{count}} de plus",
+      "tabs": {
+        "deals": "Bonnes affaires",
+        "watch": "Joueurs suivis",
+        "sell": "Quand vendre",
+        "markets": "Marchés"
+      },
+      "growth": {
+        "measured_one": "Progression mesurée dans ta partie sur {{count}} joueur",
+        "measured_other": "Progression mesurée dans ta partie sur {{count}} joueurs",
+        "generic": "Progression : repères génériques (il faut au moins 4 mois de CA lu dans ta partie, option « Lire le CA/PA », pour la mesurer)",
+        "bucket": "{{from}}-{{to}} ans : +{{pts}}/saison",
+        "detail": "{{from}}-{{to}} ans : {{measured}} mesurés (repère {{base}}, {{count}} joueurs)"
+      },
+      "watch": {
+        "title": "Tes joueurs suivis",
+        "lead": "Chaque joueur de tes cibles est relu dans la base de FM27 : son prix, son CA et son contrat depuis que tu le suis. Avec « Lire le CA/PA » activé, c'est fait tout seul à chaque date de jeu.",
+        "reread_one": "Relire {{count}} joueur",
+        "reread_other": "Relire {{count}} joueurs",
+        "none": "Aucun joueur suivi relu pour l'instant. Ajoute des joueurs depuis les bonnes affaires (« Suivre »), puis relis-les.",
+        "flagged": "{{count}} sur {{total}} demandent ton attention",
+        "quiet": "rien de neuf",
+        "col": {
+          "player": "Joueur",
+          "since": "Suivi depuis",
+          "ca": "CA",
+          "value": "Prix",
+          "contract": "Contrat",
+          "signals": "À savoir"
+        },
+        "signal": {
+          "priceDrop": "prix en baisse",
+          "preContract": "précontrat possible",
+          "contractEnding": "fin de contrat dans l'année",
+          "listed": "mis sur la liste des transferts",
+          "free": "libre",
+          "ahead": "progresse plus vite que prévu",
+          "stalled": "ne progresse plus",
+          "moved": "a changé de club"
+        },
+        "help": "Prix en baisse : 20 % sous le plus haut relu. Précontrat : 6 mois de contrat ou moins. Progression : comparée à celle attendue pour son âge (plus vite : au moins 1,5 fois et 3 points ; à l'arrêt : rien gagné en 4 mois quand il aurait dû). La lecture se fait dans la mémoire de FM27, en lecture seule."
+      },
+      "sell": {
+        "title": "Quand vendre tes joueurs",
+        "lead": "{{sell}} à vendre avant que leur valeur baisse, {{hold}} qui vaudront nettement plus plus tard.",
+        "calls": "À décider",
+        "all": "Tout l'effectif",
+        "noCa": "Il faut le CA de tes joueurs : active « Lire le CA/PA » dans Plugin et réglages, puis joue un jour.",
+        "col": {
+          "player": "Joueur",
+          "now": "Aujourd'hui",
+          "y1": "Dans 1 saison",
+          "y2": "Dans 2 saisons",
+          "y3": "Dans 3 saisons",
+          "call": "Conseil"
+        },
+        "call": {
+          "sellNow": "Vends : sa valeur baisse",
+          "hold_one": "Garde : pic dans {{count}} saison",
+          "hold_other": "Garde : pic dans {{count}} saisons",
+          "stable": "Valeur stable"
+        },
+        "help": "Valeur future : celle d'un joueur de son CA projeté et de son âge, sur les prix de ton effectif, en gardant à moitié sa cote propre. Vends : il perdra au moins 10 % dans l'année. Garde : il vaudra au moins 15 % de plus à son pic. Ça ne dit rien de son utilité sur le terrain : un titulaire peut valoir plus qu'un chèque."
+      },
+      "market": {
+        "title": "Où acheter",
+        "lead": "Les championnats où un joueur coûte le moins cher pour son niveau et son âge, d'après les joueurs lus lors du dernier repérage.",
+        "first": "Lance d'abord un repérage dans Bonnes affaires : la carte se fait sur les joueurs lus.",
+        "none": "Pas assez de joueurs par championnat dans cette lecture (4 au moins). Essaie le repère « Tout ».",
+        "col": {
+          "division": "Championnat",
+          "index": "Prix",
+          "n": "Joueurs lus",
+          "ca": "CA médian",
+          "age": "Âge médian"
+        },
+        "cheaper": "{{pct}} % moins cher",
+        "dearer": "{{pct}} % plus cher",
+        "par": "au prix du marché",
+        "help": "Prix médian des joueurs du championnat comparé à la valeur d'un joueur de même CA et même âge sur tout le marché lu. Un championnat peu coté vend moins cher : c'est là que tes recruteurs trouveront les bonnes affaires."
+      }
     }
   },
   "modes": {

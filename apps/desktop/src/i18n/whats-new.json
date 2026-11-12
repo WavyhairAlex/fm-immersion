@@ -1,5 +1,19 @@
 [
   {
+    "version": "0.1.184",
+    "date": "2026-11-12",
+    "fr": [
+      "Le Repérage du Mercato s'étoffe : « Joueurs suivis » relit tes cibles dans FM27 et te prévient quand leur prix baisse, qu'un précontrat devient possible ou qu'ils progressent plus vite que prévu.",
+      "« Quand vendre » montre la valeur de tes joueurs sur trois saisons : qui vendre avant qu'elle baisse, qui garder pour le vendre plus cher. « Marchés » te dit dans quels championnats acheter moins cher.",
+      "Nouveau repère « Profils sous-estimés » : des joueurs mieux notés dans ton projet que leur CA ne le laisse croire. Et la progression des jeunes se mesure maintenant dans ta propre partie."
+    ],
+    "en": [
+      "Mercato Scouting grows: “Followed players” reads your targets again in FM27 and warns you when their price drops, a pre-contract becomes possible or they grow faster than expected.",
+      "“When to sell” shows your players' value over three seasons: who to sell before it drops, who to keep to sell higher. “Markets” tells you in which leagues to buy cheaper.",
+      "New “Underrated profiles” filter: players rated higher in your project than their CA suggests. And youngsters' growth is now measured in your own save."
+    ]
+  },
+  {
     "version": "0.1.183",
     "date": "2026-11-12",
     "fr": [

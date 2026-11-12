@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useRef } from 'react';
+import { baseTargetIds, type DbPlayer } from '@fm-immersion/module-fm';
 import { useCareer, useCareerStore } from './career';
 import { fmData } from './data';
 import { rememberClubLooks } from './club-look';
@@ -99,6 +100,16 @@ export function useFmSync() {
         if (stop || r.gameDate?.slice(0, 10) !== latest.gameDate.slice(0, 10) || !r.players.length) return;
         if (await fmData.attachAbilities(saveId, latest.gameDate, r.players)) {
           abilitiesDate.current = latest.gameDate;
+          // Même lecture pour les joueurs suivis : prix, CA et contrat, pour les alertes du Repérage.
+          try {
+            const ids = baseTargetIds(await fmData.targets(saveId));
+            if (ids.length) {
+              const found = await invoke<DbPlayer[]>('fm_memory_search', { filter: { ids, limit: 300 } });
+              if (!stop && (await fmData.refreshBaseTargets(saveId, found, latest.gameDate))) qc.invalidateQueries({ queryKey: ['fm', saveId, 'targets'] });
+            }
+          } catch {
+            /* relu à la prochaine date de jeu */
+          }
           const updated = await fmData.latest(saveId);
           if (updated && !stop) noteImported(qc, saveId, updated.data);
         }

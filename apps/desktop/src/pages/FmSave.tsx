@@ -272,7 +272,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
       case 'mercato':
         return <FmMercato saveId={saveId} snap={snapshot.data} players={players} folder={folder} gameDate={snapshot.gameDate} history={history} />;
       case 'scouting':
-        return <FmScouting saveId={saveId} snap={snapshot.data} players={players} folder={folder} gameDate={snapshot.gameDate} />;
+        return <FmScouting saveId={saveId} snap={snapshot.data} players={players} folder={folder} gameDate={snapshot.gameDate} history={history} />;
       case 'targets':
         return <FmTargets saveId={saveId} snap={snapshot.data} players={players} folder={folder} go={go} />;
       case 'depth':
