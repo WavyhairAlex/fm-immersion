@@ -192,3 +192,36 @@ describe('conférences : pas de doublon ni de sujet répété', () => {
     expect(c.questions.some((q) => q.id === 'hero')).toBe(false);
   });
 });
+
+describe('conférences : la presse se souvient de ce que le coach a dit', () => {
+  // Un joueur clé en fin de contrat : le sujet revient d'une conférence à l'autre.
+  const contractSnap = snap(
+    '2026-10-20',
+    [
+      { id: 'gk', min: 180, starts: 2, tg: 4, tc: 1 },
+      { id: 'st', name: 'Diallo', min: 180, starts: 2, tg: 4, tc: 1, goals: 4 },
+    ],
+    { classementPosition: 5 },
+  );
+  (contractSnap.players.find((p) => p.id === 'st') as unknown as Record<string, unknown>).contractEnd = '2027-01-15';
+  const hist = [before, contractSnap].map((data) => ({ gameDate: data.gameDate, data }));
+  const said = (matchDate: string, text: string) =>
+    ({
+      kind: 'post',
+      matchDate,
+      opponent: 'Gand',
+      questions: [{ id: 'contract', text: 'Le contrat de Diallo se termine dans 3 mois. Va-t-il prolonger ?' }],
+      answers: [{ question: 'contract', tone: 'confident', text }],
+    }) as unknown as import('../src').PressHeld;
+
+  it('rappelle la dernière phrase, et compte les conférences où elle a été répétée', () => {
+    const q = (held: import('../src').PressHeld[]) => postMatchConference(hist, held)?.questions.find((x) => x.id === 'contract');
+    expect(q([])?.params.echo).toBeUndefined();
+    // Entre-temps, une conférence sur autre chose (un sujet ne revient pas deux conférences de suite) : le contrat a sa place.
+    const other = { kind: 'pre', matchDate: '2026-10-12', opponent: 'Genk', questions: [{ id: 'hero', text: '…' }, { id: 'bigWin', text: '…' }], answers: [] } as unknown as import('../src').PressHeld;
+    const once = q([other, said('2026-10-05', 'On discute, et je suis confiant. Il se sent bien ici.')]);
+    expect(once?.params).toMatchObject({ echo: 'On discute, et je suis confiant.', echoTimes: 1 });
+    const twice = q([other, said('2026-10-05', 'On discute.'), said('2026-09-28', 'On discute.'), said('2026-09-20', 'Autre chose.')]);
+    expect(twice?.params).toMatchObject({ echo: 'On discute.', echoTimes: 2 });
+  });
+});

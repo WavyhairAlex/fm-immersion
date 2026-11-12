@@ -137,6 +137,10 @@ const RECENT_PENALTY = 50;
  * l'autre : une conférence d'avant-match tenue contre le même adversaire à quelques jours près vaut pour ce match.
  */
 const SAME_MATCH_DAYS = 6;
+/** La presse se souvient de ce que le coach a dit sur un sujet pendant six semaines. */
+const ECHO_DAYS = 42;
+/** Sujets propres à un match (résultat, enjeu, série…) : chaque fois un autre match, pas de « vous disiez déjà ». */
+const NO_ECHO: ReadonlySet<QuestionTopic> = new Set(['result', 'stakes', 'cup', 'streak', 'bigWin', 'runEnded', 'hero', 'youthDebut', 'followUp', 'theirScorer']);
 /** Course au titre : dans les deux premiers, à huit journées ou moins de la fin. */
 const TITLE_RACE_LEFT = 8;
 /** Les joueurs qui comptent : les quatorze meilleurs de l'effectif par niveau. */
@@ -296,7 +300,32 @@ function pick(lead: PressQuestion, rest: Candidate[], held: readonly PressHeld[]
     .map((c) => ({ ...c, score: c.score - (recent.has(c.q.id) ? RECENT_PENALTY : 0) + (hash(`${key}|${c.q.id}`) % 10) }))
     .sort((a, b) => b.score - a.score)
     .map((c) => c.q);
-  return assignOutlets(club, key, [lead, ...ranked].slice(0, MAX_QUESTIONS));
+  return withEchoes(assignOutlets(club, key, [lead, ...ranked].slice(0, MAX_QUESTIONS)), held, date);
+}
+
+/**
+ * La presse remarque quand le coach a déjà répondu sur ce sujet (même joueur, même club) : sa dernière phrase est
+ * rappelée dans la question (`echo`), et `echoTimes` dit combien de conférences de suite il a dit exactement la
+ * même chose (2 ou plus : « vous répétez depuis… »).
+ */
+function withEchoes(qs: PressQuestion[], held: readonly PressHeld[], date: string): PressQuestion[] {
+  const past = [...held]
+    .filter((h) => h.answers.length && h.matchDate.slice(0, 10) <= date.slice(0, 10) && days(h.matchDate, date) <= ECHO_DAYS)
+    .sort((a, b) => b.matchDate.localeCompare(a.matchDate));
+  return qs.map((q) => {
+    if (NO_ECHO.has(q.id)) return q;
+    // Même sujet ET même personne : la question gardée doit nommer le même joueur (ou club) que celle d'aujourd'hui.
+    const who = [q.params.name, q.params.other].filter((x): x is string => typeof x === 'string' && !!x);
+    const said = past.flatMap((h) => {
+      const asked = h.questions.find((x) => x.id === q.id);
+      const a = h.answers.find((x) => x.question === q.id && x.text.trim());
+      return asked && a && who.every((w) => asked.text.includes(w)) ? [a.text.trim()] : [];
+    });
+    if (!said.length) return q;
+    let times = 1;
+    while (times < said.length && said[times] === said[0]) times++;
+    return { ...q, params: { ...q.params, echo: shortQuote(said[0]!), echoTimes: times } };
+  });
 }
 
 /** Nouvelles du club des derniers jours (dépêches) : recrue, départ, longue blessure, rumeur sur le coach. */

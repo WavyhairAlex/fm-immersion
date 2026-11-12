@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { useCareer } from '../lib/career';
 import { fmData } from '../lib/data';
 import { useHistory } from '../lib/fm-cache';
-import { answerText, askedBy, pressAiOn, pressKeyOf, rewordAnswer, usePressHeld, usePressQuestions } from '../lib/press';
+import { answerText, askedBy, pressAiOn, pressKeyOf, recentAnswers, rewordAnswer, usePressHeld, usePressQuestions } from '../lib/press';
 
 /** Conférence de presse : la presse interroge le coach avant une affiche et après chaque match officiel. */
 export function Press() {
@@ -45,7 +45,7 @@ export function Press() {
         </p>
       )}
       {!!fmSaves.length && !isLoading && !heldLoading && !pending && <p className="card mt-6 text-brun">{t('press.page.none')}</p>}
-      {pending && <Conference key={pending.key} saveId={saveId} club={history.at(-1)?.data.club ?? pending.club} conference={pending} onDone={setNote} />}
+      {pending && <Conference key={pending.key} saveId={saveId} club={history.at(-1)?.data.club ?? pending.club} conference={pending} said={recentAnswers(held)} onDone={setNote} />}
 
       {held.length > 0 && (
         <section className="mt-8">
@@ -90,7 +90,7 @@ function PastQuestion({ q, club }: { q: PressAsked | undefined; club: string }) 
 
 const dateLabel = (iso: string, lang?: string) => new Intl.DateTimeFormat(lang, { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${iso.slice(0, 10)}T00:00:00Z`));
 
-function Conference({ saveId, club, conference: c, onDone }: { saveId: string; club: string; conference: PressConference; onDone: (n: 'saved' | 'declined') => void }) {
+function Conference({ saveId, club, conference: c, said, onDone }: { saveId: string; club: string; conference: PressConference; said: ReadonlySet<string>; onDone: (n: 'saved' | 'declined') => void }) {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage;
   const qc = useQueryClient();
@@ -122,7 +122,7 @@ function Conference({ saveId, club, conference: c, onDone }: { saveId: string; c
   });
   const pick = (i: number, tone: AnswerTone) => {
     setTones((x) => x.map((v, j) => (j === i ? tone : v)));
-    setAnswers((x) => x.map((v, j) => (j === i ? answerText(t, c.questions[i]!, tone, lang) : v)));
+    setAnswers((x) => x.map((v, j) => (j === i ? answerText(t, c.questions[i]!, tone, lang, said) : v)));
   };
   const any = answers.some((a) => a.trim());
   const aiOn = pressAiOn();

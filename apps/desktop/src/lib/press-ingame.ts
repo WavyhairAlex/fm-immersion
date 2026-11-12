@@ -8,7 +8,7 @@ import { useCareer } from './career';
 import { fmData } from './data';
 import { useHistory } from './fm-cache';
 import { useFmFolder } from './fm-sync';
-import { answerText, askedBy, pressKeyOf, usePressHeld, usePressQuestions } from './press';
+import { answerText, askedBy, pressKeyOf, recentAnswers, usePressHeld, usePressQuestions } from './press';
 
 /**
  * Conférence de presse dans FM27 : FM Immersion dépose la conférence du moment dans le dossier du plugin
@@ -33,7 +33,7 @@ export interface InGameConference {
 const dateLabel = (iso: string, lang?: string) => new Intl.DateTimeFormat(lang, { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${iso.slice(0, 10)}T00:00:00Z`));
 
 /** La conférence telle que le plugin l'affiche : tous les textes déjà rédigés dans la langue du joueur. */
-export function inGameConference(t: TFunction, c: PressConference, club: string, texts: string[], lang?: string): InGameConference {
+export function inGameConference(t: TFunction, c: PressConference, club: string, texts: string[], lang?: string, avoid?: ReadonlySet<string>): InGameConference {
   return {
     format: 'fmi-presse/1',
     key: c.key,
@@ -43,7 +43,7 @@ export function inGameConference(t: TFunction, c: PressConference, club: string,
       id: q.id,
       by: askedBy(t, q, club),
       text: texts[i] ?? '',
-      answers: answerTones(q).map((tone) => ({ tone, label: t(`press.tones.${tone}`), text: answerText(t, q, tone, lang) })),
+      answers: answerTones(q).map((tone) => ({ tone, label: t(`press.tones.${tone}`), text: answerText(t, q, tone, lang, avoid) })),
     })),
     ui: {
       free: t('press.ingame.free'),
@@ -100,7 +100,7 @@ export function usePressInGame() {
 
   // Dépose (ou retire) la conférence pour le plugin ; on attend la reformulation de l'IA si elle est en cours.
   const json = useMemo(
-    () => (!held ? undefined : pending ? (rewording ? undefined : JSON.stringify(inGameConference(t, pending, club, texts, lang), null, 1)) : null),
+    () => (!held ? undefined : pending ? (rewording ? undefined : JSON.stringify(inGameConference(t, pending, club, texts, lang, recentAnswers(held)), null, 1)) : null),
     [held, pending, rewording, t, club, texts, lang],
   );
   useEffect(() => {

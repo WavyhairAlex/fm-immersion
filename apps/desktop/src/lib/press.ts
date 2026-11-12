@@ -69,9 +69,41 @@ function vars(t: TFunction, q: PressQuestion, lang?: string): Record<string, unk
   };
 }
 
-export const questionText = (t: TFunction, q: PressQuestion, lang?: string) => t(`press.q.${questionKey(q)}.${outletOf(q)}`, vars(t, q, lang));
+/**
+ * Texte d'une question. Quand le coach a déjà répondu sur ce sujet, la presse le lui rappelle (« Vous disiez
+ * déjà… »), ou lui fait remarquer qu'il dit la même chose depuis plusieurs conférences.
+ */
+export const questionText = (t: TFunction, q: PressQuestion, lang?: string) => {
+  const v = vars(t, q, lang);
+  const question = t(`press.q.${questionKey(q)}.${outletOf(q)}`, v);
+  const echo = typeof q.params.echo === 'string' && q.params.echo ? q.params.echo : null;
+  if (!echo) return question;
+  const many = Number(q.params.echoTimes) >= 2;
+  return t(`press.q.${many ? 'echoMany' : 'echo'}.${outletOf(q) === 'tabloid' ? 'tabloid' : 'other'}`, { ...v, echo, times: q.params.echoTimes, question });
+};
 
-export const answerText = (t: TFunction, q: PressQuestion, tone: AnswerTone, lang?: string) => t(`press.a.${questionKey(q)}.${tone}`, vars(t, q, lang));
+/** Nombre maximal de versions d'une même réponse proposée (`<ton>`, `<ton>_2`, `<ton>_3`). */
+const ANSWER_VARIANTS = 3;
+
+/**
+ * Réponse proposée pour un ton : une des versions écrites pour ce sujet, en évitant celles que le coach a déjà
+ * données récemment (`avoid`), pour que la gazette ne cite pas la même phrase chaque semaine.
+ */
+export const answerText = (t: TFunction, q: PressQuestion, tone: AnswerTone, lang?: string, avoid?: ReadonlySet<string>) => {
+  const v = vars(t, q, lang);
+  const key = `press.a.${questionKey(q)}.${tone}`;
+  const all = [t(key, v), ...Array.from({ length: ANSWER_VARIANTS - 1 }, (_, i) => t(`${key}_${i + 2}`, { ...v, defaultValue: '' }))].filter((x) => x && !x.startsWith('press.a.'));
+  return all.find((x) => !avoid?.has(x.trim())) ?? all[0] ?? t(key, v);
+};
+
+/** Réponses données lors des dernières conférences : la presse les a déjà entendues. */
+export const recentAnswers = (held: readonly PressHeld[] | undefined, n = 8): Set<string> =>
+  new Set(
+    [...(held ?? [])]
+      .sort((a, b) => b.matchDate.localeCompare(a.matchDate))
+      .slice(0, n)
+      .flatMap((h) => h.answers.map((a) => a.text.trim())),
+  );
 
 /** Style de chaque rédaction, tel que décrit à l'IA. */
 const STYLE: Record<Outlet, string> = { local: 'quotidien local', radio: 'radio', tabloid: 'presse à scandale', tv: 'télé nationale' };

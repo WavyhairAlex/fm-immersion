@@ -3,7 +3,7 @@ import i18next from 'i18next';
 import { describe, expect, it } from 'vitest';
 import en from '../src/i18n/en.json';
 import fr from '../src/i18n/fr.json';
-import { answerText, askedBy, cleanQuestion, questionKey, questionText } from '../src/lib/press';
+import { answerText, askedBy, cleanQuestion, questionKey, questionText, recentAnswers } from '../src/lib/press';
 
 /** Une question de chaque sorte, avec toutes ses variantes (enjeu, issue, série). */
 const Q = (id: QuestionTopic, params: PressQuestion['params']): PressQuestion => ({ id, params });
@@ -106,4 +106,40 @@ describe("questions reformulées par l'IA", () => {
     expect(cleanQuestion('Solovyov a marqué 3 buts. Un mot ?', base)).toBeNull();
     expect(cleanQuestion(`Solovyov a marqué 2 buts. ${'Vraiment, '.repeat(30)}un mot ?`, base)).toBeNull();
   });
+});
+
+describe('réponses variées et presse qui se souvient', () => {
+  it('propose une autre version de la réponse quand le coach l’a déjà donnée', async () => {
+    const i18n = i18next.createInstance();
+    await i18n.init({ lng: 'fr', resources: { fr: { translation: fr } }, interpolation: { escapeValue: false } });
+    const q = Q('result', { outcome: 'W', opponent: 'Nitra', goalsFor: 2, goalsAgainst: 1, competition: '2. liga', home: 0 });
+    const first = answerText(i18n.t, q, 'praise', 'fr');
+    expect(first).toBe('Les joueurs ont été remarquables ce soir. Cette victoire leur appartient.');
+    const said = recentAnswers([{ kind: 'post', matchDate: '2026-10-01', opponent: 'Genk', questions: [], answers: [{ question: 'result', tone: 'praise', text: first }] }]);
+    const second = answerText(i18n.t, q, 'praise', 'fr', said);
+    expect(second).not.toBe(first);
+    expect(second).not.toContain('press.a.');
+    // Toutes les versions déjà dites : on revient à la première plutôt que de ne rien proposer.
+    const all = new Set([first, second, answerText(i18n.t, q, 'praise', 'fr', new Set([first, second]))]);
+    expect(answerText(i18n.t, q, 'praise', 'fr', all)).toBe(first);
+    // Un sujet sans autre version garde sa réponse unique.
+    const linked = Q('linked', { other: 'Lyon' });
+    const only = answerText(i18n.t, linked, 'deny', 'fr');
+    expect(answerText(i18n.t, linked, 'deny', 'fr', new Set([only]))).toBe(only);
+  });
+
+  for (const [lang, res] of [['fr', fr], ['en', en]] as const) {
+    it(`rappelle la phrase passée dans la question (${lang})`, async () => {
+      const i18n = i18next.createInstance();
+      await i18n.init({ lng: lang, resources: { [lang]: { translation: res } }, interpolation: { escapeValue: false } });
+      const base = { ...Q('contract', { name: 'Diallo', months: 2 }), outlet: 'local' as const };
+      const plain = questionText(i18n.t, base, lang);
+      const once = questionText(i18n.t, { ...base, params: { ...base.params, echo: 'On discute.', echoTimes: 1 } }, lang);
+      expect(once).toContain('On discute.');
+      expect(once.endsWith(plain)).toBe(true);
+      const many = questionText(i18n.t, { ...base, outlet: 'tabloid', params: { ...base.params, echo: 'On discute.', echoTimes: 3 } }, lang);
+      expect(many).toContain('3');
+      expect(many).not.toMatch(/\{\{|undefined/);
+    });
+  }
 });

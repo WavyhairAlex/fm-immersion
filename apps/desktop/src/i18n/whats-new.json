@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.187",
+    "date": "2026-11-12",
+    "fr": [
+      "Conférences de presse : les réponses proposées ont maintenant plusieurs versions, et celle que tu as déjà donnée récemment laisse la place à une autre. La gazette ne te cite plus avec la même phrase chaque semaine.",
+      "La presse se souvient de ce que tu as dit : quand un sujet revient (un contrat, une blessure, un joueur qui fait la tête), elle te rappelle ta dernière réponse, et te fait remarquer si tu répètes la même depuis plusieurs conférences."
+    ],
+    "en": [
+      "Press conferences: suggested answers now come in several versions, and one you gave recently makes way for another. The gazette no longer quotes you with the same sentence every week.",
+      "The press remembers what you said: when a topic comes back (a contract, an injury, an unhappy player), it reminds you of your last answer, and points it out if you've been repeating it for several conferences."
+    ]
+  },
+  {
     "version": "0.1.186",
     "date": "2026-11-12",
     "fr": [
