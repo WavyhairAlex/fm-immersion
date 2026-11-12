@@ -165,3 +165,30 @@ describe('conférences variées', () => {
     expect(answerTones({ id: 'linked', params: {} })).toEqual(['deny', 'deflect', 'tease']);
   });
 });
+
+describe('conférences : pas de doublon ni de sujet répété', () => {
+  const held = (kind: 'pre' | 'post', matchDate: string, opponent: string, ids: string[]) => ({
+    kind,
+    matchDate,
+    opponent,
+    questions: ids.map((id) => ({ id, text: id })),
+    answers: [{ question: ids[0], tone: 'ambitious', text: "On n'a peur de personne. Si on joue notre football, on peut gagner." }],
+  }) as unknown as import('../src').PressHeld;
+
+  it("une seule conférence d'avant-match par affiche, même si la date annoncée glisse", () => {
+    const c = preMatchConference(history)!;
+    // Tenue la veille de la date calculée aujourd'hui (le jeu disait « Demain » deux jours de suite).
+    expect(preMatchConference(history, undefined, [held('pre', '2026-10-22', 'Anderlecht', ['stakes'])])).toBeNull();
+    expect(pendingConference(history, new Set(), [held('pre', '2026-10-22', 'Anderlecht', ['stakes'])])?.kind).toBe('post');
+    // Un autre adversaire, ou le même un mois plus tard : nouvelle conférence.
+    expect(preMatchConference(history, undefined, [held('pre', '2026-09-20', 'Anderlecht', ['stakes'])])?.key).toBe(c.key);
+  });
+
+  it('un sujet de la dernière conférence ne revient pas à la suivante', () => {
+    const plain = postMatchConference(history)!;
+    expect(plain.questions.some((q) => q.id === 'hero')).toBe(true);
+    const c = postMatchConference(history, [held('pre', '2026-10-15', 'Gand', ['stakes', 'hero'])])!;
+    expect(c.questions[0]!.id).toBe('result');
+    expect(c.questions.some((q) => q.id === 'hero')).toBe(false);
+  });
+});

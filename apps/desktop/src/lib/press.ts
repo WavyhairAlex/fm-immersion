@@ -76,8 +76,37 @@ export const answerText = (t: TFunction, q: PressQuestion, tone: AnswerTone, lan
 /** Style de chaque rédaction, tel que décrit à l'IA. */
 const STYLE: Record<Outlet, string> = { local: 'quotidien local', radio: 'radio', tabloid: 'presse à scandale', tv: 'télé nationale' };
 
-/** Longueur maximale d'une question reformulée par l'IA. */
-const MAX_QUESTION = 260;
+/** Longueur maximale d'une question reformulée par l'IA (une question de conférence est courte). */
+const MAX_QUESTION = 220;
+
+/** Question racontée au lieu d'être posée : « …, demande le journaliste », « vous demandez, impatient… ». */
+const NARRATED = /\b(demande|interroge|s['’]interroge|lance|s['’]enquiert|questionne|ajoute|poursuit|asks?|wonders?|inquires?)\s+(le|la|l['’]|un|une|the|a)\s*(journaliste|correspondant|correspondante|rédacteur|rédactrice|reporter|envoyée?|chroniqueur|chroniqueuse|journalist|correspondent)|\bvous demandez\b|\byou ask\b/i;
+/** Nom de rédaction : l'IA ne doit pas en inventer (« Radio Sportif », « Presse People »). */
+const OUTLET_NAME = /\b(Radio|Télé|TV|Presse|Journal|Gazette|Quotidien|Chaîne)\s+\p{Lu}/u;
+/** Contexte de match que l'IA ajoute volontiers sans le savoir. */
+const MATCH_CONTEXT = /\bmatch(s)? (aller|retour)\b|\b(first|second|return) leg\b/i;
+/** Formule d'adresse répétée à chaque question par certains modèles : en tête ou au milieu, puis en fin de question. */
+const ADDRESS_LEAD = /(^|[,.?!]\s+)(monsieur|madame)( l['’]entraîneur)?\s*,\s*/giu;
+const ADDRESS_TAIL = /,\s*(monsieur|madame)( l['’]entraîneur)?(?=\s*[?.!]|$)/giu;
+
+/**
+ * Question de l'IA nettoyée, ou null si elle doit être rejetée (la question toute faite reste alors) : sans
+ * l'étiquette de rédaction recopiée (« [télé nationale] »), sans guillemets autour ni formule d'adresse, posée
+ * directement (pas racontée), sans nom de rédaction ni contexte de match absents de la question de base, courte,
+ * avec les mêmes chiffres et scores.
+ */
+export function cleanQuestion(raw: string, base: string): string | null {
+  let s = raw.replace(/\s+/g, ' ').trim();
+  s = s.replace(/^\s*(\d+[.)]\s*)?\[[^\]]*\]\s*[:–-]?\s*/, '');
+  s = s.replace(/^["«“\s]+|["»”\s]+$/g, '').trim();
+  s = s.replace(ADDRESS_LEAD, '$1').replace(ADDRESS_TAIL, '').replace(/\s+([.,])/g, '$1').trim();
+  s = s.replace(/(^|[.?!]\s+)(\p{Ll})/gu, (_m, a: string, c: string) => a + c.toUpperCase());
+  if (!s || s.length > MAX_QUESTION) return null;
+  if (/[\[\]]/.test(s) || NARRATED.test(s)) return null;
+  if (OUTLET_NAME.test(s) && !OUTLET_NAME.test(base)) return null;
+  if (MATCH_CONTEXT.test(s) && !MATCH_CONTEXT.test(base)) return null;
+  return factsKept(s, base) ? s : null;
+}
 
 /**
  * Questions reformulées par l'IA du joueur, comme un journaliste les poserait. Chaque question doit garder ses
@@ -90,7 +119,8 @@ export async function rewordQuestions(club: string, c: PressConference, base: st
     `Tu es journaliste sportif en conférence de presse ${c.kind === 'pre' ? "d'avant-match" : "d'après-match"} avec l'entraîneur de ${club} (adversaire : ${c.opponent}), dans une partie de Football Manager.`,
     `Écris en ${LANG(lang)}.`,
     "Chaque question est posée par un journaliste d'une rédaction différente, indiquée entre crochets : garde son style (quotidien local : proche du club et factuel ; radio : direct et à chaud ; presse à scandale : provocateur, petites phrases ; télé nationale : solennel, grands enjeux).",
-    "Reformule chaque question avec tes mots, en vouvoyant l'entraîneur, une ou deux phrases. Garde le sens, les noms propres, les citations entre guillemets, les chiffres et les scores exactement ; n'ajoute aucun fait.",
+    "Reformule chaque question avec tes mots, en vouvoyant l'entraîneur : une ou deux phrases courtes, 30 mots au plus. Garde le sens, les noms propres, les citations entre guillemets, les chiffres et les scores exactement ; n'ajoute aucun fait (pas de « match aller » ou « retour », pas de contexte inventé).",
+    "Écris seulement la question, telle que le journaliste la pose : pas l'indication entre crochets, pas de nom de rédaction ni de journaliste, pas de « demande le journaliste », pas de guillemets autour, pas de « Monsieur l'entraîneur ».",
     "Pas de markdown, pas d'émoji.",
     'Réponds uniquement par un objet JSON : {"questions": ["…", "…"]}, dans le même ordre et en même nombre.',
   ].join('\n');
@@ -99,8 +129,9 @@ export async function rewordQuestions(club: string, c: PressConference, base: st
     try {
       const raw = await aiComplete(ai.provider, ai.model, system, prompt, true);
       const parsed = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1)) as { questions?: unknown };
-      const out = Array.isArray(parsed.questions) ? parsed.questions.map((x) => (typeof x === 'string' ? x.replace(/\s+/g, ' ').trim() : '')) : [];
-      if (out.length === base.length && out.every((x, i) => x && x.length <= MAX_QUESTION && factsKept(x, base[i]!))) return out;
+      const out = Array.isArray(parsed.questions) ? parsed.questions.map((x, i) => (typeof x === 'string' && base[i] ? cleanQuestion(x, base[i]) : null)) : [];
+      // Une question ratée garde son texte de base, les autres restent reformulées.
+      if (out.length === base.length && out.some((x) => x)) return out.map((x, i) => x ?? base[i]!);
     } catch (e) {
       console.warn('Conférence IA :', e);
     }

@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.186",
+    "date": "2026-11-12",
+    "fr": [
+      "Conférences de presse : une seule conférence d'avant-match par affiche, même quand le jeu change la date annoncée du match, et la presse ne te repose plus le même sujet deux conférences de suite.",
+      "Quand ton IA reformule les questions, elles restent courtes et directes : plus d'étiquette entre crochets, de rédaction inventée ni de « Monsieur l'entraîneur » à chaque phrase."
+    ],
+    "en": [
+      "Press conferences: only one pre-match conference per big match, even when the game moves the announced match date, and the press no longer asks you about the same topic two conferences in a row.",
+      "When your AI rewords the questions, they stay short and direct: no more labels in brackets, made-up outlets or \"Coach\" at every sentence."
+    ]
+  },
+  {
     "version": "0.1.185",
     "date": "2026-11-12",
     "fr": [
