@@ -1,4 +1,4 @@
-import { engineTier, POS_LABEL, teamInstructionCards, teamInstructionOf, type CoachPrefs, type EngineTier, type EngineValue, type FmPlayer, type PlanLetter, type Project, type ProjectCompat, type TacticEngine } from '@fm-immersion/module-fm';
+import { engineTier, POS_LABEL, type Reliability, teamInstructionCards, teamInstructionOf, type CoachPrefs, type EngineTier, type EngineValue, type FmPlayer, type PlanLetter, type Project, type ProjectCompat, type TacticEngine } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
@@ -286,6 +286,19 @@ export function Fit({ value }: { value: number | null | undefined }) {
   if (value == null) return <span className="text-canard/40">–</span>;
   const cls = value >= 14 ? 'bg-eau-fonce text-white' : value >= 12 ? 'bg-eau/40 text-canard' : value >= 10 ? 'bg-canard/10 text-canard' : 'bg-corail/20 text-canard';
   return <span className={`num-pill ${cls}`}>{fitPct(value)}</span>;
+}
+
+/** Fiabilité des données derrière une analyse (FM Notebook) : niveau et raisons, pour nuancer les conseils. */
+export function ReliabilityLine({ r }: { r: Reliability }) {
+  const { t } = useTranslation();
+  const cls = r.level === 'high' ? 'text-eau-fonce' : r.level === 'medium' ? 'text-orange-fonce' : 'text-corail';
+  const reason = (x: Reliability['reasons'][number]) => t(`fm.reliability.reason.${x.id}`, x as unknown as Record<string, unknown>);
+  return (
+    <p className="mt-2 rounded-lg bg-canard/5 px-3 py-2 text-xs text-brun">
+      <span className={`font-bold ${cls}`}>● {t('fm.reliability.label', { level: t(`fm.reliability.level.${r.level}`) })}</span>
+      {r.reasons.length > 0 && <> · {r.reasons.map(reason).join(' · ')}</>}
+    </p>
+  );
 }
 
 /** Choix du coach (style aimé, schéma, niveau visé), partagés entre « Mon projet » et « Cibles », par partie. */

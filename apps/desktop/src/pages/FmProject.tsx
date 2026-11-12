@@ -1,10 +1,10 @@
-import { FORMATIONS, POS_LABEL, TARGETS, buildProject, evolutionPlan, recruitAttrs, styleOfGameTactic, switchAnalysis, trainingFor, type FmPlayer, type FmSnapshot, type SquadAt } from '@fm-immersion/module-fm';
+import { reliability, FORMATIONS, POS_LABEL, TARGETS, buildProject, evolutionPlan, recruitAttrs, styleOfGameTactic, switchAnalysis, trainingFor, type FmPlayer, type FmSnapshot, type SquadAt } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
 import { useLeaving } from './FmLeaving';
 import { useTacticEngine } from './FmTactic';
-import { Empty, Fit, Kpi, Panel, Pos, Tag, useCoach, useNames, More, PlayerLink, SectionTabs } from './FmUi';
+import { Empty, Fit, Kpi, Panel, Pos, Tag, useCoach, useNames, More, PlayerLink, SectionTabs, ReliabilityLine } from './FmUi';
 
 const STATUS_TONE = { ready: 'good', develop: 'info', recruit: 'bad' } as const;
 const ICON = { good: '✓', warn: '~', bad: '✗' } as const;
@@ -85,6 +85,7 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
                   </label>
                 </div>
                 <p className="mt-2 text-xs text-brun">{t('fm.proj.help', { forms: pr.forms.join(', ') })}</p>
+                <ReliabilityLine r={reliability(players, { snapshots: history.length })} />
                 <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   <Kpi label={t('fm.proj.ready')} value={`${count('ready')} / 11`} sub={t('fm.proj.readySub', { value: nf1.format(pr.target / 5) })} />
                   <Kpi label={t('fm.proj.develop')} value={count('develop')} sub={t('fm.proj.developSub')} />

@@ -3568,6 +3568,21 @@
         "corners": "Corners",
         "longThrows": "Long throws"
       }
+    },
+    "reliability": {
+      "label": "Data reliability: {{level}}",
+      "level": {
+        "high": "high",
+        "medium": "medium",
+        "low": "low"
+      },
+      "reason": {
+        "partial": "partial attributes ({{pct}}% known)",
+        "small": "small squad ({{count}} players read)",
+        "noPa": "potential from staff stars (tick “Read CA/PA” for the real PA)",
+        "shortHistory": "a single snapshot: progression from age, not measured",
+        "targetsUnknown": "{{count}} of {{total}} targets under 50% known: their rating may move"
+      }
     }
   },
   "modes": {

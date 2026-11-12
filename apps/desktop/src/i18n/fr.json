@@ -3568,6 +3568,21 @@
         "corners": "Corners",
         "longThrows": "Touches longues"
       }
+    },
+    "reliability": {
+      "label": "Fiabilité des données : {{level}}",
+      "level": {
+        "high": "élevée",
+        "medium": "moyenne",
+        "low": "faible"
+      },
+      "reason": {
+        "partial": "attributs partiels ({{pct}} % connus)",
+        "small": "effectif réduit ({{count}} joueurs lus)",
+        "noPa": "potentiel d'après les étoiles du staff (coche « Lire le CA/PA » pour le PA réel)",
+        "shortHistory": "un seul instantané : progression d'après l'âge, pas mesurée",
+        "targetsUnknown": "{{count}} cibles sur {{total}} connues à moins de 50 % : leur note peut bouger"
+      }
     }
   },
   "modes": {

@@ -54,6 +54,7 @@ export * from './subs';
 export * from './rules';
 export * from './registration';
 export * from './takers';
+export * from './reliability';
 export * from './results';
 export * from './replacement';
 export * from './needs';

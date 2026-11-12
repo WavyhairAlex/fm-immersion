@@ -1,4 +1,4 @@
-import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, POS_ORDER, lineOf, type Line, type PosCode, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type Project, type Target, type TacticEngine, teamPlan, storedTargets, type TeamPlanLimits, marketModel, bestSlotFit, targetPrice, roleCeiling, valueScore, slotFit, registrationContext, registrationCheck, regStatus, signingBlock, type RegistrationContext, type PriceVerdict, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
+import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, POS_ORDER, lineOf, type Line, type PosCode, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type Project, type Target, type TacticEngine, teamPlan, storedTargets, type TeamPlanLimits, marketModel, bestSlotFit, targetPrice, roleCeiling, valueScore, slotFit, registrationContext, registrationCheck, regStatus, signingBlock, type RegistrationContext, reliability, type PriceVerdict, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -9,7 +9,7 @@ import { useTacticEngine } from './FmTactic';
 import { LeaveButton, useLeaving } from './FmLeaving';
 import { NeedsPanel } from './FmNeeds';
 import { DivisionLevelPanel, ReplacementFinder } from './FmReplacement';
-import { CompatTag, EngineTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone, More, PlayerLink, Chips } from './FmUi';
+import { CompatTag, EngineTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone, More, PlayerLink, Chips, ReliabilityLine } from './FmUi';
 
 export const TONE: Record<MercatoVerdict, Tone> = { sell: 'bad', release: 'bad', loan: 'warn', extend: 'warn', develop: 'good', replace: 'warn', backup: 'info', core: 'good' };
 /** Groupes affichés en détail : ce qui demande une décision au mercato. */
@@ -53,7 +53,7 @@ function PlanRows({ rows }: { rows: PlanRow[] }) {
  * Le plan du mercato, hiérarchisé : 1) la priorité, en grand, avec l'argent disponible ; 2) les décisions regroupées
  * par type, dans l'ordre où les prendre (une ligne par groupe) ; 3) au clic, chaque joueur ou poste ; le reste est replié.
  */
-function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked, reg }: { r: MercatoReport; pr: Project | null; engine: TacticEngine; pool: Target[]; needs: RecruitNeed[]; fin: ClubFinances | null; gameDate: string; onMarked: (id: string) => void; reg: RegistrationContext | null }) {
+function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked, reg, snapshots }: { r: MercatoReport; pr: Project | null; engine: TacticEngine; pool: Target[]; needs: RecruitNeed[]; fin: ClubFinances | null; gameDate: string; onMarked: (id: string) => void; reg: RegistrationContext | null; snapshots: number }) {
   // Liste d'inscription : effectif qui reste (les partants signalés n'y sont plus).
   const squad = useMemo(() => r.advice.map((a) => a.player), [r]);
   const regCheck = useMemo(() => (reg ? registrationCheck(squad, (p) => regStatus({ id: p.id, nationality: reg.nationality.get(p.id) }, reg.elig, reg.country), reg.rules) : null), [squad, reg]);
@@ -168,7 +168,7 @@ function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked, reg 
       )}
 
       {/* 2. Le niveau du onze face à la note visée, et l'argent réparti pour combler l'écart. */}
-      {pr && <TeamTarget pr={pr} engine={engine} pool={pool} limits={limits} blockOf={reg && regCheck ? (p) => signingBlock(regCheck, regStatus(p, reg.elig, reg.country), p.age) : undefined} />}
+      {pr && <TeamTarget pr={pr} engine={engine} pool={pool} limits={limits} squad={squad} snapshots={snapshots} blockOf={reg && regCheck ? (p) => signingBlock(regCheck, regStatus(p, reg.elig, reg.country), p.age) : undefined} />}
 
       {reg && regCheck && <Registration reg={reg} c={regCheck} />}
 
@@ -216,7 +216,8 @@ function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked, reg 
  * les recrues abordables (parmi tes cibles suivies) qui font monter la moyenne, de la plus utile à la moins utile,
  * jusqu'à passer la barre.
  */
-function TeamTarget({ pr: pr0, engine: engine0, pool, limits, blockOf }: { pr: Project; engine: TacticEngine; pool: Target[]; limits: TeamPlanLimits; blockOf?: (p: Target) => 'full' | 'nonEu' | null }) {
+function TeamTarget({ pr: pr0, engine: engine0, pool, limits, blockOf, squad, snapshots }: { pr: Project; engine: TacticEngine; pool: Target[]; limits: TeamPlanLimits; blockOf?: (p: Target) => 'full' | 'nonEu' | null; squad: FmPlayer[]; snapshots: number }) {
+  const rel = useMemo(() => reliability(squad, { snapshots, targets: pool.map((p) => ({ knowledge: p.scout?.knowledge ?? null })) }), [squad, snapshots, pool]);
   // Notes absolues (attributs seuls, comme FM Notebook) : les étoiles du jeu sont relatives à l'effectif et ne disent
   // pas si une recrue d'un autre club apporte quelque chose.
   const { engine, pr } = useMemo(() => {
@@ -321,6 +322,8 @@ function TeamTarget({ pr: pr0, engine: engine0, pool, limits, blockOf }: { pr: P
         {limits.wageRoom != null && <> · {t('fm.merc.target.wageCap', { amount: f.money(limits.wageRoom) })}</>} · {t('fm.merc.target.pool', { count: pool.length })}
         {rows.length > 0 && !done && <> · {t('fm.merc.target.spent', { amount: f.money(rows.reduce((a, u) => a + (u.price ?? 0), 0)), wages: f.money(rows.reduce((a, u) => a + (u.wage ?? 0), 0)) })}</>}
       </p>
+
+      <ReliabilityLine r={rel} />
 
       {/* Une seule liste de cibles, chacune avec son statut : dans le plan, bonne affaire, trop chère, prix à chiffrer. */}
       {done && <p className="mt-3 text-sm text-brun">{t('fm.merc.target.doneText')}</p>}
@@ -752,7 +755,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
 
   return (
     <div className="space-y-4">
-      <MercatoPlan r={r} pr={pr} engine={engine} pool={pool} needs={needs?.needs ?? []} fin={fin} gameDate={gameDate} onMarked={setJustMarked} reg={reg} />
+      <MercatoPlan r={r} pr={pr} engine={engine} pool={pool} needs={needs?.needs ?? []} fin={fin} gameDate={gameDate} onMarked={setJustMarked} reg={reg} snapshots={history.length} />
       {/* Le reste (jeunes, recherche de remplaçants, niveau de la division…) replié : l'écran tient sur une page. */}
       <details className="group">
         <summary className="cursor-pointer text-sm font-bold text-orange-fonce hover:underline">
