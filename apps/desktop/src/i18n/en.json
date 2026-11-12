@@ -1994,8 +1994,6 @@
         "detailClose": "Fold the detail ▴"
       },
       "plan": {
-        "priority": "Your priority",
-        "next": "Then, in order",
         "decisions": "Your decisions, in order",
         "verb": {
           "extendUrgent": "Extend soon",
@@ -2018,13 +2016,36 @@
         "tightTitle": "Tight finances: sell before you sign",
         "tightText": "No purchases possible. Look for free agents or loans, and start by making room.",
         "calmTitle": "Nothing urgent in the transfer window",
-        "calmText": "Your squad holds up: keep an eye on contracts and youngsters.",
-        "money": {
-          "transfer": "Transfer budget {{amount}}",
-          "wageOver": "wage bill {{amount}} over budget per month",
-          "wageLeft": "wage room {{amount}} per month",
-          "balance": "club balance {{amount}}"
-        }
+        "calmText": "Your squad holds up: keep an eye on contracts and youngsters."
+      },
+      "view": {
+        "title": "Your squad going forward",
+        "summary": "{{total}} players: {{stay}} stay, {{extend}} to extend, {{leave}} on the way out",
+        "needs_one": "{{count}} position to fill",
+        "needs_other": "{{count}} positions to fill",
+        "needsUrgent_one": "{{count}} a priority",
+        "needsUrgent_other": "{{count}} priorities",
+        "legend": "Legend",
+        "status": {
+          "stay": "Stays",
+          "upgrade": "Stays, to replace in time",
+          "extend": "To extend (contract end)",
+          "leave": "On the way out",
+          "need": "Position to fill"
+        },
+        "lineCount": "{{kept}} kept of {{total}}",
+        "toRecruit": "to sign",
+        "young": "youngster",
+        "marked": "marked as leaving",
+        "kpi": {
+          "transfer": "Transfer budget",
+          "wage": "Wage room",
+          "perMonth": "per month",
+          "income": "Possible sales",
+          "incomeSub": "wages freed: {{wages}}",
+          "balance": "Club balance"
+        },
+        "noNeeds": "no position to fill"
       }
     },
     "stats": {

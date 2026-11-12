@@ -1994,8 +1994,6 @@
         "detailClose": "Replier le détail ▴"
       },
       "plan": {
-        "priority": "Ta priorité",
-        "next": "Ensuite, dans l'ordre",
         "decisions": "Tes décisions, dans l'ordre",
         "verb": {
           "extendUrgent": "Prolonger vite",
@@ -2018,13 +2016,36 @@
         "tightTitle": "Finances serrées : vends avant de recruter",
         "tightText": "Pas d'achat possible. Cherche des joueurs libres ou en prêt, et commence par faire de la place.",
         "calmTitle": "Rien d'urgent au mercato",
-        "calmText": "Ton effectif tient la route : garde un œil sur les contrats et les jeunes.",
-        "money": {
-          "transfer": "Budget transferts {{amount}}",
-          "wageOver": "masse salariale {{amount}} au-dessus du budget par mois",
-          "wageLeft": "marge salariale {{amount}} par mois",
-          "balance": "solde du club {{amount}}"
-        }
+        "calmText": "Ton effectif tient la route : garde un œil sur les contrats et les jeunes."
+      },
+      "view": {
+        "title": "Ton effectif pour la suite",
+        "summary": "{{total}} joueurs : {{stay}} restent, {{extend}} à prolonger, {{leave}} sur le départ",
+        "needs_one": "{{count}} poste à pourvoir",
+        "needs_other": "{{count}} postes à pourvoir",
+        "needsUrgent_one": "dont {{count}} prioritaire",
+        "needsUrgent_other": "dont {{count}} prioritaires",
+        "legend": "Légende",
+        "status": {
+          "stay": "Reste",
+          "upgrade": "Reste, à remplacer à terme",
+          "extend": "À prolonger (fin de contrat)",
+          "leave": "Sur le départ",
+          "need": "Poste à pourvoir"
+        },
+        "lineCount": "{{kept}} gardés sur {{total}}",
+        "toRecruit": "à recruter",
+        "young": "jeune",
+        "marked": "signalé partant",
+        "kpi": {
+          "transfer": "Budget transferts",
+          "wage": "Marge salariale",
+          "perMonth": "par mois",
+          "income": "Ventes possibles",
+          "incomeSub": "salaires libérés : {{wages}}",
+          "balance": "Solde du club"
+        },
+        "noNeeds": "aucun poste à pourvoir"
       }
     },
     "stats": {

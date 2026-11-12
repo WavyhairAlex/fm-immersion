@@ -1,4 +1,4 @@
-import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
+import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, POS_ORDER, lineOf, type Line, type PosCode, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -23,7 +23,6 @@ type PlanKind = 'extendUrgent' | 'recruit1' | 'sell' | 'release' | 'recruit2' | 
 /** Ordre de priorité des groupes : du plus pressé au confort de banc. */
 const PLAN_ORDER: PlanKind[] = ['extendUrgent', 'recruit1', 'sell', 'release', 'recruit2', 'loan', 'extend', 'recruit3'];
 /** Au-delà de ce rang, des finances serrées passent en tête (rien de plus pressé qu'elles). */
-const MONEY_FIRST_FROM = 2;
 type PlanGroup = { kind: PlanKind; rows: PlanRow[]; names: string[]; why: string };
 
 /** Les décisions d'un groupe, une par ligne ; un clic ouvre la ligne sur place. */
@@ -133,60 +132,44 @@ function MercatoPlan({ r, needs, fin, gameDate, onMarked }: { r: MercatoReport; 
   ].filter((g) => g.rows.length);
 
   const tight = fin ? financeState(fin).tight : false;
-  const topRank = groups.length ? PLAN_ORDER.indexOf(groups[0]!.kind) : PLAN_ORDER.length;
-  const moneyFirst = tight && topRank >= MONEY_FIRST_FROM;
-  const top = moneyFirst ? null : groups[0] ?? null;
-  const list = top ? groups.slice(1) : groups;
   const listNames = (xs: string[]) => (xs.length <= 3 ? xs.join(', ') : t('fm.merc.plan.andMore', { list: xs.slice(0, 3).join(', '), count: xs.length - 3 }));
-  const money = fin
-    ? [
-        t('fm.merc.plan.money.transfer', { amount: f.money(fin.transferBudget) }),
-        fin.wageRoom == null ? null : t(fin.wageRoom < 0 ? 'fm.merc.plan.money.wageOver' : 'fm.merc.plan.money.wageLeft', { amount: f.money(Math.abs(fin.wageRoom)) }),
-        t('fm.merc.plan.money.balance', { amount: f.money(fin.balance) }),
-      ].filter(Boolean)
-    : [];
+  const kpis = [
+    fin && <Kpi key="tb" label={t('fm.merc.view.kpi.transfer')} value={f.money(fin.transferBudget)} />,
+    fin && fin.wageRoom != null && <Kpi key="wr" label={t('fm.merc.view.kpi.wage')} value={f.money(fin.wageRoom)} tone={fin.wageRoom < 0 ? 'bad' : undefined} sub={t('fm.merc.view.kpi.perMonth')} />,
+    <Kpi key="in" label={t('fm.merc.view.kpi.income')} value={f.money(r.income)} sub={t('fm.merc.view.kpi.incomeSub', { wages: f.money(r.wagesFreed) })} />,
+    fin && <Kpi key="bal" label={t('fm.merc.view.kpi.balance')} value={f.money(fin.balance)} tone={(fin.balance ?? 0) < 0 ? 'bad' : undefined} />,
+  ].filter(Boolean);
 
   return (
     <div className="space-y-4">
-      {/* 1. La priorité : une seule chose, en grand. */}
-      <section className="rounded-xl bg-canard p-5 text-white" aria-labelledby="merc-priority">
-        <p className="text-xs font-extrabold uppercase tracking-widest text-orange">{t('fm.merc.plan.priority')}</p>
-        <h2 id="merc-priority" className="mt-1 text-2xl font-semibold leading-tight text-white">
-          {top ? `${t(`fm.merc.plan.verb.${top.kind}`)} : ${listNames(top.names)}` : moneyFirst ? t('fm.merc.plan.tightTitle') : t('fm.merc.plan.calmTitle')}
-        </h2>
-        <p className="mt-1 max-w-3xl text-white/80">{top ? top.why : moneyFirst ? t('fm.merc.plan.tightText') : t('fm.merc.plan.calmText')}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-          {top ? (
-            <button type="button" className="btn-primary px-4 py-1.5 text-sm" onClick={() => setOpen(open === top.kind ? null : top.kind)}>
-              {t('fm.merc.plan.see', { count: top.rows.length })}
-            </button>
-          ) : moneyFirst ? (
-            <button type="button" className="btn-primary px-4 py-1.5 text-sm" onClick={() => navigate(clubPath('finances'))}>
-              {t('fm.merc.plan.seeFinances')}
-            </button>
-          ) : null}
-          {money.length > 0 && <p className="text-sm text-white/70">{money.join(' · ')}</p>}
-        </div>
-        {top && open === top.kind && (
-          <div className="mt-3 overflow-hidden rounded-lg bg-white text-canard">
-            <PlanRows rows={top.rows} />
-          </div>
-        )}
-      </section>
+      {/* 1. L'argent disponible, en un coup d'œil. */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{kpis}</div>
+      {tight && (
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border-l-4 border-ambre bg-ambre/10 px-4 py-2 text-sm">
+          <span className="font-bold">{t('fm.merc.plan.tightTitle')}</span>
+          <span className="text-brun">{t('fm.merc.plan.tightText')}</span>
+          <button type="button" className="font-bold text-orange-fonce hover:underline" onClick={() => navigate(clubPath('finances'))}>
+            {t('fm.merc.plan.seeFinances')}
+          </button>
+        </p>
+      )}
 
-      {/* 2. Ensuite : un groupe par ligne, dans l'ordre ; 3. le détail s'ouvre sous le groupe. */}
-      {list.length > 0 && (
+      {/* 2. Vue d'ensemble : tout l'effectif par ligne, avec ce qui reste, part, se prolonge et manque. */}
+      <SquadOverview r={r} needs={needs} />
+
+      {/* 3. Les décisions, dans l'ordre ; le détail s'ouvre sous le groupe. */}
+      {groups.length > 0 ? (
         <section className="card !p-0" aria-labelledby="merc-next">
           <h2 id="merc-next" className="px-4 pb-2 pt-4 text-xs font-extrabold uppercase tracking-widest text-canard">
-            {t(top ? 'fm.merc.plan.next' : 'fm.merc.plan.decisions')}
+            {t('fm.merc.plan.decisions')}
           </h2>
           <ol className="divide-y divide-canard/10 border-t border-canard/10">
-            {list.map((g, i) => {
+            {groups.map((g, i) => {
               const isOpen = open === g.kind;
               return (
                 <li key={g.kind}>
                   <button type="button" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : g.kind)} className={`flex w-full items-center gap-4 px-4 py-3 text-left hover:bg-orange-clair/40 ${isOpen ? 'bg-orange-clair/40' : ''}`}>
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-canard/10 text-sm font-extrabold tabular-nums">{i + (top ? 2 : 1)}</span>
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-canard/10 text-sm font-extrabold tabular-nums">{i + 1}</span>
                     <span className="min-w-0 flex-1">
                       <span className="block font-bold">
                         {t(`fm.merc.plan.verb.${g.kind}`)} · <span className="font-normal">{listNames(g.names)}</span>
@@ -201,8 +184,102 @@ function MercatoPlan({ r, needs, fin, gameDate, onMarked }: { r: MercatoReport; 
             })}
           </ol>
         </section>
+      ) : (
+        <p className="card text-sm">
+          <span className="font-bold">{t('fm.merc.plan.calmTitle')}</span> <span className="text-brun">{t('fm.merc.plan.calmText')}</span>
+        </p>
       )}
     </div>
+  );
+}
+
+type Status = 'stay' | 'upgrade' | 'extend' | 'leave';
+const STATUS_ORDER: Status[] = ['stay', 'upgrade', 'extend', 'leave'];
+const STATUS_OF: Record<MercatoVerdict, Status> = { core: 'stay', develop: 'stay', backup: 'stay', replace: 'upgrade', extend: 'extend', sell: 'leave', release: 'leave', loan: 'leave' };
+const CHIP: Record<Status, string> = {
+  stay: 'border-eau-fonce/40 bg-eau/15',
+  upgrade: 'border-ambre bg-ambre/15',
+  extend: 'border-orange-fonce/50 bg-orange-clair',
+  leave: 'border-corail/50 bg-corail/10 text-canard/70 line-through decoration-corail/60',
+};
+const LINES: Line[] = ['GB', 'DEF', 'MIL', 'ATT'];
+
+/** Vue d'ensemble de l'effectif : une ligne par secteur, chaque joueur avec son sort au mercato, et les postes à pourvoir. */
+function SquadOverview({ r, needs }: { r: MercatoReport; needs: RecruitNeed[] }) {
+  const { t } = useTranslation();
+  const f = useFormat();
+  const reason = useReason();
+  type Item = { id: string; name: string; pos: PosCode | null; status: Status; note: string; title: string; rank: number };
+  const items: Item[] = [
+    ...r.advice.map((a) => {
+      const status = STATUS_OF[a.verdict];
+      const pos = a.project.pos ?? a.now.pos ?? a.player.positions[0] ?? null;
+      const note =
+        status === 'extend' ? (a.player.contractEnd ? f.date(a.player.contractEnd) : '') : status === 'leave' || status === 'upgrade' ? t(`fm.merc.verdict.${a.verdict}`) : a.verdict === 'develop' ? t('fm.merc.view.young') : '';
+      return { id: a.player.id, name: a.player.name, pos, status, note, title: a.reasons.map(reason).join(' · '), rank: a.project.rank ?? a.now.rank ?? 99 };
+    }),
+    ...r.leaving.map((p) => ({ id: p.id, name: p.name, pos: p.positions[0] ?? null, status: 'leave' as Status, note: t('fm.merc.view.marked'), title: '', rank: 99 })),
+  ];
+  const lineItems = (l: Line) =>
+    items
+      .filter((x) => x.pos && lineOf(x.pos) === l)
+      .sort((x, y) => STATUS_ORDER.indexOf(x.status) - STATUS_ORDER.indexOf(y.status) || POS_ORDER.indexOf(x.pos!) - POS_ORDER.indexOf(y.pos!) || x.rank - y.rank);
+  const lineNeeds = (l: Line) => needs.filter((n) => lineOf(n.pos) === l).sort((x, y) => x.priority - y.priority);
+  const count = (s: Status) => items.filter((x) => x.status === s).length;
+  const urgentNeeds = needs.filter((n) => n.priority < 3).length;
+
+  return (
+    <section className="card" aria-labelledby="merc-view">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="merc-view" className="font-display text-xl font-semibold">{t('fm.merc.view.title')}</h2>
+        <p className="text-sm text-brun">
+          {t('fm.merc.view.summary', { total: items.length, stay: count('stay') + count('upgrade'), extend: count('extend'), leave: count('leave') })} · {needs.length ? t('fm.merc.view.needs', { count: needs.length }) : t('fm.merc.view.noNeeds')}
+          {urgentNeeds > 0 && <> ({t('fm.merc.view.needsUrgent', { count: urgentNeeds })})</>}
+        </p>
+      </div>
+      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-brun" aria-label={t('fm.merc.view.legend')}>
+        {STATUS_ORDER.map((s) => (
+          <li key={s} className="flex items-center gap-1.5">
+            <span className={`inline-block h-3 w-5 rounded border ${CHIP[s]}`} /> {t(`fm.merc.view.status.${s}`)}
+          </li>
+        ))}
+        <li className="flex items-center gap-1.5">
+          <span className="inline-block h-3 w-5 rounded border border-dashed border-canard/50" /> {t('fm.merc.view.status.need')}
+        </li>
+      </ul>
+      <div className="mt-3 divide-y divide-canard/10 border-t border-canard/10">
+        {LINES.map((l) => {
+          const xs = lineItems(l);
+          const ns = lineNeeds(l);
+          const kept = xs.filter((x) => x.status !== 'leave').length;
+          return (
+            <div key={l} className="grid gap-2 py-3 sm:grid-cols-[9rem_1fr]">
+              <div>
+                <p className="font-bold">{t(`fm.line.${l}`)}</p>
+                <p className="text-xs text-brun">{t('fm.merc.view.lineCount', { kept, total: xs.length })}</p>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {xs.map((x) => (
+                  <span key={x.id} title={x.title || undefined} className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-sm ${CHIP[x.status]}`}>
+                    {x.pos && <span className="text-[11px] font-bold text-canard/60 no-underline">{POS_LABEL[x.pos]}</span>}
+                    <span className="font-semibold">{x.name}</span>
+                    {x.note && <span className="text-xs text-brun">{x.note}</span>}
+                  </span>
+                ))}
+                {ns.map((n, i) => (
+                  <span key={`n-${n.pos}-${i}`} className={`inline-flex items-center gap-1.5 rounded-md border border-dashed px-2 py-1 text-sm ${n.priority === 1 ? 'border-corail text-corail' : n.priority === 2 ? 'border-orange-fonce text-orange-fonce' : 'border-canard/40 text-brun'}`}>
+                    <span className="text-[11px] font-bold">{POS_LABEL[n.pos]}</span>
+                    <span className="font-semibold">{t('fm.merc.view.toRecruit')}</span>
+                    <span className="text-xs">{t(`fm.needs.priority.${n.priority}`)}</span>
+                  </span>
+                ))}
+                {!xs.length && !ns.length && <span className="text-sm text-brun">–</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
