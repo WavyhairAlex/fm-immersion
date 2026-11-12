@@ -5963,53 +5963,115 @@
       "followUp_again": {
         "tabloid": "Last time, against {{pastOpponent}}, you said: “{{quote}}” Time to prove it?",
         "radio": "“{{quote}}”: that was your line after {{pastOpponent}}. Does it still hold for this game?"
+      },
+      "echo": {
+        "other": "On this subject, you already told us: \"{{echo}}\" {{question}}",
+        "tabloid": "Last time you gave us: \"{{echo}}\" Should we still believe it? {{question}}"
+      },
+      "echoMany": {
+        "other": "\"{{echo}}\": that's what you've been saying for {{times}} press conferences. {{question}}",
+        "tabloid": "\"{{echo}}\", you've been repeating it for {{times}} press conferences. Got anything else to say? {{question}}"
       }
     },
     "a": {
       "stakes_cup": {
         "ambitious": "We want to go all the way in this cup. We'll pick a team to win.",
         "humble": "Every round is a trap. We respect this opponent and we'll play our game.",
-        "humour": "You win a cup by winning every round. I haven't found another way yet."
+        "humour": "You win a cup by winning every round. I haven't found another way yet.",
+        "ambitious_2": "We won't sacrifice this game. A cup is a chance to make club history.",
+        "ambitious_3": "My team will be competitive. I want to get through this round.",
+        "humble_2": "There are no small opponents in a cup. We'll take it very seriously.",
+        "humble_3": "They'll play the game of their lives. We have to match that.",
+        "humour_2": "I was asked if I'd rotate. Mostly I'll rotate the ball.",
+        "humour_3": "A cup comes down to one game. I'd rather it was ours."
       },
       "stakes_europe": {
         "ambitious": "We wait all year for nights like these. We're going there to win, not to make up the numbers.",
         "humble": "We're discovering this level. We'll learn, and we'll fight.",
-        "humour": "I told the players: in Europe the ball is the same. It just moves faster."
+        "humour": "I told the players: in Europe the ball is the same. It just moves faster.",
+        "ambitious_2": "We worked hard to live nights like this. We won't settle for taking part.",
+        "ambitious_3": "I want Europe to discover this team.",
+        "humble_2": "It's another level, we know that. We'll learn fast and give everything.",
+        "humble_3": "We don't have the experience of these games. We have the hunger, and that's a lot already.",
+        "humour_2": "I've checked everyone's passport. The rest we'll see on the pitch.",
+        "humour_3": "The stadiums are bigger in Europe. The goals are still the same size."
       },
       "stakes_top": {
         "ambitious": "We're not afraid of anyone. If we play our football, we can win this.",
         "humble": "They have a very good team. We'll have to be perfect.",
-        "humour": "If we win, it was a big game. If we lose, the season goes on. I prefer the first option."
+        "humour": "If we win, it was a big game. If we lose, the season goes on. I prefer the first option.",
+        "ambitious_2": "This is the kind of game that shows what a team is made of. We're going to go for the win.",
+        "ambitious_3": "They're ahead, so it's up to us to go and get them. We won't go there to defend.",
+        "humble_2": "They're ahead in the table for a reason. We'll need a very big performance.",
+        "humble_3": "We're not favourites, and that suits us fine. We'll play without pressure.",
+        "humour_2": "I told the players it was a game like any other. Nobody believed me.",
+        "humour_3": "If we win, you can write that it's a turning point. If we lose, we'll talk again next week."
       },
       "stakes_rival": {
         "ambitious": "Winning this would give us breathing space. We're ready.",
         "humble": "Three points like any other, even if we know what they mean.",
-        "humour": "Six points, three points… I'll leave the maths to you. I just want to win."
+        "humour": "Six points, three points… I'll leave the maths to you. I just want to win.",
+        "ambitious_2": "We've had this game circled for a long time. We want to pull ahead.",
+        "ambitious_3": "If we win, we give ourselves real breathing room. We'll go all out.",
+        "humble_2": "They're chasing the same goals as us. It'll be tight to the end.",
+        "humble_3": "They have as much to lose as we do. The first one to make a mistake will pay.",
+        "humour_2": "I leave the maths to my assistant. All I know is three points beats one.",
+        "humour_3": "I'm told it's a six-pointer. I hope they really give us all six."
       },
       "theirScorer": {
         "confident": "We have a plan. He won't see much of the ball.",
         "calm": "He's a very good player, we'll be careful as a team.",
-        "deflect": "I don't talk about the other team's players. I talk about mine."
+        "deflect": "I don't talk about the other team's players. I talk about mine.",
+        "confident_2": "We've studied him closely. We know how to cut off his supply.",
+        "confident_3": "My defenders know what to do. He's in for a difficult evening.",
+        "calm_2": "One player doesn't make a team. We'll watch the space, not just him.",
+        "calm_3": "He's a quality player, no doubt. We'll respect him without obsessing over him.",
+        "deflect_2": "I'd rather talk about my strikers. They know how to score too.",
+        "deflect_3": "My players are what interests me. The rest we sort out in training."
       },
       "injuries": {
         "confident": "The squad is deep enough. Whoever plays is ready.",
         "calm": "We deal with it. That's football, it happens to everyone.",
-        "firm": "I'm not looking for excuses. Eleven players will be on the pitch."
+        "firm": "I'm not looking for excuses. Eleven players will be on the pitch.",
+        "confident_2": "The players who've had less time are waiting for this moment. They'll take their chance.",
+        "confident_3": "We've prepared for this. Whoever starts will be ready.",
+        "calm_2": "We make do with what we have. The medical staff are doing a huge job.",
+        "calm_3": "It happens in a season. We'll adapt, as always.",
+        "firm_2": "I won't talk about the injured. I'll talk about the ones who are here.",
+        "firm_3": "No excuses. We have a squad and it has to deliver."
       },
       "form": {
         "confident": "The results show we're on the right track.",
         "calm": "We look at the next game, not the last ones.",
-        "firm": "It's not good enough. We have to do better, and we know it."
+        "firm": "It's not good enough. We have to do better, and we know it.",
+        "confident_2": "The team is growing. The results are following the work we put in.",
+        "confident_3": "We've found a balance. I'm confident about what comes next.",
+        "calm_2": "Runs, good or bad, never last. We stay focused on the next game.",
+        "calm_3": "I'm not getting carried away. There's good and less good.",
+        "firm_2": "We lack consistency. I want the same level every week.",
+        "firm_3": "We can do much better, and I'm going to demand it."
       },
       "ourScorer": {
         "confident": "He's full of confidence, and the team finds him really well.",
         "calm": "He scores, great, but the whole group works for it.",
-        "firm": "Nobody is bigger than the team. Goals will come from everywhere."
+        "firm": "Nobody is bigger than the team. Goals will come from everywhere.",
+        "confident_2": "He's in incredible form. We'll keep playing for him.",
+        "confident_3": "He's full of confidence, and when he's like that he's very hard to stop.",
+        "calm_2": "He scores, but look at all the work behind it. It's collective.",
+        "calm_3": "I'm happy for him, but I don't want us to depend on one player.",
+        "firm_2": "If one day he doesn't score, others will have to. I don't want dependence.",
+        "firm_3": "Nobody is indispensable here. He knows that better than anyone."
       },
       "congestion": {
         "confident": "We have a squad for this. Everyone will get a chance.",
         "calm": "We manage the minutes day by day with the medical staff.",
-        "firm": "Fatigue is no excuse. Whoever plays will have to give everything."
+        "firm": "Fatigue is no excuse. Whoever plays will have to give everything.",
+        "confident_2": "I trust my whole squad. Those who play less will be ready.",
+        "confident_3": "This is the moment to see the depth of our group.",
+        "calm_2": "We look at the physical data every day. We'll make the right calls.",
+        "calm_3": "We'll have to manage it and rotate a bit. That's the schedule, we deal with it.",
+        "firm_2": "I don't want to hear about tiredness. Whoever is picked gives everything.",
+        "firm_3": "We're professionals. Playing often is the job."
       },
       "titleRace": {
         "ambitious": "Yes, we think about it. We'd be mad not to.",
@@ -6019,22 +6081,46 @@
       "result_W": {
         "praise": "The players were outstanding tonight. This win belongs to them.",
         "calm": "A good win, but there are still things to fix.",
-        "ambitious": "That's what I expect every week. And we can do even better."
+        "ambitious": "That's what I expect every week. And we can do even better.",
+        "praise_2": "We were patient, waited for the right moment and the players struck. I'm proud of them.",
+        "praise_3": "Everyone defended, everyone attacked. This is a win for the whole group.",
+        "calm_2": "The score flatters us at times. We suffered in spells and we'll need to fix that.",
+        "calm_3": "Three points is what matters. We'll go over the rest on video.",
+        "ambitious_2": "We showed what we're worth. Now we have to do it again every weekend.",
+        "ambitious_3": "I want this team to scare people. Tonight we took a step in that direction."
       },
       "result_D": {
         "confident": "We had the chances, the win will come next time.",
         "calm": "A point, we'll take it. We move on.",
-        "firm": "It's not enough. We should have won this game."
+        "firm": "It's not enough. We should have won this game.",
+        "confident_2": "We controlled the game for long spells. Keep this intensity and the wins will come.",
+        "confident_3": "I see a team that's improving. The result doesn't tell the whole story.",
+        "calm_2": "A draw isn't a disaster. We take the point and get back to work.",
+        "calm_3": "It was an even game and an even result. I won't make a drama out of it.",
+        "firm_2": "With the chances we had, we have to win. We need to be more clinical.",
+        "firm_3": "I'm frustrated. We let two points slip and we won't get them back."
       },
       "result_L": {
         "protect": "I won't let anyone pile on my players. We lose together.",
         "selfCritical": "I made the wrong calls tonight. That's on me.",
-        "firm": "That's unacceptable. I'll be having a word with the group."
+        "firm": "That's unacceptable. I'll be having a word with the group.",
+        "protect_2": "My players kept trying to the end. The criticism is for me, not for them.",
+        "protect_3": "We lost a game, not our season. The group will stick together.",
+        "selfCritical_2": "The game plan didn't work, and I chose it. I have to prepare these games better.",
+        "selfCritical_3": "I was too slow to make changes. I take full responsibility.",
+        "firm_2": "What we showed tonight isn't worthy of this shirt. That will change.",
+        "firm_3": "Some players weren't at the level. They know it, and they'll hear it from me."
       },
       "cup_W": {
         "ambitious": "We have no limits. We play every round to win it.",
         "humble": "We take it one round at a time, no getting carried away.",
-        "humour": "I'll watch the draw tomorrow. Tonight, we enjoy it."
+        "humour": "I'll watch the draw tomorrow. Tonight, we enjoy it.",
+        "ambitious_2": "I want to go as far as possible. Why not all the way?",
+        "ambitious_3": "Every round we get through gives us confidence. We want to keep dreaming.",
+        "humble_2": "There are plenty of teams stronger than us left. We enjoy it without getting carried away.",
+        "humble_3": "We'll enjoy tonight. Tomorrow we think about the league again.",
+        "humour_2": "I won't watch the draw. My players will, and they'll tell me.",
+        "humour_3": "The fans are already asking me about the final. I told them to book the coach, just in case."
       },
       "cup_D": {
         "ambitious": "We have what it takes to finish the job.",
@@ -6044,17 +6130,35 @@
       "cup_L": {
         "protect": "The players gave everything. We'll bounce back together.",
         "selfCritical": "We weren't at the level, and I take my share of the blame.",
-        "firm": "A knockout like that must never happen again."
+        "firm": "A knockout like that must never happen again.",
+        "protect_2": "The players deserved better. We'll move forward together.",
+        "protect_3": "I don't just remember the exit. I remember the commitment.",
+        "selfCritical_2": "I made choices for this game. They weren't the right ones.",
+        "selfCritical_3": "We couldn't raise our level. That starts with me.",
+        "firm_2": "We wanted to go far and we're out far too early. We'll need answers.",
+        "firm_3": "It's a big disappointment. Some players will have to show me something else."
       },
       "hero": {
         "praise": "He's becoming a truly great player.",
         "calm": "He had a good game, like the whole team.",
-        "firm": "I'm happy for him, but he has to keep working."
+        "firm": "I'm happy for him, but he has to keep working.",
+        "praise_2": "He had a huge game. That lad's finishing is something special.",
+        "praise_3": "Tonight he carried the team. He deserves every compliment.",
+        "calm_2": "He was well served and he finished well. That's the work of the whole team.",
+        "calm_3": "I'm happy for him, but I won't single out one player after a team performance.",
+        "firm_2": "He scored, that's great. Now I want the same in the next game.",
+        "firm_3": "He knows what I expect. One good game isn't enough, he needs consistency."
       },
       "streak_W": {
         "ambitious": "We're confident and we don't plan to stop.",
         "humble": "We don't look at the run, only at the next game.",
-        "humour": "I haven't changed my socks in a month. Back home, they're less thrilled than I am."
+        "humour": "I haven't changed my socks in a month. Back home, they're less thrilled than I am.",
+        "ambitious_2": "We've built momentum. Now we don't want to let go.",
+        "ambitious_3": "This team is hungry. And I'm not putting it on a diet.",
+        "humble_2": "It can end in the next game. We keep our feet on the ground.",
+        "humble_3": "We enjoy tonight, and from tomorrow we start from zero.",
+        "humour_2": "I'm not changing anything: same tie, same route, same coffee. Don't ask me to change.",
+        "humour_3": "I don't dare touch anything in the dressing room in case I break something."
       },
       "streak_L": {
         "protect": "The group is united. I won't give up on my players.",
@@ -6064,12 +6168,24 @@
       "streak_winless": {
         "protect": "The group is working well. The win will come.",
         "selfCritical": "I'm still looking for the right formula. I take responsibility.",
-        "firm": "We need to find our hunger again. Everyone is concerned, me first."
+        "firm": "We need to find our hunger again. Everyone is concerned, me first.",
+        "protect_2": "The players aren't giving up. It will turn, I'm sure of it.",
+        "protect_3": "I see the hunger in training. The breakthrough is coming.",
+        "selfCritical_2": "I have to find the answer faster. That's my job.",
+        "selfCritical_3": "Maybe I'm asking too much, or asking the wrong way. I'll rethink how I do things.",
+        "firm_2": "It's time to wake up. Everyone, no exceptions.",
+        "firm_3": "This is no longer acceptable. The next games will show who wants to fight."
       },
       "streak_unbeaten": {
         "ambitious": "We've become a very solid team, and we want to keep it going.",
         "humble": "We're pleased, but the season is long.",
-        "humour": "Unbeatable? I'd rather not say it too loud, we play again in three days."
+        "humour": "Unbeatable? I'd rather not say it too loud, we play again in three days.",
+        "ambitious_2": "We're hard to beat and we want to stay that way all season.",
+        "ambitious_3": "That solidity is our strength. We want to go even further.",
+        "humble_2": "We don't lose, but we don't always win either. There's work to do.",
+        "humble_3": "A run earns you nothing on its own. Only points count.",
+        "humour_2": "Don't say the word. Runs always end when you talk about them.",
+        "humour_3": "I've been touching wood for so long I'll end up a carpenter."
       },
       "youthDebut": {
         "praise": "He has a rare talent. I'm proud he made his debut with us.",
@@ -6079,7 +6195,13 @@
       "bigWin": {
         "praise": "We saw what this team is capable of. The players were huge.",
         "humble": "A big score is still only three points. We keep our feet on the ground.",
-        "humour": "I asked the players to save a few for the next game."
+        "humour": "I asked the players to save a few for the next game.",
+        "praise_2": "Everything we've worked on for weeks, we saw tonight. Well done to the players.",
+        "praise_3": "This is the kind of game that does a whole club good.",
+        "humble_2": "We won't get carried away. The next game could be completely different.",
+        "humble_3": "They had a tough night. It can happen to us too, so we stay humble.",
+        "humour_2": "I think the players wanted to make me happy. Mission accomplished.",
+        "humour_3": "We may have used up all our goals for the month. I hope there are a few left."
       },
       "runEnded": {
         "protect": "I never doubted this group. They deserved this win.",
@@ -6104,7 +6226,13 @@
       "contract": {
         "confident": "We're talking, and I'm confident. He's happy here.",
         "deflect": "Contracts are discussed in offices, not in front of microphones.",
-        "firm": "Nobody is bigger than the club. If he wants to stay, the door is open."
+        "firm": "Nobody is bigger than the club. If he wants to stay, the door is open.",
+        "confident_2": "He knows how much I value him. I think we'll reach an agreement.",
+        "confident_3": "Talks are going well. I'm not worried.",
+        "deflect_2": "That's between the player, his agent and the club. I'm thinking about the next game.",
+        "deflect_3": "I won't negotiate his contract in front of you. Ask me about the pitch.",
+        "firm_2": "The club has made an offer. Now the ball is in his court.",
+        "firm_3": "I want players who want to be here. We'll soon see if he's one of them."
       },
       "unhappy": {
         "protect": "I back him one hundred percent. He's going through a tough spell, we'll help him.",
@@ -6114,7 +6242,13 @@
       "signing": {
         "ambitious": "He's a player who will take us up a level.",
         "calm": "He needs to settle in first. We won't put pressure on him.",
-        "praise": "A top-quality player and an excellent person. We're delighted."
+        "praise": "A top-quality player and an excellent person. We're delighted.",
+        "ambitious_2": "We signed him to take the next step. He has the qualities for it.",
+        "ambitious_3": "It's a strong signal for the dressing room and for our rivals.",
+        "calm_2": "He's discovering a new club and new team-mates. Let's give him time.",
+        "calm_3": "We'll bring him in gently. He has nothing to prove on day one.",
+        "praise_2": "I've wanted him for a long time. I'm happy he chose our project.",
+        "praise_3": "He has an exemplary mentality. He'll lift the whole group."
       },
       "exit": {
         "praise": "I thank him for everything he gave. I wish him all the best.",
@@ -6124,7 +6258,13 @@
       "longInjury": {
         "confident": "We have options. Someone else will take their chance.",
         "calm": "It's hard for him. We'll support him all the way back.",
-        "firm": "No crying. The group has to make up for it."
+        "firm": "No crying. The group has to make up for it.",
+        "confident_2": "It's a chance for others. I trust them.",
+        "confident_3": "We have depth. Someone will step up.",
+        "calm_2": "The most important thing is that he comes back healthy. We won't rush anything.",
+        "calm_3": "We think of him first. For the team, we'll find solutions.",
+        "firm_2": "Nobody will feel sorry for us. We have to move on without him.",
+        "firm_3": "It's hard, but it doesn't change our goals."
       },
       "linked": {
         "deny": "I'm one hundred percent focused on my club. There's nothing in it.",

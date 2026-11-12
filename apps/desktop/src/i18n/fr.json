@@ -5963,53 +5963,115 @@
       "followUp_again": {
         "tabloid": "La dernière fois, contre {{pastOpponent}}, vous disiez : « {{quote}} » C'est le moment de le prouver ?",
         "radio": "« {{quote}} » : c'était votre phrase après {{pastOpponent}}. Elle vaut toujours pour ce match ?"
+      },
+      "echo": {
+        "other": "Sur ce sujet, vous nous disiez déjà : « {{echo}} » {{question}}",
+        "tabloid": "La dernière fois, vous nous avez servi : « {{echo}} » On y croit encore ? {{question}}"
+      },
+      "echoMany": {
+        "other": "« {{echo}} » : c'est ce que vous répondez depuis {{times}} conférences. {{question}}",
+        "tabloid": "« {{echo}} », vous nous le répétez depuis {{times}} conférences. Vous avez autre chose à dire ? {{question}}"
       }
     },
     "a": {
       "stakes_cup": {
         "ambitious": "On veut aller au bout dans cette coupe. On alignera une équipe pour gagner.",
         "humble": "Chaque tour est un piège. On respecte cet adversaire et on fera notre match.",
-        "humour": "Une coupe, ça se gagne en jouant tous les tours. Je n'ai pas trouvé d'autre méthode."
+        "humour": "Une coupe, ça se gagne en jouant tous les tours. Je n'ai pas trouvé d'autre méthode.",
+        "ambitious_2": "On ne va pas sacrifier ce match. Une coupe, c'est une chance de marquer l'histoire du club.",
+        "ambitious_3": "Mon équipe sera compétitive. Je veux passer ce tour.",
+        "humble_2": "En coupe, il n'y a pas de petit adversaire. On va le prendre très au sérieux.",
+        "humble_3": "Ils vont jouer le match de leur vie. À nous d'être à la hauteur.",
+        "humour_2": "On m'a demandé si je faisais tourner. Je vais faire tourner… le ballon, surtout.",
+        "humour_3": "Une coupe, ça se joue sur un match. Je préfère que ce soit le nôtre."
       },
       "stakes_europe": {
         "ambitious": "Ces soirées, on les attend toute l'année. On va jouer pour gagner, pas pour faire de la figuration.",
         "humble": "On découvre ce niveau. On va apprendre, et on va se battre.",
-        "humour": "J'ai prévenu les joueurs : en Europe, le ballon est le même. Il va juste plus vite."
+        "humour": "J'ai prévenu les joueurs : en Europe, le ballon est le même. Il va juste plus vite.",
+        "ambitious_2": "On a travaillé pour vivre ces soirées. On ne va pas se contenter de participer.",
+        "ambitious_3": "Je veux que l'Europe découvre cette équipe.",
+        "humble_2": "C'est un autre niveau, on le sait. On va apprendre vite, et on va tout donner.",
+        "humble_3": "On n'a pas l'expérience de ces matchs. On a l'envie, et c'est déjà beaucoup.",
+        "humour_2": "J'ai vérifié les passeports de tout le monde. Le reste, on verra sur le terrain.",
+        "humour_3": "En Europe, les stades sont plus grands. Les buts, eux, font toujours la même taille."
       },
       "stakes_top": {
         "ambitious": "On n'a peur de personne. Si on joue notre football, on peut gagner ce match.",
         "humble": "Ils ont une très belle équipe. On va devoir être parfaits.",
-        "humour": "Si on gagne, c'est un grand match. Si on perd, la saison continue. Je préfère la première option."
+        "humour": "Si on gagne, c'est un grand match. Si on perd, la saison continue. Je préfère la première option.",
+        "ambitious_2": "C'est le genre de match où on voit ce qu'une équipe a dans le ventre. On va y aller pour gagner.",
+        "ambitious_3": "Ils sont devant, à nous d'aller les chercher. On n'ira pas là-bas pour défendre.",
+        "humble_2": "Ils sont devant au classement, et ce n'est pas un hasard. On va devoir faire un très grand match.",
+        "humble_3": "On n'est pas favoris, et ça nous va très bien. On va jouer sans pression.",
+        "humour_2": "J'ai dit aux joueurs que c'était un match comme un autre. Personne ne m'a cru.",
+        "humour_3": "Si on gagne, je vous laisse écrire que c'est un tournant. Si on perd, on en reparlera la semaine prochaine."
       },
       "stakes_rival": {
         "ambitious": "Gagner ce match nous donnerait de l'air. On est prêts.",
         "humble": "Trois points comme les autres, même si on sait ce qu'ils représentent.",
-        "humour": "Six points, trois points… je laisse les calculs aux journalistes. Moi, je veux juste gagner."
+        "humour": "Six points, trois points… je laisse les calculs aux journalistes. Moi, je veux juste gagner.",
+        "ambitious_2": "C'est un match qu'on a coché depuis longtemps. On veut prendre de l'avance.",
+        "ambitious_3": "Si on gagne, on se donne une vraie marge. On va jouer ce match à fond.",
+        "humble_2": "Ils jouent pour les mêmes objectifs que nous. Ce sera serré jusqu'au bout.",
+        "humble_3": "Ils ont autant à perdre que nous. Le premier qui fera une erreur sera puni.",
+        "humour_2": "Les calculs, je les laisse à mon adjoint. Moi, je sais juste que trois points, c'est mieux qu'un.",
+        "humour_3": "On m'a dit que c'était un match à six points. J'espère qu'on nous donnera bien les six."
       },
       "theirScorer": {
         "confident": "On a un plan. Il aura très peu de ballons.",
         "calm": "C'est un très bon joueur, on va être attentifs collectivement.",
-        "deflect": "Je ne parle pas des joueurs adverses. Je parle de mon équipe."
+        "deflect": "Je ne parle pas des joueurs adverses. Je parle de mon équipe.",
+        "confident_2": "On l'a beaucoup étudié. On sait comment le priver de ballons.",
+        "confident_3": "Mes défenseurs savent ce qu'ils ont à faire. Il va passer une soirée compliquée.",
+        "calm_2": "Un joueur ne fait pas une équipe. On va surveiller la zone, pas seulement lui.",
+        "calm_3": "Il a des qualités, c'est certain. On va le respecter sans en faire une obsession.",
+        "deflect_2": "Je préfère vous parler de mes attaquants. Eux aussi savent marquer.",
+        "deflect_3": "Ce sont mes joueurs qui m'intéressent. Le reste, on le règle à l'entraînement."
       },
       "injuries": {
         "confident": "L'effectif est assez profond. Ceux qui joueront sont prêts.",
         "calm": "On fait avec. C'est le football, ça arrive à tout le monde.",
-        "firm": "Je ne cherche pas d'excuses. Onze joueurs seront sur le terrain."
+        "firm": "Je ne cherche pas d'excuses. Onze joueurs seront sur le terrain.",
+        "confident_2": "Ceux qui jouent depuis moins longtemps attendent ce moment. Ils vont saisir leur chance.",
+        "confident_3": "On a préparé ça. L'équipe qui entrera sera prête.",
+        "calm_2": "On fait avec ce qu'on a. Le staff médical fait un travail énorme.",
+        "calm_3": "Ça arrive dans une saison. On va s'adapter, comme toujours.",
+        "firm_2": "Les blessés, je n'en parle pas. Je parle de ceux qui sont là.",
+        "firm_3": "Il n'y a pas d'excuse. On a un effectif, il doit répondre présent."
       },
       "form": {
         "confident": "Les résultats montrent qu'on est sur la bonne voie.",
         "calm": "On regarde le prochain match, pas les précédents.",
-        "firm": "Ce n'est pas suffisant. On doit faire mieux, et on le sait."
+        "firm": "Ce n'est pas suffisant. On doit faire mieux, et on le sait.",
+        "confident_2": "L'équipe grandit. Les résultats suivent le travail qu'on fait.",
+        "confident_3": "On a trouvé un équilibre. Je suis confiant pour la suite.",
+        "calm_2": "Les séries, bonnes ou mauvaises, ne durent jamais. On reste concentrés sur le prochain match.",
+        "calm_3": "Je ne m'emballe pas. Il y a du bon et du moins bon.",
+        "firm_2": "Il manque de la régularité. Je veux voir le même niveau chaque semaine.",
+        "firm_3": "On peut faire beaucoup mieux, et je vais l'exiger."
       },
       "ourScorer": {
         "confident": "Il est en pleine confiance, et l'équipe le sert très bien.",
         "calm": "Il marque, tant mieux, mais c'est tout le groupe qui travaille.",
-        "firm": "Personne n'est au-dessus de l'équipe. Les buts viendront de partout."
+        "firm": "Personne n'est au-dessus de l'équipe. Les buts viendront de partout.",
+        "confident_2": "Il est dans une forme incroyable. On continue de jouer pour lui.",
+        "confident_3": "Il est en confiance, et quand il est comme ça, il est très difficile à arrêter.",
+        "calm_2": "Il marque, mais il faut regarder tout le travail derrière. C'est collectif.",
+        "calm_3": "Je suis content pour lui, mais je ne veux pas qu'on dépende d'un seul joueur.",
+        "firm_2": "Si un jour il ne marque pas, d'autres devront le faire. Je ne veux pas de dépendance.",
+        "firm_3": "Personne n'est indispensable ici. Lui le premier le sait."
       },
       "congestion": {
         "confident": "On a un groupe pour ça. Tout le monde aura sa chance.",
         "calm": "On gère les minutes au jour le jour avec le staff médical.",
-        "firm": "La fatigue n'est pas une excuse. Ceux qui jouent devront tout donner."
+        "firm": "La fatigue n'est pas une excuse. Ceux qui jouent devront tout donner.",
+        "confident_2": "J'ai confiance dans tout mon effectif. Ceux qui joueront moins seront prêts.",
+        "confident_3": "C'est le moment de voir la profondeur de notre groupe.",
+        "calm_2": "On regarde les données physiques chaque jour. On fera les bons choix.",
+        "calm_3": "Il faudra gérer, faire tourner un peu. C'est le calendrier, on fait avec.",
+        "firm_2": "Je ne veux pas entendre parler de fatigue. Ceux qui sont alignés doivent tout donner.",
+        "firm_3": "On est des professionnels. Jouer souvent, c'est le métier."
       },
       "titleRace": {
         "ambitious": "Oui, on y pense. On serait fous de ne pas y penser.",
@@ -6019,22 +6081,46 @@
       "result_W": {
         "praise": "Les joueurs ont été remarquables ce soir. Cette victoire leur appartient.",
         "calm": "Une bonne victoire, mais il y a encore des choses à corriger.",
-        "ambitious": "C'est ce que j'attends chaque semaine. Et on peut faire encore mieux."
+        "ambitious": "C'est ce que j'attends chaque semaine. Et on peut faire encore mieux.",
+        "praise_2": "On a été patients, on a attendu le bon moment et les joueurs ont su frapper. Je suis fier d'eux.",
+        "praise_3": "Tout le monde a défendu, tout le monde a attaqué. C'est la victoire d'un groupe.",
+        "calm_2": "Le score est flatteur sur certaines phases. On a souffert par moments, il faudra corriger ça.",
+        "calm_3": "Trois points, c'est l'essentiel. Le reste, on le reverra à la vidéo.",
+        "ambitious_2": "On a montré ce qu'on vaut. Maintenant, il faut le refaire tous les week-ends.",
+        "ambitious_3": "Je veux que cette équipe fasse peur. Ce soir, on a fait un pas dans ce sens."
       },
       "result_D": {
         "confident": "On a eu les occasions, la victoire viendra la prochaine fois.",
         "calm": "Un point, on le prend. On avance.",
-        "firm": "Ce n'est pas assez. On aurait dû gagner ce match."
+        "firm": "Ce n'est pas assez. On aurait dû gagner ce match.",
+        "confident_2": "On a eu le match en main pendant longtemps. Si on garde cette intensité, les victoires vont venir.",
+        "confident_3": "Je vois une équipe qui progresse. Le résultat ne dit pas tout.",
+        "calm_2": "Un nul, ce n'est pas une catastrophe. On prend le point et on repart au travail.",
+        "calm_3": "Le match a été équilibré, le résultat aussi. Je ne vais pas en faire un drame.",
+        "firm_2": "Avec les occasions qu'on a eues, on doit gagner. Il faut être plus tueurs devant le but.",
+        "firm_3": "Je suis frustré. On a laissé filer deux points qu'on ne retrouvera pas."
       },
       "result_L": {
         "protect": "Je ne laisserai personne accabler mes joueurs. On perd ensemble.",
         "selfCritical": "J'ai fait de mauvais choix ce soir. C'est ma responsabilité.",
-        "firm": "C'est inacceptable. Je vais avoir une discussion avec le groupe."
+        "firm": "C'est inacceptable. Je vais avoir une discussion avec le groupe.",
+        "protect_2": "Mes joueurs ont essayé jusqu'au bout. Les critiques, c'est pour moi, pas pour eux.",
+        "protect_3": "On a perdu un match, pas notre saison. Le groupe va rester soudé.",
+        "selfCritical_2": "Le plan de jeu n'a pas fonctionné, et c'est moi qui l'ai choisi. Je dois mieux préparer ces matchs.",
+        "selfCritical_3": "J'ai tardé à faire les changements. Je l'assume complètement.",
+        "firm_2": "Ce qu'on a montré ce soir n'est pas digne de ce maillot. Ça va changer.",
+        "firm_3": "Certains n'étaient pas au niveau. Ils le savent, et ils vont me l'entendre dire."
       },
       "cup_W": {
         "ambitious": "On n'a pas de limite. On joue chaque tour pour le gagner.",
         "humble": "On prend les tours un par un, sans s'enflammer.",
-        "humour": "Le tirage au sort, je le regarderai demain. Ce soir, on savoure."
+        "humour": "Le tirage au sort, je le regarderai demain. Ce soir, on savoure.",
+        "ambitious_2": "Je veux aller le plus loin possible. Et pourquoi pas au bout ?",
+        "ambitious_3": "Chaque tour passé nous donne confiance. On veut continuer à rêver.",
+        "humble_2": "Il reste beaucoup d'équipes plus fortes que nous. On profite, sans s'emballer.",
+        "humble_3": "On va savourer ce soir. Demain, on repense au championnat.",
+        "humour_2": "Je ne regarderai pas le tirage. Mes joueurs le feront, et ils me raconteront.",
+        "humour_3": "Les supporters me demandent déjà la finale. Je leur ai dit de réserver le car, au cas où."
       },
       "cup_D": {
         "ambitious": "On a les moyens de finir le travail.",
@@ -6044,17 +6130,35 @@
       "cup_L": {
         "protect": "Les joueurs ont tout donné. On rebondira ensemble.",
         "selfCritical": "On n'était pas au niveau, et j'en prends ma part.",
-        "firm": "Une élimination comme ça ne doit plus jamais arriver."
+        "firm": "Une élimination comme ça ne doit plus jamais arriver.",
+        "protect_2": "Les joueurs méritaient mieux. On repartira de l'avant ensemble.",
+        "protect_3": "Je ne retiens pas que l'élimination. Je retiens l'engagement.",
+        "selfCritical_2": "J'ai fait des choix pour ce match. Ils n'étaient pas les bons.",
+        "selfCritical_3": "On n'a pas su élever notre niveau. Ça commence par moi.",
+        "firm_2": "On voulait aller loin, on sort beaucoup trop tôt. Il faudra des réponses.",
+        "firm_3": "C'est une grande déception. Certains vont devoir me montrer autre chose."
       },
       "hero": {
         "praise": "Il est en train de devenir un très grand joueur.",
         "calm": "Il a fait un bon match, comme toute l'équipe.",
-        "firm": "Je suis content pour lui, mais il doit continuer à travailler."
+        "firm": "Je suis content pour lui, mais il doit continuer à travailler.",
+        "praise_2": "Il a fait un match énorme. Ce garçon a une qualité de finition rare.",
+        "praise_3": "Ce soir, il a porté l'équipe. Il mérite tous les compliments.",
+        "calm_2": "Il a été bien servi, il a bien fini. C'est le travail de toute l'équipe.",
+        "calm_3": "Je suis content pour lui, mais je ne vais pas isoler un joueur après un match collectif.",
+        "firm_2": "Il a marqué, c'est très bien. Maintenant je veux la même chose au prochain match.",
+        "firm_3": "Il connaît mon exigence. Un bon match ne suffit pas, il faut de la régularité."
       },
       "streak_W": {
         "ambitious": "On est en confiance et on ne compte pas s'arrêter.",
         "humble": "On ne regarde pas la série, seulement le prochain match.",
-        "humour": "Je ne change plus de chaussettes depuis un mois. À la maison, on est moins ravis que moi."
+        "humour": "Je ne change plus de chaussettes depuis un mois. À la maison, on est moins ravis que moi.",
+        "ambitious_2": "On a pris de l'élan. Maintenant, on ne veut plus lâcher.",
+        "ambitious_3": "Cette équipe a faim. Et je ne vais pas la mettre au régime.",
+        "humble_2": "Ça peut s'arrêter dès le prochain match. On garde les pieds sur terre.",
+        "humble_3": "On savoure ce soir, et dès demain on repart de zéro.",
+        "humour_2": "Je ne change rien : même cravate, même trajet, même café. Ne me demandez pas de changer.",
+        "humour_3": "Je n'ose plus rien toucher dans le vestiaire, de peur de casser quelque chose."
       },
       "streak_L": {
         "protect": "Le groupe reste uni. Je ne lâcherai pas mes joueurs.",
@@ -6064,12 +6168,24 @@
       "streak_winless": {
         "protect": "Le groupe travaille bien. La victoire va arriver.",
         "selfCritical": "Je cherche encore la bonne formule. J'assume.",
-        "firm": "Il faut retrouver de l'envie. Tout le monde est concerné, moi d'abord."
+        "firm": "Il faut retrouver de l'envie. Tout le monde est concerné, moi d'abord.",
+        "protect_2": "Les joueurs ne lâchent rien. Ça va tourner, j'en suis sûr.",
+        "protect_3": "Je vois l'envie à l'entraînement. Le déclic va arriver.",
+        "selfCritical_2": "Je dois trouver la solution plus vite. C'est mon rôle.",
+        "selfCritical_3": "Peut-être que je demande trop ou mal. Je vais revoir ma façon de faire.",
+        "firm_2": "Il est temps de se réveiller. Tout le monde, sans exception.",
+        "firm_3": "Ce n'est plus acceptable. Les prochains matchs diront qui veut se battre."
       },
       "streak_unbeaten": {
         "ambitious": "On est devenus une équipe très solide, et on veut continuer.",
         "humble": "On est contents, mais la saison est longue.",
-        "humour": "Imbattables ? Je préfère ne pas le dire trop fort, on a un match dans trois jours."
+        "humour": "Imbattables ? Je préfère ne pas le dire trop fort, on a un match dans trois jours.",
+        "ambitious_2": "On est difficiles à battre, et on veut le rester toute la saison.",
+        "ambitious_3": "Cette solidité, c'est notre force. On veut aller encore plus loin.",
+        "humble_2": "On ne perd pas, mais on ne gagne pas toujours non plus. Il reste du travail.",
+        "humble_3": "Une série, ça ne rapporte rien en soi. Seuls les points comptent.",
+        "humour_2": "Ne prononcez pas le mot. Les séries, ça s'arrête toujours quand on en parle.",
+        "humour_3": "Je touche du bois depuis tellement longtemps que je vais finir menuisier."
       },
       "youthDebut": {
         "praise": "Il a un talent rare. Je suis fier qu'il ait débuté avec nous.",
@@ -6079,7 +6195,13 @@
       "bigWin": {
         "praise": "On a vu ce dont cette équipe est capable. Les joueurs ont été énormes.",
         "humble": "Un grand score ne rapporte que trois points. On garde les pieds sur terre.",
-        "humour": "J'ai demandé aux joueurs d'en garder un peu pour le prochain match."
+        "humour": "J'ai demandé aux joueurs d'en garder un peu pour le prochain match.",
+        "praise_2": "Tout ce qu'on travaille depuis des semaines, on l'a vu ce soir. Bravo aux joueurs.",
+        "praise_3": "C'est le genre de match qui fait du bien à tout un club.",
+        "humble_2": "On ne va pas s'enflammer. Le prochain match peut être totalement différent.",
+        "humble_3": "Ils ont eu une soirée difficile. Ça peut nous arriver aussi, on reste humbles.",
+        "humour_2": "Je crois que les joueurs voulaient me faire plaisir. C'est réussi.",
+        "humour_3": "On a peut-être utilisé tous nos buts du mois. J'espère qu'il en reste un peu."
       },
       "runEnded": {
         "protect": "Je n'ai jamais douté de ce groupe. Ils méritaient cette victoire.",
@@ -6104,7 +6226,13 @@
       "contract": {
         "confident": "On discute, et je suis confiant. Il se sent bien ici.",
         "deflect": "Les contrats se discutent dans les bureaux, pas devant les micros.",
-        "firm": "Personne n'est plus grand que le club. S'il veut rester, la porte est ouverte."
+        "firm": "Personne n'est plus grand que le club. S'il veut rester, la porte est ouverte.",
+        "confident_2": "Il connaît l'estime que j'ai pour lui. Je pense qu'on va trouver un accord.",
+        "confident_3": "Les discussions avancent bien. Je ne suis pas inquiet.",
+        "deflect_2": "Ça, c'est entre le joueur, son agent et le club. Moi, je pense au prochain match.",
+        "deflect_3": "Je ne vais pas négocier son contrat devant vous. Posez-moi une question sur le terrain.",
+        "firm_2": "Le club a fait une offre. Maintenant, la balle est dans son camp.",
+        "firm_3": "Je veux des joueurs qui ont envie d'être ici. On verra très vite s'il en fait partie."
       },
       "unhappy": {
         "protect": "Je le soutiens à cent pour cent. Il traverse un moment difficile, on va l'aider.",
@@ -6114,7 +6242,13 @@
       "signing": {
         "ambitious": "C'est un joueur qui va nous faire passer un cap.",
         "calm": "Il doit d'abord trouver ses repères. On ne va pas lui mettre de pression.",
-        "praise": "Un garçon de grande qualité, et une excellente personne. On est ravis."
+        "praise": "Un garçon de grande qualité, et une excellente personne. On est ravis.",
+        "ambitious_2": "On l'a recruté pour franchir un palier. Il a les qualités pour ça.",
+        "ambitious_3": "C'est un signal fort pour le vestiaire et pour nos concurrents.",
+        "calm_2": "Il découvre un nouveau club, de nouveaux partenaires. Laissons-lui du temps.",
+        "calm_3": "On va l'intégrer doucement. Il n'a rien à prouver dès le premier jour.",
+        "praise_2": "Je le voulais depuis longtemps. Je suis heureux qu'il ait choisi notre projet.",
+        "praise_3": "Il a une mentalité exemplaire. Il va tirer le groupe vers le haut."
       },
       "exit": {
         "praise": "Je le remercie pour tout ce qu'il a apporté. Je lui souhaite le meilleur.",
@@ -6124,7 +6258,13 @@
       "longInjury": {
         "confident": "On a des solutions. Un autre va saisir sa chance.",
         "calm": "C'est dur pour lui. On va l'accompagner jusqu'à son retour.",
-        "firm": "On ne pleure pas. Le groupe doit compenser."
+        "firm": "On ne pleure pas. Le groupe doit compenser.",
+        "confident_2": "C'est une chance pour d'autres. J'ai confiance en eux.",
+        "confident_3": "On a de la profondeur. Quelqu'un va prendre le relais.",
+        "calm_2": "Le plus important, c'est qu'il revienne en bonne santé. On ne précipitera rien.",
+        "calm_3": "On pense d'abord à lui. Pour l'équipe, on trouvera des solutions.",
+        "firm_2": "Personne ne viendra nous plaindre. Il faut avancer sans lui.",
+        "firm_3": "C'est dur, mais ça ne change pas nos objectifs."
       },
       "linked": {
         "deny": "Je suis concentré à cent pour cent sur mon club. Il n'y a rien.",
