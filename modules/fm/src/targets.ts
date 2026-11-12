@@ -36,6 +36,8 @@ export type Target = FmPlayer & {
   scout: ScoutView | null;
   /** Listes du jeu où figure le joueur (`listeSuivi`, `cibles`…). */
   sources: string[];
+  /** Nationalité telle que le jeu l'écrit (« slovaque », « argentin, italien »), si elle est lue. */
+  nationality?: string | null;
 };
 
 /** Texte d'une valeur du jeu : texte, nombre, ou libellé d'un objet brut. */
@@ -112,6 +114,7 @@ export function targetOf(x: unknown): Target | null {
     stars: p.stars ?? scout?.stars ?? null,
     personality: p.personality ?? (o.scout && typeof o.scout === 'object' ? str((o.scout as Raw).personality) : null),
     sources: Array.isArray(o.sources) ? o.sources.filter((s): s is string => typeof s === 'string') : [],
+    nationality: str(o.nationality),
   };
 }
 

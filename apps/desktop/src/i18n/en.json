@@ -92,7 +92,7 @@
       "contract": "Contract ends",
       "wage": "Wage",
       "status": "Status",
-      "starsHelp": "Current / potential ability stars according to your staff",
+      "starsHelp": "Reachable potential out of 20 (PA read from memory, otherwise staff stars, weighted by age)",
       "compat": "Project",
       "engine": "Engine",
       "reach": "Reach",
@@ -384,7 +384,7 @@
       "advice": {
         "title": "Your assistant's view of this eleven",
         "none": "Nothing to add: everyone is in a role that suits him, and every position has cover.",
-        "help": "A role is only suggested when it is worth at least 0.3 star more for the player and does not unbalance the team (width, creation, cover, presence in the box). A starter is only questioned for half a star, current form included. Cover comes first from the first team, then from a starter who can shift, then from the reserves.",
+        "help": "A role is only suggested when it is worth at least 0.6 point out of 20 more for the player and does not unbalance the team (width, creation, cover, presence in the box). A starter is only questioned for half a star, current form included. Cover comes first from the first team, then from a starter who can shift, then from the reserves.",
         "starters": "Starters to review",
         "starter": "{{pos}}: {{better}} ({{betterFit}}) would do better today than {{starter}} ({{starterFit}}) in these roles, current form included.",
         "roles": "Roles to review",
@@ -439,7 +439,7 @@
       "bestNow": "Best applicable tactic",
       "projectBest": "Your project is now the best choice",
       "baseKept": "Your base tactic, kept",
-      "baseKeptHelp": "Another tactic ({{other}}) rates slightly higher, +{{gain}} star, but it would take at least +{{need}} star to make up for the tactical understanding lost by switching. Your base stays; only the players change, match after match.",
+      "baseKeptHelp": "Another tactic ({{other}}) rates slightly higher, +{{gain}} pt, but it would take at least +{{need}} pt to make up for the tactical understanding lost by switching. Your base stays; only the players change, match after match.",
       "teamTitle": "Team instructions · {{style}}",
       "teamHelp": "Every card of the game's Team Instructions screen, in its order; in bold, those the style sets, the others stay on the default. Set them with the mentality.",
       "oppTitle": "Against {{name}}",
@@ -1039,10 +1039,10 @@
       "coach": "My coach",
       "style": "Style I like",
       "target": "Target level",
-      "targetOpt": "{{value}}% fit",
+      "targetOpt": "{{value}} / 20",
       "help": "FM Immersion measures the gap between your squad and this style, then derives the positions to sign and each player's work. Natural formations for this style: {{forms}}.",
       "ready": "Positions ready",
-      "readySub": "fit ≥ {{value}}%",
+      "readySub": "rating ≥ {{value}} / 20",
       "develop": "To develop",
       "developSub": "23 or younger, close to the level",
       "recruit": "To sign",
@@ -1123,7 +1123,7 @@
         "eff": "Proj. effectiveness",
         "wage": "Wage",
         "value": "Value",
-        "stars": "Stars",
+        "stars": "Potential",
         "knowledge": "Known",
         "seen": "List"
       },
@@ -1154,7 +1154,7 @@
         "backup": "ahead of {{name}}",
         "none": "{{name}} is better"
       },
-      "gainHelp": "{{gain}} fit points against the current starter",
+      "gainHelp": "{{gain}} pt out of 20 against the current starter",
       "shortTerm": "Short term (33+)"
     },
     "pi": {
@@ -1808,7 +1808,7 @@
       "contracts": "Contract expiries to plan for.",
       "progression": "Each player's level since the first snapshot.",
       "opponent": "The next opponent as the game's team report describes it, and how to play them.",
-      "mercato": "Who to move on (sale, loan, contract end), who to renew, and which youngsters are worth it for the project.",
+      "mercato": "Your money, your XI against the target rating, the signings that lift it, then your decisions in order.",
       "instructions": "Up to 3 instructions per starter, to fit the style without overloading tactical familiarity.",
       "results": "Matches played since FM Immersion started following the save: score, eleven, each player's rating, and what earns points.",
       "diagnosis": "Starters below the eleven's average, and why.",
@@ -1919,7 +1919,7 @@
       "loan": "on loan at {{club}} until {{end}}"
     },
     "merc": {
-      "help": "Based on the imported squad, in two elevens: the one to play today ({{form}}) and the project one ({{style}} {{projectForm}}). At each position we keep the starters plus one backup per slot (two backup keepers); anyone beyond that is surplus. Stars are the staff's (current → potential, relative to the club); level is projected two seasons ahead.",
+      "help": "Based on the imported squad, in two elevens: the one to play today ({{form}}) and the project one ({{style}} {{projectForm}}). At each position we keep the starters plus one backup per slot (two backup keepers); anyone beyond that is surplus. Level and potential out of 20: potential comes from PA when read, otherwise from staff stars, weighted by age.",
       "kpi": {
         "income": "Possible income",
         "incomeSub": "value of players to sell · wages freed: {{wages}}",
@@ -1976,7 +1976,7 @@
         "contract_one": "contract: {{count}} month",
         "contract_other": "contract: {{count}} months",
         "unwanted": "club status: {{status}}",
-        "potential": "potential {{stars}} ★",
+        "potential": "potential {{value}}/20 per staff",
         "potentialPa": "PA {{pa}}, the starter is at {{ca}} CA",
         "lowPotential": "limited potential",
         "overtakes_one": "at {{starter}}'s level in {{count}} season",
@@ -1988,25 +1988,176 @@
       },
       "stayNoYouth": "Players aged 21 or under are in their own panel above.",
       "board": {
-        "transfer": "Transfer budget",
-        "wageRoom": "Wage bill",
-        "wageOver": "over budget, per month",
-        "wageLeft": "room under budget, per month",
-        "balance": "Club balance",
-        "tightLine": "No purchases: look for free agents or loans, and sell before you sign.",
-        "in": "Bring in",
-        "out": "Let go",
-        "extend": "Extend",
-        "noIn": "No position to strengthen for now.",
-        "noOut": "Nobody to let go for now.",
-        "noExtend": "No contract to extend for now.",
-        "profile": "Profile to look for",
         "until": "contract ends {{date}}",
         "urgent": "Settle soon",
-        "season": "This season",
-        "more": "+ {{count}} more",
+        "detailOpen": "All the detail: youngsters, replacement search, division level ▾",
+        "detailClose": "Fold the detail ▴"
+      },
+      "plan": {
+        "decisions": "Your decisions, in order",
+        "verb": {
+          "extendUrgent": "Extend soon",
+          "recruit1": "Sign urgently",
+          "sell": "Sell",
+          "release": "Let go at contract end",
+          "recruit2": "Sign for the project",
+          "loan": "Loan out",
+          "extend": "Extend",
+          "recruit3": "Plan a signing"
+        },
+        "why": {
+          "extend": "Their contracts end by {{date}} at the latest."
+        },
+        "andMore_one": "{{list}} and {{count}} more",
+        "andMore_other": "{{list}} and {{count}} more",
+        "see_one": "See",
+        "see_other": "See all {{count}}",
+        "seeFinances": "See finances",
+        "tightTitle": "Tight finances: sell before you sign",
+        "tightText": "No purchases possible. Look for free agents or loans, and start by making room.",
+        "calmTitle": "Nothing urgent in the transfer window",
+        "calmText": "Your squad holds up: keep an eye on contracts and youngsters."
+      },
+      "view": {
+        "title": "Your squad going forward",
+        "summary": "{{total}} players: {{stay}} stay, {{extend}} to extend, {{leave}} on the way out",
+        "needs_one": "{{count}} position to fill",
+        "needs_other": "{{count}} positions to fill",
+        "needsUrgent_one": "{{count}} a priority",
+        "needsUrgent_other": "{{count}} priorities",
+        "legend": "Legend",
+        "status": {
+          "stay": "Stays",
+          "upgrade": "Stays, to replace in time",
+          "extend": "To extend (contract end)",
+          "leave": "On the way out",
+          "need": "Position to fill"
+        },
+        "lineCount": "{{kept}} kept of {{total}}",
+        "toRecruit": "to sign",
+        "young": "youngster",
+        "marked": "marked as leaving",
+        "kpi": {
+          "transfer": "Transfer budget",
+          "wage": "Wage room",
+          "perMonth": "per month",
+          "income": "Possible sales",
+          "incomeSub": "wages freed: {{wages}}",
+          "balance": "Club balance"
+        },
+        "noNeeds": "no position to fill"
+      },
+      "target": {
+        "title": "Your XI against the target rating",
+        "help": "Project XI ({{style}}, {{form}}): each position's rating is the starter's role rating; the XI average is their mean.",
+        "aim": "Target rating",
+        "now": "XI average today",
+        "ready_one": "{{count}} position at the level out of 11",
+        "ready_other": "{{count}} positions at the level out of 11",
+        "aimed": "Target rating",
+        "missing": "{{gap}} pts short on average",
+        "reached": "reached",
+        "col": {
+          "pos": "Position",
+          "recruit": "Signing",
+          "fit": "Rating /20",
+          "replaces": "Replaces",
+          "gain": "Gain",
+          "price": "Price",
+          "after": "XI average after",
+          "wage": "Wage",
+          "known": "Known",
+          "status": "Status",
+          "fitHint": "Current rating in the role, out of 20",
+          "potential": "Potential",
+          "potentialHint": "Rating he can reach in time, out of 20"
+        },
+        "empty": "nobody",
+        "reachable": "Reachable with your targets",
+        "verdict": {
+          "done": "already there",
+          "reachable_one": "reachable with {{count}} signing",
+          "reachable_other": "reachable with {{count}} signings",
+          "out": "out of reach: widen the budget or follow other targets"
+        },
+        "cap": "Money for the plan: {{amount}} (transfer budget + possible sales)",
+        "capNone": "Budget unknown: no price limit",
+        "pool_one": "{{count}} tracked target",
+        "pool_other": "{{count}} tracked targets",
+        "doneText": "Your XI is already above the target: aim higher, or strengthen the bench with the positions to fill below.",
+        "noPool": "No tracked targets: add players to your FM27 shortlist (or in Targets) and I'll work out which signings lift your XI.",
+        "noUpgrade": "None of your priced, affordable targets beats a starter. Follow other players or widen the budget.",
+        "priceEst": "Value estimated by your scouts",
+        "floor": "weakest link {{value}}",
+        "wageCap": "wage room {{amount}} (freed wages included)",
+        "spent": "the plan spends {{amount}} and {{wages}} in wages",
+        "knownLow": "Your scouts barely know this player yet: his rating may change.",
+        "price": {
+          "bargain": "bargain",
+          "pricey": "pricey"
+        },
+        "status": {
+          "plan": "In the plan",
+          "bargain": "Bargain",
+          "dear": "Too dear",
+          "unpriced": "Needs a valuation"
+        },
+        "listTitle": "Your useful targets, most useful first",
+        "replaces": "replaces {{name}} ({{fit}})",
+        "afterShort": "XI at {{value}} after",
+        "depth": "backup",
         "less": "Show less",
-        "detail": "The detail"
+        "marketHelp": "“Bargain” and “pricey”: price compared with the fair price for that rating, worked out from your {{count}} priced targets. “Known”: how much your scouts know; under 50%, the rating may still move.",
+        "marketNone": "At least 6 priced targets are needed to judge prices. “Known”: how much your scouts know; under 50%, the rating may still move.",
+        "backupOf": "backup to {{name}} ({{fit}})",
+        "overBudget": "above your budget",
+        "more_one": "Show 1 more",
+        "more_other": "Show {{count}} more",
+        "xiCeil": "XI potential: {{value}}",
+        "ceilSame": "= rating",
+        "ceilSameHint": "Already at his ceiling (25 or older, or potential reached).",
+        "later": "long term {{gain}}",
+        "scaleHelp": "Ratings out of 20 in your system's role, dark green = at your target. Potential: what the player can reach given his age and potential (PA read from memory, otherwise your scouts' stars); from 25 on, it's his current rating.",
+        "sort": {
+          "label": "Sort:",
+          "status": "Status",
+          "now": "Current rating",
+          "potential": "Potential",
+          "value": "Value for money"
+        }
+      },
+      "levelHint": "Current level → reachable potential, out of 20",
+      "reg": {
+        "title": "Your registration list",
+        "unknownLeague": "your league",
+        "generic": "No known list rule for {{league}}: here are your counts, to compare with the Competition Rules screen in FM27.",
+        "rule": {
+          "FR": "Ligue 1: at least 8 club- or France-trained players, 4 of them club-trained. No non-EU cap.",
+          "IT": "Serie A: 25-man list (22 and over), at least 8 home-grown including 4 club-trained. Limited non-EU signings each season.",
+          "ES": "LaLiga: 25-man list (22 and over), at least 8 home-grown, 3 non-EU players at most.",
+          "EN": "Premier League: 25-man list (22 and over), at least 8 home-grown; each one missing costs a place.",
+          "DE": "Bundesliga: at least 12 home-grown, 6 of them club-trained. No non-EU cap."
+        },
+        "seniors": "Places (22 and over)",
+        "noCap": "no size limit",
+        "free_one": "{{count}} place free",
+        "free_other": "{{count}} places free",
+        "over_one": "{{count}} too many: leave out of the list",
+        "over_other": "{{count}} too many: leave out of the list",
+        "homeGrown": "Home-grown",
+        "hgClub": "club-trained: {{have}} ({{need}} needed)",
+        "hgClubFree_one": "{{count}} club-trained",
+        "hgClubFree_other": "{{count}} club-trained",
+        "nonEu": "Non-EU",
+        "noNonEuCap": "no cap",
+        "nonEuCap": "{{count}} at most",
+        "u21": "Under 21",
+        "u21Sub": "registered separately, no place taken",
+        "unknownHg": "The plugin doesn't read the home-grown status for the whole squad yet: the home-grown count stays unknown.",
+        "block": {
+          "full": "list full",
+          "nonEu": "no non-EU place left"
+        }
       }
     },
     "stats": {
@@ -2300,7 +2451,7 @@
       "mind": "Mindset",
       "weight": "counts for {{weight}}%",
       "why": {
-        "role": "Their best role in your eleven is {{role}} ({{slot}}). Gap with their best possible role: {{stars}} star. The smaller the gap, the more your project uses their real qualities.",
+        "role": "Their best role in your eleven is {{role}} ({{slot}}). Gap with their best possible role: {{stars}} pt out of 20. The smaller the gap, the more your project uses their real qualities.",
         "roleZero": "Their best role in your eleven is {{role}} ({{slot}}), which is also their best possible role: your project uses their real qualities.",
         "positionNatural": "{{pos}} is one of their natural positions.",
         "position": "{{pos}} is not a natural position: familiarity {{fam}}/20 in the game. They will need time (and matches) to feel at home there.",
@@ -2373,7 +2524,7 @@
       "replaces": "{{name}} takes {{other}}'s place ({{pos}})",
       "starts": "{{name}} becomes a starter ({{pos}})",
       "recruit": "Still to recruit for the project: {{list}}",
-      "foot": "Windows computed from the league restart month (Training settings). Provisional costs chosen by FM Immersion: changing tactic needs a half-star gain; a style too complex for the group loses up to half a star."
+      "foot": "Windows computed from the league restart month (Training settings). Provisional costs chosen by FM Immersion: changing tactic needs a one-point gain (out of 20); a style too complex for the group loses up to one point."
     },
     "abilities": {
       "toggle": "Read CA/PA",
@@ -2409,13 +2560,13 @@
       },
       "why": {
         "potentialPa": "PA {{pa}}: he can overtake the starter in his position (CA {{ca}}).",
-        "potential": "{{stars}} ★ potential per your staff, relative to the current squad.",
+        "potential": "Potential {{value}}/20 per your staff.",
         "starter": "Starter today ({{age}} years old).",
         "backup": "Useful backup ({{age}} years old).",
         "surplus": "Doesn't play and has no place in the project ({{age}} years old).",
-        "smallGain": "{{other}} would only be {{gain}} ★ better: not enough to lose tactical understanding ({{need}} ★ needed).",
-        "bigGain": "At least {{need}} ★ better than {{other}}: worth the learning time. Switch during pre-season or the winter break.",
-        "weakSlot": "The best player for this position only reaches {{fit}}% suitability in the project.",
+        "smallGain": "{{other}} would only be {{gain}} pt better: not enough to lose tactical understanding ({{need}} pt needed).",
+        "bigGain": "At least {{need}} pt better than {{other}}: worth the learning time. Switch during pre-season or the winter break.",
+        "weakSlot": "The best player for this position only rates {{fit}}/20 in the project.",
         "emptySlot": "Nobody in the squad covers this project position.",
         "blocked": "Promising youngster without game time here: a loan will help him develop.",
         "leaving": "Flagged as leaving ({{age}}): the position is open, they no longer count in planning.",
@@ -2428,7 +2579,7 @@
         "repl_noInternal": "Nobody in the squad can play this position: recruit."
       },
       "unless": {
-        "bigGain": "Review if the gap exceeds {{need}} ★ (injuries, signings)."
+        "bigGain": "Review if the gap exceeds {{need}} pt (injuries, signings)."
       },
       "basis": {
         "read": "read from the game",
@@ -2555,7 +2706,8 @@
       "otherClubNamed": "Plays for {{club}}",
       "caPa": "CA / PA",
       "caOff": "reading off",
-      "projectShort": "Project grade"
+      "projectShort": "Project grade",
+      "potential": "potential {{value}}"
     },
     "foot": {
       "profile": "Profile",
@@ -3403,6 +3555,34 @@
       "help": "What his attributes really weigh in the FM27 match engine, according to FM-Arena community tests (November 2026): pace, acceleration and stamina matter most, jumping reach above 12, and he needs at least 6 in work rate, anticipation, strength, balance, concentration and natural fitness. A trend from a single series of tests, not the game's rating: the stars remain FM27's.",
       "none": "Nothing notable.",
       "gk": "Goalkeepers are not covered by these tests."
+    },
+    "takers": {
+      "title": "Set-piece takers and captain",
+      "help": "From your XI, out of 20 from the useful attributes (the task's own attribute counts triple). Set them in FM27: Tactics, Set Pieces and Captains.",
+      "then": "then {{name}}",
+      "none": "Attribute not read yet",
+      "role": {
+        "captain": "Captain",
+        "penalties": "Penalties",
+        "freeKicks": "Free kicks",
+        "corners": "Corners",
+        "longThrows": "Long throws"
+      }
+    },
+    "reliability": {
+      "label": "Data reliability: {{level}}",
+      "level": {
+        "high": "high",
+        "medium": "medium",
+        "low": "low"
+      },
+      "reason": {
+        "partial": "partial attributes ({{pct}}% known)",
+        "small": "small squad ({{count}} players read)",
+        "noPa": "potential from staff stars (tick “Read CA/PA” for the real PA)",
+        "shortHistory": "a single snapshot: progression from age, not measured",
+        "targetsUnknown": "{{count}} of {{total}} targets under 50% known: their rating may move"
+      }
     }
   },
   "modes": {

@@ -105,6 +105,8 @@ export interface RuleCheck {
 export interface Eligibility {
   eu: boolean | null;
   homeGrown: boolean | null;
+  /** Formé au club (et pas seulement au pays), d'après le même texte du jeu. */
+  club?: boolean | null;
 }
 
 const boolOf = (v: unknown): boolean | null =>
@@ -127,7 +129,8 @@ export function eligibilityOf(snap: Pick<FmSnapshot, 'players'> & { custom?: unk
   const custom = snap.custom as { joueurs?: Record<string, Record<string, unknown>> } | null | undefined;
   for (const [key, row] of Object.entries(custom?.joueurs ?? {})) {
     if (!row || typeof row !== 'object') continue;
-    const e: Eligibility = { eu: boolOf(row.estUE), homeGrown: homeGrownOf(row.formeAuPays) };
+    const homeGrown = homeGrownOf(row.formeAuPays);
+    const e: Eligibility = { eu: boolOf(row.estUE), homeGrown, club: homeGrown == null ? null : homeGrown && /club/i.test(String(row.formeAuPays)) };
     if (e.eu == null && e.homeGrown == null) continue;
     out.set(String(row.id ?? key), e);
   }

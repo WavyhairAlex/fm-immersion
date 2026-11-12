@@ -1,10 +1,10 @@
-import { FORMATIONS, POS_LABEL, TARGETS, buildProject, evolutionPlan, recruitAttrs, styleOfGameTactic, switchAnalysis, trainingFor, type FmPlayer, type FmSnapshot, type SquadAt } from '@fm-immersion/module-fm';
+import { reliability, FORMATIONS, POS_LABEL, TARGETS, buildProject, evolutionPlan, recruitAttrs, styleOfGameTactic, switchAnalysis, trainingFor, type FmPlayer, type FmSnapshot, type SquadAt } from '@fm-immersion/module-fm';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
 import { useLeaving } from './FmLeaving';
 import { useTacticEngine } from './FmTactic';
-import { Empty, Fit, Kpi, Panel, Pos, Tag, useCoach, useNames, More, PlayerLink, SectionTabs } from './FmUi';
+import { Empty, Fit, Kpi, Panel, Pos, Tag, useCoach, useNames, More, PlayerLink, SectionTabs, ReliabilityLine } from './FmUi';
 
 const STATUS_TONE = { ready: 'good', develop: 'info', recruit: 'bad' } as const;
 const ICON = { good: '✓', warn: '~', bad: '✗' } as const;
@@ -38,11 +38,11 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
   const now = sw.now;
   const missing = Math.max(0, 7 - now.target.ready);
   const checkValue = (c: (typeof now.checks)[number], st: typeof now.target) =>
-    c.id === 'fit' ? `${c.gap != null && c.gap >= 0 ? '+' : ''}${c.gap == null ? '–' : Math.round((c.gap / 20) * 100)} pts` : c.id === 'ready' ? `${st.ready} / 11` : `${st.ability == null ? '–' : nf1.format(st.ability)} / ${nf1.format(st.need)}`;
+    c.id === 'fit' ? `${c.gap != null && c.gap >= 0 ? '+' : ''}${c.gap == null ? '–' : nf1.format(c.gap)} pt` : c.id === 'ready' ? `${st.ready} / 11` : `${st.ability == null ? '–' : nf1.format(st.ability)} / ${nf1.format(st.need)}`;
   const select = 'input mt-1 min-w-[10rem]';
 
   const dateOf = (iso: string) => month.format(new Date(`${iso}T00:00:00Z`));
-  const pct = (v: number) => `${Math.round((v / 20) * 100)} %`;
+  const pct = (v: number) => nf1.format(v);
 
   return (
     <SectionTabs
@@ -78,15 +78,16 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
                     <select className={select} value={pr.target} onChange={(e) => setCoach({ target: Number(e.target.value) })}>
                       {TARGETS.map((v) => (
                         <option key={v} value={v}>
-                          {t('fm.proj.targetOpt', { value: v })}
+                          {t('fm.proj.targetOpt', { value: nf1.format(v / 5) })}
                         </option>
                       ))}
                     </select>
                   </label>
                 </div>
                 <p className="mt-2 text-xs text-brun">{t('fm.proj.help', { forms: pr.forms.join(', ') })}</p>
+                <ReliabilityLine r={reliability(players, { snapshots: history.length })} />
                 <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <Kpi label={t('fm.proj.ready')} value={`${count('ready')} / 11`} sub={t('fm.proj.readySub', { value: pr.target })} />
+                  <Kpi label={t('fm.proj.ready')} value={`${count('ready')} / 11`} sub={t('fm.proj.readySub', { value: nf1.format(pr.target / 5) })} />
                   <Kpi label={t('fm.proj.develop')} value={count('develop')} sub={t('fm.proj.developSub')} />
                   <Kpi label={t('fm.proj.recruit')} value={count('recruit')} tone={count('recruit') ? 'bad' : undefined} sub={t('fm.proj.recruitSub')} />
                   <Kpi label={t('fm.style.ability')} value={now.target.ability == null ? '–' : nf1.format(now.target.ability)} sub={t('fm.style.abilitySub', { value: nf1.format(now.target.need) })} />
@@ -211,7 +212,7 @@ export function FmProject({ snap, players, folder, history }: { snap: FmSnapshot
                             <span className="text-xs text-brun">{names.role(engine.roles.get(sl.oop))}</span>
                           </div>
                           <p>{t('fm.proj.priorities', { list: recruitAttrs(engine, sl).map(attr).join(', ') })}</p>
-                          <p className="text-xs text-brun">{sl.player ? t('fm.proj.current', { name: sl.player.name, fit: `${Math.round(((sl.fit ?? 0) / 20) * 100)} %` }) : t('fm.proj.currentNone')}</p>
+                          <p className="text-xs text-brun">{sl.player ? t('fm.proj.current', { name: sl.player.name, fit: nf1.format(sl.fit ?? 0) }) : t('fm.proj.currentNone')}</p>
                         </div>
                       ))
                   ) : (

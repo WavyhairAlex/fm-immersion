@@ -1,4 +1,4 @@
-import { engineTier, POS_LABEL, teamInstructionCards, teamInstructionOf, type CoachPrefs, type EngineTier, type EngineValue, type FmPlayer, type PlanLetter, type Project, type ProjectCompat, type TacticEngine } from '@fm-immersion/module-fm';
+import { engineTier, POS_LABEL, type Reliability, teamInstructionCards, teamInstructionOf, type CoachPrefs, type EngineTier, type EngineValue, type FmPlayer, type PlanLetter, type Project, type ProjectCompat, type TacticEngine } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
@@ -270,31 +270,35 @@ export function useNames() {
   };
 }
 
-/** Adéquation sur 20 affichée en pourcentage. */
 /*
- * Échelle d'affichage des notes. Dès que des étoiles ont été lues dans le jeu, toutes les notes sont sur
- * l'échelle du jeu (10 = 0 étoile, 20 = 5 étoiles) et s'affichent en étoiles dans tous les onglets ;
- * sinon en pourcentage. Réglée par useTacticEngine (FmTactic), commun à tous les onglets.
+ * Échelle unique de l'appli : notes sur 20, calculées sur les attributs (comme l'ancienne appli FM Notebook),
+ * comparables d'un club à l'autre. Les étoiles du jeu, relatives à l'effectif, ne sont plus affichées.
  */
-let starScale = false;
-export const setFitScale = (stars: boolean) => {
-  starScale = stars;
-};
-const toStars = (f: number) => Math.max(0, Math.min(5, (f - 10) / 2));
-export const fitPct = (f: number | null | undefined) =>
-  f == null ? '–' : starScale ? `${toStars(f).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} ★` : `${Math.round((f / 20) * 100)} %`;
+const nf1 = (v: number) => v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+/** Note sur 20 à une décimale (« 13,4 »). */
+export const fitPct = (f: number | null | undefined) => (f == null ? '–' : nf1(f));
 
-/** Écart entre deux notes sur 20, dans l'unité affichée (étoiles ou pourcentage), à deux décimales près. */
-export const fitGap = (d: number) =>
-  starScale ? `${(d / 2).toLocaleString(undefined, { maximumFractionDigits: 2 })} ★` : `${((d / 20) * 100).toLocaleString(undefined, { maximumFractionDigits: 1 })} %`;
+/** Écart entre deux notes sur 20, en points (« 0,8 pt »). */
+export const fitGap = (d: number) => `${d.toLocaleString(undefined, { maximumFractionDigits: 1 })} pt`;
 
-/** Pastille d'adéquation : vert au-dessus de 65 % (3,5 étoiles), neutre au milieu, corail sous 45 % (1,5 étoile). */
+/** Pastille de note sur 20 : vert à partir de 14, neutre au milieu, corail sous 10. */
 export function Fit({ value }: { value: number | null | undefined }) {
   if (value == null) return <span className="text-canard/40">–</span>;
-  const pc = starScale ? (toStars(value) / 5) * 100 : (value / 20) * 100;
-  const [hi, mid, lo] = starScale ? [70, 50, 30] : [65, 55, 45];
-  const cls = pc >= hi ? 'bg-eau-fonce text-white' : pc >= mid ? 'bg-eau/40 text-canard' : pc >= lo ? 'bg-canard/10 text-canard' : 'bg-corail/20 text-canard';
+  const cls = value >= 14 ? 'bg-eau-fonce text-white' : value >= 12 ? 'bg-eau/40 text-canard' : value >= 10 ? 'bg-canard/10 text-canard' : 'bg-corail/20 text-canard';
   return <span className={`num-pill ${cls}`}>{fitPct(value)}</span>;
+}
+
+/** Fiabilité des données derrière une analyse (FM Notebook) : niveau et raisons, pour nuancer les conseils. */
+export function ReliabilityLine({ r }: { r: Reliability }) {
+  const { t } = useTranslation();
+  const cls = r.level === 'high' ? 'text-eau-fonce' : r.level === 'medium' ? 'text-orange-fonce' : 'text-corail';
+  const reason = (x: Reliability['reasons'][number]) => t(`fm.reliability.reason.${x.id}`, x as unknown as Record<string, unknown>);
+  return (
+    <p className="mt-2 rounded-lg bg-canard/5 px-3 py-2 text-xs text-brun">
+      <span className={`font-bold ${cls}`}>● {t('fm.reliability.label', { level: t(`fm.reliability.level.${r.level}`) })}</span>
+      {r.reasons.length > 0 && <> · {r.reasons.map(reason).join(' · ')}</>}
+    </p>
+  );
 }
 
 /** Choix du coach (style aimé, schéma, niveau visé), partagés entre « Mon projet » et « Cibles », par partie. */

@@ -51,7 +51,7 @@ export function FmCompare({ saveId, snap, players, folder, history }: { saveId: 
   const role = engine.roles.get(rc);
   const keys = new Set(Object.keys(role?.weights ?? {}).map(attrKey));
   const roleName = (r: { fr: string; en?: string } | undefined) => (r ? (en && r.en) || r.fr : '–');
-  const pct = (x: number | null) => (x == null ? '–' : `${Math.round((x / 20) * 100)} %`);
+  const pct = (x: number | null) => (x == null ? '–' : x.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }));
   const rating = new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const sorted = [...people].sort((a, b) => a.name.localeCompare(b.name));
 

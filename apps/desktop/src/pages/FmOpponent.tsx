@@ -161,7 +161,7 @@ export function FmOpponent({ snap, go }: { snap: FmSnapshot; go?: (view: string)
                     <span>{p.name}</span>
                     <span className="text-brun">
                       {dash(p.positions)}
-                      {p.stars != null && <span className="ml-2">{nf.format(p.stars)} ★</span>}
+                      {p.stars != null && <span className="ml-2">{nf.format(10 + 2 * p.stars)}/20</span>}
                     </span>
                   </li>
                 ))}

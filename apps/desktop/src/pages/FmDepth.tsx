@@ -1,4 +1,4 @@
-import { depthAlerts, depthChart, depthFromPlan, formationKey, POS_LABEL, seasonStart, type DepthEntry, type FmPlayer, type GameSlot, type SquadAt } from '@fm-immersion/module-fm';
+import { setPieceTakers, depthAlerts, depthChart, depthFromPlan, formationKey, POS_LABEL, seasonStart, type DepthEntry, type FmPlayer, type GameSlot, type SquadAt } from '@fm-immersion/module-fm';
 import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
@@ -15,6 +15,12 @@ export function FmDepth({ players, folder, gameFormation, gameTactic = null, lin
   const rows = useMemo(() => (plan ? depthFromPlan(plan, players, history) : depthChart(players, form, history)), [plan, players, form, history]);
   const alerts = useMemo(() => depthAlerts(rows), [rows]);
   const thin = rows.filter((r) => !r.subs.length);
+  // Tireurs et capitaine parmi le onze (sinon tout l'effectif disponible).
+  const takers = useMemo(() => {
+    const xi = plan ? plan.slots.flatMap((sl) => (sl.player ? [sl.player] : [])) : [];
+    return setPieceTakers(xi.length ? xi : players.filter((p) => !p.injury));
+  }, [plan, players]);
+  const nf1 = (v: number) => v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const y0 = seasonStart(gameDate);
   const season = (n: number) => `${y0 + n}/${String(y0 + n + 1).slice(2)}`;
 
@@ -58,6 +64,33 @@ export function FmDepth({ players, folder, gameFormation, gameTactic = null, lin
           sub={[style && names.style(style), gameFormation && t('fm.tac.inGame', { form: gameFormation })].filter(Boolean).join(' · ') || t('fm.depth.proposed')}
         />
       </div>
+
+      <Panel title={t('fm.takers.title')}>
+        <p className="mb-2 text-sm text-brun">{t('fm.takers.help')}</p>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+          {takers.map((k) => (
+            <div key={k.role} className="rounded-lg bg-canard/5 p-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{t(`fm.takers.role.${k.role}`)}</p>
+              {k.first ? (
+                <>
+                  <p className="mt-1 flex items-center justify-between gap-2 font-bold">
+                    <PlayerLink player={k.first.player} />
+                    <span className="tabular-nums">{nf1(k.first.score)}</span>
+                  </p>
+                  {k.second && (
+                    <p className="flex items-center justify-between gap-2 text-xs text-brun">
+                      <span>{t('fm.takers.then', { name: k.second.player.name })}</span>
+                      <span className="tabular-nums">{nf1(k.second.score)}</span>
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="mt-1 text-sm text-brun">{t('fm.takers.none')}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      </Panel>
 
       {alerts.length > 0 && (
         <Panel title={t('fm.depth.watch')}>

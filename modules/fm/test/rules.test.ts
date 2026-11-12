@@ -74,8 +74,8 @@ describe('admissibilité lue dans le jeu', () => {
 
   it('lit estUE et formeAuPays par joueur', () => {
     const e = eligibilityOf(snap({ a: { id: 'a', estUE: 'True', formeAuPays: 'Formé au club' }, b: { id: 'b', estUE: 'False', formeAuPays: 'Non formé au pays' }, c: { id: 'c', risqueBlessureGlobal: 3 } }));
-    expect(e.get('a')).toEqual({ eu: true, homeGrown: true });
-    expect(e.get('b')).toEqual({ eu: false, homeGrown: false });
+    expect(e.get('a')).toEqual({ eu: true, homeGrown: true, club: true });
+    expect(e.get('b')).toEqual({ eu: false, homeGrown: false, club: false });
     expect(e.has('c')).toBe(false);
     expect(homeGrownOf('Formé au pays')).toBe(true);
     expect(homeGrownOf('Pas formé au pays')).toBe(false);

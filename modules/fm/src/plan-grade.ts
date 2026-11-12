@@ -162,7 +162,7 @@ export function planGrade(p: FmPlayer, g: GradeInput): PlanGrade {
   }
   const pos = g.pos;
   // Rôle : 1 point sur 20 = une demi-étoile ; une étoile et demie d'écart (3 points) = 10/100.
-  parts.push({ id: 'role', score: clamp(100 - g.gap * 30), weight: GRADE_WEIGHTS.role, vals: { stars: Math.round(g.gap * 5) / 10 } });
+  parts.push({ id: 'role', score: clamp(100 - g.gap * 30), weight: GRADE_WEIGHTS.role, vals: { stars: Math.round(g.gap * 10) / 10 } });
 
   // Poste : naturel = 100 ; sinon familiarité du jeu (1-20) ; à défaut, jugé apte d'après ses étoiles.
   const fam = p.positions.includes(pos) ? 20 : (p.familiarity?.[pos] ?? null);
