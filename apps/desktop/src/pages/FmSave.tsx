@@ -74,6 +74,7 @@ import { FmStyle } from './FmStyle';
 import { FmBuilder } from './FmBuilder';
 import { FmTactic, ReserveContext, useTacticEngine } from './FmTactic';
 import { FmTargets } from './FmTargets';
+import { FmScouting } from './FmScouting';
 import { FmTraining } from './FmTraining';
 import { FmWages } from './FmWages';
 import { CompatTag, EngineTag, GradeLetter, HelpHost, PlayerLink, PlayerSheetContext, useCoach, type SheetFocus } from './FmUi';
@@ -270,6 +271,8 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
         return <FmStaff />;
       case 'mercato':
         return <FmMercato saveId={saveId} snap={snapshot.data} players={players} folder={folder} gameDate={snapshot.gameDate} history={history} />;
+      case 'scouting':
+        return <FmScouting saveId={saveId} snap={snapshot.data} players={players} folder={folder} gameDate={snapshot.gameDate} />;
       case 'targets':
         return <FmTargets saveId={saveId} snap={snapshot.data} players={players} folder={folder} go={go} />;
       case 'depth':

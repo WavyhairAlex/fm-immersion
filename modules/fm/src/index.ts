@@ -76,6 +76,7 @@ export * from './offseason';
 export * from './playtime';
 export * from './pricing';
 export * from './reach';
+export * from './trading';
 export * from './briefing';
 export * from './matchday';
 export * from './challenges';

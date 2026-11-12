@@ -581,6 +581,7 @@
       "progression": "Progression",
       "training": "Entraînement",
       "mercato": "Départs et jeunes",
+      "scouting": "Repérage des bonnes affaires",
       "targets": "Cibles du mercato",
       "instructions": "Consignes individuelles",
       "results": "Résultats",
@@ -1809,6 +1810,7 @@
       "progression": "L'évolution du niveau de chaque joueur depuis le premier instantané.",
       "opponent": "Le prochain adversaire tel que le décrit le rapport d'équipe du jeu, et comment le jouer.",
       "mercato": "Ton argent, ton onze face à la note visée, les recrues qui le font monter, puis tes décisions dans l'ordre.",
+      "scouting": "Les joueurs de toute la base à acheter peu cher, faire progresser puis revendre : achat, progression, revente et gain estimés.",
       "instructions": "Au plus 3 consignes par joueur du onze, pour coller au style sans trop charger la compréhension tactique.",
       "results": "Les matchs joués depuis que FM Immersion suit la partie : score, onze, note de chaque joueur, et ce qui rapporte des points.",
       "diagnosis": "Les titulaires sous la moyenne du onze, et ce qui l'explique.",
@@ -2612,6 +2614,7 @@
       "stats": "Statistiques",
       "analysis": "Analyse",
       "mercato": "Mercato",
+      "scouting": "Repérage",
       "targets": "Cibles",
       "finances": "Finances",
       "wages": "Salaires",
@@ -3583,6 +3586,84 @@
         "shortHistory": "un seul instantané : progression d'après l'âge, pas mesurée",
         "targetsUnknown": "{{count}} cibles sur {{total}} connues à moins de 50 % : leur note peut bouger"
       }
+    },
+    "scout": {
+      "title": "Repérage : acheter, faire progresser, revendre",
+      "lead": "Toute la base de FM27, lue en mémoire à ta demande : les joueurs que ton club peut s'offrir et qui ont encore de la marge. Pour chacun : ce qu'il coûte, ce qu'il deviendra, ce qu'il rapportera à la revente.",
+      "preset": "Ce que tu cherches",
+      "presets": {
+        "all": "Tout (25 ans et moins)",
+        "nugget": "Pépites à revendre",
+        "undervalued": "Sous-cotés",
+        "expiring": "Fins de contrat",
+        "free": "Libres"
+      },
+      "presetHelp": {
+        "all": "Joueurs de 25 ans et moins à ta portée, classés par gain par saison.",
+        "nugget": "21 ans et moins avec au moins 15 points d'écart entre CA et PA : ceux qui prennent le plus de valeur.",
+        "undervalued": "24 ans et moins, vendus au moins 20 % sous la valeur d'un joueur de même niveau et même âge.",
+        "expiring": "Plus qu'un an de contrat ou moins : leur club les brade.",
+        "free": "Sans club : aucune indemnité, seulement le salaire."
+      },
+      "positions": "Postes (aucun = tous)",
+      "run": "Lancer le repérage",
+      "rerun": "Relancer",
+      "help": "Les chiffres viennent des vraies valeurs du jeu (CA, PA, âge, valeur, salaire, contrat), pas de l'avis des recruteurs. Progression : le CA monte chaque saison, vite avant 21 ans puis de moins en moins, sans dépasser le PA, et moins s'il ne joue pas chez toi (doublure : 70 %, à prêter : 60 %). Revente : la valeur d'un joueur de ce niveau et de cet âge sur le marché lu, un peu plus pour un jeune sous contrat long. Achat : sa valeur, plus chère s'il a un long contrat, moins s'il arrive en fin de contrat, gratuit s'il est libre. Gain : revente − achat − salaires. Ce sont des estimations de FM Immersion pour savoir où regarder : la négociation et la progression réelles restent celles du jeu.",
+      "kpi": {
+        "ideas": "Bonnes affaires",
+        "read": "sur {{count}} joueurs lus",
+        "best": "Meilleur gain",
+        "bestSub_one": "{{name}}, revendu dans {{count}} saison",
+        "bestSub_other": "{{name}}, revendu dans {{count}} saisons",
+        "free": "Sans indemnité",
+        "freeSub": "libres ou en précontrat",
+        "model": "Prix du marché",
+        "modelFit": "Mesuré",
+        "modelSub": "sur {{count}} joueurs chiffrés",
+        "modelGeneric": "Approché",
+        "modelGenericSub": "trop peu de valeurs lues : courbe générique"
+      },
+      "list": "Les bonnes affaires",
+      "sort": {
+        "perYear": "Gain par saison",
+        "profit": "Gain total",
+        "roi": "Rendement"
+      },
+      "none": "Aucun joueur ne rapporte plus qu'il ne coûte dans cette recherche. Essaie un autre repère ou d'autres postes.",
+      "col": {
+        "player": "Joueur",
+        "role": "Chez toi",
+        "growth": "CA → à la revente",
+        "buy": "Achat",
+        "wages": "Salaires",
+        "sale": "Revente",
+        "profit": "Gain",
+        "reach": "Portée"
+      },
+      "age_one": "{{count}} an",
+      "age_other": "{{count}} ans",
+      "kind": {
+        "nugget": "pépite",
+        "undervalued": "sous-coté",
+        "expiring": "fin de contrat",
+        "free": "sans indemnité"
+      },
+      "role": {
+        "starter": "titulaire",
+        "backup": "doublure",
+        "none": "à prêter pour jouer"
+      },
+      "pa": "PA {{pa}}",
+      "costless": "0 €",
+      "ratio": "{{pct}} % de sa valeur",
+      "months_one": "{{count}} mois de contrat",
+      "months_other": "{{count}} mois de contrat",
+      "seasons_one": "sur {{count}} saison",
+      "seasons_other": "sur {{count}} saisons",
+      "saleAt": "à {{age}} ans",
+      "roi": "rendement {{pct}} %",
+      "roiFree": "rien à avancer",
+      "more": "Voir {{count}} de plus"
     }
   },
   "modes": {
