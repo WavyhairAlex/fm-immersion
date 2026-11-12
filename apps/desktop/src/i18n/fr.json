@@ -1988,25 +1988,43 @@
       },
       "stayNoYouth": "Les jeunes de 21 ans ou moins sont dans leur cadre plus haut.",
       "board": {
-        "transfer": "Budget transferts",
-        "wageRoom": "Masse salariale",
-        "wageOver": "au-dessus du budget, par mois",
-        "wageLeft": "de marge sous le budget, par mois",
-        "balance": "Solde du club",
-        "in": "Faire venir",
-        "out": "Faire partir",
-        "extend": "Prolonger",
-        "noIn": "Aucun poste à renforcer pour l'instant.",
-        "noOut": "Personne à faire partir pour l'instant.",
-        "noExtend": "Aucun contrat à prolonger pour l'instant.",
         "until": "fin de contrat le {{date}}",
         "urgent": "À régler vite",
-        "less": "Montrer moins",
-        "hint": "Clique sur une ligne pour voir le détail et agir.",
         "detailOpen": "Tout le détail : jeunes, recherche de remplaçants, niveau de la division ▾",
-        "detailClose": "Replier le détail ▴",
-        "more_one": "+ {{count}} autre",
-        "more_other": "+ {{count}} autres"
+        "detailClose": "Replier le détail ▴"
+      },
+      "plan": {
+        "priority": "Ta priorité",
+        "next": "Ensuite, dans l'ordre",
+        "decisions": "Tes décisions, dans l'ordre",
+        "verb": {
+          "extendUrgent": "Prolonger vite",
+          "recruit1": "Recruter en urgence",
+          "sell": "Vendre",
+          "release": "Laisser partir en fin de contrat",
+          "recruit2": "Recruter pour le projet",
+          "loan": "Prêter",
+          "extend": "Prolonger",
+          "recruit3": "Anticiper un recrutement"
+        },
+        "why": {
+          "extend": "Leurs contrats finissent au plus tard le {{date}}."
+        },
+        "andMore_one": "{{list}} et {{count}} autre",
+        "andMore_other": "{{list}} et {{count}} autres",
+        "see_one": "Voir",
+        "see_other": "Voir les {{count}}",
+        "seeFinances": "Voir les finances",
+        "tightTitle": "Finances serrées : vends avant de recruter",
+        "tightText": "Pas d'achat possible. Cherche des joueurs libres ou en prêt, et commence par faire de la place.",
+        "calmTitle": "Rien d'urgent au mercato",
+        "calmText": "Ton effectif tient la route : garde un œil sur les contrats et les jeunes.",
+        "money": {
+          "transfer": "Budget transferts {{amount}}",
+          "wageOver": "masse salariale {{amount}} au-dessus du budget par mois",
+          "wageLeft": "marge salariale {{amount}} par mois",
+          "balance": "solde du club {{amount}}"
+        }
       }
     },
     "stats": {

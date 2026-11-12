@@ -414,7 +414,8 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
                     ) : (
                       <>
                         <ViewHeader view={view} part={PARTS[view].includes(current) ? current : view} />
-                        <AssistantSays page={view} saveId={saveId} go={go} />
+                        {/* Le Mercato ouvre sur sa propre priorité en grand : la boîte de l'adjoint y ferait doublon. */}
+                        {(PARTS[view].includes(current) ? current : view) !== 'mercato' && <AssistantSays page={view} saveId={saveId} go={go} />}
                         <PageParts page={view} current={current} go={go} render={part} />
                       </>
                     )}

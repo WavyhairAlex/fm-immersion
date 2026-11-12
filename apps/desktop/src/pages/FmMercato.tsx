@@ -1,6 +1,8 @@
 import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { clubPath } from '../lib/club-nav';
 import { useTacticEngine } from './FmTactic';
 import { LeaveButton, useLeaving } from './FmLeaving';
 import { NeedsPanel } from './FmNeeds';
@@ -15,159 +17,191 @@ const REPLACE: MercatoVerdict[] = ['sell', 'release', 'replace'];
 
 /** Fins de contrat à six mois ou moins : à régler avant que le joueur puisse signer ailleurs. */
 const URGENT_MONTHS = 6;
-/** Lignes montrées par colonne avant « + N autres ». */
-const COLUMN_ROWS = 5;
+/** Une décision individuelle, ouverte sous son groupe : une ligne, une raison courte, le détail au clic. */
+type PlanRow = { key: string; head: ReactNode; tag: ReactNode; line: string; detail: ReactNode };
+type PlanKind = 'extendUrgent' | 'recruit1' | 'sell' | 'release' | 'recruit2' | 'loan' | 'extend' | 'recruit3';
+/** Ordre de priorité des groupes : du plus pressé au confort de banc. */
+const PLAN_ORDER: PlanKind[] = ['extendUrgent', 'recruit1', 'sell', 'release', 'recruit2', 'loan', 'extend', 'recruit3'];
+/** Au-delà de ce rang, des finances serrées passent en tête (rien de plus pressé qu'elles). */
+const MONEY_FIRST_FROM = 2;
+type PlanGroup = { kind: PlanKind; rows: PlanRow[]; names: string[]; why: string };
 
-/** Une décision du bureau : une ligne (poste ou joueur, étiquette), une raison courte, le détail au clic. */
-type BoardRow = { key: string; head: ReactNode; tag: ReactNode; line: string; detail: ReactNode };
-
-/** Une colonne du bureau : titre, compteur, une ligne par décision ; un clic ouvre la ligne, « + N autres » déplie. */
-function BoardColumn({ title, rows, empty }: { title: string; rows: BoardRow[]; empty: string }) {
-  const { t } = useTranslation();
-  const [all, setAll] = useState(false);
+/** Les décisions d'un groupe, une par ligne ; un clic ouvre la ligne sur place. */
+function PlanRows({ rows }: { rows: PlanRow[] }) {
   const [open, setOpen] = useState<string | null>(null);
-  const shown = all ? rows : rows.slice(0, COLUMN_ROWS);
   return (
-    <section className="card min-w-0 !p-3">
-      <h3 className="mb-1 flex items-center justify-between px-1 text-xs font-extrabold uppercase tracking-widest text-canard">
-        {title} <span className="rounded-full bg-canard px-2 text-white">{rows.length}</span>
-      </h3>
-      {rows.length ? (
-        <ul className="divide-y divide-canard/10">
-          {shown.map((row) => {
-            const isOpen = open === row.key;
-            return (
-              <li key={row.key}>
-                <button
-                  type="button"
-                  aria-expanded={isOpen}
-                  onClick={() => setOpen(isOpen ? null : row.key)}
-                  className={`w-full rounded-md px-1 py-1.5 text-left hover:bg-orange-clair/50 ${isOpen ? 'bg-orange-clair/50' : ''}`}
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="flex min-w-0 flex-1 items-center gap-1.5 truncate font-bold">{row.head}</span>
-                    <span className="shrink-0">{row.tag}</span>
-                  </span>
-                  <span className="block truncate text-xs text-brun">{row.line}</span>
-                </button>
-                {isOpen && <div className="space-y-1.5 px-1 pb-2 text-sm">{row.detail}</div>}
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <p className="px-1 py-2 text-sm text-brun">{empty}</p>
-      )}
-      {rows.length > COLUMN_ROWS && (
-        <button type="button" className="mt-1 px-1 text-sm font-bold text-orange-fonce hover:underline" onClick={() => setAll(!all)}>
-          {all ? t('fm.merc.board.less') : t('fm.merc.board.more', { count: rows.length - COLUMN_ROWS })}
-        </button>
-      )}
-    </section>
+    <ul className="divide-y divide-canard/10 border-t border-canard/10">
+      {rows.map((row) => {
+        const isOpen = open === row.key;
+        return (
+          <li key={row.key}>
+            <button type="button" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : row.key)} className={`flex w-full items-center gap-3 px-4 py-2 text-left hover:bg-orange-clair/40 ${isOpen ? 'bg-orange-clair/40' : ''}`}>
+              <span className="flex min-w-0 flex-1 items-center gap-1.5 font-bold">{row.head}</span>
+              <span className="hidden min-w-0 flex-[2] truncate text-sm text-brun md:block">{row.line}</span>
+              <span className="shrink-0">{row.tag}</span>
+            </button>
+            {isOpen && <div className="space-y-1.5 px-4 pb-3 text-sm">{row.detail}</div>}
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
 /**
- * Le bureau du mercato (version A choisie par le joueur), fait pour tenir sur un écran : l'argent disponible en une
- * bande, puis trois colonnes (faire venir, faire partir, prolonger), une ligne par décision ; le détail s'ouvre au clic.
+ * Le plan du mercato, hiérarchisé : 1) la priorité, en grand, avec l'argent disponible ; 2) les décisions regroupées
+ * par type, dans l'ordre où les prendre (une ligne par groupe) ; 3) au clic, chaque joueur ou poste ; le reste est replié.
  */
-function MercatoBoard({ r, needs, fin, gameDate, onMarked }: { r: MercatoReport; needs: RecruitNeed[]; fin: ClubFinances | null; gameDate: string; onMarked: (id: string) => void }) {
+function MercatoPlan({ r, needs, fin, gameDate, onMarked }: { r: MercatoReport; needs: RecruitNeed[]; fin: ClubFinances | null; gameDate: string; onMarked: (id: string) => void }) {
   const { t } = useTranslation();
   const f = useFormat();
   const reason = useReason();
+  const navigate = useNavigate();
   const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
-  const arrivals: BoardRow[] = needs.map((n, i) => {
-    const why = n.why[0] ? t(`fm.needs.why.${n.why[0]}`, { name: n.player?.name ?? '' }) : '';
-    return {
-      key: `need-${n.pos}-${i}`,
-      head: (
-        <>
-          <span className="pill">{POS_LABEL[n.pos]}</span>
-          {n.player && <span className="truncate font-normal text-brun">{n.player.name}</span>}
-        </>
-      ),
-      tag: <Tag tone={n.priority === 1 ? 'bad' : n.priority === 2 ? 'warn' : undefined}>{t(`fm.needs.priority.${n.priority}`)}</Tag>,
-      line: why,
-      detail: (
-        <>
-          {n.why.length > 1 && <p>{n.why.slice(1).map((w) => t(`fm.needs.why.${w}`, { name: n.player?.name ?? '' })).join(' ')}</p>}
-          {n.attrs.length > 0 && <p className="text-brun">{t('fm.needs.attrs', { list: n.attrs.map(attr).join(', ') })}</p>}
-          {n.player && <PlayerLink player={n.player} />}
-        </>
-      ),
-    };
+  const [open, setOpen] = useState<PlanKind | null>(null);
+
+  const needRow = (n: RecruitNeed, i: number): PlanRow => ({
+    key: `need-${n.pos}-${i}`,
+    head: (
+      <>
+        <span className="pill">{POS_LABEL[n.pos]}</span>
+        {n.player && <span className="truncate font-normal text-brun">{n.player.name}</span>}
+      </>
+    ),
+    tag: <Tag tone={n.priority === 1 ? 'bad' : n.priority === 2 ? 'warn' : undefined}>{t(`fm.needs.priority.${n.priority}`)}</Tag>,
+    line: n.why[0] ? t(`fm.needs.why.${n.why[0]}`, { name: n.player?.name ?? '' }) : '',
+    detail: (
+      <>
+        {n.why.length > 1 && <p>{n.why.slice(1).map((w) => t(`fm.needs.why.${w}`, { name: n.player?.name ?? '' })).join(' ')}</p>}
+        {n.attrs.length > 0 && <p className="text-brun">{t('fm.needs.attrs', { list: n.attrs.map(attr).join(', ') })}</p>}
+        {n.player && <PlayerLink player={n.player} />}
+      </>
+    ),
   });
-  const departures: BoardRow[] = (['sell', 'release', 'loan'] as const).flatMap((v) =>
-    r.byVerdict[v].map((a) => ({
-      key: `${v}-${a.player.id}`,
-      head: (
-        <>
-          <span className="truncate">{a.player.name}</span> <Pos player={a.player} />
-        </>
-      ),
-      tag: <Tag tone={TONE[v]}>{t(`fm.merc.verdict.${v}`)}</Tag>,
-      line: a.reasons[0] ? reason(a.reasons[0]) : '',
-      detail: (
-        <>
-          <p className="text-brun">{a.reasons.map(reason).join(' · ')}</p>
-          <p className="flex flex-wrap items-center gap-2">
-            <PlayerLink player={a.player} />
-            {v === 'sell' && <PriceTag a={a} />}
-            <LeaveButton player={a.player} gameDate={gameDate} onMarked={onMarked} />
-          </p>
-        </>
-      ),
-    })),
-  );
-  const extensions: BoardRow[] = [...r.byVerdict.extend]
-    .sort((x, y) => (x.months ?? 99) - (y.months ?? 99))
-    .map((a) => {
-      const urgent = a.months != null && a.months <= URGENT_MONTHS;
-      return {
-        key: `extend-${a.player.id}`,
-        head: (
-          <>
-            <span className="truncate">{a.player.name}</span> <Pos player={a.player} />
-          </>
-        ),
-        tag: urgent ? <Tag tone="bad">{t('fm.merc.board.urgent')}</Tag> : null,
-        line: [t('fm.contracts.age', { count: a.player.age ?? 0 }), a.player.contractEnd ? t('fm.merc.board.until', { date: f.date(a.player.contractEnd) }) : null].filter(Boolean).join(' · '),
-        detail: (
-          <>
-            <p className="text-brun">{a.reasons.map(reason).join(' · ')}</p>
-            <PlayerLink player={a.player} />
-          </>
-        ),
-      };
-    });
-  const red = 'text-corail';
+  const playerRow = (a: MercatoAdvice, v: MercatoVerdict): PlanRow => ({
+    key: `${v}-${a.player.id}`,
+    head: (
+      <>
+        <span className="truncate">{a.player.name}</span> <Pos player={a.player} />
+      </>
+    ),
+    tag:
+      v === 'extend' ? (a.months != null && a.months <= URGENT_MONTHS ? <Tag tone="bad">{t('fm.merc.board.urgent')}</Tag> : null) : <Tag tone={TONE[v]}>{t(`fm.merc.verdict.${v}`)}</Tag>,
+    line:
+      v === 'extend'
+        ? [t('fm.contracts.age', { count: a.player.age ?? 0 }), a.player.contractEnd ? t('fm.merc.board.until', { date: f.date(a.player.contractEnd) }) : null].filter(Boolean).join(' · ')
+        : a.reasons[0]
+          ? reason(a.reasons[0])
+          : '',
+    detail: (
+      <>
+        <p className="text-brun">{a.reasons.map(reason).join(' · ')}</p>
+        <p className="flex flex-wrap items-center gap-2">
+          <PlayerLink player={a.player} />
+          {v === 'sell' && <PriceTag a={a} />}
+          {v !== 'extend' && <LeaveButton player={a.player} gameDate={gameDate} onMarked={onMarked} />}
+        </p>
+      </>
+    ),
+  });
+
+  const extend = [...r.byVerdict.extend].sort((x, y) => (x.months ?? 99) - (y.months ?? 99));
+  const urgentExt = extend.filter((a) => a.months != null && a.months <= URGENT_MONTHS);
+  const laterExt = extend.filter((a) => !(a.months != null && a.months <= URGENT_MONTHS));
+  const lastEnd = (xs: MercatoAdvice[]) => xs.map((a) => a.player.contractEnd).filter(Boolean).sort().at(-1);
+  const extWhy = (xs: MercatoAdvice[]) => (lastEnd(xs) ? t('fm.merc.plan.why.extend', { date: f.date(lastEnd(xs)!) }) : '');
+  const byPrio = (p: number) => needs.map((n, i) => ({ n, i })).filter((x) => x.n.priority === p);
+  const recruit = (p: number): PlanGroup => {
+    const xs = byPrio(p);
+    return { kind: `recruit${p}` as PlanKind, rows: xs.map((x) => needRow(x.n, x.i)), names: xs.map((x) => POS_LABEL[x.n.pos]), why: xs[0]?.n.why[0] ? t(`fm.needs.why.${xs[0].n.why[0]}`, { name: xs[0].n.player?.name ?? '' }) : '' };
+  };
+  const players = (kind: PlanKind, v: MercatoVerdict, xs: MercatoAdvice[], why?: string): PlanGroup => ({
+    kind,
+    rows: xs.map((a) => playerRow(a, v)),
+    names: xs.map((a) => a.player.name),
+    why: why ?? (xs[0]?.reasons[0] ? reason(xs[0].reasons[0]) : ''),
+  });
+  const groups = [
+    players('extendUrgent', 'extend', urgentExt, extWhy(urgentExt)),
+    recruit(1),
+    players('sell', 'sell', r.byVerdict.sell),
+    players('release', 'release', r.byVerdict.release),
+    recruit(2),
+    players('loan', 'loan', r.byVerdict.loan),
+    players('extend', 'extend', laterExt, extWhy(laterExt)),
+    recruit(3),
+  ].filter((g) => g.rows.length);
+
+  const tight = fin ? financeState(fin).tight : false;
+  const topRank = groups.length ? PLAN_ORDER.indexOf(groups[0]!.kind) : PLAN_ORDER.length;
+  const moneyFirst = tight && topRank >= MONEY_FIRST_FROM;
+  const top = moneyFirst ? null : groups[0] ?? null;
+  const list = top ? groups.slice(1) : groups;
+  const listNames = (xs: string[]) => (xs.length <= 3 ? xs.join(', ') : t('fm.merc.plan.andMore', { list: xs.slice(0, 3).join(', '), count: xs.length - 3 }));
+  const money = fin
+    ? [
+        t('fm.merc.plan.money.transfer', { amount: f.money(fin.transferBudget) }),
+        fin.wageRoom == null ? null : t(fin.wageRoom < 0 ? 'fm.merc.plan.money.wageOver' : 'fm.merc.plan.money.wageLeft', { amount: f.money(Math.abs(fin.wageRoom)) }),
+        t('fm.merc.plan.money.balance', { amount: f.money(fin.balance) }),
+      ].filter(Boolean)
+    : [];
+
   return (
-    <div className="space-y-3">
-      {fin && (
-        <div className="card flex flex-wrap items-center gap-x-8 gap-y-2 !px-4 !py-3">
-          <p>
-            <span className="block text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.merc.board.transfer')}</span>
-            <span className={`font-display text-xl font-semibold tabular-nums ${fin.transferBudget != null && fin.transferBudget <= 0 ? red : ''}`}>{f.money(fin.transferBudget)}</span>
-          </p>
-          <p>
-            <span className="block text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.merc.board.wageRoom')}</span>
-            <span className={`font-display text-xl font-semibold tabular-nums ${fin.wageRoom != null && fin.wageRoom < 0 ? red : ''}`}>
-              {fin.wageRoom == null ? f.money(null) : f.money(Math.abs(fin.wageRoom))}
-            </span>{' '}
-            <span className="text-xs text-brun">{t(fin.wageRoom != null && fin.wageRoom < 0 ? 'fm.merc.board.wageOver' : 'fm.merc.board.wageLeft')}</span>
-          </p>
-          <p>
-            <span className="block text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.merc.board.balance')}</span>
-            <span className={`font-display text-xl font-semibold tabular-nums ${fin.balance != null && fin.balance < 0 ? red : ''}`}>{f.money(fin.balance)}</span>
-          </p>
+    <div className="space-y-4">
+      {/* 1. La priorité : une seule chose, en grand. */}
+      <section className="rounded-xl bg-canard p-5 text-white" aria-labelledby="merc-priority">
+        <p className="text-xs font-extrabold uppercase tracking-widest text-orange">{t('fm.merc.plan.priority')}</p>
+        <h2 id="merc-priority" className="mt-1 text-2xl font-semibold leading-tight text-white">
+          {top ? `${t(`fm.merc.plan.verb.${top.kind}`)} : ${listNames(top.names)}` : moneyFirst ? t('fm.merc.plan.tightTitle') : t('fm.merc.plan.calmTitle')}
+        </h2>
+        <p className="mt-1 max-w-3xl text-white/80">{top ? top.why : moneyFirst ? t('fm.merc.plan.tightText') : t('fm.merc.plan.calmText')}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+          {top ? (
+            <button type="button" className="btn-primary px-4 py-1.5 text-sm" onClick={() => setOpen(open === top.kind ? null : top.kind)}>
+              {t('fm.merc.plan.see', { count: top.rows.length })}
+            </button>
+          ) : moneyFirst ? (
+            <button type="button" className="btn-primary px-4 py-1.5 text-sm" onClick={() => navigate(clubPath('finances'))}>
+              {t('fm.merc.plan.seeFinances')}
+            </button>
+          ) : null}
+          {money.length > 0 && <p className="text-sm text-white/70">{money.join(' · ')}</p>}
         </div>
+        {top && open === top.kind && (
+          <div className="mt-3 overflow-hidden rounded-lg bg-white text-canard">
+            <PlanRows rows={top.rows} />
+          </div>
+        )}
+      </section>
+
+      {/* 2. Ensuite : un groupe par ligne, dans l'ordre ; 3. le détail s'ouvre sous le groupe. */}
+      {list.length > 0 && (
+        <section className="card !p-0" aria-labelledby="merc-next">
+          <h2 id="merc-next" className="px-4 pb-2 pt-4 text-xs font-extrabold uppercase tracking-widest text-canard">
+            {t(top ? 'fm.merc.plan.next' : 'fm.merc.plan.decisions')}
+          </h2>
+          <ol className="divide-y divide-canard/10 border-t border-canard/10">
+            {list.map((g, i) => {
+              const isOpen = open === g.kind;
+              return (
+                <li key={g.kind}>
+                  <button type="button" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : g.kind)} className={`flex w-full items-center gap-4 px-4 py-3 text-left hover:bg-orange-clair/40 ${isOpen ? 'bg-orange-clair/40' : ''}`}>
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-canard/10 text-sm font-extrabold tabular-nums">{i + (top ? 2 : 1)}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-bold">
+                        {t(`fm.merc.plan.verb.${g.kind}`)} · <span className="font-normal">{listNames(g.names)}</span>
+                      </span>
+                      <span className="block truncate text-sm text-brun">{g.why}</span>
+                    </span>
+                    <span className="shrink-0 text-sm font-bold text-orange-fonce">{isOpen ? '▴' : t('fm.merc.plan.see', { count: g.rows.length })}</span>
+                  </button>
+                  {isOpen && <PlanRows rows={g.rows} />}
+                </li>
+              );
+            })}
+          </ol>
+        </section>
       )}
-      <div className="grid items-start gap-3 lg:grid-cols-3">
-        <BoardColumn title={t('fm.merc.board.in')} rows={arrivals} empty={t('fm.merc.board.noIn')} />
-        <BoardColumn title={t('fm.merc.board.out')} rows={departures} empty={t('fm.merc.board.noOut')} />
-        <BoardColumn title={t('fm.merc.board.extend')} rows={extensions} empty={t('fm.merc.board.noExtend')} />
-      </div>
-      <p className="text-xs text-brun">{t('fm.merc.board.hint')}</p>
     </div>
   );
 }
@@ -359,7 +393,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
 
   return (
     <div className="space-y-4">
-      <MercatoBoard r={r} needs={needs?.needs ?? []} fin={fin} gameDate={gameDate} onMarked={setJustMarked} />
+      <MercatoPlan r={r} needs={needs?.needs ?? []} fin={fin} gameDate={gameDate} onMarked={setJustMarked} />
       {/* Le reste (jeunes, recherche de remplaçants, niveau de la division…) replié : l'écran tient sur une page. */}
       <details className="group">
         <summary className="cursor-pointer text-sm font-bold text-orange-fonce hover:underline">

@@ -1988,25 +1988,43 @@
       },
       "stayNoYouth": "Players aged 21 or under are in their own panel above.",
       "board": {
-        "transfer": "Transfer budget",
-        "wageRoom": "Wage bill",
-        "wageOver": "over budget, per month",
-        "wageLeft": "room under budget, per month",
-        "balance": "Club balance",
-        "in": "Bring in",
-        "out": "Let go",
-        "extend": "Extend",
-        "noIn": "No position to strengthen for now.",
-        "noOut": "Nobody to let go for now.",
-        "noExtend": "No contract to extend for now.",
         "until": "contract ends {{date}}",
         "urgent": "Settle soon",
-        "less": "Show less",
-        "hint": "Click a line to see the detail and act.",
         "detailOpen": "All the detail: youngsters, replacement search, division level ▾",
-        "detailClose": "Fold the detail ▴",
-        "more_one": "+ {{count}} more",
-        "more_other": "+ {{count}} more"
+        "detailClose": "Fold the detail ▴"
+      },
+      "plan": {
+        "priority": "Your priority",
+        "next": "Then, in order",
+        "decisions": "Your decisions, in order",
+        "verb": {
+          "extendUrgent": "Extend soon",
+          "recruit1": "Sign urgently",
+          "sell": "Sell",
+          "release": "Let go at contract end",
+          "recruit2": "Sign for the project",
+          "loan": "Loan out",
+          "extend": "Extend",
+          "recruit3": "Plan a signing"
+        },
+        "why": {
+          "extend": "Their contracts end by {{date}} at the latest."
+        },
+        "andMore_one": "{{list}} and {{count}} more",
+        "andMore_other": "{{list}} and {{count}} more",
+        "see_one": "See",
+        "see_other": "See all {{count}}",
+        "seeFinances": "See finances",
+        "tightTitle": "Tight finances: sell before you sign",
+        "tightText": "No purchases possible. Look for free agents or loans, and start by making room.",
+        "calmTitle": "Nothing urgent in the transfer window",
+        "calmText": "Your squad holds up: keep an eye on contracts and youngsters.",
+        "money": {
+          "transfer": "Transfer budget {{amount}}",
+          "wageOver": "wage bill {{amount}} over budget per month",
+          "wageLeft": "wage room {{amount}} per month",
+          "balance": "club balance {{amount}}"
+        }
       }
     },
     "stats": {
