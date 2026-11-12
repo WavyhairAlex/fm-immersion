@@ -1,4 +1,4 @@
-import {
+import { roleCeiling,
   ATTR_GROUPS,
   buildProject,
   engineValue,
@@ -727,11 +727,8 @@ export function FmPlayerSheet({
             <div className="ml-auto pr-8 text-right">
               <p className="text-xs uppercase tracking-wide text-white/60">{t('fm.col.level')}</p>
               <p className="font-display text-4xl font-semibold tabular-nums">{p.level != null ? nf(1).format(p.level) : '–'}</p>
-              {p.stars?.current != null && (
-                <p className="text-sm text-white/80">
-                  ★ {p.stars.current}
-                  {p.stars.potential != null ? ` → ${p.stars.potential}` : ''}
-                </p>
+              {p.level != null && (roleCeiling(p.level, p) ?? 0) - p.level >= 0.4 && (
+                <p className="text-sm text-white/80">{t('fm.sheet.potential', { value: nf(1).format(roleCeiling(p.level, p)!) })}</p>
               )}
             </div>
           </div>

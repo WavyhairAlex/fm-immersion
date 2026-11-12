@@ -45,7 +45,7 @@ function contractWhy(a: MercatoAdvice): { why: string; values: Record<string, st
   const pa = r('potentialPa');
   if (pa && pa.id === 'potentialPa') return { why: 'potentialPa', values: { pa: pa.pa, ca: pa.ca }, basis: 'real' };
   const pot = r('potential');
-  if (pot && pot.id === 'potential') return { why: 'potential', values: { stars: pot.stars }, basis: 'read' };
+  if (pot && pot.id === 'potential') return { why: 'potential', values: { value: 8 + 2 * pot.stars }, basis: 'read' };
   if (a.now.tier === 0) return { why: 'starter', values: { age: a.player.age ?? '–' }, basis: 'computed' };
   if (a.now.tier === 1 || a.project.tier === 1) return { why: 'backup', values: { age: a.player.age ?? '–' }, basis: 'computed' };
   return { why: 'surplus', values: { age: a.player.age ?? '–' }, basis: 'computed' };
@@ -98,7 +98,7 @@ export function decisions(
         players: [],
         deadline: null,
         why: 'smallGain',
-        values: { gain: Math.round((pick.kept.gain / 2) * 100) / 100, need: SWITCH_POINTS / 2 },
+        values: { gain: Math.round(pick.kept.gain * 10) / 10, need: SWITCH_POINTS },
         basis: 'computed',
         unless: 'bigGain',
         style: pick.style,
@@ -111,7 +111,7 @@ export function decisions(
         players: [],
         deadline: window,
         why: 'bigGain',
-        values: { form: pick.form, need: SWITCH_POINTS / 2 },
+        values: { form: pick.form, need: SWITCH_POINTS },
         basis: 'computed',
         style: pick.style,
         other: base,
@@ -147,7 +147,7 @@ export function decisions(
         pos: sl.pos,
         deadline: window,
         why: sl.player ? 'weakSlot' : 'emptySlot',
-        values: { fit: sl.fit == null ? '–' : Math.round((sl.fit / 20) * 100) },
+        values: { fit: sl.fit == null ? '–' : Math.round(sl.fit * 10) / 10 },
         basis: 'computed',
       });
 

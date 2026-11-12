@@ -44,7 +44,7 @@ import { useTranslation } from 'react-i18next';
 import { LINE_COLOR, Pitch, PosBadge } from './FmFoot';
 import { readBuiltTactics } from './FmBuilder';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
-import { fitPct, More, PlayerLink, setFitScale, TeamCards, useCoach, SectionStack } from './FmUi';
+import { fitPct, More, PlayerLink, TeamCards, useCoach, SectionStack } from './FmUi';
 
 // v2 : le choix automatique (meilleure tactique applicable) devient la valeur par défaut.
 const PREFS_KEY = 'fmi.tactic.v2';
@@ -71,14 +71,11 @@ async function loadLocalReference(folder: string): Promise<{ ref: TacticReferenc
 }
 
 /** Moteur tactique avec les repères maison, remplacés par les repères locaux du joueur s'il en a. */
-export function useTacticEngine(folder: string, players: FmPlayer[] = []) {
+export function useTacticEngine(folder: string, _players: FmPlayer[] = []) {
   const { data: local } = useQuery({ queryKey: ['fm', 'reference', folder], queryFn: () => loadLocalReference(folder), staleTime: 60_000 });
-  // Notes calculées ramenées à l'échelle des étoiles lues dans le jeu pour cet effectif.
-  const engine = useMemo(() => {
-    const e = new TacticEngine(mergeReference(local?.ref)).calibrate(players);
-    setFitScale(!!e.cal);
-    return e;
-  }, [local?.ref, players]);
+  // Notes sur 20 calculées sur les attributs, échelle fixe pour toute l'appli (les étoiles du jeu sont relatives à
+  // l'effectif et ne permettent pas de comparer une recrue d'un autre club).
+  const engine = useMemo(() => new TacticEngine(mergeReference(local?.ref)).absolute(), [local?.ref]);
   return { engine, local };
 }
 
@@ -296,7 +293,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
         )}
         {auto && pick?.kept && !fromGame && (
           <div className="-mt-2 w-full">
-            <More>{t('fm.tac.baseKeptHelp', { other: `${pick.kept.form} ${styleName(pick.kept.style)}`, gain: nf1.format(Math.max(0, pick.kept.gain) / 2), need: nf1.format(SWITCH_POINTS / 2) })}</More>
+            <More>{t('fm.tac.baseKeptHelp', { other: `${pick.kept.form} ${styleName(pick.kept.style)}`, gain: nf1.format(Math.max(0, pick.kept.gain)), need: nf1.format(SWITCH_POINTS) })}</More>
           </div>
         )}
         {gameFormation && <span className="rounded-md bg-eau/20 px-1.5 py-0.5 text-xs text-canard">{t('fm.tac.inGame', { form: gameFormation })}</span>}

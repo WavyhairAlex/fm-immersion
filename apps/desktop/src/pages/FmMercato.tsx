@@ -524,19 +524,6 @@ function SquadOverview({ r, needs }: { r: MercatoReport; needs: RecruitNeed[] })
   );
 }
 
-/** Étoiles du staff « 1,5 ★ → 4 ★ » (niveau actuel → potentiel). */
-function Stars({ p }: { p: FmPlayer }) {
-  const { i18n } = useTranslation();
-  const s = p.stars;
-  if (!s || (s.current == null && s.potential == null)) return <span className="text-canard/40">–</span>;
-  const n = (x: number | null) => (x == null ? '?' : x.toLocaleString(i18n.resolvedLanguage, { maximumFractionDigits: 1 }));
-  return (
-    <span className="whitespace-nowrap tabular-nums">
-      {n(s.current)} ★ <span className="text-brun">→</span> <b>{n(s.potential)} ★</b>
-    </span>
-  );
-}
-
 /** Prix conseillé pour la liste des transferts : prix demandé et plancher, raisons en infobulle. */
 function PriceTag({ a }: { a: MercatoAdvice }) {
   const { t } = useTranslation();
@@ -568,7 +555,10 @@ export function useReason() {
       case 'unwanted':
         return t('fm.merc.why.unwanted', { status: x.status });
       case 'potential':
-        return t('fm.merc.why.potential', { stars: typeof x.stars === 'number' ? x.stars.toLocaleString(i18n.resolvedLanguage) : x.stars });
+        // Étoiles du staff ramenées sur 20 (5 étoiles = 18, comme le potentiel du plan).
+        return typeof x.stars === 'number'
+          ? t('fm.merc.why.potential', { value: (8 + 2 * x.stars).toLocaleString(i18n.resolvedLanguage, { maximumFractionDigits: 1 }) })
+          : t('fm.merc.why.lowPotential');
       case 'potentialPa':
         return t('fm.merc.why.potentialPa', { pa: x.pa, ca: x.ca });
       case 'overtakes':
@@ -601,9 +591,10 @@ function AdviceLine({ a, tag, extra, after }: { a: MercatoAdvice; tag?: ReactNod
       </div>
       <div className="flex flex-wrap items-center gap-2 text-xs text-brun">
         {extra}
-        <Stars p={a.player} />
-        <span className="flex items-center gap-1">
-          <Level value={a.player.level} />→<Level value={a.proj[1]} />
+        {/* Niveau actuel → potentiel atteignable, sur 20 (plus d'étoiles : elles sont relatives à l'effectif). */}
+        <span className="flex items-center gap-1" title={t('fm.merc.levelHint')}>
+          <Level value={a.player.level} />→<Level value={roleCeiling(a.player.level, a.player)} />
+          <span>/20</span>
         </span>
         <span className="tabular-nums">{f.money(a.player.value)}</span>
       </div>

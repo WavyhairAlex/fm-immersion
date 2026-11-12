@@ -1,4 +1,4 @@
-import { snapshotWinterBreak,
+import { roleCeiling, snapshotWinterBreak,
   CLUB_STATUSES,
   CONDITION_LEVELS,
   PART_TIME_DAYS,
@@ -1157,7 +1157,7 @@ function YouthPanel({ engine, week, players }: { engine: TacticEngine; week: Ret
                   {focus ? <b>{t(`fm.train.focus.${focus}`)}</b> : '–'}
                   <span className="ml-1.5 text-xs text-brun">{x.weak.map((w) => `${attr(w.key)} ${Math.round(w.value)}`).join(', ')}</span>
                 </td>
-                <td className="px-2 py-1.5 text-right tabular-nums">{x.player.stars?.potential != null ? `★ ${x.player.stars.potential}` : '–'}</td>
+                <td className="px-2 py-1.5 text-right tabular-nums">{x.player.level != null ? (roleCeiling(x.player.level, x.player) ?? x.player.level).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '–'}</td>
                 <td className="px-2 py-1.5 text-right">
                   <Fit value={x.fit} />
                 </td>

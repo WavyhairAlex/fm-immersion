@@ -92,7 +92,7 @@
       "contract": "Fin de contrat",
       "wage": "Salaire",
       "status": "Statut",
-      "starsHelp": "Étoiles de niveau actuel / potentiel selon ton staff",
+      "starsHelp": "Potentiel atteignable sur 20 (PA lu en mémoire, sinon étoiles du staff, pondéré par l'âge)",
       "compat": "Projet",
       "engine": "Moteur",
       "reach": "Portée",
@@ -384,7 +384,7 @@
       "advice": {
         "title": "L'avis de ton adjoint sur ce onze",
         "none": "Rien à redire : chacun est dans un rôle qui lui va, et chaque poste a sa doublure.",
-        "help": "Un rôle n'est proposé que s'il vaut au moins 0,3 étoile de mieux pour le joueur et ne déséquilibre pas l'équipe (largeur, création, couverture, présence dans la surface). Un titulaire n'est remis en cause que pour une demi-étoile d'écart, forme du jour comprise. Les doublures viennent d'abord de l'équipe première, puis d'un titulaire qui peut glisser, puis de la réserve.",
+        "help": "Un rôle n'est proposé que s'il vaut au moins 0,6 point sur 20 de mieux pour le joueur et ne déséquilibre pas l'équipe (largeur, création, couverture, présence dans la surface). Un titulaire n'est remis en cause que pour un point d'écart, forme du jour comprise. Les doublures viennent d'abord de l'équipe première, puis d'un titulaire qui peut glisser, puis de la réserve.",
         "starters": "Titulaires à revoir",
         "starter": "{{pos}} : {{better}} ({{betterFit}}) ferait mieux aujourd'hui que {{starter}} ({{starterFit}}) dans ces rôles, forme du jour comprise.",
         "roles": "Rôles à revoir",
@@ -439,7 +439,7 @@
       "bestNow": "Meilleure tactique applicable",
       "projectBest": "Ton projet est devenu le meilleur choix",
       "baseKept": "Ta tactique de base, gardée",
-      "baseKeptHelp": "Une autre tactique ({{other}}) note un peu mieux, +{{gain}} étoile, mais il faudrait au moins +{{need}} étoile pour compenser la compréhension tactique perdue en changeant. On garde ta base et on change seulement les joueurs, match après match.",
+      "baseKeptHelp": "Une autre tactique ({{other}}) note un peu mieux, +{{gain}} pt, mais il faudrait au moins +{{need}} pt pour compenser la compréhension tactique perdue en changeant. On garde ta base et on change seulement les joueurs, match après match.",
       "teamTitle": "Consignes d'équipe · {{style}}",
       "teamHelp": "Toutes les cases de l'écran Consignes d'équipe du jeu, dans son ordre ; en gras, celles que le style règle, les autres restent sur la valeur par défaut. À régler avec la mentalité.",
       "oppTitle": "Contre {{name}}",
@@ -1039,10 +1039,10 @@
       "coach": "Mon coach",
       "style": "Style que j'aime",
       "target": "Niveau visé",
-      "targetOpt": "{{value}} % d'adéquation",
+      "targetOpt": "{{value}} / 20",
       "help": "FM Immersion mesure l'écart entre ton effectif et ce style, puis en tire les postes à recruter et le travail de chaque joueur. Schémas naturels du style : {{forms}}.",
       "ready": "Postes prêts",
-      "readySub": "adéquation ≥ {{value}} %",
+      "readySub": "note ≥ {{value}} / 20",
       "develop": "À faire progresser",
       "developSub": "23 ans ou moins, proches du niveau",
       "recruit": "À recruter",
@@ -1123,7 +1123,7 @@
         "eff": "Efficacité proj.",
         "wage": "Salaire",
         "value": "Valeur",
-        "stars": "Étoiles",
+        "stars": "Potentiel",
         "knowledge": "Connu",
         "seen": "Liste"
       },
@@ -1154,7 +1154,7 @@
         "backup": "devant {{name}}",
         "none": "{{name}} est meilleur"
       },
-      "gainHelp": "{{gain}} pts d'adéquation face au titulaire du poste",
+      "gainHelp": "{{gain}} pt sur 20 face au titulaire du poste",
       "shortTerm": "Court terme (33 ans et +)"
     },
     "pi": {
@@ -1919,7 +1919,7 @@
       "loan": "prêté à {{club}} jusqu’au {{end}}"
     },
     "merc": {
-      "help": "Calculé sur l'effectif importé, dans deux onze : celui à jouer aujourd'hui ({{form}}) et celui du projet ({{style}} {{projectForm}}). À chaque poste, on garde les titulaires et une doublure par place (deux gardiens remplaçants) ; au-delà, le joueur est en trop. Les étoiles sont celles du staff (niveau → potentiel, par rapport au club) ; le niveau est projeté dans deux saisons.",
+      "help": "Calculé sur l'effectif importé, dans deux onze : celui à jouer aujourd'hui ({{form}}) et celui du projet ({{style}} {{projectForm}}). À chaque poste, on garde les titulaires et une doublure par place (deux gardiens remplaçants) ; au-delà, le joueur est en trop. Niveau et potentiel sur 20 : le potentiel vient du PA s'il est lu, sinon des étoiles du staff, pondéré par l'âge.",
       "kpi": {
         "income": "Recette possible",
         "incomeSub": "valeur des joueurs à vendre · salaires libérés : {{wages}}",
@@ -1976,7 +1976,7 @@
         "contract_one": "contrat : {{count}} mois",
         "contract_other": "contrat : {{count}} mois",
         "unwanted": "statut du club : {{status}}",
-        "potential": "potentiel {{stars}} ★",
+        "potential": "potentiel {{value}}/20 selon le staff",
         "potentialPa": "PA {{pa}}, le titulaire est à {{ca}} de CA",
         "lowPotential": "potentiel limité",
         "overtakes_one": "au niveau de {{starter}} dans {{count}} saison",
@@ -2125,7 +2125,8 @@
           "potential": "Potentiel",
           "value": "Rapport qualité-prix"
         }
-      }
+      },
+      "levelHint": "Niveau actuel → potentiel atteignable, sur 20"
     },
     "stats": {
       "stale": "Le plugin n'a pas pu lire les stats à la dernière lecture : tu vois celles du {{date}}. Elles reviendront à la prochaine lecture complète (laisse le jeu quelques secondes sur un écran calme, ou relance FM27).",
@@ -2418,7 +2419,7 @@
       "mind": "État d'esprit",
       "weight": "compte pour {{weight}} %",
       "why": {
-        "role": "Son meilleur rôle dans ton onze est {{role}} ({{slot}}). Écart avec le meilleur rôle possible pour lui : {{stars}} étoile. Plus l'écart est petit, plus ton projet utilise ses vraies qualités.",
+        "role": "Son meilleur rôle dans ton onze est {{role}} ({{slot}}). Écart avec le meilleur rôle possible pour lui : {{stars}} pt sur 20. Plus l'écart est petit, plus ton projet utilise ses vraies qualités.",
         "roleZero": "Son meilleur rôle dans ton onze est {{role}} ({{slot}}), et c'est aussi le meilleur rôle possible pour lui : ton projet utilise ses vraies qualités.",
         "positionNatural": "{{pos}} est un de ses postes naturels.",
         "position": "{{pos}} n'est pas son poste naturel : familiarité {{fam}}/20 dans le jeu. Il lui faudra du temps (et des matchs) pour s'y sentir chez lui.",
@@ -2491,7 +2492,7 @@
       "replaces": "{{name}} prend la place de {{other}} ({{pos}})",
       "starts": "{{name}} devient titulaire ({{pos}})",
       "recruit": "Encore à recruter pour le projet : {{list}}",
-      "foot": "Fenêtres calculées depuis le mois de reprise du championnat (réglage Entraînement). Coûts provisoires, choix de FM Immersion : changer de tactique demande un gain d'une demi-étoile ; un style trop complexe pour le groupe perd jusqu'à une demi-étoile."
+      "foot": "Fenêtres calculées depuis le mois de reprise du championnat (réglage Entraînement). Coûts provisoires, choix de FM Immersion : changer de tactique demande un gain d'un point sur 20 ; un style trop complexe pour le groupe perd jusqu'à un point."
     },
     "abilities": {
       "toggle": "Lire le CA/PA",
@@ -2527,13 +2528,13 @@
       },
       "why": {
         "potentialPa": "PA {{pa}} : il peut dépasser le titulaire de son poste (CA {{ca}}).",
-        "potential": "Potentiel {{stars}} ★ selon ton staff, relatif à l'effectif actuel.",
+        "potential": "Potentiel {{value}}/20 selon ton staff.",
         "starter": "Titulaire aujourd'hui ({{age}} ans).",
         "backup": "Doublure utile ({{age}} ans).",
         "surplus": "Ne joue pas et n'a pas sa place dans le projet ({{age}} ans).",
-        "smallGain": "{{other}} ferait mieux de {{gain}} ★ seulement : pas assez pour perdre la compréhension tactique (il faut {{need}} ★).",
-        "bigGain": "Gain d'au moins {{need}} ★ sur {{other}} : il paie l'apprentissage. Change pendant la présaison ou la trêve.",
-        "weakSlot": "Le meilleur joueur du poste n'atteint que {{fit}} % d'adéquation dans le projet.",
+        "smallGain": "{{other}} ferait mieux de {{gain}} pt seulement : pas assez pour perdre la compréhension tactique (il faut {{need}} pt).",
+        "bigGain": "Gain d'au moins {{need}} pt sur {{other}} : il paie l'apprentissage. Change pendant la présaison ou la trêve.",
+        "weakSlot": "Le meilleur joueur du poste n'a que {{fit}}/20 dans le projet.",
         "emptySlot": "Personne dans l'effectif ne tient ce poste du projet.",
         "blocked": "Jeune prometteur sans temps de jeu ici : un prêt le fera progresser.",
         "leaving": "Signalé partant ({{age}} ans) : son poste est à pourvoir, il ne compte plus dans la planification.",
@@ -2546,7 +2547,7 @@
         "repl_noInternal": "Personne dans l'effectif ne tient ce poste : il faut recruter."
       },
       "unless": {
-        "bigGain": "À revoir si l'écart dépasse {{need}} ★ (blessures, recrues)."
+        "bigGain": "À revoir si l'écart dépasse {{need}} pt (blessures, recrues)."
       },
       "basis": {
         "read": "lu dans le jeu",
@@ -2673,7 +2674,8 @@
       "otherClubNamed": "Joue à {{club}}",
       "caPa": "CA / PA",
       "caOff": "lecture coupée",
-      "projectShort": "Note de projet"
+      "projectShort": "Note de projet",
+      "potential": "potentiel {{value}}"
     },
     "foot": {
       "profile": "Profil",

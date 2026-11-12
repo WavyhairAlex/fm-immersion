@@ -2,7 +2,7 @@ import { GameCompatBanner, GameCompatCard } from '../components/GameCompat';
 import { AiSettingsCard } from '../components/AiSettingsCard';
 import { aiFor } from '../lib/ai';
 import { PageTitle } from '../components/PageTitle';
-import {
+import { roleCeiling,
   buildProject,
   engineValue,
   isUnwanted,
@@ -907,10 +907,9 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
                   <td className="px-3 py-1.5 tabular-nums">{p.age ?? '–'}</td>
                   <td className="whitespace-nowrap px-3 py-1.5 font-bold tabular-nums">
                     {p.level != null ? nf1.format(p.level) : '–'}
-                    {p.stars?.current != null && (
-                      <span className="ml-2 text-xs font-normal text-brun" title={t('fm.col.starsHelp')}>
-                        ★ {p.stars.current}
-                        {p.stars.potential != null ? ` / ${p.stars.potential}` : ''}
+                    {p.level != null && (roleCeiling(p.level, p) ?? 0) - p.level >= 0.4 && (
+                      <span className="ml-2 text-xs font-normal text-eau-fonce" title={t('fm.col.starsHelp')}>
+                        → {nf1.format(roleCeiling(p.level, p)!)}
                       </span>
                     )}
                   </td>

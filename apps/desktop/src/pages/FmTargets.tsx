@@ -1,4 +1,4 @@
-import {
+import { roleCeiling,
   POS_LABEL,
   buildProject,
   clubFinances,
@@ -247,7 +247,7 @@ export function FmTargets({
                         title={
                           best
                             ? t("fm.targets.gainHelp", {
-                                gain: `${best.gain > 0 ? "+" : ""}${Math.round((best.gain / 20) * 100)}`,
+                                gain: `${best.gain > 0 ? "+" : ""}${best.gain.toLocaleString(i18n.resolvedLanguage, { maximumFractionDigits: 1 })}`,
                               })
                             : undefined
                         }
@@ -278,8 +278,8 @@ export function FmTargets({
                         <Level value={p.level} />
                       </td>
                       <td className="whitespace-nowrap px-2 py-1.5 text-xs tabular-nums">
-                        {p.stars?.current != null
-                          ? `★ ${p.stars.current.toLocaleString(i18n.resolvedLanguage)}${p.stars.potential != null ? ` / ${p.stars.potential.toLocaleString(i18n.resolvedLanguage)}` : ""}`
+                        {p.level != null
+                          ? (roleCeiling(p.level, p) ?? p.level).toLocaleString(i18n.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
                           : "–"}
                       </td>
                       <td
