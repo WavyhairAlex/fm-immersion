@@ -237,6 +237,22 @@ function TeamTarget({ pr, engine, pool, limits }: { pr: Project; engine: TacticE
     : [];
   const done = plan.xiAvg >= T;
   const rows = plan.toTarget.length ? plan.toTarget : plan.upgrades.slice(0, 6);
+  const [showAll, setShowAll] = useState(false);
+  type Cand = { key: string; status: CandStatus; pos: PosCode; player: Target; starter: FmPlayer | null; starterFit: number; fit: number; delta: number; after: number | null; price: number | null; isEst: boolean; wage: number | null; knowledge: number | null };
+  const cands: Cand[] = [];
+  const seen = new Set<string>();
+  const add = (c: Cand) => {
+    if (seen.has(c.player.id)) return;
+    seen.add(c.player.id);
+    cands.push(c);
+  };
+  for (const u of rows) add({ key: `p-${u.player.id}`, status: 'plan', pos: u.slot.pos, player: u.player, starter: u.starter, starterFit: u.starterFit, fit: u.fit, delta: u.delta, after: u.after, price: u.price, isEst: u.priceIsEst, wage: u.wage, knowledge: u.knowledge });
+  for (const x of radar) {
+    const sl = x.best!.slot;
+    add({ key: `r-${x.p.id}`, status: 'bargain', pos: sl.pos, player: x.p, starter: sl.player, starterFit: sl.fit ?? 0, fit: x.best!.fit, delta: x.best!.fit - (sl.fit ?? 0), after: null, price: x.price, isEst: x.isEst, wage: x.p.wage ?? null, knowledge: x.p.scout?.knowledge ?? null });
+  }
+  for (const u of plan.tooDear) add({ key: `d-${u.player.id}`, status: 'dear', pos: u.slot.pos, player: u.player, starter: u.starter, starterFit: u.starterFit, fit: u.fit, delta: u.delta, after: null, price: u.price, isEst: u.priceIsEst, wage: u.wage, knowledge: u.knowledge });
+  for (const u of plan.unpriced) add({ key: `u-${u.player.id}`, status: 'unpriced', pos: u.slot.pos, player: u.player, starter: u.starter, starterFit: u.starterFit, fit: u.fit, delta: u.delta, after: null, price: null, isEst: false, wage: u.wage, knowledge: u.knowledge });
   const verdict = done ? 'done' : plan.reached ? 'reachable' : 'out';
 
   return (
@@ -282,84 +298,73 @@ function TeamTarget({ pr, engine, pool, limits }: { pr: Project; engine: TacticE
         {rows.length > 0 && !done && <> · {t('fm.merc.target.spent', { amount: f.money(rows.reduce((a, u) => a + (u.price ?? 0), 0)), wages: f.money(rows.reduce((a, u) => a + (u.wage ?? 0), 0)) })}</>}
       </p>
 
-      {done ? (
-        <p className="mt-3 text-sm text-brun">{t('fm.merc.target.doneText')}</p>
-      ) : !pool.length ? (
+      {/* Une seule liste de cibles, chacune avec son statut : dans le plan, bonne affaire, trop chère, prix à chiffrer. */}
+      {done && <p className="mt-3 text-sm text-brun">{t('fm.merc.target.doneText')}</p>}
+      {!pool.length ? (
         <p className="mt-3 text-sm text-brun">{t('fm.merc.target.noPool')}</p>
-      ) : !rows.length ? (
+      ) : !cands.length ? (
         <p className="mt-3 text-sm text-brun">{t('fm.merc.target.noUpgrade')}</p>
       ) : (
-        <div className="mt-3 overflow-x-auto">
-          <p className="mb-1 text-sm font-bold">{plan.toTarget.length ? t('fm.merc.target.planTitle', { count: plan.toTarget.length }) : t('fm.merc.target.bestTitle')}</p>
+        <div className="mt-4 overflow-x-auto">
+          <p className="mb-1 text-sm font-bold">{t('fm.merc.target.listTitle')}</p>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-canard/15 text-left text-xs uppercase tracking-wide text-canard/60">
+                <th className="py-1.5 pr-3">{t('fm.merc.target.col.status')}</th>
                 <th className="py-1.5 pr-3">{t('fm.merc.target.col.pos')}</th>
                 <th className="py-1.5 pr-3">{t('fm.merc.target.col.recruit')}</th>
                 <th className="py-1.5 pr-3">{t('fm.merc.target.col.fit')}</th>
-                <th className="py-1.5 pr-3">{t('fm.merc.target.col.replaces')}</th>
                 <th className="py-1.5 pr-3">{t('fm.merc.target.col.gain')}</th>
                 <th className="py-1.5 pr-3 text-right">{t('fm.merc.target.col.price')}</th>
                 <th className="py-1.5 pr-3 text-right">{t('fm.merc.target.col.wage')}</th>
-                <th className="py-1.5 pr-3 text-right">{t('fm.merc.target.col.known')}</th>
-                <th className="py-1.5 text-right">{t('fm.merc.target.col.after')}</th>
+                <th className="py-1.5 text-right">{t('fm.merc.target.col.known')}</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((u) => (
-                <tr key={u.player.id} className="border-b border-canard/5 last:border-0">
-                  <td className="py-1.5 pr-3"><span className="pill">{POS_LABEL[u.slot.pos]}</span></td>
-                  <td className="py-1.5 pr-3"><PlayerLink player={u.player} /></td>
-                  <td className="py-1.5 pr-3"><Fit value={u.fit} /></td>
-                  <td className="py-1.5 pr-3 text-brun">{u.starter ? `${u.starter.name} (${fitPct(u.starterFit)})` : t('fm.merc.target.empty')}</td>
-                  <td className="py-1.5 pr-3 font-bold tabular-nums text-eau-fonce">+{fitGap(u.delta)}</td>
-                  <td className="py-1.5 pr-3 text-right tabular-nums" title={u.priceIsEst ? t('fm.merc.target.priceEst') : undefined}>
-                    {u.price == null ? '–' : `${u.priceIsEst ? '~' : ''}${f.money(u.price)}`}
-                    {market && <PriceTag2 v={market.verdict(u.fit, u.price)?.verdict ?? null} />}
+              {(showAll ? cands : cands.slice(0, CAND_MAX)).map((c) => (
+                <tr key={c.key} className={`border-b border-canard/5 last:border-0 ${c.status === 'plan' ? 'bg-eau/10' : ''}`}>
+                  <td className="py-1.5 pr-3"><span className={`whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-bold ${STATUS_CLS[c.status]}`}>{t(`fm.merc.target.status.${c.status}`)}</span></td>
+                  <td className="py-1.5 pr-3"><span className="pill">{POS_LABEL[c.pos]}</span></td>
+                  <td className="py-1.5 pr-3">
+                    <PlayerLink player={c.player} />
+                    {c.starter && <span className="block text-xs text-brun">{t(c.delta > 0 ? 'fm.merc.target.replaces' : 'fm.merc.target.backupOf', { name: c.starter.name, fit: fitPct(c.starterFit) })}</span>}
                   </td>
-                  <td className="py-1.5 pr-3 text-right tabular-nums">{u.wage == null ? '–' : f.money(u.wage)}</td>
-                  <td className="py-1.5 pr-3 text-right"><Known value={u.knowledge} /></td>
-                  <td className="py-1.5 text-right font-bold tabular-nums">{fitPct(u.after)}</td>
+                  <td className="py-1.5 pr-3"><Fit value={c.fit} /></td>
+                  <td className="py-1.5 pr-3 tabular-nums">
+                    {c.delta > 0 ? <span className="font-bold text-eau-fonce">+{fitGap(c.delta)}</span> : <span className="text-brun">{t('fm.merc.target.depth')}</span>}
+                    {c.after != null && <span className="block text-xs text-brun">{t('fm.merc.target.afterShort', { value: fitPct(c.after) })}</span>}
+                  </td>
+                  <td className="py-1.5 pr-3 text-right tabular-nums">
+                    {c.price == null ? '–' : `${c.isEst ? '~' : ''}${f.money(c.price)}`}
+                    {market && c.status !== 'bargain' && <PriceTag2 v={market.verdict(c.fit, c.price)?.verdict ?? null} />}
+                    {c.status === 'bargain' && limits.budget != null && c.price != null && c.price > limits.budget && <span className="block text-xs text-corail">{t('fm.merc.target.overBudget')}</span>}
+                  </td>
+                  <td className="py-1.5 pr-3 text-right tabular-nums">{c.wage == null ? '–' : f.money(c.wage)}</td>
+                  <td className="py-1.5 text-right"><Known value={c.knowledge} /></td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {cands.length > CAND_MAX && (
+            <button type="button" className="mt-1 text-sm font-bold text-orange-fonce hover:underline" onClick={() => setShowAll(!showAll)}>
+              {showAll ? t('fm.merc.target.less') : t('fm.merc.target.more', { count: cands.length - CAND_MAX })}
+            </button>
+          )}
+          <p className="mt-2 text-xs text-brun">{market ? t('fm.merc.target.marketHelp', { count: market.n }) : t('fm.merc.target.marketNone')}</p>
         </div>
-      )}
-      {!done && plan.tooDear.length > 0 && (
-        <p className="mt-3 text-sm">
-          <span className="font-bold">{t('fm.merc.target.tooDear')}</span>{' '}
-          <span className="text-brun">{plan.tooDear.slice(0, 4).map((u) => `${u.player.name} (${POS_LABEL[u.slot.pos]}, +${fitGap(u.delta)}, ${u.price == null ? '–' : f.money(u.price)})`).join(' · ')}</span>
-        </p>
-      )}
-      {radar.length > 0 && (
-        <div className="mt-4 rounded-lg border border-eau-fonce/30 bg-eau/10 p-3">
-          <p className="text-sm font-bold">{t('fm.merc.target.radar.title', { count: radar.length })}</p>
-          <p className="text-xs text-brun">{t('fm.merc.target.radar.help', { count: market!.n })}</p>
-          <ul className="mt-2 space-y-1 text-sm">
-            {radar.map((x) => (
-              <li key={x.p.id} className="flex flex-wrap items-center gap-2">
-                <span className="pill">{POS_LABEL[x.best!.slot.pos]}</span>
-                <PlayerLink player={x.p} />
-                <Fit value={x.best!.fit} />
-                <span className="text-brun">
-                  {t('fm.merc.target.radar.line', { price: `${x.isEst ? '~' : ''}${f.money(x.price)}`, fair: f.money(market!.fair(x.best!.fit)), ratio: Math.round(x.v!.ratio * 100) })}
-                </span>
-                <Known value={x.p.scout?.knowledge ?? null} />
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {!done && plan.unpriced.length > 0 && (
-        <p className="mt-2 text-sm">
-          <span className="font-bold">{t('fm.merc.target.unpriced')}</span>{' '}
-          <span className="text-brun">{plan.unpriced.slice(0, 4).map((u) => `${u.player.name} (${POS_LABEL[u.slot.pos]}, +${fitGap(u.delta)})`).join(' · ')}</span>
-        </p>
       )}
     </section>
   );
 }
+
+type CandStatus = 'plan' | 'bargain' | 'dear' | 'unpriced';
+const STATUS_CLS: Record<CandStatus, string> = {
+  plan: 'bg-eau-fonce text-white',
+  bargain: 'bg-eau/40 text-canard',
+  dear: 'bg-corail/15 text-canard',
+  unpriced: 'bg-canard/10 text-canard',
+};
+const CAND_MAX = 8;
 
 /** Verdict de prix face au marché de tes cibles : bonne affaire ou cher (rien quand le prix est dans la norme). */
 function PriceTag2({ v }: { v: PriceVerdict | null }) {

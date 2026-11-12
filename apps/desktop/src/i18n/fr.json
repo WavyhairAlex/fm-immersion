@@ -1808,7 +1808,7 @@
       "contracts": "Les fins de contrat à anticiper.",
       "progression": "L'évolution du niveau de chaque joueur depuis le premier instantané.",
       "opponent": "Le prochain adversaire tel que le décrit le rapport d'équipe du jeu, et comment le jouer.",
-      "mercato": "Qui faire partir (vente, prêt, fin de contrat), qui prolonger, et quels jeunes valent le coup pour le projet.",
+      "mercato": "Ton argent, ton onze face à la note visée, les recrues qui le font monter, puis tes décisions dans l'ordre.",
       "instructions": "Au plus 3 consignes par joueur du onze, pour coller au style sans trop charger la compréhension tactique.",
       "results": "Les matchs joués depuis que FM Immersion suit la partie : score, onze, note de chaque joueur, et ce qui rapporte des points.",
       "diagnosis": "Les titulaires sous la moyenne du onze, et ce qui l'explique.",
@@ -2066,7 +2066,8 @@
           "price": "Prix",
           "after": "Moyenne du onze après",
           "wage": "Salaire",
-          "known": "Connu à"
+          "known": "Connu à",
+          "status": "Statut"
         },
         "empty": "personne",
         "reachable": "Atteignable avec tes cibles",
@@ -2083,26 +2084,32 @@
         "doneText": "Ton onze dépasse déjà la note visée : vise plus haut, ou renforce le banc avec les postes à pourvoir plus bas.",
         "noPool": "Aucune cible suivie : ajoute des joueurs à ta liste de suivi dans FM27 (ou dans Cibles) et je calcule les recrues qui font monter ton onze.",
         "noUpgrade": "Aucune de tes cibles chiffrées et abordables ne fait mieux qu'un titulaire. Suis d'autres joueurs ou élargis le budget.",
-        "planTitle_one": "La recrue qui suffit à passer la barre :",
-        "planTitle_other": "Les {{count}} recrues qui suffisent à passer la barre, de la plus utile à la moins utile :",
-        "bestTitle": "Le budget ne suffit pas pour la note visée. Les meilleures améliorations possibles :",
         "priceEst": "Valeur estimée par tes recruteurs",
         "floor": "maillon faible {{value}}",
         "wageCap": "marge salariale {{amount}} (salaires libérés compris)",
         "spent": "le plan dépense {{amount}} et {{wages}} de salaires",
-        "tooDear": "Trop chères pour l'argent ou la marge salariale qui restent :",
-        "unpriced": "Prix inconnu, à faire chiffrer par tes recruteurs :",
         "knownLow": "Tes recruteurs connaissent encore peu ce joueur : sa note peut bouger.",
         "price": {
           "bargain": "bonne affaire",
           "pricey": "cher"
         },
-        "radar": {
-          "title_one": "Sous les radars : {{count}} cible bien notée pour son prix",
-          "title_other": "Sous les radars : {{count}} cibles bien notées pour leur prix",
-          "help": "Juste prix calculé sur tes {{count}} cibles chiffrées : ces joueurs coûtent bien moins que ce que vaut leur note dans ton onze, souvent des profils équilibrés que le marché sous-cote.",
-          "line": "{{price}} pour un juste prix de {{fair}} ({{ratio}} %)"
-        }
+        "status": {
+          "plan": "Dans le plan",
+          "bargain": "Bonne affaire",
+          "dear": "Trop chère",
+          "unpriced": "Prix à chiffrer"
+        },
+        "listTitle": "Tes cibles utiles, de la plus utile à la moins utile",
+        "replaces": "remplace {{name}} ({{fit}})",
+        "afterShort": "onze à {{value}} après",
+        "depth": "doublure",
+        "less": "Voir moins",
+        "marketHelp": "« Bonne affaire » et « cher » : prix comparé au juste prix pour cette note, calculé sur tes {{count}} cibles chiffrées. « Connu à » : ce que tes recruteurs savent du joueur ; sous 50 %, sa note peut encore bouger.",
+        "marketNone": "Il faut au moins 6 cibles chiffrées pour juger les prix. « Connu à » : ce que tes recruteurs savent du joueur ; sous 50 %, sa note peut encore bouger.",
+        "backupOf": "doublure de {{name}} ({{fit}})",
+        "overBudget": "au-dessus de ton budget",
+        "more_one": "Voir l'autre",
+        "more_other": "Voir les {{count}} autres"
       }
     },
     "stats": {
