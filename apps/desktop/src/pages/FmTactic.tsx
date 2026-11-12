@@ -22,6 +22,7 @@ import {
   instructionBudget,
   tactAbility,
   shapeOf,
+  slotPos,
   spreadXY,
   unavailable,
   styleBlock,
@@ -387,7 +388,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                         const [x, y] = shown[i] ?? [sl.x, sl.y];
                         const code = phase === 'ip' ? sl.ip : sl.oop;
                         const off = !!sl.player && !sl.player.positions.includes(sl.pos);
-                        const c = LINE_COLOR[lineOf(sl.pos)];
+                        const c = LINE_COLOR[lineOf(slotPos(sl, phase))];
                         return (
                           <button
                             key={i}
@@ -400,11 +401,11 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                             className={`absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-0.5 transition-all duration-500 ${hover === i ? 'z-10 scale-110' : ''}`}
                             style={{ left: `${x}%`, top: `${y}%` }}
                           >
-                            {/* Le poste FM27 du créneau : le rôle déplace la pastille sur le terrain, jamais le poste. */}
+                            {/* Le poste FM27 du créneau dans la phase montrée (FM27 en donne un avec ballon, un sans) : le rôle déplace la pastille, jamais le poste. */}
                             <span
                               className={`whitespace-nowrap rounded-md px-2 py-1 text-xs font-bold leading-none shadow ring-2 ${c.bg} ${c.text} ${hover === i ? 'ring-white' : off ? 'ring-corail' : 'ring-white/40'}`}
                             >
-                              {POS_LABEL[sl.pos]}
+                              {POS_LABEL[slotPos(sl, phase)]}
                             </span>
                             <span className="max-w-[8rem] truncate rounded-md bg-white px-2 py-0.5 text-sm font-bold text-canard shadow">
                               {sl.player ? shortName(sl.player.name) : t('fm.tac.nobody')}
@@ -431,7 +432,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                           {rows.map((i) => {
                             const sl = plan.slots[i]!;
                             const p = sl.player;
-                            const fitOf = (ph: Phase) => (p ? engine.roleFit(p, ph === 'ip' ? sl.ip : sl.oop, ph, sl.pos) : null);
+                            const fitOf = (ph: Phase) => (p ? engine.roleFit(p, ph === 'ip' ? sl.ip : sl.oop, ph, slotPos(sl, ph)) : null);
                             return (
                               <tr key={i} className={hover === i ? 'bg-creme/70' : ''} onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}>
                                 <td>
@@ -452,6 +453,7 @@ export function FmTactic({ snap, players, folder, gameFormation, lineup, lineupS
                                   {(['ip', 'oop'] as const).map((ph) => (
                                     <div key={ph} className="flex flex-wrap items-baseline gap-x-2">
                                       <span className="text-xs text-brun">{t(`fm.tac.phase.${ph}`)}</span>
+                                      {ph === 'oop' && sl.posOOP && sl.posOOP !== sl.pos && <PosBadge pos={sl.posOOP} />}
                                       <span className="text-canard">{roleName(ph === 'ip' ? sl.ip : sl.oop, ph)}</span>
                                       {p && <span className="text-xs font-bold text-brun">{note(fitOf(ph))}</span>}
                                     </div>

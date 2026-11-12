@@ -868,11 +868,31 @@ const ROLE_MOVE: Record<Phase, Record<string, [number, number, number]>> = {
 export type Block = 'high' | 'mid' | 'low';
 const blockShift = (ph: Phase, block: Block) => (ph === 'ip' ? -6 : block === 'low' ? 8 : block === 'mid' ? 3 : -3);
 
+/** Hauteur de chaque poste sur le terrain (en %), pour replacer un joueur à son poste sans ballon. */
+const POS_Y: Record<PosCode, number> = { GB: 92, DG: 72, DC: 76, DD: 72, DLG: 60, DLD: 60, MDF: 57, MG: 48, MC: 47, MD: 48, MOG: 28, MOC: 32, MOD: 28, BT: 14 };
+const POS_SIDE_X = (pos: PosCode): number | null => (/G$/.test(pos) && pos !== 'GB' ? 15 : /D$/.test(pos) && pos !== 'MDF' ? 85 : null);
+
+/**
+ * Point de départ d'un créneau dans une phase : sa place dans le schéma, ou, sans ballon, celle de son poste
+ * sans ballon quand le jeu en donne un autre (un MO (D) qui défend en M (D) redescend sur la ligne du milieu).
+ */
+export function slotBase(sl: Pick<Slot, 'pos' | 'posOOP' | 'x' | 'y'>, ph: Phase): [number, number] {
+  if (ph !== 'oop' || !sl.posOOP || sl.posOOP === sl.pos) return [sl.x, sl.y];
+  const side = POS_SIDE_X(sl.posOOP);
+  // Même couloir : on garde l'écart du schéma ; changement de couloir ou retour dans l'axe : place du nouveau poste.
+  const x = side != null ? (POS_SIDE_X(sl.pos) === side ? sl.x : side) : POS_SIDE_X(sl.pos) != null ? (sl.x < 50 ? 38 : 62) : sl.x;
+  return [x, POS_Y[sl.posOOP]];
+}
+
+/** Poste d'un créneau dans une phase : le poste sans ballon du jeu quand il diffère. */
+export const slotPos = (sl: Pick<Slot, 'pos' | 'posOOP'>, ph: Phase): PosCode => (ph === 'oop' ? (sl.posOOP ?? sl.pos) : sl.pos);
+
 export function phaseXY(sl: Slot, ph: Phase, block: Block = 'mid'): [number, number] {
+  const [bx, by] = slotBase(sl, ph);
   const mv = ROLE_MOVE[ph][ph === 'ip' ? sl.ip : sl.oop] ?? [0, 0, 0];
-  const sh = sl.pos === 'GB' ? 0 : blockShift(ph, block) * (sl.y > 60 ? 0.8 : 1);
-  const x = sl.x + (50 - sl.x) * mv[0] + Math.sign(sl.x - 50) * mv[1];
-  const y = sl.y + mv[2] + sh;
+  const sh = sl.pos === 'GB' ? 0 : blockShift(ph, block) * (by > 60 ? 0.8 : 1);
+  const x = bx + (50 - bx) * mv[0] + Math.sign(bx - 50) * mv[1];
+  const y = by + mv[2] + sh;
   return [Math.max(6, Math.min(94, x)), Math.max(6, Math.min(94, y))];
 }
 
@@ -889,8 +909,9 @@ export function zonePos(x: number, y: number): PosCode {
 /** Poste occupé selon le rôle seul, sans le décalage du bloc. */
 export function rolePos(sl: Slot, ph: Phase): PosCode {
   if (sl.pos === 'GB') return 'GB';
+  const [bx, by] = slotBase(sl, ph);
   const mv = ROLE_MOVE[ph][ph === 'ip' ? sl.ip : sl.oop] ?? [0, 0, 0];
-  return zonePos(sl.x + (50 - sl.x) * mv[0] + Math.sign(sl.x - 50) * mv[1], sl.y + mv[2]);
+  return zonePos(bx + (50 - bx) * mv[0] + Math.sign(bx - 50) * mv[1], by + mv[2]);
 }
 
 /** Forme en lignes (« 4-1-4-1 ») à partir des positions des joueurs de champ. */

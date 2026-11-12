@@ -44,3 +44,19 @@ describe('liste « À changer dans FM27 »', () => {
     expect(items.map((x) => x.kind)).toEqual(['team', 'starter', 'piAdd', 'role']);
   });
 });
+
+describe('poste sans ballon du jeu', () => {
+  it('replace un MO (D) qui défend en M (D) sur la ligne du milieu', async () => {
+    const { phaseXY, rolePos, slotPos } = await import('../src');
+    const sl = { pos: 'MOD', posOOP: 'MD', x: 85, y: 22, ip: 'W', oop: 'TWM', player: null, fit: null } as never;
+    expect(slotPos(sl, 'ip')).toBe('MOD');
+    expect(slotPos(sl, 'oop')).toBe('MD');
+    expect(['MD', 'DLD']).toContain(rolePos(sl, 'oop'));
+    const [x, y] = phaseXY(sl, 'oop');
+    expect(x).toBeGreaterThan(70);
+    expect(y).toBeGreaterThan(40);
+    // Sans poste sans ballon distinct, rien ne change.
+    const same = { ...(sl as object), posOOP: undefined } as never;
+    expect(phaseXY(same, 'oop')[1]).toBeLessThan(40);
+  });
+});
