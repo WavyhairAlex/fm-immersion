@@ -1,4 +1,4 @@
-import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, POS_ORDER, lineOf, type Line, type PosCode, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type Project, type Target, type TacticEngine, teamPlan, storedTargets, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
+import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, POS_ORDER, lineOf, type Line, type PosCode, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type Project, type Target, type TacticEngine, teamPlan, storedTargets, type TeamPlanLimits, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -135,8 +135,14 @@ function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked }: { 
 
   const tight = fin ? financeState(fin).tight : false;
   const listNames = (xs: string[]) => (xs.length <= 3 ? xs.join(', ') : t('fm.merc.plan.andMore', { list: xs.slice(0, 3).join(', '), count: xs.length - 3 }));
-  // Enveloppe par recrue : budget transferts + ventes possibles (rien de connu = sans limite).
-  const cap = fin && fin.transferBudget != null ? Math.max(0, fin.transferBudget) + r.income : null;
+  // Argent du plan : budget transferts + ventes possibles ; marge salariale + salaires libérés (inconnu = sans limite).
+  const limits = useMemo<TeamPlanLimits>(
+    () => ({
+      budget: fin && fin.transferBudget != null ? Math.max(0, fin.transferBudget) + r.income : null,
+      wageRoom: fin && fin.wageRoom != null ? Math.max(0, fin.wageRoom + r.wagesFreed) : null,
+    }),
+    [fin, r.income, r.wagesFreed],
+  );
   const kpis = [
     fin && <Kpi key="tb" label={t('fm.merc.view.kpi.transfer')} value={f.money(fin.transferBudget)} />,
     fin && fin.wageRoom != null && <Kpi key="wr" label={t('fm.merc.view.kpi.wage')} value={f.money(fin.wageRoom)} tone={fin.wageRoom < 0 ? 'bad' : undefined} sub={t('fm.merc.view.kpi.perMonth')} />,
@@ -159,7 +165,7 @@ function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked }: { 
       )}
 
       {/* 2. Le niveau du onze face à la note visée, et l'argent réparti pour combler l'écart. */}
-      {pr && <TeamTarget pr={pr} engine={engine} pool={pool} cap={cap} />}
+      {pr && <TeamTarget pr={pr} engine={engine} pool={pool} limits={limits} />}
 
       {/* 3. Vue d'ensemble : tout l'effectif par ligne, avec ce qui reste, part, se prolonge et manque. */}
       <SquadOverview r={r} needs={needs} />
@@ -205,7 +211,7 @@ function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked }: { 
  * les recrues abordables (parmi tes cibles suivies) qui font monter la moyenne, de la plus utile à la moins utile,
  * jusqu'à passer la barre.
  */
-function TeamTarget({ pr, engine, pool, cap }: { pr: Project; engine: TacticEngine; pool: Target[]; cap: number | null }) {
+function TeamTarget({ pr, engine, pool, limits }: { pr: Project; engine: TacticEngine; pool: Target[]; limits: TeamPlanLimits }) {
   const { t } = useTranslation();
   const f = useFormat();
   const names = useNames();
@@ -215,7 +221,7 @@ function TeamTarget({ pr, engine, pool, cap }: { pr: Project; engine: TacticEngi
   const options = fitInStars() ? [2.5, 3, 3.5, 4, 4.5, 5].map((x) => 10 + x * 2) : [50, 55, 60, 65, 70, 75, 80, 85, 90].map((x) => x / 5);
   // Par défaut, le palier juste au-dessus de la moyenne actuelle : un objectif atteignable.
   const T = coach.teamTarget ?? options.find((o) => o > now + 0.01) ?? options.at(-1)!;
-  const plan = useMemo(() => teamPlan(engine, pr, pool, T, cap), [engine, pr, pool, T, cap]);
+  const plan = useMemo(() => teamPlan(engine, pr, pool, T, limits), [engine, pr, pool, T, limits]);
   const done = plan.xiAvg >= T;
   const rows = plan.toTarget.length ? plan.toTarget : plan.upgrades.slice(0, 6);
   const verdict = done ? 'done' : plan.reached ? 'reachable' : 'out';
@@ -242,7 +248,7 @@ function TeamTarget({ pr, engine, pool, cap }: { pr: Project; engine: TacticEngi
         <div className="rounded-lg bg-canard/5 p-3">
           <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.merc.target.now')}</p>
           <p className="mt-1 font-display text-3xl font-semibold tabular-nums">{fitPct(plan.xiAvg)}</p>
-          <p className="text-xs text-brun">{t('fm.merc.target.ready', { count: pr.slots.filter((s) => s.fit != null && s.fit >= T).length })}</p>
+          <p className="text-xs text-brun">{t('fm.merc.target.ready', { count: pr.slots.filter((s) => s.fit != null && s.fit >= T).length })} · {t('fm.merc.target.floor', { value: fitPct(plan.floor) })}</p>
         </div>
         <div className="rounded-lg bg-orange-clair p-3">
           <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.merc.target.aimed')}</p>
@@ -258,7 +264,9 @@ function TeamTarget({ pr, engine, pool, cap }: { pr: Project; engine: TacticEngi
         </div>
       </div>
       <p className="mt-2 text-xs text-brun">
-        {cap == null ? t('fm.merc.target.capNone') : t('fm.merc.target.cap', { amount: f.money(cap) })} · {t('fm.merc.target.pool', { count: pool.length })}
+        {limits.budget == null ? t('fm.merc.target.capNone') : t('fm.merc.target.cap', { amount: f.money(limits.budget) })}
+        {limits.wageRoom != null && <> · {t('fm.merc.target.wageCap', { amount: f.money(limits.wageRoom) })}</>} · {t('fm.merc.target.pool', { count: pool.length })}
+        {rows.length > 0 && !done && <> · {t('fm.merc.target.spent', { amount: f.money(rows.reduce((a, u) => a + (u.price ?? 0), 0)), wages: f.money(rows.reduce((a, u) => a + (u.wage ?? 0), 0)) })}</>}
       </p>
 
       {done ? (
@@ -279,6 +287,8 @@ function TeamTarget({ pr, engine, pool, cap }: { pr: Project; engine: TacticEngi
                 <th className="py-1.5 pr-3">{t('fm.merc.target.col.replaces')}</th>
                 <th className="py-1.5 pr-3">{t('fm.merc.target.col.gain')}</th>
                 <th className="py-1.5 pr-3 text-right">{t('fm.merc.target.col.price')}</th>
+                <th className="py-1.5 pr-3 text-right">{t('fm.merc.target.col.wage')}</th>
+                <th className="py-1.5 pr-3 text-right">{t('fm.merc.target.col.known')}</th>
                 <th className="py-1.5 text-right">{t('fm.merc.target.col.after')}</th>
               </tr>
             </thead>
@@ -293,6 +303,8 @@ function TeamTarget({ pr, engine, pool, cap }: { pr: Project; engine: TacticEngi
                   <td className="py-1.5 pr-3 text-right tabular-nums" title={u.priceIsEst ? t('fm.merc.target.priceEst') : undefined}>
                     {u.price == null ? '–' : `${u.priceIsEst ? '~' : ''}${f.money(u.price)}`}
                   </td>
+                  <td className="py-1.5 pr-3 text-right tabular-nums">{u.wage == null ? '–' : f.money(u.wage)}</td>
+                  <td className="py-1.5 pr-3 text-right"><Known value={u.knowledge} /></td>
                   <td className="py-1.5 text-right font-bold tabular-nums">{fitPct(u.after)}</td>
                 </tr>
               ))}
@@ -300,7 +312,30 @@ function TeamTarget({ pr, engine, pool, cap }: { pr: Project; engine: TacticEngi
           </table>
         </div>
       )}
+      {!done && plan.tooDear.length > 0 && (
+        <p className="mt-3 text-sm">
+          <span className="font-bold">{t('fm.merc.target.tooDear')}</span>{' '}
+          <span className="text-brun">{plan.tooDear.slice(0, 4).map((u) => `${u.player.name} (${POS_LABEL[u.slot.pos]}, +${fitGap(u.delta)}, ${u.price == null ? '–' : f.money(u.price)})`).join(' · ')}</span>
+        </p>
+      )}
+      {!done && plan.unpriced.length > 0 && (
+        <p className="mt-2 text-sm">
+          <span className="font-bold">{t('fm.merc.target.unpriced')}</span>{' '}
+          <span className="text-brun">{plan.unpriced.slice(0, 4).map((u) => `${u.player.name} (${POS_LABEL[u.slot.pos]}, +${fitGap(u.delta)})`).join(' · ')}</span>
+        </p>
+      )}
     </section>
+  );
+}
+
+/** Connaissance d'une cible par tes recruteurs : sous 50 %, sa note est encore incertaine. */
+function Known({ value }: { value: number | null }) {
+  const { t } = useTranslation();
+  if (value == null) return <span className="text-canard/40">–</span>;
+  return (
+    <span className={`num-pill ${value >= 75 ? 'bg-eau/40 text-canard' : value >= 50 ? 'bg-canard/10 text-canard' : 'bg-ambre/30 text-canard'}`} title={value < 50 ? t('fm.merc.target.knownLow') : undefined}>
+      {Math.round(value)} %
+    </span>
   );
 }
 

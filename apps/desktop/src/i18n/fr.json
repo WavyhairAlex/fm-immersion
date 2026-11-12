@@ -2064,7 +2064,9 @@
           "replaces": "Remplace",
           "gain": "Gain",
           "price": "Prix",
-          "after": "Moyenne du onze après"
+          "after": "Moyenne du onze après",
+          "wage": "Salaire",
+          "known": "Connu à"
         },
         "empty": "personne",
         "reachable": "Atteignable avec tes cibles",
@@ -2074,17 +2076,23 @@
           "reachable_other": "atteignable avec {{count}} recrues",
           "out": "hors de portée : élargis le budget ou suis d'autres cibles"
         },
-        "cap": "Prix max par recrue : {{amount}} (budget transferts + ventes possibles)",
+        "cap": "Argent du plan : {{amount}} (budget transferts + ventes possibles)",
         "capNone": "Budget inconnu : pas de limite de prix",
         "pool_one": "{{count}} cible suivie",
         "pool_other": "{{count}} cibles suivies",
         "doneText": "Ton onze dépasse déjà la note visée : vise plus haut, ou renforce le banc avec les postes à pourvoir plus bas.",
         "noPool": "Aucune cible suivie : ajoute des joueurs à ta liste de suivi dans FM27 (ou dans Cibles) et je calcule les recrues qui font monter ton onze.",
-        "noUpgrade": "Aucune de tes cibles abordables ne fait mieux qu'un titulaire. Suis d'autres joueurs ou élargis le budget.",
+        "noUpgrade": "Aucune de tes cibles chiffrées et abordables ne fait mieux qu'un titulaire. Suis d'autres joueurs ou élargis le budget.",
         "planTitle_one": "La recrue qui suffit à passer la barre :",
         "planTitle_other": "Les {{count}} recrues qui suffisent à passer la barre, de la plus utile à la moins utile :",
         "bestTitle": "Le budget ne suffit pas pour la note visée. Les meilleures améliorations possibles :",
-        "priceEst": "Valeur estimée par tes recruteurs"
+        "priceEst": "Valeur estimée par tes recruteurs",
+        "floor": "maillon faible {{value}}",
+        "wageCap": "marge salariale {{amount}} (salaires libérés compris)",
+        "spent": "le plan dépense {{amount}} et {{wages}} de salaires",
+        "tooDear": "Trop chères pour l'argent ou la marge salariale qui restent :",
+        "unpriced": "Prix inconnu, à faire chiffrer par tes recruteurs :",
+        "knownLow": "Tes recruteurs connaissent encore peu ce joueur : sa note peut bouger."
       }
     },
     "stats": {

@@ -2064,7 +2064,9 @@
           "replaces": "Replaces",
           "gain": "Gain",
           "price": "Price",
-          "after": "XI average after"
+          "after": "XI average after",
+          "wage": "Wage",
+          "known": "Known"
         },
         "empty": "nobody",
         "reachable": "Reachable with your targets",
@@ -2074,17 +2076,23 @@
           "reachable_other": "reachable with {{count}} signings",
           "out": "out of reach: widen the budget or follow other targets"
         },
-        "cap": "Max price per signing: {{amount}} (transfer budget + possible sales)",
+        "cap": "Money for the plan: {{amount}} (transfer budget + possible sales)",
         "capNone": "Budget unknown: no price limit",
         "pool_one": "{{count}} tracked target",
         "pool_other": "{{count}} tracked targets",
         "doneText": "Your XI is already above the target: aim higher, or strengthen the bench with the positions to fill below.",
         "noPool": "No tracked targets: add players to your FM27 shortlist (or in Targets) and I'll work out which signings lift your XI.",
-        "noUpgrade": "None of your affordable targets beats a starter. Follow other players or widen the budget.",
+        "noUpgrade": "None of your priced, affordable targets beats a starter. Follow other players or widen the budget.",
         "planTitle_one": "The signing that gets you over the bar:",
         "planTitle_other": "The {{count}} signings that get you over the bar, most useful first:",
         "bestTitle": "The budget isn't enough for the target. Best possible upgrades:",
-        "priceEst": "Value estimated by your scouts"
+        "priceEst": "Value estimated by your scouts",
+        "floor": "weakest link {{value}}",
+        "wageCap": "wage room {{amount}} (freed wages included)",
+        "spent": "the plan spends {{amount}} and {{wages}} in wages",
+        "tooDear": "Too expensive for the money or wage room left:",
+        "unpriced": "Price unknown, ask your scouts for a valuation:",
+        "knownLow": "Your scouts barely know this player yet: his rating may change."
       }
     },
     "stats": {
