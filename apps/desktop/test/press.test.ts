@@ -3,7 +3,7 @@ import i18next from 'i18next';
 import { describe, expect, it } from 'vitest';
 import en from '../src/i18n/en.json';
 import fr from '../src/i18n/fr.json';
-import { answerText, askedBy, questionKey, questionText } from '../src/lib/press';
+import { answerText, askedBy, cleanQuestion, questionKey, questionText } from '../src/lib/press';
 
 /** Une question de chaque sorte, avec toutes ses variantes (enjeu, issue, série). */
 const Q = (id: QuestionTopic, params: PressQuestion['params']): PressQuestion => ({ id, params });
@@ -82,5 +82,28 @@ describe('conférence de presse dans la gazette', () => {
     expect(storyText(i18n.t, 'Nitra', story)).toEqual({ title: 'Le coach hausse le ton', body: '« Ça suffit. », a confié le coach au Crampon après le match contre Genk.' });
     // Conférence d'avant les rédactions : titre et texte d'origine.
     expect(storyText(i18n.t, 'Nitra', { ...story, params: { ...story.params, tone: 'calm', outlet: null } }).body).toBe('« Ça suffit. »');
+  });
+});
+
+describe("questions reformulées par l'IA", () => {
+  // Exemples tirés de vraies conférences.
+  const base = "{{name}}, 2 buts ce soir ! Il mérite un mot ?".replace('{{name}}', 'Solovyov');
+
+  it("retire l'étiquette de rédaction, les guillemets et la formule d'adresse", () => {
+    expect(cleanQuestion('[télé nationale] Solovyov a marqué 2 buts. Mérite-t-il un mot ?', base)).toBe('Solovyov a marqué 2 buts. Mérite-t-il un mot ?');
+    expect(cleanQuestion("« Monsieur l'entraîneur, Solovyov a marqué 2 buts : un mot sur lui ? »", base)).toBe('Solovyov a marqué 2 buts : un mot sur lui ?');
+    expect(cleanQuestion("Solovyov a marqué 2 buts, pourriez-vous nous dire, Monsieur l'entraîneur, ce que vous en pensez ?", base)).toBe(
+      'Solovyov a marqué 2 buts, pourriez-vous nous dire, ce que vous en pensez ?',
+    );
+    expect(cleanQuestion('Solovyov a marqué 2 buts. Un mot sur lui, monsieur ?', base)).toBe('Solovyov a marqué 2 buts. Un mot sur lui ?');
+  });
+
+  it('rejette une question racontée, une rédaction inventée, un contexte inventé ou un chiffre changé', () => {
+    expect(cleanQuestion("« Solovyov a marqué 2 buts, un mot ? », demande le journaliste de Télé Nationale.", base)).toBeNull();
+    expect(cleanQuestion('"2 buts pour Solovyov ?", vous demandez, impatient de connaître la réaction.', base)).toBeNull();
+    expect(cleanQuestion('Pour Radio Sportif : Solovyov, 2 buts, un mot ?', base)).toBeNull();
+    expect(cleanQuestion('Avant ce match retour, Solovyov a marqué 2 buts. Un mot ?', base)).toBeNull();
+    expect(cleanQuestion('Solovyov a marqué 3 buts. Un mot ?', base)).toBeNull();
+    expect(cleanQuestion(`Solovyov a marqué 2 buts. ${'Vraiment, '.repeat(30)}un mot ?`, base)).toBeNull();
   });
 });

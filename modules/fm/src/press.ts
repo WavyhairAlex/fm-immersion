@@ -132,6 +132,11 @@ const MEMORY_DAYS = 21;
 /** Un sujet abordé lors des trois dernières conférences passe après les autres. */
 const RECENT_CONFERENCES = 3;
 const RECENT_PENALTY = 50;
+/**
+ * Le jeu annonce le match en jours (« Dans 3 jours », « Demain ») et cette date calculée peut glisser d'un relevé à
+ * l'autre : une conférence d'avant-match tenue contre le même adversaire à quelques jours près vaut pour ce match.
+ */
+const SAME_MATCH_DAYS = 6;
 /** Course au titre : dans les deux premiers, à huit journées ou moins de la fin. */
 const TITLE_RACE_LEFT = 8;
 /** Les joueurs qui comptent : les quatorze meilleurs de l'effectif par niveau. */
@@ -270,10 +275,24 @@ function recentTopics(held: readonly PressHeld[], before: string): Set<QuestionT
   );
 }
 
+/** Sujets de la dernière conférence tenue jusqu'à cette date (l'avant-match du même jour compte). */
+function lastTopics(held: readonly PressHeld[], until: string): Set<QuestionTopic> {
+  const prev = [...held].filter((h) => h.matchDate.slice(0, 10) <= until.slice(0, 10)).sort((a, b) => b.matchDate.localeCompare(a.matchDate))[0];
+  return new Set(prev?.questions.map((q) => q.id) ?? []);
+}
+
+/** Une conférence d'avant-match a-t-elle déjà été tenue (ou refusée) pour ce match, même si sa date annoncée a bougé ? */
+const preAlreadyHeld = (held: readonly PressHeld[], opponent: string, date: string) =>
+  held.some((h) => h.kind === 'pre' && h.opponent === opponent && Math.abs(days(h.matchDate, date)) <= SAME_MATCH_DAYS);
+
 /** La question d'ouverture, puis les plus intéressantes ; un sujet déjà abordé récemment passe après les autres. */
 function pick(lead: PressQuestion, rest: Candidate[], held: readonly PressHeld[], date: string, club: string, key: string): PressQuestion[] {
   const recent = recentTopics(held, date);
+  // Un sujet posé à la toute dernière conférence ne revient pas à la suivante : mieux vaut deux questions que la même
+  // question chaque semaine (le sujet d'ouverture, le match lui-même, reste).
+  const last = lastTopics(held, date);
   const ranked = rest
+    .filter((c) => !last.has(c.q.id))
     .map((c) => ({ ...c, score: c.score - (recent.has(c.q.id) ? RECENT_PENALTY : 0) + (hash(`${key}|${c.q.id}`) % 10) }))
     .sort((a, b) => b.score - a.score)
     .map((c) => c.q);
@@ -324,9 +343,11 @@ function clubCandidates(sorted: Entry[], opponent: string | null, losing: boolea
 const STRONG: readonly AnswerTone[] = ['confident', 'ambitious', 'firm', 'deny', 'tease', 'selfCritical', 'protect'];
 
 /** Réponse d'une conférence récente sur laquelle la presse peut revenir : la plus tranchée, sinon la plus longue. */
-function memoryOf(held: readonly PressHeld[], date: string): { h: PressHeld; a: PressAnswer } | null {
+function memoryOf(held: readonly PressHeld[], date: string, opponent: string | null): { h: PressHeld; a: PressAnswer } | null {
   const past = [...held]
     .filter((h) => h.answers.length && h.matchDate.slice(0, 10) < date.slice(0, 10) && days(h.matchDate, date) <= MEMORY_DAYS)
+    // Avant un match, pas de relance sur ce qu'on a dit… avant ce même match.
+    .filter((h) => opponent == null || !(h.kind === 'pre' && h.opponent === opponent && days(h.matchDate, date) <= SAME_MATCH_DAYS))
     .sort((a, b) => b.matchDate.localeCompare(a.matchDate))[0];
   if (!past) return null;
   const strong = (x: PressAnswer) => Number(x.tone != null && STRONG.includes(x.tone));
@@ -345,8 +366,8 @@ export function shortQuote(text: string): string {
  * Relance sur une réponse passée : rumeur qui revient après un démenti, promesse démentie par une défaite, mise au
  * point suivie d'une victoire, ou simple rappel avant une affiche.
  */
-function followUp(held: readonly PressHeld[], date: string, now: { outcome?: string | null; linked?: boolean; pre?: boolean }): Candidate | null {
-  const m = memoryOf(held, date);
+function followUp(held: readonly PressHeld[], date: string, now: { outcome?: string | null; linked?: boolean; pre?: boolean; opponent?: string }): Candidate | null {
+  const m = memoryOf(held, date, now.pre ? (now.opponent ?? null) : null);
   if (!m) return null;
   const tone = m.a.tone;
   let variant: 'broken' | 'kept' | 'denied' | 'again' | null = null;
@@ -360,7 +381,7 @@ function followUp(held: readonly PressHeld[], date: string, now: { outcome?: str
 
 /** Conférence d'avant-match : seulement pour une affiche (coupe, Europe, choc au sommet, duel direct). */
 export function preMatchConference(history: Entry[], big: BigMatch | null = bigMatchNow(history), held: readonly PressHeld[] = []): PressConference | null {
-  if (!big) return null;
+  if (!big || preAlreadyHeld(held, big.opponent, big.date)) return null;
   const sorted = [...history].sort((a, b) => a.gameDate.localeCompare(b.gameDate));
   const last = sorted.at(-1)!;
   const results = matchResults(sorted);
@@ -384,7 +405,7 @@ export function preMatchConference(history: Entry[], big: BigMatch | null = bigM
   }
   const news = newsCandidates(sorted, last.gameDate);
   c.push(...news, ...clubCandidates(sorted, big.opponent, false));
-  const fu = followUp(held, big.date, { pre: true, linked: news.some((n) => n.q.id === 'linked') });
+  const fu = followUp(held, big.date, { pre: true, opponent: big.opponent, linked: news.some((n) => n.q.id === 'linked') });
   if (fu) c.push(fu);
   return { key, kind: 'pre', date: big.date, club: big.club, opponent: big.opponent, competition: big.competition, questions: pick(lead, c, held, big.date, big.club, key) };
 }
