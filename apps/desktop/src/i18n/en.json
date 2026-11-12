@@ -2049,7 +2049,7 @@
       },
       "target": {
         "title": "Your XI against the target rating",
-        "help": "Project XI ({{style}}, {{form}}): each position's rating is the starter's fit to the role.",
+        "help": "Project XI ({{style}}, {{form}}): each position's rating is the starter's role rating; the XI average is their mean.",
         "aim": "Target rating",
         "now": "XI average today",
         "ready_one": "{{count}} position at the level out of 11",
@@ -2057,29 +2057,34 @@
         "aimed": "Target rating",
         "missing": "{{gap}} short on average",
         "reached": "reached",
-        "after": "After the window",
-        "afterSub_one": "if you fill the position below target",
-        "afterSub_other": "if you fill the {{count}} positions below target",
         "col": {
           "pos": "Position",
-          "player": "Starter",
+          "recruit": "Signing",
           "fit": "Rating",
-          "gap": "Gap to target",
-          "plan": "Plan",
-          "budget": "Budget share",
-          "wage": "Wage room share"
-        },
-        "plan": {
-          "ready": "At the level",
-          "develop": "Youngster to develop",
-          "recruit": "To sign"
+          "replaces": "Replaces",
+          "gain": "Gain",
+          "price": "Price",
+          "after": "XI average after"
         },
         "empty": "nobody",
-        "total_one": "Total for {{count}} position to fill",
-        "total_other": "Total for {{count}} positions to fill",
-        "split": "Money available = transfer budget ({{budget}}) + possible sales ({{income}}), split by each position's gap. A guide only: real prices depend on the market.",
-        "noMoney": "Nothing to split for now: no transfer budget and no possible sale. Aim for free agents or loans.",
-        "none": "Every XI position is at the target level: the budget can go to the bench or youngsters."
+        "reachable": "Reachable with your targets",
+        "verdict": {
+          "done": "already there",
+          "reachable_one": "reachable with {{count}} signing",
+          "reachable_other": "reachable with {{count}} signings",
+          "out": "out of reach: widen the budget or follow other targets"
+        },
+        "cap": "Max price per signing: {{amount}} (transfer budget + possible sales)",
+        "capNone": "Budget unknown: no price limit",
+        "pool_one": "{{count}} tracked target",
+        "pool_other": "{{count}} tracked targets",
+        "doneText": "Your XI is already above the target: aim higher, or strengthen the bench with the positions to fill below.",
+        "noPool": "No tracked targets: add players to your FM27 shortlist (or in Targets) and I'll work out which signings lift your XI.",
+        "noUpgrade": "None of your affordable targets beats a starter. Follow other players or widen the budget.",
+        "planTitle_one": "The signing that gets you over the bar:",
+        "planTitle_other": "The {{count}} signings that get you over the bar, most useful first:",
+        "bestTitle": "The budget isn't enough for the target. Best possible upgrades:",
+        "priceEst": "Value estimated by your scouts"
       }
     },
     "stats": {

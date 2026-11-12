@@ -21,6 +21,7 @@ export * from './tactic-defaults';
 export * from './club';
 export * from './progress';
 export * from './project';
+export * from './team-plan';
 export * from './targets';
 export * from './teams';
 export * from './training';
