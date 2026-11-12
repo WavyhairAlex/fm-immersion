@@ -2126,7 +2126,39 @@
           "value": "Rapport qualité-prix"
         }
       },
-      "levelHint": "Niveau actuel → potentiel atteignable, sur 20"
+      "levelHint": "Niveau actuel → potentiel atteignable, sur 20",
+      "reg": {
+        "title": "Ta liste d'inscription",
+        "unknownLeague": "ton championnat",
+        "generic": "Pas de règle de liste connue pour {{league}} : voici tes comptes, à comparer avec l'écran Règles de la compétition dans FM27.",
+        "rule": {
+          "FR": "Ligue 1 : au moins 8 joueurs issus de la formation française, dont 4 formés au club. Pas de plafond hors UE.",
+          "IT": "Serie A : liste de 25 (22 ans et plus), avec au moins 8 formés localement dont 4 au club. Recrutement hors UE limité chaque saison.",
+          "ES": "LaLiga : liste de 25 (22 ans et plus), au moins 8 formés localement, 3 joueurs hors UE au plus.",
+          "EN": "Premier League : liste de 25 (22 ans et plus), dont au moins 8 formés localement ; il en manque un, une place de moins.",
+          "DE": "Bundesliga : au moins 12 formés localement, dont 6 au club. Pas de plafond hors UE."
+        },
+        "seniors": "Places (22 ans et +)",
+        "noCap": "pas de limite de taille",
+        "free_one": "{{count}} place libre",
+        "free_other": "{{count}} places libres",
+        "over_one": "{{count}} de trop : à sortir de la liste",
+        "over_other": "{{count}} de trop : à sortir de la liste",
+        "homeGrown": "Formés localement",
+        "hgClub": "dont formés au club : {{have}} (il en faut {{need}})",
+        "hgClubFree_one": "dont {{count}} formé au club",
+        "hgClubFree_other": "dont {{count}} formés au club",
+        "nonEu": "Hors UE",
+        "noNonEuCap": "pas de plafond",
+        "nonEuCap": "{{count}} au plus",
+        "u21": "Moins de 21 ans",
+        "u21Sub": "inscrits à part, sans prendre de place",
+        "unknownHg": "Le statut « formé au pays / au club » n'est pas encore lu par le plugin pour tout l'effectif : le compte des formés localement reste inconnu.",
+        "block": {
+          "full": "liste pleine",
+          "nonEu": "plus de place hors UE"
+        }
+      }
     },
     "stats": {
       "stale": "Le plugin n'a pas pu lire les stats à la dernière lecture : tu vois celles du {{date}}. Elles reviendront à la prochaine lecture complète (laisse le jeu quelques secondes sur un écran calme, ou relance FM27).",
@@ -3523,6 +3555,19 @@
       "help": "Ce que ses attributs pèsent vraiment dans le moteur de match de FM27, d'après les tests de la communauté FM-Arena (novembre 2026) : vitesse, accélération et endurance comptent le plus, la détente au-dessus de 12, et il faut au moins 6 en volume de jeu, anticipation, puissance, équilibre, concentration et condition physique. Une tendance tirée d'une seule série de tests, pas la note du jeu : les étoiles restent celles de FM27.",
       "none": "Rien de marquant.",
       "gk": "Les gardiens ne sont pas couverts par ces tests."
+    },
+    "takers": {
+      "title": "Tireurs et capitaine",
+      "help": "Parmi ton onze, sur 20 d'après les attributs utiles (l'attribut de la tâche compte triple). À régler dans FM27 : Tactique, Coups de pied arrêtés et capitaines.",
+      "then": "puis {{name}}",
+      "none": "Attribut pas encore lu",
+      "role": {
+        "captain": "Capitaine",
+        "penalties": "Penaltys",
+        "freeKicks": "Coups francs",
+        "corners": "Corners",
+        "longThrows": "Touches longues"
+      }
     }
   },
   "modes": {

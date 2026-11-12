@@ -2126,7 +2126,39 @@
           "value": "Value for money"
         }
       },
-      "levelHint": "Current level → reachable potential, out of 20"
+      "levelHint": "Current level → reachable potential, out of 20",
+      "reg": {
+        "title": "Your registration list",
+        "unknownLeague": "your league",
+        "generic": "No known list rule for {{league}}: here are your counts, to compare with the Competition Rules screen in FM27.",
+        "rule": {
+          "FR": "Ligue 1: at least 8 club- or France-trained players, 4 of them club-trained. No non-EU cap.",
+          "IT": "Serie A: 25-man list (22 and over), at least 8 home-grown including 4 club-trained. Limited non-EU signings each season.",
+          "ES": "LaLiga: 25-man list (22 and over), at least 8 home-grown, 3 non-EU players at most.",
+          "EN": "Premier League: 25-man list (22 and over), at least 8 home-grown; each one missing costs a place.",
+          "DE": "Bundesliga: at least 12 home-grown, 6 of them club-trained. No non-EU cap."
+        },
+        "seniors": "Places (22 and over)",
+        "noCap": "no size limit",
+        "free_one": "{{count}} place free",
+        "free_other": "{{count}} places free",
+        "over_one": "{{count}} too many: leave out of the list",
+        "over_other": "{{count}} too many: leave out of the list",
+        "homeGrown": "Home-grown",
+        "hgClub": "club-trained: {{have}} ({{need}} needed)",
+        "hgClubFree_one": "{{count}} club-trained",
+        "hgClubFree_other": "{{count}} club-trained",
+        "nonEu": "Non-EU",
+        "noNonEuCap": "no cap",
+        "nonEuCap": "{{count}} at most",
+        "u21": "Under 21",
+        "u21Sub": "registered separately, no place taken",
+        "unknownHg": "The plugin doesn't read the home-grown status for the whole squad yet: the home-grown count stays unknown.",
+        "block": {
+          "full": "list full",
+          "nonEu": "no non-EU place left"
+        }
+      }
     },
     "stats": {
       "stale": "The plugin could not read the stats on its last pass: these are from {{date}}. They will come back with the next full read (leave the game a few seconds on a quiet screen, or restart FM27).",
@@ -3523,6 +3555,19 @@
       "help": "What his attributes really weigh in the FM27 match engine, according to FM-Arena community tests (November 2026): pace, acceleration and stamina matter most, jumping reach above 12, and he needs at least 6 in work rate, anticipation, strength, balance, concentration and natural fitness. A trend from a single series of tests, not the game's rating: the stars remain FM27's.",
       "none": "Nothing notable.",
       "gk": "Goalkeepers are not covered by these tests."
+    },
+    "takers": {
+      "title": "Set-piece takers and captain",
+      "help": "From your XI, out of 20 from the useful attributes (the task's own attribute counts triple). Set them in FM27: Tactics, Set Pieces and Captains.",
+      "then": "then {{name}}",
+      "none": "Attribute not read yet",
+      "role": {
+        "captain": "Captain",
+        "penalties": "Penalties",
+        "freeKicks": "Free kicks",
+        "corners": "Corners",
+        "longThrows": "Long throws"
+      }
     }
   },
   "modes": {

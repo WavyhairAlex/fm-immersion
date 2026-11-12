@@ -52,6 +52,8 @@ export * from './plan-grade';
 export * from './stats';
 export * from './subs';
 export * from './rules';
+export * from './registration';
+export * from './takers';
 export * from './results';
 export * from './replacement';
 export * from './needs';

@@ -1,4 +1,4 @@
-import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, POS_ORDER, lineOf, type Line, type PosCode, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type Project, type Target, type TacticEngine, teamPlan, storedTargets, type TeamPlanLimits, marketModel, bestSlotFit, targetPrice, roleCeiling, valueScore, slotFit, type PriceVerdict, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
+import { CONTRACT_CALLS, MERCATO_ORDER, POS_LABEL, POS_ORDER, lineOf, type Line, type PosCode, askingPrice, buildProject, clubFinances, contractDecisions, engineValue, financeState, mercatoAdvice, recruitmentNeeds, type ContractCall, type FmPlayer, type Project, type Target, type TacticEngine, teamPlan, storedTargets, type TeamPlanLimits, marketModel, bestSlotFit, targetPrice, roleCeiling, valueScore, slotFit, registrationContext, registrationCheck, regStatus, signingBlock, type RegistrationContext, type PriceVerdict, type FmSnapshot, type MercatoAdvice, type MercatoReason, type MercatoReport, type MercatoVerdict, type RecruitNeed, type SquadAt, type ClubFinances } from '@fm-immersion/module-fm';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
@@ -53,7 +53,10 @@ function PlanRows({ rows }: { rows: PlanRow[] }) {
  * Le plan du mercato, hiérarchisé : 1) la priorité, en grand, avec l'argent disponible ; 2) les décisions regroupées
  * par type, dans l'ordre où les prendre (une ligne par groupe) ; 3) au clic, chaque joueur ou poste ; le reste est replié.
  */
-function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked }: { r: MercatoReport; pr: Project | null; engine: TacticEngine; pool: Target[]; needs: RecruitNeed[]; fin: ClubFinances | null; gameDate: string; onMarked: (id: string) => void }) {
+function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked, reg }: { r: MercatoReport; pr: Project | null; engine: TacticEngine; pool: Target[]; needs: RecruitNeed[]; fin: ClubFinances | null; gameDate: string; onMarked: (id: string) => void; reg: RegistrationContext | null }) {
+  // Liste d'inscription : effectif qui reste (les partants signalés n'y sont plus).
+  const squad = useMemo(() => r.advice.map((a) => a.player), [r]);
+  const regCheck = useMemo(() => (reg ? registrationCheck(squad, (p) => regStatus({ id: p.id, nationality: reg.nationality.get(p.id) }, reg.elig, reg.country), reg.rules) : null), [squad, reg]);
   const { t } = useTranslation();
   const f = useFormat();
   const reason = useReason();
@@ -165,7 +168,9 @@ function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked }: { 
       )}
 
       {/* 2. Le niveau du onze face à la note visée, et l'argent réparti pour combler l'écart. */}
-      {pr && <TeamTarget pr={pr} engine={engine} pool={pool} limits={limits} />}
+      {pr && <TeamTarget pr={pr} engine={engine} pool={pool} limits={limits} blockOf={reg && regCheck ? (p) => signingBlock(regCheck, regStatus(p, reg.elig, reg.country), p.age) : undefined} />}
+
+      {reg && regCheck && <Registration reg={reg} c={regCheck} />}
 
       {/* 3. Vue d'ensemble : tout l'effectif par ligne, avec ce qui reste, part, se prolonge et manque. */}
       <SquadOverview r={r} needs={needs} />
@@ -211,7 +216,7 @@ function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked }: { 
  * les recrues abordables (parmi tes cibles suivies) qui font monter la moyenne, de la plus utile à la moins utile,
  * jusqu'à passer la barre.
  */
-function TeamTarget({ pr: pr0, engine: engine0, pool, limits }: { pr: Project; engine: TacticEngine; pool: Target[]; limits: TeamPlanLimits }) {
+function TeamTarget({ pr: pr0, engine: engine0, pool, limits, blockOf }: { pr: Project; engine: TacticEngine; pool: Target[]; limits: TeamPlanLimits; blockOf?: (p: Target) => 'full' | 'nonEu' | null }) {
   // Notes absolues (attributs seuls, comme FM Notebook) : les étoiles du jeu sont relatives à l'effectif et ne disent
   // pas si une recrue d'un autre club apporte quelque chose.
   const { engine, pr } = useMemo(() => {
@@ -349,7 +354,10 @@ function TeamTarget({ pr: pr0, engine: engine0, pool, limits }: { pr: Project; e
             <tbody>
               {(showAll ? sorted : sorted.slice(0, CAND_MAX)).map((c) => (
                 <tr key={c.key} className={`border-b border-canard/5 last:border-0 ${c.status === 'plan' ? 'bg-eau/10' : ''}`}>
-                  <td className="py-1.5 pr-3"><span className={`whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-bold ${STATUS_CLS[c.status]}`}>{t(`fm.merc.target.status.${c.status}`)}</span></td>
+                  <td className="py-1.5 pr-3">
+                    <span className={`whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-bold ${STATUS_CLS[c.status]}`}>{t(`fm.merc.target.status.${c.status}`)}</span>
+                    {blockOf?.(c.player) && <span className="mt-1 block whitespace-nowrap text-[11px] font-bold text-corail">{t(`fm.merc.reg.block.${blockOf(c.player)}`)}</span>}
+                  </td>
                   <td className="py-1.5 pr-3"><span className="pill">{POS_LABEL[c.pos]}</span></td>
                   <td className="py-1.5 pr-3">
                     <PlayerLink player={c.player} />
@@ -384,6 +392,44 @@ function TeamTarget({ pr: pr0, engine: engine0, pool, limits }: { pr: Project; e
           <p className="mt-1 text-xs text-brun">{market ? t('fm.merc.target.marketHelp', { count: market.n }) : t('fm.merc.target.marketNone')}</p>
         </div>
       )}
+    </section>
+  );
+}
+
+/** Liste d'inscription du championnat (règles reprises de FM Notebook) : places, formés localement, hors UE. */
+function Registration({ reg, c }: { reg: RegistrationContext; c: ReturnType<typeof registrationCheck> }) {
+  const { t } = useTranslation();
+  const R = c.rules;
+  const generic = R.key === 'generic';
+  const n = (v: number | null) => (v == null ? '?' : String(v));
+  const tile = (label: string, value: string, sub: string, bad: boolean) => (
+    <div className={`rounded-lg p-3 ${bad ? 'bg-corail/10' : 'bg-canard/5'}`}>
+      <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{label}</p>
+      <p className={`mt-1 font-display text-2xl font-semibold tabular-nums ${bad ? 'text-corail' : ''}`}>{value}</p>
+      <p className="text-xs text-brun">{sub}</p>
+    </div>
+  );
+  return (
+    <section className="card" aria-labelledby="merc-reg">
+      <h2 id="merc-reg" className="font-display text-xl font-semibold">{t('fm.merc.reg.title')}</h2>
+      <p className="text-sm text-brun">{generic ? t('fm.merc.reg.generic', { league: reg.league ?? t('fm.merc.reg.unknownLeague') }) : t(`fm.merc.reg.rule.${R.key}`)}</p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        {tile(
+          t('fm.merc.reg.seniors'),
+          c.maxSeniors == null ? String(c.seniors) : `${c.seniors} / ${c.maxSeniors}`,
+          c.free == null ? t('fm.merc.reg.noCap') : c.free >= 0 ? t('fm.merc.reg.free', { count: c.free }) : t('fm.merc.reg.over', { count: -c.free }),
+          c.issues.includes('full'),
+        )}
+        {tile(
+          t('fm.merc.reg.homeGrown'),
+          R.hgTotal == null ? n(c.homeGrown) : `${n(c.homeGrown)} / ${R.hgTotal}`,
+          R.hgClub == null ? t('fm.merc.reg.hgClubFree', { count: c.homeGrownClub ?? 0 }) : t('fm.merc.reg.hgClub', { have: n(c.homeGrownClub), need: R.hgClub }),
+          c.issues.includes('hgShort') || c.issues.includes('hgClubShort'),
+        )}
+        {tile(t('fm.merc.reg.nonEu'), R.nonEuCap == null ? n(c.nonEu) : `${n(c.nonEu)} / ${R.nonEuCap}`, R.nonEuCap == null ? t('fm.merc.reg.noNonEuCap') : t('fm.merc.reg.nonEuCap', { count: R.nonEuCap }), c.issues.includes('nonEuOver'))}
+        {tile(t('fm.merc.reg.u21'), String(c.u21), t('fm.merc.reg.u21Sub'), false)}
+      </div>
+      {c.homeGrown == null && <p className="mt-2 text-xs text-brun">{t('fm.merc.reg.unknownHg')}</p>}
     </section>
   );
 }
@@ -686,6 +732,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
   const [replacing, setReplacing] = useState<string | null>(null);
   // Cibles suivies (liste du jeu et ajouts de l'appli) : le vivier du plan pour atteindre la note visée.
   const { data: targetRows } = useQuery({ queryKey: ['fm', saveId, 'targets', gameDate], queryFn: () => fmData.targets(saveId) });
+  const reg = useMemo(() => (snap ? registrationContext(snap) : null), [snap]);
   const pool = useMemo(() => storedTargets(targetRows ?? [], players).filter((x) => !x.dismissed), [targetRows, players]);
   // Finances serrées : le mercato commence par les départs ; les recrues se cherchent libres ou en prêt.
   const fin = useMemo(() => (snap ? clubFinances(snap, players) : null), [snap, players]);
@@ -705,7 +752,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
 
   return (
     <div className="space-y-4">
-      <MercatoPlan r={r} pr={pr} engine={engine} pool={pool} needs={needs?.needs ?? []} fin={fin} gameDate={gameDate} onMarked={setJustMarked} />
+      <MercatoPlan r={r} pr={pr} engine={engine} pool={pool} needs={needs?.needs ?? []} fin={fin} gameDate={gameDate} onMarked={setJustMarked} reg={reg} />
       {/* Le reste (jeunes, recherche de remplaçants, niveau de la division…) replié : l'écran tient sur une page. */}
       <details className="group">
         <summary className="cursor-pointer text-sm font-bold text-orange-fonce hover:underline">
