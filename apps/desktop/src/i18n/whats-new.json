@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.191",
+    "date": "2026-11-13",
+    "fr": [
+      "Repérage et la recherche dans toute la base lisent maintenant directement dans le jeu si un joueur est un homme ou une femme : plus aucune joueuse proposée pour une équipe masculine (et l'inverse), même parmi les joueurs libres."
+    ],
+    "en": [
+      "Scouting and the whole-database search now read straight from the game whether a player is a man or a woman: no more women suggested for a men's team (or the other way round), free agents included."
+    ]
+  },
+  {
     "version": "0.1.190",
     "date": "2026-11-13",
     "fr": [
