@@ -38,7 +38,7 @@ import { useTranslation } from 'react-i18next';
 import { fmData } from '../lib/data';
 import { PosBadge } from './FmFoot';
 import { useTacticEngine } from './FmTactic';
-import { Chips, Empty, Fit, Kpi, More, Panel, PlayerLink, SectionTabs, Tag, useCoach, useFormat, type Tone } from './FmUi';
+import { Chips, Empty, Fit, Kpi, More, Panel, PlayerLink, SectionTabs, Tag, useCoach, useFormat, type Tone, COUNTRY_LIST_ID, CountryList } from './FmUi';
 
 /** Ce que l'on cherche : chaque repère lit une tranche différente de la base (la lecture garde 300 joueurs, meilleur CA d'abord). */
 type Preset = 'all' | TradeKind;
@@ -143,7 +143,8 @@ export function FmScouting({ saveId, snap, players, folder, gameDate, history }:
   const text = (k: 'nation' | 'division') => (
     <label className="flex flex-col text-xs font-bold text-canard">
       {t(`fm.scout.f.${k}`)}
-      <input className="input mt-1 w-48 font-normal" placeholder={t(`fm.scout.f.${k}Hint`)} value={filters[k]} onChange={(e) => setF(k, e.target.value)} />
+      {k === 'nation' && <CountryList />}
+      <input className="input mt-1 w-48 font-normal" placeholder={t(`fm.scout.f.${k}Hint`)} list={k === 'nation' ? COUNTRY_LIST_ID : undefined} value={filters[k]} onChange={(e) => setF(k, e.target.value)} />
     </label>
   );
   const togglePos = (p: PosCode) => setPositions((xs) => (xs.includes(p) ? xs.filter((x) => x !== p) : [...xs, p]));

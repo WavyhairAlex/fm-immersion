@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.189",
+    "date": "2026-11-13",
+    "fr": [
+      "Dans Repérage et dans la recherche de toute la base, le champ Nationalité te propose la liste des pays pendant que tu tapes : plus besoin de deviner l'orthographe."
+    ],
+    "en": [
+      "In Scouting and in the whole-database search, the Nationality field now suggests countries as you type, so no more guessing the spelling."
+    ]
+  },
+  {
     "version": "0.1.188",
     "date": "2026-11-13",
     "fr": [

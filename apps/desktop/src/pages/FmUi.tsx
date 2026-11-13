@@ -1,4 +1,4 @@
-import { engineTier, POS_LABEL, type Reliability, teamInstructionCards, teamInstructionOf, type CoachPrefs, type ProjectTemplate, type EngineTier, type EngineValue, type FmPlayer, type PlanLetter, type Project, type ProjectCompat, type TacticEngine } from '@fm-immersion/module-fm';
+import { COUNTRIES, engineTier, POS_LABEL, type Reliability, teamInstructionCards, teamInstructionOf, type CoachPrefs, type ProjectTemplate, type EngineTier, type EngineValue, type FmPlayer, type PlanLetter, type Project, type ProjectCompat, type TacticEngine } from '@fm-immersion/module-fm';
 import { Face } from '../components/Face';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
@@ -514,5 +514,49 @@ export function SectionTabs({ id, sections, jump }: { id: string; sections: { id
         {active.node}
       </div>
     </div>
+  );
+}
+
+/** Noms des pays britanniques, absents d'Intl (codes maison GB-ENG…), et ceux que FM écrit autrement qu'Intl. */
+const UK_NAMES: Record<string, [string, string]> = {
+  CD: ['RD Congo', 'DR Congo'],
+  CG: ['Congo', 'Congo'],
+  VN: ['Vietnam', 'Vietnam'],
+  'GB-ENG': ['Angleterre', 'England'],
+  'GB-SCT': ['Écosse', 'Scotland'],
+  'GB-WLS': ['Pays de Galles', 'Wales'],
+  'GB-NIR': ['Irlande du Nord', 'Northern Ireland'],
+};
+
+/** Liste des pays dans la langue de l'appli, triée, pour proposer les noms pendant la frappe. */
+export function countryNames(lang: string): string[] {
+  const en = lang.startsWith('en');
+  let names: Intl.DisplayNames | null = null;
+  try {
+    names = new Intl.DisplayNames([en ? 'en' : 'fr'], { type: 'region' });
+  } catch {
+    names = null;
+  }
+  const out = new Set<string>();
+  for (const c of COUNTRIES) {
+    const uk = UK_NAMES[c.code];
+    const name = uk ? uk[en ? 1 : 0] : names?.of(c.code);
+    if (name && name !== c.code) out.add(name.replace(/’/g, "'"));
+  }
+  return [...out].sort((a, b) => a.localeCompare(b, en ? 'en' : 'fr'));
+}
+
+export const COUNTRY_LIST_ID = 'fmi-countries';
+
+/** `<datalist>` des pays : à brancher sur un champ par `list={COUNTRY_LIST_ID}`. */
+export function CountryList() {
+  const { i18n } = useTranslation();
+  const list = useMemo(() => countryNames(i18n.language), [i18n.language]);
+  return (
+    <datalist id={COUNTRY_LIST_ID}>
+      {list.map((n) => (
+        <option key={n} value={n} />
+      ))}
+    </datalist>
   );
 }
