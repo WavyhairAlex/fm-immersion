@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.188",
+    "date": "2026-11-13",
+    "fr": [
+      "La recherche de joueurs dans la base comprend maintenant la nationalité écrite comme un adjectif : « biélorusse », « espagnol » ou « anglais » trouvent les joueurs de Biélorussie, d'Espagne ou d'Angleterre."
+    ],
+    "en": [
+      "The player search in the database now understands nationalities written as adjectives: “Belarusian”, “Spanish” or “English” find players from Belarus, Spain or England."
+    ]
+  },
+  {
     "version": "0.1.187",
     "date": "2026-11-12",
     "fr": [
