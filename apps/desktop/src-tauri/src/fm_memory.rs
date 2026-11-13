@@ -335,6 +335,10 @@ mod off {
 
     // PERSON / ACTUAL_PERSON
     pub const P_UID: u64 = 0xC;
+    /// Drapeaux de la personne : bit `0x10` = femme (vu en jeu le 13/11/2026 sur 7 500 joueurs : 99,8 % des prénoms
+    /// féminins, 0,6 % des masculins, les écarts étant des prénoms mixtes ; vaut aussi pour les joueuses libres).
+    pub const P_FLAGS: u64 = 0x19;
+    pub const P_FEMALE: u8 = 0x10;
     pub const A_FULL_NAME: u64 = 0x18;
     pub const A_FIRST_NAME: u64 = 0x28;
     pub const A_LAST_NAME: u64 = 0x30;
@@ -548,6 +552,8 @@ pub struct DbPlayer {
     pub transfer_listed: bool,
     /// Blessé (lu dans le code du jeu, à confirmer en partie).
     pub injured: bool,
+    /// Joueuse (drapeau du jeu) ; `None` si l'octet n'a pas pu être lu.
+    pub female: Option<bool>,
     /// Valeur stockée par le jeu, monnaie de base (le jeu affiche une fourchette estimée autour de cette valeur).
     pub value_raw: Option<i32>,
 }
@@ -642,6 +648,7 @@ impl<M: Mem> Ctx<'_, M> {
         let person = ap + off::AP_VBPTR + self.r.i32(vb + 4)? as i64 as u64;
         let actual = ap + off::AP_VBPTR + self.r.i32(vb + 8)? as i64 as u64;
         let id = self.r.i32(person + off::P_UID).filter(|&id| id > 0)?;
+        let female = self.r.u8(person + off::P_FLAGS).map(|f| f & off::P_FEMALE != 0);
 
         let ca = le_i16(&b, off::AP_CA);
         let pa = le_i16(&b, off::AP_PA);
@@ -755,6 +762,7 @@ impl<M: Mem> Ctx<'_, M> {
             contract_end,
             transfer_listed,
             injured,
+            female,
             value_raw: (value >= 0).then_some(value),
         })
     }
@@ -1458,7 +1466,10 @@ impl SearchFilter {
     }
     fn keep(&self, p: &DbPlayer) -> bool {
         (self.ids.is_empty() || self.ids.contains(&p.id))
-            && self.women.map_or(true, |w| is_women_player(p) == w || (w && p.club_id.is_none()))
+            && self.women.map_or(true, |w| match p.female {
+                Some(f) => f == w,
+                None => is_women_player(p) == w || (w && p.club_id.is_none()),
+            })
             && self.min_age.map_or(true, |m| p.age.is_some_and(|a| a >= m))
             && self.max_age.map_or(true, |m| p.age.is_some_and(|a| a <= m))
             && self.max_wage_weekly.map_or(true, |m| p.wage_weekly.map_or(true, |w| w <= m))
@@ -1525,9 +1536,12 @@ pub fn has_women_first_name(p: &DbPlayer) -> bool {
     f.split(|c: char| c.is_whitespace() || c == '-').next().is_some_and(|w| WOMEN_FIRST_NAMES.contains(&w))
 }
 
-/// Joueur d'une équipe ou d'un championnat féminin (club propriétaire, club de prêt ou division) ; sans club,
-/// d'après le prénom.
+/// Joueuse : drapeau du jeu ; à défaut (octet illisible), équipe ou championnat féminin (club propriétaire, club de
+/// prêt ou division) et, sans club, prénom.
 pub fn is_women_player(p: &DbPlayer) -> bool {
+    if let Some(f) = p.female {
+        return f;
+    }
     [&p.club, &p.loan_club, &p.division].iter().any(|x| x.as_deref().is_some_and(is_women_name))
         || (p.club_id.is_none() && p.loan_club_id.is_none() && has_women_first_name(p))
 }
@@ -1746,6 +1760,7 @@ mod tests {
         let person = ap + 0x288;
         let actual = ap + 0x2B0;
         m.put_i32(person + 0xC, 2_000_533);
+        m.put(person + 0x19, vec![0x02]);
         m.put_u64(actual + 0x18, 0);
         m.put_u64(actual + 0x28, 0x2700_0000);
         m.put_u64(0x2700_0000, 0x2700_0100);
@@ -1854,6 +1869,17 @@ mod tests {
         assert_eq!(run(&mut db, SearchFilter { women: Some(true), ..Default::default() }), 0);
         assert!(is_women_name("Arsenal Women") && is_women_name("Olympique Lyonnais Féminin") && is_women_name("Liga F") && is_women_name("Frauen-Bundesliga"));
         let mut w = db.players(1, |_| true).pop().unwrap();
+        // Drapeau du jeu lu (octet à 0 dans le monde d'essai) : il décide seul.
+        assert_eq!(w.female, Some(false));
+        w.first_name = Some("Nicole".into());
+        assert!(!is_women_player(&w));
+        w.female = Some(true);
+        assert!(is_women_player(&w));
+        let keep = |f: &SearchFilter, p: &DbPlayer| f.keep(p);
+        assert!(keep(&SearchFilter { women: Some(true), ..Default::default() }, &w));
+        assert!(!keep(&SearchFilter { women: Some(false), ..Default::default() }, &w));
+        // Drapeau illisible : repli sur le club, le championnat et le prénom.
+        w.female = None;
         (w.club, w.club_id, w.division, w.first_name) = (None, None, None, Some("Oihane".into()));
         assert!(is_women_player(&w));
         w.first_name = Some("Andrea".into());
