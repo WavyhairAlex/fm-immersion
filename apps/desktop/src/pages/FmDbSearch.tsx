@@ -16,7 +16,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PosBadge } from './FmFoot';
 import { fmData } from "../lib/data";
-import { Fit, Level, More, Tag, useNames, type Tone } from "./FmUi";
+import { Fit, Level, More, Tag, useNames, type Tone, COUNTRY_LIST_ID, CountryList } from "./FmUi";
 
 type Engine = Parameters<typeof rankTargets>[0];
 
@@ -168,9 +168,11 @@ export function FmDbSearch({
   const text = (k: "nation" | "division") => (
     <label className="block text-xs font-bold text-canard">
       {t(`fm.dbSearch.f.${k}`)}
+      {k === "nation" && <CountryList />}
       <input
         className="input mt-1 w-56 font-normal"
         placeholder={t(`fm.dbSearch.f.${k}Hint`)}
+        list={k === "nation" ? COUNTRY_LIST_ID : undefined}
         value={filter[k]}
         onChange={(e) => set(k, e.target.value)}
       />
