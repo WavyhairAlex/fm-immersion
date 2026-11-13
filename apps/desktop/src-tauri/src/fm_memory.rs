@@ -1373,6 +1373,39 @@ fn matches(query: &Option<String>, value: &Option<String>) -> bool {
     value.as_deref().map(fold).is_some_and(|v| parts.iter().any(|q| v.contains(q.as_str())))
 }
 
+/// Adjectifs de nationalité dont le pays ne commence pas pareil (repliés, sans accents) : « anglais » → Angleterre.
+const NATION_ALIASES: &[(&str, &str)] = &[
+    ("anglais", "angleterre"), ("english", "england"), ("belge", "belgique"), ("russe", "russie"), ("turc", "turquie"),
+    ("danois", "danemark"), ("suedois", "suede"), ("polonais", "pologne"), ("serbe", "serbie"), ("gallois", "galles"),
+    ("neerlandais", "pays-bas"), ("hollandais", "pays-bas"), ("dutch", "netherlands"), ("americain", "etats-unis"),
+    ("tcheque", "tchequie"), ("slovene", "slovenie"), ("bosnien", "bosnie"), ("irlandais", "irlande"), ("islandais", "islande"),
+    ("finlandais", "finlande"), ("estonien", "estonie"), ("letton", "lettonie"), ("lituanien", "lituanie"), ("bulgare", "bulgarie"),
+    ("albanais", "albanie"), ("maltais", "malte"), ("chypriote", "chypre"), ("georgien", "georgie"), ("armenien", "armenie"),
+    ("swiss", "switzerland"), ("german", "germany"), ("french", "france"), ("spanish", "spain"), ("belarusian", "belarus"),
+];
+
+/// Nationalité : le nom du pays (« Biélorussie ») ou son adjectif (« biélorusse ») ; chaque morceau séparé par une
+/// virgule est essayé. Un adjectif se reconnaît à un long début commun avec le pays (« espagnol » / « Espagne »).
+fn matches_nation(query: &Option<String>, value: &Option<String>) -> bool {
+    let parts: Vec<String> = query.iter().flat_map(|q| q.split(',')).map(|q| fold(q.trim())).filter(|q| !q.is_empty()).collect();
+    if parts.is_empty() {
+        return true;
+    }
+    let Some(v) = value.as_deref().map(fold) else { return false };
+    let words: Vec<&str> = v.split(|c: char| !c.is_alphanumeric() && c != '-').filter(|w| !w.is_empty()).collect();
+    parts.iter().any(|q| {
+        if v.contains(q.as_str()) {
+            return true;
+        }
+        let q = NATION_ALIASES.iter().find(|(a, _)| a == q).map_or(q.as_str(), |(_, b)| b);
+        if v.contains(q) {
+            return true;
+        }
+        let need = 5.max(q.chars().count().saturating_sub(3));
+        words.iter().any(|w| w.chars().zip(q.chars()).take_while(|(a, b)| a == b).count() >= need)
+    })
+}
+
 /// Critères de recherche dans la base (tous facultatifs).
 #[derive(Debug, Default, Clone, serde::Deserialize)]
 #[serde(rename_all = "camelCase", default)]
@@ -1433,7 +1466,7 @@ impl SearchFilter {
             && (!self.free_only || (p.club_id.is_none() && p.loan_club_id.is_none()))
             && (!self.transfer_listed_only || p.transfer_listed)
             && (!self.exclude_injured || !p.injured)
-            && matches(&self.nation, &p.nation)
+            && matches_nation(&self.nation, &p.nation)
             && matches(&self.division, &p.division)
             && self.min_division_reputation.map_or(true, |m| p.division_reputation.is_some_and(|r| r >= m))
             && self.max_reputation.map_or(true, |m| p.reputation[1] <= 0 || p.reputation[1] <= m)
@@ -1762,6 +1795,14 @@ mod tests {
         assert_eq!(run(&mut db, f("suede", "södra", Some(70))), 1);
         assert_eq!(run(&mut db, f("Argentine, Suède", "", None)), 1);
         assert_eq!(run(&mut db, f("France", "", None)), 0);
+        // Adjectif de nationalité plutôt que le pays.
+        assert_eq!(run(&mut db, f("suédois", "", None)), 1);
+        assert!(matches_nation(&Some("biélorusse".into()), &Some("Biélorussie".into())));
+        assert!(matches_nation(&Some("espagnol".into()), &Some("Espagne".into())));
+        assert!(matches_nation(&Some("slovaque".into()), &Some("Slovaquie".into())));
+        assert!(matches_nation(&Some("anglais".into()), &Some("Angleterre".into())));
+        assert!(!matches_nation(&Some("slovaque".into()), &Some("Slovénie".into())));
+        assert!(!matches_nation(&Some("autrichien".into()), &Some("Australie".into())));
         assert_eq!(run(&mut db, f("", "Allsvenskan", None)), 0);
         assert_eq!(run(&mut db, f("", "", Some(100))), 0);
         // Potentiel négatif (fourchette du jeu) : gardé.
