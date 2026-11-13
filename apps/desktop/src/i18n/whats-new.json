@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.190",
+    "date": "2026-11-13",
+    "fr": [
+      "Les joueuses libres ne sont plus proposées pour une équipe masculine dans Repérage et dans la recherche de toute la base."
+    ],
+    "en": [
+      "Free-agent women players are no longer suggested for a men's team in Scouting and in the whole-database search."
+    ]
+  },
+  {
     "version": "0.1.189",
     "date": "2026-11-13",
     "fr": [

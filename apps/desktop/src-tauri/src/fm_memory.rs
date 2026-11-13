@@ -1485,9 +1485,51 @@ pub fn is_women_name(name: &str) -> bool {
     WOMEN_MARKS.iter().any(|m| f.contains(m)) || f.ends_with(" w") || f.ends_with(" f")
 }
 
-/// Joueur d'une équipe ou d'un championnat féminin (club propriétaire, club de prêt ou division).
+/// Prénoms féminins courants (texte replié), pour les joueuses libres que le club ne trahit pas.
+/// Prénoms mixtes (Andrea, Camille, Alexis…) volontairement absents.
+const WOMEN_FIRST_NAMES: &[&str] = &[
+    "abigail", "adriana", "agata", "agathe", "agnes", "agnieszka", "aida", "aina", "ainhoa", "aitana", "aiyana", "alba",
+    "alejandra", "alessandra", "alessia", "alexandra", "alexia", "alice", "alicia", "alina", "alisha", "alyssa", "amalie", "amanda",
+    "amandine", "amber", "amelia", "amelie", "ana", "anastasia", "andreia", "anette", "angela", "angelica", "angelina", "anja",
+    "ann", "anna", "annabel", "anne", "annika", "antonia", "ariadna", "asisat", "aurelie", "ayumi", "barbara", "beatrice",
+    "beatriz", "bethany", "bianca", "birgit", "brenda", "bridget", "brittany", "camila", "carla", "carlota", "carmen", "carolina",
+    "caroline", "cassandra", "catalina", "catarina", "caterina", "catherine", "cecilia", "celia", "chantal", "charlotte", "chiara", "chloe",
+    "christina", "christine", "cindy", "clara", "clarisse", "claudia", "clementine", "constance", "cristiana", "cristina", "dagny", "daniela",
+    "danielle", "daphne", "debora", "deborah", "delphine", "denise", "diana", "dominika", "dora", "dorota", "edita", "elena",
+    "eleonora", "elisa", "elisabeth", "elise", "elizabeth", "ella", "ellen", "ellie", "eloise", "elsa", "emilia", "emilie",
+    "emily", "emma", "erika", "estefania", "esther", "eugenie", "eva", "evelyn", "fabienne", "fatima", "federica", "felicitas",
+    "fernanda", "filippa", "francesca", "franziska", "frida", "gabriela", "gabriella", "gaelle", "georgia", "giada", "gina", "giorgia",
+    "giulia", "giuliana", "grace", "greta", "gwen", "hailey", "hanna", "hannah", "harriet", "hayley", "heather", "heidi",
+    "helena", "helene", "hina", "hinata", "ida", "ilaria", "ines", "ingrid", "irene", "irina", "isabel", "isabella",
+    "isabelle", "itziar", "ivana", "jacqueline", "jade", "jana", "jane", "janina", "jasmine", "jenni", "jennifer", "jessica",
+    "jill", "joanna", "johanna", "jordyn", "josefine", "josephine", "judit", "judith", "julia", "juliana", "julie", "justine",
+    "kadidiatou", "kaja", "karin", "karina", "karolina", "kate", "katharina", "katherine", "kathrin", "katie", "katja", "katrin",
+    "kayla", "kerstin", "kirsty", "klara", "kristin", "kristina", "laia", "lara", "laura", "lauren", "lea",
+    "leah", "leila", "lena", "leonie", "lieke", "lina", "linda", "lindsey", "line", "lisa", "livia", "lotte",
+    "louisa", "louise", "lucia", "luciana", "lucie", "lucy", "luisa", "madeleine", "magdalena", "maite", "maja",
+    "malin", "manuela", "mara", "mareike", "margaux", "margot", "maria", "mariana", "marie", "marina", "marion", "marta",
+    "martina", "mary", "maryse", "megan", "melanie", "melissa", "mia", "michelle", "mikaela", "milena", "millie", "miriam",
+    "molly", "monica", "monika", "nadia", "nadine", "naomi", "natalia", "natasha", "nathalie", "nicole", "nina", "noemi",
+    "nora", "oihane", "olga", "olivia", "paula", "paulina", "pauline", "pernille", "petra", "pia", "rachel", "rebecca",
+    "rebekah", "renata", "rita", "roberta", "rosa", "rose", "ruth", "sabrina", "sakina", "samantha", "sandra", 
+    "sara", "sarah", "selma", "serena", "shannon", "sharon", "silvia", "sofia", "sofie", "sonia", "sophia",
+    "sophie", "stefanie", "stephanie", "susanne", "svenja", "tabea", "tanja", "tatiana", "teresa", "tessa", "tina",
+    "valentina", "valeria", "vanessa", "vera", "veronica", "veronika", "victoria", "vilde", "viola", "virginia", "vivianne", "wendy",
+    "ximena", "yasmin", "yui", "yuka", "yuki", "zoe",
+];
+
+/// Prénom féminin courant (premier mot du prénom, sinon du nom complet).
+pub fn has_women_first_name(p: &DbPlayer) -> bool {
+    let first = p.first_name.as_deref().filter(|f| !f.trim().is_empty()).unwrap_or(&p.name);
+    let f = fold(first);
+    f.split(|c: char| c.is_whitespace() || c == '-').next().is_some_and(|w| WOMEN_FIRST_NAMES.contains(&w))
+}
+
+/// Joueur d'une équipe ou d'un championnat féminin (club propriétaire, club de prêt ou division) ; sans club,
+/// d'après le prénom.
 pub fn is_women_player(p: &DbPlayer) -> bool {
     [&p.club, &p.loan_club, &p.division].iter().any(|x| x.as_deref().is_some_and(is_women_name))
+        || (p.club_id.is_none() && p.loan_club_id.is_none() && has_women_first_name(p))
 }
 
 /// Recherche dans toute la base (lecture seule, à la demande) : 300 joueurs au plus, meilleurs CA d'abord.
@@ -1811,6 +1853,14 @@ mod tests {
         assert_eq!(run(&mut db, SearchFilter { women: Some(false), ..Default::default() }), 1);
         assert_eq!(run(&mut db, SearchFilter { women: Some(true), ..Default::default() }), 0);
         assert!(is_women_name("Arsenal Women") && is_women_name("Olympique Lyonnais Féminin") && is_women_name("Liga F") && is_women_name("Frauen-Bundesliga"));
+        let mut w = db.players(1, |_| true).pop().unwrap();
+        (w.club, w.club_id, w.division, w.first_name) = (None, None, None, Some("Oihane".into()));
+        assert!(is_women_player(&w));
+        w.first_name = Some("Andrea".into());
+        assert!(!is_women_player(&w));
+        w.club_id = Some(7_001);
+        w.first_name = Some("Nicole".into());
+        assert!(!is_women_player(&w), "le prénom ne compte que sans club");
         assert!(is_women_name("Lyon (F)") && !is_women_name("Toulouse FC") && !is_women_name("Malženice") && !is_women_name("Fenerbahçe"));
         // Relecture des joueurs suivis, par identifiant.
         let id = db.search(1, &|_| true, |_| true)[0].id;
