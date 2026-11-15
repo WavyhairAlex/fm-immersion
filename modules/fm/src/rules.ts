@@ -47,7 +47,7 @@ export function competitionKind(name: string | null | undefined): CompetitionKin
   if (!n) return 'other';
   if (isFriendly(n)) return 'friendly';
   if (/champions|europa|conference|uefa|europe|libertadores|sudamericana|afc |concacaf/.test(n)) return 'europe';
-  if (/\bcup\b|coupe|pokal|copa|pohar|coppa|taca|beker|trophy|trophee|shield|supercup|super cup|community/.test(n)) return 'cup';
+  if (/\bcup\b|coupe|pokal|copa|pohar|coppa|taca|beker|kubok|kubak|puchar|\bkupa|kupasi|\bcupa\b|trophy|trophee|shield|supercup|super cup|community/.test(n)) return 'cup';
   if (/liga|league|ligue|division|championnat|premier|serie|bundesliga|eredivisie|primeira|national|championship|\bl1\b|\bl2\b/.test(n)) return 'league';
   return 'other';
 }
