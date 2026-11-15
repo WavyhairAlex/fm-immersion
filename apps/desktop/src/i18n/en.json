@@ -4127,7 +4127,9 @@
         "player": "Player",
         "fit": "Rating"
       },
-      "nobody": "Nobody"
+      "nobody": "Nobody",
+      "adopt": "Adopt this tactic",
+      "adoptHelp": "\"Adopt\" makes it your tactic in the Tactics screen: the eleven, the advice and the rest of the app follow it. You will find it under \"My tactics\" and can go back to your in-game tactic at any time."
     }
   },
   "modes": {
