@@ -47,6 +47,7 @@ export const IP_TRAITS: Record<string, IpTrait> = {
   PMWB: { lane: 'half', move: 'step', create: true }, WB: { lane: 'wide', move: 'push' }, AWB: { lane: 'wide', move: 'high' },
   DM: { lane: 'centre', move: 'stay' }, HB: { lane: 'centre', move: 'drop' }, DLP: { lane: 'centre', move: 'stay', create: true },
   BBM: { lane: 'centre', move: 'push', box: true }, B2BPM: { lane: 'centre', move: 'push', create: true },
+  B2BDM: { lane: 'centre', move: 'push', box: true }, BBP: { lane: 'half', move: 'step' },
   CM: { lane: 'centre', move: 'step' }, MFPM: { lane: 'centre', move: 'step', create: true }, WCM: { lane: 'half', move: 'step' },
   CHM: { lane: 'half', move: 'push' },
   AM: { lane: 'centre', move: 'high' }, AP: { lane: 'centre', move: 'high', create: true }, FREE: { lane: 'centre', move: 'high', create: true },
@@ -61,12 +62,12 @@ export const IP_TRAITS: Record<string, IpTrait> = {
 export const OOP_TRAITS: Record<string, Guard> = {
   GK: 'base', SK: 'press', LHK: 'cover',
   CB: 'base', WCB: 'base', STCB: 'press', CCB: 'cover', SWCB: 'press', CWCB: 'cover',
-  FB: 'base', PFB: 'press', HFB: 'cover', WB: 'base', PWB: 'press', HWB: 'cover',
+  FB: 'base', PFB: 'press', HFB: 'cover', WB: 'base', PWB: 'press', HWB: 'cover', DWB: 'cover',
   DM: 'screen', PRSDM: 'press', SCRDM: 'screen', DROPDM: 'cover', WCDM: 'wideCover',
   CM: 'base', PRSCM: 'press', SCRCM: 'screen', WCCM: 'wideCover',
   AM: 'base', TAM: 'track', COAM: 'outlet', SOAM: 'outlet',
   WM: 'base', W: 'base', TWM: 'track', WOM: 'outlet', TW: 'track', WOW: 'outlet', IOW: 'outlet',
-  CF: 'press', TCF: 'track', COCF: 'outlet', SOCF: 'outlet',
+  CF: 'press', TCF: 'track', COCF: 'outlet', SOCF: 'outlet', CCS: 'track',
 };
 
 /* ---------- Tactique construite ---------- */

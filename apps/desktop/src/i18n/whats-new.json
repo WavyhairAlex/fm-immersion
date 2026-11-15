@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.225",
+    "date": "2026-11-15",
+    "fr": [
+      "« Ma tactique idéale » propose maintenant des consignes individuelles pour chaque joueur du onze, choisies selon son rôle et ses qualités. Tu les lis dans le détail de chaque proposition.",
+      "Quand tu pars de ta tactique du jeu, la proposition conseillée garde toujours ton schéma, même s'il sort des schémas classiques. Le style de centres est aussi choisi selon tes attaquants."
+    ],
+    "en": [
+      "\"My ideal tactic\" now suggests individual instructions for each player in the eleven, picked from his role and strengths. You can read them in the detail of each proposal.",
+      "When you start from your in-game tactic, the recommended proposal always keeps your shape, even an unusual one. The crossing style is also chosen from your strikers."
+    ]
+  },
+  {
     "version": "0.1.224",
     "date": "2026-11-15",
     "fr": [

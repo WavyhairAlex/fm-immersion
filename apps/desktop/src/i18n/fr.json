@@ -4121,7 +4121,8 @@
         "farFromTaste": "Loin de ce que tu aimes jouer.",
         "tuned": "Réglée automatiquement : qualité passée de {{before}} à {{after}}.",
         "issuesLeft_one": "Il reste {{count}} point à surveiller, visible dans Composition.",
-        "issuesLeft_other": "Il reste {{count}} points à surveiller, visibles dans Composition."
+        "issuesLeft_other": "Il reste {{count}} points à surveiller, visibles dans Composition.",
+        "playerInstructions": "{{count}} consigne(s) individuelle(s) conseillée(s) pour ce onze, à lire dans le détail."
       },
       "gameTactic": "Ta tactique du jeu",
       "nothingWritten": "Rien n'est écrit dans FM27 : tu recopies toi-même ce que tu gardes.",

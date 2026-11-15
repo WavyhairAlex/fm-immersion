@@ -4121,7 +4121,8 @@
         "farFromTaste": "Far from what you like to play.",
         "tuned": "Tuned automatically: quality went from {{before}} to {{after}}.",
         "issuesLeft_one": "{{count}} point still to watch, shown in Line-up.",
-        "issuesLeft_other": "{{count}} points still to watch, shown in Line-up."
+        "issuesLeft_other": "{{count}} points still to watch, shown in Line-up.",
+        "playerInstructions": "{{count}} individual instruction(s) advised for this eleven, listed in the detail."
       },
       "gameTactic": "Your in-game tactic",
       "nothingWritten": "Nothing is written into FM27: you copy what you keep yourself.",
