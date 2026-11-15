@@ -1,18 +1,17 @@
-import { careerOf, COUNTRIES, crestLetters, inkOn, type Career as CareerData, type CareerSpell } from '@fm-immersion/module-fm';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { COUNTRIES, crestLetters, inkOn, type CareerSpell } from '@fm-immersion/module-fm';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { TFunction } from 'i18next';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { CoachLifeSection, TrophyCabinet } from '../components/CoachLife';
 import { PageHero } from '../components/PageHero';
-import { useCareer } from '../lib/career';
+import { useCareerSpells } from '../lib/coach-world';
 import { useFmFolder } from '../lib/fm-sync';
 import { FmHistoryImport } from './FmSave';
 import { clubLook, rememberClubLooks } from '../lib/club-look';
 import { Crest } from '../components/Crest';
 import { fmData } from '../lib/data';
-import { useHistory } from '../lib/fm-cache';
 import { trophyName } from '../lib/farewell-text';
 import { ordinal } from '../lib/season-une';
 import { MAP_HEIGHT, MAP_PINS, MAP_SHAPES, MAP_WIDTH } from '../lib/world-map';
@@ -32,21 +31,9 @@ export function Career() {
   const { t, i18n } = useTranslation();
   const lang = i18n.resolvedLanguage;
   const qc = useQueryClient();
-  const { saveId, save, fmSaves } = useCareer();
-  const { data: history = [], isLoading } = useHistory(saveId);
-  const { data: settings } = useQuery({ queryKey: ['fm', saveId, 'settings'], queryFn: () => fmData.settings(saveId), enabled: !!saveId });
+  const { saveId, save, fmSaves, history, isLoading, settings, hidden, kept, raw, fixed, career } = useCareerSpells();
   useMemo(() => rememberClubLooks(history.map((h) => h.data)), [history]);
   const folder = useFmFolder(saveId);
-  // Clubs écartés par le joueur (jours venus d'une autre sauvegarde) : leurs jours ne comptent pas dans la carrière.
-  const hidden = useMemo(() => settings?.careerHidden ?? [], [settings?.careerHidden]);
-  const kept = useMemo(() => history.filter((h) => !hidden.includes(h.data.club)), [history, hidden]);
-  const raw = useMemo(() => careerOf(kept, { freeSince: settings?.fmFreeSince ?? null }), [kept, settings?.fmFreeSince]);
-  // Pays corrigés à la main par le joueur (par nom de club), à la place du pays deviné.
-  const fixed = useMemo(() => settings?.careerCountries ?? {}, [settings?.careerCountries]);
-  const career: CareerData = useMemo(() => {
-    const spells = raw.spells.map((s) => (fixed[s.club] ? { ...s, country: fixed[s.club]!, countrySource: null } : s));
-    return { spells, totals: { ...raw.totals, countries: new Set(spells.map((s) => s.country).filter(Boolean)).size } };
-  }, [raw, fixed]);
   const setCountry = useMutation({
     mutationFn: ({ club, code }: { club: string; code: string | null }) =>
       fmData.updateSettings(saveId, (prev) => {

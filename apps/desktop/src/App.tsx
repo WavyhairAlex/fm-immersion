@@ -12,6 +12,7 @@ import { useGazetteAuto } from './lib/gazette-auto';
 import { useLiveDiscord } from './lib/live-discord';
 import { usePressInGame } from './lib/press-ingame';
 import { Career } from './pages/Career';
+import { MyLife } from './pages/MyLife';
 import { Challenges } from './pages/Challenges';
 import { Faces } from './pages/Faces';
 import { Photos } from './pages/Photos';
@@ -46,6 +47,7 @@ export function App() {
             <Route path="/photos" element={<Photos />} />
             <Route path="/sauvegardes" element={<Saves />} />
             <Route path="/carriere" element={<Career />} />
+            <Route path="/vie" element={<MyLife />} />
             <Route path="/gazette" element={<Story tab="gazette" />} />
             <Route path="/presse" element={<Story tab="presse" />} />
             <Route path="/discord" element={<Story tab="discord" />} />
