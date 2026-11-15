@@ -1,3 +1,4 @@
+import { inboxOf } from './coach-news';
 import { calendarFixtures } from './fixtures';
 import type { MatchResult } from './results';
 import { competitionKind } from './rules';
@@ -114,4 +115,28 @@ export function cupRuns(results: MatchResult[], last: FmSnapshot, opts: { season
 export function cupPending(s: FmSnapshot, within = 60): boolean {
   const today = s.gameDate.slice(0, 10);
   return calendarFixtures(s).some((f) => f.date >= today && days(today, f.date) <= within && !!cupKind(f.competition));
+}
+
+// Finale gagnée annoncée par la boîte de réception (message de la prime : « Nous avons reçu 93K € après avoir battu X en
+// Finale de Betera Kubok Belarusi »). Une finale jouée en cours de saison (coupe de Biélorussie en mai) n'est pas vue
+// par `cupRuns`, qui ne dit « vainqueur » qu'une fois la saison finie. Textes français et anglais.
+const BEAT = /apr[eè]s avoir battu|after (?:beating|defeating)/i;
+const FINAL_FR = /^finale\s+(?:de la |de l['’]|du |des |de |d['’])(.+)$/i;
+const FINAL_EN = /^(?:the\s+)?(.+?)\s+final$/i;
+const FINAL_OF = /^(?:the\s+)?final\s+of\s+(?:the\s+)?(.+)$/i;
+
+/** Coupes gagnées en finale d'après les messages des instantanés (une fois par compétition), avec le jour du relevé. */
+export function cupFinalsWon(entries: { gameDate: string; data: FmSnapshot }[]): { date: string; competition: string }[] {
+  const out: { date: string; competition: string }[] = [];
+  for (const e of entries)
+    for (const item of inboxOf(e.data)) {
+      if (!BEAT.test(item.body)) continue;
+      for (const l of item.links) {
+        if (/demi|semi|quart|quarter/i.test(l)) continue;
+        const m = FINAL_FR.exec(l) ?? FINAL_OF.exec(l) ?? FINAL_EN.exec(l);
+        const comp = m?.[1]?.trim();
+        if (comp && !out.some((o) => norm(o.competition) === norm(comp))) out.push({ date: e.gameDate.slice(0, 10), competition: comp });
+      }
+    }
+  return out;
 }

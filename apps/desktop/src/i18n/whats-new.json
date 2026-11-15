@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.211",
+    "date": "2026-11-15",
+    "fr": [
+      "Les coupes gagnées en cours de saison comptent enfin dans « Ma carrière » : une finale remportée en mai (comme la coupe de Biélorussie) entre dans ta vitrine des trophées et ton journal de vie sans attendre la fin du championnat.",
+      "Les coupes d'Europe de l'Est (Kubok, Puchar, Kupa…) sont reconnues comme des coupes dans tes bilans de saison."
+    ],
+    "en": [
+      "Cups won mid-season now count in \"My career\": a final won in May (like the Belarusian Cup) goes straight into your trophy cabinet and life journal without waiting for the league to end.",
+      "Eastern European cups (Kubok, Puchar, Kupa…) are now recognised as cups in your season reviews."
+    ]
+  },
+  {
     "version": "0.1.210",
     "date": "2026-11-15",
     "fr": [

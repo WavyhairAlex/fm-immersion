@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cupRuns, type FmSnapshot, type MatchResult } from '../src';
+import { competitionKind, cupFinalsWon, cupRuns, type FmSnapshot, type MatchResult } from '../src';
 
 const CUP = 'Slovnaft Cup';
 const EURO = 'UEFA Europa League';
@@ -59,5 +59,33 @@ describe('parcours en coupe', () => {
   it('sans calendrier lu : inconnu', () => {
     const s = { club: 'Malženice', gameDate: '2027-10-21', players: [], custom: { equipe: {} } } as unknown as FmSnapshot;
     expect(cupRuns([res('2027-10-20', CUP, 'Žilina', 0, 1)], s)[0]!.status).toBe('unknown');
+  });
+});
+
+describe('finale gagnée lue dans la boîte de réception', () => {
+  const snap = (gameDate: string, titre: string, texte: string) =>
+    ({ gameDate: gameDate, data: { gameDate, club: 'Slutsk', players: [], custom: { partie: { boite00Titre: titre, boite00Texte: texte } } } as unknown as FmSnapshot });
+  const L = (t: string) => `\x01QUJD\x02${t}\x01`;
+
+  it('repère la coupe gagnée en finale, une seule fois, en français et en anglais', () => {
+    const fr = snap('2027-05-26', 'Prime', `Nous avons reçu 93,12K € après avoir battu ${L('Football Club Gomel')} en ${L('Finale de Betera Kubok Belarusi')}.`);
+    const again = snap('2027-05-27', 'Prime', `Nous avons reçu 93,12K € après avoir battu ${L('Football Club Gomel')} en ${L('Finale de Betera Kubok Belarusi')}.`);
+    const en = snap('2027-05-28', 'Prize', `We have received €50K after beating ${L('Gomel')} in the ${L('FA Cup Final')}.`);
+    expect(cupFinalsWon([fr, again, en])).toEqual([
+      { date: '2027-05-26', competition: 'Betera Kubok Belarusi' },
+      { date: '2027-05-28', competition: 'FA Cup' },
+    ]);
+  });
+
+  it('ignore les demi-finales et les annonces sans victoire', () => {
+    const semi = snap('2027-04-15', 'Prime', `Nous avons reçu 34,92K € après avoir battu ${L('Niva Dolbizno')} en ${L('Demi-finale de Betera Kubok Belarusi')}.`);
+    const press = snap('2027-05-25', 'Conférence', `Une conférence de presse va avoir lieu avant la rencontre de ${L('Finale de Betera Kubok Belarusi')}.`);
+    expect(cupFinalsWon([semi, press])).toEqual([]);
+  });
+
+  it('les coupes slaves sont des coupes', () => {
+    expect(competitionKind('Betera Kubok Belarusi')).toBe('cup');
+    expect(competitionKind('Puchar Polski')).toBe('cup');
+    expect(competitionKind('Ziraat Türkiye Kupası')).toBe('cup');
   });
 });

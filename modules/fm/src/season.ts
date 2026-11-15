@@ -1,4 +1,4 @@
-import { cupPending, cupRuns, type CupRun } from './cups';
+import { cupFinalsWon, cupPending, cupRuns, type CupRun } from './cups';
 import { snapshotFixtures } from './fixtures';
 import { leaguePosition } from './gazette';
 import { normalizePlayer } from './player';
@@ -136,6 +136,12 @@ function exact(r: MatchResult): SeasonMatch | null {
 }
 
 /** Bilan d'une suite d'instantanés quelconque (une saison, ou tout un passage au club pour le hors-série du départ). */
+const sameCup = (a: string, b: string) => {
+  const x = a.normalize('NFC').toLowerCase();
+  const y = b.normalize('NFC').toLowerCase();
+  return x === y || x.includes(y) || y.includes(x);
+};
+
 export const reviewOf = (entries: Entry[], ongoing = false) => review(entries, ongoing);
 
 function review(season: Entry[], ongoing = false): SeasonReview {
@@ -218,6 +224,12 @@ function review(season: Entry[], ongoing = false): SeasonReview {
   const big = wins[0] && margin(wins[0]) >= 3 ? wins[0] : null;
   const ht = hatTrick as Extract<SeasonMoment, { kind: 'hatTrick' }> | null;
   const cups = cupRuns(results, last.data, { seasonOver: !ongoing, seasonEnd: last.gameDate });
+  // Finale gagnée en cours de saison (coupe de Biélorussie en mai) : la boîte de réception l'annonce.
+  for (const f of cupFinalsWon(season)) {
+    const run = cups.find((c) => sameCup(c.competition, f.competition));
+    if (run) Object.assign(run, { status: 'won', outBy: null });
+    else cups.push({ competition: f.competition, kind: 'cup', played: 0, wins: 0, draws: 0, losses: 0, ties: [], status: 'won', outBy: null });
+  }
   const cupWon = cups.find((c) => c.status === 'won');
   const moment: SeasonMoment | null = cupWon
     ? { kind: 'cupWin', competition: cupWon.competition }
