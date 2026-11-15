@@ -3692,7 +3692,7 @@
       "positions": "Postes (aucun = tous)",
       "run": "Lancer le repérage",
       "rerun": "Relancer",
-      "help": "Les chiffres viennent des vraies valeurs du jeu (CA, PA, âge, valeur, salaire, contrat), pas de l'avis des recruteurs. Progression : le CA monte chaque saison, vite avant 21 ans puis de moins en moins, sans dépasser le PA, et moins s'il ne joue pas chez toi (doublure : 70 %, à prêter : 60 %). Revente : la valeur d'un joueur de ce niveau et de cet âge sur le marché lu, un peu plus pour un jeune sous contrat long. Achat : sa valeur, plus chère s'il a un long contrat, moins s'il arrive en fin de contrat, gratuit s'il est libre. Gain : revente − achat − salaires. Ce sont des estimations de FM Immersion pour savoir où regarder : la négociation et la progression réelles restent celles du jeu.",
+      "help": "Les chiffres viennent des vraies valeurs du jeu (CA, PA, âge, valeur, salaire, contrat), pas de l'avis des recruteurs. Progression : le CA monte chaque saison, vite avant 21 ans puis de moins en moins, sans dépasser le PA, et moins s'il ne joue pas chez toi (doublure : 70 %, à prêter : 60 %). Revente : la valeur d'un joueur de ce niveau et de cet âge sur le marché lu, un peu plus pour un jeune sous contrat long. Achat : sa valeur, plus chère s'il a un long contrat, moins s'il arrive en fin de contrat, gratuit s'il est libre. Gain : revente − achat − salaires. Ce sont des estimations de FM Immersion pour savoir où regarder : la négociation et la progression réelles restent celles du jeu. Classement « Poste et méta » : moyenne de son adaptation à ta tactique (sa note dans les rôles du poste où il irait, sur 20) et de sa note méta à ce poste (ce que ses attributs valent dans le moteur de match, sur 20).",
       "kpi": {
         "ideas": "Bonnes affaires",
         "read": "sur {{count}} joueurs lus",
@@ -3709,6 +3709,7 @@
       },
       "list": "Les bonnes affaires",
       "sort": {
+        "fitMeta": "Poste et méta",
         "perYear": "Gain par saison",
         "profit": "Gain total",
         "roi": "Rendement"

@@ -212,3 +212,12 @@ export type EngineTier = 'top' | 'good' | 'average' | 'poor';
 export function engineTier(index: number): EngineTier {
   return index >= 25 ? 'top' : index >= 8 ? 'good' : index > -10 ? 'average' : 'poor';
 }
+
+/**
+ * Classement « poste et méta » : moyenne de l'adaptation à la tactique (note dans les rôles du créneau, sur 20) et de
+ * la note méta au poste (ce que ses attributs valent dans le moteur, sur 20). Une seule des deux connue : elle seule.
+ */
+export function fitMetaScore(fit: number | null | undefined, meta: number | null | undefined): number | null {
+  if (fit != null && meta != null) return (fit + meta) / 2;
+  return fit ?? meta ?? null;
+}
