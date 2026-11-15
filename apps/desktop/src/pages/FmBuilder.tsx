@@ -15,6 +15,8 @@ import {
   FORMATIONS,
   MENTALITIES_FM27,
   newBuiltTactic,
+  optimiseTactic,
+  tacticQuality,
   parseBuiltTactics,
   POS_LABEL,
   POS_ORDER,
@@ -110,6 +112,14 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
   const [openPi, setOpenPi] = useState<number | null>(null);
   const analysis = useMemo(() => (cur ? analyseBuiltTactic(engine, cur, avail) : null), [engine, cur, avail]);
 
+  // Réglage automatique : rôles et consignes ajustés pour monter la note de qualité, dans une copie (l'original reste).
+  const [improved, setImproved] = useState<{ before: number; after: number; roles: number; instructions: number } | null>(null);
+  const improve = () => {
+    if (!cur) return;
+    const o = optimiseTactic(engine, cur, avail);
+    setImproved({ before: o.before, after: o.after, roles: o.roles, instructions: o.instructions });
+    if (o.after > o.before) put({ ...o.tactic, id: newId(), name: t('fm.builder.improvedName', { name: cur.name }) });
+  };
   const create = () => put(newBuiltTactic(engine, form, newId(), t('fm.builder.defaultName', { form })));
   const fromGame = () => {
     const mentality = typeof snap?.tactic?.mentality === 'string' ? snap.tactic.mentality : null;
@@ -341,7 +351,26 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
         </section>
 
         {/* L'analyse : jauges, risque, forces et faiblesses, duos. */}
-        <Panel title={t('fm.builder.analysis')} className="min-w-0">
+        <Panel
+          title={t('fm.builder.analysis')}
+          className="min-w-0"
+          action={
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              <span className="text-sm">
+                {t('fm.builder.quality')} <b className="text-base">{tacticQuality(analysis)}</b>
+                <span className="text-brun"> / 100</span>
+              </span>
+              <button type="button" className="btn-primary px-3 py-1.5 text-sm" onClick={improve}>
+                {t('fm.builder.improve')}
+              </button>
+            </div>
+          }
+        >
+          {improved && (
+            <p className="mb-3 rounded-lg bg-canard/5 px-3 py-2 text-sm">
+              {improved.after > improved.before ? t('fm.builder.improved', improved) : t('fm.builder.notImproved')}
+            </p>
+          )}
           <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
             {gauge(t('fm.builder.score.penetration'), analysis.scores.penetration)}
             {gauge(t('fm.builder.score.support'), analysis.scores.support)}

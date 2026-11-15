@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.223",
+    "date": "2026-11-15",
+    "fr": [
+      "Nouvelle note « Qualité » sur 100 pour une tactique : 100 veut dire aucun point à surveiller dans « Forces et faiblesses » et des jauges équilibrées.",
+      "Dans « Ma tactique idéale », chaque proposition est maintenant réglée automatiquement (rôles et consignes) pour s'approcher de 100, sans toucher à tes réponses. Dans Composition, le bouton « Améliorer automatiquement » fait le même réglage sur ta tactique, dans une copie."
+    ],
+    "en": [
+      "New \"Quality\" rating out of 100 for a tactic: 100 means nothing to watch in \"Strengths and weaknesses\" and balanced gauges.",
+      "In \"My ideal tactic\", each proposal is now tuned automatically (roles and instructions) to get close to 100, without touching your answers. In Line-up, the \"Improve automatically\" button does the same tuning on your tactic, in a copy."
+    ]
+  },
+  {
     "version": "0.1.222",
     "date": "2026-11-15",
     "fr": [

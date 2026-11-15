@@ -3619,7 +3619,12 @@
       "piHelp": "Les 17 consignes individuelles du jeu, avec les verrous du rôle et du poste de chaque phase (🔒 : verrouillée ou déjà fixée par le rôle). Une option par consigne, comme dans le jeu. Au-delà de 3 par joueur, la tactique devient longue à assimiler.",
       "piLocked": "Verrouillée par le rôle ou le poste",
       "savedAuto": "Enregistrée",
-      "savedHelp": "Chaque changement est enregistré sur ce PC, pour cette partie. Retrouve la tactique par son nom dans la liste."
+      "savedHelp": "Chaque changement est enregistré sur ce PC, pour cette partie. Retrouve la tactique par son nom dans la liste.",
+      "quality": "Qualité",
+      "improve": "Améliorer automatiquement",
+      "improvedName": "{{name}} (améliorée)",
+      "improved": "Qualité passée de {{before}} à {{after}} dans une copie : {{roles}} rôle(s) et {{instructions}} consigne(s) changés. Ta tactique d'origine reste dans la liste.",
+      "notImproved": "Rien de mieux trouvé sans déplacer un poste : essaie de changer un poste, puis relance."
     },
     "secondary": {
       "numbers": "Numéros de maillot",
@@ -4075,7 +4080,8 @@
       "score": {
         "taste": "Tes goûts",
         "squad": "Ton effectif",
-        "meta": "Méta FM27"
+        "meta": "Méta FM27",
+        "quality": "Qualité"
       },
       "note": {
         "allMet": "Tout ce que tu as demandé y est.",
@@ -4112,13 +4118,16 @@
         "hole_one": "{{count}} poste sans joueur.",
         "hole_other": "{{count}} postes sans joueur.",
         "simple": "Tactique simple : {{count}} consignes d'équipe.",
-        "farFromTaste": "Loin de ce que tu aimes jouer."
+        "farFromTaste": "Loin de ce que tu aimes jouer.",
+        "tuned": "Réglée automatiquement : qualité passée de {{before}} à {{after}}.",
+        "issuesLeft_one": "Il reste {{count}} point à surveiller, visible dans Composition.",
+        "issuesLeft_other": "Il reste {{count}} points à surveiller, visibles dans Composition."
       },
       "gameTactic": "Ta tactique du jeu",
       "nothingWritten": "Rien n'est écrit dans FM27 : tu recopies toi-même ce que tu gardes.",
-      "how": "Tes goûts : chaque réponse est comparée aux consignes et aux postes de la tactique (ballon et bloc défensif comptent le plus). Ton effectif : 100 = le meilleur onze que ton groupe peut aligner parmi les tactiques montrées ; chaque point de note en moins sur 20 retire 15, chaque exigence que ton groupe tient mal retire 6. Méta FM27 : ce que les attributs du onze pèsent dans le moteur de match, d'après des tests de la communauté ; c'est une tendance, pas une vérité. Les consignes viennent des tactiques préréglées de FM27, ajustées à tes réponses.",
+      "how": "Qualité : 100 = aucun point à surveiller dans « Forces et faiblesses » et des jauges de pénétration, de soutien et de solidité au moins à 60 ; chaque point à surveiller retire 6 (12 s'il est grave). Chaque proposition est réglée automatiquement (rôles et consignes) pour s'en approcher, sans toucher à tes réponses. Tes goûts : chaque réponse est comparée aux consignes et aux postes de la tactique (ballon et bloc défensif comptent le plus). Ton effectif : 100 = le meilleur onze que ton groupe peut aligner parmi les tactiques montrées ; chaque point de note en moins sur 20 retire 15, chaque exigence que ton groupe tient mal retire 6. Méta FM27 : ce que les attributs du onze pèsent dans le moteur de match, d'après des tests de la communauté ; c'est une tendance, pas une vérité. Ce sont des estimations de FM Immersion, pas des mesures du jeu.",
       "detailTitle": "Détail : {{form}} · {{style}}",
-      "openBuilder": "Ouvrir dans Construire",
+      "openBuilder": "Ouvrir dans Composition",
       "builtName": "{{form}} · {{style}} (mon style)",
       "col": {
         "pos": "Poste",
@@ -4129,7 +4138,8 @@
       },
       "nobody": "Personne",
       "adopt": "Adopter cette tactique",
-      "adoptHelp": "« Adopter » en fait ta tactique dans l'écran Tactique : le onze, les conseils et le reste de l'appli la suivent. Tu la retrouves dans « Mes tactiques » et tu peux revenir à ta tactique du jeu à tout moment."
+      "adoptHelp": "« Adopter » en fait ta tactique dans l'écran Tactique : le onze, les conseils et le reste de l'appli la suivent. Tu la retrouves dans « Mes tactiques » et tu peux revenir à ta tactique du jeu à tout moment.",
+      "computing": "Calcul et réglage des propositions…"
     }
   },
   "modes": {

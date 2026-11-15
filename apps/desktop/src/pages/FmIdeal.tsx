@@ -14,12 +14,13 @@ import {
   type FmPlayer,
   type FmSnapshot,
   type Proposal,
+  type TacticProposals,
   type ProposalNote,
   type TacticScores,
   type Taste,
   type TasteMust,
 } from '@fm-immersion/module-fm';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { addBuiltTactic } from './FmBuilder';
@@ -63,15 +64,25 @@ export function FmIdeal({ snap, players, folder, go }: { snap?: FmSnapshot; play
     const mentality = typeof snap?.tactic?.mentality === 'string' ? snap.tactic.mentality : null;
     return builtFromGame(engine, slots, 'game', name, gameInstructions(snap), mentality);
   }, [snap, engine, t]);
-  const result = useMemo(() => proposeTactics({ engine, players: avail, reserve, taste, ranked, game }), [engine, avail, reserve, taste, ranked, game]);
+  // Le calcul règle chaque proposition (une à deux secondes) : il tourne après l'affichage pour ne pas figer les réponses.
+  const [result, setResult] = useState<TacticProposals | null>(null);
+  const [busy, setBusy] = useState(true);
+  useEffect(() => {
+    setBusy(true);
+    const id = window.setTimeout(() => {
+      setResult(proposeTactics({ engine, players: avail, reserve, taste, ranked, game }));
+      setBusy(false);
+    }, 40);
+    return () => window.clearTimeout(id);
+  }, [engine, avail, reserve, taste, ranked, game]);
   const [open, setOpen] = useState<Proposal['kind'] | null>(null);
   const [sent, setSent] = useState<string | null>(null);
 
   if (!avail.length || !ranked.length) return <Empty>{t('fm.tac.noAttributes')}</Empty>;
 
   const answered = tasteAnswered(taste);
-  const proposals = result.proposals;
-  const shown = proposals.find((p) => p.kind === open) ?? proposals.find((p) => p.recommended) ?? proposals[0]!;
+  const proposals = result?.proposals ?? [];
+  const shown = proposals.find((p) => p.kind === open) ?? proposals.find((p) => p.recommended) ?? proposals[0] ?? null;
 
   // Une réponse du questionnaire : recliquer la réponse choisie l'efface ; le style tout fait n'est plus coché.
   const answer = <K extends 'ball' | 'attack' | 'defend' | 'risk' | 'tuning'>(key: K, v: NonNullable<Taste[K]>) =>
@@ -120,6 +131,7 @@ export function FmIdeal({ snap, players, folder, go }: { snap?: FmSnapshot; play
   );
   const bars = (s: TacticScores) => (
     <div className="space-y-1">
+      {bar(t('fm.ideal.score.quality'), s.quality)}
       {bar(t('fm.ideal.score.taste'), s.taste)}
       {bar(t('fm.ideal.score.squad'), s.squad)}
       {bar(t('fm.ideal.score.meta'), s.meta)}
@@ -147,7 +159,7 @@ export function FmIdeal({ snap, players, folder, go }: { snap?: FmSnapshot; play
     </div>
   );
   const card = (p: Proposal) => (
-    <article key={p.kind} className={`relative flex flex-col rounded-2xl border p-4 ${p.recommended ? 'border-2 border-orange' : 'border-canard/15'} ${shown.kind === p.kind ? 'bg-orange-clair/20' : ''}`}>
+    <article key={p.kind} className={`relative flex flex-col rounded-2xl border p-4 ${p.recommended ? 'border-2 border-orange' : 'border-canard/15'} ${shown?.kind === p.kind ? 'bg-orange-clair/20' : ''}`}>
       {p.recommended && <span className="absolute -top-2.5 left-3 rounded-full bg-orange px-2.5 py-0.5 text-[0.7rem] font-extrabold uppercase tracking-wide text-canard">{t('fm.ideal.recommended')}</span>}
       <h3 className="font-display text-lg font-bold leading-tight">
         {p.form} · {names.style(p.style)}
@@ -164,7 +176,7 @@ export function FmIdeal({ snap, players, folder, go }: { snap?: FmSnapshot; play
           </li>
         ))}
       </ul>
-      <button type="button" className={`mt-3 px-3 py-1.5 text-sm ${shown.kind === p.kind ? 'btn-primary' : 'btn-secondary'}`} aria-pressed={shown.kind === p.kind} onClick={() => setOpen(p.kind)}>
+      <button type="button" className={`mt-3 px-3 py-1.5 text-sm ${shown?.kind === p.kind ? 'btn-primary' : 'btn-secondary'}`} aria-pressed={shown?.kind === p.kind} onClick={() => setOpen(p.kind)}>
         {t('fm.ideal.detail')}
       </button>
     </article>
@@ -187,7 +199,7 @@ export function FmIdeal({ snap, players, folder, go }: { snap?: FmSnapshot; play
     update({ source: 'built', built: keep(p) });
     go('tactic');
   };
-  const labels = builtInstructionLabels(shown.tactic);
+  const labels = shown ? builtInstructionLabels(shown.tactic) : { ip: [], oop: [] };
   const summary = [taste.ball && t(`fm.ideal.sum.ball.${taste.ball}`), taste.attack && t(`fm.ideal.sum.attack.${taste.attack}`), taste.defend && t(`fm.ideal.sum.defend.${taste.defend}`)].filter(Boolean).join(', ');
 
   return (
@@ -237,8 +249,9 @@ export function FmIdeal({ snap, players, folder, go }: { snap?: FmSnapshot; play
           ) : (
             <p className="mb-4 text-sm text-brun">{t('fm.ideal.squadOnly')}</p>
           )}
-          <div className={`grid gap-4 pt-2 ${proposals.length > 1 ? 'md:grid-cols-3' : 'max-w-sm'}`}>{proposals.map(card)}</div>
-          {result.game && game && (
+          {busy && <p className="mb-3 text-sm font-bold text-orange-fonce">{t('fm.ideal.computing')}</p>}
+          <div className={`grid gap-4 pt-2 ${busy ? 'opacity-50' : ''} ${proposals.length > 1 ? 'md:grid-cols-3' : 'max-w-sm'}`}>{proposals.map(card)}</div>
+          {result?.game && game && (
             <div className="mt-4 rounded-xl border border-canard/15 p-3">
               <p className="mb-2 text-sm">
                 <b>{t('fm.ideal.gameTactic')}</b> · {game.name}
@@ -250,6 +263,7 @@ export function FmIdeal({ snap, players, folder, go }: { snap?: FmSnapshot; play
           <More>{t('fm.ideal.how')}</More>
         </Panel>
 
+        {shown && (
         <Panel
           title={t('fm.ideal.detailTitle', { form: shown.form, style: names.style(shown.style) })}
           action={
@@ -295,6 +309,7 @@ export function FmIdeal({ snap, players, folder, go }: { snap?: FmSnapshot; play
             <TeamCards inPossession={labels.ip} outOfPossession={labels.oop} />
           </div>
         </Panel>
+        )}
       </div>
     </div>
   );

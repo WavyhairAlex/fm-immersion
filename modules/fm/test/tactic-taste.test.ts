@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyTaste, builtFromGame, EMPTY_TASTE, mergeReference, mustMet, newBuiltTactic, parseTaste, proposeTactics, scoreTactic, styleInstructions, TacticEngine, tacticDiff, tacticFeatures, tasteOfStyle, tasteScore, unmetDemands, SIMPLE_MAX, type Taste } from '../src';
+import { analyseBuiltTactic, applyTaste, builtFromGame, optimiseTactic, tacticQuality, EMPTY_TASTE, mergeReference, mustMet, newBuiltTactic, parseTaste, proposeTactics, scoreTactic, styleInstructions, TacticEngine, tacticDiff, tacticFeatures, tasteOfStyle, tasteScore, unmetDemands, SIMPLE_MAX, type Taste } from '../src';
 import { normalizePlayer } from '../src/player';
 
 const engine = new TacticEngine(mergeReference(undefined));
@@ -101,13 +101,35 @@ describe('ma tactique idéale', () => {
     expect(tacticDiff(same, game)).toEqual({ sameShape: true, roles: 1, instructions: 1 });
     expect(tacticDiff(newBuiltTactic(engine, '4-4-2', 'x'), game).sameShape).toBe(false);
     const res = proposeTactics({ engine, players: squad(), taste: taste({ defend: 'mid' }), game });
-    // Point de départ « ma tactique du jeu » : le compromis garde ses rôles, seules les consignes des réponses changent.
-    expect(res.proposals[1]!.diff).toMatchObject({ sameShape: true, roles: 0 });
+    // Point de départ « ma tactique du jeu » : le compromis garde son schéma et ne change que les rôles qui montent la qualité.
+    expect(res.proposals[1]!.diff).toMatchObject({ sameShape: true });
+    expect(res.proposals[1]!.diff!.roles).toBeLessThanOrEqual(6);
+    expect(res.proposals[1]!.scores.quality).toBeGreaterThanOrEqual(res.game!.scores.quality);
     expect(res.game!.scores.taste).toBe(100);
     // Repère commun : la meilleure tactique montrée vaut 100 pour l'effectif (avant exigences mal tenues).
     expect(Math.max(...res.proposals.map((p) => p.scores.squad), res.game!.scores.squad)).toBe(100);
     expect(scoreTactic(engine, game, squad(), [], taste({ defend: 'mid' })).scores.taste).toBe(100);
     expect(builtFromGame).toBeTypeOf('function');
+  });
+
+  it('règle une tactique pour monter sa note de qualité, sans déplacer les postes ni casser les goûts', () => {
+    // Deux latéraux et un milieu qui montent tous : défense restante trop juste.
+    let t = newBuiltTactic(engine, '4-3-3', 'a');
+    t = { ...t, slots: t.slots.map((s, i) => (i === 1 || i === 4 ? { ...s, ip: 'WB' } : i === 5 ? { ...s, ip: 'BBM' } : s)) };
+    const before = tacticQuality(analyseBuiltTactic(engine, t, squad()));
+    const o = optimiseTactic(engine, t, squad());
+    expect(o.before).toBe(before);
+    expect(o.after).toBeGreaterThan(before);
+    expect(o.tactic.slots.map((s) => s.pos)).toEqual(t.slots.map((s) => s.pos));
+    expect(o.roles).toBeGreaterThan(0);
+    // Contrainte : aucun rôle avec ballon ne bouge, donc rien ne change de ce côté.
+    const fixed = optimiseTactic(engine, t, squad(), { accept: (x) => x.slots.every((s, i) => s.ip === t.slots[i]!.ip) });
+    expect(fixed.tactic.slots.map((s) => s.ip)).toEqual(t.slots.map((s) => s.ip));
+    // Les propositions sortent déjà réglées : la qualité de chacune vaut au moins celle du schéma de départ brut.
+    const out = proposeTactics({ engine, players: squad(), taste: taste({ ball: 'fast', defend: 'high', musts: ['insideWingers'] }) }).proposals;
+    for (const p of out) expect(p.scores.quality).toBeGreaterThanOrEqual(60);
+    expect(mustMet(out[0]!.tactic.slots, 'insideWingers')).toBe(true);
+    expect(tacticFeatures(out[0]!.tactic).line).toBe(2);
   });
 
   it('relit des réponses abîmées sans planter', () => {
