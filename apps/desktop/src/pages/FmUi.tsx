@@ -90,12 +90,16 @@ export function CompatTag({ c, compact = false }: { c: ProjectCompat | null | un
 const ENGINE_TONE: Record<EngineTier, Tone> = { top: 'good', good: 'good', average: 'info', poor: 'warn' };
 
 /** Pastille de l'indice moteur (tests d'attributs FM27) : atouts et points faibles en infobulle. */
+/** Note méta avec une décimale, dans la langue de l'interface (14,3 / 14.3). */
+export const metaText = (v: Pick<EngineValue, 'meta'>, lang?: string) => v.meta.toLocaleString(lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
 export function EngineTag({ v }: { v: EngineValue | null | undefined }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   if (!v) return null;
   const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
+  const meta = metaText(v, i18n.resolvedLanguage);
   const title = [
-    t('fm.engine.title', { index: signed(v.index) }),
+    t('fm.engine.title', { meta, index: signed(v.index) }),
     v.strengths.length > 0 && t('fm.engine.strengths', { list: v.strengths.map((f) => `${attr(f.attr)} ${f.value}`).join(', ') }),
     v.weaknesses.length > 0 && t('fm.engine.weaknesses', { list: v.weaknesses.map((f) => `${attr(f.attr)} ${f.value}`).join(', ') }),
     v.belowMin.length > 0 && t('fm.engine.belowMin', { list: v.belowMin.map((f) => `${attr(f.attr)} ${f.value}`).join(', ') }),
@@ -105,7 +109,7 @@ export function EngineTag({ v }: { v: EngineValue | null | undefined }) {
     .join('\n');
   return (
     <span title={title}>
-      <Tag tone={v.belowMin.length ? 'warn' : ENGINE_TONE[engineTier(v.index)]}>{t('fm.engine.badge', { index: signed(v.index) })}</Tag>
+      <Tag tone={v.belowMin.length ? 'warn' : ENGINE_TONE[engineTier(v.index)]}>{t('fm.engine.badge', { meta })}</Tag>
     </span>
   );
 }

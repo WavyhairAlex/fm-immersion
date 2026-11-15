@@ -871,7 +871,7 @@ function SquadTable({ players, folder, gameDate }: { players: FmPlayer[]; folder
     const byLine = line ? players.filter((p) => p.line === line) : players;
     const byLetter = letter ? byLine.filter((p) => compat.get(p.id)?.grade.letter === letter) : byLine;
     const list = watch ? byLetter.filter(watched) : byLetter;
-    const val = (p: FmPlayer) => (sort.key === 'grade' ? (compat.get(p.id)?.grade.score ?? null) : sort.key === 'engine' ? (engineVals.get(p.id)?.index ?? null) : p[sort.key]);
+    const val = (p: FmPlayer) => (sort.key === 'grade' ? (compat.get(p.id)?.grade.score ?? null) : sort.key === 'engine' ? (engineVals.get(p.id)?.meta ?? null) : p[sort.key]);
     return [...list].sort((a, b) => {
       const x = val(a);
       const y = val(b);

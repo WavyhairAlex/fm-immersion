@@ -58,4 +58,18 @@ describe('indice moteur (tests d’attributs FM27)', () => {
     expect(engineValue(p, 'DC')!.index).toBe(jumper('DC'));
     expect(engineValue(p, 'DC')!.groups).toEqual(['CB']);
   });
+
+  it('donne une note méta sur 20 : un joueur à X partout vaut X', () => {
+    for (const v of [6, 12, 15, 18]) expect(engineValue(all(v))!.meta).toBeCloseTo(v, 1);
+    expect(engineValue({ positions: ['DC'], attributes: all(14).attributes })!.meta).toBeCloseTo(14, 1);
+    // Un sprinteur à 12 ailleurs pèse comme un joueur nettement au-dessus de 12 partout.
+    const fast = engineValue(all(12, { Pace: 18, Acceleration: 17, Stamina: 16 }))!;
+    expect(fast.meta).toBeGreaterThan(13.5);
+    expect(fast.meta).toBeLessThan(16);
+    // Un technicien lent à 17 en technique pèse moins qu'un joueur à 12 partout.
+    expect(engineValue(all(12, { Technique: 17, Vision: 17, Passing: 17, Pace: 7, Acceleration: 8 }))!.meta).toBeLessThan(12);
+    // Bornée entre 1 et 20.
+    expect(engineValue(all(20, { Pace: 20 }))!.meta).toBeLessThanOrEqual(20);
+    expect(engineValue(all(1))!.meta).toBeGreaterThanOrEqual(1);
+  });
 });
