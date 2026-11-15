@@ -1,9 +1,10 @@
-//! Lecture directe de la base de FM27 en mémoire, de l'extérieur du jeu et en lecture seule.
+//! Lecture directe de la base de FM27 en mémoire, de l'extérieur du jeu, en lecture seule.
 //!
 //! FM Immersion ouvre le processus `fm.exe` avec les seuls droits de lecture (`PROCESS_VM_READ`) et lit la base
-//! native du moteur (module `game_plugin.dll`). Il n'écrit jamais dans le jeu, n'y injecte rien et n'y lance
-//! aucun code : une adresse invalide fait seulement échouer la lecture, sans effet sur la partie.
-//! Rien ne se lit sans une action du joueur dans l'interface.
+//! native du moteur (module `game_plugin.dll`). Il n'injecte rien et n'y lance aucun code : une adresse invalide
+//! fait seulement échouer la lecture, sans effet sur la partie. Rien ne se lit sans une action du joueur.
+//! Une seule exception écrit dans le jeu, sur clic du joueur : le diplôme d'entraîneur de son coach
+//! (`fm_memory_set_qualification`, un octet, codes vérifiés, valeur actuelle contrôlée avant).
 //!
 //! Les adresses viennent de notre propre analyse hors jeu de `game_plugin.dll` (FM27 du 29/10/2026) :
 //! - trois points d'entrée globaux, retrouvés à chaque lancement par des motifs d'octets cherchés dans le
@@ -315,6 +316,9 @@ mod off {
     pub const HUMANS_VEC: u64 = 0x18;
     pub const HUMAN_PERSON: u64 = 0x440;
     pub const HUMAN_ACTUAL_PERSON: u64 = 0x468;
+    /// Diplôme d'entraîneur du manager humain (octet, même code que `CoachingQualificationDisplayValue`) : vérifié en
+    /// partie le 15/11/2026 (7 → 253 a affiché « Diplôme continental C, en vue du B » dans le profil, puis retour à 7).
+    pub const HUMAN_QUALIFICATION: u64 = 0x57C;
 
     // ACTUAL_PLAYER
     pub const AP_VBPTR: u64 = 0x8;
@@ -865,6 +869,11 @@ impl<'a, M: Mem> Database<'a, M> {
 
     /// Managers humains de la partie et leur club.
     pub fn humans(&mut self) -> Vec<Human> {
+        self.human_slots().into_iter().map(|(_, h)| h).collect()
+    }
+
+    /// Managers humains avec l'adresse de leur objet `HUMAN_NON_PLAYER`.
+    fn human_slots(&mut self) -> Vec<(u64, Human)> {
         let r = &self.ctx.r;
         let Some(mgr) = r.ptr(self.module_base + self.globals.humans) else { return Vec::new() };
         let list = pointer_vec(r, mgr + off::HUMANS_VEC, 64).unwrap_or_default();
@@ -881,11 +890,33 @@ impl<'a, M: Mem> Database<'a, M> {
                     (f, l) => f.or(l),
                 }
             });
+            let qualification = r.u8(h + off::HUMAN_QUALIFICATION);
             let team = r.ptr(actual + off::A_CONTRACT).and_then(|c| r.ptr(c + off::C_TEAM));
             let club = team.and_then(|t| self.ctx.club_of_team(t));
-            out.push(Human { id, name, club: club.as_ref().and_then(|c| c.name.clone()), club_id: club.map(|c| c.id) });
+            out.push((h, Human { id, name, club: club.as_ref().and_then(|c| c.name.clone()), club_id: club.map(|c| c.id), qualification }));
         }
         out
+    }
+
+    /// Adresse du diplôme du coach du joueur : le seul manager humain qui a un club, ou celui qui porte ce nom.
+    pub fn coach_qualification_at(&mut self, name: Option<&str>) -> Result<(u64, Human), MemError> {
+        pick_coach(self.human_slots(), name).map(|(h, human)| (h + off::HUMAN_QUALIFICATION, human))
+    }
+}
+
+fn pick_coach(slots: Vec<(u64, Human)>, name: Option<&str>) -> Result<(u64, Human), MemError> {
+    let wanted = name.map(|n| fold(n.trim())).filter(|n| !n.is_empty());
+    let mut found: Vec<(u64, Human)> = slots
+        .into_iter()
+        .filter(|(_, h)| match &wanted {
+            Some(w) => h.name.as_deref().is_some_and(|n| fold(n) == *w),
+            None => h.club_id.is_some(),
+        })
+        .collect();
+    match found.len() {
+        1 => Ok(found.remove(0)),
+        0 => Err(MemError::Unexpected("coach du joueur introuvable dans FM27".into())),
+        _ => Err(MemError::Unexpected("plusieurs managers humains : coach du joueur incertain".into())),
     }
 }
 
@@ -896,6 +927,26 @@ pub struct Human {
     pub name: Option<String>,
     pub club: Option<String>,
     pub club_id: Option<i32>,
+    /// Code du diplôme d'entraîneur (voir `QUALIFICATION_CODES`).
+    pub qualification: Option<u8>,
+}
+
+/// Codes de diplôme de FM27 (`CoachingQualificationDisplayValue`), relevés sur des fiches du jeu le 15/11/2026 :
+/// 1 à 7 = diplôme tenu (1 Pro, 2/3/4 continental A/B/C, 5/6/7 national A/B/C, tous vus), 253 à 255 = en
+/// formation (octet négatif), 0 = aucun. On n'écrit qu'un diplôme tenu (1 à 7), jamais une formation en cours.
+pub const QUALIFICATION_CODES: [u8; 7] = [1, 2, 3, 4, 5, 6, 7];
+const QUALIFICATION_READ: [u8; 11] = [0, 1, 2, 3, 4, 5, 6, 7, 253, 254, 255];
+
+/// Vérifie une écriture de diplôme avant de la faire : codes connus, valeur actuelle égale à celle que l'appli attend
+/// (sinon le jeu a changé depuis la dernière lecture, ou ce n'est pas le bon octet).
+pub fn check_qualification_write(current: u8, expected: u8, code: u8) -> Result<(), MemError> {
+    if !QUALIFICATION_CODES.contains(&code) || !QUALIFICATION_READ.contains(&expected) {
+        return Err(MemError::Unexpected(format!("code de diplôme non vérifié ({code})")));
+    }
+    if current != expected {
+        return Err(MemError::Unexpected(format!("diplôme lu dans FM27 : {current}, attendu : {expected}")));
+    }
+    Ok(())
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1230,6 +1281,24 @@ mod win {
         }
     }
 
+    /// Écrit quelques octets dans FM27 (diplôme du coach, à la demande du joueur) : poignée ouverte pour cette seule
+    /// écriture, fermée aussitôt.
+    pub fn write_bytes(pid: u32, addr: u64, bytes: &[u8]) -> Result<(), MemError> {
+        use windows_sys::Win32::System::Diagnostics::Debug::WriteProcessMemory;
+        use windows_sys::Win32::System::Threading::{PROCESS_VM_OPERATION, PROCESS_VM_WRITE};
+        let h = unsafe { OpenProcess(PROCESS_VM_WRITE | PROCESS_VM_OPERATION, 0, pid) };
+        if h.is_null() {
+            return Err(MemError::AccessDenied);
+        }
+        let h = Process(h);
+        let mut n = 0usize;
+        let ok = unsafe { WriteProcessMemory(h.0, addr as *const c_void, bytes.as_ptr() as *const c_void, bytes.len(), &mut n) };
+        if ok == 0 || n != bytes.len() {
+            return Err(MemError::Unexpected("écriture refusée par Windows".into()));
+        }
+        Ok(())
+    }
+
     impl Mem for Process {
         fn read(&self, addr: u64, buf: &mut [u8]) -> bool {
             let mut n = 0usize;
@@ -1337,6 +1406,42 @@ fn probe() -> Result<Probe, MemError> {
             squad,
         })
     })
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct QualificationWrite {
+    pub coach: Option<String>,
+    pub before: u8,
+    pub after: u8,
+}
+
+#[cfg(windows)]
+fn set_qualification(expected: u8, code: u8, name: Option<String>) -> Result<QualificationWrite, MemError> {
+    with_database(|db, module| {
+        db.check()?;
+        let (addr, human) = db.coach_qualification_at(name.as_deref())?;
+        let r = &db.ctx.r;
+        let before = r.u8(addr).ok_or_else(|| MemError::Unexpected("diplôme illisible".into()))?;
+        check_qualification_write(before, expected, code)?;
+        win::write_bytes(module.pid, addr, &[code])?;
+        let after = db.ctx.r.u8(addr).ok_or_else(|| MemError::Unexpected("diplôme illisible après écriture".into()))?;
+        Ok(QualificationWrite { coach: human.name, before, after })
+    })
+}
+
+#[cfg(not(windows))]
+fn set_qualification(_expected: u8, _code: u8, _name: Option<String>) -> Result<QualificationWrite, MemError> {
+    Err(MemError::Unsupported)
+}
+
+/// Inscrit dans FM27 le diplôme obtenu dans l'appli : seule écriture dans le jeu, sur clic du joueur, un octet du
+/// coach humain, seulement si FM27 montre encore le diplôme attendu et vers un code vérifié.
+#[tauri::command]
+pub async fn fm_memory_set_qualification(expected: u8, code: u8, name: Option<String>) -> Result<QualificationWrite, MemError> {
+    tauri::async_runtime::spawn_blocking(move || set_qualification(expected, code, name))
+        .await
+        .map_err(|e| MemError::Unexpected(e.to_string()))?
 }
 
 /// Comparaison de noms sans casse ni accents (« Kåre » trouve « kare »).
@@ -2150,6 +2255,30 @@ mod tests {
         emit(&mut code, va, &SIG_DATE, KNOWN.date + 8);
         assert!(matches!(scan_globals(&mut Cursor::new(fake_pe(&code, va))), Err(MemError::UnknownVersion(_))));
     }
+    fn human(name: &str, club: Option<i32>) -> Human {
+        Human { id: Some(1), name: Some(name.into()), club: None, club_id: club, qualification: Some(7) }
+    }
+
+    #[test]
+    fn coach_is_the_human_with_a_club_or_the_named_one() {
+        let slots = vec![(0x10, human("(Amnesix)", None)), (0x20, human("Sébastien Menard", Some(5)))];
+        assert_eq!(pick_coach(slots.clone(), None).unwrap().0, 0x20);
+        assert_eq!(pick_coach(slots.clone(), Some("sebastien menard")).unwrap().0, 0x20);
+        assert!(pick_coach(slots, Some("Personne")).is_err());
+        let two = vec![(0x10, human("A", Some(1))), (0x20, human("B", Some(2)))];
+        assert!(pick_coach(two, None).is_err());
+    }
+
+    #[test]
+    fn qualification_write_only_verified_codes_and_expected_value() {
+        assert!(check_qualification_write(7, 7, 6).is_ok());
+        assert!(check_qualification_write(254, 254, 2).is_ok());
+        assert!(check_qualification_write(7, 7, 255).is_err());
+        assert!(check_qualification_write(7, 7, 0).is_err());
+        assert!(check_qualification_write(253, 7, 4).is_err());
+        assert!(check_qualification_write(9, 9, 4).is_err());
+    }
+
 }
 
 /// Vérification sur le vrai module du jeu (hors CI) : `FMI_MODULE=…\\game_plugin.dll cargo test module_reel -- --ignored --nocapture`
@@ -2162,4 +2291,5 @@ mod module_reel {
         let g = super::globals_for(&p);
         println!("points d'entrée : {:?}, version connue : {:?}", g, g.as_ref().ok().map(|g| super::is_known(*g)));
     }
+
 }

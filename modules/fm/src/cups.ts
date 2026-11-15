@@ -140,3 +140,28 @@ export function cupFinalsWon(entries: { gameDate: string; data: FmSnapshot }[]):
     }
   return out;
 }
+
+const MONTH_AWARD = /entra[iî]neur du mois|manager of the month/i;
+// Message d'un proche du club qui se réjouit du prix : seul signe que c'est bien le coach du joueur qui l'a reçu
+// (l'annonce « Voici des infos concernant le vainqueur… » arrive chaque mois, quel que soit le lauréat).
+const PRAISE_YOU = /parler de vous|vous plaire|(?:speak|talk)\w*\s+(?:so\s+)?(?:highly|well)\s+of\s+you|about you/i;
+const AWARD_COMP = /(?:du mois|of the month)\s+(?:en|in|de|du|for)\s+(?:la |le |l['’])?(.+?)\.?$/i;
+
+/**
+ * Prix d'entraîneur du mois reçus par le coach, d'après la boîte de réception : le mois récompensé est celui qui
+ * précède le message (il arrive en début de mois suivant), la compétition vient de l'annonce quand elle est là.
+ */
+export function managerAwards(entries: { gameDate: string; data: FmSnapshot }[]): { month: string; competition: string | null }[] {
+  const out: { month: string; competition: string | null }[] = [];
+  for (const e of entries) {
+    const items = inboxOf(e.data).filter((i) => MONTH_AWARD.test(i.title));
+    if (!items.some((i) => PRAISE_YOU.test(i.body))) continue;
+    const d = new Date(`${e.gameDate.slice(0, 10)}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - 10);
+    const month = d.toISOString().slice(0, 7);
+    if (out.some((o) => o.month === month)) continue;
+    const comp = items.map((i) => AWARD_COMP.exec(i.body)?.[1]?.trim()).find(Boolean) ?? null;
+    out.push({ month, competition: comp });
+  }
+  return out;
+}

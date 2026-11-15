@@ -1,7 +1,8 @@
-import { ageAt, BADGES, CAR_COST, CURRENCIES, DEFAULT_TAX, GAME_QUALIFICATION, gameCoach, HOUSING_COST, type FmSnapshot, type GameCoach, lifeEvents, lifeFinances, sceneState, schoolStage, trophyCabinet, type CareerSpell, type CoachLife as Life, type Scene, type SceneChoice, type SceneState } from '@fm-immersion/module-fm';
+import { ageAt, BADGES, CAR_COST, CURRENCIES, DEFAULT_TAX, GAME_QUALIFICATION, gameCoach, HOUSING_COST, type FmSnapshot, type GameCoach, lifeEvents, lifeFinances, qualificationCode, sceneState, schoolStage, trophyCabinet, type CareerSpell, type CoachLife as Life, type Scene, type SceneChoice, type SceneState } from '@fm-immersion/module-fm';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { invoke } from '@tauri-apps/api/core';
 import { coachPhotoSource } from '../lib/coach-photo';
 import { fmData } from '../lib/data';
 import { trophyName } from '../lib/farewell-text';
@@ -247,7 +248,38 @@ function Badges({ saveId, st, gameDate, life, game }: { saveId: string; st: Scen
       ) : (
         st.badges.length > 0 && st.badges.every((b) => b.done) && <p className="mt-3 text-sm font-bold text-eau-fonce">{t('coachLife.badges.all')}</p>
       )}
+      <WriteBadge st={st} game={game} />
       <p className="mt-3 text-xs text-brun">{t('coachLife.badges.note')}</p>
+    </div>
+  );
+}
+
+/**
+ * Inscrit dans FM27 le dernier diplôme obtenu dans l'appli, sur clic du joueur : un octet du coach, seulement si le
+ * jeu montre encore le diplôme lu par le plugin et vers un code vérifié (contrôlé aussi côté Rust).
+ */
+function WriteBadge({ st, game }: { st: SceneState; game: GameCoach }) {
+  const { t } = useTranslation();
+  const [done, setDone] = useState<number | null>(null);
+  const write = useMutation({
+    mutationFn: (v: { expected: number; code: number }) => invoke<{ before: number; after: number }>('fm_memory_set_qualification', v),
+    onSuccess: (r) => setDone(r.after),
+  });
+  const best = [...st.badges].reverse().find((b) => b.done);
+  const code = best ? qualificationCode(best.level) : null;
+  const held = game.qualification != null ? GAME_QUALIFICATION[game.qualification] : undefined;
+  const rank = best ? BADGES.findIndex((b) => b.level === best.level) + 1 : 0;
+  if (!best || game.qualification == null || held == null || rank <= held || done === code) {
+    return done != null ? <p className="mt-3 text-sm font-bold text-eau-fonce">{t('coachLife.badges.written')}</p> : null;
+  }
+  const level = t(`coachLife.badges.level.${best.level}`);
+  return (
+    <div className="mt-4 rounded-xl bg-orange-clair/60 p-3 text-sm">
+      <p>{t('coachLife.badges.writeHelp', { level })}</p>
+      <button type="button" className="btn-primary mt-2 px-4 py-2 text-sm" disabled={write.isPending} onClick={() => write.mutate({ expected: game.qualification!, code: code! })}>
+        {t('coachLife.badges.write', { level })}
+      </button>
+      {write.isError && <p className="mt-2 font-bold text-corail">{t('coachLife.badges.writeError', { error: String(write.error) })}</p>}
     </div>
   );
 }

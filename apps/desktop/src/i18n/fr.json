@@ -5912,6 +5912,8 @@
     "mapW": "V",
     "mapD": "N",
     "mapL": "D",
+    "mapAwardOne": "Entraîneur du mois, {{month}}",
+    "mapAwardMany": "Entraîneur du mois ×{{count}}",
     "mapStatsNote": "V = victoires, N = nuls, D = défaites, en matchs officiels (sans les amicaux).",
     "mapMissing": "Pas encore placés sur la carte (pays inconnu) : {{clubs}}. Choisis leur pays plus bas.",
     "source": "Le pays de chaque club est deviné d'après la nationalité de son effectif ou le nom du championnat ; clique dessus pour le corriger. Le motif d'un départ est deviné d'après la sécurité de l'emploi au dernier relevé.",
@@ -6645,9 +6647,13 @@
       "until": "en cours, fin le {{date}}",
       "start": "Commencer la {{level}} ({{cost}}, {{months}} mois)",
       "all": "Tu as tous les diplômes.",
-      "note": "Pour l'instant, le diplôme payé ici ne change pas celui de ta partie FM27 : l'appli n'écrit pas encore dans le jeu.",
+      "note": "Le diplôme payé ici peut être inscrit dans ta partie FM27, sur ton clic, FM27 ouvert sur la partie.",
       "inGame": "Dans FM27 :",
       "none": "aucun diplôme",
+      "write": "Inscrire la {{level}} dans FM27",
+      "writeHelp": "Ta {{level}} est obtenue. Avec FM27 ouvert sur ta partie, l'appli peut la mettre dans le profil de ton coach. Sauvegarde ensuite dans le jeu pour la garder.",
+      "written": "C'est inscrit dans FM27. Sauvegarde ta partie dans le jeu pour le garder.",
+      "writeError": "FM27 n'a pas été modifié : {{error}}",
       "unknownCode": "diplôme de code {{code}}, pas encore reconnu par l'appli"
     },
     "scene": {

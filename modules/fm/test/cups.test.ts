@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { competitionKind, cupFinalsWon, cupRuns, type FmSnapshot, type MatchResult } from '../src';
+import { competitionKind, cupFinalsWon, cupRuns, managerAwards, type FmSnapshot, type MatchResult } from '../src';
 
 const CUP = 'Slovnaft Cup';
 const EURO = 'UEFA Europa League';
@@ -87,5 +87,30 @@ describe('finale gagnée lue dans la boîte de réception', () => {
     expect(competitionKind('Betera Kubok Belarusi')).toBe('cup');
     expect(competitionKind('Puchar Polski')).toBe('cup');
     expect(competitionKind('Ziraat Türkiye Kupası')).toBe('cup');
+  });
+});
+
+describe('entraîneur du mois lu dans la boîte de réception', () => {
+  const L = (t: string) => `\x01AgAA\x02${t}\x01`;
+  const snap = (gameDate: string, items: [string, string][]) =>
+    ({
+      gameDate,
+      data: {
+        gameDate,
+        club: 'Slutsk',
+        players: [],
+        custom: { partie: Object.fromEntries(items.flatMap(([t, x], i) => [[`boite0${i}Titre`, t], [`boite0${i}Texte`, x]])) },
+      } as unknown as FmSnapshot,
+    });
+  const ANNONCE = `Voici des infos concernant le vainqueur ${L("de l'Entraîneur du mois en CS de Biélorussie")}.`;
+  const BRAVO = `Je pense que ceci devrait vous plaire, il est vraiment sympa de voir ${L('Vitaliy Bunos')} parler de vous de manière aussi élogieuse.`;
+
+  it("compte le prix quand un proche s'en réjouit, pour le mois précédent, une fois", () => {
+    const won = snap('2027-06-01', [['Entraîneur du mois', BRAVO], ['Entraîneur du mois', ANNONCE]]);
+    expect(managerAwards([won, { ...won, gameDate: '2027-06-02' }])).toEqual([{ month: '2027-05', competition: 'CS de Biélorussie' }]);
+  });
+
+  it("ignore l'annonce mensuelle seule (prix d'un autre entraîneur)", () => {
+    expect(managerAwards([snap('2026-11-01', [['Entraîneur du mois', ANNONCE]])])).toEqual([]);
   });
 });

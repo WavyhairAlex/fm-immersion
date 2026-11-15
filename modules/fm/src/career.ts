@@ -1,4 +1,5 @@
 import { countryOfLeague, countryOfNationality } from './countries';
+import { managerAwards } from './cups';
 import { coachSpells, type ExitReason } from './farewell';
 import { normalizePlayer } from './player';
 import { appearanceMatches, officialResults } from './results';
@@ -116,6 +117,8 @@ export interface CareerSpell {
   untracked: Untracked;
   /** Titres : championnats finis en tête (competition null), coupes gagnées. */
   trophies: { season: string; competition: string | null }[];
+  /** Prix d'entraîneur du mois (mois « 2027-05 », compétition si l'annonce la nomme). */
+  awards: { month: string; competition: string | null }[];
   bestFinish: number | null;
 }
 
@@ -271,6 +274,7 @@ export function careerOf(history: Entry[], opts: { freeSince?: string | null } =
       total: withUntracked(reviewOf(sp.entries, false), untracked),
       untracked,
       trophies,
+      awards: managerAwards(sp.entries),
       bestFinish: finished.length ? Math.min(...finished) : null,
     };
   });
