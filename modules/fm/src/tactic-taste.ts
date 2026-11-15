@@ -442,6 +442,8 @@ export function tacticDiff(a: BuiltTactic, b: BuiltTactic): TacticDiff {
   return { sameShape, roles, instructions };
 }
 
+/** Carte « la plus adaptée à l'effectif » : son réglage tient d'abord à la note du onze (deux fois le poids habituel). */
+export const SQUAD_FIT_WEIGHT = 30;
 /** Avantage (note d'équipe sur 20) donné au schéma déjà joué dans FM27 : la familiarité se reconstruit sur des semaines. */
 export const KEEP_FORM_BONUS = 0.4;
 /** Un souhait est abandonné dans le compromis s'il coûte plus que cela au onze (note sur 20). */
@@ -503,14 +505,14 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
   const keepsShape = (plan: FormationPlan) => gameShape != null && plan.slots.map((s) => s.pos).sort().join(' ') === gameShape;
   // Réglage automatique d'une proposition retenue : rôles et consignes ajustés pour vider les points à surveiller, sans
   // perdre sur les goûts (note et souhaits) ni toucher aux consignes qui les portent.
-  const tune = (tactic: BuiltTactic, locked: readonly number[], reference: BuiltTactic | null = null) => {
+  const tune = (tactic: BuiltTactic, locked: readonly number[], reference: BuiltTactic | null = null, fitWeight?: number) => {
     const floor = tasteScore(tactic, taste).score ?? 0;
     const met = taste.musts.filter((m) => mustMet(tactic.slots, m));
     const accept = (t: BuiltTactic) => (tasteScore(t, taste).score ?? 0) >= floor && met.every((m) => mustMet(t.slots, m));
-    return optimiseTactic(engine, tactic, players, { accept, lockedTi: locked, reference, reserve });
+    return optimiseTactic(engine, tactic, players, { accept, lockedTi: locked, reference, reserve, ...(fitWeight ? { fitWeight } : {}) });
   };
-  const finish = (kind: ProposalKind, style: StyleRef, raw: BuiltTactic, notes: ProposalNote[], alt = false, tuning: { locked: readonly number[]; reference?: BuiltTactic | null } | null = null): Proposal => {
-    const tuned = tuning ? tune(raw, tuning.locked, tuning.reference ?? null) : null;
+  const finish = (kind: ProposalKind, style: StyleRef, raw: BuiltTactic, notes: ProposalNote[], alt = false, tuning: { locked: readonly number[]; reference?: BuiltTactic | null; fitWeight?: number } | null = null): Proposal => {
+    const tuned = tuning ? tune(raw, tuning.locked, tuning.reference ?? null, tuning.fitWeight) : null;
     const tactic = tuned?.tactic ?? raw;
     const s = scoreTactic(engine, tactic, players, reserve, taste);
     const all = [...notes];
@@ -526,7 +528,7 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
   // La plus adaptée à l'effectif : le classement habituel de l'appli, sans regarder les goûts.
   const squadOf = (r: (typeof ranked)[number], alt = false, tuned = false): Proposal => {
     const b = styleBase(r.style);
-    const p = finish('squad', r.style, fromPlan(r.plan, 'squad', `${r.plan.form} · ${r.style.name}`, b.ti, b.mentality), [{ id: 'bestFit', tone: 'good', params: {} }], alt, tuned ? { locked: [] } : null);
+    const p = finish('squad', r.style, fromPlan(r.plan, 'squad', `${r.plan.form} · ${r.style.name}`, b.ti, b.mentality), [{ id: 'bestFit', tone: 'good', params: {} }], alt, tuned ? { locked: [], fitWeight: SQUAD_FIT_WEIGHT } : null);
     if (p.scores.taste != null && p.scores.taste < 60) p.notes.splice(1, 0, { id: 'farFromTaste', tone: 'warn', params: {} });
     return p;
   };

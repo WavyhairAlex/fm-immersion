@@ -36,6 +36,8 @@ export interface OptimiseOptions {
   reference?: BuiltTactic | null;
   /** Réserve et jeunes : ils dépannent un poste que l'équipe première ne couvre pas. */
   reserve?: FmPlayer[];
+  /** Poids de la note du onze (FIT_WEIGHT par défaut) : plus haut, le réglage ne cède presque rien sur les joueurs. */
+  fitWeight?: number;
   /** Nombre maximal de changements. */
   maxSteps?: number;
 }
@@ -75,7 +77,7 @@ export function optimiseTactic(engine: TacticEngine, start: BuiltTactic, players
   const value = (t: BuiltTactic) => {
     const a = analyseBuiltTactic(engine, t, players, opts.reserve ?? []);
     const q = tacticQuality(a);
-    return { q, v: q + (a.squad?.fit ?? 0) * FIT_WEIGHT - moved(t) * ROLE_CHANGE_COST };
+    return { q, v: q + (a.squad?.fit ?? 0) * (opts.fitWeight ?? FIT_WEIGHT) - moved(t) * ROLE_CHANGE_COST };
   };
   // Tri rapide des candidats sur la seule forme de la tactique (sans l'effectif) : seuls les meilleurs sont notés en entier.
   // `sig` : les points à surveiller de la forme, pour repérer un changement qui en échange un contre un autre.
