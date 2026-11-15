@@ -43,6 +43,7 @@ export * from './lineup-advice';
 export * from './team-advice';
 export * from './tactic-gap';
 export * from './tactic-builder';
+export * from './tactic-taste';
 export * from './opponent';
 export * from './matchup';
 export * from './match-plan';

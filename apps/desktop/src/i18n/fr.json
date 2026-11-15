@@ -642,7 +642,8 @@
       "numbers": "Numéros",
       "playtime": "Temps de jeu",
       "builder": "Construire",
-      "academy": "Académie"
+      "academy": "Académie",
+      "ideal": "Ma tactique idéale"
     },
     "home": {
       "todo": "À traiter",
@@ -1879,7 +1880,8 @@
       "numbers": "Une proposition de numéros pour la saison : 1 à 11 pour les titulaires selon leur poste, la doublure de chaque poste juste derrière.",
       "staff": "Les notes de tes entraîneurs par domaine : qui doit s'occuper de quoi, et quel entraîneur libre comblerait un manque.",
       "builder": "Ta tactique de zéro : postes et rôles avec et sans ballon, style, et ce qui tient ou coince.",
-      "academy": "La réserve et les équipes de jeunes : bilan, décisions à prendre et meilleurs espoirs."
+      "academy": "La réserve et les équipes de jeunes : bilan, décisions à prendre et meilleurs espoirs.",
+      "ideal": "Dis ce que tu aimes jouer : l'appli cherche la tactique FM27 qui s'en approche le plus avec ton effectif."
     },
     "nextStep": "Étape suivante : {{view}}",
     "opp": {
@@ -2682,7 +2684,8 @@
       "finances": "Finances",
       "wages": "Salaires",
       "contracts": "Contrats",
-      "academy": "Académie"
+      "academy": "Académie",
+      "ideal": "Ma tactique idéale"
     },
     "subtabs": {
       "squad": "Joueurs",
@@ -3981,6 +3984,150 @@
         "few": "Moins de 3 matchs complets : pas encore de comparaison.",
         "at": "Relevé du {{date}}."
       }
+    },
+    "ideal": {
+      "tasteTitle": "Ce que j'aime jouer",
+      "tasteIntro": "Choisis un style tout fait ou réponds aux questions : chaque réponse est facultative, et tu peux recliquer pour l'enlever.",
+      "presets": "Styles tout faits",
+      "reset": "Tout effacer",
+      "q": {
+        "ball": "Avec le ballon",
+        "attack": "Par où j'attaque",
+        "defend": "Sans le ballon",
+        "risk": "Le risque",
+        "musts": "Ce que je veux absolument voir",
+        "tuning": "Niveau de réglage",
+        "start": "Point de départ"
+      },
+      "a": {
+        "ball": {
+          "keep": "Je le garde, on construit",
+          "fast": "Vite vers l'avant",
+          "long": "Long sur un point d'appui"
+        },
+        "attack": {
+          "wide": "Les couloirs et les centres",
+          "centre": "L'axe, en combinaisons",
+          "both": "Les deux"
+        },
+        "defend": {
+          "high": "Je presse haut",
+          "mid": "Bloc médian",
+          "low": "Bloc bas, j'attends"
+        },
+        "risk": {
+          "cautious": "Prudent",
+          "balanced": "Équilibré",
+          "positive": "Offensif",
+          "allout": "Tout pour l'attaque"
+        },
+        "tuning": {
+          "simple": "Simple, assimilée vite",
+          "worked": "Travaillée, plus longue à apprendre"
+        },
+        "start": {
+          "game": "Ma tactique du jeu, à corriger",
+          "blank": "Page blanche"
+        }
+      },
+      "must": {
+        "back3": "Défense à 3",
+        "back4": "Défense à 4",
+        "twoStrikers": "Deux attaquants",
+        "ten": "Un meneur n°10",
+        "insideWingers": "Ailiers qui rentrent",
+        "attackingFullbacks": "Latéraux très offensifs",
+        "targetMan": "Un pivot devant"
+      },
+      "sum": {
+        "ball": {
+          "keep": "possession",
+          "fast": "vertical",
+          "long": "jeu long"
+        },
+        "attack": {
+          "wide": "par les couloirs",
+          "centre": "par l'axe",
+          "both": "sur toute la largeur"
+        },
+        "defend": {
+          "high": "pressing haut",
+          "mid": "bloc médian",
+          "low": "bloc bas"
+        }
+      },
+      "noGame": "Ta tactique du jeu n'est pas encore lue par le plugin : les propositions partent d'une page blanche.",
+      "proposalsTitle": "Trois propositions pour ton effectif",
+      "squadOnlyTitle": "La tactique la plus adaptée à ton effectif",
+      "squadOnly": "Tu n'as encore rien dit de ton style : voici la tactique qui convient le mieux à ton effectif. Réponds aux questions pour voir celle qui te ressemble et le meilleur compromis.",
+      "yourStyle": "Ton style :",
+      "closeTo": "Proche de",
+      "recommended": "Conseillée",
+      "toKnow": "À savoir",
+      "detail": "Voir le détail",
+      "kind": {
+        "taste": "La plus fidèle à tes goûts",
+        "tasteAlt": "Aussi fidèle, dans un autre schéma",
+        "balance": "Le meilleur compromis",
+        "squad": "La plus adaptée à l'effectif",
+        "squadAlt": "Autre piste pour ton effectif"
+      },
+      "score": {
+        "taste": "Tes goûts",
+        "squad": "Ton effectif",
+        "meta": "Méta FM27"
+      },
+      "note": {
+        "allMet": "Tout ce que tu as demandé y est.",
+        "mustMissed": "« {{must}} » : impossible avec ce schéma.",
+        "mustDropped": "« {{must}} » laissé de côté : il coûtait trop cher au onze.",
+        "demand": {
+          "press": "Pressing exigeant pour ton groupe : volume de course à {{value}}, contre {{mean}} pour ses autres qualités.",
+          "short": "Passes courtes risquées : technique du groupe à {{value}}, contre {{mean}} pour ses autres qualités.",
+          "long": "Jeu long peu servi : jeu aérien du groupe à {{value}}, contre {{mean}} pour ses autres qualités.",
+          "pace": "Contres peu tranchants : vitesse du groupe à {{value}}, contre {{mean}} pour ses autres qualités.",
+          "wide": "Couloirs peu armés : centres et dribbles à {{value}}, contre {{mean}} pour ses autres qualités.",
+          "low": "Bloc bas fragile : défense du groupe à {{value}}, contre {{mean}} pour ses autres qualités."
+        },
+        "relaxed": {
+          "defend": {
+            "high": "Tu renonces au pressing très haut : bloc médian, ligne haute, pressing déclenché souvent.",
+            "low": "Bloc médian plutôt que bas : ton groupe défend mal sous pression.",
+            "mid": "Bloc médian gardé."
+          },
+          "ball": {
+            "keep": "Passes standard plutôt que courtes : la technique du groupe est juste.",
+            "fast": "Rythme élevé, mais sans contre systématique : le groupe manque de vitesse.",
+            "long": "Jeu direct plutôt que très long : peu de présence aérienne."
+          },
+          "attack": {
+            "wide": "Largeur standard avec dédoublements : peu de centreurs et de dribbleurs.",
+            "centre": "Jeu par l'axe gardé.",
+            "both": "Jeu sur toute la largeur gardé."
+          }
+        },
+        "sameShape": "Même schéma que ta tactique du jeu. À changer : {{roles}} rôle(s), {{instructions}} consigne(s).",
+        "newShape": "Nouveau schéma : la familiarité est à reconstruire.",
+        "bestFit": "Le onze le mieux noté de l'appli pour ton effectif, sans regarder tes goûts.",
+        "hole_one": "{{count}} poste sans joueur.",
+        "hole_other": "{{count}} postes sans joueur.",
+        "simple": "Tactique simple : {{count}} consignes d'équipe.",
+        "farFromTaste": "Loin de ce que tu aimes jouer."
+      },
+      "gameTactic": "Ta tactique du jeu",
+      "nothingWritten": "Rien n'est écrit dans FM27 : tu recopies toi-même ce que tu gardes.",
+      "how": "Tes goûts : chaque réponse est comparée aux consignes et aux postes de la tactique (ballon et bloc défensif comptent le plus). Ton effectif : 100 = le meilleur onze que ton groupe peut aligner parmi les tactiques montrées ; chaque point de note en moins sur 20 retire 15, chaque exigence que ton groupe tient mal retire 6. Méta FM27 : ce que les attributs du onze pèsent dans le moteur de match, d'après des tests de la communauté ; c'est une tendance, pas une vérité. Les consignes viennent des tactiques préréglées de FM27, ajustées à tes réponses.",
+      "detailTitle": "Détail : {{form}} · {{style}}",
+      "openBuilder": "Ouvrir dans Construire",
+      "builtName": "{{form}} · {{style}} (mon style)",
+      "col": {
+        "pos": "Poste",
+        "ip": "Avec ballon",
+        "oop": "Sans ballon",
+        "player": "Joueur",
+        "fit": "Note"
+      },
+      "nobody": "Personne"
     }
   },
   "modes": {
