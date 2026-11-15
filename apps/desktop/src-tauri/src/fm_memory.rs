@@ -932,7 +932,7 @@ pub struct Human {
 }
 
 /// Codes de diplôme de FM27 (`CoachingQualificationDisplayValue`), relevés sur des fiches du jeu le 15/11/2026 :
-/// 1 à 7 = diplôme tenu (1 Pro … 4 continental C, 5 national A, 6 national B, 7 national C), 253 à 255 = en
+/// 1 à 7 = diplôme tenu (1 Pro, 2/3/4 continental A/B/C, 5/6/7 national A/B/C, tous vus), 253 à 255 = en
 /// formation (octet négatif), 0 = aucun. On n'écrit qu'un diplôme tenu (1 à 7), jamais une formation en cours.
 pub const QUALIFICATION_CODES: [u8; 7] = [1, 2, 3, 4, 5, 6, 7];
 const QUALIFICATION_READ: [u8; 11] = [0, 1, 2, 3, 4, 5, 6, 7, 253, 254, 255];
