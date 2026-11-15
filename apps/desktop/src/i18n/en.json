@@ -642,7 +642,8 @@
       "numbers": "Shirt numbers",
       "playtime": "Playing time",
       "builder": "Build",
-      "academy": "Academy"
+      "academy": "Academy",
+      "ideal": "My ideal tactic"
     },
     "home": {
       "todo": "To deal with",
@@ -1879,7 +1880,8 @@
       "numbers": "Suggested squad numbers for the season: 1 to 11 for the starters by position, each position's backup right behind.",
       "staff": "Your coaches' ratings by area: who should handle what, and which free coach would fill a gap.",
       "builder": "Your tactic from scratch: positions and roles in and out of possession, style, and what holds up or doesn't.",
-      "academy": "Your reserve and youth teams: overview, decisions to make and best prospects."
+      "academy": "Your reserve and youth teams: overview, decisions to make and best prospects.",
+      "ideal": "Say what you like to play: the app looks for the FM27 tactic closest to it with your squad."
     },
     "nextStep": "Next step: {{view}}",
     "opp": {
@@ -2682,7 +2684,8 @@
       "finances": "Finances",
       "wages": "Wages",
       "contracts": "Contracts",
-      "academy": "Academy"
+      "academy": "Academy",
+      "ideal": "My ideal tactic"
     },
     "subtabs": {
       "squad": "Players",
@@ -3981,6 +3984,150 @@
         "few": "Fewer than 3 full matches: no comparison yet.",
         "at": "Recorded on {{date}}."
       }
+    },
+    "ideal": {
+      "tasteTitle": "What I like to play",
+      "tasteIntro": "Pick a ready-made style or answer the questions: every answer is optional, and you can click again to remove it.",
+      "presets": "Ready-made styles",
+      "reset": "Clear all",
+      "q": {
+        "ball": "With the ball",
+        "attack": "Where I attack",
+        "defend": "Without the ball",
+        "risk": "Risk",
+        "musts": "What I absolutely want to see",
+        "tuning": "Level of detail",
+        "start": "Starting point"
+      },
+      "a": {
+        "ball": {
+          "keep": "Keep it and build",
+          "fast": "Forward quickly",
+          "long": "Long to a target"
+        },
+        "attack": {
+          "wide": "The flanks and crosses",
+          "centre": "Through the middle, in combinations",
+          "both": "Both"
+        },
+        "defend": {
+          "high": "I press high",
+          "mid": "Mid block",
+          "low": "Low block, I wait"
+        },
+        "risk": {
+          "cautious": "Cautious",
+          "balanced": "Balanced",
+          "positive": "Attacking",
+          "allout": "All-out attack"
+        },
+        "tuning": {
+          "simple": "Simple, learned quickly",
+          "worked": "Detailed, longer to learn"
+        },
+        "start": {
+          "game": "My in-game tactic, to fix",
+          "blank": "Blank page"
+        }
+      },
+      "must": {
+        "back3": "Back three",
+        "back4": "Back four",
+        "twoStrikers": "Two strikers",
+        "ten": "A number 10",
+        "insideWingers": "Wingers cutting inside",
+        "attackingFullbacks": "Very attacking full-backs",
+        "targetMan": "A target man up front"
+      },
+      "sum": {
+        "ball": {
+          "keep": "possession",
+          "fast": "vertical",
+          "long": "long ball"
+        },
+        "attack": {
+          "wide": "down the flanks",
+          "centre": "through the middle",
+          "both": "across the full width"
+        },
+        "defend": {
+          "high": "high press",
+          "mid": "mid block",
+          "low": "low block"
+        }
+      },
+      "noGame": "Your in-game tactic is not read by the plugin yet: proposals start from a blank page.",
+      "proposalsTitle": "Three proposals for your squad",
+      "squadOnlyTitle": "The tactic that suits your squad best",
+      "squadOnly": "You have not described your style yet: here is the tactic that suits your squad best. Answer the questions to see the one that looks like you and the best compromise.",
+      "yourStyle": "Your style:",
+      "closeTo": "Close to",
+      "recommended": "Recommended",
+      "toKnow": "Good to know",
+      "detail": "See details",
+      "kind": {
+        "taste": "Closest to your taste",
+        "tasteAlt": "Just as close, in another shape",
+        "balance": "The best compromise",
+        "squad": "Best suited to the squad",
+        "squadAlt": "Another option for your squad"
+      },
+      "score": {
+        "taste": "Your taste",
+        "squad": "Your squad",
+        "meta": "FM27 meta"
+      },
+      "note": {
+        "allMet": "Everything you asked for is in it.",
+        "mustMissed": "“{{must}}”: impossible with this shape.",
+        "mustDropped": "“{{must}}” left out: it cost the eleven too much.",
+        "demand": {
+          "press": "Demanding press for your group: work rate at {{value}}, against {{mean}} for its other qualities.",
+          "short": "Short passing is risky: the group's technique is at {{value}}, against {{mean}} for its other qualities.",
+          "long": "Long play poorly served: aerial ability at {{value}}, against {{mean}} for its other qualities.",
+          "pace": "Counters lack bite: the group's pace is at {{value}}, against {{mean}} for its other qualities.",
+          "wide": "Flanks poorly armed: crossing and dribbling at {{value}}, against {{mean}} for its other qualities.",
+          "low": "Fragile low block: the group's defending is at {{value}}, against {{mean}} for its other qualities."
+        },
+        "relaxed": {
+          "defend": {
+            "high": "You give up the very high press: mid block, high line, pressing triggered often.",
+            "low": "Mid block rather than low: your group defends poorly under pressure.",
+            "mid": "Mid block kept."
+          },
+          "ball": {
+            "keep": "Standard passing rather than short: the group's technique is limited.",
+            "fast": "High tempo, but no systematic counter: the group lacks pace.",
+            "long": "Direct play rather than very long: little aerial presence."
+          },
+          "attack": {
+            "wide": "Standard width with overlaps: few crossers and dribblers.",
+            "centre": "Play through the middle kept.",
+            "both": "Play across the full width kept."
+          }
+        },
+        "sameShape": "Same shape as your in-game tactic. To change: {{roles}} role(s), {{instructions}} instruction(s).",
+        "newShape": "New shape: familiarity has to be rebuilt.",
+        "bestFit": "The app's best-rated eleven for your squad, regardless of your taste.",
+        "hole_one": "{{count}} position with no player.",
+        "hole_other": "{{count}} positions with no player.",
+        "simple": "Simple tactic: {{count}} team instructions.",
+        "farFromTaste": "Far from what you like to play."
+      },
+      "gameTactic": "Your in-game tactic",
+      "nothingWritten": "Nothing is written into FM27: you copy what you keep yourself.",
+      "how": "Your taste: each answer is compared with the tactic's instructions and positions (the ball and the defensive block weigh the most). Your squad: 100 = the best eleven your group can field among the tactics shown; each point of rating lost out of 20 removes 15, each demand your group handles poorly removes 6. FM27 meta: what the eleven's attributes weigh in the match engine, according to community tests; a trend, not a truth. Instructions come from FM27's preset tactics, adjusted to your answers.",
+      "detailTitle": "Details: {{form}} · {{style}}",
+      "openBuilder": "Open in Build",
+      "builtName": "{{form}} · {{style}} (my style)",
+      "col": {
+        "pos": "Position",
+        "ip": "With the ball",
+        "oop": "Without the ball",
+        "player": "Player",
+        "fit": "Rating"
+      },
+      "nobody": "Nobody"
     }
   },
   "modes": {

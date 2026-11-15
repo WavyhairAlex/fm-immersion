@@ -55,6 +55,12 @@ interface Stored {
   current?: string;
 }
 
+/** Range une tactique dans l'éditeur de la partie et l'y ouvre (depuis « Ma tactique idéale »). */
+export function addBuiltTactic(scope: Parameters<typeof readScoped>[1], tactic: BuiltTactic) {
+  const s = readScoped<Stored>(KEY, { ...scope, inheritsLegacy: false }, { list: [] });
+  writeScoped(KEY, scope, { list: [...parseBuiltTactics(s.list), { ...tactic, updatedAt: new Date().toISOString() }], current: tactic.id });
+}
+
 const newId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `t${Date.now()}`);
 const TONE_DOT = { good: 'bg-eau', warn: 'bg-ambre', bad: 'bg-corail' } as const;
 const AREAS: Area[] = ['roles', 'lanes', 'centre', 'rest', 'attack', 'transition', 'press', 'coherence', 'squad'];

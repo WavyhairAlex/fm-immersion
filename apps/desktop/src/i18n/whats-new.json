@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.221",
+    "date": "2026-11-15",
+    "fr": [
+      "Nouveau dans Tactique : « Ma tactique idéale ». Dis ce que tu aimes jouer (un style tout fait ou 7 questions courtes) et l'appli te propose trois tactiques complètes pour ton effectif : la plus fidèle à tes goûts, le meilleur compromis et la plus adaptée à tes joueurs.",
+      "Chaque proposition est notée sur tes goûts, ton effectif et la méta de FM27, et tu peux l'ouvrir dans « Construire » pour la retoucher. L'entraînement passe dans le menu « Plus » de Tactique."
+    ],
+    "en": [
+      "New in Tactics: \"My ideal tactic\". Say what you like to play (a ready-made style or 7 short questions) and the app offers three complete tactics for your squad: the closest to your taste, the best compromise and the best suited to your players.",
+      "Each proposal is rated on your taste, your squad and the FM27 meta, and you can open it in \"Build\" to adjust it. Training moves to the \"More\" menu in Tactics."
+    ]
+  },
+  {
     "version": "0.1.220",
     "date": "2026-11-15",
     "fr": [

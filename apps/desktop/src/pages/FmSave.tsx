@@ -77,6 +77,7 @@ import { FmDiagnosis } from './FmDiagnosis';
 import { SquadBoard } from './FmSquadBoard';
 import { FmStyle } from './FmStyle';
 import { FmBuilder } from './FmBuilder';
+import { FmIdeal } from './FmIdeal';
 import { FmAcademy } from './FmAcademy';
 import { FmTactic, ProjectProvider, ReserveContext, useTacticEngine } from './FmTactic';
 import { FmTargets } from './FmTargets';
@@ -265,6 +266,8 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
         return <FmCalendar snap={snapshot.data} players={players} />;
       case 'roles':
         return <FmRoles players={players} folder={folder} />;
+      case 'ideal':
+        return <FmIdeal snap={snapshot.data} players={players} folder={folder} go={go} />;
       case 'builder':
         return <FmBuilder snap={snapshot.data} players={players} folder={folder} />;
       case 'style':
