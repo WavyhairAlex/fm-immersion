@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.213",
+    "date": "2026-11-15",
+    "fr": [
+      "Sur la carte de « Ma carrière », chaque club a maintenant sa petite fiche à côté de son point : nom du club, saisons, bilan victoires, nuls et défaites, et une coupe avec le nom de chaque compétition gagnée."
+    ],
+    "en": [
+      "On the map in \"My career\", each club now has a small card next to its pin: club name, seasons, wins, draws and losses, and a trophy with the name of each competition won."
+    ]
+  },
+  {
     "version": "0.1.212",
     "date": "2026-11-15",
     "fr": [

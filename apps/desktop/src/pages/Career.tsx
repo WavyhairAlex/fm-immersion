@@ -372,8 +372,108 @@ function clubStats(spells: CareerSpell[], club: string) {
   return {
     seasons: new Set(mine.flatMap((s) => s.seasons.map((x) => x.label))).size,
     wins: mine.reduce((a, s) => a + s.total.wins, 0),
-    titles: mine.reduce((a, s) => a + s.trophies.length, 0),
+    draws: mine.reduce((a, s) => a + s.total.draws, 0),
+    losses: mine.reduce((a, s) => a + s.total.losses, 0),
+    trophies: mine.flatMap((s) => s.trophies),
   };
+}
+
+/** Petite coupe dessinée (boîte de 10 × 10), ambre cerclée de brun. */
+function TrophyIcon({ x, y, size }: { x: number; y: number; size: number }) {
+  const sc = size / 10;
+  return (
+    <g transform={`translate(${x},${y}) scale(${sc})`}>
+      <path d="M2.4,2.2 H0.9 V3.2 A1.8,1.8 0 0 0 2.9,5 M7.6,2.2 H9.1 V3.2 A1.8,1.8 0 0 1 7.1,5" fill="none" stroke="#8F5400" strokeWidth={0.8} />
+      <path d="M2.2,1 H7.8 V3.6 A2.8,2.8 0 0 1 2.2,3.6 Z" fill="#FFB547" stroke="#8F5400" strokeWidth={0.7} />
+      <rect x={4.4} y={6.4} width={1.2} height={1.6} fill="#8F5400" />
+      <rect x={3} y={8} width={4} height={1.3} rx={0.3} fill="#8F5400" />
+    </g>
+  );
+}
+
+type ClubCard = {
+  seasons: string;
+  wdl: { letter: string; count: number; color: string }[];
+  trophies: string[];
+};
+
+// Étiquette d'un club sur la carte : petite carte blanche à côté du point (nom ; saisons et bilan V/N/D sans les
+// amicaux ; une ligne par titre avec sa coupe), basculée à gauche du point si elle sortirait du cadre.
+function ClubCallout({
+  x,
+  y,
+  r,
+  k,
+  box,
+  club,
+  current,
+  card,
+}: {
+  x: number;
+  y: number;
+  r: number;
+  k: number;
+  box: { x: number; y: number; w: number; h: number };
+  club: string;
+  current: boolean;
+  card: ClubCard;
+}) {
+  const fsName = r * 1.15;
+  const fsStat = r * 0.85;
+  const line = fsStat * 1.45;
+  const pad = r * 0.65;
+  const bar = r * 0.32;
+  const icon = fsStat * 1.05;
+  // Largeur estimée (Nunito gras ≈ 0,6 em par caractère) : pas de mesure du texte dans le rendu.
+  const wdlLen = card.wdl.reduce((n, p) => n + String(p.count).length + p.letter.length + 3, 0);
+  const statsW = (card.seasons.length + 4 + wdlLen) * fsStat * 0.56;
+  const trophyW = Math.max(0, ...card.trophies.map((tr) => icon * 1.4 + tr.length * fsStat * 0.56));
+  const w = bar + pad * 2 + Math.max(club.length * fsName * 0.6, statsW, trophyW);
+  const h = pad * 2 + fsName + line * (1 + card.trophies.length) - fsStat * 0.1;
+  const gap = r * 1.7;
+  const left = x + gap + w > box.x + box.w && x - gap - w >= box.x;
+  const cx = left ? x - gap - w : x + gap;
+  const cy = Math.min(Math.max(y - h / 2, box.y + 2 * k), box.y + box.h - h - 2 * k);
+  const tx = cx + bar + pad;
+  // Petite pointe vers le point, du côté du point.
+  const tipX = left ? cx + w : cx;
+  const dir = left ? 1 : -1;
+  const ty = Math.min(Math.max(y, cy + r), cy + h - r);
+  const statsY = cy + pad + fsName + fsStat * 1.1;
+  return (
+    <g pointerEvents="none">
+      <g filter="url(#carte-ombre)">
+        <path d={`M${tipX},${ty - r * 0.55} L${tipX + dir * r * 0.6},${ty} L${tipX},${ty + r * 0.55} Z`} fill="#FFFFFF" />
+        <rect x={cx} y={cy} width={w} height={h} rx={r * 0.55} fill="#FFFFFF" />
+      </g>
+      <rect x={cx} y={cy} width={bar} height={h} rx={bar / 2} fill={current ? '#FFB547' : '#0F1B2D'} />
+      <text x={tx} y={cy + pad + fsName * 0.8} fontSize={fsName} fontWeight={800} fill="#0F1B2D">
+        {club}
+      </text>
+      <text x={tx} y={statsY} fontSize={fsStat} fontWeight={600} fill="#56607A">
+        {card.seasons}
+        {card.wdl.map((p, i) => (
+          <tspan key={i} dx={i ? fsStat * 0.55 : fsStat * 0.9}>
+            <tspan fontWeight={800} fill={p.color}>
+              {p.count}
+            </tspan>
+            <tspan fill={p.color}>{`\u00a0${p.letter}`}</tspan>
+          </tspan>
+        ))}
+      </text>
+      {card.trophies.map((tr, i) => {
+        const ly = statsY + line * (i + 1);
+        return (
+          <g key={i}>
+            <TrophyIcon x={tx} y={ly - icon * 0.85} size={icon} />
+            <text x={tx + icon * 1.4} y={ly} fontSize={fsStat} fontWeight={700} fill="#8F5400">
+              {tr}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
 }
 
 /** Carte du monde (dessinée sur place, rien de chargé d'Internet) : pays entraînés en orange, clubs numérotés dans l'ordre. */
@@ -404,13 +504,21 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
   const route = pins.filter((p): p is { x: number; y: number } => !!p);
   const missing = spells.filter((s) => !s.country || !MAP_PINS[s.country]);
   const r = 11 * k;
-  const statsLine = (club: string) => {
+  const cardOf = (club: string): ClubCard => {
     const st = clubStats(spells, club);
-    return [
-      t('careerPage.mapSeasons', { count: st.seasons }),
-      t('careerPage.mapWins', { count: st.wins }),
-      t('careerPage.mapTitles', { count: st.titles }),
-    ].join(' · ');
+    return {
+      seasons: t('careerPage.mapSeasons', { count: st.seasons }),
+      wdl: [
+        { letter: t('careerPage.mapW'), count: st.wins, color: '#1F7A4D' },
+        { letter: t('careerPage.mapD'), count: st.draws, color: '#56607A' },
+        { letter: t('careerPage.mapL'), count: st.losses, color: '#B42E2E' },
+      ],
+      trophies: st.trophies.map((tr) => `${trophyName(t, tr)} ${tr.season}`),
+    };
+  };
+  const statsLine = (club: string) => {
+    const c = cardOf(club);
+    return [c.seasons, c.wdl.map((p) => `${p.count} ${p.letter}`).join(' '), ...c.trophies].join(' · ');
   };
   const clubs = spells.filter((s, i) => !spells.slice(i + 1).some((x) => x.club === s.club));
 
@@ -433,6 +541,11 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
         role="img"
         aria-label={t('careerPage.mapLabel', { clubs: spells.map((s) => s.club).join(', ') })}
       >
+        <defs>
+          <filter id="carte-ombre" x="-20%" y="-30%" width="140%" height="170%">
+            <feDropShadow dx={0} dy={1.5 * k} stdDeviation={2.5 * k} floodColor="#0F1B2D" floodOpacity={0.22} />
+          </filter>
+        </defs>
         {MAP_SHAPES.map((s, i) => (
           <path
             key={i}
@@ -467,51 +580,28 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
               <text x={p.x} y={p.y} dy="0.35em" textAnchor="middle" fontSize={r * 1.15} fontWeight={800} fill="#FFFFFF">
                 {i + 1}
               </text>
-              <text
-                x={p.x + r * 1.5}
-                y={p.y}
-                dy="0.35em"
-                fontSize={r * 1.25}
-                fontWeight={800}
-                fill="#0F1B2D"
-                stroke="#FFFFFF"
-                strokeWidth={3}
-                paintOrder="stroke"
-                vectorEffect="non-scaling-stroke"
-              >
-                {s.club}
-              </text>
-              <text
-                x={p.x + r * 1.5}
-                y={p.y + r * 1.45}
-                dy="0.35em"
-                fontSize={r * 0.95}
-                fontWeight={700}
-                fill="#56607A"
-                stroke="#FFFFFF"
-                strokeWidth={3}
-                paintOrder="stroke"
-                vectorEffect="non-scaling-stroke"
-              >
-                {statsLine(s.club)}
-              </text>
+              <ClubCallout x={p.x} y={p.y} r={r} k={k} box={box} club={s.club} current={!!s.current} card={cardOf(s.club)} />
             </g>
           );
         })}
       </svg>
       <ul className="mt-3 grid gap-2 sm:grid-cols-2">
         {clubs.map((s) => {
-          const st = clubStats(spells, s.club);
+          const c = cardOf(s.club);
           const n = spells.lastIndexOf(s) + 1;
           return (
-            <li key={s.club} className="flex items-center gap-3 rounded-xl px-3 py-2 ring-1 ring-brun/30">
-              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-extrabold text-white ${s.current ? 'bg-orange-fonce' : 'bg-canard'}`}>{n}</span>
+            <li key={s.club} className="flex items-start gap-3 rounded-xl px-3 py-2 ring-1 ring-brun/30">
+              <span className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-extrabold text-white ${s.current ? 'bg-orange-fonce' : 'bg-canard'}`}>{n}</span>
               <div className="min-w-0">
                 <p className="truncate font-bold">{s.club}</p>
                 <p className="text-xs text-brun">
-                  {t('careerPage.mapSeasons', { count: st.seasons })} · {t('careerPage.mapWins', { count: st.wins })} ·{' '}
-                  <span className={st.titles ? 'font-bold text-orange-fonce' : ''}>{t('careerPage.mapTitles', { count: st.titles })}</span>
+                  {c.seasons} · {c.wdl.map((p) => `${p.count} ${p.letter}`).join(' · ')}
                 </p>
+                {c.trophies.map((tr, i) => (
+                  <p key={i} className="text-xs font-bold text-orange">
+                    🏆 {tr}
+                  </p>
+                ))}
               </div>
             </li>
           );
