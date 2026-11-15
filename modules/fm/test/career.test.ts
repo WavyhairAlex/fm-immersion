@@ -102,7 +102,7 @@ describe('Ma carrière', () => {
   });
 
   it("bilan lu dans FM27 (écran Carrière) : il prime sur nos comptes, pour le club et pour la carrière", () => {
-    const withGame = (x: FmSnapshot, partie: Record<string, unknown>) => ({ ...x, custom: { ...(x as { custom: object }).custom, partie } }) as unknown as FmSnapshot;
+    const withGame = (x: FmSnapshot, partie: Record<string, unknown>) => ({ ...x, custom: { ...(x as unknown as { custom: object }).custom, partie } }) as unknown as FmSnapshot;
     const h = e([
       snap('2026-10-14', 'Slutsk', 20, 5, ['biélorusse']),
       withGame(snap('2027-06-27', 'Slutsk', 10, 2, ['biélorusse']), {
