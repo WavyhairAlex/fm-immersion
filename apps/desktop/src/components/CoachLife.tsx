@@ -1,4 +1,4 @@
-import { ageAt, CAR_COST, CURRENCIES, DEFAULT_TAX, HOUSING_COST, lifeEvents, lifeFinances, sceneState, schoolStage, trophyCabinet, type CareerSpell, type CoachLife as Life, type Scene, type SceneChoice, type SceneState } from '@fm-immersion/module-fm';
+import { ageAt, BADGES, CAR_COST, CURRENCIES, DEFAULT_TAX, GAME_QUALIFICATION, gameCoach, HOUSING_COST, type FmSnapshot, type GameCoach, lifeEvents, lifeFinances, sceneState, schoolStage, trophyCabinet, type CareerSpell, type CoachLife as Life, type Scene, type SceneChoice, type SceneState } from '@fm-immersion/module-fm';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -58,9 +58,25 @@ function Cup({ big }: { big: boolean }) {
 }
 
 /** « Hors terrain » : finances perso, foyer et journal de vie du coach, saisis par le joueur. */
-export function CoachLifeSection({ saveId, life, spells, gameDate }: { saveId: string; life: Life | undefined; spells: CareerSpell[]; gameDate: string | null }) {
+export function CoachLifeSection({
+  saveId,
+  life: saved,
+  spells,
+  gameDate,
+  history,
+}: {
+  saveId: string;
+  life: Life | undefined;
+  spells: CareerSpell[];
+  gameDate: string | null;
+  history: { data: FmSnapshot }[];
+}) {
   const { t } = useTranslation();
-  const st = useMemo(() => sceneState(spells, life, gameDate), [spells, life, gameDate]);
+  // Salaire et diplôme lus dans FM27 par le plugin (lecture seule) ; la devise du jeu sert tant que le joueur n'en choisit pas.
+  const game = useMemo(() => gameCoach(history), [history]);
+  const life = useMemo<Life>(() => ({ ...(saved ?? {}), currency: saved?.currency ?? game.currency ?? undefined }), [saved, game.currency]);
+  const held = game.qualification != null ? (GAME_QUALIFICATION[game.qualification] ?? 0) : 0;
+  const st = useMemo(() => sceneState(spells, life, gameDate, { held }), [spells, life, gameDate, held]);
   return (
     <section className="mt-10">
       <h2 className="text-2xl font-semibold">{t('coachLife.title')}</h2>
@@ -70,10 +86,10 @@ export function CoachLifeSection({ saveId, life, spells, gameDate }: { saveId: s
         <Gauges st={st} />
       </div>
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
-        <Finances saveId={saveId} life={life} spells={spells} st={st} />
+        <Finances saveId={saveId} life={life} spells={spells} st={st} game={game} />
         <Household saveId={saveId} life={life} gameDate={gameDate} st={st} />
       </div>
-      <Badges saveId={saveId} st={st} gameDate={gameDate} life={life} />
+      <Badges saveId={saveId} st={st} gameDate={gameDate} life={life} game={game} />
       <Journal life={life} spells={spells} gameDate={gameDate} st={st} />
     </section>
   );
@@ -182,7 +198,7 @@ function Gauges({ st }: { st: SceneState }) {
 }
 
 /** Diplômes d'entraîneur payés de sa poche : un à la fois, dans l'ordre. */
-function Badges({ saveId, st, gameDate, life }: { saveId: string; st: SceneState; gameDate: string | null; life: Life | undefined }) {
+function Badges({ saveId, st, gameDate, life, game }: { saveId: string; st: SceneState; gameDate: string | null; life: Life | undefined; game: GameCoach }) {
   const { t, i18n } = useTranslation();
   const save = useSaveLife(saveId);
   const money = new Intl.NumberFormat(i18n.resolvedLanguage, { style: 'currency', currency: life?.currency ?? 'EUR', maximumFractionDigits: 0 });
@@ -192,6 +208,16 @@ function Badges({ saveId, st, gameDate, life }: { saveId: string; st: SceneState
     <div className="card mt-6">
       <h3 className="text-xl font-semibold">{t('coachLife.badges.title')}</h3>
       <p className="mt-1 text-sm text-brun">{t('coachLife.badges.help')}</p>
+      {game.qualification != null && (
+        <p className="mt-2 text-sm">
+          <span className="font-bold">{t('coachLife.badges.inGame')}</span>{' '}
+          {GAME_QUALIFICATION[game.qualification] != null
+            ? GAME_QUALIFICATION[game.qualification]! > 0
+              ? t(`coachLife.badges.level.${BADGES[GAME_QUALIFICATION[game.qualification]! - 1]!.level}`)
+              : t('coachLife.badges.none')
+            : t('coachLife.badges.unknownCode', { code: game.qualification })}
+        </p>
+      )}
       {!!st.badges.length && (
         <ul className="mt-3 space-y-3 text-sm">
           {st.badges.map((b) => (
@@ -226,12 +252,12 @@ function Badges({ saveId, st, gameDate, life }: { saveId: string; st: SceneState
   );
 }
 
-function Finances({ saveId, life, spells, st }: { saveId: string; life: Life | undefined; spells: CareerSpell[]; st: SceneState }) {
+function Finances({ saveId, life, spells, st, game }: { saveId: string; life: Life | undefined; spells: CareerSpell[]; st: SceneState; game: GameCoach }) {
   const { t, i18n } = useTranslation();
   const save = useSaveLife(saveId);
   const currency = life?.currency ?? 'EUR';
   const money = new Intl.NumberFormat(i18n.resolvedLanguage, { style: 'currency', currency, maximumFractionDigits: 0 });
-  const f = lifeFinances(spells, life, st.spending.total);
+  const f = lifeFinances(spells, life, st.spending.total, game.wages);
   const set = save.mutate;
   const setWage = (club: string, v: string) => {
     const n = num(v);
@@ -266,14 +292,17 @@ function Finances({ saveId, life, spells, st }: { saveId: string; life: Life | u
               <td className="py-1.5 font-bold">{s.club}</td>
               <td className="py-1.5">
                 <input
-                  key={`${s.club}-${s.weekly ?? ''}`}
+                  key={`${s.club}-${life?.wages?.[s.club] ?? ''}`}
                   className="input w-28 py-1 text-sm"
                   inputMode="decimal"
-                  defaultValue={s.weekly ?? ''}
-                  placeholder={t('coachLife.money.wagePlaceholder')}
+                  defaultValue={life?.wages?.[s.club] ?? ''}
+                  placeholder={game.wages[s.club] != null ? String(game.wages[s.club]) : t('coachLife.money.wagePlaceholder')}
                   aria-label={t('coachLife.money.weeklyOf', { club: s.club })}
-                  onBlur={(e) => e.target.value !== String(s.weekly ?? '') && setWage(s.club, e.target.value)}
+                  onBlur={(e) => e.target.value !== String(life?.wages?.[s.club] ?? '') && setWage(s.club, e.target.value)}
                 />
+                {life?.wages?.[s.club] == null && game.wages[s.club] != null && (
+                  <span className="ml-2 rounded-full bg-eau/20 px-2 py-0.5 text-[10px] font-bold">{t('coachLife.money.fromGame')}</span>
+                )}
               </td>
               <td className="py-1.5 text-right tabular-nums">{s.gross != null ? money.format(s.gross) : '–'}</td>
             </tr>

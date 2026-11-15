@@ -1,4 +1,6 @@
 import type { CareerSpell } from './career';
+import { toNumber } from './player';
+import type { FmSnapshot } from './snapshot';
 
 /**
  * Vie du coach hors terrain (« Ma carrière ») : salaire par club, foyer et journal de vie. Tout est saisi par le
@@ -54,10 +56,53 @@ export interface LifeFinances {
 }
 
 /** Ce que la carrière a rapporté, d'après les salaires saisis et le nombre de jours passés dans chaque club. */
-export function lifeFinances(spells: CareerSpell[], life: CoachLife | undefined, extraCosts = 0): LifeFinances {
+/**
+ * Salaire hebdomadaire lu dans le jeu (`coachSalaire` de la section partie de chemins.json, ex. « 1,3K € p/m »),
+ * ramené à la semaine selon l'unité affichée : p/m (mois), p/s ou p/w (semaine), p/a ou p/y (an).
+ */
+export function weeklyFromText(text: unknown): number | null {
+  if (typeof text !== 'string') return null;
+  const n = toNumber(text);
+  if (n == null || n <= 0) return null;
+  if (/p\/\s*[sw]/i.test(text)) return Math.round(n);
+  if (/p\/\s*[ay]/i.test(text)) return Math.round(n / 52);
+  return Math.round((n * 12) / 52);
+}
+
+const CURRENCY_SIGNS: [RegExp, string][] = [[/€/, 'EUR'], [/£/, 'GBP'], [/\$/, 'USD'], [/CHF/, 'CHF'], [/kr/i, 'SEK']];
+
+export interface GameCoach {
+  /** Salaire hebdomadaire lu dans le jeu, par club (dernier instantané de chaque club). */
+  wages: Record<string, number>;
+  /** Devise du salaire affiché par le jeu. */
+  currency: string | null;
+  /** Code du diplôme d'entraîneur (`CoachingQualificationDisplayValue`), null s'il n'est pas lu. */
+  qualification: number | null;
+}
+
+/** Ce que le plugin lit du coach dans FM27 (salaire, diplôme), à partir de l'historique des instantanés. */
+export function gameCoach(history: { data: FmSnapshot }[]): GameCoach {
+  const out: GameCoach = { wages: {}, currency: null, qualification: null };
+  for (const h of history) {
+    const p = (h.data as { custom?: { partie?: Record<string, unknown> } }).custom?.partie;
+    if (!p) continue;
+    const w = weeklyFromText(p.coachSalaire);
+    if (w != null) {
+      out.wages[h.data.club] = w;
+      const sign = CURRENCY_SIGNS.find(([re]) => re.test(String(p.coachSalaire)));
+      if (sign) out.currency = sign[1];
+    }
+    const q = toNumber(p.coachDiplome);
+    if (q != null) out.qualification = q;
+  }
+  return out;
+}
+
+export function lifeFinances(spells: CareerSpell[], life: CoachLife | undefined, extraCosts = 0, gameWages: Record<string, number> = {}): LifeFinances {
   const taxRate = Math.min(90, Math.max(0, life?.taxRate ?? DEFAULT_TAX));
   const rows: SpellPay[] = spells.map((s) => {
-    const w = life?.wages?.[s.club];
+    // Le salaire saisi par le joueur prime ; sinon celui lu dans le jeu.
+    const w = life?.wages?.[s.club] ?? gameWages[s.club];
     const weekly = typeof w === 'number' && w > 0 ? w : null;
     const d = days(s.start, s.end);
     return { club: s.club, weekly, days: d, gross: weekly != null ? Math.round((weekly * d) / 7) : null };

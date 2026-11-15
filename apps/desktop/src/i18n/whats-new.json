@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.210",
+    "date": "2026-11-15",
+    "fr": [
+      "« Ma carrière » lit maintenant ton salaire dans FM27 : plus besoin de le saisir (tu peux toujours le remplacer). Il faut que le plugin FM27 lise ce salaire : ce sera le cas avec sa prochaine mise à jour.",
+      "Les diplômes d'entraîneur suivent ceux de FM27 (du Diplôme national C à la Licence continentale Pro) et partent du diplôme que tu as déjà dans ta partie."
+    ],
+    "en": [
+      "\"My career\" now reads your salary from FM27: no need to type it in (you can still replace it). The FM27 plugin has to read that salary: it will with its next update.",
+      "Coaching badges now follow FM27's (from National C Licence to Continental Pro Licence) and start from the badge you already hold in your save."
+    ]
+  },
+  {
     "version": "0.1.209",
     "date": "2026-11-14",
     "fr": [

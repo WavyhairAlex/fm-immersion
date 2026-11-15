@@ -5,6 +5,8 @@
     "editeurAutorise": "GameInGameEditorAllowed",
     "editeurUtilise": "GameInGameEditorUsed",
     "coachNom": "GameCurrentManager/Name",
+    "coachDiplome": "GameCurrentManager/CoachingQualificationDisplayValue",
+    "coachSalaire": "GameCurrentManager/FullContract/Wage/DisplayValue",
     "boite00Titre": "GameCurrentManager/AllNews{human=@human,team=@team}/#0/NewsTitleString",
     "boite00Texte": "GameCurrentManager/AllNews{human=@human,team=@team}/#0/NewsBodyString",
     "boite00Id": "GameCurrentManager/AllNews{human=@human,team=@team}/#0/NewsItemId",

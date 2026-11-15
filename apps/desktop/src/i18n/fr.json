@@ -6518,7 +6518,7 @@
     "intro": "La vie du coach en dehors du club : ce que ta carrière t'a rapporté, ton foyer et les grands moments. Tout reste dans l'appli, rien n'est changé dans ta partie.",
     "money": {
       "title": "Finances perso",
-      "help": "Note le salaire de chaque club (tu le trouves dans ton contrat, sur ton profil de manager dans FM27). L'appli compte les jours passés dans chaque club.",
+      "help": "Ton salaire est lu dans FM27 quand le plugin le trouve. Tu peux le remplacer en tapant un autre montant. L'appli compte les jours passés dans chaque club.",
       "gross": "Gagné (brut)",
       "net": "Après impôts ({{rate}} %)",
       "savings": "De côté",
@@ -6533,7 +6533,8 @@
       "costs": "Dépenses du foyer par mois",
       "missing_one": "Un club n'a pas encore de salaire : il ne compte pas dans les totaux.",
       "missing_other": "{{count}} clubs n'ont pas encore de salaire : ils ne comptent pas dans les totaux.",
-      "choices": "Dont logement {{housing}}, voiture {{car}}, choix du téléphone {{oneOff}}, diplômes {{badges}}."
+      "choices": "Dont logement {{housing}}, voiture {{car}}, choix du téléphone {{oneOff}}, diplômes {{badges}}.",
+      "fromGame": "lu dans FM27"
     },
     "home": {
       "title": "Le foyer",
@@ -6624,18 +6625,24 @@
     },
     "badges": {
       "title": "Diplômes d'entraîneur",
-      "help": "Payés de ta poche, un à la fois, même sans club. Le prix part de tes économies.",
+      "help": "Payés de ta poche, un à la fois, même sans club, en partant du diplôme que tu as dans FM27. Le prix part de tes économies.",
       "level": {
-        "c": "Licence C",
-        "b": "Licence B",
-        "a": "Licence A",
-        "pro": "Licence Pro"
+        "nationalC": "Diplôme national C",
+        "nationalB": "Diplôme national B",
+        "nationalA": "Diplôme national A",
+        "continentalC": "Licence continentale C",
+        "continentalB": "Licence continentale B",
+        "continentalA": "Licence continentale A",
+        "continentalPro": "Licence continentale Pro"
       },
       "done": "obtenue le {{date}}",
       "until": "en cours, fin le {{date}}",
       "start": "Commencer la {{level}} ({{cost}}, {{months}} mois)",
       "all": "Tu as tous les diplômes.",
-      "note": "Dans FM27, pense à lancer la formation depuis ton profil de manager : l'appli ne l'inscrit pas dans le jeu."
+      "note": "Pour l'instant, le diplôme payé ici ne change pas celui de ta partie FM27 : l'appli n'écrit pas encore dans le jeu.",
+      "inGame": "Dans FM27 :",
+      "none": "aucun diplôme",
+      "unknownCode": "diplôme de code {{code}}, pas encore reconnu par l'appli"
     },
     "scene": {
       "arrival": {
