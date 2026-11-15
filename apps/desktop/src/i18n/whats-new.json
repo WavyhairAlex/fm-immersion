@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.226",
+    "date": "2026-11-15",
+    "fr": [
+      "« Ma tactique idéale » te donne maintenant la liste exacte de ce qu'il faut changer dans FM27 pour passer de ta tactique à la proposition : mentalité, rôles poste par poste et consignes d'équipe.",
+      "Le réglage automatique corrige mieux une défense trop dégarnie ou un pressing porté par trop peu de joueurs : il donne « moins de courses » à un latéral ou « presser plus souvent » à quelques joueurs, sans toucher à leurs rôles."
+    ],
+    "en": [
+      "\"My ideal tactic\" now lists exactly what to change in FM27 to go from your tactic to the proposal: mentality, roles position by position and team instructions.",
+      "Automatic tuning is better at fixing a thin rest defence or a press carried by too few players: it gives \"fewer runs\" to a full-back or \"press more often\" to a few players, without touching their roles."
+    ]
+  },
+  {
     "version": "0.1.225",
     "date": "2026-11-15",
     "fr": [

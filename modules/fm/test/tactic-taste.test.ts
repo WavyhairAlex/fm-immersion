@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addPlayerInstructions, analyseBuiltTactic, applyTaste, IP_TRAITS, OOP_TRAITS, rolesAt, builtFromGame, optimiseTactic, tacticQuality, EMPTY_TASTE, mergeReference, mustMet, newBuiltTactic, parseTaste, proposeTactics, scoreTactic, styleInstructions, TacticEngine, tacticDiff, tacticFeatures, tasteOfStyle, tasteScore, unmetDemands, SIMPLE_MAX, type Taste } from '../src';
+import { addPlayerInstructions, analyseBuiltTactic, applyTaste, IP_TRAITS, OOP_TRAITS, rolesAt, builtFromGame, optimiseTactic, tacticQuality, EMPTY_TASTE, mergeReference, mustMet, newBuiltTactic, parseTaste, proposeTactics, scoreTactic, styleInstructions, TacticEngine, tacticChanges, tacticDiff, tacticFeatures, tasteOfStyle, tasteScore, unmetDemands, SIMPLE_MAX, type Taste } from '../src';
 import { normalizePlayer } from '../src/player';
 
 const engine = new TacticEngine(mergeReference(undefined));
@@ -99,6 +99,12 @@ describe('ma tactique idéale', () => {
     const game = newBuiltTactic(engine, '4-3-3', 'g');
     const same = { ...game, slots: game.slots.map((s, i) => (i === 9 ? { ...s, ip: 'TF' } : s)), mentality: 'Positive' };
     expect(tacticDiff(same, game)).toEqual({ sameShape: true, roles: 1, instructions: 1 });
+    // Le détail donne les gestes à faire dans le jeu : le rôle à changer, à quel poste, et la mentalité.
+    const ch = tacticChanges({ ...same, ti: { ...same.ti, 21: 3 } }, game);
+    expect(ch.roles).toEqual([{ slot: 9, pos: game.slots[9]!.pos, phase: 'ip', from: game.slots[9]!.ip, to: 'TF' }]);
+    expect(ch.mentality).toEqual({ from: game.mentality, to: 'Positive' });
+    expect(ch.instructions.map((c) => [c.def.code, c.from, c.to])).toEqual([['Tempo', 2, 3]]);
+    expect(tacticChanges(newBuiltTactic(engine, '4-4-2', 'x'), game)).toMatchObject({ sameShape: false, roles: [] });
     expect(tacticDiff(newBuiltTactic(engine, '4-4-2', 'x'), game).sameShape).toBe(false);
     const res = proposeTactics({ engine, players: squad(), taste: taste({ defend: 'mid' }), game });
     // Point de départ « ma tactique du jeu » : le compromis garde son schéma et ne change que les rôles qui montent la qualité.

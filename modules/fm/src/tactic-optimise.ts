@@ -1,6 +1,6 @@
 import type { FmPlayer } from './player';
 import type { TacticEngine } from './tactic';
-import { analyseBuiltTactic, defaultOption, normalizePi, OOP_TRAITS, PI_HOLD, piOptions, rolesAt, type BuiltAnalysis, type BuiltTactic } from './tactic-builder';
+import { analyseBuiltTactic, defaultOption, normalizePi, OOP_TRAITS, PI_HOLD, PI_PRESS_MORE, piOptions, rolesAt, type BuiltAnalysis, type BuiltTactic } from './tactic-builder';
 import { TEAM_INSTRUCTIONS_FM27 } from './team-instructions-fm27';
 
 /*
@@ -63,6 +63,9 @@ const LIGHT_TI = 9;
 /** Changements « latéraux » explorés un coup plus loin quand la montée simple est bloquée. */
 const LOOKAHEAD = 4;
 
+/** Postes où « moins de courses » fait rester le joueur derrière le ballon : milieux axiaux, latéraux, milieux de côté. */
+const HOLD_POS: ReadonlySet<string> = new Set(['MC', 'MDF', 'DG', 'DD', 'DLG', 'DLD', 'MG', 'MD']);
+
 /**
  * Règle les rôles (avec et sans ballon) et allège les consignes d'équipe pour monter la note « Qualité », en gardant
  * les postes. Montée gloutonne : à chaque pas, le changement unique qui rapporte le plus ; on s'arrête quand plus rien
@@ -101,7 +104,7 @@ export function optimiseTactic(engine: TacticEngine, start: BuiltTactic, players
     // Milieu axial sans rôle qui reste en place (aucun n'existe en milieu central) : la consigne individuelle « moins de
     // courses » en fait la sentinelle, quand son rôle la laisse choisir.
     cur.slots.forEach((slot, i) => {
-      if ((slot.pos !== 'MC' && slot.pos !== 'MDF') || normalizePi(slot.pi ?? []).includes(PI_HOLD)) return;
+      if (!HOLD_POS.has(slot.pos) || normalizePi(slot.pi ?? []).includes(PI_HOLD)) return;
       const free = piOptions(engine, cur, i).ip.some((g) => g.state === 'free' && g.options.some((o) => `${g.def.group}:${o}` === PI_HOLD));
       if (free) consider({ ...cur, slots: cur.slots.map((s, k) => (k === i ? { ...s, pi: normalizePi([...(s.pi ?? []), PI_HOLD]) } : s)) });
     });
@@ -138,6 +141,21 @@ export function optimiseTactic(engine: TacticEngine, start: BuiltTactic, players
       if (pressable.length < k) break;
       const swap = new Map(pressable.slice(0, k).map((x) => [x.i, x.code]));
       consider({ ...cur, slots: cur.slots.map((s, i) => (swap.has(i) ? { ...s, oop: swap.get(i)! } : s)) });
+    }
+    // Même idée sans toucher aux rôles (ceux qui vont le mieux aux joueurs restent) : la consigne individuelle
+    // « presser plus souvent » donnée à deux, trois ou quatre joueurs, des attaquants vers les milieux.
+    const pressPi = cur.slots
+      .map((s, i) => i)
+      .filter((i) => {
+        const s = cur.slots[i]!;
+        if (s.pos === 'GB' || OOP_TRAITS[s.oop] === 'press' || OOP_TRAITS[s.oop] === 'outlet' || normalizePi(s.pi ?? []).some((k) => k.startsWith('TriggerPress:'))) return false;
+        return piOptions(engine, cur, i).oop.some((g) => g.state === 'free' && g.options.some((o) => `${g.def.group}:${o}` === PI_PRESS_MORE));
+      })
+      .reverse();
+    for (const k of [1, 2, 3, 4]) {
+      if (pressPi.length < k) break;
+      const on = new Set(pressPi.slice(0, k));
+      consider({ ...cur, slots: cur.slots.map((s, i) => (on.has(i) ? { ...s, pi: normalizePi([...(s.pi ?? []), PI_PRESS_MORE]) } : s)) });
     }
     return pool.sort((a, b) => b.r - a.r);
   };
