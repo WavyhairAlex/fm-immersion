@@ -99,6 +99,7 @@ export function EngineTag({ v }: { v: EngineValue | null | undefined }) {
     v.strengths.length > 0 && t('fm.engine.strengths', { list: v.strengths.map((f) => `${attr(f.attr)} ${f.value}`).join(', ') }),
     v.weaknesses.length > 0 && t('fm.engine.weaknesses', { list: v.weaknesses.map((f) => `${attr(f.attr)} ${f.value}`).join(', ') }),
     v.belowMin.length > 0 && t('fm.engine.belowMin', { list: v.belowMin.map((f) => `${attr(f.attr)} ${f.value}`).join(', ') }),
+    engineWeighted(t, v),
   ]
     .filter(Boolean)
     .join('\n');
@@ -107,6 +108,12 @@ export function EngineTag({ v }: { v: EngineValue | null | undefined }) {
       <Tag tone={v.belowMin.length ? 'warn' : ENGINE_TONE[engineTier(v.index)]}>{t('fm.engine.badge', { index: signed(v.index) })}</Tag>
     </span>
   );
+}
+
+/** « Poids du poste : défenseur central » ; rien pour les postes sans mesure propre (milieux centraux et excentrés). */
+export function engineWeighted(t: (k: string, o?: Record<string, unknown>) => string, v: EngineValue): string | null {
+  const groups = v.groups.filter((g) => g !== 'team');
+  return groups.length ? t('fm.engine.weighted', { list: groups.map((g) => t(`fm.engine.group.${g}`)).join(', ') }) : null;
 }
 
 /** Nombre avec son signe (+3, −4, 0). */
