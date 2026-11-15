@@ -4127,7 +4127,9 @@
         "player": "Joueur",
         "fit": "Note"
       },
-      "nobody": "Personne"
+      "nobody": "Personne",
+      "adopt": "Adopter cette tactique",
+      "adoptHelp": "« Adopter » en fait ta tactique dans l'écran Tactique : le onze, les conseils et le reste de l'appli la suivent. Tu la retrouves dans « Mes tactiques » et tu peux revenir à ta tactique du jeu à tout moment."
     }
   },
   "modes": {

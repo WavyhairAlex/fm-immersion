@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.222",
+    "date": "2026-11-15",
+    "fr": [
+      "Dans « Ma tactique idéale », le bouton « Adopter cette tactique » fait de la proposition choisie ta tactique dans l'écran Tactique : le onze et les conseils de l'appli la suivent. Tu peux revenir à ta tactique du jeu quand tu veux."
+    ],
+    "en": [
+      "In \"My ideal tactic\", the \"Adopt this tactic\" button makes the chosen proposal your tactic in the Tactics screen: the eleven and the app's advice follow it. You can go back to your in-game tactic whenever you like."
+    ]
+  },
+  {
     "version": "0.1.221",
     "date": "2026-11-15",
     "fr": [

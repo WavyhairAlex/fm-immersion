@@ -49,7 +49,7 @@ export function FmIdeal({ snap, players, folder, go }: { snap?: FmSnapshot; play
   const lang = i18n.resolvedLanguage;
   const names = useNames();
   const scope = useFmSaveScope();
-  const { engine, avail, reserve, ranked } = useTacticChoice(players, folder, null);
+  const { engine, avail, reserve, ranked, update } = useTacticChoice(players, folder, null);
   const [taste, setTasteState] = useState<Taste>(() => parseTaste(readScoped<unknown>(KEY, { ...scope, inheritsLegacy: false }, null)));
   const setTaste = (next: Taste) => {
     setTasteState(next);
@@ -170,12 +170,22 @@ export function FmIdeal({ snap, players, folder, go }: { snap?: FmSnapshot; play
     </article>
   );
 
-  const openInBuilder = (p: Proposal) => {
+  // Range la proposition parmi les tactiques construites de la partie (« Mes tactiques »).
+  const keep = (p: Proposal): string => {
     const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `t${Date.now()}`;
     addBuiltTactic(scope, { ...p.tactic, id, name: t('fm.ideal.builtName', { form: p.form, style: names.style(p.style) }) });
-    window.dispatchEvent(new Event(TACTIC_EVENT));
     setSent(p.kind);
+    return id;
+  };
+  const openInBuilder = (p: Proposal) => {
+    keep(p);
+    window.dispatchEvent(new Event(TACTIC_EVENT));
     go('builder');
+  };
+  // Adopter : la proposition devient la tactique de l'écran Tactique (et donc le projet de jeu de toute l'appli).
+  const adopt = (p: Proposal) => {
+    update({ source: 'built', built: keep(p) });
+    go('tactic');
   };
   const labels = builtInstructionLabels(shown.tactic);
   const summary = [taste.ball && t(`fm.ideal.sum.ball.${taste.ball}`), taste.attack && t(`fm.ideal.sum.attack.${taste.attack}`), taste.defend && t(`fm.ideal.sum.defend.${taste.defend}`)].filter(Boolean).join(', ');
@@ -243,11 +253,17 @@ export function FmIdeal({ snap, players, folder, go }: { snap?: FmSnapshot; play
         <Panel
           title={t('fm.ideal.detailTitle', { form: shown.form, style: names.style(shown.style) })}
           action={
-            <button type="button" className="btn-primary px-3 py-1.5 text-sm" onClick={() => openInBuilder(shown)} disabled={sent === shown.kind}>
-              {t('fm.ideal.openBuilder')}
-            </button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <button type="button" className="btn-secondary px-3 py-1.5 text-sm" onClick={() => openInBuilder(shown)} disabled={sent === shown.kind}>
+                {t('fm.ideal.openBuilder')}
+              </button>
+              <button type="button" className="btn-primary px-3 py-1.5 text-sm" onClick={() => adopt(shown)} disabled={sent === shown.kind}>
+                {t('fm.ideal.adopt')}
+              </button>
+            </div>
           }
         >
+          <p className="mb-3 text-sm text-brun">{t('fm.ideal.adoptHelp')}</p>
           <p className="mb-3 text-sm">
             {t('fm.builder.mentality')} : <b>{shown.tactic.mentality}</b>
           </p>
