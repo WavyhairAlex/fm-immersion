@@ -1,7 +1,7 @@
 import { countryOfLeague, countryOfNationality } from './countries';
 import { managerAwards } from './cups';
 import { coachSpells, type ExitReason } from './farewell';
-import { normalizePlayer } from './player';
+import { normalizePlayer, toNumber } from './player';
 import { appearanceMatches, officialResults } from './results';
 import { matchStatsFull } from './stats';
 import { reviewOf, seasonSegments, type SeasonMatch, type SeasonReview } from './season';
@@ -117,6 +117,8 @@ export interface CareerSpell {
   untracked: Untracked;
   /** Titres : championnats finis en tête (competition null), coupes gagnées. */
   trophies: { season: string; competition: string | null }[];
+  /** Bilan du club tel que FM27 l'affiche, quand le plugin le lit (il remplace alors V-N-D et buts de `total`). */
+  game: GameRecord | null;
   /** Prix d'entraîneur du mois (mois « 2027-05 », compétition si l'annonce la nomme). */
   awards: { month: string; competition: string | null }[];
   bestFinish: number | null;
@@ -145,6 +147,8 @@ export interface CareerTotals {
   biggestWin: (SeasonMatch & { club: string }) | null;
   /** Plus longue série sans défaite sur une saison. */
   unbeaten: number;
+  /** Matchs, V-N-D et buts lus dans FM27 (écran Carrière du jeu) plutôt que comptés relevé par relevé. */
+  fromGame: boolean;
 }
 
 export interface Career {
@@ -154,6 +158,50 @@ export interface Career {
 }
 
 const DAY = 86_400_000;
+
+/** Bilan tel que FM27 l'affiche (écran Carrière > Général), lu par le plugin dans la section partie de chemins.json. */
+export interface GameRecord {
+  played: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  cups: number | null;
+  leagues: number | null;
+  promotions: number | null;
+  relegations: number | null;
+}
+
+/**
+ * Dernier bilan du jeu dans ces relevés : `coach*` pour toute la carrière, `club*` pour le club actuel
+ * (`GameCurrentManager/TotalGamesPlayed`, `CurrentClubTotalGamesPlayed`…). Null tant que le plugin ne les lit pas.
+ */
+export function gameRecord(entries: Entry[], scope: 'coach' | 'club'): GameRecord | null {
+  for (let i = entries.length - 1; i >= 0; i--) {
+    const p = (entries[i]!.data as { custom?: { partie?: Record<string, unknown> } }).custom?.partie;
+    if (!p) continue;
+    const n = (k: string) => toNumber(p[`${scope}${k}`]);
+    const played = n('Matchs');
+    const wins = n('Victoires');
+    const draws = n('Nuls');
+    const losses = n('Defaites');
+    if (played == null || wins == null || draws == null || losses == null) continue;
+    return {
+      played,
+      wins,
+      draws,
+      losses,
+      goalsFor: n('ButsPour') ?? 0,
+      goalsAgainst: n('ButsContre') ?? 0,
+      cups: n('Coupes'),
+      leagues: n('Ligues'),
+      promotions: n('Promotions'),
+      relegations: n('Relegations'),
+    };
+  }
+  return null;
+}
 
 /**
  * Pays d'un passage : nationalité la plus présente dans l'effectif quand elle pèse au moins un tiers des joueurs,
@@ -262,6 +310,12 @@ export function careerOf(history: Entry[], opts: { freeSince?: string | null } =
     const finished = seasons.filter((s) => s.ended && s.position != null).map((s) => s.position!);
     const country = spellCountry(sp.entries);
     const untracked = mergeUntracked(seasons.map((x) => x.untracked));
+    // Bilan du club lu dans FM27 (club actuel au moment du relevé) : il prime sur nos comptes, qui ratent des matchs.
+    const game = gameRecord(sp.entries, 'club');
+    const counted = withUntracked(reviewOf(sp.entries, false), untracked);
+    const total = game
+      ? { ...counted, played: game.played, wins: game.wins, draws: game.draws, losses: game.losses, goalsFor: game.goalsFor, goalsAgainst: game.goalsAgainst }
+      : counted;
     return {
       club: sp.club,
       start: sp.entries[0]!.gameDate,
@@ -271,7 +325,8 @@ export function careerOf(history: Entry[], opts: { freeSince?: string | null } =
       country: country?.code ?? null,
       countrySource: country?.source ?? null,
       seasons,
-      total: withUntracked(reviewOf(sp.entries, false), untracked),
+      total,
+      game,
       untracked,
       trophies,
       awards: managerAwards(sp.entries),
@@ -293,6 +348,9 @@ export function careerOf(history: Entry[], opts: { freeSince?: string | null } =
   const first = spells[0]?.start;
   const last = spells.at(-1)?.end;
 
+  // Bilan de carrière lu dans FM27 : il prime sur la somme des passages.
+  const g = gameRecord(history, 'coach');
+  const fromGame = g ? { played: g.played, wins: g.wins, draws: g.draws, losses: g.losses, goalsFor: g.goalsFor, goalsAgainst: g.goalsAgainst } : null;
   return {
     spells,
     totals: {
@@ -309,8 +367,11 @@ export function careerOf(history: Entry[], opts: { freeSince?: string | null } =
       goalsAgainst: sum((s) => s.total.goalsAgainst),
       cleanSheets: sum((s) => s.total.cleanSheets),
       winRate: played ? Math.round((wins / played) * 100) : null,
+      ...(fromGame ? { ...fromGame, winRate: g!.played ? Math.round((g!.wins / g!.played) * 100) : null } : {}),
+      // Sans bilan de carrière (FM27 ne le donne pas toujours) : celui du club suffit quand tous les passages l'ont.
+      fromGame: !!g || (spells.length > 0 && spells.every((s) => s.game)),
       pointsPerGame: league.played ? Math.round((league.points / league.played) * 100) / 100 : null,
-      trophies: sum((s) => s.trophies.length),
+      trophies: Math.max(g?.cups != null && g.leagues != null ? g.cups + g.leagues : 0, sum((s) => Math.max(s.trophies.length, s.game?.cups != null && s.game.leagues != null ? s.game.cups + s.game.leagues : 0))),
       bestFinish: finishes.length ? Math.min(...finishes) : null,
       biggestWin,
       // Séries sans défaite : saison par saison (celle d'un passage entier mélangerait les saisons).

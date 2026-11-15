@@ -100,4 +100,32 @@ describe('Ma carrière', () => {
   it('historique vide', () => {
     expect(careerOf([])).toMatchObject({ spells: [], totals: { clubs: 0, played: 0, winRate: null, biggestWin: null } });
   });
+
+  it("bilan lu dans FM27 (écran Carrière) : il prime sur nos comptes, pour le club et pour la carrière", () => {
+    const withGame = (x: FmSnapshot, partie: Record<string, unknown>) => ({ ...x, custom: { ...(x as unknown as { custom: object }).custom, partie } }) as unknown as FmSnapshot;
+    const h = e([
+      snap('2026-10-14', 'Slutsk', 20, 5, ['biélorusse']),
+      withGame(snap('2027-06-27', 'Slutsk', 10, 2, ['biélorusse']), {
+        coachMatchs: 29, coachVictoires: 16, coachNuls: 10, coachDefaites: 3, coachButsPour: 49, coachButsContre: 26, coachCoupes: 1, coachLigues: 0,
+        clubMatchs: '29', clubVictoires: '16', clubNuls: '10', clubDefaites: '3', clubButsPour: '49', clubButsContre: '26',
+      }),
+    ]);
+    const c = careerOf(h);
+    expect(c.spells[0]!.total).toMatchObject({ played: 29, wins: 16, draws: 10, losses: 3, goalsFor: 49, goalsAgainst: 26 });
+    expect(c.spells[0]!.game?.played).toBe(29);
+    expect(c.totals).toMatchObject({ played: 29, wins: 16, draws: 10, losses: 3, goalsFor: 49, goalsAgainst: 26, winRate: 55, fromGame: true, trophies: 1 });
+  });
+
+  it("bilan de carrière illisible (null dans le relevé) : celui du club, tel que FM27 l'affiche, suffit", () => {
+    const withGame = (x: FmSnapshot, partie: Record<string, unknown>) => ({ ...x, custom: { ...(x as unknown as { custom: object }).custom, partie } }) as unknown as FmSnapshot;
+    const h = e([
+      snap('2026-10-14', 'Slutsk', 20, 5, ['biélorusse']),
+      withGame(snap('2027-07-01', 'Slutsk', 10, 2, ['biélorusse']), {
+        coachMatchs: null, coachVictoires: null, coachNuls: null, coachDefaites: null,
+        clubJours: '288 jours', clubMatchs: '29', clubVictoires: '16', clubNuls: '10', clubDefaites: '3', clubButsPour: '49', clubButsContre: '26', clubCoupes: '1', clubLigues: '0',
+      }),
+    ]);
+    const c = careerOf(h);
+    expect(c.totals).toMatchObject({ played: 29, wins: 16, draws: 10, losses: 3, goalsFor: 49, goalsAgainst: 26, winRate: 55, fromGame: true, trophies: 1 });
+  });
 });

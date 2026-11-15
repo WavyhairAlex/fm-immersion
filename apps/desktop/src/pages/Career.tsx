@@ -102,6 +102,7 @@ export function Career() {
             <Tile value={String(tt.trophies)} label={t('careerPage.tile.trophies', { count: tt.trophies })} accent={tt.trophies > 0} />
             <Tile value={tt.bestFinish != null ? ordinal(t, tt.bestFinish) : '–'} label={t('careerPage.tile.best')} />
           </div>
+          <p className="help mt-2 text-xs">{tt.fromGame ? t('careerPage.fromGame') : t('careerPage.fromSnapshots')}</p>
 
           <div className="mt-6 grid gap-6 2xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
             <WorldMap spells={career.spells} />
