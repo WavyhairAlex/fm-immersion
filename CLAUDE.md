@@ -58,8 +58,10 @@ extraite avec son historique ; Simloom garde Planet Zoo 2 et Transport Fever 3.
   coupées par défaut : copie du `.fm` dans `fm-immersion-secours\<nom>\` à côté de `games`. Jamais d'écriture dans `games` :
   le joueur restaure lui-même, FM27 fermé.
 - **FM27, lecture directe en mémoire** (`src-tauri/src/fm_memory.rs`) : FM Immersion ouvre `fm.exe` en lecture seule
-  (`PROCESS_VM_READ`) et lit la base native de `game_plugin.dll`, seulement sur action du joueur (bouton, ou option « Lire le CA/PA » qu'il coche : une lecture de l'effectif par date de jeu). Jamais d'écriture
-  ni d'injection. Adresses issues de notre propre analyse hors jeu (rien repris de FM27 Live Editor, dont la licence
+  (`PROCESS_VM_READ`) et lit la base native de `game_plugin.dll`, seulement sur action du joueur (bouton, ou option « Lire le CA/PA » qu'il coche : une lecture de l'effectif par date de jeu). Jamais d'injection.
+  Seule écriture, à la demande du joueur (15/11/2026) : le diplôme d'entraîneur de son coach, payé dans « Ma carrière », inscrit sur son clic
+  (`fm_memory_set_qualification`, un octet du manager humain, `PROCESS_VM_WRITE` le temps de l'écriture, code 1-7 seulement, valeur actuelle
+  vérifiée avant ; il sauvegarde lui-même dans le jeu). Adresses issues de notre propre analyse hors jeu (rien repris de FM27 Live Editor, dont la licence
   interdit l'analyse) ; points d'entrée retrouvés par motifs dans le fichier du module.
 - Windows uniquement pour l'instant (Tauri permettra macOS plus tard).
 - Mention de non-affiliation partout : « projet indépendant, sans lien avec Sports Interactive ni SEGA ».

@@ -286,11 +286,16 @@ function SpellCard({
         </p>
       )}
 
-      {!!s.trophies.length && (
+      {!!(s.trophies.length || s.awards?.length) && (
         <p className="mt-3 flex flex-wrap gap-2">
           {s.trophies.map((tr, i) => (
             <span key={i} className="pill">
               🏆 {trophyName(t, tr)} {tr.season}
+            </span>
+          ))}
+          {(s.awards ?? []).map((a) => (
+            <span key={a.month} className="pill">
+              🏅 {t('careerPage.mapAwardOne', { month: new Intl.DateTimeFormat(i18n.resolvedLanguage, { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${a.month}-01T00:00:00Z`)) })}
             </span>
           ))}
         </p>
@@ -375,6 +380,7 @@ function clubStats(spells: CareerSpell[], club: string) {
     draws: mine.reduce((a, s) => a + s.total.draws, 0),
     losses: mine.reduce((a, s) => a + s.total.losses, 0),
     trophies: mine.flatMap((s) => s.trophies),
+    awards: mine.flatMap((s) => s.awards ?? []),
   };
 }
 
@@ -391,10 +397,23 @@ function TrophyIcon({ x, y, size }: { x: number; y: number; size: number }) {
   );
 }
 
+/** Petite médaille (boîte de 10 × 10) : prix individuel du coach (entraîneur du mois). */
+function MedalIcon({ x, y, size }: { x: number; y: number; size: number }) {
+  const sc = size / 10;
+  return (
+    <g transform={`translate(${x},${y}) scale(${sc})`}>
+      <path d="M3,0.5 L5,4 L7,0.5" fill="none" stroke="#0F1B2D" strokeWidth={1.1} />
+      <circle cx={5} cy={6.4} r={3} fill="#FFB547" stroke="#8F5400" strokeWidth={0.7} />
+      <circle cx={5} cy={6.4} r={1.2} fill="#8F5400" />
+    </g>
+  );
+}
+
 type ClubCard = {
   seasons: string;
   wdl: { letter: string; count: number; color: string }[];
   trophies: string[];
+  awards: string[];
 };
 
 // Étiquette d'un club sur la carte : petite carte blanche à côté du point (nom ; saisons et bilan V/N/D sans les
@@ -427,9 +446,10 @@ function ClubCallout({
   // Largeur estimée (Nunito gras ≈ 0,6 em par caractère) : pas de mesure du texte dans le rendu.
   const wdlLen = card.wdl.reduce((n, p) => n + String(p.count).length + p.letter.length + 3, 0);
   const statsW = (card.seasons.length + 4 + wdlLen) * fsStat * 0.56;
-  const trophyW = Math.max(0, ...card.trophies.map((tr) => icon * 1.4 + tr.length * fsStat * 0.56));
+  const lines = [...card.trophies.map((text) => ({ text, medal: false })), ...card.awards.map((text) => ({ text, medal: true }))];
+  const trophyW = Math.max(0, ...lines.map((l) => icon * 1.4 + l.text.length * fsStat * 0.56));
   const w = bar + pad * 2 + Math.max(club.length * fsName * 0.6, statsW, trophyW);
-  const h = pad * 2 + fsName + line * (1 + card.trophies.length) - fsStat * 0.1;
+  const h = pad * 2 + fsName + line * (1 + lines.length) - fsStat * 0.1;
   const gap = r * 1.7;
   const left = x + gap + w > box.x + box.w && x - gap - w >= box.x;
   const cx = left ? x - gap - w : x + gap;
@@ -461,13 +481,13 @@ function ClubCallout({
           </tspan>
         ))}
       </text>
-      {card.trophies.map((tr, i) => {
+      {lines.map((l, i) => {
         const ly = statsY + line * (i + 1);
         return (
           <g key={i}>
-            <TrophyIcon x={tx} y={ly - icon * 0.85} size={icon} />
-            <text x={tx + icon * 1.4} y={ly} fontSize={fsStat} fontWeight={700} fill="#8F5400">
-              {tr}
+            {l.medal ? <MedalIcon x={tx} y={ly - icon * 0.85} size={icon} /> : <TrophyIcon x={tx} y={ly - icon * 0.85} size={icon} />}
+            <text x={tx + icon * 1.4} y={ly} fontSize={fsStat} fontWeight={700} fill={l.medal ? '#0F1B2D' : '#8F5400'}>
+              {l.text}
             </text>
           </g>
         );
@@ -504,6 +524,14 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
   const route = pins.filter((p): p is { x: number; y: number } => !!p);
   const missing = spells.filter((s) => !s.country || !MAP_PINS[s.country]);
   const r = 11 * k;
+  const monthFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  // Un prix : « Entraîneur du mois, mai 2027 » ; plusieurs : « Entraîneur du mois ×3 ».
+  const awardLines = (awards: { month: string }[]) =>
+    !awards.length
+      ? []
+      : awards.length === 1
+        ? [t('careerPage.mapAwardOne', { month: monthFmt.format(new Date(`${awards[0]!.month}-01T00:00:00Z`)) })]
+        : [t('careerPage.mapAwardMany', { count: awards.length })];
   const cardOf = (club: string): ClubCard => {
     const st = clubStats(spells, club);
     return {
@@ -514,11 +542,12 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
         { letter: t('careerPage.mapL'), count: st.losses, color: '#B42E2E' },
       ],
       trophies: st.trophies.map((tr) => `${trophyName(t, tr)} ${tr.season}`),
+      awards: awardLines(st.awards),
     };
   };
   const statsLine = (club: string) => {
     const c = cardOf(club);
-    return [c.seasons, c.wdl.map((p) => `${p.count} ${p.letter}`).join(' '), ...c.trophies].join(' · ');
+    return [c.seasons, c.wdl.map((p) => `${p.count} ${p.letter}`).join(' '), ...c.trophies, ...c.awards].join(' · ');
   };
   const clubs = spells.filter((s, i) => !spells.slice(i + 1).some((x) => x.club === s.club));
 
@@ -600,6 +629,11 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
                 {c.trophies.map((tr, i) => (
                   <p key={i} className="text-xs font-bold text-orange">
                     🏆 {tr}
+                  </p>
+                ))}
+                {c.awards.map((a, i) => (
+                  <p key={`a${i}`} className="text-xs font-bold text-orange-clair">
+                    🏅 {a}
                   </p>
                 ))}
               </div>

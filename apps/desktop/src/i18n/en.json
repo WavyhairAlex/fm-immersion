@@ -5912,6 +5912,8 @@
     "mapW": "W",
     "mapD": "D",
     "mapL": "L",
+    "mapAwardOne": "Manager of the Month, {{month}}",
+    "mapAwardMany": "Manager of the Month ×{{count}}",
     "mapStatsNote": "W = wins, D = draws, L = losses, in competitive matches (friendlies left out).",
     "mapMissing": "Not on the map yet (unknown country): {{clubs}}. Pick their country below.",
     "source": "Each club's country is guessed from its squad's nationalities or the league name; click it to correct it. The reason for leaving is guessed from job security at the last read.",
@@ -6645,9 +6647,13 @@
       "until": "in progress, ends {{date}}",
       "start": "Start the {{level}} ({{cost}}, {{months}} months)",
       "all": "You have every badge.",
-      "note": "For now, a badge paid for here doesn't change the one in your FM27 save: the app doesn't write to the game yet.",
+      "note": "A badge paid for here can be added to your FM27 save, when you click, with FM27 open on the save.",
       "inGame": "In FM27:",
       "none": "no badge",
+      "write": "Add the {{level}} in FM27",
+      "writeHelp": "You've earned your {{level}}. With FM27 open on your save, the app can put it on your manager's profile. Then save in the game to keep it.",
+      "written": "Done in FM27. Save your game in FM27 to keep it.",
+      "writeError": "FM27 wasn't changed: {{error}}",
       "unknownCode": "badge code {{code}}, not recognised by the app yet"
     },
     "scene": {

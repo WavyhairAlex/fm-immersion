@@ -3,7 +3,7 @@ import type { CareerSpell } from '../src/career';
 import { careerScenes, sceneState } from '../src/coach-scenes';
 
 const spell = (club: string, start: string, end: string, current: boolean, extra: Partial<CareerSpell> = {}): CareerSpell =>
-  ({ club, start, end, current, reason: current ? null : 'sacked', country: 'SE', countrySource: null, seasons: [], trophies: [], bestFinish: null, ...extra }) as unknown as CareerSpell;
+  ({ club, start, end, current, reason: current ? null : 'sacked', country: 'SE', countrySource: null, seasons: [], trophies: [], awards: [], bestFinish: null, ...extra }) as unknown as CareerSpell;
 
 const spells = [
   spell('Vänersborgs IF', '2026-08-29', '2026-10-04', false),

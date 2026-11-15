@@ -30,10 +30,18 @@ export const BADGES: { level: BadgeLevel; cost: number; months: number }[] = [
 ];
 
 /**
- * Code de `CoachingQualificationDisplayValue` (FM27) → nombre de diplômes de `BADGES` déjà obtenus. Seul le 7 est
- * vérifié en jeu (« Diplôme national C », 14/11/2026) : les autres codes restent inconnus plutôt que devinés.
+ * Code de `CoachingQualificationDisplayValue` (FM27, un octet) → nombre de diplômes de `BADGES` déjà obtenus.
+ * Relevé le 15/11/2026 sur des fiches du jeu : n de 1 à 7 = diplôme tenu (1 Pro, 2 continental A, 3 continental B,
+ * 4 continental C, 5 national A, 6 national B, 7 national C ; 3 et 4 déduits de la suite, les autres vus) ;
+ * un octet « négatif » (-n, soit 256 - n) = en formation pour le niveau n, donc tenant le niveau du dessous
+ * (253 = continental C en vue du B, 254 = continental B en vue du A, 255 = continental A en vue du Pro). 0 = aucun.
  */
-export const GAME_QUALIFICATION: Record<number, number> = { 7: 1 };
+export const GAME_QUALIFICATION: Record<number, number> = { 0: 0, 7: 1, 6: 2, 5: 3, 4: 4, 3: 5, 2: 6, 1: 7, 253: 4, 254: 5, 255: 6 };
+
+/** Code FM27 du diplôme `level` tenu sans formation en cours (sert à l'inscrire dans le jeu). */
+export function qualificationCode(level: BadgeLevel): number {
+  return 8 - (BADGES.findIndex((b) => b.level === level) + 1);
+}
 
 export type SceneKind = 'arrival' | 'move' | 'car' | 'sacked' | 'left' | 'trophy' | 'birth' | 'summer';
 

@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.214",
+    "date": "2026-11-15",
+    "fr": [
+      "Les diplômes d'entraîneur payés dans « Ma carrière » peuvent maintenant être inscrits dans ta partie FM27 : un bouton « Inscrire dans FM27 », FM27 ouvert, puis sauvegarde dans le jeu.",
+      "Tes prix d'entraîneur du mois comptent dans ta carrière et apparaissent sur la carte, avec une médaille."
+    ],
+    "en": [
+      "Coaching badges paid for in \"My career\" can now be added to your FM27 save: an \"Add in FM27\" button with FM27 open, then save in the game.",
+      "Your Manager of the Month awards now count in your career and show on the map, with a medal."
+    ]
+  },
+  {
     "version": "0.1.213",
     "date": "2026-11-15",
     "fr": [

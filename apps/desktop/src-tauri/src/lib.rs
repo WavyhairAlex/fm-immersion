@@ -61,6 +61,7 @@ pub fn run() {
             fm_memory::fm_memory_abilities,
             fm_memory::fm_memory_division,
             fm_memory::fm_memory_staff,
+            fm_memory::fm_memory_set_qualification,
             faces::faces_status,
             faces::faces_install,
             faces::faces_uninstall,
