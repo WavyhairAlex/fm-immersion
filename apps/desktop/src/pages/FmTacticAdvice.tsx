@@ -15,7 +15,7 @@ import {
 import { useState } from 'react';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTranslation } from 'react-i18next';
-import { fitGap, fitPct, More } from './FmUi';
+import { fitGap, fitPct, More, signed } from './FmUi';
 
 /*
  * Mon onze : ce que les derniers matchs disent de la tactique jouée, ce que l'adjoint dit du onze affiché (rôles à revoir, titulaires, joueurs à relancer, doublures),
@@ -33,7 +33,9 @@ export function LineupAdviceCard({ advice: full, plan, engine, inTodo = false }:
     return (en ? r?.en : r?.fr) ?? r?.fr ?? code;
   };
   const pos = (i: number) => POS_LABEL[plan.slots[i]!.pos];
-  const empty = !advice.roles.length && !advice.starters.length && !advice.rested.length && !advice.cover.length;
+  const attr = (k: string) => t(`fm.attr.${k}`, { defaultValue: k });
+  const vals = (v: Record<string, number>) => Object.entries(v).map(([k, x]) => `${attr(k)} ${x}`).join(', ');
+  const empty = !advice.roles.length && !advice.starters.length && !advice.rested.length && !advice.cover.length && !advice.engine.length && !advice.physical.length;
   if (inTodo && empty) return null;
   return (
     <section className="card">
@@ -69,6 +71,37 @@ export function LineupAdviceCard({ advice: full, plan, engine, inTodo = false }:
                     : t(a.reserve || a.makeshift ? 'fm.tac.advice.coverThin' : 'fm.tac.advice.coverNone', { pos: pos(a.slot), starter: a.starter?.name ?? '' })}
                   {a.reserve && <> {t('fm.tac.advice.coverReserve', { name: a.reserve.name, team: a.reserve.team ?? '' })}</>}
                   {a.makeshift && <> {t('fm.tac.advice.coverMakeshift', { name: a.makeshift.player.name, fam: a.makeshift.familiarity })}</>}
+                </li>
+              ))}
+            </Group>
+          )}
+          {advice.engine.length > 0 && (
+            <Group title={t('fm.tac.advice.engine')} note={t('fm.tac.advice.engineNote')}>
+              {advice.engine.map((a) => (
+                <li key={a.slot}>
+                  {t('fm.tac.advice.engineSwap', {
+                    pos: pos(a.slot),
+                    better: a.better.name,
+                    betterFit: fitPct(a.betterFit),
+                    starter: a.starter.name,
+                    starterFit: fitPct(a.starterFit),
+                    betterIndex: signed(a.betterIndex),
+                    starterIndex: signed(a.starterIndex),
+                    list: a.strengths.map((f) => `${attr(f.attr)} ${f.value}`).join(', '),
+                  })}
+                </li>
+              ))}
+            </Group>
+          )}
+          {advice.physical.length > 0 && (
+            <Group title={t('fm.tac.advice.physical')} note={t('fm.tac.advice.physicalNote')}>
+              {advice.physical.map((a) => (
+                <li key={`${a.kind}${a.slots[0]}`}>
+                  {t(`fm.tac.advice.need.${a.kind}`, {
+                    pos: pos(a.slots[0]!),
+                    players: a.players.map((p, j) => `${p.name} (${vals(a.values[j]!)})`).join(', '),
+                  })}
+                  {a.alt && <> {t('fm.tac.advice.needAlt', { name: a.alt.name, value: vals(Object.fromEntries(Object.keys(a.values[0]!).map((k) => [k, a.alt!.attributes[k] ?? 0]))) })}</>}
                 </li>
               ))}
             </Group>

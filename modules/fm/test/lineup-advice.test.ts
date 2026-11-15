@@ -4,6 +4,8 @@ import {
   betterStarters,
   builtPlan,
   coverGaps,
+  ENGINE_GAINS,
+  engineSwaps,
   gamePlayerInstructions,
   instructionBudget,
   instructionKey,
@@ -12,6 +14,7 @@ import {
   lineupAdvice,
   mergeReference,
   newBuiltTactic,
+  physicalNeeds,
   playerInstructions,
   restedPlayers,
   ROLE_GAIN,
@@ -186,5 +189,49 @@ describe('consignes individuelles face au jeu', () => {
     const snap = { effectiveness: { complexityParts: { teamInstructionComplexity: { MinValue: 50, MaxValue: 52 }, playerInstructionComplexity: 70 }, components: { tacticalUnderstanding: { min: 38, max: 38 } } } } as unknown as FmSnapshot;
     expect(instructionLoad(snap)).toEqual({ team: 51, player: 70, understanding: 38 });
     expect(instructionLoad(null)).toEqual({ team: null, player: null, understanding: null });
+  });
+});
+
+describe('le moteur dans l’avis sur le onze (tests d’attributs)', () => {
+  const full = (id: number, positions: string, attrs: Record<string, number> = {}, v = 12) => mk(id, positions, v, {}, { ...Object.fromEntries(Object.keys(ENGINE_GAINS).map((k) => [k, v])), ...attrs });
+  const fullSquad = (more: ReturnType<typeof mk>[] = [], over: Record<number, ReturnType<typeof mk>> = {}) => [...XI.map((p, i) => over[i + 1] ?? full(i + 1, p)), ...more];
+
+  it('signale un remplaçant aussi bien noté mais plus fort dans le moteur au poste', () => {
+    // Même profil que le titulaire, mais rapide et endurant.
+    const sprinter = full(20, 'D (D)', { Pace: 18, Acceleration: 18, Stamina: 18 });
+    const players = fullSquad([sprinter]);
+    const plan = builtPlan(engine, tactic(), players.slice(0, 11));
+    const rows = engineSwaps(engine, plan, players);
+    const dd = plan.slots.findIndex((s) => s.pos === 'DD');
+    const row = rows.find((r) => r.slot === dd)!;
+    expect(row.better.id).toBe('20');
+    expect(row.betterIndex - row.starterIndex).toBeGreaterThanOrEqual(12);
+    expect(row.betterFit).toBeGreaterThanOrEqual(row.starterFit - 0.6);
+    expect(row.strengths[0]!.attr).toMatch(/Pace|Acceleration|Stamina/);
+    // Onze du jeu : si l'avis « titulaires » propose déjà ce changement, il n'est pas répété.
+    const all = lineupAdvice(engine, plan, players, 'game');
+    expect(all.engine.some((r) => all.starters.some((x) => x.slot === r.slot))).toBe(false);
+    // Sans écart de moteur, rien.
+    expect(engineSwaps(engine, plan, fullSquad([full(20, 'D (D)')]))).toHaveLength(0);
+  });
+
+  it('demande la détente en défense centrale, l’endurance sur les côtés, la vitesse en attaque', () => {
+    const players = fullSquad([full(30, 'D (C)', { JumpingReach: 17 })], {
+      3: full(3, 'D (C)', { JumpingReach: 10 }),
+      4: full(4, 'D (C)', { JumpingReach: 12 }),
+      2: full(2, 'D (G)', { Stamina: 9 }),
+      10: full(10, 'BT', { Pace: 9, Acceleration: 10 }),
+    });
+    const plan = builtPlan(engine, tactic(), players.slice(0, 11));
+    const needs = physicalNeeds(engine, plan, players);
+    const kinds = needs.map((n) => n.kind).sort();
+    expect(kinds).toEqual(['aerialCB', 'slowStriker', 'wideStamina']);
+    const cb = needs.find((n) => n.kind === 'aerialCB')!;
+    expect(cb.players).toHaveLength(2);
+    expect(cb.alt?.id).toBe('30');
+    expect(needs.find((n) => n.kind === 'wideStamina')!.values[0]).toEqual({ Stamina: 9 });
+    // Un seul défenseur central avec de la détente suffit ; un attaquant rapide OU vif aussi.
+    const ok = fullSquad([], { 3: full(3, 'D (C)', { JumpingReach: 15 }), 10: full(10, 'BT', { Pace: 9, Acceleration: 14 }) });
+    expect(physicalNeeds(engine, builtPlan(engine, tactic(), ok), ok)).toHaveLength(0);
   });
 });

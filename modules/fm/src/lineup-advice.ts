@@ -1,3 +1,4 @@
+import { engineValue, type EngineFactor } from './engine-value';
 import type { FmPlayer } from './player';
 import type { PosCode } from './positions';
 import { balancePenalty, oopFit, readiness, readinessParts, slotContexts, slotFit, type FormationPlan, type Phase, type Slot, type TacticEngine } from './tactic';
@@ -8,7 +9,10 @@ import { balancePenalty, oopFit, readiness, readinessParts, slotContexts, slotFi
  * - un rôle qui irait nettement mieux au joueur, au même poste, sans déséquilibrer l'équipe ;
  * - un remplaçant nettement meilleur que le titulaire choisi dans le jeu (forme du jour comprise) ;
  * - un joueur mieux noté laissé sur le banc par le calcul à cause de sa forme (rythme, fatigue, moral) ;
- * - un poste sans doublure : qui glisse, qui entre, ou qui monter de la réserve.
+ * - un poste sans doublure : qui glisse, qui entre, ou qui monter de la réserve ;
+ * - un remplaçant aussi bien noté dans le jeu mais nettement plus fort dans le moteur (indice moteur au poste) ;
+ * - le physique que le poste demande dans le moteur : détente des défenseurs centraux, endurance des latéraux et
+ *   pistons, vitesse des attaquants (tests d'attributs FM27, voir engine-value.ts).
  * Purement consultatif : le joueur décide et règle lui-même FM27.
  */
 
@@ -73,12 +77,52 @@ export interface CoverAdvice {
   makeshift: { player: FmPlayer; familiarity: number } | null;
 }
 
+/** Remplaçant que le jeu note presque autant que le titulaire, mais nettement plus fort dans le moteur au poste. */
+export interface EngineAdvice {
+  slot: number;
+  starter: FmPlayer;
+  better: FmPlayer;
+  starterFit: number;
+  betterFit: number;
+  /** Indices moteur au poste du créneau. */
+  starterIndex: number;
+  betterIndex: number;
+  /** Ce qui fait la différence chez le remplaçant (ses atouts moteur). */
+  strengths: EngineFactor[];
+}
+
+export type PhysicalNeedKind = 'aerialCB' | 'wideStamina' | 'slowStriker';
+
+/** Physique que le poste demande dans le moteur et que le titulaire n'a pas. */
+export interface PhysicalNeed {
+  kind: PhysicalNeedKind;
+  /** Créneaux concernés (un seul, sauf pour la défense centrale). */
+  slots: number[];
+  players: FmPlayer[];
+  /** Valeurs des attributs en cause, joueur par joueur. */
+  values: Record<string, number>[];
+  /** Remplaçant qui a ce physique et qui peut jouer au poste, s'il y en a un. */
+  alt: FmPlayer | null;
+}
+
 export interface LineupAdvice {
   roles: RoleAdvice[];
   starters: StarterAdvice[];
   rested: RestedAdvice[];
   cover: CoverAdvice[];
+  engine: EngineAdvice[];
+  physical: PhysicalNeed[];
 }
+
+/** Écart de note (sur 20) sous lequel le jeu tient deux joueurs pour équivalents dans un créneau. */
+export const ENGINE_TIE = 0.6;
+/** Écart d'indice moteur (au poste) pour signaler un remplaçant : un palier de la pastille. */
+export const ENGINE_GAP = 12;
+/** Repères du physique des postes : sous 12 un attribut coûte des matchs, la détente ne paie qu'au-dessus. */
+export const AERIAL_CB = 14;
+export const WIDE_STAMINA = 12;
+export const STRIKER_SPEED = 12;
+const MAX_ENGINE = 3;
 
 const MAX_ROLES = 4;
 const MAX_STARTERS = 3;
@@ -226,13 +270,89 @@ export function coverGaps(engine: TacticEngine, plan: FormationPlan, players: Fm
   return out;
 }
 
+/**
+ * Remplaçants que le jeu note presque autant que le titulaire dans les rôles du créneau (moins de ENGINE_TIE
+ * d'écart), sans être moins en forme, mais nettement plus forts dans le moteur à ce poste (ENGINE_GAP). Le jeu ne
+ * voit pas cette différence ; les tests d'attributs, si.
+ */
+export function engineSwaps(engine: TacticEngine, plan: FormationPlan, players: FmPlayer[]): EngineAdvice[] {
+  const xi = new Set(plan.slots.flatMap((s) => (s.player ? [s.player.id] : [])));
+  const bench = players.filter((p) => !xi.has(p.id));
+  const cands: (EngineAdvice & { gap: number })[] = [];
+  plan.slots.forEach((sl, i) => {
+    const s = sl.player;
+    if (!s || sl.pos === 'GB') return;
+    const sFit = slotFit(engine, s, sl);
+    const sEng = engineValue(s, sl.pos);
+    if (sFit == null || !sEng) return;
+    for (const b of bench) {
+      if (!engine.canPlay(b, sl.pos)) continue;
+      const bFit = slotFit(engine, b, sl);
+      const bEng = engineValue(b, sl.pos);
+      if (bFit == null || !bEng || bFit < sFit - ENGINE_TIE || readiness(b) < readiness(s) - 0.5) continue;
+      const gap = bEng.index - sEng.index;
+      if (gap >= ENGINE_GAP)
+        cands.push({ slot: i, starter: s, better: b, starterFit: sFit, betterFit: bFit, starterIndex: sEng.index, betterIndex: bEng.index, strengths: bEng.strengths, gap });
+    }
+  });
+  cands.sort((a, b) => b.gap - a.gap);
+  const usedSlot = new Set<number>();
+  const usedPlayer = new Set<string>();
+  return cands
+    .filter((c) => !usedSlot.has(c.slot) && !usedPlayer.has(c.better.id) && !!usedSlot.add(c.slot) && !!usedPlayer.add(c.better.id))
+    .slice(0, MAX_ENGINE)
+    .map(({ gap: _gap, ...row }) => row);
+}
+
+const WIDE_DEF = new Set<PosCode>(['DD', 'DG', 'DLD', 'DLG']);
+
+/**
+ * Le physique que chaque poste demande dans le moteur (tests d'Harvestgreen et de Purity) : au moins un défenseur
+ * central avec de la détente au-dessus de 12, de l'endurance pour les latéraux et pistons, de la vitesse ou de
+ * l'accélération pour les attaquants. Attribut non lu : rien n'est signalé.
+ */
+export function physicalNeeds(engine: TacticEngine, plan: FormationPlan, players: FmPlayer[]): PhysicalNeed[] {
+  const xi = new Set(plan.slots.flatMap((s) => (s.player ? [s.player.id] : [])));
+  const bench = players.filter((p) => !xi.has(p.id));
+  const a = (p: FmPlayer, k: string) => p.attributes[k] ?? null;
+  const altFor = (pos: PosCode, ok: (p: FmPlayer) => boolean) => bench.filter((b) => engine.canPlay(b, pos) && ok(b)).sort((x, y) => (y.level ?? 0) - (x.level ?? 0))[0] ?? null;
+  const out: PhysicalNeed[] = [];
+
+  const cbs = plan.slots.map((sl, i) => ({ sl, i })).filter((x) => x.sl.pos === 'DC' && x.sl.player && a(x.sl.player, 'JumpingReach') != null);
+  if (cbs.length > 0 && cbs.every((x) => a(x.sl.player!, 'JumpingReach')! < AERIAL_CB)) {
+    out.push({
+      kind: 'aerialCB',
+      slots: cbs.map((x) => x.i),
+      players: cbs.map((x) => x.sl.player!),
+      values: cbs.map((x) => ({ JumpingReach: a(x.sl.player!, 'JumpingReach')! })),
+      alt: altFor('DC', (b) => (a(b, 'JumpingReach') ?? 0) >= AERIAL_CB + 2),
+    });
+  }
+  plan.slots.forEach((sl, i) => {
+    const p = sl.player;
+    if (!p) return;
+    const sta = a(p, 'Stamina');
+    if (WIDE_DEF.has(sl.pos) && sta != null && sta < WIDE_STAMINA)
+      out.push({ kind: 'wideStamina', slots: [i], players: [p], values: [{ Stamina: sta }], alt: altFor(sl.pos, (b) => (a(b, 'Stamina') ?? 0) >= WIDE_STAMINA + 3) });
+    const pace = a(p, 'Pace');
+    const acc = a(p, 'Acceleration');
+    if (sl.pos === 'BT' && pace != null && acc != null && pace < STRIKER_SPEED && acc < STRIKER_SPEED)
+      out.push({ kind: 'slowStriker', slots: [i], players: [p], values: [{ Pace: pace, Acceleration: acc }], alt: altFor('BT', (b) => Math.max(a(b, 'Pace') ?? 0, a(b, 'Acceleration') ?? 0) >= STRIKER_SPEED + 3) });
+  });
+  return out;
+}
+
 /** Tout l'avis sur un onze. `players` : équipe première disponible. */
 export function lineupAdvice(engine: TacticEngine, plan: FormationPlan, players: FmPlayer[], source: PlanSource): LineupAdvice {
+  const starters = source === 'game' ? betterStarters(engine, plan, players) : [];
+  const changed = new Set(starters.map((x) => x.slot));
   return {
     // Un onze calculé a déjà les rôles du style les mieux notés : on ne le contredit pas.
     roles: source === 'suggested' ? [] : betterRoles(engine, plan),
-    starters: source === 'game' ? betterStarters(engine, plan, players) : [],
+    starters,
     rested: source === 'game' ? [] : restedPlayers(engine, plan, players),
     cover: coverGaps(engine, plan, players),
+    engine: engineSwaps(engine, plan, players).filter((x) => !changed.has(x.slot)),
+    physical: physicalNeeds(engine, plan, players),
   };
 }

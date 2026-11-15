@@ -406,7 +406,18 @@
           "morale": "{{pos}} : {{better}} ({{betterFit}}) est mieux noté que {{starter}} ({{starterFit}}), mais son moral est bas ({{morale}}). Une discussion ou du temps de jeu peut le relancer.",
           "risk": "{{pos}} : {{better}} ({{betterFit}}) est mieux noté que {{starter}} ({{starterFit}}), mais le jeu lui donne un risque de blessure élevé. Il reprend sa place une fois reposé."
         },
-        "titleBench": "Doublures et joueurs à relancer"
+        "titleBench": "Doublures et joueurs à relancer",
+        "engine": "Plus fort dans le moteur",
+        "engineSwap": "{{pos}} : le jeu note {{better}} ({{betterFit}}) presque comme {{starter}} ({{starterFit}}), mais il pèse bien plus dans le moteur de match à ce poste (indice {{betterIndex}} contre {{starterIndex}} ; {{list}}).",
+        "engineNote": "D'après les tests d'attributs de la communauté (Harvestgreen22, Purity) : une tendance, pas la note du jeu. À essayer sur quelques matchs, xG à l'appui.",
+        "physical": "Physique des postes",
+        "physicalNote": "Dans le moteur de FM27, la détente compte surtout au-dessus de 12 pour un défenseur central, l'endurance fait le latéral et le piston, la vitesse et l'accélération font l'attaquant (tests d'attributs de la communauté).",
+        "need": {
+          "aerialCB": "Défense centrale sans détente : {{players}}. Au-dessus de 12, c'est l'atout n°1 d'un défenseur central dans le moteur.",
+          "wideStamina": "{{pos}} : {{players}}. C'est le poste qui court le plus : sous 12 d'endurance, il coûte des matchs.",
+          "slowStriker": "{{pos}} : {{players}}. Chez un attaquant, vitesse et accélération sont ce qui pèse le plus."
+        },
+        "needAlt": "Sur le banc : {{name}} ({{value}})."
       },
       "tiAdvice": {
         "title": "Adapté à ton onze",
