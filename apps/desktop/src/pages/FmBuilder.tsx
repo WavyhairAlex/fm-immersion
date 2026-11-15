@@ -34,10 +34,10 @@ import {
   type Phase,
   type PosCode,
 } from '@fm-immersion/module-fm';
-import { Fragment, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { Fragment, useContext, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
-import { useTacticEngine } from './FmTactic';
+import { ReserveContext, useTacticEngine } from './FmTactic';
 import { Empty, Fit, More, Panel, useNames } from './FmUi';
 
 /*
@@ -87,6 +87,9 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
   const scope = useFmSaveScope();
   const { engine } = useTacticEngine(folder, players);
   const avail = useMemo(() => players.filter((p) => !unavailable(p) && Object.keys(p.attributes).length > 0), [players]);
+  // Réserve et jeunes : ils dépannent un poste que l'équipe première ne couvre pas, comme dans « Le onze ».
+  const reserveAll = useContext(ReserveContext);
+  const reserve = useMemo(() => reserveAll.filter((p) => !unavailable(p) && Object.keys(p.attributes).length > 0), [reserveAll]);
   const game = useMemo(() => tacticSlots(snap?.tactic), [snap]);
   const gameName = typeof snap?.tactic?.name === 'string' ? snap.tactic.name : null;
 
@@ -110,13 +113,13 @@ export function FmBuilder({ snap, players, folder }: { snap?: FmSnapshot; player
   const [drag, setDrag] = useState<{ i: number; x: number; y: number } | null>(null);
   // Créneau dont les consignes individuelles sont ouvertes dans le tableau.
   const [openPi, setOpenPi] = useState<number | null>(null);
-  const analysis = useMemo(() => (cur ? analyseBuiltTactic(engine, cur, avail) : null), [engine, cur, avail]);
+  const analysis = useMemo(() => (cur ? analyseBuiltTactic(engine, cur, avail, reserve) : null), [engine, cur, avail, reserve]);
 
   // Réglage automatique : rôles et consignes ajustés pour monter la note de qualité, dans une copie (l'original reste).
   const [improved, setImproved] = useState<{ before: number; after: number; roles: number; instructions: number } | null>(null);
   const improve = () => {
     if (!cur) return;
-    const o = optimiseTactic(engine, cur, avail);
+    const o = optimiseTactic(engine, cur, avail, { reserve });
     setImproved({ before: o.before, after: o.after, roles: o.roles, instructions: o.instructions });
     if (o.after > o.before) put({ ...o.tactic, id: newId(), name: t('fm.builder.improvedName', { name: cur.name }) });
   };

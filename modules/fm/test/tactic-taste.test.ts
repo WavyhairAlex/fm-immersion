@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { analyseBuiltTactic, applyTaste, builtFromGame, optimiseTactic, tacticQuality, EMPTY_TASTE, mergeReference, mustMet, newBuiltTactic, parseTaste, proposeTactics, scoreTactic, styleInstructions, TacticEngine, tacticDiff, tacticFeatures, tasteOfStyle, tasteScore, unmetDemands, SIMPLE_MAX, type Taste } from '../src';
+import { analyseBuiltTactic, applyTaste, rolesAt, builtFromGame, optimiseTactic, tacticQuality, EMPTY_TASTE, mergeReference, mustMet, newBuiltTactic, parseTaste, proposeTactics, scoreTactic, styleInstructions, TacticEngine, tacticDiff, tacticFeatures, tasteOfStyle, tasteScore, unmetDemands, SIMPLE_MAX, type Taste } from '../src';
 import { normalizePlayer } from '../src/player';
 
 const engine = new TacticEngine(mergeReference(undefined));
@@ -130,6 +130,51 @@ describe('ma tactique idéale', () => {
     for (const p of out) expect(p.scores.quality).toBeGreaterThanOrEqual(60);
     expect(mustMet(out[0]!.tactic.slots, 'insideWingers')).toBe(true);
     expect(tacticFeatures(out[0]!.tactic).line).toBe(2);
+  });
+
+  it('répare un rôle impossible au poste et trouve une sentinelle dans un schéma sans milieu défensif', () => {
+    // 4-4-1-1 : ailier sans ballon en milieu latéral (rôle qui n'existe pas à ce poste), aucun milieu qui reste en place.
+    let t = newBuiltTactic(engine, '4-4-1-1', 'a');
+    t = { ...t, slots: t.slots.map((s) => (s.pos === 'MG' || s.pos === 'MD' ? { ...s, oop: 'W' } : s)) };
+    const before = analyseBuiltTactic(engine, t, squad());
+    expect(before.findings.some((f) => f.id === 'roleInvalid')).toBe(true);
+    expect(before.findings.some((f) => f.id === 'noPivot')).toBe(true);
+    const o = optimiseTactic(engine, t, squad());
+    const after = analyseBuiltTactic(engine, o.tactic, squad());
+    expect(after.findings.some((f) => f.id === 'roleInvalid')).toBe(false);
+    expect(after.findings.some((f) => f.id === 'noPivot')).toBe(false);
+    // La sentinelle vient de la consigne individuelle « moins de courses » donnée à un milieu axial.
+    expect(o.tactic.slots.some((s) => s.pos === 'MC' && s.pi.includes('ForwardRuns:Effectuez moins de courses'))).toBe(true);
+    expect(o.after).toBeGreaterThan(o.before);
+  });
+
+  it('ne génère aucun rôle impossible, quel que soit le style et le schéma', () => {
+    for (const st of engine.ref.styles)
+      for (const form of ['4-4-2', '4-4-1-1', '4-3-3', '3-5-2', '5-4-1', '4-2-3-1']) {
+        const plan = engine.formationPlan(form, st, squad());
+        plan.slots.forEach((s, i) => {
+          expect(rolesAt(engine, plan.slots, i, 'ip').some((r) => r.code === s.ip), `${form} ${st.id} ${s.pos} ${s.ip}`).toBe(true);
+          expect(rolesAt(engine, plan.slots.map((x) => ({ pos: x.posOOP ?? x.pos })), i, 'oop').some((r) => r.code === s.oop), `${form} ${st.id} ${s.pos} ${s.oop}`).toBe(true);
+        });
+      }
+  });
+
+  it('prend la réserve pour un poste que l’équipe première ne couvre pas', () => {
+    const t = newBuiltTactic(engine, '4-3-3', 'a');
+    const noKeeper = squad().filter((p) => !p.positions.includes('GB'));
+    expect(analyseBuiltTactic(engine, t, noKeeper).findings.some((f) => f.id === 'squadHoles')).toBe(true);
+    expect(analyseBuiltTactic(engine, t, noKeeper, [mk(99, 'GB')]).findings.some((f) => f.id === 'squadHoles')).toBe(false);
+  });
+
+  it('garde la tactique du jeu dans le compromis et ne montre jamais deux fois la même carte', () => {
+    const game = { ...newBuiltTactic(engine, '4-2-3-1', 'game'), name: 'Jeu' };
+    for (const t of [taste({ ball: 'keep', attack: 'wide', defend: 'high', risk: 'cautious', tuning: 'worked' }), taste({ ball: 'keep', attack: 'centre', defend: 'low', risk: 'cautious', tuning: 'simple', start: 'blank' })]) {
+      const out = proposeTactics({ engine, players: squad(), taste: t, game }).proposals;
+      const key = (p: (typeof out)[number]) => JSON.stringify([p.tactic.slots.map((s) => [s.pos, s.ip, s.oop]), p.tactic.ti, p.tactic.mentality]);
+      expect(new Set(out.map(key)).size).toBe(3);
+      const balance = out[1]!;
+      if (balance.diff?.sameShape) expect(balance.diff.roles).toBeLessThanOrEqual(8);
+    }
   });
 
   it('relit des réponses abîmées sans planter', () => {

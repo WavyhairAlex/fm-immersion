@@ -4139,7 +4139,8 @@
       "nobody": "Nobody",
       "adopt": "Adopt this tactic",
       "adoptHelp": "\"Adopt\" makes it your tactic in the Tactics screen: the eleven, the advice and the rest of the app follow it. You will find it under \"My tactics\" and can go back to your in-game tactic at any time.",
-      "computing": "Computing and tuning the proposals…"
+      "computing": "Computing and tuning the proposals…",
+      "pi": "Instruction: {{group}}, {{option}}"
     }
   },
   "modes": {
