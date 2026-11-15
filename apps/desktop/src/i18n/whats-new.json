@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.224",
+    "date": "2026-11-15",
+    "fr": [
+      "« Ma tactique idéale » a été testée sur plus de mille combinaisons de réponses et plusieurs parties : le réglage automatique trouve maintenant de meilleures tactiques, surtout avec un petit effectif ou un schéma sans milieu défensif.",
+      "Quand tu pars de ta tactique du jeu, le compromis la corrige au lieu de la réécrire. Le réglage peut aussi donner « moins de courses » à un milieu pour en faire la sentinelle : la consigne s'affiche dans le détail."
+    ],
+    "en": [
+      "\"My ideal tactic\" was tested on over a thousand answer combinations and several saves: automatic tuning now finds better tactics, especially with a small squad or a shape without a defensive midfielder.",
+      "When you start from your in-game tactic, the compromise now corrects it instead of rewriting it. Tuning can also give \"fewer runs\" to a midfielder to make him the holder: the instruction shows in the detail."
+    ]
+  },
+  {
     "version": "0.1.223",
     "date": "2026-11-15",
     "fr": [

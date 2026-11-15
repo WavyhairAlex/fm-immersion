@@ -442,6 +442,8 @@ export function tacticDiff(a: BuiltTactic, b: BuiltTactic): TacticDiff {
   return { sameShape, roles, instructions };
 }
 
+/** Coût (note d'équipe sur 20) d'un couloir laissé sans défenseur par le schéma, dans le choix du compromis. */
+export const SHAPE_FLAW_COST = 1;
 /** Carte « la plus adaptée à l'effectif » : son réglage tient d'abord à la note du onze (deux fois le poids habituel). */
 export const SQUAD_FIT_WEIGHT = 30;
 /** Avantage (note d'équipe sur 20) donné au schéma déjà joué dans FM27 : la familiarité se reconstruit sur des semaines. */
@@ -546,7 +548,15 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
 
   // La plus fidèle : le schéma qui permet le plus de souhaits (puis le meilleur onze), toutes les réponses appliquées.
   const possible = (plan: FormationPlan) => taste.musts.filter((m) => mustPossible(plan.slots, m)).length;
-  const faithfulPlans = [...base.plans].sort((a, b) => possible(b) - possible(a) || b.score - a.score);
+  // Schéma qui laisse un couloir sans défenseur (trois centraux sans piston) : défaut de structure qu'aucun rôle ne
+  // corrige, il passe donc après les autres à souhaits égaux.
+  const flawMemo = new Map<FormationPlan, number>();
+  const flaws = (plan: FormationPlan) => {
+    let n = flawMemo.get(plan);
+    if (n === undefined) flawMemo.set(plan, (n = analyseBuiltTactic(engine, fromPlan(plan, 'x', 'x', {}, 'Équilibrée')).findings.filter((f) => f.id === 'flankOpen').length));
+    return n;
+  };
+  const faithfulPlans = [...base.plans].sort((a, b) => possible(b) - possible(a) || flaws(a) - flaws(b) || b.score - a.score);
   const faithful = (plan: FormationPlan, alt = false, from = base): Proposal => {
     const applied = applyTaste(from === base ? baseTi : styleBase(from.style), taste);
     const tactic = enforceRoles(engine, fromPlan(plan, 'taste', `${plan.form} · ${from.style.name}`, applied.ti, applied.mentality), taste.musts);
@@ -560,7 +570,7 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
   // est avantagé), un souhait n'est gardé que s'il ne coûte pas trop au onze.
   const relaxed = new Set<TasteAxis>(tasteP.demands.map((d) => d.axis));
   const applied = applyTaste(baseTi, taste, relaxed);
-  const value = (plan: FormationPlan) => plan.score + (keepsShape(plan) ? KEEP_FORM_BONUS : 0) + MUST_MAX_COST * possible(plan);
+  const value = (plan: FormationPlan) => plan.score + (keepsShape(plan) ? KEEP_FORM_BONUS : 0) + MUST_MAX_COST * possible(plan) - SHAPE_FLAW_COST * flaws(plan);
   const plan = [...base.plans].sort((a, b) => value(b) - value(a))[0]!;
   let tactic = fromPlan(plan, 'balance', name(plan.form), applied.ti, applied.mentality);
   let reference: BuiltTactic | null = null;
@@ -596,7 +606,7 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
   // style suivant le plus proche des réponses, pour montrer une vraie autre piste.
   if (sameTactic(tasteP.tactic, balance.tactic)) {
     const next = ranked.filter((r) => r !== base).map((r) => ({ r, s: near(r.style) })).sort((a, b) => b.s - a.s)[0];
-    if (next) tasteP = faithful([...next.r.plans].sort((a, b) => possible(b) - possible(a) || b.score - a.score)[0]!, true, next.r);
+    if (next) tasteP = faithful([...next.r.plans].sort((a, b) => possible(b) - possible(a) || flaws(a) - flaws(b) || b.score - a.score)[0]!, true, next.r);
   }
   // Même style et même schéma que le compromis : la carte « effectif » montre la piste suivante du classement.
   const sameAsBalance = (r: (typeof ranked)[number]) => r.style.id === base.style.id && r.plan.form === balance.form;
