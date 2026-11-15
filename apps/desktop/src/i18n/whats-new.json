@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.227",
+    "date": "2026-11-15",
+    "fr": [
+      "L'analyse d'une tactique signale maintenant deux meneurs de jeu au même rôle, ou trois meneurs dans l'axe. « Ma tactique idéale » et « Améliorer automatiquement » ne proposent donc plus deux meneurs de jeu avancés ensemble."
+    ],
+    "en": [
+      "Tactic analysis now flags two playmakers in the same role, or three playmakers through the middle. \"My ideal tactic\" and \"Improve automatically\" therefore no longer suggest two advanced playmakers together."
+    ]
+  },
+  {
     "version": "0.1.226",
     "date": "2026-11-15",
     "fr": [
