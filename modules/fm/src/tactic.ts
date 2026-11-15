@@ -550,16 +550,23 @@ export class TacticEngine {
   formationPlan(form: string, style: StyleRef, list: FmPlayer[], reserve: FmPlayer[] = []): FormationPlan {
     const used: Record<Phase, Record<string, number>> = { ip: {}, oop: {} };
     // Rôles du style proposés à ce créneau ; un créneau excentré prend d'abord les rôles qui lui sont réservés.
+    // Rôle par défaut du poste ; s'il n'existe pas dans cette phase (un ailier ne défend pas en milieu latéral), le
+    // premier rôle que le jeu propose à ce poste.
+    const fallback = (pos: PosCode, ph: Phase, ctx: SlotCtx) => {
+      const d = this.roles.get(DEFAULT_ROLE[pos]);
+      if (d && this.availableAt(d, pos, ph, ctx)) return d.code;
+      return this.ref.roles.find((r) => this.availableAt(r, pos, ph, ctx))?.code ?? DEFAULT_ROLE[pos];
+    };
     const pickRole = (pos: PosCode, ph: Phase, ctx: SlotCtx) => {
       const opts = style.signatureRoles[ph].filter((c) => {
         const r = this.roles.get(c);
         return r && this.availableAt(r, pos, ph, ctx);
       });
       if (ctx.wide) opts.sort((a, b) => Number(!!this.roles.get(b)?.cond) - Number(!!this.roles.get(a)?.cond));
-      if (!opts.length) return DEFAULT_ROLE[pos];
+      if (!opts.length) return fallback(pos, ph, ctx);
       const key = `${pos}${ctx.wide ? '+' : ''}`;
       used[ph][key] = (used[ph][key] ?? -1) + 1;
-      return opts[used[ph][key] % opts.length] ?? DEFAULT_ROLE[pos];
+      return opts[used[ph][key] % opts.length] ?? fallback(pos, ph, ctx);
     };
     const base = FORMATIONS[form] ?? FORMATIONS['4-3-3']!;
     const ctxs = slotContexts(base.map(([pos, x]) => ({ pos, x })));

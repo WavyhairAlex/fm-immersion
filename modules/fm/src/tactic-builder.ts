@@ -360,7 +360,7 @@ const blockOf = (t: BuiltTactic) => (['low', 'mid', 'high'] as const)[ti(t, 'Lin
  * quand on attaque, présence dans la surface et création, transitions (relais de contre, contre-pressing),
  * pressing, cohérence des consignes avec les rôles, et, si l'effectif est connu, le onze qui la jouerait.
  */
-export function analyseBuiltTactic(engine: TacticEngine, t: BuiltTactic, players: FmPlayer[] = []): BuiltAnalysis {
+export function analyseBuiltTactic(engine: TacticEngine, t: BuiltTactic, players: FmPlayer[] = [], reserve: FmPlayer[] = []): BuiltAnalysis {
   const F: Finding[] = [];
   const add = (id: string, area: Area, tone: Tone, params: Record<string, unknown> = {}, slots?: number[]) => F.push({ id, area, tone, params, ...(slots ? { slots } : {}) });
   const S = t.slots;
@@ -532,7 +532,7 @@ export function analyseBuiltTactic(engine: TacticEngine, t: BuiltTactic, players
   if (stale.length) add('piStale', 'coherence', 'warn', { count: stale.length }, stale);
 
   // 8. Effectif : le onze qui jouerait cette tactique, et ses limites physiques.
-  const squad = players.length ? squadFit(engine, t, players) : null;
+  const squad = players.length ? squadFit(engine, t, players, reserve) : null;
   if (squad) {
     const holes = squad.xi.map((x, i) => (x.player ? -1 : i)).filter((i) => i >= 0);
     if (holes.length) add('squadHoles', 'squad', 'bad', { count: holes.length }, holes);
@@ -624,7 +624,7 @@ function builtLabelsAll(t: BuiltTactic): string[] {
  * Meilleur onze de l'effectif pour cette tactique : chaque joueur jugé au créneau (rôle avec ballon à son poste
  * avec ballon, rôle sans ballon à son poste sans ballon) et à sa forme du jour, attribution optimale sur le onze.
  */
-export function squadFit(engine: TacticEngine, t: BuiltTactic, players: FmPlayer[]): SquadFit {
+export function squadFit(engine: TacticEngine, t: BuiltTactic, players: FmPlayer[], reserve: FmPlayer[] = []): SquadFit {
   const S = t.slots;
   const fitOf = (p: FmPlayer, i: number) => {
     const s = S[i]!;
@@ -633,17 +633,21 @@ export function squadFit(engine: TacticEngine, t: BuiltTactic, players: FmPlayer
     return (a + b) / 2;
   };
   const ok = (p: FmPlayer, i: number) => engine.canPlay(p, S[i]!.pos);
-  const value = S.map((_, i) => players.map((p) => (ok(p, i) ? fitOf(p, i) + readiness(p) : null)));
-  const assign = assignMax(value);
-  const taken = new Set(assign.filter((j) => j >= 0));
+  const pick = (list: FmPlayer[], open: number[]) => {
+    const value = open.map((i) => list.map((p) => (ok(p, i) ? fitOf(p, i) + readiness(p) : null)));
+    return assignMax(value).map((j) => (j >= 0 ? list[j]! : null));
+  };
+  const chosen: (FmPlayer | null)[] = pick(players, S.map((_, i) => i));
+  // Poste que l'équipe première ne couvre pas : la réserve et les jeunes dépannent, comme dans « Le onze ».
+  const holes = S.map((_, i) => i).filter((i) => !chosen[i]);
+  if (holes.length && reserve.length) pick(reserve, holes).forEach((p, k) => (chosen[holes[k]!] = p));
+  const taken = new Set(chosen.flatMap((p) => (p ? [p.id] : [])));
   const xi = S.map((_, i) => {
-    const j = assign[i]!;
-    const player = j >= 0 ? players[j]! : null;
+    const player = chosen[i] ?? null;
     const second =
       players
-        .map((p, k) => ({ p, k }))
-        .filter(({ p, k }) => !taken.has(k) && ok(p, i))
-        .sort((a, b) => fitOf(b.p, i) - fitOf(a.p, i))[0]?.p ?? null;
+        .filter((p) => !taken.has(p.id) && ok(p, i))
+        .sort((a, b) => fitOf(b, i) - fitOf(a, i))[0] ?? null;
     return { player, fit: player ? fitOf(player, i) : null, second };
   });
   return { xi, fit: xi.reduce((a, x) => a + (x.fit ?? 0), 0) / xi.length };

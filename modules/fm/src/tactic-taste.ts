@@ -378,7 +378,7 @@ export function scoreTactic(engine: TacticEngine, tactic: BuiltTactic, players: 
   });
   const raw: ScoreRef = { fit: plan.fit, meta: avg(metas) };
   const ts = tasteScore(tactic, taste);
-  const analysis = analyseBuiltTactic(engine, tactic, players);
+  const analysis = analyseBuiltTactic(engine, tactic, players, reserve);
   const issues = analysis.findings.filter((f) => f.tone !== 'good').length;
   return rescore({ tactic, plan, demands, tasteParts: ts.parts, raw, issues, scores: { taste: ts.score, squad: 0, meta: null, quality: tacticQuality(analysis) } }, ref ?? raw);
 }
@@ -507,7 +507,7 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
     const floor = tasteScore(tactic, taste).score ?? 0;
     const met = taste.musts.filter((m) => mustMet(tactic.slots, m));
     const accept = (t: BuiltTactic) => (tasteScore(t, taste).score ?? 0) >= floor && met.every((m) => mustMet(t.slots, m));
-    return optimiseTactic(engine, tactic, players, { accept, lockedTi: locked, reference });
+    return optimiseTactic(engine, tactic, players, { accept, lockedTi: locked, reference, reserve });
   };
   const finish = (kind: ProposalKind, style: StyleRef, raw: BuiltTactic, notes: ProposalNote[], alt = false, tuning: { locked: readonly number[]; reference?: BuiltTactic | null } | null = null): Proposal => {
     const tuned = tuning ? tune(raw, tuning.locked, tuning.reference ?? null) : null;
@@ -545,12 +545,12 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
   // La plus fidèle : le schéma qui permet le plus de souhaits (puis le meilleur onze), toutes les réponses appliquées.
   const possible = (plan: FormationPlan) => taste.musts.filter((m) => mustPossible(plan.slots, m)).length;
   const faithfulPlans = [...base.plans].sort((a, b) => possible(b) - possible(a) || b.score - a.score);
-  const faithful = (plan: FormationPlan, alt = false): Proposal => {
-    const applied = applyTaste(baseTi, taste);
-    const tactic = enforceRoles(engine, fromPlan(plan, 'taste', name(plan.form), applied.ti, applied.mentality), taste.musts);
+  const faithful = (plan: FormationPlan, alt = false, from = base): Proposal => {
+    const applied = applyTaste(from === base ? baseTi : styleBase(from.style), taste);
+    const tactic = enforceRoles(engine, fromPlan(plan, 'taste', `${plan.form} · ${from.style.name}`, applied.ti, applied.mentality), taste.musts);
     const missed = taste.musts.filter((m) => !mustMet(tactic.slots, m));
     const notes: ProposalNote[] = missed.length ? missed.map((m) => ({ id: 'mustMissed' as const, tone: 'warn' as const, params: { must: m } })) : [{ id: 'allMet', tone: 'good', params: {} }];
-    return finish('taste', base.style, tactic, notes, alt, { locked: applied.touched });
+    return finish('taste', from.style, tactic, notes, alt, { locked: applied.touched });
   };
   let tasteP = faithful(faithfulPlans[0]!);
 
@@ -563,14 +563,12 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
   let tactic = fromPlan(plan, 'balance', name(plan.form), applied.ti, applied.mentality);
   let reference: BuiltTactic | null = null;
   // « Ma tactique du jeu, à corriger » : à schéma égal, on garde ses rôles et ses consignes (la familiarité est acquise)
-  // et l'on n'y applique que les réponses, sauf si ses rôles coûtent trop au onze.
+  // et l'on n'y applique que les réponses ; le réglage automatique corrige ensuite les rôles qui coûtent au onze.
   if (game && keepsShape(plan)) {
     const kept = applyTaste(game, taste, relaxed);
     const own: BuiltTactic = { ...game, id: 'balance', name: name(plan.form), slots: game.slots.map((s) => ({ ...s, pi: [] })), ti: kept.ti, mentality: kept.mentality };
-    if (builtPlan(engine, own, players, reserve).fit >= builtPlan(engine, tactic, players, reserve).fit - MUST_MAX_COST) {
-      tactic = own;
-      reference = game;
-    }
+    tactic = own;
+    reference = game;
   }
   const dropped: TasteMust[] = [];
   for (const m of taste.musts) {
@@ -592,9 +590,21 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
     const other = faithfulPlans.find((p) => p.form !== balance.form);
     if (other) tasteP = faithful(other, true);
   }
+  // Toujours la même tactique après réglage (schémas voisins ramenés aux mêmes rôles) : la première carte part du
+  // style suivant le plus proche des réponses, pour montrer une vraie autre piste.
+  if (sameTactic(tasteP.tactic, balance.tactic)) {
+    const next = ranked.filter((r) => r !== base).map((r) => ({ r, s: near(r.style) })).sort((a, b) => b.s - a.s)[0];
+    if (next) tasteP = faithful([...next.r.plans].sort((a, b) => possible(b) - possible(a) || b.score - a.score)[0]!, true, next.r);
+  }
   // Même style et même schéma que le compromis : la carte « effectif » montre la piste suivante du classement.
   const sameAsBalance = (r: (typeof ranked)[number]) => r.style.id === base.style.id && r.plan.form === balance.form;
   const best = bySquad[0]!;
-  const squadP = sameAsBalance(best.r) ? squadOf((bySquad.find((x) => !sameAsBalance(x.r)) ?? best).r, true, true) : squadOf(best.r, false, true);
+  let squadP = sameAsBalance(best.r) ? squadOf((bySquad.find((x) => !sameAsBalance(x.r)) ?? best).r, true, true) : squadOf(best.r, false, true);
+  // Le réglage peut faire passer la piste suivante devant : on la règle aussi et l'on garde la meilleure des deux.
+  const runner = bySquad.find((x) => !sameAsBalance(x.r) && x.r.style.id + x.r.plan.form !== squadP.style.id + squadP.form);
+  if (runner && [tasteP, balance].some((p) => worth(p) > worth(squadP))) {
+    const alt2 = squadOf(runner.r, squadP.alt, true);
+    if (worth(alt2) > worth(squadP)) squadP = alt2;
+  }
   return [tasteP, balance, squadP];
 }
