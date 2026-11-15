@@ -87,6 +87,9 @@ export interface EngineAdvice {
   /** Indices moteur au poste du créneau. */
   starterIndex: number;
   betterIndex: number;
+  /** Notes méta sur 20 au poste du créneau. */
+  starterMeta: number;
+  betterMeta: number;
   /** Ce qui fait la différence chez le remplaçant (ses atouts moteur). */
   strengths: EngineFactor[];
 }
@@ -292,7 +295,7 @@ export function engineSwaps(engine: TacticEngine, plan: FormationPlan, players: 
       if (bFit == null || !bEng || bFit < sFit - ENGINE_TIE || readiness(b) < readiness(s) - 0.5) continue;
       const gap = bEng.index - sEng.index;
       if (gap >= ENGINE_GAP)
-        cands.push({ slot: i, starter: s, better: b, starterFit: sFit, betterFit: bFit, starterIndex: sEng.index, betterIndex: bEng.index, strengths: bEng.strengths, gap });
+        cands.push({ slot: i, starter: s, better: b, starterFit: sFit, betterFit: bFit, starterIndex: sEng.index, betterIndex: bEng.index, starterMeta: sEng.meta, betterMeta: bEng.meta, strengths: bEng.strengths, gap });
     }
   });
   cands.sort((a, b) => b.gap - a.gap);

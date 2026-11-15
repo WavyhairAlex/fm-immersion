@@ -143,6 +143,11 @@ export interface EngineFactor {
 export interface EngineValue {
   /** Familles de poste prises en compte pour les poids (vide ou `team` seul : poids de toute l'équipe). */
   groups: EngineGroup[];
+  /**
+   * Note méta sur 20 : la valeur X telle qu'un joueur à X partout, au même poste, pèse autant dans le moteur
+   * (12 partout = 12). Lisible comme une note du jeu, mais sur ce que le moteur récompense.
+   */
+  meta: number;
   /** Somme des effets : un onze entier de ce profil gagnerait environ autant de points de % qu'un onze à 12 partout. */
   index: number;
   /** Atouts les plus nets (effet ≥ 4), du plus fort au moins fort. */
@@ -176,9 +181,23 @@ export function engineValue(p: Pick<FmPlayer, 'attributes' | 'positions'>, at?: 
   }
   if (factors.length < MIN_READ) return null;
   const index = factors.reduce((s, f) => s + f.effect, 0);
+  // Joueur « à X partout » sur les mêmes attributs lus et au même poste : X croît avec l'indice, on le cherche par dichotomie.
+  const uniform = (x: number) => factors.reduce((s, f) => s + (attributeEffect(f.attr, x) ?? 0) * (weights[f.attr] ?? 1), 0);
+  let lo = 1;
+  let hi = 20;
+  if (index <= uniform(lo)) hi = lo;
+  else if (index >= uniform(hi)) lo = hi;
+  else
+    for (let i = 0; i < 40; i++) {
+      const mid = (lo + hi) / 2;
+      if (uniform(mid) < index) lo = mid;
+      else hi = mid;
+    }
+  const meta = Math.round(((lo + hi) / 2) * 10) / 10;
   const round = (f: EngineFactor) => ({ ...f, effect: Math.round(f.effect * 10) / 10 });
   return {
     groups: engineGroups(positions),
+    meta,
     index: Math.round(index),
     strengths: factors.filter((f) => f.effect >= NOTABLE).sort((a, b) => b.effect - a.effect).slice(0, 3).map(round),
     weaknesses: factors.filter((f) => f.effect <= -NOTABLE).sort((a, b) => a.effect - b.effect).slice(0, 3).map(round),

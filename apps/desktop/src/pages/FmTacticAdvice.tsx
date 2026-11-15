@@ -15,7 +15,7 @@ import {
 import { useState } from 'react';
 import { readScoped, useFmSaveScope, writeScoped } from '../lib/save-store';
 import { useTranslation } from 'react-i18next';
-import { fitGap, fitPct, More, signed } from './FmUi';
+import { fitGap, fitPct, metaText, More } from './FmUi';
 
 /*
  * Mon onze : ce que les derniers matchs disent de la tactique jouée, ce que l'adjoint dit du onze affiché (rôles à revoir, titulaires, joueurs à relancer, doublures),
@@ -85,8 +85,8 @@ export function LineupAdviceCard({ advice: full, plan, engine, inTodo = false }:
                     betterFit: fitPct(a.betterFit),
                     starter: a.starter.name,
                     starterFit: fitPct(a.starterFit),
-                    betterIndex: signed(a.betterIndex),
-                    starterIndex: signed(a.starterIndex),
+                    betterMeta: metaText({ meta: a.betterMeta }, i18n.resolvedLanguage),
+                    starterMeta: metaText({ meta: a.starterMeta }, i18n.resolvedLanguage),
                     list: a.strengths.map((f) => `${attr(f.attr)} ${f.value}`).join(', '),
                   })}
                 </li>
