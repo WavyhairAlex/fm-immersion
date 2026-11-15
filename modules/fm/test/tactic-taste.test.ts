@@ -225,6 +225,15 @@ describe('ma tactique idéale', () => {
     expect(tasteScore({ ...newBuiltTactic(engine, '4-3-3', 'a'), ti: a.ti, mentality: a.mentality }, t).score).toBe(100);
   });
 
+  it('signale deux meneurs de jeu au même rôle et le réglage les sépare', () => {
+    const b = newBuiltTactic(engine, '4-2-3-1', 'a');
+    const mc = b.slots.map((s, i) => (s.pos === 'MDF' || s.pos === 'MOC' ? i : -1)).filter((i) => i >= 0);
+    const twin = { ...b, slots: b.slots.map((s, i) => (i === mc[0] ? { ...s, ip: 'DLP' } : i === mc[1] ? { ...s, ip: 'DLP' } : s)) };
+    expect(analyseBuiltTactic(engine, twin).findings.some((f) => f.id === 'samePlaymakers')).toBe(true);
+    const out = optimiseTactic(engine, twin, squad());
+    expect(analyseBuiltTactic(engine, out.tactic).findings.some((f) => f.id === 'samePlaymakers')).toBe(false);
+  });
+
   it('relit des réponses abîmées sans planter', () => {
     expect(parseTaste({ ball: 'nope' })).toEqual(EMPTY_TASTE);
     expect(parseTaste({ ball: 'keep', musts: ['ten'] }).musts).toEqual(['ten']);

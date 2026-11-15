@@ -58,6 +58,9 @@ export const IP_TRAITS: Record<string, IpTrait> = {
   DLF: { lane: 'centre', move: 'drop', box: true }, F9: { lane: 'centre', move: 'drop', create: true }, CHF: { lane: 'half', move: 'high', box: true },
 };
 
+/** Rôles de meneur de jeu : le ballon passe par eux. */
+export const PLAYMAKER_ROLES: ReadonlySet<string> = new Set(['DLP', 'MFPM', 'AP', 'WP', 'PMWB', 'B2BPM', 'FREE']);
+
 /** Traits des rôles sans ballon. */
 export const OOP_TRAITS: Record<string, Guard> = {
   GK: 'base', SK: 'press', LHK: 'cover',
@@ -454,6 +457,12 @@ export function analyseBuiltTactic(engine: TacticEngine, t: BuiltTactic, players
   else if (create.length === 1) add('oneCreator', 'attack', 'warn', {}, create);
   else if (create.length > 4) add('tooManyCreators', 'attack', 'warn', { count: create.length }, create);
   else add('creators', 'attack', 'good', { count: create.length }, create);
+  // Meneurs de jeu : deux au même rôle demandent le ballon au même endroit ; trois dans l'axe, plus personne ne court.
+  const makers = outfield.filter((i) => PLAYMAKER_ROLES.has(S[i]!.ip));
+  const twins = makers.filter((i) => makers.some((j) => j !== i && S[j]!.ip === S[i]!.ip && (sideOf(S[i]!.pos) === null) === (sideOf(S[j]!.pos) === null)));
+  const axisMakers = makers.filter((i) => sideOf(S[i]!.pos) === null);
+  if (twins.length) add('samePlaymakers', 'attack', 'warn', { count: twins.length }, twins);
+  else if (axisMakers.length >= 3) add('playmakersCrowd', 'attack', 'warn', { count: axisMakers.length }, axisMakers);
   const pushers = outfield.filter((i) => ipT(i)?.move === 'push' || ipT(i)?.move === 'high');
   if (pushers.length >= 8) add('allForward', 'attack', 'warn', { count: pushers.length }, pushers);
 

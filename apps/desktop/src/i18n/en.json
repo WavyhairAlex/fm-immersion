@@ -3602,7 +3602,9 @@
         "piHeavy_one": "{{count}} player with more than 3 player instructions: slow to learn.",
         "piHeavy_other": "{{count}} players with more than 3 player instructions: slow to learn.",
         "piStale_one": "{{count}} player keeps instructions their new role no longer allows.",
-        "piStale_other": "{{count}} players keep instructions their new role no longer allows."
+        "piStale_other": "{{count}} players keep instructions their new role no longer allows.",
+        "samePlaymakers": "Two playmakers in the same role: they ask for the ball in the same spot. Keep one and give the other a running or supporting role.",
+        "playmakersCrowd": "{{count}} playmakers through the middle: everyone asks for the ball and nobody makes the runs."
       },
       "dragHint": "Drag to change position",
       "dragHelp": {

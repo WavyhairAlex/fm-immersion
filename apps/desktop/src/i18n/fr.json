@@ -3602,7 +3602,9 @@
         "piHeavy_one": "{{count}} joueur avec plus de 3 consignes individuelles : longues à assimiler.",
         "piHeavy_other": "{{count}} joueurs avec plus de 3 consignes individuelles : longues à assimiler.",
         "piStale_one": "{{count}} joueur garde des consignes que son nouveau rôle ne permet plus.",
-        "piStale_other": "{{count}} joueurs gardent des consignes que leur nouveau rôle ne permet plus."
+        "piStale_other": "{{count}} joueurs gardent des consignes que leur nouveau rôle ne permet plus.",
+        "samePlaymakers": "Deux meneurs de jeu au même rôle : ils demandent le ballon au même endroit. Garde-en un et donne à l'autre un rôle qui court ou qui soutient.",
+        "playmakersCrowd": "{{count}} meneurs de jeu dans l'axe : tout le monde demande le ballon et personne ne fait les courses."
       },
       "dragHint": "Glisse pour changer de poste",
       "dragHelp": {
