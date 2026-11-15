@@ -366,6 +366,16 @@ function pinsOf(spells: CareerSpell[], spread: number) {
   });
 }
 
+/** Bilan d'un club sur toute la carrière (plusieurs passages possibles) : saisons, victoires officielles, titres. */
+function clubStats(spells: CareerSpell[], club: string) {
+  const mine = spells.filter((s) => s.club === club);
+  return {
+    seasons: new Set(mine.flatMap((s) => s.seasons.map((x) => x.label))).size,
+    wins: mine.reduce((a, s) => a + s.total.wins, 0),
+    titles: mine.reduce((a, s) => a + s.trophies.length, 0),
+  };
+}
+
 /** Carte du monde (dessinée sur place, rien de chargé d'Internet) : pays entraînés en orange, clubs numérotés dans l'ordre. */
 function WorldMap({ spells }: { spells: CareerSpell[] }) {
   const { t, i18n } = useTranslation();
@@ -394,6 +404,15 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
   const route = pins.filter((p): p is { x: number; y: number } => !!p);
   const missing = spells.filter((s) => !s.country || !MAP_PINS[s.country]);
   const r = 11 * k;
+  const statsLine = (club: string) => {
+    const st = clubStats(spells, club);
+    return [
+      t('careerPage.mapSeasons', { count: st.seasons }),
+      t('careerPage.mapWins', { count: st.wins }),
+      t('careerPage.mapTitles', { count: st.titles }),
+    ].join(' · ');
+  };
+  const clubs = spells.filter((s, i) => !spells.slice(i + 1).some((x) => x.club === s.club));
 
   return (
     <div className="card overflow-hidden">
@@ -443,7 +462,7 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
           if (!p || spells.slice(i + 1).some((x) => x.club === s.club)) return null;
           return (
             <g key={i}>
-              <title>{`${i + 1}. ${s.club}`}</title>
+              <title>{`${i + 1}. ${s.club} : ${statsLine(s.club)}`}</title>
               <circle cx={p.x} cy={p.y} r={r} fill={s.current ? '#8F5400' : '#0F1B2D'} stroke="#FFFFFF" strokeWidth={2} vectorEffect="non-scaling-stroke" />
               <text x={p.x} y={p.y} dy="0.35em" textAnchor="middle" fontSize={r * 1.15} fontWeight={800} fill="#FFFFFF">
                 {i + 1}
@@ -462,10 +481,43 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
               >
                 {s.club}
               </text>
+              <text
+                x={p.x + r * 1.5}
+                y={p.y + r * 1.45}
+                dy="0.35em"
+                fontSize={r * 0.95}
+                fontWeight={700}
+                fill="#56607A"
+                stroke="#FFFFFF"
+                strokeWidth={3}
+                paintOrder="stroke"
+                vectorEffect="non-scaling-stroke"
+              >
+                {statsLine(s.club)}
+              </text>
             </g>
           );
         })}
       </svg>
+      <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+        {clubs.map((s) => {
+          const st = clubStats(spells, s.club);
+          const n = spells.lastIndexOf(s) + 1;
+          return (
+            <li key={s.club} className="flex items-center gap-3 rounded-xl px-3 py-2 ring-1 ring-brun/30">
+              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-extrabold text-white ${s.current ? 'bg-orange-fonce' : 'bg-canard'}`}>{n}</span>
+              <div className="min-w-0">
+                <p className="truncate font-bold">{s.club}</p>
+                <p className="text-xs text-brun">
+                  {t('careerPage.mapSeasons', { count: st.seasons })} · {t('careerPage.mapWins', { count: st.wins })} ·{' '}
+                  <span className={st.titles ? 'font-bold text-orange-fonce' : ''}>{t('careerPage.mapTitles', { count: st.titles })}</span>
+                </p>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="mt-2 text-xs text-brun">{t('careerPage.mapStatsNote')}</p>
       {!!missing.length && <p className="mt-2 text-xs text-brun">{t('careerPage.mapMissing', { clubs: missing.map((s) => s.club).join(', ') })}</p>}
     </div>
   );

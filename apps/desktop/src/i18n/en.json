@@ -5907,6 +5907,13 @@
     "mapZoom": "My countries",
     "mapWorld": "Whole world",
     "mapLabel": "World map of the clubs managed: {{clubs}}",
+    "mapSeasons_one": "{{count}} season",
+    "mapSeasons_other": "{{count}} seasons",
+    "mapWins_one": "{{count}} win",
+    "mapWins_other": "{{count}} wins",
+    "mapTitles_one": "{{count}} trophy",
+    "mapTitles_other": "{{count}} trophies",
+    "mapStatsNote": "Wins in competitive matches, friendlies left out.",
     "mapMissing": "Not on the map yet (unknown country): {{clubs}}. Pick their country below.",
     "source": "Each club's country is guessed from its squad's nationalities or the league name; click it to correct it. The reason for leaving is guessed from job security at the last read.",
     "nations": {

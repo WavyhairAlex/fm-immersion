@@ -5907,6 +5907,13 @@
     "mapZoom": "Mes pays",
     "mapWorld": "Monde entier",
     "mapLabel": "Carte du monde des clubs entraînés : {{clubs}}",
+    "mapSeasons_one": "{{count}} saison",
+    "mapSeasons_other": "{{count}} saisons",
+    "mapWins_one": "{{count}} victoire",
+    "mapWins_other": "{{count}} victoires",
+    "mapTitles_one": "{{count}} titre",
+    "mapTitles_other": "{{count}} titres",
+    "mapStatsNote": "Victoires en matchs officiels, sans les amicaux.",
     "mapMissing": "Pas encore placés sur la carte (pays inconnu) : {{clubs}}. Choisis leur pays plus bas.",
     "source": "Le pays de chaque club est deviné d'après la nationalité de son effectif ou le nom du championnat ; clique dessus pour le corriger. Le motif d'un départ est deviné d'après la sécurité de l'emploi au dernier relevé.",
     "nations": {
