@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.220",
+    "date": "2026-11-15",
+    "fr": [
+      "Dans « Mercato et club », le Repérage classe maintenant les joueurs par « Poste et méta » : à la fois leur adaptation à ta tactique et leur note méta au poste où ils iraient. La note méta s'affiche aussi à côté de chaque joueur trouvé."
+    ],
+    "en": [
+      "In \"Transfers & club\", Scouting now ranks players by \"Fit and meta\": both how well they fit your tactic and their meta rating at the position they'd play. The meta rating is also shown next to each player found."
+    ]
+  },
+  {
     "version": "0.1.219",
     "date": "2026-11-15",
     "fr": [

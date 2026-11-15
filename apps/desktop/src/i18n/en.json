@@ -3692,7 +3692,7 @@
       "positions": "Positions (none = all)",
       "run": "Start scouting",
       "rerun": "Run again",
-      "help": "The figures come from the game's real values (CA, PA, age, value, wage, contract), not from scout opinions. Growth: CA rises every season, fast before 21 then less and less, never above PA, and less if he doesn't play for you (backup: 70%, to loan out: 60%). Sale: the value of a player of that level and age on the market read, a bit more for a youngster on a long contract. Buy: his value, more with a long contract, less near the end of it, free if he has no club. Profit: sale − buy − wages. These are FM Immersion estimates to know where to look: real negotiations and growth are the game's.",
+      "help": "The figures come from the game's real values (CA, PA, age, value, wage, contract), not from scout opinions. Growth: CA rises every season, fast before 21 then less and less, never above PA, and less if he doesn't play for you (backup: 70%, to loan out: 60%). Sale: the value of a player of that level and age on the market read, a bit more for a youngster on a long contract. Buy: his value, more with a long contract, less near the end of it, free if he has no club. Profit: sale − buy − wages. These are FM Immersion estimates to know where to look: real negotiations and growth are the game's. \"Fit and meta\" ranking: the average of his fit with your tactic (his rating in the roles of the position he'd play, out of 20) and his meta rating at that position (what his attributes are worth in the match engine, out of 20).",
       "kpi": {
         "ideas": "Good deals",
         "read": "out of {{count}} players read",
@@ -3709,6 +3709,7 @@
       },
       "list": "The good deals",
       "sort": {
+        "fitMeta": "Fit and meta",
         "perYear": "Profit per season",
         "profit": "Total profit",
         "roi": "Return"

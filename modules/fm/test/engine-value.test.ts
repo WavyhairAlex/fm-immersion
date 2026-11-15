@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { attributeEffect, ENGINE_GAINS, engineGroups, engineTier, engineValue, positionWeights } from '../src';
+import { attributeEffect, ENGINE_GAINS, engineGroups, engineTier, fitMetaScore, engineValue, positionWeights } from '../src';
 
 const all = (v: number, over: Record<string, number> = {}) => ({ positions: ['MC' as const], attributes: { ...Object.fromEntries(Object.keys(ENGINE_GAINS).map((k) => [k, v])), ...over } });
 
@@ -71,5 +71,12 @@ describe('indice moteur (tests d’attributs FM27)', () => {
     // Bornée entre 1 et 20.
     expect(engineValue(all(20, { Pace: 20 }))!.meta).toBeLessThanOrEqual(20);
     expect(engineValue(all(1))!.meta).toBeGreaterThanOrEqual(1);
+  });
+
+  it('classe « poste et méta » par la moyenne des deux notes', () => {
+    expect(fitMetaScore(14, 12)).toBe(13);
+    expect(fitMetaScore(null, 12)).toBe(12);
+    expect(fitMetaScore(11, undefined)).toBe(11);
+    expect(fitMetaScore(null, null)).toBeNull();
   });
 });

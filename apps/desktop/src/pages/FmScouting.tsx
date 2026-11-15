@@ -30,6 +30,8 @@ import {
   type ReachLevel,
   type TradeIdea,
   type TradeKind,
+  engineValue,
+  fitMetaScore,
 } from '@fm-immersion/module-fm';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
@@ -38,7 +40,7 @@ import { useTranslation } from 'react-i18next';
 import { fmData } from '../lib/data';
 import { PosBadge } from './FmFoot';
 import { useTacticEngine } from './FmTactic';
-import { Chips, Empty, Fit, Kpi, More, Panel, PlayerLink, SectionTabs, Tag, useCoach, useFormat, type Tone, COUNTRY_LIST_ID, CountryList } from './FmUi';
+import { Chips, EngineTag, Empty, Fit, Kpi, More, Panel, PlayerLink, SectionTabs, Tag, useCoach, useFormat, type Tone, COUNTRY_LIST_ID, CountryList } from './FmUi';
 
 /** Ce que l'on cherche : chaque repère lit une tranche différente de la base (la lecture garde 300 joueurs, meilleur CA d'abord). */
 type Preset = 'all' | TradeKind;
@@ -51,7 +53,8 @@ const PRESET_FILTER: Record<Preset, { maxAge?: number; freeOnly?: boolean }> = {
   free: { maxAge: 27, freeOnly: true },
   profile: { maxAge: 29 },
 };
-type Sort = 'perYear' | 'profit' | 'roi';
+type Sort = 'fitMeta' | 'perYear' | 'profit' | 'roi';
+const SORTS: Sort[] = ['fitMeta', 'perYear', 'profit', 'roi'];
 
 /** Filtres du joueur, en plus du repère : vides = ceux du repère. */
 type Filters = { minAge: string; maxAge: string; nation: string; division: string; minCa: string; maxCa: string; minPa: string; listed: boolean };
@@ -90,7 +93,7 @@ export function FmScouting({ saveId, snap, players, folder, gameDate, history }:
   const fin = useMemo(() => (snap ? clubFinances(snap, players) : null), [snap, players]);
   const [preset, setPreset] = useState<Preset>('all');
   const [positions, setPositions] = useState<PosCode[]>([]);
-  const [sort, setSort] = useState<Sort>('perYear');
+  const [sort, setSort] = useState<Sort>('fitMeta');
   const [shown, setShown] = useState(25);
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   // Progression mesurée dans la partie (CA lu à chaque date de jeu), mêlée aux repères génériques.
@@ -128,9 +131,13 @@ export function FmScouting({ saveId, snap, players, folder, gameDate, history }:
     const play = new Map<string, PlayRole>([...fit].map(([id, b]) => [id, b?.verdict ?? 'none']));
     const edge = profileEdge(d.found.map((p) => ({ id: String(p.id), ca: p.ca, fit: fit.get(String(p.id))?.fit })));
     const ideas = tradeIdeas(d.found, d.club, gameDate, { play, growth: curve.growth, edge }).filter((x) => d.preset === 'all' || x.kinds.includes(d.preset));
-    const key = (x: TradeIdea) => (sort === 'profit' ? x.profit : sort === 'roi' ? (x.buy === 0 ? Infinity : (x.roi ?? 0)) : x.profit / x.years);
-    ideas.sort((a, b) => key(b) - key(a));
-    return { ideas, fit, edge, read: d.found.length, model: valueModel(d.found) };
+    // Note méta de chaque joueur au poste où il irait dans ta tactique (sinon à ses postes).
+    const meta = new Map(targets.map((t) => [t.id.replace(/^t/, ''), engineValue(t, fit.get(t.id.replace(/^t/, ''))?.slot.pos)]));
+    const fitMeta = (x: TradeIdea) => fitMetaScore(fit.get(String(x.player.id))?.fit, meta.get(String(x.player.id))?.meta) ?? -Infinity;
+    const key = (x: TradeIdea) =>
+      sort === 'fitMeta' ? fitMeta(x) : sort === 'profit' ? x.profit : sort === 'roi' ? (x.buy === 0 ? Infinity : (x.roi ?? 0)) : x.profit / x.years;
+    ideas.sort((a, b) => key(b) - key(a) || b.profit - a.profit);
+    return { ideas, fit, meta, edge, read: d.found.length, model: valueModel(d.found) };
   }, [search.data, engine, pr, own, gameDate, sort, curve]);
 
   const setF = <K extends keyof Filters>(k: K, v: Filters[K]) => setFilters((x) => ({ ...x, [k]: v }));
@@ -218,7 +225,7 @@ export function FmScouting({ saveId, snap, players, folder, gameDate, history }:
 
           <Panel
             title={t('fm.scout.list')}
-            action={<Chips value={sort} options={(['perYear', 'profit', 'roi'] as Sort[]).map((s) => [s, t(`fm.scout.sort.${s}`)])} onChange={setSort} />}
+            action={<Chips value={sort} options={SORTS.map((s) => [s, t(`fm.scout.sort.${s}`)])} onChange={setSort} />}
           >
             {result.ideas.length === 0 ? (
               <Empty>{t('fm.scout.none')}</Empty>
@@ -258,6 +265,7 @@ export function FmScouting({ saveId, snap, players, folder, gameDate, history }:
                             <div className="flex items-center gap-1.5">
                               {b && <PosBadge pos={b.slot.pos} />}
                               <Fit value={b?.fit} />
+                              <EngineTag v={result.meta.get(String(p.id))} />
                             </div>
                             <div className="mt-0.5">
                               <Tag tone={ROLE_TONE[x.role ?? 'none']}>{t(`fm.scout.role.${x.role ?? 'none'}`)}</Tag>
