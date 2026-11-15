@@ -276,7 +276,7 @@ export function piStale(engine: TacticEngine, t: BuiltTactic, i: number): string
 
 export const PI_HOLD = 'ForwardRuns:Effectuez moins de courses';
 const PI_RUN_BEHIND = 'AttackBoxDepth:Attaquer la ligne défensive';
-const PI_PRESS_MORE = 'TriggerPress:Plus souvent';
+export const PI_PRESS_MORE = 'TriggerPress:Plus souvent';
 const PI_PRESS_LESS = 'TriggerPress:Moins souvent';
 
 export type Area = 'roles' | 'lanes' | 'centre' | 'rest' | 'attack' | 'transition' | 'press' | 'coherence' | 'squad';

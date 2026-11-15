@@ -481,6 +481,47 @@ export interface Proposal extends ScoredTactic {
   diff: TacticDiff | null;
 }
 
+export interface RoleChange {
+  /** Créneau de la tactique proposée. */
+  slot: number;
+  pos: BuiltTactic['slots'][number]['pos'];
+  phase: 'ip' | 'oop';
+  from: string;
+  to: string;
+}
+export interface InstructionChange {
+  def: (typeof TEAM_INSTRUCTIONS_FM27)[number];
+  from: number;
+  to: number;
+}
+/** Liste des gestes à faire dans le jeu pour passer de la tactique `b` (celle du jeu) à la tactique `a`. */
+export interface TacticChanges {
+  sameShape: boolean;
+  mentality: { from: string; to: string } | null;
+  /** Rôles à changer, poste par poste ; vide quand le schéma change (tout est à replacer). */
+  roles: RoleChange[];
+  instructions: InstructionChange[];
+}
+
+/** Détail de l'écart entre deux tactiques, dans l'ordre de l'écran du jeu : mentalité, rôles, consignes d'équipe. */
+export function tacticChanges(a: BuiltTactic, b: BuiltTactic): TacticChanges {
+  const key = (t: BuiltTactic) => t.slots.map((s) => s.pos).sort().join(' ');
+  const sameShape = key(a) === key(b);
+  const roles: RoleChange[] = [];
+  if (sameShape) {
+    const rest = b.slots.map((s) => ({ ...s }));
+    a.slots.forEach((s, slot) => {
+      const same = rest.findIndex((x) => x.pos === s.pos && x.ip === s.ip && x.oop === s.oop);
+      const j = same >= 0 ? same : rest.findIndex((x) => x.pos === s.pos);
+      const o = rest.splice(j, 1)[0]!;
+      if (o.ip !== s.ip) roles.push({ slot, pos: s.pos, phase: 'ip', from: o.ip, to: s.ip });
+      if (o.oop !== s.oop) roles.push({ slot, pos: s.pos, phase: 'oop', from: o.oop, to: s.oop });
+    });
+  }
+  const instructions = TEAM_INSTRUCTIONS_FM27.filter((d) => opt(a.ti, d.id) !== opt(b.ti, d.id)).map((def) => ({ def, from: opt(b.ti, def.id), to: opt(a.ti, def.id) }));
+  return { sameShape, mentality: a.mentality !== b.mentality ? { from: b.mentality, to: a.mentality } : null, roles, instructions };
+}
+
 /** Écart entre deux tactiques : schéma, rôles à postes égaux, consignes et mentalité. */
 export function tacticDiff(a: BuiltTactic, b: BuiltTactic): TacticDiff {
   const key = (t: BuiltTactic) => t.slots.map((s) => s.pos).sort().join(' ');

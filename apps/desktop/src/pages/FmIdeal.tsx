@@ -7,6 +7,7 @@ import {
   piLabel,
   POS_LABEL,
   proposeTactics,
+  tacticChanges,
   tacticSlots,
   TASTE_MUSTS,
   tasteAnswered,
@@ -201,6 +202,10 @@ export function FmIdeal({ snap, players, folder, go }: { snap?: FmSnapshot; play
     go('tactic');
   };
   const labels = shown ? builtInstructionLabels(shown.tactic) : { ip: [], oop: [] };
+  // Liste des gestes à faire dans FM27 pour passer de la tactique du jeu à la proposition ouverte.
+  const changes = shown && game ? tacticChanges(shown.tactic, game) : null;
+  const piCount = shown ? shown.tactic.slots.reduce((n, x) => n + (x.pi ?? []).length, 0) : 0;
+  const changeCount = changes ? (changes.sameShape ? 0 : 1) + (changes.mentality ? 1 : 0) + changes.roles.length + changes.instructions.length + (piCount ? 1 : 0) : 0;
   const summary = [taste.ball && t(`fm.ideal.sum.ball.${taste.ball}`), taste.attack && t(`fm.ideal.sum.attack.${taste.attack}`), taste.defend && t(`fm.ideal.sum.defend.${taste.defend}`)].filter(Boolean).join(', ');
 
   return (
@@ -279,6 +284,34 @@ export function FmIdeal({ snap, players, folder, go }: { snap?: FmSnapshot; play
           }
         >
           <p className="mb-3 text-sm text-brun">{t('fm.ideal.adoptHelp')}</p>
+          {changes && game && (
+            <div className="mb-4 rounded-xl border border-canard/15 bg-canard/5 p-3 text-sm">
+              <p className="font-bold">{t('fm.ideal.changes.title', { count: changeCount })}</p>
+              <p className="mb-2 text-brun">{t('fm.ideal.changes.intro', { name: game.name })}</p>
+              {changeCount === 0 ? (
+                <p>{t('fm.ideal.changes.none')}</p>
+              ) : (
+                <ol className="list-decimal space-y-0.5 pl-5">
+                  {!changes.sameShape && <li>{t('fm.ideal.changes.newShape', { form: shown.form })}</li>}
+                  {changes.mentality && <li>{t('fm.ideal.changes.mentality', changes.mentality)}</li>}
+                  {changes.roles.map((c) => (
+                    <li key={`${c.slot}${c.phase}`}>
+                      {t(`fm.ideal.changes.role.${c.phase}`, {
+                        pos: POS_LABEL[c.pos],
+                        player: shown.plan.slots[c.slot]?.player?.name ?? t('fm.ideal.nobody'),
+                        from: names.role(engine.roles.get(c.from)),
+                        to: names.role(engine.roles.get(c.to)),
+                      })}
+                    </li>
+                  ))}
+                  {changes.instructions.map((c) => (
+                    <li key={c.def.id}>{t('fm.ideal.changes.instruction', { title: c.def.title, from: c.def.short[c.from] ?? '', to: c.def.short[c.to] ?? '' })}</li>
+                  ))}
+                  {piCount > 0 && <li>{t('fm.ideal.changes.pi', { count: piCount })}</li>}
+                </ol>
+              )}
+            </div>
+          )}
           <p className="mb-3 text-sm">
             {t('fm.builder.mentality')} : <b>{shown.tactic.mentality}</b>
           </p>

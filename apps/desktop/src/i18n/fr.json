@@ -4141,7 +4141,20 @@
       "adopt": "Adopter cette tactique",
       "adoptHelp": "« Adopter » en fait ta tactique dans l'écran Tactique : le onze, les conseils et le reste de l'appli la suivent. Tu la retrouves dans « Mes tactiques » et tu peux revenir à ta tactique du jeu à tout moment.",
       "computing": "Calcul et réglage des propositions…",
-      "pi": "Consigne : {{group}}, {{option}}"
+      "pi": "Consigne : {{group}}, {{option}}",
+      "changes": {
+        "title": "À changer dans FM27 : {{count}} geste(s)",
+        "intro": "Par rapport à ta tactique du jeu « {{name}} ». Rien n'est écrit dans FM27, c'est toi qui recopies.",
+        "none": "Rien à changer, c'est déjà ta tactique.",
+        "newShape": "Nouveau schéma {{form}} : replace tes joueurs et leurs rôles comme dans le tableau.",
+        "mentality": "Mentalité : {{from}} devient {{to}}.",
+        "role": {
+          "ip": "{{pos}} ({{player}}), avec ballon : {{from}} devient {{to}}.",
+          "oop": "{{pos}} ({{player}}), sans ballon : {{from}} devient {{to}}."
+        },
+        "instruction": "{{title}} : {{from}} devient {{to}}.",
+        "pi": "{{count}} consigne(s) individuelle(s) à donner, notées sous chaque rôle du tableau."
+      }
     }
   },
   "modes": {

@@ -4141,7 +4141,20 @@
       "adopt": "Adopt this tactic",
       "adoptHelp": "\"Adopt\" makes it your tactic in the Tactics screen: the eleven, the advice and the rest of the app follow it. You will find it under \"My tactics\" and can go back to your in-game tactic at any time.",
       "computing": "Computing and tuning the proposals…",
-      "pi": "Instruction: {{group}}, {{option}}"
+      "pi": "Instruction: {{group}}, {{option}}",
+      "changes": {
+        "title": "To change in FM27: {{count}} step(s)",
+        "intro": "Compared with your in-game tactic \"{{name}}\". Nothing is written into FM27, you copy it yourself.",
+        "none": "Nothing to change, this is already your tactic.",
+        "newShape": "New shape {{form}}: place your players and their roles as in the table.",
+        "mentality": "Mentality: {{from}} becomes {{to}}.",
+        "role": {
+          "ip": "{{pos}} ({{player}}), in possession: {{from}} becomes {{to}}.",
+          "oop": "{{pos}} ({{player}}), out of possession: {{from}} becomes {{to}}."
+        },
+        "instruction": "{{title}}: {{from}} becomes {{to}}.",
+        "pi": "{{count}} individual instruction(s) to give, listed under each role in the table."
+      }
     }
   },
   "modes": {
