@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.212",
+    "date": "2026-11-15",
+    "fr": [
+      "La carte de « Ma carrière » montre maintenant, pour chaque club entraîné, ton nombre de saisons, de victoires (sans les matchs amicaux) et de titres."
+    ],
+    "en": [
+      "The map in \"My career\" now shows, for each club you managed, your number of seasons, wins (friendlies left out) and trophies."
+    ]
+  },
+  {
     "version": "0.1.211",
     "date": "2026-11-15",
     "fr": [
