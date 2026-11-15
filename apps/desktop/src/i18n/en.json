@@ -406,7 +406,18 @@
           "morale": "{{pos}}: {{better}} ({{betterFit}}) rates higher than {{starter}} ({{starterFit}}), but his morale is low ({{morale}}). A chat or playing time can lift him.",
           "risk": "{{pos}}: {{better}} ({{betterFit}}) rates higher than {{starter}} ({{starterFit}}), but the game gives him a high injury risk. He takes his place back once rested."
         },
-        "titleBench": "Backups and players to bring back"
+        "titleBench": "Backups and players to bring back",
+        "engine": "Stronger in the match engine",
+        "engineSwap": "{{pos}}: the game rates {{better}} ({{betterFit}}) almost like {{starter}} ({{starterFit}}), but he weighs much more in the match engine at this position (index {{betterIndex}} vs {{starterIndex}}; {{list}}).",
+        "engineNote": "From community attribute tests (Harvestgreen22, Purity): a trend, not the game's rating. Try it over a few matches, xG in hand.",
+        "physical": "Physical needs by position",
+        "physicalNote": "In the FM27 engine, jumping reach matters above 12 for a centre-back, stamina makes full-backs and wing-backs, pace and acceleration make strikers (community attribute tests).",
+        "need": {
+          "aerialCB": "Centre-backs without jumping reach: {{players}}. Above 12, it's a centre-back's number-one asset in the engine.",
+          "wideStamina": "{{pos}}: {{players}}. It's the position that runs the most: below 12 stamina, it costs matches.",
+          "slowStriker": "{{pos}}: {{players}}. For a striker, pace and acceleration weigh the most."
+        },
+        "needAlt": "On the bench: {{name}} ({{value}})."
       },
       "tiAdvice": {
         "title": "Adapted to your eleven",

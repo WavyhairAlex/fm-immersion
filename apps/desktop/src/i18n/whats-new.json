@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.217",
+    "date": "2026-11-15",
+    "fr": [
+      "Dans « Mon onze », ton adjoint signale un remplaçant que le jeu note presque comme le titulaire mais qui pèse bien plus dans le moteur de match à ce poste.",
+      "Il te prévient aussi quand un poste manque du physique qui compte : défense centrale sans détente, latéral peu endurant, attaquant lent, avec la solution sur le banc s'il y en a une."
+    ],
+    "en": [
+      "In \"My XI\", your assistant points out a substitute the game rates almost like the starter but who weighs much more in the match engine at that position.",
+      "He also warns you when a position lacks the physical attributes that matter: centre-backs without jumping reach, a full-back short on stamina, a slow striker, with the option on the bench if there is one."
+    ]
+  },
+  {
     "version": "0.1.216",
     "date": "2026-11-15",
     "fr": [
