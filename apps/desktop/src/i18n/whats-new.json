@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.215",
+    "date": "2026-11-15",
+    "fr": [
+      "L'indice moteur tient maintenant compte du poste : la détente pèse plus pour un défenseur central ou un attaquant, l'endurance pour un latéral, la finition pour un attaquant. Le poste pris en compte est indiqué sur la fiche du joueur."
+    ],
+    "en": [
+      "The engine index now takes the position into account: jumping reach weighs more for a centre-back or a striker, stamina for a full-back, finishing for a striker. The position used is shown on the player's sheet."
+    ]
+  },
+  {
     "version": "0.1.214",
     "date": "2026-11-15",
     "fr": [

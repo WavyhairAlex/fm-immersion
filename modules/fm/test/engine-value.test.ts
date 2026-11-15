@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { attributeEffect, ENGINE_GAINS, engineTier, engineValue } from '../src';
+import { attributeEffect, ENGINE_GAINS, engineGroups, engineTier, engineValue, positionWeights } from '../src';
 
-const all = (v: number, over: Record<string, number> = {}) => ({ positions: ['DC' as const], attributes: { ...Object.fromEntries(Object.keys(ENGINE_GAINS).map((k) => [k, v])), ...over } });
+const all = (v: number, over: Record<string, number> = {}) => ({ positions: ['MC' as const], attributes: { ...Object.fromEntries(Object.keys(ENGINE_GAINS).map((k) => [k, v])), ...over } });
 
 describe('indice moteur (tests d’attributs FM27)', () => {
   it('reprend les paliers du tableau et interpole entre eux', () => {
@@ -30,5 +30,32 @@ describe('indice moteur (tests d’attributs FM27)', () => {
   it('rien pour un gardien ni sans attributs lus', () => {
     expect(engineValue({ positions: ['GB'], attributes: all(12).attributes })).toBeNull();
     expect(engineValue({ positions: ['DC'], attributes: { Pace: 15 } })).toBeNull();
+  });
+
+  it('pèse les attributs selon le poste (mesures de Purity), sans changer l’échelle', () => {
+    // Milieu central : pas de mesure propre, poids de toute l'équipe.
+    expect(Object.values(positionWeights(['MC'])).every((w) => w === 1)).toBe(true);
+    // La détente compte surtout en défense centrale et en attaque, peu sur les côtés.
+    expect(positionWeights(['DC']).JumpingReach).toBeGreaterThan(1.5);
+    expect(positionWeights(['BT']).JumpingReach).toBeGreaterThan(1.2);
+    expect(positionWeights(['DLG']).JumpingReach).toBeLessThan(0.6);
+    // L'endurance compte surtout pour un latéral ou un piston, la finition pour un attaquant.
+    expect(positionWeights(['DD']).Stamina).toBeGreaterThan(1.3);
+    expect(positionWeights(['BT']).Finishing).toBeGreaterThan(1.4);
+    // Poids moyen de 1 par poste et bornés.
+    for (const pos of ['BT', 'MOC', 'DLG', 'DC', 'MDF'] as const) {
+      const w = Object.values(positionWeights([pos]));
+      expect(w.every((x) => x >= 0.25 && x <= 2)).toBe(true);
+    }
+    // Les autres attributs ne changent pas.
+    expect(positionWeights(['DC']).Passing).toBeUndefined();
+    const jumper = (pos: 'DC' | 'DLG') => engineValue({ positions: [pos], attributes: all(12, { JumpingReach: 18 }).attributes })!.index;
+    expect(jumper('DC')).toBeGreaterThan(jumper('DLG'));
+    // Plusieurs postes : moyenne des familles ; le poste visé l'emporte sur les postes du joueur.
+    expect(engineGroups(['DC', 'MDF', 'MC'])).toEqual(['CB', 'DM', 'team']);
+    expect(positionWeights(['DC', 'DLG']).JumpingReach).toBeCloseTo((positionWeights(['DC']).JumpingReach! + positionWeights(['DLG']).JumpingReach!) / 2);
+    const p = { positions: ['DLG' as const], attributes: all(12, { JumpingReach: 18 }).attributes };
+    expect(engineValue(p, 'DC')!.index).toBe(jumper('DC'));
+    expect(engineValue(p, 'DC')!.groups).toEqual(['CB']);
   });
 });

@@ -3618,9 +3618,17 @@
       "weaknesses": "Coûte des matchs : {{list}}",
       "belowMin": "Sous le minimum de 6 : {{list}}",
       "heading": "Indice moteur",
-      "help": "Ce que ses attributs pèsent vraiment dans le moteur de match de FM27, d'après les tests de la communauté FM-Arena (novembre 2026) : vitesse, accélération et endurance comptent le plus, la détente au-dessus de 12, et il faut au moins 6 en volume de jeu, anticipation, puissance, équilibre, concentration et condition physique. Une tendance tirée d'une seule série de tests, pas la note du jeu : les étoiles restent celles de FM27.",
+      "help": "Ce que ses attributs pèsent vraiment dans le moteur de match de FM27, d'après les tests de la communauté FM-Arena (novembre 2026) : vitesse, accélération et endurance comptent le plus, la détente au-dessus de 12, et il faut au moins 6 en volume de jeu, anticipation, puissance, équilibre, concentration et condition physique. Une tendance tirée d'une seule série de tests, pas la note du jeu : les étoiles restent celles de FM27. Le poids de chaque attribut dépend aussi du poste, d'après les tests de Purity : la détente compte surtout pour un défenseur central ou un attaquant, l'endurance pour un latéral, la finition pour un attaquant. Les milieux centraux et excentrés gardent les poids de toute l'équipe.",
       "none": "Rien de marquant.",
-      "gk": "Les gardiens ne sont pas couverts par ces tests."
+      "gk": "Les gardiens ne sont pas couverts par ces tests.",
+      "weighted": "Poids du poste : {{list}} (mesures de Purity, faites avec une seule tactique en 3-4-3).",
+      "group": {
+        "ST": "attaquant",
+        "AM": "milieu offensif ou ailier",
+        "WB": "latéral ou piston",
+        "CB": "défenseur central",
+        "DM": "milieu défensif"
+      }
     },
     "takers": {
       "title": "Tireurs et capitaine",

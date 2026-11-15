@@ -33,7 +33,7 @@ import { LeaveButton, useLeaving } from './FmLeaving';
 import { TONE, useReason } from './FmMercato';
 import { Spark } from './FmProgression';
 import { useTacticEngine } from './FmTactic';
-import { Chips, CompatTag, EngineTag, fitPct, Level, PlanGradeCard, signed, Tag, useCoach, useFormat, useNames, type SheetFocus } from './FmUi';
+import { Chips, CompatTag, EngineTag, engineWeighted, fitPct, Level, PlanGradeCard, signed, Tag, useCoach, useFormat, useNames, type SheetFocus } from './FmUi';
 
 const PCT = new Set<StatKey>(['passPct', 'tacklePct', 'headerPct', 'shotsOnTargetPct', 'savePct']);
 
@@ -485,6 +485,7 @@ export function FmPlayerSheet({
               </li>
             )}
             {!engineVal.strengths.length && !engineVal.weaknesses.length && !engineVal.belowMin.length && <li className="text-brun">{t('fm.engine.none')}</li>}
+            {engineWeighted(t, engineVal) && <li className="text-xs text-brun">{engineWeighted(t, engineVal)}</li>}
           </ul>
         )}
       </Section>

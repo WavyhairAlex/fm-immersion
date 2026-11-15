@@ -3618,9 +3618,17 @@
       "weaknesses": "Costs matches: {{list}}",
       "belowMin": "Below the minimum of 6: {{list}}",
       "heading": "Engine index",
-      "help": "What his attributes really weigh in the FM27 match engine, according to FM-Arena community tests (November 2026): pace, acceleration and stamina matter most, jumping reach above 12, and he needs at least 6 in work rate, anticipation, strength, balance, concentration and natural fitness. A trend from a single series of tests, not the game's rating: the stars remain FM27's.",
+      "help": "What his attributes really weigh in the FM27 match engine, according to FM-Arena community tests (November 2026): pace, acceleration and stamina matter most, jumping reach above 12, and he needs at least 6 in work rate, anticipation, strength, balance, concentration and natural fitness. A trend from a single series of tests, not the game's rating: the stars remain FM27's. Each attribute's weight also depends on the position, from Purity's tests: jumping reach matters most for a centre-back or a striker, stamina for a full-back, finishing for a striker. Central and wide midfielders keep the whole-team weights.",
       "none": "Nothing notable.",
-      "gk": "Goalkeepers are not covered by these tests."
+      "gk": "Goalkeepers are not covered by these tests.",
+      "weighted": "Position weights: {{list}} (Purity's measurements, made with a single 3-4-3 tactic).",
+      "group": {
+        "ST": "striker",
+        "AM": "attacking midfielder or winger",
+        "WB": "full-back or wing-back",
+        "CB": "centre-back",
+        "DM": "defensive midfielder"
+      }
     },
     "takers": {
       "title": "Set-piece takers and captain",
