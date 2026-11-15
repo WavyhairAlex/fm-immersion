@@ -30,7 +30,7 @@ interface Sub {
 function sectionOf(pathname: string): Section {
   if (pathname.startsWith('/club/')) return pageOf(pathname.slice('/club/'.length)) === 'results' ? 'competitions' : 'club';
   if (/^\/(gazette|presse|discord|photos)/.test(pathname)) return 'media';
-  if (/^\/(carriere|defis|monde)/.test(pathname)) return 'career';
+  if (/^\/(carriere|vie|defis|monde)/.test(pathname)) return 'career';
   if (/^\/(visages|sauvegardes|reglages|parties|nouveautes)/.test(pathname)) return 'game';
   return 'office';
 }
@@ -69,6 +69,7 @@ export function TopBar() {
     ],
     career: [
       { to: '/carriere', label: t('careerPage.title') },
+      { to: '/vie', label: t('myLife.title') },
       { to: '/defis', label: t('modes.challenges.title') },
       { to: '/monde', label: t('modes.world.title') },
     ],

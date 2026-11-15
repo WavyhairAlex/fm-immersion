@@ -23,6 +23,8 @@ export interface CoachLife {
   answers?: Record<string, { choice: string; date: string }>;
   /** Diplômes d'entraîneur payés de sa poche, avec la date de jeu du début de la formation. */
   badges?: { level: string; start: string }[];
+  /** Noms donnés par le joueur à ses proches (« Ma vie ») : adjoint, agent, président, journaliste. */
+  contacts?: Partial<Record<'assistant' | 'representative' | 'chairman' | 'journalist', string>>;
 }
 
 export const CURRENCIES = ['EUR', 'GBP', 'USD', 'CHF', 'SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'BRL'] as const;

@@ -6608,7 +6608,10 @@
         "partner": "{{name}}",
         "dealer": "Concessionnaire",
         "friend": "Un vieil ami",
-        "assistant": "Ton adjoint"
+        "assistant": "Ton adjoint",
+        "representative": "Ton agent",
+        "chairman": "Ton président",
+        "journalist": "La Gazette"
       }
     },
     "gauges": {
@@ -6758,6 +6761,142 @@
           "roadtrip": "Road trip après la saison {{season}}",
           "work": "Été passé à préparer la saison, après {{season}}"
         }
+      },
+      "promise": {
+        "text": "{{club}}… tu es sûr ? On ne connaît personne là-bas.",
+        "choice": {
+          "promise": "Le jour où je gagne un titre, je t'emmène en week-end. Promis.",
+          "honest": "Ce sera dur au début, je le sais.",
+          "career": "C'est ma chance, je ne peux pas dire non."
+        },
+        "done": {
+          "promise": "Promis à {{name}} : un week-end à deux le jour d'un titre",
+          "honest": "Franc avec {{name}} : le début à {{club}} sera dur",
+          "career": "« C'est ma chance » : {{club}} avant tout"
+        }
+      },
+      "objectives": {
+        "text": "Bienvenue à {{club}}. Le conseil veut un objectif clair pour la saison. Je leur dis quoi ?",
+        "choice": {
+          "title": "On joue le titre.",
+          "top3": "On finit sur le podium.",
+          "safe": "On construit, sans promesse."
+        },
+        "done": {
+          "title": "Promis au président de {{club}} : jouer le titre",
+          "top3": "Promis au président de {{club}} : le podium",
+          "safe": "Pas de promesse au président de {{club}}"
+        }
+      },
+      "promiseDue": {
+        "text": "Je t'ai vu soulever {{trophy}}. J'ai pleuré devant la télé. Tu te souviens de ta promesse ? Un week-end rien que nous deux. On part quand ?",
+        "choice": {
+          "now": "Ce week-end, c'est promis.",
+          "later": "Juste après la fin de saison.",
+          "club": "Le club passe d'abord, tu le sais."
+        },
+        "done": {
+          "now": "Week-end à deux après {{trophy}} : promesse tenue",
+          "later": "Week-end repoussé après la saison",
+          "club": "Promesse du week-end pas tenue"
+        }
+      },
+      "reminder": {
+        "text": "Bon. Toujours pas de week-end. Tu me l'avais promis.",
+        "choice": {
+          "go": "Je réserve ce soir.",
+          "again": "Pas maintenant, il y a la reprise."
+        },
+        "done": {
+          "go": "Week-end enfin réservé avec {{name}}",
+          "again": "Week-end repoussé encore une fois"
+        }
+      },
+      "offer": {
+        "text": "{{rival}} veut te voir. Ils ont aimé ta saison à {{club}} et parlent du double de ton salaire. Je leur dis quoi ?",
+        "title": "{{rival}} veut te voir",
+        "causeTrophy": "Après {{trophy}}",
+        "causeAward": "Après ton prix d'entraîneur du mois",
+        "choice": {
+          "listen": "J'écoute, sans rien signer.",
+          "negotiate": "Je m'en sers pour négocier avec mon président.",
+          "refuse": "Non. {{club}} d'abord."
+        },
+        "hint": {
+          "listen": "Si la presse l'apprend, ça va se savoir.",
+          "negotiate": "Dans FM27, va demander une prolongation à ton président.",
+          "refuse": "Ton agent sera moins pressé la prochaine fois."
+        },
+        "done": {
+          "listen": "Rencontre discrète avec {{rival}}",
+          "negotiate": "Intérêt de {{rival}} montré au président",
+          "refuse": "Offre de {{rival}} refusée, {{club}} d'abord"
+        }
+      },
+      "leak": {
+        "text": "On me dit que tu as rencontré {{rival}}. Je peux l'écrire ?",
+        "choice": {
+          "deny": "C'est faux.",
+          "admit": "On m'a appelé, j'ai écouté. C'est normal.",
+          "noComment": "Pas de commentaire."
+        },
+        "done": {
+          "deny": "Rencontre avec {{rival}} démentie",
+          "admit": "Contact avec {{rival}} reconnu devant la presse",
+          "noComment": "Pas de commentaire sur {{rival}}"
+        }
+      },
+      "award": {
+        "text": "Entraîneur du mois de {{month}} ! Une réaction pour la Gazette ?",
+        "choice": {
+          "humble": "C'est le travail de tout le staff.",
+          "proud": "Je l'ai mérité, on a bien bossé.",
+          "players": "C'est pour les joueurs, pas pour moi."
+        },
+        "done": {
+          "humble": "Entraîneur du mois de {{month}} : le mérite au staff",
+          "proud": "Entraîneur du mois de {{month}} : fier de son travail",
+          "players": "Entraîneur du mois de {{month}} : le mérite aux joueurs"
+        }
+      },
+      "streak": {
+        "text": "Trois défaites de suite. Il faut qu'on parle. Tu fais quoi ?",
+        "textRecall": "Trois défaites de suite. Et pendant ce temps, tu parlais avec {{rival}}. Il faut qu'on parle.",
+        "title": "Trois défaites de suite",
+        "choice": {
+          "backPlayers": "Je garde ma confiance aux joueurs.",
+          "blameSelf": "C'est ma faute, je prends tout.",
+          "pressure": "Je vais secouer le vestiaire."
+        },
+        "hint": {
+          "backPlayers": "Ton adjoint apprécie, ton président moins.",
+          "blameSelf": "La presse aime les coachs qui assument.",
+          "pressure": "Le vestiaire risque de mal le prendre."
+        },
+        "done": {
+          "backPlayers": "Trois défaites : confiance gardée aux joueurs",
+          "blameSelf": "Trois défaites : le coach prend tout sur lui",
+          "pressure": "Trois défaites : le vestiaire secoué"
+        }
+      },
+      "ultimatum": {
+        "text": "Deux fois que tu promets et que tu ne tiens pas. Je pense rentrer quelque temps chez mes parents.",
+        "title": "{{name}} parle de partir",
+        "choice": {
+          "holiday": "On part une semaine, tous les deux.",
+          "space": "Si tu as besoin d'air, je comprends.",
+          "talk": "Parlons-en ce soir, vraiment."
+        },
+        "hint": {
+          "holiday": "Tu rates une semaine au club.",
+          "space": "Le foyer et ton moral vont en prendre un coup.",
+          "talk": "Ça ne règle pas tout, mais ça aide."
+        },
+        "done": {
+          "holiday": "Une semaine de vacances pour sauver le foyer",
+          "space": "{{name}} prend du recul",
+          "talk": "Longue discussion avec {{name}}"
+        }
       }
     }
   },
@@ -6770,5 +6909,125 @@
     "screens": "Écrans",
     "coach": "Ma carrière et mon coach",
     "coachShort": "Moi"
+  },
+  "myLife": {
+    "title": "Ma vie",
+    "intro": "Tes proches t'écrivent après les grands moments de ta partie et se souviennent de tes réponses. Rien n'est écrit dans FM27.",
+    "tabs": {
+      "messages": "Messages",
+      "dilemmas": "Dilemmes",
+      "people": "Tes proches"
+    },
+    "noCareer": "Choisis d'abord une carrière pour recevoir les messages de tes proches.",
+    "unread_one": "{{count}} non lu",
+    "unread_other": "{{count}} non lus",
+    "unread_zero": "Tout est lu",
+    "trigger": "Déclenché par ta partie",
+    "noThread": "Personne ne t'a encore écrit. Les messages arrivent avec les grands moments de ta carrière : arrivée, titre, prix, mauvaise série.",
+    "reply": "Ta réponse",
+    "send": "Répondre",
+    "pick": "Choisis une réponse pour voir ce qu'elle change.",
+    "ifAnswer": "Si tu réponds « {{choice}} »",
+    "noEffect": "Rien ne bouge.",
+    "remembers": "Se souvient de ta réponse du {{date}} : {{text}}",
+    "answered": "Tu as répondu",
+    "expired": "Trop tard pour répondre",
+    "note": "Tes réponses restent dans l'appli. Elles font bouger les jauges, ton journal et tes finances.",
+    "cost": "−{{amount}}",
+    "effect": "{{gauge}} {{n}}",
+    "startsBadge": "lance un diplôme",
+    "dilemma": {
+      "none": "Aucun dilemme en cours. Il en arrive après un titre, un prix d'entraîneur du mois ou une mauvaise série.",
+      "eyebrow": "Dilemme · {{from}}, {{date}}",
+      "choose": "Choisir",
+      "past": "Dilemmes passés",
+      "youChose": "Ton choix : {{choice}}",
+      "returns": "Ça reviendra.",
+      "returnsText": "Tes proches gardent ce choix en mémoire : il peut revenir dans un message plus tard.",
+      "season": "Saison {{season}}",
+      "record": "Bilan",
+      "position": "Classement",
+      "wage": "Salaire",
+      "titles": "Titres"
+    },
+    "people": {
+      "title": "Tes proches",
+      "curve": "La courbe suit chaque réponse et chaque fait de ta partie.",
+      "remembers": "Se souvient :",
+      "noMemory": "Pas encore de souvenir.",
+      "rename": "Renommer",
+      "save": "OK",
+      "perClub": "Repart de zéro à chaque club",
+      "noPartner": "Ajoute ton conjoint dans Ma carrière (partie Foyer) pour recevoir ses messages.",
+      "life": "Ta vie à toi",
+      "savings": "Économies",
+      "badge": "Diplôme en cours",
+      "badgeNone": "Aucun",
+      "awards": "Entraîneur du mois",
+      "journal": "Journal du coach",
+      "promises": "Promesses en cours",
+      "noPromise": "Aucune promesse en cours."
+    },
+    "contacts": {
+      "partner": "{{name}}",
+      "assistant": "Ton adjoint",
+      "representative": "Ton agent",
+      "chairman": "Ton président",
+      "journalist": "La Gazette"
+    },
+    "roles": {
+      "partner": "Ton foyer",
+      "assistant": "Ton bras droit",
+      "representative": "Gère ta carrière",
+      "chairman": "Président de {{club}}",
+      "chairmanFree": "Pas de club en ce moment",
+      "journalist": "Écrit sur toi chaque semaine"
+    },
+    "others": {
+      "agent": "Agent immobilier",
+      "dealer": "Concessionnaire",
+      "friend": "Un vieil ami"
+    },
+    "gauges": {
+      "harmony": "Foyer",
+      "morale": "Moral",
+      "trust": "Confiance",
+      "patience": "Patience",
+      "esteem": "Estime",
+      "press": "Ton de la presse"
+    },
+    "outcome": {
+      "trophy": "{{trophy}} gagné avec {{club}}",
+      "award": "Entraîneur du mois de {{month}}",
+      "objectiveKept": "Objectif tenu : {{objective}} ({{position}})",
+      "objectiveMissed": "Objectif manqué : {{objective}}, fini {{position}}"
+    },
+    "objective": {
+      "title": "le titre",
+      "top3": "le podium"
+    },
+    "promise": {
+      "trophyWeekend": "Un week-end à deux le jour d'un titre",
+      "seasonEnd": "Le week-end juste après la saison",
+      "title": "Jouer le titre avec {{club}}",
+      "top3": "Finir sur le podium avec {{club}}"
+    },
+    "rivalUnknown": "Un club plus riche",
+    "careerLink": "Ma vie : messages, dilemmes et proches",
+    "careerLinkCount_one": "{{count}} message t'attend dans Ma vie",
+    "careerLinkCount_other": "{{count}} messages t'attendent dans Ma vie",
+    "careerLinkOpen": "Ouvrir Ma vie",
+    "promiseChip": "Promesse gardée en mémoire",
+    "triggers": {
+      "recall": "Suite de ta réponse du {{date}}",
+      "arrival": "Arrivée à {{club}}",
+      "trophy": "{{trophy}} gagné",
+      "award": "Entraîneur du mois de {{month}}",
+      "offerAward": "Ton prix d'entraîneur du mois",
+      "streak": "Trois défaites de suite",
+      "summer": "Fin de la saison {{season}}",
+      "exit": "Départ de {{club}}",
+      "birth": "Naissance de {{name}}"
+    }
   }
 }

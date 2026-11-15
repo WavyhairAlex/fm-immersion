@@ -1,5 +1,6 @@
 import type { CareerSpell } from './career';
 import { days, seasonEnd, type CoachLife } from './coach-life';
+import { CONTACTS, GAUGES, lifeOutcomes, PER_CLUB, relationScenes, type Contact, type Gauge, type LifeOutcome, type LifeResult, type PromiseKind } from './coach-relations';
 
 /**
  * Téléphone du coach (inspiré de FMLife) : des scènes tirées des vrais moments de la carrière (arrivée, départ,
@@ -43,7 +44,25 @@ export function qualificationCode(level: BadgeLevel): number {
   return 8 - (BADGES.findIndex((b) => b.level === level) + 1);
 }
 
-export type SceneKind = 'arrival' | 'move' | 'car' | 'sacked' | 'left' | 'trophy' | 'birth' | 'summer';
+export type SceneKind =
+  | 'arrival'
+  | 'move'
+  | 'car'
+  | 'sacked'
+  | 'left'
+  | 'trophy'
+  | 'birth'
+  | 'summer'
+  // Proches (« Ma vie », coach-relations.ts)
+  | 'promise'
+  | 'objectives'
+  | 'promiseDue'
+  | 'reminder'
+  | 'offer'
+  | 'leak'
+  | 'award'
+  | 'streak'
+  | 'ultimatum';
 
 export interface SceneChoice {
   key: string;
@@ -55,18 +74,40 @@ export interface SceneChoice {
   car?: CarTier;
   /** Lance le diplôme suivant (payé à part, voir `BADGES`). */
   badge?: boolean;
+  /** Effets sur les jauges des proches (confiance de l'adjoint, patience de l'agent, estime du président, presse). */
+  effects?: Partial<Record<Gauge, number>>;
+  /** Promesse gardée en mémoire, rappelée plus tard. */
+  promise?: PromiseKind;
+}
+
+/** Tous les effets d'un choix sur les jauges (foyer et moral compris). */
+export function choiceEffects(c: SceneChoice): Partial<Record<Gauge, number>> {
+  const out: Partial<Record<Gauge, number>> = { ...(c.effects ?? {}) };
+  if (c.harmony) out.harmony = (out.harmony ?? 0) + c.harmony;
+  if (c.morale) out.morale = (out.morale ?? 0) + c.morale;
+  return out;
 }
 
 export interface Scene {
   id: string;
   kind: SceneKind;
   date: string;
-  /** Qui écrit : agent immobilier, conjoint, concessionnaire, ami, adjoint. */
-  from: 'agent' | 'partner' | 'dealer' | 'friend' | 'assistant';
+  /** Qui écrit : agent immobilier, conjoint, concessionnaire, ami, adjoint, agent du coach, président, journaliste. */
+  from: 'agent' | 'partner' | 'dealer' | 'friend' | 'assistant' | 'representative' | 'chairman' | 'journalist';
   club?: string;
   name?: string;
   season?: string;
   competition?: string | null;
+  /** Mois d'un prix d'entraîneur du mois (« 2027-05 »). */
+  month?: string;
+  /** Club qui fait une offre, ou dont on reparle (dernier adversaire battu), null s'il n'est pas connu. */
+  rival?: string | null;
+  /** Ce qui a amené une offre : un titre ou un prix. */
+  cause?: SceneKind;
+  /** Réponse d'avant que ce message rappelle (le proche s'en souvient). */
+  recall?: { id: string; choice: string; date: string };
+  /** Vrai dilemme : un choix qui coûte quelque chose à quelqu'un, montré à part. */
+  dilemma?: boolean;
   choices: SceneChoice[];
 }
 
@@ -203,7 +244,7 @@ export function careerScenes(spells: CareerSpell[], life: CoachLife | undefined,
 
 export interface SceneState {
   scenes: Scene[];
-  /** Scènes en attente de réponse, de la plus récente à la plus ancienne (au plus 3). */
+  /** Scènes en attente de réponse, de la plus récente à la plus ancienne. */
   pending: Scene[];
   /** Réponses retenues, dans l'ordre de la carrière. */
   answered: { scene: Scene; choice: SceneChoice; date: string }[];
@@ -219,7 +260,18 @@ export interface SceneState {
   badges: { level: BadgeLevel; start: string; end: string; done: boolean; progress: number }[];
   /** Prochain diplôme possible (le précédent doit être fini), null si tout est fait ou si une formation est en cours. */
   nextBadge: (typeof BADGES)[number] | null;
+  /** Toutes les jauges aujourd'hui (foyer et moral valent `harmony` et `morale`). */
+  gauges: Record<Gauge, number>;
+  /** Valeur de chaque jauge après chaque changement, de la plus ancienne à la plus récente (point de départ compris). */
+  history: Record<Gauge, { date: string; value: number }[]>;
+  /** Faits du jeu qui ont fait bouger les jauges (titres, prix, objectifs vérifiés au classement). */
+  outcomes: LifeOutcome[];
+  /** Ce dont chaque proche se souvient : sa dernière réponse retenue (ou le dernier fait du jeu pour le président). */
+  memories: Partial<Record<Contact, { scene: Scene; choice: SceneChoice; date: string }>>;
+  /** Promesses faites et pas encore réglées. */
+  promises: { kind: PromiseKind; scene: Scene; date: string }[];
 }
+
 
 const clamp = (n: number) => Math.min(100, Math.max(0, n));
 const addMonths = (date: string, m: number) => {
@@ -229,30 +281,73 @@ const addMonths = (date: string, m: number) => {
 };
 
 /** Où en est la vie du coach : réponses, jauges, logement, voiture, dépenses et diplômes. */
-export function sceneState(spells: CareerSpell[], life: CoachLife | undefined, gameDate: string | null, opts: { held?: number } = {}): SceneState {
-  const scenes = careerScenes(spells, life, gameDate);
+export function sceneState(
+  spells: CareerSpell[],
+  life: CoachLife | undefined,
+  gameDate: string | null,
+  opts: { held?: number; results?: LifeResult[] } = {},
+): SceneState {
+  const scenes = [...careerScenes(spells, life, gameDate), ...relationScenes(spells, life, gameDate, opts.results ?? [])].sort((a, b) =>
+    a.date < b.date ? -1 : a.date > b.date ? 1 : 0,
+  );
   const today = gameDate ? d10(gameDate) : (spells.at(-1)?.end.slice(0, 10) ?? '');
   const answers = life?.answers ?? {};
   const answered: SceneState['answered'] = [];
-  const pending: Scene[] = [];
+  const waiting: Scene[] = [];
   // Première ouverture (aucune réponse encore) : les derniers moments passés sont proposés quand même, sinon une
   // carrière déjà avancée n'aurait aucun message. Le logement et la voiture du club actuel attendent toujours.
   const firstUse = !Object.keys(answers).length;
   const cur = spells.at(-1);
   const lasting = (sc: Scene) => !!cur?.current && (sc.kind === 'arrival' || sc.kind === 'car') && sc.club === cur.club && sc.date === d10(cur.start);
+  // Un message qui rappelle une réponse d'avant (promesse, offre) attend toujours : c'est la suite de l'histoire.
+  const fresh = (sc: Scene) => !today || lasting(sc) || !!sc.recall || days(sc.date, today) - 1 <= SCENE_EXPIRY_DAYS;
   for (const sc of scenes) {
     const a = answers[sc.id];
     const choice = a && sc.choices.find((c) => c.key === a.choice);
     if (choice) answered.push({ scene: sc, choice, date: a.date });
-    else if (!today || firstUse || lasting(sc) || days(sc.date, today) - 1 <= SCENE_EXPIRY_DAYS) pending.push(sc);
+    else waiting.push(sc);
   }
-  let harmony = BASE_GAUGE;
-  let morale = BASE_GAUGE;
+  // En attente : les messages récents ; à la première ouverture, les trois derniers moments ; et pour chaque proche
+  // à qui le coach n'a encore jamais répondu, son dernier message, même ancien (premier contact).
+  const keep = new Set(waiting.filter(fresh).map((sc) => sc.id));
+  if (firstUse) for (const sc of waiting.slice(-3)) keep.add(sc.id);
+  for (const c of CONTACTS) {
+    if (answered.some((x) => x.scene.from === c)) continue;
+    const last = waiting.filter((sc) => sc.from === c).at(-1);
+    if (last) keep.add(last.id);
+  }
+  const pending = waiting.filter((sc) => keep.has(sc.id));
+  // Jauges : réponses et faits du jeu dans l'ordre des dates. L'adjoint et le président ne comptent que le club actuel.
+  const outcomes = lifeOutcomes(spells, life, gameDate);
+  const clubNow = cur?.current ? cur.club : null;
+  const gauges = Object.fromEntries(GAUGES.map((g) => [g, BASE_GAUGE])) as Record<Gauge, number>;
+  const startOf = (g: Gauge) => (PER_CLUB.includes(g) ? (cur?.current ? d10(cur.start) : today) : (spells[0] ? d10(spells[0].start) : today));
+  const history = Object.fromEntries(GAUGES.map((g) => [g, [{ date: startOf(g), value: BASE_GAUGE }]])) as SceneState['history'];
+  const steps = [
+    ...answered.map((x) => ({ date: x.scene.date, club: x.scene.club, fx: choiceEffects(x.choice) })),
+    ...outcomes.map((o) => ({ date: o.date, club: o.club as string | undefined, fx: { [o.gauge]: o.delta } as Partial<Record<Gauge, number>> })),
+  ].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  for (const st of steps)
+    for (const [g, n] of Object.entries(st.fx) as [Gauge, number][]) {
+      if (!n || (PER_CLUB.includes(g) && st.club !== clubNow)) continue;
+      gauges[g] = clamp(gauges[g] + n);
+      history[g].push({ date: st.date, value: gauges[g] });
+    }
+  const harmony = gauges.harmony;
+  const morale = gauges.morale;
   let oneOff = 0;
-  for (const { choice } of answered) {
-    harmony = clamp(harmony + (choice.harmony ?? 0));
-    morale = clamp(morale + (choice.morale ?? 0));
-    oneOff += choice.cost ?? 0;
+  for (const { choice } of answered) oneOff += choice.cost ?? 0;
+
+  // Mémoire de chaque proche : sa dernière réponse ; promesses encore ouvertes (pas réglées par une réponse plus tard).
+  const memories: SceneState['memories'] = {};
+  for (const x of answered) if ((CONTACTS as string[]).includes(x.scene.from)) memories[x.scene.from as Contact] = x;
+  const settled = new Set(answered.map((x) => x.scene.recall?.id).filter(Boolean));
+  const promises: SceneState['promises'] = [];
+  for (const x of answered) {
+    if (!x.choice.promise || settled.has(x.scene.id)) continue;
+    // Objectifs du président : seulement au club actuel, tant que le classement ne les a pas tranchés.
+    if ((x.choice.promise === 'title' || x.choice.promise === 'top3') && (x.scene.club !== clubNow || outcomes.some((o) => o.club === x.scene.club && o.objective))) continue;
+    promises.push({ kind: x.choice.promise, scene: x.scene, date: x.date });
   }
 
   // Logement : celui choisi à l'arrivée dans chaque club, payé pendant tout le passage.
@@ -305,7 +400,7 @@ export function sceneState(spells: CareerSpell[], life: CoachLife | undefined, g
   const current = spells.at(-1)?.current;
   return {
     scenes,
-    pending: pending.reverse().slice(0, 3),
+    pending: pending.reverse(),
     answered,
     harmony,
     morale,
@@ -315,5 +410,10 @@ export function sceneState(spells: CareerSpell[], life: CoachLife | undefined, g
     monthly: (current && housingNow ? HOUSING_COST[housingNow] : 0) + (carNow ? CAR_COST[carNow] : 0),
     badges,
     nextBadge,
+    gauges,
+    history,
+    outcomes,
+    memories,
+    promises,
   };
 }

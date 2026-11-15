@@ -46,13 +46,16 @@ describe('sceneState', () => {
     expect(st.spending.housing).toBe(Math.round((2200 * 365) / 30.44));
     expect(st.spending.car).toBe(Math.round((1500 * 364) / 30.44));
     // Les scènes plus vieilles que 120 jours sans réponse sont passées ; les autres attendent, la plus récente d'abord.
-    expect(st.pending.map((s) => s.kind)).toEqual(['trophy', 'summer']);
+    // Premier contact avec le président : son dernier message attend, même ancien.
+    expect(st.pending.map((s) => s.kind)).toEqual(['offer', 'trophy', 'summer', 'objectives']);
   });
 
   it("première ouverture : les derniers moments sont proposés même anciens ; logement et voiture du club actuel attendent toujours", () => {
-    expect(sceneState(spells, undefined, '2028-06-01').pending.map((s) => s.kind)).toEqual(['trophy', 'summer', 'car']);
+    expect(sceneState(spells, undefined, '2028-06-01').pending.map((s) => s.kind)).toEqual(['offer', 'trophy', 'summer', 'objectives', 'car', 'arrival']);
     const later = sceneState(spells, { answers: { 'sacked|Vänersborgs IF|2026-10-04': { choice: 'work', date: '2026-10-05' } } }, '2028-06-01');
-    expect(later.pending.map((s) => s.kind)).toEqual(['car', 'arrival']);
+    // Les proches à qui le coach n'a jamais répondu gardent leur dernier message (premier contact).
+    expect(later.pending.map((s) => s.kind)).toEqual(['offer', 'trophy', 'summer', 'objectives', 'car', 'arrival']);
+    expect(later.pending.map((s) => s.from)).toEqual(['representative', 'assistant', 'partner', 'chairman', 'dealer', 'agent']);
   });
 
   it('diplômes : un à la fois, le choix « passer un diplôme » en lance un, le diplôme du jeu est sauté', () => {
