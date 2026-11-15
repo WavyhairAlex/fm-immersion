@@ -5953,7 +5953,9 @@
     "fixTitle": "Il manque un club, ou il y en a un de trop ?",
     "fixHelp": "Ma carrière suit seulement cette sauvegarde. Si un ancien club manque (avant que FM Immersion suive la partie, ou après un licenciement), importe ses jours ci-dessous : le plugin les a gardés. Un club venu d'une autre sauvegarde s'écarte avec « Pas dans cette carrière » sur sa fiche.",
     "hiddenLabel": "écarté de cette carrière",
-    "unhide": "Remettre"
+    "unhide": "Remettre",
+    "fromGame": "Matchs, victoires, nuls, défaites et buts : les chiffres de l'écran Carrière de FM27.",
+    "fromSnapshots": "Chiffres comptés à partir de tes relevés : ouvre FM27 avec le plugin à jour pour avoir ceux du jeu."
   },
   "whatsNew": {
     "kicker": "Mise à jour installée · version {{version}}",
