@@ -368,9 +368,10 @@ export function careerOf(history: Entry[], opts: { freeSince?: string | null } =
       cleanSheets: sum((s) => s.total.cleanSheets),
       winRate: played ? Math.round((wins / played) * 100) : null,
       ...(fromGame ? { ...fromGame, winRate: g!.played ? Math.round((g!.wins / g!.played) * 100) : null } : {}),
-      fromGame: !!g,
+      // Sans bilan de carrière (FM27 ne le donne pas toujours) : celui du club suffit quand tous les passages l'ont.
+      fromGame: !!g || (spells.length > 0 && spells.every((s) => s.game)),
       pointsPerGame: league.played ? Math.round((league.points / league.played) * 100) / 100 : null,
-      trophies: g?.cups != null && g.leagues != null ? Math.max(g.cups + g.leagues, sum((s) => s.trophies.length)) : sum((s) => s.trophies.length),
+      trophies: Math.max(g?.cups != null && g.leagues != null ? g.cups + g.leagues : 0, sum((s) => Math.max(s.trophies.length, s.game?.cups != null && s.game.leagues != null ? s.game.cups + s.game.leagues : 0))),
       bestFinish: finishes.length ? Math.min(...finishes) : null,
       biggestWin,
       // Séries sans défaite : saison par saison (celle d'un passage entier mélangerait les saisons).

@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.219",
+    "date": "2026-11-15",
+    "fr": [
+      "« Ma carrière » reprend maintenant le bilan affiché par FM27 dans ton écran Carrière (matchs, victoires, nuls, défaites, buts) au lieu de le recompter. Les chiffres sont les mêmes que dans le jeu."
+    ],
+    "en": [
+      "“My career” now uses the record FM27 shows on your Career screen (matches, wins, draws, losses, goals) instead of counting it again. The numbers match the game."
+    ]
+  },
+  {
     "version": "0.1.218",
     "date": "2026-11-15",
     "fr": [
