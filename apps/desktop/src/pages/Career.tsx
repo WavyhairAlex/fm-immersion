@@ -377,6 +377,82 @@ function clubStats(spells: CareerSpell[], club: string) {
 }
 
 /** Carte du monde (dessinée sur place, rien de chargé d'Internet) : pays entraînés en orange, clubs numérotés dans l'ordre. */
+type StatPart = { text: string; count: number; title: boolean };
+
+// Étiquette d'un club sur la carte : petite carte blanche à côté du point (nom, puis saisons · victoires · titres,
+// chiffres en gras), basculée à gauche du point si elle sortirait du cadre.
+function ClubCallout({
+  x,
+  y,
+  r,
+  k,
+  box,
+  club,
+  current,
+  stats,
+}: {
+  x: number;
+  y: number;
+  r: number;
+  k: number;
+  box: { x: number; y: number; w: number; h: number };
+  club: string;
+  current: boolean;
+  stats: StatPart[];
+}) {
+  const fsName = r * 1.15;
+  const fsStat = r * 0.85;
+  const pad = r * 0.65;
+  const bar = r * 0.32;
+  const sep = '  ·  ';
+  // Largeur estimée (Nunito gras ≈ 0,6 em par caractère) : pas de mesure du texte dans le rendu.
+  const statsLen = stats.reduce((n, p) => n + p.text.length, 0) + sep.length * (stats.length - 1);
+  const w = bar + pad * 2 + Math.max(club.length * fsName * 0.6, statsLen * fsStat * 0.56);
+  const h = pad * 2 + fsName + fsStat * 1.35;
+  const gap = r * 1.7;
+  const left = x + gap + w > box.x + box.w && x - gap - w >= box.x;
+  const cx = left ? x - gap - w : x + gap;
+  const cy = Math.min(Math.max(y - h / 2, box.y + 2 * k), box.y + box.h - h - 2 * k);
+  const tx = cx + bar + pad;
+  // Petite pointe vers le point, du côté du point.
+  const tipX = left ? cx + w : cx;
+  const dir = left ? 1 : -1;
+  const ty = Math.min(Math.max(y, cy + h * 0.3), cy + h * 0.7);
+  return (
+    <g pointerEvents="none">
+      <g filter="url(#carte-ombre)">
+        <path d={`M${tipX},${ty - r * 0.55} L${tipX + dir * r * 0.6},${ty} L${tipX},${ty + r * 0.55} Z`} fill="#FFFFFF" />
+        <rect x={cx} y={cy} width={w} height={h} rx={r * 0.55} fill="#FFFFFF" />
+      </g>
+      <rect x={cx} y={cy} width={bar} height={h} rx={bar / 2} fill={current ? '#FFB547' : '#0F1B2D'} />
+      <text x={tx} y={cy + pad + fsName * 0.8} fontSize={fsName} fontWeight={800} fill="#0F1B2D">
+        {club}
+      </text>
+      <text x={tx} y={cy + pad + fsName + fsStat * 1.1} fontSize={fsStat} fontWeight={600} fill="#56607A">
+        {stats.map((p, i) => {
+          const m = /^(\d+)(.*)$/.exec(p.text);
+          const strong = p.title && p.count > 0 ? '#8F5400' : '#0F1B2D';
+          return (
+            <tspan key={i}>
+              {i > 0 && sep}
+              {m ? (
+                <>
+                  <tspan fontWeight={800} fill={strong}>
+                    {m[1]}
+                  </tspan>
+                  <tspan fill={p.title && p.count > 0 ? '#8F5400' : undefined}>{m[2]}</tspan>
+                </>
+              ) : (
+                p.text
+              )}
+            </tspan>
+          );
+        })}
+      </text>
+    </g>
+  );
+}
+
 function WorldMap({ spells }: { spells: CareerSpell[] }) {
   const { t, i18n } = useTranslation();
   const [whole, setWhole] = useState(false);
@@ -404,14 +480,15 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
   const route = pins.filter((p): p is { x: number; y: number } => !!p);
   const missing = spells.filter((s) => !s.country || !MAP_PINS[s.country]);
   const r = 11 * k;
-  const statsLine = (club: string) => {
+  const statsParts = (club: string) => {
     const st = clubStats(spells, club);
     return [
-      t('careerPage.mapSeasons', { count: st.seasons }),
-      t('careerPage.mapWins', { count: st.wins }),
-      t('careerPage.mapTitles', { count: st.titles }),
-    ].join(' · ');
+      { text: t('careerPage.mapSeasons', { count: st.seasons }), count: st.seasons, title: false },
+      { text: t('careerPage.mapWins', { count: st.wins }), count: st.wins, title: false },
+      { text: t('careerPage.mapTitles', { count: st.titles }), count: st.titles, title: true },
+    ];
   };
+  const statsLine = (club: string) => statsParts(club).map((x) => x.text).join(' · ');
   const clubs = spells.filter((s, i) => !spells.slice(i + 1).some((x) => x.club === s.club));
 
   return (
@@ -433,6 +510,11 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
         role="img"
         aria-label={t('careerPage.mapLabel', { clubs: spells.map((s) => s.club).join(', ') })}
       >
+        <defs>
+          <filter id="carte-ombre" x="-20%" y="-30%" width="140%" height="170%">
+            <feDropShadow dx={0} dy={1.5 * k} stdDeviation={2.5 * k} floodColor="#0F1B2D" floodOpacity={0.22} />
+          </filter>
+        </defs>
         {MAP_SHAPES.map((s, i) => (
           <path
             key={i}
@@ -467,34 +549,7 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
               <text x={p.x} y={p.y} dy="0.35em" textAnchor="middle" fontSize={r * 1.15} fontWeight={800} fill="#FFFFFF">
                 {i + 1}
               </text>
-              <text
-                x={p.x + r * 1.5}
-                y={p.y}
-                dy="0.35em"
-                fontSize={r * 1.25}
-                fontWeight={800}
-                fill="#0F1B2D"
-                stroke="#FFFFFF"
-                strokeWidth={3}
-                paintOrder="stroke"
-                vectorEffect="non-scaling-stroke"
-              >
-                {s.club}
-              </text>
-              <text
-                x={p.x + r * 1.5}
-                y={p.y + r * 1.45}
-                dy="0.35em"
-                fontSize={r * 0.95}
-                fontWeight={700}
-                fill="#56607A"
-                stroke="#FFFFFF"
-                strokeWidth={3}
-                paintOrder="stroke"
-                vectorEffect="non-scaling-stroke"
-              >
-                {statsLine(s.club)}
-              </text>
+              <ClubCallout x={p.x} y={p.y} r={r} k={k} box={box} club={s.club} current={!!s.current} stats={statsParts(s.club)} />
             </g>
           );
         })}
