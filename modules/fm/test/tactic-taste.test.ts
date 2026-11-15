@@ -211,6 +211,14 @@ describe('ma tactique idéale', () => {
     }
   });
 
+  it('en simple, garde les consignes qui pèsent le plus dans les goûts (le bloc bas ne saute pas)', () => {
+    const t = taste({ ball: 'keep', attack: 'wide', defend: 'low', risk: 'cautious', tuning: 'simple' });
+    const poss = styleInstructions(style('longball'));
+    const a = applyTaste({ ti: poss.ti, mentality: poss.mentality ?? 'Équilibrée' }, t);
+    expect(tacticFeatures(a).count).toBeLessThanOrEqual(SIMPLE_MAX);
+    expect(tasteScore({ ...newBuiltTactic(engine, '4-3-3', 'a'), ti: a.ti, mentality: a.mentality }, t).score).toBe(100);
+  });
+
   it('relit des réponses abîmées sans planter', () => {
     expect(parseTaste({ ball: 'nope' })).toEqual(EMPTY_TASTE);
     expect(parseTaste({ ball: 'keep', musts: ['ten'] }).musts).toEqual(['ten']);

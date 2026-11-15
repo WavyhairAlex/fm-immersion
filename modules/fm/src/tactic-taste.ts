@@ -269,11 +269,21 @@ export function applyTaste(base: Pick<BuiltTactic, 'ti' | 'mentality'>, taste: T
   if (opt(ti, TI.line) !== 2) delete ti[TI.gkShort];
   if (opt(ti, TI.line) !== 0) delete ti[TI.crossEngage];
   const mentality = taste.risk ? MENTALITIES_FM27[RISK_TARGET[taste.risk]]! : base.mentality;
-  // Tactique simple : on garde les consignes qui portent les goûts, puis celles du style, jusqu'à SIMPLE_MAX.
+  // Tactique simple : on retire d'abord les consignes du style, puis, parmi celles qui portent les goûts, celle dont
+  // le retrait coûte le moins à la note de goûts, jusqu'à SIMPLE_MAX (le bloc bas ne doit pas sauter avant un détail).
   if (taste.tuning === 'simple') {
-    const active = TEAM_INSTRUCTIONS_FM27.filter((d) => ti[d.id] != null && ti[d.id] !== defaultOption(d)).map((d) => d.id);
-    const keep = new Set([...active.filter((id) => touched.includes(id)), ...active.filter((id) => !touched.includes(id))].slice(0, SIMPLE_MAX));
-    for (const id of active) if (!keep.has(id)) delete ti[id];
+    const active = () => TEAM_INSTRUCTIONS_FM27.filter((d) => ti[d.id] != null && ti[d.id] !== defaultOption(d)).map((d) => d.id);
+    const axes: Taste = { ...taste, musts: [], tuning: null };
+    const worth = (without: number) => {
+      const rest = { ...ti };
+      delete rest[without];
+      return tasteScore({ slots: [], ti: rest, mentality } as unknown as BuiltTactic, axes).score ?? 0;
+    };
+    for (let on = active(); on.length > SIMPLE_MAX; on = active()) {
+      const free = on.filter((id) => !touched.includes(id));
+      const drop = free.length ? free[free.length - 1]! : on.map((id) => ({ id, w: worth(id) })).reduce((a, b) => (b.w >= a.w ? b : a)).id;
+      delete ti[drop];
+    }
   }
   return { ti, mentality, touched };
 }
@@ -685,5 +695,7 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
     const alt2 = squadOf(runner.r, squadP.alt, true);
     if (worth(alt2) > worth(squadP)) squadP = alt2;
   }
+  // Une autre carte tient encore mieux l'effectif après réglage : celle-ci est alors annoncée comme « autre piste ».
+  if (!squadP.alt && [tasteP, balance].some((p) => worth(p) > worth(squadP))) squadP = { ...squadP, alt: true };
   return [tasteP, balance, squadP];
 }
