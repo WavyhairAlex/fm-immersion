@@ -155,7 +155,7 @@ export function Career() {
           </ol>
           <p className="mt-4 text-xs text-brun">{t('careerPage.source')}</p>
 
-          <CoachLifeSection saveId={saveId} life={settings?.coachLife} spells={career.spells} gameDate={kept.at(-1)?.gameDate ?? null} />
+          <CoachLifeSection saveId={saveId} life={settings?.coachLife} spells={career.spells} gameDate={kept.at(-1)?.gameDate ?? null} history={kept} />
         </>
       )}
 

@@ -10,18 +10,30 @@ import { days, seasonEnd, type CoachLife } from './coach-life';
 
 export type HousingTier = 'studio' | 'flat' | 'house' | 'villa';
 export type CarTier = 'city' | 'saloon' | 'sports';
-export type BadgeLevel = 'c' | 'b' | 'a' | 'pro';
+export type BadgeLevel = 'nationalC' | 'nationalB' | 'nationalA' | 'continentalC' | 'continentalB' | 'continentalA' | 'continentalPro';
 
 /** Loyer ou crédit par mois, dans la devise du joueur (ordres de grandeur, pas de vrais prix). */
 export const HOUSING_COST: Record<HousingTier, number> = { studio: 600, flat: 1200, house: 2200, villa: 5000 };
 export const CAR_COST: Record<CarTier, number> = { city: 250, saloon: 600, sports: 1500 };
-/** Diplômes d'entraîneur payés de sa poche : prix et durée en mois, dans l'ordre. */
+/**
+ * Diplômes d'entraîneur de FM27, du plus bas au plus haut, payés de sa poche : prix et durée en mois (ordres de
+ * grandeur). Le diplôme déjà obtenu dans le jeu (lu par le plugin) est sauté.
+ */
 export const BADGES: { level: BadgeLevel; cost: number; months: number }[] = [
-  { level: 'c', cost: 1500, months: 6 },
-  { level: 'b', cost: 4000, months: 9 },
-  { level: 'a', cost: 9000, months: 12 },
-  { level: 'pro', cost: 20000, months: 18 },
+  { level: 'nationalC', cost: 1500, months: 3 },
+  { level: 'nationalB', cost: 3000, months: 6 },
+  { level: 'nationalA', cost: 6000, months: 9 },
+  { level: 'continentalC', cost: 10000, months: 12 },
+  { level: 'continentalB', cost: 15000, months: 12 },
+  { level: 'continentalA', cost: 25000, months: 18 },
+  { level: 'continentalPro', cost: 40000, months: 24 },
 ];
+
+/**
+ * Code de `CoachingQualificationDisplayValue` (FM27) → nombre de diplômes de `BADGES` déjà obtenus. Seul le 7 est
+ * vérifié en jeu (« Diplôme national C », 14/11/2026) : les autres codes restent inconnus plutôt que devinés.
+ */
+export const GAME_QUALIFICATION: Record<number, number> = { 7: 1 };
 
 export type SceneKind = 'arrival' | 'move' | 'car' | 'sacked' | 'left' | 'trophy' | 'birth' | 'summer';
 
@@ -209,7 +221,7 @@ const addMonths = (date: string, m: number) => {
 };
 
 /** Où en est la vie du coach : réponses, jauges, logement, voiture, dépenses et diplômes. */
-export function sceneState(spells: CareerSpell[], life: CoachLife | undefined, gameDate: string | null): SceneState {
+export function sceneState(spells: CareerSpell[], life: CoachLife | undefined, gameDate: string | null, opts: { held?: number } = {}): SceneState {
   const scenes = careerScenes(spells, life, gameDate);
   const today = gameDate ? d10(gameDate) : (spells.at(-1)?.end.slice(0, 10) ?? '');
   const answers = life?.answers ?? {};
@@ -259,10 +271,11 @@ export function sceneState(spells: CareerSpell[], life: CoachLife | undefined, g
     ...(life?.badges ?? []).map((b) => b.start),
     ...answered.filter((x) => x.choice.badge).map((x) => x.scene.date),
   ].sort();
+  const held = Math.max(0, Math.min(BADGES.length, opts.held ?? 0));
   const badges: SceneState['badges'] = [];
   let free = '';
   for (const start of starts) {
-    const def = BADGES[badges.length];
+    const def = BADGES[held + badges.length];
     if (!def) break;
     const begin = start > free ? start : free;
     const end = addMonths(begin, def.months);
@@ -272,7 +285,7 @@ export function sceneState(spells: CareerSpell[], life: CoachLife | undefined, g
     free = end;
   }
   const badgeCost = badges.reduce((a, b) => a + BADGES.find((x) => x.level === b.level)!.cost, 0);
-  const nextBadge = badges.some((b) => !b.done) ? null : (BADGES[badges.length] ?? null);
+  const nextBadge = badges.some((b) => !b.done) ? null : (BADGES[held + badges.length] ?? null);
 
   const spending = {
     oneOff,

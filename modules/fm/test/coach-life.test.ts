@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { CareerSpell } from '../src/career';
-import { ageAt, lifeEvents, lifeFinances, schoolStage, trophyCabinet } from '../src/coach-life';
+import { ageAt, gameCoach, lifeEvents, lifeFinances, schoolStage, trophyCabinet, weeklyFromText } from '../src/coach-life';
+import type { FmSnapshot } from '../src/snapshot';
 
 const spell = (club: string, start: string, end: string, current: boolean, trophies: CareerSpell['trophies'] = []): CareerSpell =>
   ({ club, start, end, current, reason: current ? null : 'sacked', country: null, countrySource: null, seasons: [], trophies, bestFinish: null }) as unknown as CareerSpell;
@@ -61,5 +62,23 @@ describe('trophyCabinet', () => {
     expect(cab[0]).toMatchObject({ competition: 'Coupe de Slovaquie' });
     expect(cab[0]!.wins).toHaveLength(2);
     expect(cab[1]).toMatchObject({ competition: null });
+  });
+});
+
+describe('lu dans FM27', () => {
+  it('salaire ramené à la semaine selon l’unité du jeu', () => {
+    expect(weeklyFromText('1,3K\u00a0€ p/m')).toBe(300);
+    expect(weeklyFromText('700 € p/s')).toBe(700);
+    expect(weeklyFromText('52K £ p/a')).toBe(1000);
+    expect(weeklyFromText('-')).toBeNull();
+    expect(weeklyFromText(null)).toBeNull();
+  });
+
+  it('salaire par club et diplôme, le salaire saisi prime', () => {
+    const snap = (club: string, partie: Record<string, unknown>) => ({ data: { club, custom: { partie } } as unknown as FmSnapshot });
+    const g = gameCoach([snap('Vänersborgs IF', {}), snap('Malženice', { coachSalaire: '1,3K € p/m', coachDiplome: 7 })]);
+    expect(g).toEqual({ wages: { Malženice: 300 }, currency: 'EUR', qualification: 7 });
+    expect(lifeFinances(spells, undefined, 0, g.wages).spells[1]!.weekly).toBe(300);
+    expect(lifeFinances(spells, { wages: { Malženice: 900 } }, 0, g.wages).spells[1]!.weekly).toBe(900);
   });
 });

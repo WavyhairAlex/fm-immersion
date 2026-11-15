@@ -55,15 +55,18 @@ describe('sceneState', () => {
     expect(later.pending.map((s) => s.kind)).toEqual(['car', 'arrival']);
   });
 
-  it('diplômes : un à la fois, le choix « passer un diplôme » en lance un', () => {
-    const life = { answers: { 'sacked|Vänersborgs IF|2026-10-04': { choice: 'badge', date: '2026-10-05' } }, badges: [{ level: 'b', start: '2027-01-01' }] };
+  it('diplômes : un à la fois, le choix « passer un diplôme » en lance un, le diplôme du jeu est sauté', () => {
+    const life = { answers: { 'sacked|Vänersborgs IF|2026-10-04': { choice: 'badge', date: '2026-10-05' } }, badges: [{ level: 'x', start: '2027-01-01' }] };
     const st = sceneState(spells, life, '2027-10-19');
     expect(st.badges.map((b) => [b.level, b.start, b.end, b.done])).toEqual([
-      ['c', '2026-10-04', '2027-04-04', true],
-      ['b', '2027-04-04', '2028-01-04', false],
+      ['nationalC', '2026-10-04', '2027-01-04', true],
+      ['nationalB', '2027-01-04', '2027-07-04', true],
     ]);
-    expect(st.spending.badges).toBe(5500);
-    expect(st.nextBadge).toBeNull();
-    expect(sceneState(spells, { badges: [{ level: 'c', start: '2026-09-01' }] }, '2027-10-19').nextBadge?.level).toBe('b');
+    expect(st.spending.badges).toBe(4500);
+    expect(st.nextBadge?.level).toBe('nationalA');
+    // Diplôme national C déjà obtenu dans FM27 : la première formation payée est le B.
+    const held = sceneState(spells, { badges: [{ level: 'x', start: '2027-09-01' }] }, '2027-10-19', { held: 1 });
+    expect(held.badges.map((b) => [b.level, b.done])).toEqual([['nationalB', false]]);
+    expect(held.nextBadge).toBeNull();
   });
 });

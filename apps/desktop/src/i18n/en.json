@@ -6518,7 +6518,7 @@
     "intro": "Your coach's life away from the club: what your career has earned you, your family and the big moments. Everything stays in the app, nothing is changed in your save.",
     "money": {
       "title": "Personal finances",
-      "help": "Enter the salary for each club (you'll find it in your contract, on your manager profile in FM27). The app counts the days spent at each club.",
+      "help": "Your salary is read from FM27 when the plugin finds it. You can replace it by typing another amount. The app counts the days spent at each club.",
       "gross": "Earned (gross)",
       "net": "After tax ({{rate}}%)",
       "savings": "Saved",
@@ -6533,7 +6533,8 @@
       "costs": "Household spending per month",
       "missing_one": "One club has no salary yet: it isn't counted in the totals.",
       "missing_other": "{{count}} clubs have no salary yet: they aren't counted in the totals.",
-      "choices": "Including housing {{housing}}, car {{car}}, phone choices {{oneOff}}, badges {{badges}}."
+      "choices": "Including housing {{housing}}, car {{car}}, phone choices {{oneOff}}, badges {{badges}}.",
+      "fromGame": "read from FM27"
     },
     "home": {
       "title": "Family",
@@ -6624,18 +6625,24 @@
     },
     "badges": {
       "title": "Coaching badges",
-      "help": "Paid out of your own pocket, one at a time, even without a club. The cost comes out of your savings.",
+      "help": "Paid out of your own pocket, one at a time, even without a club, starting from the badge you hold in FM27. The cost comes out of your savings.",
       "level": {
-        "c": "C Licence",
-        "b": "B Licence",
-        "a": "A Licence",
-        "pro": "Pro Licence"
+        "nationalC": "National C Licence",
+        "nationalB": "National B Licence",
+        "nationalA": "National A Licence",
+        "continentalC": "Continental C Licence",
+        "continentalB": "Continental B Licence",
+        "continentalA": "Continental A Licence",
+        "continentalPro": "Continental Pro Licence"
       },
       "done": "earned on {{date}}",
       "until": "in progress, ends {{date}}",
       "start": "Start the {{level}} ({{cost}}, {{months}} months)",
       "all": "You have every badge.",
-      "note": "In FM27, remember to start the course from your manager profile: the app doesn't put it in the game."
+      "note": "For now, a badge paid for here doesn't change the one in your FM27 save: the app doesn't write to the game yet.",
+      "inGame": "In FM27:",
+      "none": "no badge",
+      "unknownCode": "badge code {{code}}, not recognised by the app yet"
     },
     "scene": {
       "arrival": {
