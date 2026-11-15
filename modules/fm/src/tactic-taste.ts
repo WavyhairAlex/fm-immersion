@@ -1,11 +1,14 @@
 import { z } from 'zod';
 import { engineValue } from './engine-value';
+import { instructionKey, playerInstructions } from './instructions';
 import type { FmPlayer } from './player';
+import { piKeyGroup } from './player-instructions-fm27';
 import type { PosCode } from './positions';
 import { rankTactics } from './project';
 import { avg, type FormationPlan, type StyleRef, type TacticEngine } from './tactic';
-import { analyseBuiltTactic, builtPlan, defaultOption, rolesAt, styleInstructions, type BuiltTactic } from './tactic-builder';
+import { analyseBuiltTactic, builtPlan, builtStyle, defaultOption, normalizePi, piOptions, rolesAt, styleInstructions, type BuiltTactic } from './tactic-builder';
 import { optimiseTactic, tacticQuality } from './tactic-optimise';
+import { teamAdvice } from './team-advice';
 import { MENTALITIES_FM27, TEAM_INSTRUCTIONS_FM27 } from './team-instructions-fm27';
 
 /*
@@ -390,12 +393,58 @@ export function rescore<T extends ScoredTactic>(s: T, ref: ScoreRef): T {
   return { ...s, scores: { ...s.scores, squad, meta } };
 }
 
+/* ---------- Consignes individuelles ---------- */
+
+/** Consignes individuelles conseillées par titulaire selon le niveau de réglage demandé. */
+export const PI_PER_PLAYER: Record<'simple' | 'default' | 'worked', number> = { simple: 1, default: 2, worked: 3 };
+/** Total au-delà duquel une tactique n'est plus « simple » (constat `simple` de l'analyse). */
+export const PI_SIMPLE_TOTAL = 6;
+
+/**
+ * Ajoute à une tactique les consignes individuelles conseillées pour le onze qui la jouerait (mêmes règles que l'écran
+ * Tactique : attributs du joueur, pied fort, rôle, style), les plus marquées d'abord. On s'arrête avant que la tactique
+ * ne devienne « chargée » (consignes d'équipe + moitié des individuelles), et une consigne qui ferait baisser la note
+ * « Qualité » est retirée. Les consignes déjà posées (la sentinelle du réglage) sont gardées.
+ */
+export function addPlayerInstructions(engine: TacticEngine, tactic: BuiltTactic, players: FmPlayer[], reserve: FmPlayer[] = [], perPlayer = PI_PER_PLAYER.default, maxTotal = Infinity): { tactic: BuiltTactic; added: number } {
+  const plan = builtPlan(engine, tactic, players, reserve);
+  const style = builtStyle(tactic);
+  const quality = (t: BuiltTactic) => tacticQuality(analyseBuiltTactic(engine, t, players, reserve));
+  const floor = quality(tactic);
+  const wanted: { i: number; key: string; weight: number }[] = [];
+  plan.slots.forEach((slot, i) => {
+    if (!slot.player) return;
+    const have = new Set(normalizePi(tactic.slots[i]!.pi ?? []).map(piKeyGroup));
+    const o = piOptions(engine, tactic, i);
+    const free = new Set([...o.ip, ...o.oop].flatMap((g) => g.options.map((x) => `${g.def.group}:${x}`)));
+    for (const x of playerInstructions(engine, slot, style, plan.slots, perPlayer).list) {
+      const key = instructionKey(x.id);
+      if (!key || have.has(piKeyGroup(key)) || !free.has(key)) continue;
+      have.add(piKeyGroup(key));
+      wanted.push({ i, key, weight: x.weight });
+    }
+  });
+  const nTi = TEAM_INSTRUCTIONS_FM27.filter((d) => tactic.ti[d.id] != null && tactic.ti[d.id] !== defaultOption(d)).length;
+  const already = tactic.slots.reduce((n, sl) => n + normalizePi(sl.pi ?? []).length, 0);
+  // Constat « chargée » : consignes d'équipe + moitié des individuelles à 14 ou plus.
+  const room = Math.max(0, Math.min(2 * (14 - nTi) - 1, maxTotal) - already);
+  let kept = wanted.sort((a, b) => b.weight - a.weight).slice(0, room);
+  const build = (list: typeof kept): BuiltTactic => ({ ...tactic, slots: tactic.slots.map((sl, i) => ({ ...sl, pi: normalizePi([...(sl.pi ?? []), ...list.filter((x) => x.i === i).map((x) => x.key)]) })) });
+  let out = build(kept);
+  // Une consigne de pressing peut déplacer un constat : on retire les moins marquées tant que la note a baissé.
+  while (kept.length && quality(out) < floor) {
+    kept = kept.slice(0, -1);
+    out = build(kept);
+  }
+  return { tactic: out, added: kept.length };
+}
+
 /* ---------- Les trois propositions ---------- */
 
 export type ProposalKind = 'taste' | 'balance' | 'squad';
 export type NoteTone = 'good' | 'warn';
 export interface ProposalNote {
-  id: 'allMet' | 'mustMissed' | 'demand' | 'relaxed' | 'mustDropped' | 'sameShape' | 'newShape' | 'bestFit' | 'hole' | 'simple' | 'farFromTaste' | 'tuned' | 'issuesLeft';
+  id: 'allMet' | 'mustMissed' | 'demand' | 'relaxed' | 'mustDropped' | 'sameShape' | 'newShape' | 'bestFit' | 'hole' | 'simple' | 'farFromTaste' | 'tuned' | 'issuesLeft' | 'playerInstructions';
   tone: NoteTone;
   params: Record<string, unknown>;
 }
@@ -515,11 +564,27 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
   };
   const finish = (kind: ProposalKind, style: StyleRef, raw: BuiltTactic, notes: ProposalNote[], alt = false, tuning: { locked: readonly number[]; reference?: BuiltTactic | null; fitWeight?: number } | null = null): Proposal => {
     const tuned = tuning ? tune(raw, tuning.locked, tuning.reference ?? null, tuning.fitWeight) : null;
-    const tactic = tuned?.tactic ?? raw;
+    const level = taste.tuning === 'simple' ? 'simple' : taste.tuning === 'worked' ? 'worked' : 'default';
+    // Style de centres : il dépend des attaquants alignés (grand pivot, ou petits gabarits), pas des goûts. Posé une fois
+    // le onze connu, s'il reste de la place sous le seuil d'une tactique chargée.
+    let settled = tuned?.tactic ?? raw;
+    if (tuning) {
+      const count = tacticFeatures(settled).count;
+      const row = teamAdvice(builtPlan(engine, settled, players, reserve), builtStyle(settled)).rows.find((r) => r.def.code === 'CrossingStyle' && r.reason);
+      if (row && settled.ti[row.def.id] == null && count < (level === 'simple' ? SIMPLE_MAX : 9)) {
+        const next = { ...settled, ti: { ...settled.ti, [row.def.id]: row.option } };
+        const q = (t: BuiltTactic) => tacticQuality(analyseBuiltTactic(engine, t, players, reserve));
+        if (q(next) >= q(settled) && (tasteScore(next, taste).score ?? 0) >= (tasteScore(settled, taste).score ?? 0)) settled = next;
+      }
+    }
+    // Consignes individuelles du onze, une fois les rôles réglés (elles dépendent du rôle et du joueur).
+    const withPi = tuning ? addPlayerInstructions(engine, settled, players, reserve, PI_PER_PLAYER[level], level === 'simple' ? PI_SIMPLE_TOTAL : Infinity) : null;
+    const tactic = withPi?.tactic ?? settled;
     const s = scoreTactic(engine, tactic, players, reserve, taste);
     const all = [...notes];
     if (tuned && tuned.after > tuned.before) all.push({ id: 'tuned', tone: 'good', params: { before: tuned.before, after: tuned.after } });
     if (tuning && s.issues) all.push({ id: 'issuesLeft', tone: 'warn', params: { count: s.issues } });
+    if (withPi?.added) all.push({ id: 'playerInstructions', tone: 'good', params: { count: withPi.added } });
     for (const d of s.demands) all.push({ id: 'demand', tone: 'warn', params: { demand: d.id, value: d.value, mean: d.mean } });
     if (s.plan.holes) all.push({ id: 'hole', tone: 'warn', params: { count: s.plan.holes } });
     const diff = game ? tacticDiff(tactic, game) : null;
@@ -574,11 +639,13 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
   const plan = [...base.plans].sort((a, b) => value(b) - value(a))[0]!;
   let tactic = fromPlan(plan, 'balance', name(plan.form), applied.ti, applied.mentality);
   let reference: BuiltTactic | null = null;
-  // « Ma tactique du jeu, à corriger » : à schéma égal, on garde ses rôles et ses consignes (la familiarité est acquise)
+  // « Ma tactique du jeu, à corriger » : on garde ses postes, ses rôles et ses consignes (la familiarité est acquise)
   // et l'on n'y applique que les réponses ; le réglage automatique corrige ensuite les rôles qui coûtent au onze.
-  if (game && keepsShape(plan)) {
+  // Le schéma du jeu est gardé même s'il ne fait pas partie des schémas types de l'appli (postes déplacés à la main,
+  // tactique téléchargée) : c'est le choix « Ma tactique du jeu, à corriger ».
+  if (game && taste.start === 'game') {
     const kept = applyTaste(game, taste, relaxed);
-    const own: BuiltTactic = { ...game, id: 'balance', name: name(plan.form), slots: game.slots.map((s) => ({ ...s, pi: [] })), ti: kept.ti, mentality: kept.mentality };
+    const own: BuiltTactic = { ...game, id: 'balance', name: name(builtPlan(engine, game, players, reserve).form), slots: game.slots.map((s) => ({ ...s, pi: [] })), ti: kept.ti, mentality: kept.mentality };
     tactic = own;
     reference = game;
   }

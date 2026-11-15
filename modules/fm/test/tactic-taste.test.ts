@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { analyseBuiltTactic, applyTaste, rolesAt, builtFromGame, optimiseTactic, tacticQuality, EMPTY_TASTE, mergeReference, mustMet, newBuiltTactic, parseTaste, proposeTactics, scoreTactic, styleInstructions, TacticEngine, tacticDiff, tacticFeatures, tasteOfStyle, tasteScore, unmetDemands, SIMPLE_MAX, type Taste } from '../src';
+import { addPlayerInstructions, analyseBuiltTactic, applyTaste, IP_TRAITS, OOP_TRAITS, rolesAt, builtFromGame, optimiseTactic, tacticQuality, EMPTY_TASTE, mergeReference, mustMet, newBuiltTactic, parseTaste, proposeTactics, scoreTactic, styleInstructions, TacticEngine, tacticDiff, tacticFeatures, tasteOfStyle, tasteScore, unmetDemands, SIMPLE_MAX, type Taste } from '../src';
 import { normalizePlayer } from '../src/player';
 
 const engine = new TacticEngine(mergeReference(undefined));
@@ -174,6 +174,40 @@ describe('ma tactique idéale', () => {
       expect(new Set(out.map(key)).size).toBe(3);
       const balance = out[1]!;
       if (balance.diff?.sameShape) expect(balance.diff.roles).toBeLessThanOrEqual(8);
+    }
+  });
+
+  it('ajoute des consignes individuelles conseillées sans baisser la qualité ni dépasser la limite par joueur', () => {
+    const base = newBuiltTactic(engine, '4-3-3', 'a');
+    const q0 = tacticQuality(analyseBuiltTactic(engine, base, squad()));
+    const out = addPlayerInstructions(engine, base, squad(), [], 2);
+    expect(out.added).toBe(out.tactic.slots.reduce((n, s) => n + (s.pi ?? []).length, 0));
+    expect(out.tactic.slots.every((s) => (s.pi ?? []).length <= 2)).toBe(true);
+    expect(tacticQuality(analyseBuiltTactic(engine, out.tactic, squad()))).toBeGreaterThanOrEqual(q0);
+    expect(addPlayerInstructions(engine, base, squad(), [], 3, 4).added).toBeLessThanOrEqual(4);
+    // Une réponse sur le réglage en met dans les propositions, avec la note qui le dit.
+    const props = proposeTactics({ engine, players: squad(), taste: taste({ ball: 'fast', defend: 'high', tuning: 'worked' }) }).proposals;
+    for (const p of props) {
+      const n = p.tactic.slots.reduce((k, s) => k + (s.pi ?? []).length, 0);
+      expect(p.notes.some((x) => x.id === 'playerInstructions')).toBe(n > 0);
+    }
+  });
+
+  it('corrige la tactique du jeu même quand son schéma n’est pas un des modèles', () => {
+    const b = newBuiltTactic(engine, '4-4-2', 'g');
+    const i = b.slots.findIndex((s) => s.pos === 'MG');
+    const slots = b.slots.map((s, k) => (k === i ? { ...s, pos: 'MOG' as const, ip: 'IF' } : s));
+    const game = { ...b, slots, name: 'Jeu' };
+    const res = proposeTactics({ engine, players: squad(), taste: taste({ defend: 'mid', start: 'game' }), game });
+    const balance = res.proposals.find((p) => p.kind === 'balance')!;
+    expect(balance.diff).toMatchObject({ sameShape: true });
+    expect(balance.scores.quality).toBeGreaterThanOrEqual(res.game!.scores.quality);
+  });
+
+  it('connaît le comportement de tous les rôles du repère', () => {
+    for (const r of engine.ref.roles) {
+      if (r.phase !== 'oop') expect(IP_TRAITS[r.code], r.code).toBeDefined();
+      if (r.phase !== 'ip') expect(OOP_TRAITS[r.code], r.code).toBeDefined();
     }
   });
 
