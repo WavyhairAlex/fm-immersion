@@ -1,4 +1,5 @@
 import type { FmPlayer } from './player';
+import type { PosCode } from './positions';
 
 /*
  * « Indice moteur » : ce que les attributs d'un joueur pèsent vraiment dans le moteur de match de FM27.
@@ -12,6 +13,12 @@ import type { FmPlayer } from './player';
  * plus utiles, ou l'endurance encore plus lourde avec un pressing intense. Une tendance, pas une vérité. Les
  * gardiens ne sont pas couverts (réflexes et agilité y font l'essentiel). Les attributs cachés testés (pression,
  * régularité, grands matchs) ne sont pas lus : ils comptent pour 0, comme un 12.
+ *
+ * Poids du poste : les tests d'Harvestgreen ne distinguent pas les postes. Les mesures de Purity (mêmes tests, mais
+ * l'attribut ne change que pour les joueurs d'un poste) donnent, pour les attributs qui comptent, un coefficient par
+ * poste (attaquant, milieu offensif ou ailier, latéral ou piston, défenseur central, milieu défensif). On en tire un
+ * multiplicateur par attribut et par poste (voir `positionWeights`) : la courbe reste celle d'Harvestgreen, seule sa
+ * hauteur change selon le poste.
  *
  * Ce n'est pas la note du jeu : les étoiles et la note au poste restent celles de FM27 (role-ratings-fm27.ts).
  */
@@ -50,6 +57,64 @@ export const ENGINE_GAINS: Record<string, readonly [number, number, number]> = {
   Movement: [-4.0, 2.4, -6.0],
 };
 
+/** Familles de poste mesurées par Purity ; `team` = pas de mesure propre (milieux centraux et excentrés). */
+export type EngineGroup = 'ST' | 'AM' | 'WB' | 'CB' | 'DM' | 'team';
+export const ENGINE_GROUPS = ['ST', 'AM', 'WB', 'CB', 'DM'] as const;
+
+export const ENGINE_GROUP_OF: Record<PosCode, EngineGroup | null> = {
+  GB: null, DD: 'WB', DG: 'WB', DLD: 'WB', DLG: 'WB', DC: 'CB', MDF: 'DM',
+  MC: 'team', MD: 'team', MG: 'team', MOD: 'AM', MOG: 'AM', MOC: 'AM', BT: 'ST',
+};
+
+/**
+ * Coefficients de Purity (gain de taux de victoire par point d'attribut) pour toute l'équipe puis par poste, dans
+ * l'ordre ST, AM, WB, CB, DM ; `true` = écart significatif dans son test. Seuls les attributs que Purity juge
+ * déterminants sont repris : pour les autres, les écarts entre postes sont du bruit.
+ */
+const PURITY: Record<string, { team: number; by: readonly (readonly [number, boolean])[] }> = {
+  Acceleration: { team: 0.34, by: [[0.7, true], [0.3, true], [0.33, true], [0.34, true], [0.23, true]] },
+  Pace: { team: 0.34, by: [[0.9, true], [0.39, true], [0.4, true], [0.23, true], [0.11, false]] },
+  JumpingReach: { team: 0.22, by: [[0.73, true], [0.05, false], [0.1, true], [0.35, true], [0.09, false]] },
+  Stamina: { team: 0.19, by: [[0.34, true], [0.2, true], [0.28, true], [0.14, true], [0.09, false]] },
+  Anticipation: { team: 0.15, by: [[0.37, true], [0.15, true], [0.15, true], [0.14, true], [0.02, false]] },
+  Strength: { team: 0.14, by: [[0.21, false], [0.26, true], [0.15, true], [0.07, false], [0.08, false]] },
+  Finishing: { team: 0.07, by: [[0.27, true], [0.14, true], [0.06, false], [0, false], [0.04, false]] },
+};
+const WEIGHT_MIN = 0.25;
+const WEIGHT_MAX = 2;
+
+/**
+ * Multiplicateur de chaque attribut déterminant pour une famille de poste. Rapport « coefficient du poste /
+ * coefficient de l'équipe », rapproché à mi-chemin de 1 quand l'écart n'est pas significatif, puis ramené à une
+ * moyenne de 1 sur ces attributs (le poste change ce qui compte, pas l'échelle de l'indice), borné entre 0,25 et 2.
+ */
+function groupWeights(group: EngineGroup): Record<string, number> {
+  const keys = Object.keys(PURITY);
+  if (group === 'team') return Object.fromEntries(keys.map((k) => [k, 1]));
+  const i = ENGINE_GROUPS.indexOf(group);
+  const raw = keys.map((k) => {
+    const { team, by } = PURITY[k]!;
+    const [coef, sig] = by[i]!;
+    const r = coef / team;
+    return sig ? r : 1 + (r - 1) / 2;
+  });
+  const mean = raw.reduce((s, r) => s + r, 0) / raw.length;
+  return Object.fromEntries(keys.map((k, j) => [k, Math.min(WEIGHT_MAX, Math.max(WEIGHT_MIN, raw[j]! / mean))]));
+}
+const WEIGHTS = Object.fromEntries([...ENGINE_GROUPS, 'team'].map((g) => [g, groupWeights(g as EngineGroup)])) as Record<EngineGroup, Record<string, number>>;
+
+/** Familles de poste d'un joueur, sans doublon (les gardiens n'en ont pas). */
+export function engineGroups(positions: readonly PosCode[]): EngineGroup[] {
+  return [...new Set(positions.map((p) => ENGINE_GROUP_OF[p]).filter((g): g is EngineGroup => g != null))];
+}
+
+/** Multiplicateur par attribut pour ces postes : moyenne des familles s'il en joue plusieurs ; 1 hors attributs déterminants. */
+export function positionWeights(positions: readonly PosCode[]): Record<string, number> {
+  const groups = engineGroups(positions);
+  if (!groups.length) return WEIGHTS.team;
+  return Object.fromEntries(Object.keys(PURITY).map((k) => [k, groups.reduce((s, g) => s + WEIGHTS[g][k]!, 0) / groups.length]));
+}
+
 /** Attributs à ne pas laisser sous 6 : ils coûtent cher en dessous et rapportent peu au-dessus de 12. */
 export const ENGINE_MINIMUMS = ['WorkRate', 'Anticipation', 'Strength', 'Balance', 'Concentration', 'NaturalFitness'] as const;
 export const ENGINE_MIN_VALUE = 6;
@@ -76,6 +141,8 @@ export interface EngineFactor {
 }
 
 export interface EngineValue {
+  /** Familles de poste prises en compte pour les poids (vide ou `team` seul : poids de toute l'équipe). */
+  groups: EngineGroup[];
   /** Somme des effets : un onze entier de ce profil gagnerait environ autant de points de % qu'un onze à 12 partout. */
   index: number;
   /** Atouts les plus nets (effet ≥ 4), du plus fort au moins fort. */
@@ -92,20 +159,26 @@ export interface EngineValue {
 const MIN_READ = 20;
 const NOTABLE = 4;
 
-/** Indice moteur d'un joueur de champ ; null pour un gardien ou si ses attributs ne sont pas lus. */
-export function engineValue(p: Pick<FmPlayer, 'attributes' | 'positions'>): EngineValue | null {
+/**
+ * Indice moteur d'un joueur de champ, pondéré selon ses postes (ou `at`, le poste visé, par exemple pour une recrue) ;
+ * null pour un gardien ou si ses attributs ne sont pas lus.
+ */
+export function engineValue(p: Pick<FmPlayer, 'attributes' | 'positions'>, at?: PosCode): EngineValue | null {
   if (p.positions.length > 0 && p.positions.every((pos) => pos === 'GB')) return null;
+  const positions = at && at !== 'GB' ? [at] : p.positions;
+  const weights = positionWeights(positions);
   const factors: EngineFactor[] = [];
   for (const attr of Object.keys(ENGINE_GAINS)) {
     const value = p.attributes[attr];
     if (value == null) continue;
     const effect = attributeEffect(attr, value);
-    if (effect != null) factors.push({ attr, value, effect });
+    if (effect != null) factors.push({ attr, value, effect: effect * (weights[attr] ?? 1) });
   }
   if (factors.length < MIN_READ) return null;
   const index = factors.reduce((s, f) => s + f.effect, 0);
   const round = (f: EngineFactor) => ({ ...f, effect: Math.round(f.effect * 10) / 10 });
   return {
+    groups: engineGroups(positions),
     index: Math.round(index),
     strengths: factors.filter((f) => f.effect >= NOTABLE).sort((a, b) => b.effect - a.effect).slice(0, 3).map(round),
     weaknesses: factors.filter((f) => f.effect <= -NOTABLE).sort((a, b) => a.effect - b.effect).slice(0, 3).map(round),
