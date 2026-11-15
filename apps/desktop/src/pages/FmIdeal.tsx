@@ -4,6 +4,7 @@ import {
   EMPTY_TASTE,
   gameInstructions,
   parseTaste,
+  piLabel,
   POS_LABEL,
   proposeTactics,
   tacticSlots,
@@ -296,7 +297,18 @@ export function FmIdeal({ snap, players, folder, go }: { snap?: FmSnapshot; play
                 {shown.plan.slots.map((s, i) => (
                   <tr key={i}>
                     <td className="py-1 pr-2 font-bold">{POS_LABEL[s.pos]}</td>
-                    <td className="py-1 pr-2">{names.role(engine.roles.get(s.ip))}</td>
+                    <td className="py-1 pr-2">
+                      {names.role(engine.roles.get(s.ip))}
+                      {/* Consignes individuelles ajoutées par le réglage (« moins de courses » pour la sentinelle). */}
+                      {(shown.tactic.slots[i]?.pi ?? []).map((k) => {
+                        const l = piLabel(k, lang === 'en');
+                        return (
+                          <span key={k} className="block text-xs text-brun">
+                            {t('fm.ideal.pi', { group: l.group, option: l.option })}
+                          </span>
+                        );
+                      })}
+                    </td>
                     <td className="py-1 pr-2">{names.role(engine.roles.get(s.oop))}</td>
                     <td className="py-1 pr-2">{s.player ? <PlayerLink player={s.player} face={false} /> : <span className="text-corail">{t('fm.ideal.nobody')}</span>}</td>
                     <td className="py-1 text-right">

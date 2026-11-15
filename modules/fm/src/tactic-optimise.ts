@@ -1,6 +1,6 @@
 import type { FmPlayer } from './player';
 import type { TacticEngine } from './tactic';
-import { analyseBuiltTactic, defaultOption, OOP_TRAITS, rolesAt, type BuiltAnalysis, type BuiltTactic } from './tactic-builder';
+import { analyseBuiltTactic, defaultOption, normalizePi, OOP_TRAITS, PI_HOLD, piOptions, rolesAt, type BuiltAnalysis, type BuiltTactic } from './tactic-builder';
 import { TEAM_INSTRUCTIONS_FM27 } from './team-instructions-fm27';
 
 /*
@@ -97,6 +97,13 @@ export function optimiseTactic(engine: TacticEngine, start: BuiltTactic, players
     cur.slots.forEach((slot, i) => {
       for (const r of rolesAt(engine, cur.slots, i, 'ip')) if (r.code !== slot.ip) consider({ ...cur, slots: cur.slots.map((s, k) => (k === i ? { ...s, ip: r.code } : s)) });
       for (const r of rolesAt(engine, oopSlots, i, 'oop')) if (r.code !== slot.oop) consider({ ...cur, slots: cur.slots.map((s, k) => (k === i ? { ...s, oop: r.code } : s)) });
+    });
+    // Milieu axial sans rôle qui reste en place (aucun n'existe en milieu central) : la consigne individuelle « moins de
+    // courses » en fait la sentinelle, quand son rôle la laisse choisir.
+    cur.slots.forEach((slot, i) => {
+      if ((slot.pos !== 'MC' && slot.pos !== 'MDF') || normalizePi(slot.pi ?? []).includes(PI_HOLD)) return;
+      const free = piOptions(engine, cur, i).ip.some((g) => g.state === 'free' && g.options.some((o) => `${g.def.group}:${o}` === PI_HOLD));
+      if (free) consider({ ...cur, slots: cur.slots.map((s, k) => (k === i ? { ...s, pi: normalizePi([...(s.pi ?? []), PI_HOLD]) } : s)) });
     });
     const active = set(cur);
     for (const d of active) {
