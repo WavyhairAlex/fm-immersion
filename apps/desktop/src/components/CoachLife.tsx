@@ -1,25 +1,13 @@
-import { ageAt, BADGES, CAR_COST, CURRENCIES, DEFAULT_TAX, GAME_QUALIFICATION, gameCoach, HOUSING_COST, type FmSnapshot, type GameCoach, lifeEvents, lifeFinances, qualificationCode, sceneState, schoolStage, trophyCabinet, type CareerSpell, type CoachLife as Life, type Scene, type SceneChoice, type SceneState } from '@fm-immersion/module-fm';
+import { ageAt, BADGES, CURRENCIES, DEFAULT_TAX, GAME_QUALIFICATION, gameCoach, type FmSnapshot, type GameCoach, lifeEvents, lifeFinances, qualificationCode, sceneState, schoolStage, trophyCabinet, type CareerSpell, type CoachLife as Life, type Scene, type SceneState } from '@fm-immersion/module-fm';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
+import { Link } from 'react-router-dom';
 import { coachPhotoSource } from '../lib/coach-photo';
+import { lifeResults, useSaveLife } from '../lib/coach-world';
 import { fmData } from '../lib/data';
 import { trophyName } from '../lib/farewell-text';
-
-/** Enregistre la vie du coach dans les réglages de la partie (rien n'est écrit dans FM27). */
-function useSaveLife(saveId: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    // Patch appliqué sur la valeur enregistrée (pas sur celle affichée) : deux champs quittés coup sur coup ne s'écrasent pas.
-    mutationFn: (patch: Partial<Life> | ((cur: Life) => Partial<Life>)) =>
-      fmData.updateSettings(saveId, (prev) => {
-        const cur = prev.coachLife ?? {};
-        return { coachLife: { ...cur, ...(typeof patch === 'function' ? patch(cur) : patch) } };
-      }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['fm', saveId, 'settings'] }),
-  });
-}
 
 const num = (v: string) => {
   const n = Number(v.replace(/\s/g, '').replace(',', '.'));
@@ -70,22 +58,20 @@ export function CoachLifeSection({
   life: Life | undefined;
   spells: CareerSpell[];
   gameDate: string | null;
-  history: { data: FmSnapshot }[];
+  history: { gameDate: string; data: FmSnapshot }[];
 }) {
   const { t } = useTranslation();
   // Salaire et diplôme lus dans FM27 par le plugin (lecture seule) ; la devise du jeu sert tant que le joueur n'en choisit pas.
   const game = useMemo(() => gameCoach(history), [history]);
   const life = useMemo<Life>(() => ({ ...(saved ?? {}), currency: saved?.currency ?? game.currency ?? undefined }), [saved, game.currency]);
   const held = game.qualification != null ? (GAME_QUALIFICATION[game.qualification] ?? 0) : 0;
-  const st = useMemo(() => sceneState(spells, life, gameDate, { held }), [spells, life, gameDate, held]);
+  const results = useMemo(() => lifeResults(history), [history]);
+  const st = useMemo(() => sceneState(spells, life, gameDate, { held, results }), [spells, life, gameDate, held, results]);
   return (
     <section className="mt-10">
       <h2 className="text-2xl font-semibold">{t('coachLife.title')}</h2>
       <p className="help mt-1">{t('coachLife.intro')}</p>
-      <div className="mt-4 grid gap-6 xl:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-        <Phone saveId={saveId} st={st} gameDate={gameDate} life={life} />
-        <Gauges st={st} />
-      </div>
+      <MyLifeLink st={st} />
       <div className="mt-6 grid gap-6 xl:grid-cols-2">
         <Finances saveId={saveId} life={life} spells={spells} st={st} game={game} />
         <Household saveId={saveId} life={life} gameDate={gameDate} st={st} />
@@ -96,109 +82,24 @@ export function CoachLifeSection({
   );
 }
 
-const fromIcon: Record<Scene['from'], string> = { agent: '🏠', partner: '❤️', dealer: '🚗', friend: '📱', assistant: '📋' };
+const fromIcon: Record<Scene['from'], string> = { agent: '🏠', partner: '❤️', dealer: '🚗', friend: '📱', assistant: '📋', representative: '💼', chairman: '🏛️', journalist: '📰' };
 
-/** Effets d'un choix, affichés sous le bouton : dépense, loyer, harmonie, moral. */
-function ChoiceEffects({ c, money }: { c: SceneChoice; money: Intl.NumberFormat }) {
+/** Lien vers « Ma vie » : les messages, dilemmes et proches ont leur écran (anciennement le téléphone ici). */
+function MyLifeLink({ st }: { st: SceneState }) {
   const { t } = useTranslation();
-  const chips: { text: string; bad: boolean }[] = [];
-  if (c.cost) chips.push({ text: `−${money.format(c.cost)}`, bad: true });
-  if (c.housing) chips.push({ text: t('coachLife.phone.perMonth', { amount: money.format(HOUSING_COST[c.housing]) }), bad: false });
-  if (c.car) chips.push({ text: t('coachLife.phone.perMonth', { amount: money.format(CAR_COST[c.car]) }), bad: false });
-  if (c.harmony) chips.push({ text: t('coachLife.phone.harmony', { n: c.harmony > 0 ? `+${c.harmony}` : `${c.harmony}` }), bad: c.harmony < 0 });
-  if (c.morale) chips.push({ text: t('coachLife.phone.morale', { n: c.morale > 0 ? `+${c.morale}` : `${c.morale}` }), bad: c.morale < 0 });
-  if (c.badge) chips.push({ text: t('coachLife.phone.startsBadge'), bad: false });
+  const n = st.pending.length;
   return (
-    <span className="mt-1 flex flex-wrap justify-center gap-1">
-      {chips.map((ch, i) => (
-        <span key={i} className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${ch.bad ? 'bg-corail/10 text-corail' : 'bg-eau/15 text-canard'}`}>
-          {ch.text}
-        </span>
-      ))}
-    </span>
+    <Link to="/vie" className="card mt-4 flex items-center gap-4 bg-canard text-white hover:ring-2 hover:ring-orange">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-orange font-extrabold text-canard">{n || '✓'}</span>
+      <span className="flex-1">
+        <span className="block font-bold">{n ? t('myLife.careerLinkCount', { count: n }) : t('myLife.careerLink')}</span>
+        <span className="block text-sm text-white/70">{t('myLife.intro')}</span>
+      </span>
+      <span className="btn-primary">{t('myLife.careerLinkOpen')}</span>
+    </Link>
   );
 }
 
-/** Téléphone : les messages qui attendent une réponse, tirés des vrais moments de la carrière. */
-function Phone({ saveId, st, gameDate, life }: { saveId: string; st: SceneState; gameDate: string | null; life: Life | undefined }) {
-  const { t, i18n } = useTranslation();
-  const save = useSaveLife(saveId);
-  const money = new Intl.NumberFormat(i18n.resolvedLanguage, { style: 'currency', currency: life?.currency ?? 'EUR', maximumFractionDigits: 0 });
-  const dateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'medium' });
-  const answer = (sc: Scene, choice: string) =>
-    save.mutate((cur) => ({ answers: { ...(cur.answers ?? {}), [sc.id]: { choice, date: gameDate ?? sc.date } } }));
-  return (
-    <div className="card bg-canard text-white">
-      <h3 className="flex items-center gap-2 text-xl font-semibold">
-        <span aria-hidden>📱</span> {t('coachLife.phone.title')}
-        {!!st.pending.length && <span className="rounded-full bg-orange px-2 py-0.5 text-xs font-extrabold text-canard">{st.pending.length}</span>}
-      </h3>
-      {!st.pending.length ? (
-        <p className="mt-3 text-sm text-white/70">{t('coachLife.phone.empty')}</p>
-      ) : (
-        <ul className="mt-4 space-y-5">
-          {st.pending.map((sc) => {
-            const params = { club: sc.club, name: sc.name ?? t('coachLife.phone.someone'), season: sc.season, trophy: trophyName(t, { season: sc.season ?? '', competition: sc.competition ?? null }) };
-            return (
-              <li key={sc.id}>
-                <p className="text-xs font-bold text-white/60">
-                  <span aria-hidden>{fromIcon[sc.from]}</span> {t(`coachLife.phone.from.${sc.from}`, { name: life?.partner?.name || t('coachLife.phone.someone') })} · {dateFmt.format(new Date(sc.date))}
-                </p>
-                <p className="mt-1 max-w-xl rounded-2xl rounded-tl-sm bg-white px-4 py-3 text-sm text-canard">{t(`coachLife.scene.${sc.kind}.text`, params)}</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {sc.choices.map((c) => (
-                    <button
-                      key={c.key}
-                      type="button"
-                      disabled={save.isPending}
-                      onClick={() => answer(sc, c.key)}
-                      className="flex min-w-[9rem] flex-col items-center rounded-xl bg-orange-clair px-3 py-2 text-sm font-bold text-canard hover:bg-orange disabled:opacity-60"
-                    >
-                      {t(`coachLife.scene.${sc.kind}.choice.${c.key}`, params)}
-                      <ChoiceEffects c={c} money={money} />
-                    </button>
-                  ))}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      <p className="mt-4 text-xs text-white/60">{t('coachLife.phone.note')}</p>
-    </div>
-  );
-}
-
-function Gauge({ label, value, help }: { label: string; value: number; help: string }) {
-  const color = value >= 60 ? 'bg-eau-soutenu' : value >= 35 ? 'bg-ambre' : 'bg-corail';
-  return (
-    <div>
-      <div className="flex items-baseline justify-between">
-        <span className="font-bold">{label}</span>
-        <span className="font-display text-lg font-semibold tabular-nums">{value}</span>
-      </div>
-      <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-canard/10" role="meter" aria-valuemin={0} aria-valuemax={100} aria-valuenow={value} aria-label={label}>
-        <div className={`h-full ${color}`} style={{ width: `${value}%` }} />
-      </div>
-      <p className="mt-1 text-xs text-brun">{help}</p>
-    </div>
-  );
-}
-
-function Gauges({ st }: { st: SceneState }) {
-  const { t } = useTranslation();
-  const mood = (v: number) => (v >= 75 ? 'high' : v >= 50 ? 'ok' : v >= 30 ? 'low' : 'crisis');
-  return (
-    <div className="card space-y-5">
-      <h3 className="text-xl font-semibold">{t('coachLife.gauges.title')}</h3>
-      <Gauge label={t('coachLife.gauges.harmony')} value={st.harmony} help={t(`coachLife.gauges.harmonyMood.${mood(st.harmony)}`)} />
-      <Gauge label={t('coachLife.gauges.morale')} value={st.morale} help={t(`coachLife.gauges.moraleMood.${mood(st.morale)}`)} />
-      <p className="text-xs text-brun">{t('coachLife.gauges.note', { count: st.answered.length })}</p>
-    </div>
-  );
-}
-
-/** Diplômes d'entraîneur payés de sa poche : un à la fois, dans l'ordre. */
 function Badges({ saveId, st, gameDate, life, game }: { saveId: string; st: SceneState; gameDate: string | null; life: Life | undefined; game: GameCoach }) {
   const { t, i18n } = useTranslation();
   const save = useSaveLife(saveId);

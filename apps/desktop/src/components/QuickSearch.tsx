@@ -78,6 +78,7 @@ export function QuickSearch() {
     screens.push(
       { key: 's:carriere', label: t('careerPage.title'), sub: '', kind: 'screen', run: go('/carriere') },
       { key: 's:gazette', label: t('layout.nav.story'), sub: '', kind: 'screen', run: go('/gazette') },
+      { key: 's:vie', label: t('myLife.title'), sub: '', kind: 'screen', run: go('/vie') },
       { key: 's:defis', label: t('modes.challenges.title'), sub: '', kind: 'screen', run: go('/defis') },
       { key: 's:faces', label: t('layout.nav.faces'), sub: '', kind: 'screen', run: go('/visages') },
       { key: 's:saves', label: t('layout.nav.saves'), sub: '', kind: 'screen', run: go('/sauvegardes') },

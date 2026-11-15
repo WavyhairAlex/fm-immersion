@@ -6616,7 +6616,10 @@
         "partner": "{{name}}",
         "dealer": "Car dealer",
         "friend": "An old friend",
-        "assistant": "Your assistant"
+        "assistant": "Your assistant",
+        "representative": "Your agent",
+        "chairman": "Your chairman",
+        "journalist": "The Gazette"
       }
     },
     "gauges": {
@@ -6766,6 +6769,142 @@
           "roadtrip": "Road trip after the {{season}} season",
           "work": "Summer spent preparing, after {{season}}"
         }
+      },
+      "promise": {
+        "text": "{{club}}… are you sure? We don't know anyone there.",
+        "choice": {
+          "promise": "The day I win a trophy, I'm taking you away for a weekend. Promise.",
+          "honest": "It'll be hard at first, I know.",
+          "career": "It's my chance, I can't say no."
+        },
+        "done": {
+          "promise": "Promised {{name}} a weekend away the day of a trophy",
+          "honest": "Honest with {{name}}: the start at {{club}} will be hard",
+          "career": "\"It's my chance\": {{club}} first"
+        }
+      },
+      "objectives": {
+        "text": "Welcome to {{club}}. The board wants a clear target for the season. What do I tell them?",
+        "choice": {
+          "title": "We go for the title.",
+          "top3": "We finish in the top three.",
+          "safe": "We build, no promises."
+        },
+        "done": {
+          "title": "Promised the {{club}} chairman a title challenge",
+          "top3": "Promised the {{club}} chairman a top-three finish",
+          "safe": "No promise to the {{club}} chairman"
+        }
+      },
+      "promiseDue": {
+        "text": "I watched you lift {{trophy}}. I cried in front of the TV. Remember your promise? A weekend just the two of us. When are we going?",
+        "choice": {
+          "now": "This weekend, I promise.",
+          "later": "Right after the season ends.",
+          "club": "The club comes first, you know that."
+        },
+        "done": {
+          "now": "Weekend away after {{trophy}}: promise kept",
+          "later": "Weekend pushed back until after the season",
+          "club": "Weekend promise not kept"
+        }
+      },
+      "reminder": {
+        "text": "Well. Still no weekend. You promised me.",
+        "choice": {
+          "go": "I'm booking tonight.",
+          "again": "Not now, pre-season is starting."
+        },
+        "done": {
+          "go": "Weekend finally booked with {{name}}",
+          "again": "Weekend pushed back once more"
+        }
+      },
+      "offer": {
+        "text": "{{rival}} want to meet you. They loved your season at {{club}} and are talking about doubling your wage. What do I tell them?",
+        "title": "{{rival}} want to meet you",
+        "causeTrophy": "After {{trophy}}",
+        "causeAward": "After your manager of the month award",
+        "choice": {
+          "listen": "I'll listen, without signing anything.",
+          "negotiate": "I'll use it to negotiate with my chairman.",
+          "refuse": "No. {{club}} first."
+        },
+        "hint": {
+          "listen": "If the press finds out, everyone will know.",
+          "negotiate": "In FM27, go and ask your chairman for a new contract.",
+          "refuse": "Your agent will be less eager next time."
+        },
+        "done": {
+          "listen": "Quiet meeting with {{rival}}",
+          "negotiate": "Showed the chairman {{rival}}'s interest",
+          "refuse": "Turned down {{rival}}, {{club}} first"
+        }
+      },
+      "leak": {
+        "text": "I hear you met {{rival}}. Can I print it?",
+        "choice": {
+          "deny": "That's not true.",
+          "admit": "They called, I listened. That's normal.",
+          "noComment": "No comment."
+        },
+        "done": {
+          "deny": "Denied meeting {{rival}}",
+          "admit": "Admitted talking to {{rival}}",
+          "noComment": "No comment on {{rival}}"
+        }
+      },
+      "award": {
+        "text": "Manager of the month for {{month}}! Any reaction for the Gazette?",
+        "choice": {
+          "humble": "It's the whole staff's work.",
+          "proud": "I earned it, we worked hard.",
+          "players": "It belongs to the players, not me."
+        },
+        "done": {
+          "humble": "Manager of the month for {{month}}: credit to the staff",
+          "proud": "Manager of the month for {{month}}: proud of the work",
+          "players": "Manager of the month for {{month}}: credit to the players"
+        }
+      },
+      "streak": {
+        "text": "Three defeats in a row. We need to talk. What are you doing about it?",
+        "textRecall": "Three defeats in a row. And meanwhile you were talking to {{rival}}. We need to talk.",
+        "title": "Three defeats in a row",
+        "choice": {
+          "backPlayers": "I keep backing the players.",
+          "blameSelf": "It's my fault, I take it all.",
+          "pressure": "I'm going to shake up the dressing room."
+        },
+        "hint": {
+          "backPlayers": "Your assistant likes it, your chairman less so.",
+          "blameSelf": "The press likes managers who own it.",
+          "pressure": "The dressing room may not take it well."
+        },
+        "done": {
+          "backPlayers": "Three defeats: kept backing the players",
+          "blameSelf": "Three defeats: took the blame",
+          "pressure": "Three defeats: shook up the dressing room"
+        }
+      },
+      "ultimatum": {
+        "text": "Twice now you've promised and not delivered. I'm thinking of going back to my parents' for a while.",
+        "title": "{{name}} is talking about leaving",
+        "choice": {
+          "holiday": "Let's go away for a week, just us.",
+          "space": "If you need some air, I understand.",
+          "talk": "Let's really talk tonight."
+        },
+        "hint": {
+          "holiday": "You miss a week at the club.",
+          "space": "Your home life and morale will take a hit.",
+          "talk": "It won't fix everything, but it helps."
+        },
+        "done": {
+          "holiday": "A week away to save the relationship",
+          "space": "{{name}} is taking some distance",
+          "talk": "Long talk with {{name}}"
+        }
       }
     }
   },
@@ -6778,5 +6917,125 @@
     "screens": "Screens",
     "coach": "My career and coach",
     "coachShort": "Me"
+  },
+  "myLife": {
+    "title": "My life",
+    "intro": "The people around you write after the big moments of your save and remember your answers. Nothing is written into FM27.",
+    "tabs": {
+      "messages": "Messages",
+      "dilemmas": "Dilemmas",
+      "people": "Your people"
+    },
+    "noCareer": "Pick a career first to get messages from the people around you.",
+    "unread_one": "{{count}} unread",
+    "unread_other": "{{count}} unread",
+    "unread_zero": "All read",
+    "trigger": "Triggered by your save",
+    "noThread": "Nobody has written yet. Messages come with the big moments of your career: arrival, trophy, award, bad run.",
+    "reply": "Your answer",
+    "send": "Reply",
+    "pick": "Pick an answer to see what it changes.",
+    "ifAnswer": "If you answer \"{{choice}}\"",
+    "noEffect": "Nothing changes.",
+    "remembers": "Remembers your answer from {{date}}: {{text}}",
+    "answered": "You answered",
+    "expired": "Too late to answer",
+    "note": "Your answers stay in the app. They move the gauges, your journal and your finances.",
+    "cost": "−{{amount}}",
+    "effect": "{{gauge}} {{n}}",
+    "startsBadge": "starts a badge",
+    "dilemma": {
+      "none": "No dilemma right now. They come after a trophy, a manager of the month award or a bad run.",
+      "eyebrow": "Dilemma · {{from}}, {{date}}",
+      "choose": "Choose",
+      "past": "Past dilemmas",
+      "youChose": "Your choice: {{choice}}",
+      "returns": "It will come back.",
+      "returnsText": "The people around you remember this choice: it may come back in a later message.",
+      "season": "Season {{season}}",
+      "record": "Record",
+      "position": "Position",
+      "wage": "Wage",
+      "titles": "Trophies"
+    },
+    "people": {
+      "title": "Your people",
+      "curve": "The line follows every answer and every fact from your save.",
+      "remembers": "Remembers:",
+      "noMemory": "No memory yet.",
+      "rename": "Rename",
+      "save": "OK",
+      "perClub": "Starts again at each club",
+      "noPartner": "Add your partner in My career (Home section) to get their messages.",
+      "life": "Your own life",
+      "savings": "Savings",
+      "badge": "Badge in progress",
+      "badgeNone": "None",
+      "awards": "Manager of the month",
+      "journal": "Coach's journal",
+      "promises": "Open promises",
+      "noPromise": "No open promise."
+    },
+    "contacts": {
+      "partner": "{{name}}",
+      "assistant": "Your assistant",
+      "representative": "Your agent",
+      "chairman": "Your chairman",
+      "journalist": "The Gazette"
+    },
+    "roles": {
+      "partner": "Your home",
+      "assistant": "Your right hand",
+      "representative": "Runs your career",
+      "chairman": "{{club}} chairman",
+      "chairmanFree": "No club right now",
+      "journalist": "Writes about you every week"
+    },
+    "others": {
+      "agent": "Estate agent",
+      "dealer": "Car dealer",
+      "friend": "An old friend"
+    },
+    "gauges": {
+      "harmony": "Home",
+      "morale": "Morale",
+      "trust": "Trust",
+      "patience": "Patience",
+      "esteem": "Esteem",
+      "press": "Press tone"
+    },
+    "outcome": {
+      "trophy": "{{trophy}} won with {{club}}",
+      "award": "Manager of the month for {{month}}",
+      "objectiveKept": "Target met: {{objective}} ({{position}})",
+      "objectiveMissed": "Target missed: {{objective}}, finished {{position}}"
+    },
+    "objective": {
+      "title": "the title",
+      "top3": "top three"
+    },
+    "promise": {
+      "trophyWeekend": "A weekend away the day of a trophy",
+      "seasonEnd": "The weekend right after the season",
+      "title": "Challenge for the title with {{club}}",
+      "top3": "Finish top three with {{club}}"
+    },
+    "rivalUnknown": "A richer club",
+    "careerLink": "My life: messages, dilemmas and people",
+    "careerLinkCount_one": "{{count}} message waiting in My life",
+    "careerLinkCount_other": "{{count}} messages waiting in My life",
+    "careerLinkOpen": "Open My life",
+    "promiseChip": "Promise remembered",
+    "triggers": {
+      "recall": "Follow-up to your answer from {{date}}",
+      "arrival": "Arrival at {{club}}",
+      "trophy": "{{trophy}} won",
+      "award": "Manager of the month for {{month}}",
+      "offerAward": "Your manager of the month award",
+      "streak": "Three defeats in a row",
+      "summer": "End of the {{season}} season",
+      "exit": "Leaving {{club}}",
+      "birth": "Birth of {{name}}"
+    }
   }
 }
