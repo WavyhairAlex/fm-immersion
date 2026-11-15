@@ -3619,7 +3619,12 @@
       "piHelp": "The game's 17 individual instructions, with the locks of each phase's role and position (🔒: locked or already set by the role). One option per instruction, as in the game. Beyond 3 per player, the tactic takes long to learn.",
       "piLocked": "Locked by the role or position",
       "savedAuto": "Saved",
-      "savedHelp": "Every change is saved on this PC, for this save. Find the tactic by its name in the list."
+      "savedHelp": "Every change is saved on this PC, for this save. Find the tactic by its name in the list.",
+      "quality": "Quality",
+      "improve": "Improve automatically",
+      "improvedName": "{{name}} (improved)",
+      "improved": "Quality went from {{before}} to {{after}} in a copy: {{roles}} role(s) and {{instructions}} instruction(s) changed. Your original tactic stays in the list.",
+      "notImproved": "Nothing better found without moving a position: try changing a position, then run it again."
     },
     "secondary": {
       "numbers": "Shirt numbers",
@@ -4075,7 +4080,8 @@
       "score": {
         "taste": "Your taste",
         "squad": "Your squad",
-        "meta": "FM27 meta"
+        "meta": "FM27 meta",
+        "quality": "Quality"
       },
       "note": {
         "allMet": "Everything you asked for is in it.",
@@ -4112,13 +4118,16 @@
         "hole_one": "{{count}} position with no player.",
         "hole_other": "{{count}} positions with no player.",
         "simple": "Simple tactic: {{count}} team instructions.",
-        "farFromTaste": "Far from what you like to play."
+        "farFromTaste": "Far from what you like to play.",
+        "tuned": "Tuned automatically: quality went from {{before}} to {{after}}.",
+        "issuesLeft_one": "{{count}} point still to watch, shown in Line-up.",
+        "issuesLeft_other": "{{count}} points still to watch, shown in Line-up."
       },
       "gameTactic": "Your in-game tactic",
       "nothingWritten": "Nothing is written into FM27: you copy what you keep yourself.",
-      "how": "Your taste: each answer is compared with the tactic's instructions and positions (the ball and the defensive block weigh the most). Your squad: 100 = the best eleven your group can field among the tactics shown; each point of rating lost out of 20 removes 15, each demand your group handles poorly removes 6. FM27 meta: what the eleven's attributes weigh in the match engine, according to community tests; a trend, not a truth. Instructions come from FM27's preset tactics, adjusted to your answers.",
+      "how": "Quality: 100 = nothing to watch in \"Strengths and weaknesses\" and penetration, support and solidity gauges at 60 or more; each point to watch removes 6 (12 if serious). Each proposal is tuned automatically (roles and instructions) to get close to it, without touching your answers. Your taste: each answer is compared with the tactic's instructions and positions (the ball and the defensive block weigh the most). Your squad: 100 = the best eleven your group can field among the tactics shown; each point of rating lost out of 20 removes 15, each demand your group handles poorly removes 6. FM27 meta: what the eleven's attributes weigh in the match engine, according to community tests; a trend, not a truth. These are FM Immersion estimates, not measurements from the game.",
       "detailTitle": "Details: {{form}} · {{style}}",
-      "openBuilder": "Open in Build",
+      "openBuilder": "Open in Line-up",
       "builtName": "{{form}} · {{style}} (my style)",
       "col": {
         "pos": "Position",
@@ -4129,7 +4138,8 @@
       },
       "nobody": "Nobody",
       "adopt": "Adopt this tactic",
-      "adoptHelp": "\"Adopt\" makes it your tactic in the Tactics screen: the eleven, the advice and the rest of the app follow it. You will find it under \"My tactics\" and can go back to your in-game tactic at any time."
+      "adoptHelp": "\"Adopt\" makes it your tactic in the Tactics screen: the eleven, the advice and the rest of the app follow it. You will find it under \"My tactics\" and can go back to your in-game tactic at any time.",
+      "computing": "Computing and tuning the proposals…"
     }
   },
   "modes": {

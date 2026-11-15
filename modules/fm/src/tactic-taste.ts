@@ -4,7 +4,8 @@ import type { FmPlayer } from './player';
 import type { PosCode } from './positions';
 import { rankTactics } from './project';
 import { avg, type FormationPlan, type StyleRef, type TacticEngine } from './tactic';
-import { builtPlan, defaultOption, rolesAt, styleInstructions, type BuiltTactic } from './tactic-builder';
+import { analyseBuiltTactic, builtPlan, defaultOption, rolesAt, styleInstructions, type BuiltTactic } from './tactic-builder';
+import { optimiseTactic, tacticQuality } from './tactic-optimise';
 import { MENTALITIES_FM27, TEAM_INSTRUCTIONS_FM27 } from './team-instructions-fm27';
 
 /*
@@ -338,6 +339,8 @@ export interface TacticScores {
   squad: number;
   /** Méta FM27, sur 100 : note méta moyenne du onze à ses postes, comparée de la même façon au meilleur onze. */
   meta: number | null;
+  /** Qualité, sur 100 : 100 = aucun point à surveiller dans « Forces et faiblesses » et des jauges équilibrées (tactic-optimise.ts). */
+  quality: number;
 }
 
 /** Repère des notes « effectif » et « méta » : les meilleures valeurs que l'effectif atteint (sur 20). */
@@ -356,6 +359,8 @@ export interface ScoredTactic {
   raw: ScoreRef;
   demands: Demand[];
   tasteParts: TastePart[];
+  /** Points à surveiller qui restent dans « Forces et faiblesses ». */
+  issues: number;
 }
 
 const relative = (v: number, best: number) => Math.round(clamp(100 - Math.max(0, best - v) * FIT_POINT, 0, 100));
@@ -373,7 +378,9 @@ export function scoreTactic(engine: TacticEngine, tactic: BuiltTactic, players: 
   });
   const raw: ScoreRef = { fit: plan.fit, meta: avg(metas) };
   const ts = tasteScore(tactic, taste);
-  return rescore({ tactic, plan, demands, tasteParts: ts.parts, raw, scores: { taste: ts.score, squad: 0, meta: null } }, ref ?? raw);
+  const analysis = analyseBuiltTactic(engine, tactic, players);
+  const issues = analysis.findings.filter((f) => f.tone !== 'good').length;
+  return rescore({ tactic, plan, demands, tasteParts: ts.parts, raw, issues, scores: { taste: ts.score, squad: 0, meta: null, quality: tacticQuality(analysis) } }, ref ?? raw);
 }
 
 /** Notes « effectif » et « méta » recalculées sur un repère commun, pour comparer plusieurs tactiques entre elles. */
@@ -388,7 +395,7 @@ export function rescore<T extends ScoredTactic>(s: T, ref: ScoreRef): T {
 export type ProposalKind = 'taste' | 'balance' | 'squad';
 export type NoteTone = 'good' | 'warn';
 export interface ProposalNote {
-  id: 'allMet' | 'mustMissed' | 'demand' | 'relaxed' | 'mustDropped' | 'sameShape' | 'newShape' | 'bestFit' | 'hole' | 'simple' | 'farFromTaste';
+  id: 'allMet' | 'mustMissed' | 'demand' | 'relaxed' | 'mustDropped' | 'sameShape' | 'newShape' | 'bestFit' | 'hole' | 'simple' | 'farFromTaste' | 'tuned' | 'issuesLeft';
   tone: NoteTone;
   params: Record<string, unknown>;
 }
@@ -494,9 +501,21 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
   };
   const gameShape = taste.start === 'game' && game ? game.slots.map((s) => s.pos).sort().join(' ') : null;
   const keepsShape = (plan: FormationPlan) => gameShape != null && plan.slots.map((s) => s.pos).sort().join(' ') === gameShape;
-  const finish = (kind: ProposalKind, style: StyleRef, tactic: BuiltTactic, notes: ProposalNote[], alt = false): Proposal => {
+  // Réglage automatique d'une proposition retenue : rôles et consignes ajustés pour vider les points à surveiller, sans
+  // perdre sur les goûts (note et souhaits) ni toucher aux consignes qui les portent.
+  const tune = (tactic: BuiltTactic, locked: readonly number[], reference: BuiltTactic | null = null) => {
+    const floor = tasteScore(tactic, taste).score ?? 0;
+    const met = taste.musts.filter((m) => mustMet(tactic.slots, m));
+    const accept = (t: BuiltTactic) => (tasteScore(t, taste).score ?? 0) >= floor && met.every((m) => mustMet(t.slots, m));
+    return optimiseTactic(engine, tactic, players, { accept, lockedTi: locked, reference });
+  };
+  const finish = (kind: ProposalKind, style: StyleRef, raw: BuiltTactic, notes: ProposalNote[], alt = false, tuning: { locked: readonly number[]; reference?: BuiltTactic | null } | null = null): Proposal => {
+    const tuned = tuning ? tune(raw, tuning.locked, tuning.reference ?? null) : null;
+    const tactic = tuned?.tactic ?? raw;
     const s = scoreTactic(engine, tactic, players, reserve, taste);
     const all = [...notes];
+    if (tuned && tuned.after > tuned.before) all.push({ id: 'tuned', tone: 'good', params: { before: tuned.before, after: tuned.after } });
+    if (tuning && s.issues) all.push({ id: 'issuesLeft', tone: 'warn', params: { count: s.issues } });
     for (const d of s.demands) all.push({ id: 'demand', tone: 'warn', params: { demand: d.id, value: d.value, mean: d.mean } });
     if (s.plan.holes) all.push({ id: 'hole', tone: 'warn', params: { count: s.plan.holes } });
     const diff = game ? tacticDiff(tactic, game) : null;
@@ -505,16 +524,16 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
   };
 
   // La plus adaptée à l'effectif : le classement habituel de l'appli, sans regarder les goûts.
-  const squadOf = (r: (typeof ranked)[number], alt = false): Proposal => {
+  const squadOf = (r: (typeof ranked)[number], alt = false, tuned = false): Proposal => {
     const b = styleBase(r.style);
-    const p = finish('squad', r.style, fromPlan(r.plan, 'squad', `${r.plan.form} · ${r.style.name}`, b.ti, b.mentality), [{ id: 'bestFit', tone: 'good', params: {} }], alt);
+    const p = finish('squad', r.style, fromPlan(r.plan, 'squad', `${r.plan.form} · ${r.style.name}`, b.ti, b.mentality), [{ id: 'bestFit', tone: 'good', params: {} }], alt, tuned ? { locked: [] } : null);
     if (p.scores.taste != null && p.scores.taste < 60) p.notes.splice(1, 0, { id: 'farFromTaste', tone: 'warn', params: {} });
     return p;
   };
   // Départagées sur la note « effectif » de cet écran (onze dans ses rôles, exigences mal tenues), du meilleur au moins bon.
   const worth = (p: Proposal) => p.raw.fit - (p.demands.length * DEMAND_COST) / FIT_POINT;
   const bySquad = ranked.map((r) => ({ r, p: squadOf(r) })).sort((a, b) => worth(b.p) - worth(a.p));
-  if (!tasteAnswered(taste)) return [bySquad[0]!.p];
+  if (!tasteAnswered(taste)) return [squadOf(bySquad[0]!.r, false, true)];
 
   // Style de départ : celui choisi d'un clic, sinon celui dont les consignes ressemblent le plus aux réponses.
   const axes: Taste = { ...taste, musts: [], tuning: null };
@@ -531,7 +550,7 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
     const tactic = enforceRoles(engine, fromPlan(plan, 'taste', name(plan.form), applied.ti, applied.mentality), taste.musts);
     const missed = taste.musts.filter((m) => !mustMet(tactic.slots, m));
     const notes: ProposalNote[] = missed.length ? missed.map((m) => ({ id: 'mustMissed' as const, tone: 'warn' as const, params: { must: m } })) : [{ id: 'allMet', tone: 'good', params: {} }];
-    return finish('taste', base.style, tactic, notes, alt);
+    return finish('taste', base.style, tactic, notes, alt, { locked: applied.touched });
   };
   let tasteP = faithful(faithfulPlans[0]!);
 
@@ -542,12 +561,16 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
   const value = (plan: FormationPlan) => plan.score + (keepsShape(plan) ? KEEP_FORM_BONUS : 0) + MUST_MAX_COST * possible(plan);
   const plan = [...base.plans].sort((a, b) => value(b) - value(a))[0]!;
   let tactic = fromPlan(plan, 'balance', name(plan.form), applied.ti, applied.mentality);
+  let reference: BuiltTactic | null = null;
   // « Ma tactique du jeu, à corriger » : à schéma égal, on garde ses rôles et ses consignes (la familiarité est acquise)
   // et l'on n'y applique que les réponses, sauf si ses rôles coûtent trop au onze.
   if (game && keepsShape(plan)) {
     const kept = applyTaste(game, taste, relaxed);
     const own: BuiltTactic = { ...game, id: 'balance', name: name(plan.form), slots: game.slots.map((s) => ({ ...s, pi: [] })), ti: kept.ti, mentality: kept.mentality };
-    if (builtPlan(engine, own, players, reserve).fit >= builtPlan(engine, tactic, players, reserve).fit - MUST_MAX_COST) tactic = own;
+    if (builtPlan(engine, own, players, reserve).fit >= builtPlan(engine, tactic, players, reserve).fit - MUST_MAX_COST) {
+      tactic = own;
+      reference = game;
+    }
   }
   const dropped: TasteMust[] = [];
   for (const m of taste.musts) {
@@ -562,7 +585,7 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
     ...dropped.map((m) => ({ id: 'mustDropped' as const, tone: 'warn' as const, params: { must: m } })),
   ];
   if (taste.tuning === 'simple') notes.unshift({ id: 'simple', tone: 'good', params: { count: tacticFeatures(tactic).count } });
-  const balance = finish('balance', base.style, tactic, notes);
+  const balance = finish('balance', base.style, tactic, notes, false, { locked: applied.touched, reference });
 
   // Rien à assouplir : le compromis est aussi la plus fidèle ; la première carte montre alors un autre schéma.
   if (sameTactic(tasteP.tactic, balance.tactic)) {
@@ -572,6 +595,6 @@ function buildProposals({ engine, players, reserve = [], taste, ranked = rankTac
   // Même style et même schéma que le compromis : la carte « effectif » montre la piste suivante du classement.
   const sameAsBalance = (r: (typeof ranked)[number]) => r.style.id === base.style.id && r.plan.form === balance.form;
   const best = bySquad[0]!;
-  const squadP = sameAsBalance(best.r) ? squadOf((bySquad.find((x) => !sameAsBalance(x.r)) ?? best).r, true) : best.p;
+  const squadP = sameAsBalance(best.r) ? squadOf((bySquad.find((x) => !sameAsBalance(x.r)) ?? best).r, true, true) : squadOf(best.r, false, true);
   return [tasteP, balance, squadP];
 }
