@@ -2835,6 +2835,19 @@
         "condition": "condition {{pct}} %",
         "risk": "risque de blessure",
         "chained": "enchaîne les matchs"
+      },
+      "hero": {
+        "live": "En direct",
+        "final": "Match terminé",
+        "now": "À faire maintenant",
+        "nothingNow": "Rien à changer pour l'instant : suis le plan.",
+        "openSheet": "Feuille de match",
+        "results": "Voir les résultats",
+        "outcome": {
+          "W": "Victoire",
+          "D": "Match nul",
+          "L": "Défaite"
+        }
       }
     },
     "matchSheet": {
@@ -5617,7 +5630,9 @@
       "noChallenge": "Aucun défi en cours.",
       "steps": "Étapes franchies : {{done}} sur {{total}}",
       "facesProgress": "Projet de portraits : {{pct}} %",
-      "facesUpdate": "Nouveau pack de visages : {{count}} portraits V2"
+      "facesUpdate": "Nouveau pack de visages : {{count}} portraits V2",
+      "story": "Ta carrière racontée",
+      "also": "Aussi dans ce numéro"
     },
     "career": {
       "create": "Créer ma carrière",
@@ -5666,13 +5681,6 @@
       "open": "FM27 ouvert",
       "closed": "FM27 fermé",
       "plugin": "Plugin à régler"
-    },
-    "board": {
-      "label": "Tableau de bord",
-      "calm": "Rien à faire ici.",
-      "open": "Ouvrir",
-      "more": "{{text}} (+{{count}})",
-      "game": "Jeu et plugin"
     },
     "dev": "{{name}} · en développement",
     "connect": {

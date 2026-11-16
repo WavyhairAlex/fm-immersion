@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.229",
+    "date": "2026-11-16",
+    "fr": [
+      "Accueil : pendant un match, le bandeau du haut devient un tableau de score en direct, avec la minute et les changements à faire maintenant. La feuille de match remonte juste dessous.",
+      "Accueil plus lisible : les choses à faire ne sont plus répétées en double, et la une de la Gazette montre son début d'article et deux autres titres du numéro."
+    ],
+    "en": [
+      "Home: during a match, the top banner turns into a live scoreboard with the minute and the changes to make right now. The match sheet moves up just below it.",
+      "Cleaner home: your to-dos are no longer shown twice, and the Gazette front page shows the start of its story and two more headlines from the issue."
+    ]
+  },
+  {
     "version": "0.1.228",
     "date": "2026-11-16",
     "fr": [

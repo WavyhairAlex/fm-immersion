@@ -18,11 +18,12 @@ import { snapshotWinterBreak,
   tacticAdvice,
 } from '@fm-immersion/module-fm';
 import { projectStyle } from '@fm-immersion/module-fm';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 import { useCareer, useCareerStore } from '../lib/career';
 import { useFmSaveScope } from '../lib/save-store';
 import { useTranslation } from 'react-i18next';
 import { GazetteUne, StaffPoint, staffStory } from '../components/HomeCards';
+import { TodayCards } from '../components/TodayCards';
 import { FmBriefing } from './FmBriefing';
 import { FmDecisions, useDecisions } from './FmDecisions';
 import { Avatar } from './FmFoot';
@@ -53,7 +54,6 @@ export function FmHome({
   lineup = null,
   gameTactic = null,
   onTodo,
-  board = null,
 }: {
   snap: FmSnapshot;
   players: FmPlayer[];
@@ -67,8 +67,6 @@ export function FmHome({
   gameTactic?: string | null;
   /** Écrans où le briefing laisse quelque chose à faire. */
   onTodo?: (views: string[]) => void;
-  /** Voyants du centre de contrôle, sous le fil du jour et le bandeau du match. */
-  board?: ReactNode;
 }) {
   const { t, i18n } = useTranslation();
   const en = i18n.resolvedLanguage === 'en';
@@ -156,11 +154,15 @@ export function FmHome({
         gameTactic={gameTactic}
         go={go}
         matches={entries}
-        afterHero={
-          <div className={`grid gap-4 ${staff ? 'lg:grid-cols-2' : ''}`}>
-            <StaffPoint players={players} />
-            <GazetteUne saveId={saveId} />
-          </div>
+        afterGrid={
+          // Bande « récit » : la une de la Gazette, le point du staff, puis la presse, le défi et les visages.
+          <section aria-label={t('layout.today.story')} className="space-y-4">
+            <div className={`grid gap-4 ${staff ? 'lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]' : ''}`}>
+              <GazetteUne saveId={saveId} />
+              <StaffPoint players={players} />
+            </div>
+            {saveId && <TodayCards saveId={saveId} />}
+          </section>
         }
         aside={
           <FmBriefing
@@ -181,7 +183,6 @@ export function FmHome({
         }
         asideAfter={<FixturesCard snap={snap} entries={entries ?? []} go={go} hideLast={threadShown} />}
       />
-      {board}
       <FmOffseason snap={snap} players={players} list={decisionList} go={go} />
       <button type="button" className="chip" aria-expanded={detail} onClick={toggleDetail}>
         {t(detail ? 'fm.brief.detailHide' : 'fm.brief.detail')}

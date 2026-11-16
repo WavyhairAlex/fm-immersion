@@ -16,7 +16,7 @@ type Progress = { found: boolean; completePermille: number };
 /** Bas de « Aujourd'hui » : un cadre par chose racontée ou installée (conférence en attente, gazette, défi, visages), avec son lien. */
 export function TodayCards({ saveId }: { saveId: string }) {
   return (
-    <div className="mt-6 grid gap-4 md:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-3">
       <PressCard saveId={saveId} />
       <ChallengeCard saveId={saveId} />
       <FacesCard />
