@@ -4901,6 +4901,13 @@
       "title": "In this issue",
       "article": "Article",
       "section": "Section"
+    },
+    "shelf": {
+      "title": "Ready for Discord",
+      "ready_one": "{{count}} image ready: poster, feat or news flash.",
+      "ready_other": "{{count}} images ready: poster, feats and news flashes.",
+      "show": "View and send",
+      "hide": "Collapse"
     }
   },
   "discord": {
@@ -6219,7 +6226,10 @@
       "asked": "{{reporter}}, {{outlet}} ({{kind}})",
       "aiAnswer": "Reword with your AI",
       "aiAnswering": "Your AI is rewording your answer…",
-      "aiAnswerFailed": "Your AI didn't keep your figures: your answer stays as it is."
+      "aiAnswerFailed": "Your AI didn't keep your figures: your answer stays as it is.",
+      "answersCount_one": "{{count}} answer",
+      "answersCount_other": "{{count}} answers",
+      "declinedShort": "Skipped"
     },
     "tones": {
       "confident": "Confident",

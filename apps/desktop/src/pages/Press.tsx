@@ -22,7 +22,10 @@ export function Press() {
   useEffect(() => setNote(null), [saveId]);
 
   return (
-    <div className="w-full max-w-3xl">
+    // Deux colonnes : la conférence du moment à gauche, l'historique replié à droite (une seule colonne étroite
+    // laissait la moitié de l'écran vide et étalait les anciennes conférences en long).
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="min-w-0">
       {/* Bandeau de la maquette : la conférence qui attend, s'il y en a une. */}
       {pending && (
         <PageHero
@@ -32,7 +35,7 @@ export function Press() {
         />
       )}
       {!fmSaves.length && (
-        <div className="card mt-6">
+        <div className="card">
           <p className="text-brun">{t('press.page.noSave')}</p>
           <Link to="/parties" className="btn-primary mt-4">
             {t('layout.career.create')}
@@ -44,17 +47,30 @@ export function Press() {
           {t(`press.page.${note}`)}
         </p>
       )}
-      {!!fmSaves.length && !isLoading && !heldLoading && !pending && <p className="card mt-6 text-brun">{t('press.page.none')}</p>}
+      {!!fmSaves.length && !isLoading && !heldLoading && !pending && <p className="card text-brun">{t('press.page.none')}</p>}
       {pending && <Conference key={pending.key} saveId={saveId} club={history.at(-1)?.data.club ?? pending.club} conference={pending} said={recentAnswers(held)} onDone={setNote} />}
 
+      </div>
+
       {held.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-xs font-bold uppercase tracking-wide text-brun">{t('press.page.past')}</h2>
-          <ul className="mt-3 space-y-4">
-            {held.map((h) => (
-              <li key={h.key} className="card">
-                <p className="font-display text-lg font-semibold">{t(`press.page.${h.kind}`, { opponent: h.opponent })}</p>
-                <p className="text-xs text-brun">{t('press.page.date', { date: dateLabel(h.matchDate, i18n.resolvedLanguage) })}</p>
+        <section className="min-w-0 lg:sticky lg:top-28">
+          <h2 className="font-sans text-xs font-bold uppercase tracking-wide text-brun">{t('press.page.past')}</h2>
+          <ul className="mt-3 max-h-[calc(100vh-10rem)] space-y-2 overflow-auto pr-1">
+            {held.map((h, i) => (
+              <li key={h.key}>
+                <details className="card group p-4" open={i === 0}>
+                  <summary className="flex cursor-pointer list-none items-baseline justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block font-display text-lg font-semibold">{t(`press.page.${h.kind}`, { opponent: h.opponent })}</span>
+                      <span className="text-xs text-brun">{t('press.page.date', { date: dateLabel(h.matchDate, i18n.resolvedLanguage) })}</span>
+                    </span>
+                    <span className="shrink-0 text-xs font-bold text-brun">
+                      {h.answers.length ? t('press.page.answersCount', { count: h.answers.length }) : t('press.page.declinedShort')}{' '}
+                      <span className="inline-block transition group-open:rotate-180" aria-hidden>
+                        ▾
+                      </span>
+                    </span>
+                  </summary>
                 {h.answers.length ? (
                   <dl className="mt-3 space-y-3 text-sm">
                     {h.answers.map((a) => (
@@ -67,6 +83,7 @@ export function Press() {
                 ) : (
                   <p className="mt-2 text-sm italic text-brun">{t('press.page.pastDeclined')}</p>
                 )}
+                </details>
               </li>
             ))}
           </ul>
