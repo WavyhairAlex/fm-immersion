@@ -22,7 +22,7 @@ import { SeasonCard } from '../components/SeasonCard';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { aiFor, getAiSettings } from '../lib/ai';
 import { useGazetteWriting, writeGazette } from '../lib/ai-gazette';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useCareer } from '../lib/career';
@@ -121,8 +121,7 @@ export function Gazette() {
   const unePhotoKey = ['gazette', 'une-photo', saveId, issue?.number, issue?.weekStart] as const;
   const { data: unePhoto = null } = useQuery({ queryKey: unePhotoKey, queryFn: () => gazettePhoto(saveId, issue!, false), enabled: !!issue });
 
-  // Ce qui attend un clic (images à envoyer) passe en tête quand le salon est relié ;
-  // sinon une seule ligne en tête, et les images sous la gazette.
+  // Images à envoyer (affiche du choc, exploits, dépêches) : sous le journal, dans une étagère repliée.
   const linked = isWebhook(getWebhook());
   const shareable = (big ? 1 : 0) + records.length + breaking.length;
   const extras = (
@@ -154,16 +153,6 @@ export function Gazette() {
       )}
 
       {exitFresh && <FarewellSection saveId={saveId} exits={exits} looks={looksReady} />}
-      {linked
-        ? extras
-        : shareable > 0 && (
-            <section className="card mt-6 flex flex-wrap items-center justify-between gap-3 p-4">
-              <p className="text-sm">{t('gazette.shareReady', { count: shareable })}</p>
-              <Link to="/discord" className="btn-secondary text-sm">
-                {t('gazette.setupDiscord')}
-              </Link>
-            </section>
-          )}
 
       {issue && (
         <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_16rem]">
@@ -203,7 +192,12 @@ export function Gazette() {
         </div>
       )}
 
-      {!linked && extras}
+      {/* Le journal d'abord ; affiche, exploits et dépêches à envoyer ensuite, repliés sur une ligne. */}
+      {shareable > 0 && (
+        <ShareShelf count={shareable} linked={linked}>
+          {extras}
+        </ShareShelf>
+      )}
       {cards.length > 0 && <SeasonCard saveId={saveId} seasons={cards} />}
       {season && <SeasonSection saveId={saveId} review={season} />}
       {exits.length > 0 && !exitFresh && (
@@ -722,6 +716,35 @@ function RecordSection({ saveId, news, looks }: { saveId: string; news: RecordNe
         {send.isSuccess && <p className="text-xs font-bold text-eau-fonce">{t('records.sent')}</p>}
         {send.isError && <p className="text-xs font-bold text-corail">{String(send.error)}</p>}
       </aside>
+    </section>
+  );
+}
+
+/**
+ * Étagère « À envoyer » sous la gazette : une ligne qui dit combien d'images attendent (affiche, exploits, dépêches),
+ * dépliée au clic. Avant, ces grandes images passaient avant le journal et le repoussaient trois écrans plus bas.
+ */
+function ShareShelf({ count, linked, children }: { count: number; linked: boolean; children: ReactNode }) {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  return (
+    <section className="card mt-6 p-4" aria-label={t('gazette.shelf.title')}>
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-orange px-2 text-sm font-extrabold text-canard">{count}</span>
+        <div className="min-w-0 flex-1">
+          <p className="font-bold">{t('gazette.shelf.title')}</p>
+          <p className="text-sm text-brun">{t(linked ? 'gazette.shelf.ready' : 'gazette.shareReady', { count })}</p>
+        </div>
+        {!linked && (
+          <Link to="/discord" className="btn-secondary text-sm">
+            {t('gazette.setupDiscord')}
+          </Link>
+        )}
+        <button type="button" className="chip" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          {t(open ? 'gazette.shelf.hide' : 'gazette.shelf.show')} {open ? '▴' : '▾'}
+        </button>
+      </div>
+      {open && <div className="mt-2">{children}</div>}
     </section>
   );
 }

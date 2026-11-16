@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageHero } from '../components/PageHero';
+import { PageTitle } from '../components/PageTitle';
 import { PhotoScenes } from '../components/PhotoScenes';
 import { libraryImage } from '../lib/photo-events';
 import { useCareer } from '../lib/career';
@@ -88,9 +89,10 @@ export function Photos() {
 
   return (
     <div className="page">
-      <h1 className="text-3xl font-semibold">{t('photos.title')}</h1>
-      <p className="mt-2 max-w-3xl text-brun">{t('photos.intro')}</p>
-      <p className="mt-1 max-w-3xl text-sm text-brun">{t('photos.size', { size: s ? fmt(s.total) : '…' })}</p>
+      {/* Même en-tête que les autres écrans de Médias : surtitre, titre, une phrase. */}
+      <PageTitle eyebrow={t('topbar.media')} title={t('photos.title')}>
+        {t('photos.intro')} {t('photos.size', { size: s ? fmt(s.total) : '…' })}
+      </PageTitle>
       {/* Bandeau de la maquette : la dernière photo faite, sinon le stade dessiné. */}
       <PageHero
         eyebrow={t('photos.hero.eyebrow')}

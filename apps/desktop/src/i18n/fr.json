@@ -4901,6 +4901,13 @@
       "title": "Dans ce numéro",
       "article": "Article",
       "section": "Rubrique"
+    },
+    "shelf": {
+      "title": "À envoyer sur Discord",
+      "ready_one": "{{count}} image prête : affiche, exploit ou dépêche.",
+      "ready_other": "{{count}} images prêtes : affiche, exploits et dépêches.",
+      "show": "Voir et envoyer",
+      "hide": "Replier"
     }
   },
   "discord": {
@@ -6219,7 +6226,10 @@
       "asked": "{{reporter}}, {{outlet}} ({{kind}})",
       "aiAnswer": "Reformuler avec ton IA",
       "aiAnswering": "Ton IA reformule ta réponse…",
-      "aiAnswerFailed": "Ton IA n'a pas gardé tes chiffres : ta réponse reste telle quelle."
+      "aiAnswerFailed": "Ton IA n'a pas gardé tes chiffres : ta réponse reste telle quelle.",
+      "answersCount_one": "{{count}} réponse",
+      "answersCount_other": "{{count}} réponses",
+      "declinedShort": "Pas venu"
     },
     "tones": {
       "confident": "Confiant",

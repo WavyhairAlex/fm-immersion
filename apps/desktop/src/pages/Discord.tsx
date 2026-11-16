@@ -47,7 +47,9 @@ export function Discord() {
   });
 
   return (
-    <div className="w-full max-w-3xl">
+    // Réglages à gauche, et à droite ce que reçoivent tes amis (l'aperçu était caché derrière un lien).
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+    <div className="min-w-0">
       <p className="text-brun">{t('discord.intro')}</p>
 
       {/* État du salon en une phrase : ce qui part vraiment, et vers où (une fois le salon relié). */}
@@ -172,7 +174,8 @@ export function Discord() {
                 setLive(v);
               }}
             />
-            <details className="pb-3">
+            {/* Aperçu en colonne de droite sur grand écran ; ici seulement quand la page tient sur une colonne. */}
+            <details className="pb-3 lg:hidden">
               <summary className="cursor-pointer text-sm font-bold text-orange-fonce">{t('discord.preview.title')}</summary>
               <p className="mt-1 text-sm text-brun">{t('discord.preview.help')}</p>
               <div className="mt-2">
@@ -241,6 +244,14 @@ export function Discord() {
       <AiLink />
 
       <p className="mt-6 text-xs text-brun">{t('discord.privacy')}</p>
+    </div>
+      <aside className="hidden min-w-0 lg:sticky lg:top-28 lg:block" aria-label={t('discord.preview.title')}>
+        <h2 className="font-sans text-xs font-bold uppercase tracking-wide text-brun">{t('discord.preview.title')}</h2>
+        <p className="mt-1 text-sm text-brun">{t('discord.preview.help')}</p>
+        <div className="mt-3">
+          <DiscordEmbed embed={preview.embeds[0]!} label={t('discord.preview.title')} />
+        </div>
+      </aside>
     </div>
   );
 }

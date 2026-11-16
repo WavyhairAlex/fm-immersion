@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.233",
+    "date": "2026-11-16",
+    "fr": [
+      "Gazette : le journal de la semaine s'affiche en premier. L'affiche du choc, les exploits et les dépêches à envoyer sont rangés dessous, sur une ligne que tu déplies.",
+      "Presse et Live Discord sur deux colonnes : la conférence du moment à côté de tes anciennes conférences (repliées), et l'aperçu de ce que reçoivent tes amis toujours visible à côté des réglages."
+    ],
+    "en": [
+      "Gazette: this week's paper now comes first. The big-match poster, feats and news flashes to send sit below it, on one line you can expand.",
+      "Press and Live Discord on two columns: the current press conference next to your past ones (folded), and a preview of what your friends receive always visible next to the settings."
+    ]
+  },
+  {
     "version": "0.1.232",
     "date": "2026-11-16",
     "fr": [
