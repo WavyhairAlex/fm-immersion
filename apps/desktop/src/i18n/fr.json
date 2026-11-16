@@ -1872,7 +1872,7 @@
       "contracts": "Les fins de contrat à anticiper.",
       "progression": "L'évolution du niveau de chaque joueur depuis le premier instantané.",
       "opponent": "Le prochain adversaire tel que le décrit le rapport d'équipe du jeu, et comment le jouer.",
-      "mercato": "Ton argent, ton onze face à la note visée, les recrues qui le font monter, puis tes décisions dans l'ordre.",
+      "mercato": "Ton argent sur une ligne, ce qu'il faut faire maintenant, puis ton onze face à la note visée et les recrues qui le font monter.",
       "scouting": "Les joueurs de toute la base à acheter peu cher, faire progresser puis revendre : achat, progression, revente et gain estimés.",
       "instructions": "Au plus 3 consignes par joueur du onze, pour coller au style sans trop charger la compréhension tactique.",
       "results": "Les matchs joués depuis que FM Immersion suit la partie : score, onze, note de chaque joueur, et ce qui rapporte des points.",
@@ -2061,7 +2061,7 @@
         "detailClose": "Replier le détail ▴"
       },
       "plan": {
-        "decisions": "Tes décisions, dans l'ordre",
+        "decisions": "À faire maintenant",
         "verb": {
           "extendUrgent": "Prolonger vite",
           "recruit1": "Recruter en urgence",
@@ -2083,7 +2083,13 @@
         "tightTitle": "Finances serrées : vends avant de recruter",
         "tightText": "Pas d'achat possible. Cherche des joueurs libres ou en prêt, et commence par faire de la place.",
         "calmTitle": "Rien d'urgent au mercato",
-        "calmText": "Ton effectif tient la route : garde un œil sur les contrats et les jeunes."
+        "calmText": "Ton effectif tient la route : garde un œil sur les contrats et les jeunes.",
+        "decisionsSub_one": "{{count}} décision, la plus pressée d'abord",
+        "decisionsSub_other": "{{count}} décisions, de la plus pressée à la moins pressée",
+        "chipsMore_one": "et {{count}} autre",
+        "chipsMore_other": "et {{count}} autres",
+        "chipAfter": "relève de {{name}}",
+        "chipAsk": "demander {{amount}}"
       },
       "view": {
         "title": "Ton effectif pour la suite",
@@ -2191,6 +2197,15 @@
           "now": "Note actuelle",
           "potential": "Potentiel",
           "value": "Rapport qualité-prix"
+        },
+        "titleNow": "Ton onze : {{value}} sur 20",
+        "knownShort": "connu à {{value}} %",
+        "gauge": {
+          "aim": "Visé {{value}}",
+          "now": "Aujourd'hui {{value}}",
+          "reachable_one": "Avec {{count}} recrue : {{value}} ✓",
+          "reachable_other": "Avec {{count}} recrues : {{value}} ✓",
+          "out": "Au mieux avec tes cibles : {{value}}"
         }
       },
       "levelHint": "Niveau actuel → potentiel atteignable, sur 20",
@@ -2224,7 +2239,8 @@
         "block": {
           "full": "liste pleine",
           "nonEu": "plus de place hors UE"
-        }
+        },
+        "ok": "Liste d'inscription OK"
       }
     },
     "stats": {
