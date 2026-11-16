@@ -65,6 +65,17 @@ export interface BriefLine {
   action: string;
 }
 
+/** Même date de jeu et même club : l'ancien objet est gardé. */
+function sameNow(prev: SyncState['now'], next: SyncState['now'] | undefined): SyncState['now'] {
+  if (next === undefined) return prev;
+  return prev && next && prev.gameDate === next.gameDate && prev.club === next.club ? prev : next;
+}
+
+/** Le correctif change-t-il quelque chose à l'état de lecture ? */
+function syncChanged(prev: SyncState, patch: Partial<SyncState>): boolean {
+  return (Object.keys(patch) as (keyof SyncState)[]).some((k) => (k === 'now' ? sameNow(prev.now, patch.now) !== prev.now : patch[k] !== prev[k]));
+}
+
 export const useCareerStore = create<CareerState>((set) => ({
   saveId: read(),
   setSaveId: (saveId) => {
@@ -76,7 +87,9 @@ export const useCareerStore = create<CareerState>((set) => ({
     set({ saveId, sync: { free: null, other: null, bridgeOk: null, now: null }, todo: { at: '', views: [] }, brief: { at: '', items: [] } });
   },
   sync: { free: null, other: null, bridgeOk: null, now: null },
-  setSync: (patch) => set((s) => ({ sync: { ...s.sync, ...patch } })),
+  // La lecture du plugin repasse toutes les 5 s : sans changement réel, l'état garde la même référence, sinon tout écran
+  // abonné à `sync` (dont l'écran de la partie entier) se redessinait toutes les 5 s et l'appli saccadait.
+  setSync: (patch) => set((s) => (syncChanged(s.sync, patch) ? { sync: { ...s.sync, ...patch, now: sameNow(s.sync.now, patch.now) } } : s)),
   todo: { at: '', views: [] },
   setTodo: (todo) => set({ todo }),
   brief: { at: '', items: [] },

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { QuickSearch } from './components/QuickSearch';
 import { TopBar } from './components/TopBar';
@@ -11,18 +11,20 @@ import { useAutoBackups } from './lib/save-backup';
 import { useGazetteAuto } from './lib/gazette-auto';
 import { useLiveDiscord } from './lib/live-discord';
 import { usePressInGame } from './lib/press-ingame';
-import { Career } from './pages/Career';
-import { MyLife } from './pages/MyLife';
-import { Challenges } from './pages/Challenges';
-import { Faces } from './pages/Faces';
-import { Photos } from './pages/Photos';
 import { FmSave, SettingsWithoutCareer } from './pages/FmSave';
-import { Home } from './pages/Home';
 import { Overview } from './pages/Overview';
-import { Saves } from './pages/Saves';
-import { Soon } from './pages/Soon';
-import { Story } from './pages/Story';
-import { WhatsNewPage } from './pages/WhatsNewPage';
+
+// Écrans chargés à la demande : le démarrage n'analyse plus tout le code de l'appli d'un coup.
+const Career = lazy(() => import('./pages/Career').then((x) => ({ default: x.Career })));
+const MyLife = lazy(() => import('./pages/MyLife').then((x) => ({ default: x.MyLife })));
+const Challenges = lazy(() => import('./pages/Challenges').then((x) => ({ default: x.Challenges })));
+const Faces = lazy(() => import('./pages/Faces').then((x) => ({ default: x.Faces })));
+const Photos = lazy(() => import('./pages/Photos').then((x) => ({ default: x.Photos })));
+const Home = lazy(() => import('./pages/Home').then((x) => ({ default: x.Home })));
+const Saves = lazy(() => import('./pages/Saves').then((x) => ({ default: x.Saves })));
+const Soon = lazy(() => import('./pages/Soon').then((x) => ({ default: x.Soon })));
+const Story = lazy(() => import('./pages/Story').then((x) => ({ default: x.Story })));
+const WhatsNewPage = lazy(() => import('./pages/WhatsNewPage').then((x) => ({ default: x.WhatsNewPage })));
 
 export function App() {
   useLiveDiscord();
@@ -38,6 +40,7 @@ export function App() {
         <QuickSearch />
         <WhatsNew />
         <main className="min-w-0">
+          <Suspense fallback={null}>
           <Routes>
             <Route path="/" element={<Today />} />
             <Route path="/club/:view" element={<CareerOnly><FmSave /></CareerOnly>} />
@@ -59,6 +62,7 @@ export function App() {
             <Route path="/fm/:saveId" element={<OpenCareer />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </Suspense>
         </main>
       </div>
     </UpdateGate>

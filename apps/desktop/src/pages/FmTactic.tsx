@@ -77,11 +77,43 @@ async function loadLocalReference(folder: string): Promise<{ ref: TacticReferenc
 }
 
 /** Moteur tactique avec les repères maison, remplacés par les repères locaux du joueur s'il en a. */
+/**
+ * Un seul moteur de tactique par référence, partagé par tous les écrans ouverts : chaque `new TacticEngine` repartait
+ * de zéro (caches vides), alors que l'accueil seul en demande quatre ou cinq.
+ */
+const ENGINES = new WeakMap<object, ReturnType<TacticEngine['absolute']>>();
+const NO_REFERENCE = {};
+function sharedEngine(ref: Parameters<typeof mergeReference>[0]) {
+  const key = (ref as object | undefined) ?? NO_REFERENCE;
+  let engine = ENGINES.get(key);
+  if (!engine) {
+    // Notes sur 20 calculées sur les attributs, échelle fixe pour toute l'appli (les étoiles du jeu sont relatives à
+    // l'effectif et ne permettent pas de comparer une recrue d'un autre club).
+    engine = new TacticEngine(mergeReference(ref)).absolute();
+    ENGINES.set(key, engine);
+  }
+  return engine;
+}
+
+/**
+ * Classement des styles (meilleur onze de chaque style, plusieurs centaines de millisecondes sur un effectif complet),
+ * calculé une fois par moteur, effectif et réserve, puis partagé : l'accueil, le Match Center, le projet et les autres
+ * écrans le demandaient chacun de leur côté, et l'appli se figeait le temps de tous ces calculs.
+ */
+const RANKS = new WeakMap<object, WeakMap<FmPlayer[], WeakMap<FmPlayer[], ReturnType<typeof rankTactics>>>>();
+function sharedRank(engine: ReturnType<typeof sharedEngine>, players: FmPlayer[], reserveAll: FmPlayer[], avail: FmPlayer[], reserve: FmPlayer[]) {
+  let byPlayers = RANKS.get(engine);
+  if (!byPlayers) RANKS.set(engine, (byPlayers = new WeakMap()));
+  let byReserve = byPlayers.get(players);
+  if (!byReserve) byPlayers.set(players, (byReserve = new WeakMap()));
+  let ranked = byReserve.get(reserveAll);
+  if (!ranked) byReserve.set(reserveAll, (ranked = rankTactics(engine, avail, reserve)));
+  return ranked;
+}
+
 export function useTacticEngine(folder: string, _players: FmPlayer[] = []) {
   const { data: local } = useQuery({ queryKey: ['fm', 'reference', folder], queryFn: () => loadLocalReference(folder), staleTime: 60_000 });
-  // Notes sur 20 calculées sur les attributs, échelle fixe pour toute l'appli (les étoiles du jeu sont relatives à
-  // l'effectif et ne permettent pas de comparer une recrue d'un autre club).
-  const engine = useMemo(() => new TacticEngine(mergeReference(local?.ref)).absolute(), [local?.ref]);
+  const engine = useMemo(() => sharedEngine(local?.ref), [local?.ref]);
   return { engine, local };
 }
 
@@ -117,7 +149,8 @@ export function useTacticChoice(players: FmPlayer[], folder: string, gameFormati
   }, [scope]);
   const avail = useMemo(() => players.filter((p) => !unavailable(p) && Object.keys(p.attributes).length > 0), [players]);
   // Classement commun à tous les onglets : chaque style avec la note d'équipe de son meilleur onze.
-  const ranked = useMemo(() => rankTactics(engine, avail, reserve), [engine, avail, reserve]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const ranked = useMemo(() => sharedRank(engine, players, reserveAll, avail, reserve), [engine, players, reserveAll]);
   const [coach] = useCoachRaw();
   // Sans choix du joueur : la meilleure tactique applicable, ou le projet dès qu'il devient le meilleur.
   // Tactique de base : celle jouée dans FM27 (d'après son nom), gardée tant qu'une autre ne gagne pas nettement.
