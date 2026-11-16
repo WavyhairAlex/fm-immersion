@@ -74,6 +74,7 @@ export * from './player-history';
 export * from './farewell';
 export * from './breaking';
 export * from './coach-news';
+export * from './incoming';
 export * from './bigmatch';
 export * from './records';
 export * from './offseason';

@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.228",
+    "date": "2026-11-16",
+    "fr": [
+      "Effectif : une recrue apparaît dans « Arrive bientôt » dès que FM27 annonce l'accord, sans attendre les quelques jours avant sa signature effective. Elle rejoint les compos le jour où le jeu l'inscrit dans ton effectif."
+    ],
+    "en": [
+      "Squad: a new signing shows under \"Arriving soon\" as soon as FM27 announces the deal, without waiting the few days until it is completed. He joins the line-ups on the day the game adds him to your squad."
+    ]
+  },
+  {
     "version": "0.1.227",
     "date": "2026-11-15",
     "fr": [

@@ -4157,6 +4157,15 @@
         "instruction": "{{title}} : {{from}} devient {{to}}.",
         "pi": "{{count}} consigne(s) individuelle(s) à donner, notées sous chaque rôle du tableau."
       }
+    },
+    "incoming": {
+      "title_one": "Arrive bientôt",
+      "title_other": "Arrivent bientôt",
+      "soon": "Accord trouvé",
+      "trial": "À l'essai, accord trouvé",
+      "age_one": "{{count}} an",
+      "age_other": "{{count}} ans",
+      "help": "FM27 a annoncé l'accord, mais ne l'inscrit dans ton effectif qu'à la signature effective, parfois quelques jours plus tard. D'ici là, il n'entre ni dans les compos ni dans l'analyse."
     }
   },
   "modes": {
