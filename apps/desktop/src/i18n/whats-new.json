@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.235",
+    "date": "2026-11-16",
+    "fr": [
+      "Entraînement : les chiffres de l'onglet « Comprendre » ont été revérifiés un par un. Le repos vaut 11,3 et non 10,7, et l'effet des séances tactiques sur les victoires reprend les vrais résultats du banc d'essai.",
+      "Gardiens : un jeune gardien sans point faible net reçoit maintenant la priorité Agilité, celle utilisée pour les gardiens dans les tests."
+    ],
+    "en": [
+      "Training: every figure in the \"Understand\" tab has been checked again. Rest is worth 11.3, not 10.7, and the effect of tactical sessions on wins now uses the real test results.",
+      "Goalkeepers: a young keeper with no clear weak point now gets the Agility focus, the one the tests use for keepers."
+    ]
+  },
+  {
     "version": "0.1.234",
     "date": "2026-11-16",
     "fr": [

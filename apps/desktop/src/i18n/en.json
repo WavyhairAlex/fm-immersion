@@ -1457,7 +1457,7 @@
         "physical": "Physical",
         "ball": "Ball work",
         "tactical": "Tactical",
-        "help": "A tactical session grows attributes no more than rest: it feeds tactical effectiveness (42.7% wins against 39.2% with eight sessions a week, at the cost of injuries). The same session three times yields less than four different sessions. The attacking and defensive variants count as the measured (balanced) ones."
+        "help": "A tactical session grows attributes no more than rest: it feeds tactical effectiveness (wins: 48.2% with no tactical session, 50.9% with eight a month, 52.6% with twenty-four, at the cost of injuries). The same session three times yields less than four different sessions. The attacking and defensive variants count as the measured (balanced) ones."
       },
       "metaHelp": "AlexJeuVideal's method (\"ENTRAINEMENT FM 27 META EFFICACITÉ 1.1\" pack): one block Pressing Trap, Line of Engagement, Build-Up; one block Pressing Trap, Chance Creation, In-Possession Shape; the day before the match Ball Progression, Defensive Block, Conditioning. Everything else is rest. Load the .fmf file shown in the Training screen.",
       "congested": "three or more matches: full rest between matches (results come before development)",
@@ -1741,6 +1741,7 @@
         "slowYoung": "Young and slow: pace matters most in matches and stops improving after 24.",
         "weakRole": "The weakest key attribute of his role.",
         "youngDefault": "Young with no clear weak point: pace, which pays most.",
+        "gkAgility": "Young goalkeeper with no clear weak point: agility, the focus the test benches use for keepers.",
         "seniorMental": "28 or older: a mental attribute of the role, which can still rise as the physical side declines.",
         "none": ""
       },
@@ -1793,7 +1794,7 @@
           "assistant": "Training left to the assistant"
         },
         "teLesson1": "Never leave training to your assistant: 14 fewer points, three times more injuries, and youngsters developing the wrong attributes.",
-        "teLesson2": "Tactical sessions win matches (about +4% wins with 8 a month) but cost injuries: 24 a month add almost nothing and nearly double the days injured.",
+        "teLesson2": "Tactical sessions win matches (48% wins without, 51% with 8 a month, 4 more points over the season) but cost injuries: 24 a month add almost nothing and nearly double the days injured.",
         "teLesson3": "Tactical sessions don't raise attributes: conditioning and ball work do.",
         "teLesson4": "Changing tactic resets understanding: training only pays if the tactic stays the same.",
         "teHelp": "jamiebolden's FM27 test (Bradford, Premier League 2032/33, each setup played three times from the same save). Win rate / effectiveness curve by harvestgreen22 and the playgm forum, quoted by ZaZ on FM-Arena (\"Training Schedules\", November 2026), who advises no more tactical sessions beyond 50%. Effectiveness breakdown: research by Chinese players quoted by ZaZ, to take as rough guides.",

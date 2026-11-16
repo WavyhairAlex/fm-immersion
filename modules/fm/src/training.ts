@@ -498,13 +498,15 @@ export function buildTrainingWeek(input: TrainingInput): TrainingWeek {
  * CA gagnée sur une saison de 100 matchs par un joueur de 18 ans (PA 150, tous attributs à 8, entraîneurs à 16,
  * installations 20), avec la seule séance en question chaque semaine, intensité « double » en bonne et très bonne
  * forme, aucun travail sinon, priorité individuelle Vitesse. Repères : sans entraînement 10,7 ; une séance tactique
- * ne fait pas mieux que le repos (10,5 à 12) ; le physique et le travail avec ballon font le double (22 à 27).
+ * ne fait pas mieux que le repos (10,6 à 12,1, repos 11,3) ; Condition physique (normale ou intense), Développement
+ * individuel et travail avec ballon font le double (22,3 à 26,7).
  * Meilleure semaine : Condition physique légère + Condition physique + Ballon offensif + Ballon défensif = 33,3 ;
  * trois fois la même séance rapporte moins (fatigue). Les séances tactiques servent l'efficacité tactique
- * (victoires 42,7 % contre 39,2 % avec 8 séances par semaine, au prix de blessures), pas les attributs.
+ * (jamiebolden : victoires 48,2 % sans séance tactique, 50,9 % avec 8 par mois, 52,6 % avec 24, mais 362, 469
+ * puis 846 jours de blessure), pas les attributs. Valeurs relevées dans le graphique du PDF d'harvestgreen22.
  */
 export const SESSION_YIELD: Partial<Record<SessionId, number>> = {
-  rest: 10.7,
+  rest: 11.3,
   recovery: 11.0,
   lightConditioning: 11.2,
   conditioning: 24.8,
@@ -537,6 +539,9 @@ export const SESSION_YIELD: Partial<Record<SessionId, number>> = {
 export const HARVEST_WEEK_YIELD = 33.3;
 /** Priorité individuelle de la méthode : Vitesse pour tous les joueurs de champ (l'attribut qui pèse le plus en match). */
 export const HARVEST_FOCUS = 'quickness';
+/** Gardiens : Agilité (« agility for keepers » dans les deux bancs d'essai), jusqu'à 26 ans (ils progressent trois ans de plus). */
+export const GK_FOCUS = 'agilityBalance';
+export const GK_AGILITY_UNTIL = 26;
 
 /** Intensité de l'équipe conseillée par méthode : Harvestgreen ne fait travailler que les joueurs en forme, en double. */
 export function teamIntensityFor(method: TrainingMethod | undefined, matches = 1): Record<(typeof CONDITION_LEVELS)[number], IndividualIntensity> {
@@ -575,7 +580,8 @@ export function coachFocus(
   const gk = player.positions[0] === 'GB';
   if (fromStats) return fromStats;
   if (!gk && player.age != null && player.age <= 23 && isSlow(player.attributes)) return HARVEST_FOCUS;
-  return individualFocus(weak, gk) ?? (!gk && player.age != null && player.age <= 23 ? HARVEST_FOCUS : null);
+  const young = player.age != null && player.age <= (gk ? GK_AGILITY_UNTIL : 23);
+  return individualFocus(weak, gk) ?? (young ? (gk ? GK_FOCUS : HARVEST_FOCUS) : null);
 }
 /** Vitesse ou accélération sous le seuil ; attributs inconnus : on reste sur Vitesse, comme avant. */
 function isSlow(a: Record<string, number> | undefined): boolean {
@@ -741,7 +747,7 @@ function buildCoachWeek(input: TrainingInput): TrainingWeek {
     if (kind === 'match') sessions = ['match', null, null];
     else if (kind === 'recovery') {
       // Repos complet le lendemain du match : pas de contrôle de blessure ce jour-là, et la séance Récupération ne
-      // rapporte pas plus que le repos (11,0 contre 10,7 chez harvestgreen22). Ce jour-là ne coûte pas de rythme.
+      // rapporte même un peu moins que le repos (11,0 contre 11,3 chez harvestgreen22). Ce jour-là ne coûte pas de rythme.
       sessions = ['rest', 'rest', null];
       why = ['recover', 'recover', null];
     } else if (kind === 'rest') {
