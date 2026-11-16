@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.234",
+    "date": "2026-11-16",
+    "fr": [
+      "Mercato plus lisible : ce qu'il faut faire passe tout en haut, avec les noms des joueurs visibles d'un coup d'œil. L'argent disponible tient sur un seul bandeau.",
+      "« Ton onze » devient une jauge : ta note d'aujourd'hui, la note visée et celle que tu atteins avec tes recrues. Le tableau des cibles est plus court ; le salaire s'affiche en passant la souris sur la ligne."
+    ],
+    "en": [
+      "Easier-to-read Transfers: what you need to do now comes first, with player names visible at a glance. Your available money fits on a single bar.",
+      "\"Your XI\" becomes a gauge: today's rating, your target and what your signings would reach. The target table is shorter; hover a row to see the wage."
+    ]
+  },
+  {
     "version": "0.1.233",
     "date": "2026-11-16",
     "fr": [

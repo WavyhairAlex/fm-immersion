@@ -1872,7 +1872,7 @@
       "contracts": "Contract expiries to plan for.",
       "progression": "Each player's level since the first snapshot.",
       "opponent": "The next opponent as the game's team report describes it, and how to play them.",
-      "mercato": "Your money, your XI against the target rating, the signings that lift it, then your decisions in order.",
+      "mercato": "Your money on one bar, what to do now, then your XI against the target rating and the signings that lift it.",
       "scouting": "Players from the whole database to buy cheap, develop and sell on: estimated cost, growth, sale and profit.",
       "instructions": "Up to 3 instructions per starter, to fit the style without overloading tactical familiarity.",
       "results": "Matches played since FM Immersion started following the save: score, eleven, each player's rating, and what earns points.",
@@ -2061,7 +2061,7 @@
         "detailClose": "Fold the detail ▴"
       },
       "plan": {
-        "decisions": "Your decisions, in order",
+        "decisions": "To do now",
         "verb": {
           "extendUrgent": "Extend soon",
           "recruit1": "Sign urgently",
@@ -2083,7 +2083,13 @@
         "tightTitle": "Tight finances: sell before you sign",
         "tightText": "No purchases possible. Look for free agents or loans, and start by making room.",
         "calmTitle": "Nothing urgent in the transfer window",
-        "calmText": "Your squad holds up: keep an eye on contracts and youngsters."
+        "calmText": "Your squad holds up: keep an eye on contracts and youngsters.",
+        "decisionsSub_one": "{{count}} decision, most urgent first",
+        "decisionsSub_other": "{{count}} decisions, most urgent first",
+        "chipsMore_one": "and {{count}} more",
+        "chipsMore_other": "and {{count}} more",
+        "chipAfter": "taking over from {{name}}",
+        "chipAsk": "ask {{amount}}"
       },
       "view": {
         "title": "Your squad going forward",
@@ -2191,6 +2197,15 @@
           "now": "Current rating",
           "potential": "Potential",
           "value": "Value for money"
+        },
+        "titleNow": "Your XI: {{value}} out of 20",
+        "knownShort": "{{value}}% known",
+        "gauge": {
+          "aim": "Target {{value}}",
+          "now": "Today {{value}}",
+          "reachable_one": "With {{count}} signing: {{value}} ✓",
+          "reachable_other": "With {{count}} signings: {{value}} ✓",
+          "out": "Best with your targets: {{value}}"
         }
       },
       "levelHint": "Current level → reachable potential, out of 20",
@@ -2224,7 +2239,8 @@
         "block": {
           "full": "list full",
           "nonEu": "no non-EU place left"
-        }
+        },
+        "ok": "Registration list OK"
       }
     },
     "stats": {

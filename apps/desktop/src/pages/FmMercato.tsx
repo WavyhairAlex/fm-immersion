@@ -25,7 +25,23 @@ type PlanKind = 'extendUrgent' | 'recruit1' | 'sell' | 'release' | 'recruit2' | 
 /** Ordre de priorité des groupes : du plus pressé au confort de banc. */
 const PLAN_ORDER: PlanKind[] = ['extendUrgent', 'recruit1', 'sell', 'release', 'recruit2', 'loan', 'extend', 'recruit3'];
 /** Au-delà de ce rang, des finances serrées passent en tête (rien de plus pressé qu'elles). */
-type PlanGroup = { kind: PlanKind; rows: PlanRow[]; names: string[]; why: string };
+type PlanChip = { key: string; pos: PosCode | null; label: string; sub?: string };
+type PlanGroup = { kind: PlanKind; rows: PlanRow[]; chips: PlanChip[]; why: string };
+/** Groupes à régler d'abord : numéro en rouge. */
+const URGENT_KINDS: PlanKind[] = ['extendUrgent', 'recruit1'];
+/** Noms montrés d'emblée sur la ligne d'un groupe (le reste en « et N autres »). */
+const CHIPS_MAX = 6;
+/** Couleur des pastilles de noms, comme dans « Ton effectif pour la suite ». */
+const KIND_CHIP: Record<PlanKind, string> = {
+  extendUrgent: 'border-orange-fonce/50 bg-orange-clair',
+  extend: 'border-orange-fonce/50 bg-orange-clair',
+  recruit1: 'border-dashed border-corail text-corail',
+  recruit2: 'border-dashed border-orange-fonce text-orange-fonce',
+  recruit3: 'border-dashed border-canard/40 text-brun',
+  sell: 'border-corail/50 bg-corail/10',
+  release: 'border-corail/50 bg-corail/10',
+  loan: 'border-ambre bg-ambre/15',
+};
 
 /** Les décisions d'un groupe, une par ligne ; un clic ouvre la ligne sur place. */
 function PlanRows({ rows }: { rows: PlanRow[] }) {
@@ -117,12 +133,22 @@ function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked, reg,
   const byPrio = (p: number) => needs.map((n, i) => ({ n, i })).filter((x) => x.n.priority === p);
   const recruit = (p: number): PlanGroup => {
     const xs = byPrio(p);
-    return { kind: `recruit${p}` as PlanKind, rows: xs.map((x) => needRow(x.n, x.i)), names: xs.map((x) => POS_LABEL[x.n.pos]), why: xs[0]?.n.why[0] ? t(`fm.needs.why.${xs[0].n.why[0]}`, { name: xs[0].n.player?.name ?? '' }) : '' };
+    return { kind: `recruit${p}` as PlanKind, rows: xs.map((x) => needRow(x.n, x.i)), chips: xs.map((x) => ({ key: `n-${x.i}`, pos: x.n.pos, label: t('fm.merc.view.toRecruit'), sub: x.n.player ? t('fm.merc.plan.chipAfter', { name: x.n.player.name }) : undefined })), why: xs[0]?.n.why[0] ? t(`fm.needs.why.${xs[0].n.why[0]}`, { name: xs[0].n.player?.name ?? '' }) : '' };
+  };
+  // Prix demandé d'un vendu, sur sa pastille.
+  const askText = (a: MercatoAdvice) => {
+    const price = askingPrice(a.player, a.months);
+    return price ? t('fm.merc.plan.chipAsk', { amount: f.money(price.ask) }) : undefined;
   };
   const players = (kind: PlanKind, v: MercatoVerdict, xs: MercatoAdvice[], why?: string): PlanGroup => ({
     kind,
     rows: xs.map((a) => playerRow(a, v)),
-    names: xs.map((a) => a.player.name),
+    chips: xs.map((a) => ({
+      key: a.player.id,
+      pos: a.project.pos ?? a.now.pos ?? a.player.positions[0] ?? null,
+      label: a.player.name,
+      sub: v === 'extend' ? (a.player.contractEnd ? f.date(a.player.contractEnd) : undefined) : v === 'sell' ? askText(a) : undefined,
+    })),
     why: why ?? (xs[0]?.reasons[0] ? reason(xs[0].reasons[0]) : ''),
   });
   const groups = [
@@ -137,7 +163,6 @@ function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked, reg,
   ].filter((g) => g.rows.length);
 
   const tight = fin ? financeState(fin).tight : false;
-  const listNames = (xs: string[]) => (xs.length <= 3 ? xs.join(', ') : t('fm.merc.plan.andMore', { list: xs.slice(0, 3).join(', '), count: xs.length - 3 }));
   // Argent du plan : budget transferts + ventes possibles ; marge salariale + salaires libérés (inconnu = sans limite).
   const limits = useMemo<TeamPlanLimits>(
     () => ({
@@ -146,17 +171,37 @@ function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked, reg,
     }),
     [fin, r.income, r.wagesFreed],
   );
-  const kpis = [
-    fin && <Kpi key="tb" label={t('fm.merc.view.kpi.transfer')} value={f.money(fin.transferBudget)} />,
-    fin && fin.wageRoom != null && <Kpi key="wr" label={t('fm.merc.view.kpi.wage')} value={f.money(fin.wageRoom)} tone={fin.wageRoom < 0 ? 'bad' : undefined} sub={t('fm.merc.view.kpi.perMonth')} />,
-    <Kpi key="in" label={t('fm.merc.view.kpi.income')} value={f.money(r.income)} sub={t('fm.merc.view.kpi.incomeSub', { wages: f.money(r.wagesFreed) })} />,
-    fin && <Kpi key="bal" label={t('fm.merc.view.kpi.balance')} value={f.money(fin.balance)} tone={(fin.balance ?? 0) < 0 ? 'bad' : undefined} />,
-  ].filter(Boolean);
+  // Bandeau d'argent (refonte « lisible » du 16/11/2026) : les quatre chiffres sur une ligne, au lieu de quatre cadres.
+  const money: { key: string; label: string; value: string; sub?: string; bad?: boolean }[] = [
+    ...(fin ? [{ key: 'tb', label: t('fm.merc.view.kpi.transfer'), value: f.money(fin.transferBudget) }] : []),
+    ...(fin && fin.wageRoom != null ? [{ key: 'wr', label: t('fm.merc.view.kpi.wage'), value: f.money(fin.wageRoom), sub: t('fm.merc.view.kpi.perMonth'), bad: fin.wageRoom < 0 }] : []),
+    { key: 'in', label: t('fm.merc.view.kpi.income'), value: f.money(r.income), sub: t('fm.merc.view.kpi.incomeSub', { wages: f.money(r.wagesFreed) }) },
+    ...(fin ? [{ key: 'bal', label: t('fm.merc.view.kpi.balance'), value: f.money(fin.balance), bad: (fin.balance ?? 0) < 0 }] : []),
+  ];
+  // Liste d'inscription : un cadre seulement s'il y a un problème ; sinon une pastille dans le bandeau, qui l'ouvre au clic.
+  const regOk = !!regCheck && regCheck.issues.length === 0;
+  const [showReg, setShowReg] = useState(false);
 
   return (
     <div className="space-y-4">
-      {/* 1. L'argent disponible, en un coup d'œil. */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{kpis}</div>
+      {/* 1. L'argent disponible, sur une ligne. */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-xl bg-canard px-5 py-3 text-white">
+        {money.map((m, i) => (
+          <div key={m.key} className={`min-w-0 ${i > 0 ? 'sm:border-l sm:border-white/20 sm:pl-6' : ''}`} title={m.key === 'in' ? m.sub : undefined}>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-white/70">{m.label}</p>
+            <p className={`font-display text-xl font-semibold tabular-nums ${m.bad ? 'text-[#FF9C9C]' : ''}`}>
+              {m.value}
+              {m.key === 'wr' && <span className="ml-1 text-sm font-normal text-white/70">{m.sub}</span>}
+            </p>
+          </div>
+        ))}
+        {reg && regCheck && regOk && (
+          <button type="button" aria-expanded={showReg} onClick={() => setShowReg(!showReg)} className="ml-auto rounded-full bg-eau/25 px-3 py-1 text-xs font-bold text-white hover:bg-eau/40">
+            ✓ {t('fm.merc.reg.ok')}
+            {regCheck.free != null && regCheck.free >= 0 && <> · {t('fm.merc.reg.free', { count: regCheck.free })}</>}
+          </button>
+        )}
+      </div>
       {tight && (
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg border-l-4 border-ambre bg-ambre/10 px-4 py-2 text-sm">
           <span className="font-bold">{t('fm.merc.plan.tightTitle')}</span>
@@ -166,33 +211,38 @@ function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked, reg,
           </button>
         </p>
       )}
+      {reg && regCheck && (!regOk || showReg) && <Registration reg={reg} c={regCheck} />}
 
-      {/* 2. Le niveau du onze face à la note visée, et l'argent réparti pour combler l'écart. */}
-      {pr && <TeamTarget pr={pr} engine={engine} pool={pool} limits={limits} squad={squad} snapshots={snapshots} blockOf={reg && regCheck ? (p) => signingBlock(regCheck, regStatus(p, reg.elig, reg.country), p.age) : undefined} />}
-
-      {reg && regCheck && <Registration reg={reg} c={regCheck} />}
-
-      {/* 3. Vue d'ensemble : tout l'effectif par ligne, avec ce qui reste, part, se prolonge et manque. */}
-      <SquadOverview r={r} needs={needs} />
-
-      {/* 4. Les décisions, dans l'ordre ; le détail s'ouvre sous le groupe. */}
+      {/* 2. Les décisions d'abord, dans l'ordre ; les noms visibles, le détail s'ouvre sous le groupe. */}
       {groups.length > 0 ? (
         <section className="card !p-0" aria-labelledby="merc-next">
-          <h2 id="merc-next" className="px-4 pb-2 pt-4 text-xs font-extrabold uppercase tracking-widest text-canard">
-            {t('fm.merc.plan.decisions')}
-          </h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-2 px-4 pb-2 pt-4">
+            <h2 id="merc-next" className="font-display text-xl font-semibold">{t('fm.merc.plan.decisions')}</h2>
+            <p className="text-sm text-brun">{t('fm.merc.plan.decisionsSub', { count: groups.length })}</p>
+          </div>
           <ol className="divide-y divide-canard/10 border-t border-canard/10">
             {groups.map((g, i) => {
               const isOpen = open === g.kind;
               return (
                 <li key={g.kind}>
                   <button type="button" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : g.kind)} className={`flex w-full items-center gap-4 px-4 py-3 text-left hover:bg-orange-clair/40 ${isOpen ? 'bg-orange-clair/40' : ''}`}>
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-canard/10 text-sm font-extrabold tabular-nums">{i + 1}</span>
+                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-extrabold tabular-nums text-white ${URGENT_KINDS.includes(g.kind) ? 'bg-corail' : 'bg-canard'}`}>{i + 1}</span>
                     <span className="min-w-0 flex-1">
-                      <span className="block font-bold">
-                        {t(`fm.merc.plan.verb.${g.kind}`)} · <span className="font-normal">{listNames(g.names)}</span>
+                      <span className="block">
+                        <span className="font-bold">{t(`fm.merc.plan.verb.${g.kind}`)}</span>
+                        {g.why && <span className="text-sm text-brun"> · {g.why}</span>}
                       </span>
-                      <span className="block truncate text-sm text-brun">{g.why}</span>
+                      {/* Les noms tout de suite visibles, sans ouvrir le groupe. */}
+                      <span className="mt-1 flex flex-wrap gap-1.5">
+                        {g.chips.slice(0, CHIPS_MAX).map((c) => (
+                          <span key={c.key} className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-sm ${KIND_CHIP[g.kind]}`}>
+                            {c.pos && <span className="text-[11px] font-bold text-canard/60">{POS_LABEL[c.pos]}</span>}
+                            <span className="font-semibold">{c.label}</span>
+                            {c.sub && <span className="text-xs text-brun">{c.sub}</span>}
+                          </span>
+                        ))}
+                        {g.chips.length > CHIPS_MAX && <span className="self-center text-sm text-brun">{t('fm.merc.plan.chipsMore', { count: g.chips.length - CHIPS_MAX })}</span>}
+                      </span>
                     </span>
                     <span className="shrink-0 text-sm font-bold text-orange-fonce">{isOpen ? '▴' : t('fm.merc.plan.see', { count: g.rows.length })}</span>
                   </button>
@@ -207,6 +257,12 @@ function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked, reg,
           <span className="font-bold">{t('fm.merc.plan.calmTitle')}</span> <span className="text-brun">{t('fm.merc.plan.calmText')}</span>
         </p>
       )}
+
+      {/* 3. Le niveau du onze face à la note visée, et l'argent réparti pour combler l'écart. */}
+      {pr && <TeamTarget pr={pr} engine={engine} pool={pool} limits={limits} squad={squad} snapshots={snapshots} blockOf={reg && regCheck ? (p) => signingBlock(regCheck, regStatus(p, reg.elig, reg.country), p.age) : undefined} />}
+
+      {/* 4. Vue d'ensemble : tout l'effectif par ligne, avec ce qui reste, part, se prolonge et manque. */}
+      <SquadOverview r={r} needs={needs} />
     </div>
   );
 }
@@ -283,8 +339,10 @@ function TeamTarget({ pr: pr0, engine: engine0, pool, limits, blockOf, squad, sn
     <section className="card" aria-labelledby="merc-target">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 id="merc-target" className="font-display text-xl font-semibold">{t('fm.merc.target.title')}</h2>
-          <p className="text-sm text-brun">{t('fm.merc.target.help', { style: names.style(pr.style), form: pr.form })}</p>
+          <h2 id="merc-target" className="font-display text-xl font-semibold" title={t('fm.merc.target.help', { style: names.style(pr.style), form: pr.form })}>
+            {t('fm.merc.target.titleNow', { value: n20(plan.xiAvg) })}
+          </h2>
+          <p className="text-sm text-brun">{names.style(pr.style)} · {pr.form}</p>
         </div>
         <label className="text-xs font-bold text-canard">
           {t('fm.merc.target.aim')}{' '}
@@ -296,27 +354,12 @@ function TeamTarget({ pr: pr0, engine: engine0, pool, limits, blockOf, squad, sn
         </label>
       </div>
 
-      {/* Où on est, où on vise, où on peut arriver avec les cibles abordables. */}
-      <div className="mt-3 grid gap-3 sm:grid-cols-3">
-        <div className="rounded-lg bg-canard/5 p-3">
-          <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.merc.target.now')}</p>
-          <p className="mt-1 font-display text-3xl font-semibold tabular-nums"><Big v={plan.xiAvg} /></p>
-          <p className="text-xs text-brun">{t('fm.merc.target.ready', { count: pr.slots.filter((s) => s.fit != null && s.fit >= T).length })} · {t('fm.merc.target.floor', { value: n20(plan.floor) })}</p>
-          {xiCeil - plan.xiAvg >= 0.1 && <p className="text-xs text-eau-fonce">{t('fm.merc.target.xiCeil', { value: n20(xiCeil) })}</p>}
-        </div>
-        <div className="rounded-lg bg-orange-clair p-3">
-          <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.merc.target.aimed')}</p>
-          <p className="mt-1 font-display text-3xl font-semibold tabular-nums"><Big v={T} /></p>
-          <p className="text-xs text-brun">{done ? t('fm.merc.target.reached') : t('fm.merc.target.missing', { gap: n20(T - plan.xiAvg) })}</p>
-        </div>
-        <div className={`rounded-lg p-3 ${verdict === 'out' ? 'bg-corail/10' : 'bg-eau/15'}`}>
-          <p className="text-xs font-bold uppercase tracking-wide text-canard/60">{t('fm.merc.target.reachable')}</p>
-          <p className="mt-1 font-display text-3xl font-semibold tabular-nums"><Big v={plan.reachable} /></p>
-          <p className={`text-xs font-bold ${verdict === 'out' ? 'text-corail' : 'text-eau-fonce'}`}>
-            {t(`fm.merc.target.verdict.${verdict}`, { count: plan.toTarget.length })}
-          </p>
-        </div>
-      </div>
+      {/* Où on est, où on vise, où on peut arriver : trois repères sur une même règle (au lieu de trois cadres). */}
+      <Gauge now={plan.xiAvg} aim={T} reach={plan.reachable} verdict={verdict} recruits={plan.toTarget.length} />
+      <p className="mt-1 text-xs text-brun">
+        {t('fm.merc.target.ready', { count: pr.slots.filter((s) => s.fit != null && s.fit >= T).length })} · {t('fm.merc.target.floor', { value: n20(plan.floor) })}
+        {xiCeil - plan.xiAvg >= 0.1 && <span className="text-eau-fonce"> · {t('fm.merc.target.xiCeil', { value: n20(xiCeil) })}</span>}
+      </p>
       <p className="mt-2 text-xs text-brun">
         {limits.budget == null ? t('fm.merc.target.capNone') : t('fm.merc.target.cap', { amount: f.money(limits.budget) })}
         {limits.wageRoom != null && <> · {t('fm.merc.target.wageCap', { amount: f.money(limits.wageRoom) })}</>} · {t('fm.merc.target.pool', { count: pool.length })}
@@ -343,32 +386,29 @@ function TeamTarget({ pr: pr0, engine: engine0, pool, limits, blockOf, squad, sn
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-canard/15 text-left text-xs uppercase tracking-wide text-canard/60">
-                <th className="py-1.5 pr-3">{t('fm.merc.target.col.status')}</th>
                 <th className="py-1.5 pr-3">{t('fm.merc.target.col.pos')}</th>
                 <th className="py-1.5 pr-3">{t('fm.merc.target.col.recruit')}</th>
-                <th className="py-1.5 pr-3" title={t('fm.merc.target.col.fitHint')}>{t('fm.merc.target.col.fit')}</th>
-                <th className="py-1.5 pr-3" title={t('fm.merc.target.col.potentialHint')}>{t('fm.merc.target.col.potential')}</th>
+                <th className="py-1.5 pr-3" title={`${t('fm.merc.target.col.fitHint')} · ${t('fm.merc.target.col.potentialHint')}`}>{t('fm.merc.target.col.fit')}</th>
                 <th className="py-1.5 pr-3">{t('fm.merc.target.col.gain')}</th>
                 <th className="py-1.5 pr-3 text-right">{t('fm.merc.target.col.price')}</th>
-                <th className="py-1.5 pr-3 text-right">{t('fm.merc.target.col.wage')}</th>
-                <th className="py-1.5 text-right">{t('fm.merc.target.col.known')}</th>
+                <th className="py-1.5">{t('fm.merc.target.col.status')}</th>
               </tr>
             </thead>
             <tbody>
-              {(showAll ? sorted : sorted.slice(0, CAND_MAX)).map((c) => (
-                <tr key={c.key} className={`border-b border-canard/5 last:border-0 ${c.status === 'plan' ? 'bg-eau/10' : ''}`}>
-                  <td className="py-1.5 pr-3">
-                    <span className={`whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-bold ${STATUS_CLS[c.status]}`}>{t(`fm.merc.target.status.${c.status}`)}</span>
-                    {blockOf?.(c.player) && <span className="mt-1 block whitespace-nowrap text-[11px] font-bold text-corail">{t(`fm.merc.reg.block.${blockOf(c.player)}`)}</span>}
-                  </td>
+              {(showAll ? sorted : sorted.slice(0, CAND_MAX)).map((c) => {
+                // Salaire et connaissance des recruteurs : en info-bulle de la ligne, pour garder six colonnes.
+                const tip = [c.wage != null && `${t('fm.merc.target.col.wage')} : ${f.money(c.wage)}`, c.knowledge != null && `${t('fm.merc.target.col.known')} ${Math.round(c.knowledge)} %`].filter(Boolean).join(' · ');
+                return (
+                <tr key={c.key} title={tip || undefined} className={`border-b border-canard/5 last:border-0 ${c.status === 'plan' ? 'bg-eau/10' : ''}`}>
                   <td className="py-1.5 pr-3"><span className="pill">{POS_LABEL[c.pos]}</span></td>
                   <td className="py-1.5 pr-3">
                     <PlayerLink player={c.player} />
+                    {c.knowledge != null && c.knowledge < 50 && <span className="ml-1.5 rounded bg-ambre/30 px-1 text-[11px] font-bold" title={t('fm.merc.target.knownLow')}>{t('fm.merc.target.knownShort', { value: Math.round(c.knowledge) })}</span>}
                     {c.starter && <span className="block text-xs text-brun">{t(c.delta > 0 ? 'fm.merc.target.replaces' : 'fm.merc.target.backupOf', { name: c.starter.name, fit: c.starterCeil - c.starterFit >= 0.4 ? `${n20(c.starterFit)} → ${n20(c.starterCeil)}` : n20(c.starterFit) })}</span>}
                   </td>
-                  <td className="py-1.5 pr-3"><Note v={c.fit} aim={T} /></td>
-                  <td className="py-1.5 pr-3 tabular-nums">
-                    {c.ceil - c.fit >= 0.4 ? <span className="font-bold text-eau-fonce">→ {n20(c.ceil)}</span> : <span className="text-brun" title={t('fm.merc.target.ceilSameHint')}>{t('fm.merc.target.ceilSame')}</span>}
+                  <td className="whitespace-nowrap py-1.5 pr-3 tabular-nums">
+                    <Note v={c.fit} aim={T} />
+                    {c.ceil - c.fit >= 0.4 && <span className="ml-1.5 font-bold text-eau-fonce">→ {n20(c.ceil)}</span>}
                   </td>
                   <td className="py-1.5 pr-3 tabular-nums">
                     {c.delta > 0 ? <span className="font-bold text-eau-fonce">+{n20(c.delta)}</span> : <span className="text-brun">{t('fm.merc.target.depth')}</span>}
@@ -380,10 +420,13 @@ function TeamTarget({ pr: pr0, engine: engine0, pool, limits, blockOf, squad, sn
                     {market && c.status !== 'bargain' && <PriceTag2 v={market.verdict(c.fit, c.price)?.verdict ?? null} />}
                     {c.status === 'bargain' && limits.budget != null && c.price != null && c.price > limits.budget && <span className="block text-xs text-corail">{t('fm.merc.target.overBudget')}</span>}
                   </td>
-                  <td className="py-1.5 pr-3 text-right tabular-nums">{c.wage == null ? '–' : f.money(c.wage)}</td>
-                  <td className="py-1.5 text-right"><Known value={c.knowledge} /></td>
+                  <td className="py-1.5">
+                    <span className={`whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-bold ${STATUS_CLS[c.status]}`}>{t(`fm.merc.target.status.${c.status}`)}</span>
+                    {blockOf?.(c.player) && <span className="mt-1 block whitespace-nowrap text-[11px] font-bold text-corail">{t(`fm.merc.reg.block.${blockOf(c.player)}`)}</span>}
+                  </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
           {cands.length > CAND_MAX && (
@@ -448,17 +491,47 @@ const CAND_MAX = 8;
 type CandSort = 'status' | 'now' | 'potential' | 'value';
 const CAND_SORTS: CandSort[] = ['status', 'now', 'potential', 'value'];
 
-/** Note sur 20 à une décimale. */
-const n20 = (v: number | null | undefined) => (v == null ? '–' : v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }));
-/** Grand chiffre sur 20 des cadres du haut. */
-function Big({ v }: { v: number }) {
+/**
+ * Jauge du onze : la moyenne d'aujourd'hui, la note visée et ce qu'on atteint avec les recrues abordables, sur une même
+ * règle de notes sur 20 (bornes arrondies autour des trois valeurs).
+ */
+function Gauge({ now, aim, reach, verdict, recruits }: { now: number; aim: number; reach: number; verdict: 'done' | 'reachable' | 'out'; recruits: number }) {
+  const { t } = useTranslation();
+  const lo = Math.floor(Math.min(now, aim, reach) - 0.5);
+  const hi = Math.max(lo + 3, Math.ceil(Math.max(now, aim, reach) + 0.5));
+  const at = (v: number) => `${((Math.min(hi, Math.max(lo, v)) - lo) / (hi - lo)) * 100}%`;
+  const ticks = Array.from({ length: hi - lo + 1 }, (_, i) => lo + i);
+  // Atteignable : seulement s'il dit autre chose qu'aujourd'hui.
+  const showReach = verdict !== 'done' && reach - now >= 0.05;
+  const dot = 'absolute h-4 w-4 -translate-x-1/2 rounded-full border-[3px] border-white shadow-[0_0_0_1px_rgba(15,27,45,0.3)]';
+  const lab = 'absolute -translate-x-1/2 whitespace-nowrap text-xs font-bold';
   return (
-    <>
-      {n20(v)}
-      <span className="ml-0.5 text-base font-normal text-brun">/20</span>
-    </>
+    <div className="mt-3">
+      <div className="relative h-[4.5rem]">
+        {/* Visé au-dessus de la règle, aujourd'hui et atteignable en dessous : les étiquettes ne se chevauchent pas. */}
+        <span className={`${lab} top-0`} style={{ left: at(aim) }}>{t('fm.merc.target.gauge.aim', { value: n20(aim) })}</span>
+        <div className="absolute inset-x-0 top-[1.6rem] h-2.5 rounded-full bg-gradient-to-r from-corail/25 via-ambre/25 to-eau/40" />
+        <span className={`${dot} top-[1.35rem] bg-orange`} style={{ left: at(aim) }} />
+        <span className={`${dot} top-[1.35rem] bg-canard`} style={{ left: at(now) }} />
+        {showReach && <span className={`${dot} top-[1.35rem] ${verdict === 'out' ? 'bg-corail' : 'bg-eau'}`} style={{ left: at(reach) }} />}
+        <span className={`${lab} top-[2.6rem]`} style={{ left: at(now) }}>{t('fm.merc.target.gauge.now', { value: n20(now) })}</span>
+        {showReach && (
+          <span className={`${lab} top-[3.6rem] ${verdict === 'out' ? 'text-corail' : 'text-eau-fonce'}`} style={{ left: at(reach) }}>
+            {t(`fm.merc.target.gauge.${verdict}`, { value: n20(reach), count: recruits })}
+          </span>
+        )}
+      </div>
+      <div className="mt-2 flex justify-between text-[11px] text-brun">
+        {ticks.map((x) => <span key={x}>{x}</span>)}
+      </div>
+      {verdict === 'done' && <p className="mt-1 text-sm font-bold text-eau-fonce">{t('fm.merc.target.verdict.done')}</p>}
+      {verdict === 'out' && <p className="mt-1 text-sm font-bold text-corail">{t('fm.merc.target.verdict.out', { count: recruits })}</p>}
+    </div>
   );
 }
+
+/** Note sur 20 à une décimale. */
+const n20 = (v: number | null | undefined) => (v == null ? '–' : v.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }));
 /** Pastille de note sur 20 colorée face à la note visée : au-dessus, juste en dessous, loin en dessous. */
 function Note({ v, aim }: { v: number; aim: number }) {
   const cls = v >= aim ? 'bg-eau-fonce text-white' : v >= aim - 1 ? 'bg-eau/40 text-canard' : v >= aim - 2 ? 'bg-canard/10 text-canard' : 'bg-corail/20 text-canard';
@@ -470,17 +543,6 @@ function PriceTag2({ v }: { v: PriceVerdict | null }) {
   const { t } = useTranslation();
   if (!v || v === 'fair') return null;
   return <span className={`ml-1.5 rounded px-1.5 py-0.5 text-[11px] font-bold ${v === 'bargain' ? 'bg-eau/40 text-canard' : 'bg-corail/15 text-canard'}`}>{t(`fm.merc.target.price.${v}`)}</span>;
-}
-
-/** Connaissance d'une cible par tes recruteurs : sous 50 %, sa note est encore incertaine. */
-function Known({ value }: { value: number | null }) {
-  const { t } = useTranslation();
-  if (value == null) return <span className="text-canard/40">–</span>;
-  return (
-    <span className={`num-pill ${value >= 75 ? 'bg-eau/40 text-canard' : value >= 50 ? 'bg-canard/10 text-canard' : 'bg-ambre/30 text-canard'}`} title={value < 50 ? t('fm.merc.target.knownLow') : undefined}>
-      {Math.round(value)} %
-    </span>
-  );
 }
 
 type Status = 'stay' | 'upgrade' | 'extend' | 'leave';
