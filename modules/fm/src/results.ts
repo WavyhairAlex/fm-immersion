@@ -241,14 +241,30 @@ export function hasStats(snap: FmSnapshot): boolean {
 }
 
 /** Dernier match joué tel que le jeu l'écrit (`custom.equipe.dernierMatch*`) : repère du match et score domicile-extérieur. */
-function lastFixture(snap: FmSnapshot): { key: string; date: string | null; home: number; away: number; opponent: string | null } | null {
+function lastFixture(snap: FmSnapshot): { key: string; date: string | null; home: number; away: number; opponent: string | null; played: boolean } | null {
   const e = ((snap as Raw).custom as { equipe?: Raw } | undefined)?.equipe;
   const num = (v: unknown) => (typeof v === 'number' ? v : typeof v === 'string' && /^\d+$/.test(v.trim()) ? Number(v) : null);
   const home = num(e?.dernierMatchScoreDomicile);
   const away = num(e?.dernierMatchScoreExterieur);
   if (!e || home == null || away == null) return null;
   const opponent = typeof e.dernierAdvNom === 'string' && e.dernierAdvNom.trim() && !/^(FM|SI)\./.test(e.dernierAdvNom) ? e.dernierAdvNom.trim() : null;
-  return { key: `${String(e.dernierMatchDate ?? '')}|${opponent ?? ''}|${home}-${away}`, date: decodeGameDate(e.dernierMatchDate), home, away, opponent };
+  return { key: `${String(e.dernierMatchDate ?? '')}|${opponent ?? ''}|${home}-${away}`, date: decodeGameDate(e.dernierMatchDate), home, away, opponent, played: fixturePlayed(e, home, away) };
+}
+
+/**
+ * Le « dernier match » du jeu a-t-il vraiment un résultat ? Le jour d'un match, le jeu pointe déjà sur la rencontre
+ * à venir, à 0-0 et sans statistiques : la compter donnait des nuls fantômes (et faussait le bilan). On se fie au
+ * drapeau du jeu (`dernierMatchJoue`) quand le plugin le lit ; sinon un 0-0 sans aucun tir ni possession est une
+ * rencontre pas encore jouée (même repère que `gameLastMatch`).
+ */
+function fixturePlayed(e: Raw, home: number, away: number): boolean {
+  const flag = e.dernierMatchJoue;
+  if (flag === false || flag === 0 || (typeof flag === 'string' && /^(false|0|non|no)$/i.test(flag.trim()))) return false;
+  if (flag === true || flag === 1 || (typeof flag === 'string' && /^(true|1|oui|yes)$/i.test(flag.trim()))) return true;
+  if (home !== 0 || away !== 0) return true;
+  const n = (v: unknown) => (typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' && Number.isFinite(Number(v)) ? Number(v) : null);
+  const shots = (n(e.dernierMatchTirsDom) ?? 0) + (n(e.dernierMatchTirsExt) ?? 0);
+  return shots > 0;
 }
 
 /**
@@ -260,7 +276,7 @@ function lightResult(prev: FmSnapshot, cur: FmSnapshot): MatchResult | null {
   if (prev.club !== cur.club) return null;
   const before = lastFixture(prev);
   const after = lastFixture(cur);
-  if (!before || !after || before.key === after.key) return null;
+  if (!before || !after || before.key === after.key || !after.played) return null;
   const { played, ...opp } = nextOpponent(prev, cur.gameDate);
   // Sans le lieu, impossible de savoir de quel côté du score on est (sauf score nul).
   if (opp.home == null && after.home !== after.away) return null;

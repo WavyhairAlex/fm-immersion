@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.231",
+    "date": "2026-11-16",
+    "fr": [
+      "Résultats : les faux 0-0 disparaissent. Le jour d'un match, FM27 annonce déjà la rencontre à 0-0 avant qu'elle soit jouée, et l'appli la comptait comme un nul. Ton bilan et ta forme sont corrigés tout seuls."
+    ],
+    "en": [
+      "Results: the fake 0-0 draws are gone. On match day FM27 already lists the fixture at 0-0 before it is played, and the app counted it as a draw. Your record and form are fixed automatically."
+    ]
+  },
+  {
     "version": "0.1.230",
     "date": "2026-11-16",
     "fr": [
