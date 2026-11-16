@@ -14,6 +14,7 @@ import { roleCeiling,
   gameFormationOf,
   gameLineup,
   forNextMatch,
+  incomingSignings,
   loanedOutIds,
   nextMatchInDays,
   normalizePlayer,
@@ -821,6 +822,7 @@ function SquadViews({ players, folder, snap, history, club, onCompare, gameDate,
           </button>
         ))}
       </div>
+      <IncomingSignings snap={snap} />
       {mode === 'board' ? (
         <SquadBoard players={players} snap={snap} history={history} club={club} onTable={() => choose('table')} onCompare={onCompare} />
       ) : mode === 'pitch' ? (
@@ -829,6 +831,33 @@ function SquadViews({ players, folder, snap, history, club, onCompare, gameDate,
         <SquadTable players={players} folder={folder} gameDate={gameDate} />
       )}
     </div>
+  );
+}
+
+/**
+ * Recrues annoncées par FM27 (« a trouvé un accord pour rejoindre le club ») mais pas encore dans l'effectif du jeu :
+ * le jeu ne les inscrit qu'à la signature effective, parfois quelques jours plus tard. Montrées à part, hors compos.
+ */
+function IncomingSignings({ snap }: { snap: FmSnapshot }) {
+  const { t } = useTranslation();
+  const list = useMemo(() => incomingSignings(snap), [snap]);
+  if (!list.length) return null;
+  return (
+    <section className="card space-y-2 p-4" aria-labelledby="fm-incoming">
+      <h3 id="fm-incoming" className="font-display text-lg text-canard">
+        {t('fm.incoming.title', { count: list.length })}
+      </h3>
+      <ul className="space-y-1">
+        {list.map((p) => (
+          <li key={p.id ?? p.name} className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="rounded-full bg-orange-clair px-2 py-0.5 text-xs font-semibold text-canard">{t(p.trial ? 'fm.incoming.trial' : 'fm.incoming.soon')}</span>
+            <span className="font-semibold text-canard">{p.name}</span>
+            <span className="text-brun">{[p.positions, p.age != null ? t('fm.incoming.age', { count: p.age }) : null].filter(Boolean).join(' · ')}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs text-brun">{t('fm.incoming.help')}</p>
+    </section>
   );
 }
 
