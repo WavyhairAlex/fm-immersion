@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.232",
+    "date": "2026-11-16",
+    "fr": [
+      "Navigation plus claire : les onglets d'un écran sont soulignés et ne se confondent plus avec les écrans de la barre du haut. Compétitions a maintenant ses écrans dans la barre, comme Club et Médias.",
+      "Le message de l'adjoint en tête d'écran tient sur une ligne (le plus urgent d'abord) et disparaît quand il n'y a rien à faire. Tous les écrans ont la même largeur."
+    ],
+    "en": [
+      "Clearer navigation: a screen's tabs are underlined and no longer look like the screens in the top bar. Competitions now has its screens in the bar, like Club and Media.",
+      "The assistant's message at the top of a screen fits on one line (most urgent first) and disappears when there is nothing to do. Every screen now has the same width."
+    ]
+  },
+  {
     "version": "0.1.231",
     "date": "2026-11-16",
     "fr": [

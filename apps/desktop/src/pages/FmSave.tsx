@@ -368,7 +368,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
           topSlot,
         )}
 
-      <div className="mx-auto w-full max-w-[96rem] px-6 py-5 xl:px-10">
+      <div className="page">
         {other && (
           <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl bg-white px-4 py-3 text-sm ring-1 ring-corail/40" role="alert">
             <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-full bg-ambre" aria-hidden />
@@ -675,15 +675,16 @@ function PageParts({ page, current, go, render }: { page: ClubPage; current: str
       role="tab"
       aria-selected={v === active}
       onClick={() => go(v)}
-      className={`rounded-md px-3 py-1.5 text-sm font-bold ${v === active ? 'bg-orange text-canard' : 'bg-white/5 text-white ring-1 ring-white/10 hover:bg-white/10'}`}
+      className={`tab ${v === active ? 'tab-on' : ''}`}
     >
       {t(`fm.tabNames.${v}`)}
     </button>
   );
   return (
     <>
-      {all.length > 1 && (
-        <div className="sticky top-[6.25rem] z-30 -mx-1 mb-4 flex flex-wrap items-center gap-1.5 bg-creme px-1 py-2" role="tablist" aria-label={t('fm.onThisPage')}>
+      {/* Compétitions : ses parties sont déjà les écrans de la barre du haut, pas de seconde rangée d'onglets. */}
+      {all.length > 1 && page !== 'results' && (
+        <div className="sticky top-[6.25rem] z-30 mb-4 flex flex-wrap items-end gap-1 border-b border-canard/10 bg-creme pt-1" role="tablist" aria-label={t('fm.onThisPage')}>
           {main.map(pill)}
           {more.includes(active) && pill(active)}
           {more.length > 0 && (
@@ -693,7 +694,7 @@ function PageParts({ page, current, go, render }: { page: ClubPage; current: str
                 aria-haspopup="menu"
                 aria-expanded={open}
                 onClick={() => setOpen(!open)}
-                className="rounded-md px-3 py-1.5 text-sm font-bold text-orange-fonce hover:bg-orange-clair"
+                className="tab"
               >
                 {t('fm.tabsMore')} ▾
               </button>
@@ -733,34 +734,37 @@ function PageParts({ page, current, go, render }: { page: ClubPage; current: str
 function AssistantSays({ page, saveId, go }: { page: ClubPage; saveId: string; go: (v: string) => void }) {
   const { t } = useTranslation();
   const brief = useCareerStore((s) => s.brief);
+  const [open, setOpen] = useState(false);
   if (!brief.at.startsWith(`${saveId}|`)) return null;
-  const lines = brief.items.filter((x) => pageOf(x.view) === page);
+  const rank = (tone: string) => (tone === 'bad' ? 0 : tone === 'warn' ? 1 : 2);
+  const lines = brief.items.filter((x) => pageOf(x.view) === page).sort((a, b) => rank(a.tone) - rank(b.tone));
   const others = brief.items.length - lines.length;
-  // Une bande fine, pas une carte : le message de l'adjoint guide sans prendre la place des conseils de l'écran.
+  // Rien à faire ici : pas de bandeau, l'écran prend toute la place (le Bureau garde la liste complète).
+  if (!lines.length) return null;
+  // Une seule ligne, le message le plus urgent ; les autres se déplient au besoin.
+  const shown = open ? lines : lines.slice(0, 1);
+  const line = (x: (typeof lines)[number]) => (
+    <li key={x.key} className="flex min-w-0 items-center gap-x-2">
+      <span className={`h-2 w-2 shrink-0 rounded-full ${x.tone === 'bad' ? 'bg-corail' : x.tone === 'warn' ? 'bg-ambre' : 'bg-eau'}`} aria-hidden />
+      <span className={`min-w-0 ${open ? '' : 'truncate'}`}>{x.text}</span>
+      <button type="button" className="shrink-0 whitespace-nowrap font-bold text-orange-fonce hover:underline" onClick={() => go(x.view)}>
+        {x.action} →
+      </button>
+    </li>
+  );
   return (
-    <aside className="mb-3 flex items-start gap-3 rounded-lg bg-white/70 px-3 py-2 text-sm ring-1 ring-canard/10" aria-label={t('layout.assistant.label')}>
-      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-canard text-xs font-extrabold text-white" aria-hidden>
+    <aside className="mb-3 flex items-start gap-3 rounded-lg bg-white/70 px-3 py-1.5 text-sm ring-1 ring-canard/10" aria-label={t('layout.assistant.label')}>
+      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-canard text-[0.65rem] font-extrabold text-white" aria-hidden>
         {t('layout.assistant.initial')}
       </span>
-      <div className="min-w-0 flex-1">
-        {lines.length ? (
-          <ul className="space-y-1">
-            {lines.map((x) => (
-              <li key={x.key} className="flex flex-wrap items-center gap-x-2">
-                <span className={`h-2 w-2 shrink-0 rounded-full ${x.tone === 'bad' ? 'bg-corail' : x.tone === 'warn' ? 'bg-ambre' : 'bg-eau'}`} aria-hidden />
-                <span className="min-w-0">{x.text}</span>
-                <button type="button" className="font-bold text-orange-fonce hover:underline" onClick={() => go(x.view)}>
-                  {x.action} →
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-brun">{t(`layout.assistant.calm.${page}`)}</p>
-        )}
-      </div>
+      <ul className="min-w-0 flex-1 space-y-1">{shown.map(line)}</ul>
+      {lines.length > 1 && (
+        <button type="button" className="shrink-0 whitespace-nowrap text-xs font-bold text-brun hover:text-canard" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+          {open ? t('layout.assistant.less') : t('layout.assistant.more', { count: lines.length - 1 })}
+        </button>
+      )}
       {others > 0 && (
-        <Link to="/" className="shrink-0 whitespace-nowrap font-bold text-orange-fonce hover:underline">
+        <Link to="/" className="shrink-0 whitespace-nowrap text-xs font-bold text-orange-fonce hover:underline">
           {t('layout.assistant.elsewhereShort', { count: others })}
         </Link>
       )}
@@ -1152,7 +1156,7 @@ export function SettingsWithoutCareer() {
   const setCreateSaveOpen = useUi((s) => s.setCreateSaveOpen);
   const { data: folder } = useQuery({ queryKey: ['fm', 'default-folder'], queryFn: () => invoke<string | null>('fm_default_folder') });
   return (
-    <div className="mx-auto w-full max-w-[96rem] space-y-6 px-6 py-5 xl:px-10">
+    <div className="page space-y-6">
       <h1 className="text-3xl font-semibold">{t('layout.nav.settings')}</h1>
       <section className="card space-y-4 p-5" aria-labelledby="connect-fm">
         <h2 id="connect-fm" className="text-lg">{t('layout.connect.title')}</h2>

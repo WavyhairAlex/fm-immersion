@@ -10,8 +10,8 @@ const TITLE = { gazette: 'layout.navShort.gazette', presse: 'layout.navShort.pre
 export function Story({ tab }: { tab: 'gazette' | 'presse' | 'discord' }) {
   const { t } = useTranslation();
   return (
-    <div className="w-full px-6 py-6 xl:px-10">
-      <PageTitle eyebrow={t('layout.groups.story')} title={t(TITLE[tab])}>
+    <div className="page">
+      <PageTitle eyebrow={t('topbar.media')} title={t(TITLE[tab])}>
         {t(`layout.storySub.${tab}`)}
       </PageTitle>
       {tab === 'gazette' ? <Gazette /> : tab === 'presse' ? <Press /> : <Discord />}

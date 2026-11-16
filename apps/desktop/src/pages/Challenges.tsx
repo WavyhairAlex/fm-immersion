@@ -69,8 +69,8 @@ export function Challenges() {
   const active = enrolled.filter((c) => !c.abandoned);
 
   return (
-    <div className="w-full px-6 py-6 xl:px-10">
-      <PageTitle eyebrow={t('layout.groups.story')} title={t('modes.challenges.title')}>
+    <div className="page">
+      <PageTitle eyebrow={t('topbar.career')} title={t('modes.challenges.title')}>
         {t('challenges.intro')}
       </PageTitle>
 

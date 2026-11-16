@@ -62,7 +62,7 @@ export function Saves() {
   const onLink = (file: string, career: string, previous?: string) => link.mutate({ file, career, previous });
 
   return (
-    <div className="w-full px-6 py-6 xl:px-10">
+    <div className="page">
       <PageTitle eyebrow={t('layout.groups.game')} title={t('saveFiles.title')}>
         {t('saveFiles.intro', { days: UNSAVED_DAYS_WARN })}
       </PageTitle>

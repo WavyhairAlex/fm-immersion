@@ -57,7 +57,7 @@ export function Career() {
   const tt = career.totals;
 
   return (
-    <div className="w-full px-6 py-6 xl:px-10">
+    <div className="page">
       <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('layout.groups.story')}</p>
       <h1 className="text-3xl font-semibold">{t('careerPage.title')}</h1>
       <p className="help mt-1">{t('careerPage.intro')}</p>

@@ -23,7 +23,7 @@ export function Home() {
   });
 
   return (
-    <div className="w-full px-6 py-6 xl:px-10">
+    <div className="page">
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-3xl font-semibold">{t('home.title')}</h1>
         {!createSaveOpen && (
