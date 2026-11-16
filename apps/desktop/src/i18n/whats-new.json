@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.230",
+    "date": "2026-11-16",
+    "fr": [
+      "L'appli est plus fluide : elle ne se fige plus toutes les quelques secondes pendant que tu joues, et l'accueil s'ouvre plus vite.",
+      "Elle démarre aussi un peu plus vite : les écrans moins utilisés se chargent quand tu les ouvres."
+    ],
+    "en": [
+      "The app runs more smoothly: it no longer freezes every few seconds while you play, and the home screen opens faster.",
+      "It also starts a little faster: less-used screens load when you open them."
+    ]
+  },
+  {
     "version": "0.1.229",
     "date": "2026-11-16",
     "fr": [

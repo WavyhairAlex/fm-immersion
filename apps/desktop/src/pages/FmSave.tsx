@@ -309,7 +309,8 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
         return null;
     }
   };
-  const sync = useCareerStore((s) => s.sync);
+  // Abonnement ciblé : la date de jeu (qui avance toutes les 10 s pendant une partie) n'est lue que par l'en-tête.
+  const sync = { free: useCareerStore((s) => s.sync.free), other: useCareerStore((s) => s.sync.other) };
   const dateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'long' });
   const longDateFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const stampFmt = new Intl.DateTimeFormat(i18n.resolvedLanguage, { dateStyle: 'short', timeStyle: 'short' });
@@ -413,7 +414,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
                           <h1 className="text-3xl font-semibold">{t('layout.today.title')}</h1>
                           <p className="mt-1 text-lg text-brun">
                             {snapshot.data.club && <>{snapshot.data.club} · </>}
-                            <span className="inline-block first-letter:uppercase">{longDateFmt.format(new Date(shownGameDate(snapshot, sync.now) ?? snapshot.gameDate))}</span>
+                            <ShownDate snapshot={snapshot} fmt={longDateFmt} />
                           </p>
                         </header>
                         <GameCompatBanner />
@@ -1171,4 +1172,10 @@ export function SettingsWithoutCareer() {
       <GameCompatCard />
     </div>
   );
+}
+
+/** Date de jeu de l'en-tête de l'accueil : seul composant redessiné quand la date avance pendant la partie. */
+function ShownDate({ snapshot, fmt }: { snapshot: { gameDate: string; club: string }; fmt: Intl.DateTimeFormat }) {
+  const now = useCareerStore((s) => s.sync.now);
+  return <span className="inline-block first-letter:uppercase">{fmt.format(new Date(shownGameDate(snapshot, now) ?? snapshot.gameDate))}</span>;
 }
