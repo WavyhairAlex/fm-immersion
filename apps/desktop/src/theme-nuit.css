@@ -13,7 +13,10 @@
 .theme-nuit .input { background: #0F1C30; border-color: rgb(255 255 255 / 0.18); color: #E7EBF2; }
 .theme-nuit .chip { background: #16263E; color: #E7EBF2; --tw-ring-color: rgb(255 255 255 / 0.15); }
 .theme-nuit .chip:hover { background: #1E3150; }
-.theme-nuit .chip-on, .theme-nuit .chip-on:hover { background: #FFB547; color: #0F1B2D; --tw-ring-color: #FFB547; }
+/* Choix dans un écran (mode d'affichage, filtre, source) : ambre en filigrane, l'ambre plein reste aux écrans et aux actions. */
+.theme-nuit .chip-on, .theme-nuit .chip-on:hover { background: rgb(255 181 71 / 0.16); color: #FFC56E; --tw-ring-color: rgb(255 181 71 / 0.55); }
+.theme-nuit .tab { color: rgb(231 235 242 / 0.6); }
+.theme-nuit .tab:hover, .theme-nuit .tab-on { color: #FFFFFF; }
 .theme-nuit .pill { background: #3D2C10; color: #FFE2B0; }
 .theme-nuit .fm .pill { background: rgb(255 255 255 / 0.1); color: #E7EBF2; }
 .theme-nuit .btn-primary { color: #0F1B2D; }

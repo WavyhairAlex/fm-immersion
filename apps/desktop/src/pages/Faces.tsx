@@ -254,7 +254,7 @@ export function Faces() {
   })();
 
   return (
-    <div className="w-full px-6 py-6 xl:px-10">
+    <div className="page">
       <h1 className="text-3xl font-semibold">{t('modes.faces.title')}</h1>
       <p className="mt-2 max-w-3xl text-brun">{t('faces.intro')}</p>
       {/* L'état de TON PC d'abord ; l'avancement du projet de portraits vient plus bas, avec son propre libellé. */}

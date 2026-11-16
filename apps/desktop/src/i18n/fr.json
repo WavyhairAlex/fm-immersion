@@ -5675,7 +5675,10 @@
       "todo_one": "À faire ici",
       "todo_other": "À faire ici ({{count}})",
       "elsewhereShort_one": "{{count}} autre point ailleurs",
-      "elsewhereShort_other": "{{count}} autres points ailleurs"
+      "elsewhereShort_other": "{{count}} autres points ailleurs",
+      "more_one": "+{{count}} autre",
+      "more_other": "+{{count}} autres",
+      "less": "Replier"
     },
     "state": {
       "open": "FM27 ouvert",

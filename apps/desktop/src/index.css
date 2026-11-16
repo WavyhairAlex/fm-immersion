@@ -34,6 +34,11 @@
   /* Bouton de choix (filtre, mode d'affichage, jour…) : le même partout ; `chip-on` = choisi. */
   .chip { @apply inline-flex items-center rounded-md bg-white px-2.5 py-1 text-sm font-bold text-canard ring-1 ring-canard/15 transition hover:bg-creme; }
   .chip-on { @apply bg-canard text-white ring-canard hover:bg-canard; }
+  /* Conteneur commun à tous les écrans : même largeur et mêmes marges partout (Bureau, Club, Médias, Carrière…). */
+  .page { @apply mx-auto w-full max-w-[96rem] px-6 py-5 xl:px-10; }
+  /* Onglets d'un écran (3e niveau) : soulignés, pour ne pas se confondre avec les écrans de la barre du haut. */
+  .tab { @apply relative -mb-px whitespace-nowrap border-b-2 border-transparent px-3 py-2 text-sm font-bold text-canard/60 transition hover:text-canard; }
+  .tab-on { @apply border-orange text-canard; }
   /* Chiffre dans une pastille (niveau, adéquation, stat) : même forme partout, la couleur suit la valeur. */
   .num-pill { @apply inline-block min-w-[2.75rem] rounded-md px-1.5 py-0.5 text-center text-xs font-bold tabular-nums; }
   .card { @apply rounded-3xl bg-white p-6 shadow-sm ring-1 ring-canard/5; }

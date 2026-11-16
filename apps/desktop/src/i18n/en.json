@@ -5675,7 +5675,10 @@
       "todo_one": "To do here",
       "todo_other": "To do here ({{count}})",
       "elsewhereShort_one": "{{count}} more elsewhere",
-      "elsewhereShort_other": "{{count}} more elsewhere"
+      "elsewhereShort_other": "{{count}} more elsewhere",
+      "more_one": "+{{count}} more",
+      "more_other": "+{{count}} more",
+      "less": "Collapse"
     },
     "state": {
       "open": "FM27 open",

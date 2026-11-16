@@ -1,5 +1,27 @@
 [
   {
+    "version": "0.1.232",
+    "date": "2026-11-16",
+    "fr": [
+      "Navigation plus claire : les onglets d'un écran sont soulignés et ne se confondent plus avec les écrans de la barre du haut. Compétitions a maintenant ses écrans dans la barre, comme Club et Médias.",
+      "Le message de l'adjoint en tête d'écran tient sur une ligne (le plus urgent d'abord) et disparaît quand il n'y a rien à faire. Tous les écrans ont la même largeur."
+    ],
+    "en": [
+      "Clearer navigation: a screen's tabs are underlined and no longer look like the screens in the top bar. Competitions now has its screens in the bar, like Club and Media.",
+      "The assistant's message at the top of a screen fits on one line (most urgent first) and disappears when there is nothing to do. Every screen now has the same width."
+    ]
+  },
+  {
+    "version": "0.1.231",
+    "date": "2026-11-16",
+    "fr": [
+      "Résultats : les faux 0-0 disparaissent. Le jour d'un match, FM27 annonce déjà la rencontre à 0-0 avant qu'elle soit jouée, et l'appli la comptait comme un nul. Ton bilan et ta forme sont corrigés tout seuls."
+    ],
+    "en": [
+      "Results: the fake 0-0 draws are gone. On match day FM27 already lists the fixture at 0-0 before it is played, and the app counted it as a draw. Your record and form are fixed automatically."
+    ]
+  },
+  {
     "version": "0.1.230",
     "date": "2026-11-16",
     "fr": [

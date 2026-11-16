@@ -70,6 +70,35 @@ describe('résultats entre deux instantanés', () => {
     expect(list[0]).toMatchObject({ matches: 1, outcome: 'W', goalsFor: 2, goalsAgainst: 1, opponent: 'Senica', home: true, players: [] });
   });
 
+  it('« dernier match » du jeu pas encore joué (0-0 sans résultat) : pas de match fantôme, le vrai score suit', () => {
+    const eq = (h: number, a: number, adv: string, extra: Record<string, unknown> = {}) => ({ custom: { equipe: { dernierMatchScoreDomicile: h, dernierMatchScoreExterieur: a, dernierAdvNom: adv, ...extra } } });
+    const b = { ...before, custom: { ...(before as unknown as { custom: object }).custom, ...eq(0, 2, 'Trnava', { dernierMatchJoue: true }).custom } } as FmSnapshot;
+    // Jour du match : le jeu pointe déjà sur la rencontre, sans résultat (0-0).
+    const kickoff = { ...snap('2027-02-16', []), ...eq(0, 0, 'Senica', { dernierMatchJoue: false }), nextMatch: { opponent: 'Senica', inDays: 0, location: 'Domicile' } } as unknown as FmSnapshot;
+    const played = { ...snap('2027-02-17', []), ...eq(2, 1, 'Senica', { dernierMatchJoue: true }), nextMatch: null } as unknown as FmSnapshot;
+    const list = matchResults([
+      { gameDate: '2027-02-14', data: b },
+      { gameDate: '2027-02-16', data: kickoff },
+      { gameDate: '2027-02-17', data: played },
+    ]);
+    expect(list).toHaveLength(1);
+    expect(list[0]).toMatchObject({ outcome: 'W', goalsFor: 2, goalsAgainst: 1, opponent: 'Senica' });
+  });
+
+  it('0-0 sans aucun tir ni possession (rencontre pas jouée) : ignoré ; un vrai 0-0 avec des tirs reste un nul', () => {
+    const eq = (shots: [number, number], poss: [number, number]) => ({
+      custom: { equipe: { dernierMatchScoreDomicile: 0, dernierMatchScoreExterieur: 0, dernierAdvNom: 'Senica', dernierMatchTirsDom: shots[0], dernierMatchTirsExt: shots[1], dernierMatchPossDom: poss[0], dernierMatchPossExt: poss[1] } },
+    });
+    const b = { ...before, custom: { ...(before as unknown as { custom: object }).custom, equipe: { dernierMatchScoreDomicile: 0, dernierMatchScoreExterieur: 2, dernierAdvNom: 'Trnava' } } } as unknown as FmSnapshot;
+    const run = (shots: [number, number], poss: [number, number]) =>
+      matchResults([
+        { gameDate: '2027-02-14', data: b },
+        { gameDate: '2027-02-17', data: { ...snap('2027-02-17', []), ...eq(shots, poss), nextMatch: null } as unknown as FmSnapshot },
+      ]);
+    expect(run([0, 0], [50, 50])).toHaveLength(0);
+    expect(run([9, 7], [54, 46])[0]).toMatchObject({ outcome: 'D', goalsFor: 0, goalsAgainst: 0 });
+  });
+
   it('buteur connu le lendemain : le jeu met à jour les buts un jour après les cumuls du match', () => {
     const day = (goals: number) =>
       snap('2027-02-17', [

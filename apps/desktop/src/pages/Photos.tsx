@@ -87,7 +87,7 @@ export function Photos() {
   const sum = (fs: PhotosFileStatus[], k: 'size' | 'onDisk') => fs.reduce((a, f) => a + f[k], 0);
 
   return (
-    <div className="w-full px-6 py-6 xl:px-10">
+    <div className="page">
       <h1 className="text-3xl font-semibold">{t('photos.title')}</h1>
       <p className="mt-2 max-w-3xl text-brun">{t('photos.intro')}</p>
       <p className="mt-1 max-w-3xl text-sm text-brun">{t('photos.size', { size: s ? fmt(s.total) : '…' })}</p>

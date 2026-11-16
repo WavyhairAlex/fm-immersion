@@ -43,7 +43,7 @@ export function MyLife() {
   const tab: Tab = TABS.includes(params.get('vue') as Tab) ? (params.get('vue') as Tab) : 'messages';
   const dilemmas = w.st.pending.filter((s) => s.dilemma).length;
   return (
-    <div className="w-full px-6 py-6 xl:px-10">
+    <div className="page">
       <p className="text-xs font-bold uppercase tracking-wide text-canard/50">{t('topbar.career')}</p>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>

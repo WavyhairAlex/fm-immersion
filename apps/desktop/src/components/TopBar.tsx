@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import logoMaillot from '../assets/logo-maillot.svg';
 import { shownGameDate, useCareer, useCareerStore } from '../lib/career';
-import { pageOf } from '../lib/club-nav';
+import { pageOf, PARTS } from '../lib/club-nav';
 import { fmData } from '../lib/data';
 import { useUi } from '../lib/ui-store';
 import { Crest } from './Crest';
@@ -56,6 +56,8 @@ export function TopBar() {
     { id: 'career', to: '/carriere', label: t('topbar.career') },
   ];
   const SUBS: Partial<Record<Section, Sub[]>> = {
+    // Compétitions : ses parties (résultats, diagnostic, statistiques, analyse) sont ses écrans, comme ceux des autres espaces.
+    competitions: PARTS.results.map((v) => ({ to: `/club/${v}`, label: t(`fm.tabNames.${v}`) })),
     club: [
       { to: '/club/tactic', label: t('layout.navShort.tactic') },
       { to: '/club/squad', label: t('layout.navShort.squad') },
@@ -83,6 +85,7 @@ export function TopBar() {
   const subs = SUBS[section] ?? [];
   // Sous-écran actif : l'adresse commence par son lien (les parties d'un écran du club restent sur leur écran).
   const subActive = (to: string) => {
+    if (section === 'competitions') return pathname === to;
     if (to.startsWith('/club/')) return pathname.startsWith('/club/') && pageOf(pathname.slice(6)) === pageOf(to.slice(6));
     return pathname === to || pathname.startsWith(`${to}/`);
   };
