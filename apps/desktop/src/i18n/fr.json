@@ -1457,7 +1457,7 @@
         "physical": "Physique",
         "ball": "Avec ballon",
         "tactical": "Tactique",
-        "help": "Une séance tactique ne fait pas progresser les attributs plus que le repos : elle sert l'efficacité tactique (victoires 42,7 % contre 39,2 % avec huit séances par semaine, au prix de blessures). Trois fois la même séance rapporte moins que quatre séances différentes. Les variantes offensives et défensives valent celles mesurées (équilibrées)."
+        "help": "Une séance tactique ne fait pas progresser les attributs plus que le repos : elle sert l'efficacité tactique (victoires : 48,2 % sans séance tactique, 50,9 % avec huit par mois, 52,6 % avec vingt-quatre, au prix de blessures). Trois fois la même séance rapporte moins que quatre séances différentes. Les variantes offensives et défensives valent celles mesurées (équilibrées)."
       },
       "metaHelp": "Méthode d'AlexJeuVideal (pack « ENTRAÎNEMENT FM 27 META EFFICACITÉ 1.1 ») : un bloc Piège du pressing, Hauteur du pressing, Construction ; un bloc Piège du pressing, Création d'occasions, Organisation avec le ballon ; la veille du match Progression du ballon, Bloc défensif, Condition physique. Tout le reste au repos. Charge le fichier .fmf indiqué dans l'écran Entraînement.",
       "congested": "trois matchs ou plus : semaine entière de repos entre les matchs (les résultats priment sur la progression)",
@@ -1741,6 +1741,7 @@
         "slowYoung": "Jeune et lent : la vitesse pèse le plus en match et ne progresse plus après 24 ans.",
         "weakRole": "L'attribut clé le plus faible de son rôle.",
         "youngDefault": "Jeune sans point faible net : la vitesse, ce qui rapporte le plus.",
+        "gkAgility": "Jeune gardien sans point faible net : l'agilité, la priorité choisie pour les gardiens dans les bancs d'essai.",
         "seniorMental": "28 ans et plus : un attribut mental du rôle, qui peut encore monter quand le physique baisse.",
         "none": ""
       },
@@ -1793,7 +1794,7 @@
           "assistant": "Entraînement confié à l'adjoint"
         },
         "teLesson1": "Ne confie jamais l'entraînement à ton adjoint : 14 points de moins, trois fois plus de blessures, et des jeunes qui progressent dans les mauvais attributs.",
-        "teLesson2": "Les séances tactiques font gagner des matchs (environ +4 % de victoires avec 8 par mois) mais coûtent des blessures : 24 par mois n'ajoutent presque rien et doublent presque les jours de blessure.",
+        "teLesson2": "Les séances tactiques font gagner des matchs (48 % de victoires sans, 51 % avec 8 par mois, soit 4 points de plus sur la saison) mais coûtent des blessures : 24 par mois n'ajoutent presque rien et doublent presque les jours de blessure.",
         "teLesson3": "Les séances tactiques ne font pas monter les attributs : ce sont la condition physique et le travail avec ballon qui le font.",
         "teLesson4": "Changer de tactique remet la compréhension à zéro : l'entraînement ne sert que si la tactique reste la même.",
         "teHelp": "Banc d'essai de jamiebolden sur FM27 (Bradford, Premier League 2032/33, chaque réglage joué trois fois depuis la même sauvegarde). Courbe victoires / efficacité d'harvestgreen22 et du forum playgm, reprise par ZaZ sur FM-Arena (« Training Schedules », novembre 2026), qui conseille de ne plus faire de séances tactiques au-delà de 50 %. Composition de l'efficacité : recherches de joueurs chinois citées par ZaZ, à prendre comme des repères.",

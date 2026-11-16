@@ -1,5 +1,5 @@
 import { ATTR_GROUPS } from './progress';
-import { HARVEST_FOCUS, INDIVIDUAL_FOCUS, SLOW_BELOW, individualFocus } from './training';
+import { GK_AGILITY_UNTIL, GK_FOCUS, HARVEST_FOCUS, INDIVIDUAL_FOCUS, SLOW_BELOW, individualFocus } from './training';
 
 /**
  * Le côté « pédagogique » de l'entraînement : ce qui fait vraiment progresser un joueur, et pourquoi chaque réglage
@@ -66,7 +66,7 @@ export function teamAppsOf(players: { apps: number | null }[]): number | null {
 }
 
 /** Pourquoi cette priorité individuelle, libellé dans fm.train.focusWhy.<id>. */
-export type FocusWhy = 'stats' | 'slowYoung' | 'weakRole' | 'youngDefault' | 'seniorMental' | 'none';
+export type FocusWhy = 'stats' | 'slowYoung' | 'weakRole' | 'youngDefault' | 'gkAgility' | 'seniorMental' | 'none';
 
 const MENTAL = new Set(ATTR_GROUPS.find(([g]) => g === 'mental')![1]);
 
@@ -93,6 +93,9 @@ export function focusAdvice(
   const role = individualFocus(weak, gk);
   if (role) return { focus: role, why: 'weakRole' };
   if (!gk && young) return { focus: HARVEST_FOCUS, why: 'youngDefault' };
+  // Gardien jusqu'à 26 ans (il progresse trois ans de plus) : Agilité, comme dans les bancs d'essai d'harvestgreen22
+  // et de jamiebolden (« Quickness, agility for keepers »).
+  if (gk && player.age != null && player.age <= GK_AGILITY_UNTIL) return { focus: GK_FOCUS, why: 'gkAgility' };
   return { focus: null, why: 'none' };
 }
 
@@ -144,7 +147,7 @@ export function focusReview(
   const valid =
     !!def &&
     !(def.gk && !ctx.gk) &&
-    (cur === ctx.fromStats || (cur === HARVEST_FOCUS && !ctx.gk && ctx.age != null && ctx.age <= 23) || def.attrs.some((a) => ctx.roleKeys.includes(a)));
+    (cur === ctx.fromStats || (cur === HARVEST_FOCUS && !ctx.gk && ctx.age != null && ctx.age <= 23) || (cur === GK_FOCUS && ctx.gk && ctx.age != null && ctx.age <= GK_AGILITY_UNTIL) || def.attrs.some((a) => ctx.roleKeys.includes(a)));
   if (!valid) return { focus: proposed, keep: 'invalid', days };
   if (days != null && days >= FOCUS_REVIEW_DAYS) return { focus: proposed, keep: 'review', days };
   return { focus: cur, keep: 'kept', days };

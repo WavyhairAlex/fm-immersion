@@ -503,6 +503,11 @@ describe('programme FM Immersion (méthode par défaut)', () => {
     expect(coachFocus({ age: 19, positions: ['DC'], attributes: { Pace: 13, Acceleration: 13 } }, [{ key: 'Composure' }], null)).toBe('containment');
     // Jeune lent (accélération 11) : Vitesse.
     expect(coachFocus({ age: 19, positions: ['DC'], attributes: { Pace: 14, Acceleration: 11 } }, [{ key: 'Composure' }], null)).toBe('quickness');
+    // Gardien sans point faible reconnu : Agilité jusqu'à 26 ans (bancs d'essai), rien après ; un point faible passe avant.
+    expect(coachFocus({ age: 24, positions: ['GB'] }, [], null)).toBe('agilityBalance');
+    expect(coachFocus({ age: 30, positions: ['GB'] }, [], null)).toBeNull();
+    expect(coachFocus({ age: 22, positions: ['GB'] }, [{ key: 'Kicking' }], null)).toBe('gkDistribution');
+    expect(focusAdvice({ age: 24, positions: ['GB'] }, [], null)).toEqual({ focus: 'agilityBalance', why: 'gkAgility' });
     // Jeune rapide sans point faible reconnu : Vitesse quand même.
     expect(coachFocus({ age: 19, positions: ['DC'], attributes: { Pace: 15, Acceleration: 15 } }, [], null)).toBe('quickness');
   });
