@@ -22,11 +22,15 @@ import {
   type FmPlayer,
   type FmSnapshot,
   type GameSlot,
+  type MatchSituation,
+  type MatchTweak,
+  type SubChange,
 } from '@fm-immersion/module-fm';
 import { useQuery } from '@tanstack/react-query';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AnimatePresence, motion, MotionConfig } from 'motion/react';
 import { Stadium } from '../components/PageHero';
 import { Avatar, Gauge, LINE_COLOR, Pitch } from './FmFoot';
 import { useTacticChoice } from './FmTactic';
@@ -51,6 +55,7 @@ export function FmMatchCenter({
   aside,
   asideAfter,
   afterHero,
+  afterGrid,
 }: {
   snap: FmSnapshot;
   players: FmPlayer[];
@@ -67,6 +72,8 @@ export function FmMatchCenter({
   asideAfter?: ReactNode;
   /** Sous le bandeau du match (cartes de l'accueil : point du staff, gazette). */
   afterHero?: ReactNode;
+  /** Sous le onze probable et la colonne de gauche (bande « récit » de l'accueil). */
+  afterGrid?: ReactNode;
 }) {
   const { t, i18n } = useTranslation();
   const names = useNames();
@@ -154,50 +161,179 @@ export function FmMatchCenter({
   const when = nm?.inDays == null ? null : nm.inDays === 0 ? t('fm.mc.today') : nm.inDays === 1 ? t('fm.mc.tomorrow') : t('fm.mc.inDaysLong', { count: nm.inDays });
   const sides = nm ? (nm.home === false ? [nm.opponent, snap.club] : [snap.club, nm.opponent]) : [];
   const absent = [...injured, ...suspended, ...back];
+  // Bandeau : avant-match, direct (relevé du plugin, match du club en cours) ou match terminé.
+  const heroMode: 'pre' | 'live' | 'final' = fromGame ? (game.final ? 'final' : 'live') : 'pre';
+  const board = fromGame
+    ? {
+        home: game.side === 'home' ? snap.club : game.opponent,
+        away: game.side === 'home' ? game.opponent : snap.club,
+        homeGoals: game.side === 'home' ? game.goalsFor : game.goalsAgainst,
+        awayGoals: game.side === 'home' ? game.goalsAgainst : game.goalsFor,
+        minute: game.minute,
+        outcome: (game.goalsFor > game.goalsAgainst ? 'W' : game.goalsFor < game.goalsAgainst ? 'L' : 'D') as HeroBoard['outcome'],
+      }
+    : null;
+  // Ce qu'il faut faire maintenant, en tête du bandeau pendant le direct.
+  const nowSubs = subs.filter((_, i) => subState[i] === 'now');
+  const nowTweaks = tweaks.filter((x) => active.includes(x.situation));
+  // Pendant le direct (ou juste après), la feuille de match remonte sous le bandeau.
+  const liveFirst = heroMode !== 'pre';
 
-  return (
-    <section className="space-y-4">
-      {/* Prochain match : bandeau sombre, l'information qu'on cherche en premier. */}
-      <div className="relative overflow-hidden rounded-2xl bg-canard text-white">
-        <Stadium className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-[55%] md:block" />
-        <div className="relative max-w-xl p-6 md:p-7">
-          {nm ? (
-            <>
-              <p className="text-xs font-bold uppercase tracking-widest text-orange">
-                {[when, nm.home != null && t(nm.home ? 'fm.mc.home' : 'fm.mc.away')].filter(Boolean).join(' · ') || t('fm.mc.next')}
-              </p>
-              <p className="mt-2 font-display text-3xl font-semibold leading-tight md:text-4xl">
-                {sides[0]} <span className="text-white/50">–</span> {sides[1]}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
-                {nm.competition && <span className="rounded-full bg-white/10 px-2.5 py-1">{nm.competition}</span>}
-                {nm.inDays != null && nm.inDays > 1 && <span className="rounded-full bg-white/10 px-2.5 py-1 tabular-nums">J-{nm.inDays}</span>}
-              </div>
-              {nm.staffView && <p className="mt-3 max-w-md text-sm italic text-white/75">« {nm.staffView} »</p>}
-            </>
-          ) : (
-            <>
-              <p className="text-xs font-bold uppercase tracking-widest text-orange">{t('fm.mc.next')}</p>
-              <p className="mt-2 text-white/70">{t('fm.sum.noMatch')}</p>
-            </>
-          )}
-          {/* Une action principale : l'adversaire (préparer le match vient après, en lien). */}
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            {nm && (
-              <button type="button" className="rounded-lg bg-orange px-5 py-2.5 font-bold text-canard hover:brightness-105" onClick={() => go('opponent')}>
-                {t('fm.mc.seeOpponent')}
-              </button>
-            )}
-            <button
-              type="button"
-              className={nm ? 'rounded-lg px-3 py-2 text-sm font-bold text-white/80 hover:bg-white/10 hover:text-white' : 'rounded-lg bg-orange px-5 py-2.5 font-bold text-canard hover:brightness-105'}
-              onClick={() => go('tactic')}
-            >
-              {t('fm.mc.prepareMatch')} →
+  // Feuille de match : remplacements prévus et ajustements selon le score (juste sous le bandeau pendant le direct).
+  const sheet = (
+    <div id="feuille-de-match" className="scroll-mt-28 space-y-4">
+        {plan && !(sheetOpen || live || !!game || (nm?.inDays != null && nm.inDays <= 1)) && (
+          <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
+            <p className="text-sm">
+              <b className="text-canard">{t('fm.matchSheet.title')}</b>{' '}
+              <span className="text-brun">{t('fm.matchSheet.folded', { subs: subs.length, tweaks: tweaks.length })}</span>
+            </p>
+            <button type="button" className="chip" onClick={() => setSheetOpen(true)}>
+              {t('fm.matchSheet.open')}
             </button>
           </div>
-        </div>
-      </div>
+        )}
+        {plan && (sheetOpen || live || !!game || (nm?.inDays != null && nm.inDays <= 1)) && (
+          <div className="card p-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2>{t('fm.matchSheet.title')}</h2>
+              <button type="button" className={chip(live)} aria-pressed={live} onClick={() => setLive((v) => !v)}>
+                {t(live ? 'fm.matchSheet.live.on' : 'fm.matchSheet.live.start')}
+              </button>
+            </div>
+            <p className="mb-3 text-xs text-brun">{t(live ? (fromGame ? 'fm.matchSheet.live.helpGame' : 'fm.matchSheet.live.help') : 'fm.matchSheet.help')}</p>
+            {live && (
+              <div className="mb-3 space-y-2 rounded-lg bg-eau/10 p-3 text-sm">
+                {game && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    {/* Le bandeau montre déjà le score du direct : ici seulement quand le coach a repris la main. */}
+                    {!fromGame && (
+                      <>
+                        <span className="rounded-full bg-corail px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-white">{t(game.final ? 'fm.matchSheet.live.gameFinal' : 'fm.matchSheet.live.gameLive')}</span>
+                        <span className="font-bold text-canard">
+                          {t(game.side === 'home' ? 'fm.matchSheet.live.vsHome' : 'fm.matchSheet.live.vsAway', { opponent: game.opponent })}
+                        </span>
+                        <span className="font-display text-xl font-semibold tabular-nums text-canard">
+                          {game.goalsFor} - {game.goalsAgainst}
+                        </span>
+                        {!game.final && <span className="tabular-nums text-brun">{game.minute}'</span>}
+                      </>
+                    )}
+                    <button type="button" className={chip(manual)} aria-pressed={manual} onClick={() => setManual((v) => !v)}>
+                      {t('fm.matchSheet.live.manual')}
+                    </button>
+                  </div>
+                )}
+                {!fromGame && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="flex items-center gap-2 font-bold text-canard">
+                    {t('fm.matchSheet.live.minute')}
+                    <input type="range" min={0} max={95} step={5} value={minute} onChange={(e) => setMinute(Number(e.target.value))} className="w-40 accent-[#8F5400]" />
+                    <span className="w-10 tabular-nums">{minute}'</span>
+                  </label>
+                  <div className="flex items-center gap-1">
+                    <span className="font-bold text-canard">{t('fm.matchSheet.live.score')}</span>
+                    <button type="button" className={chip(false)} onClick={() => setDiff((d) => d - 1)} aria-label={t('fm.matchSheet.live.conceded')}>
+                      −
+                    </button>
+                    <span className="w-24 text-center font-bold tabular-nums">
+                      {diff > 0 ? t('fm.matchSheet.live.ahead', { n: diff }) : diff < 0 ? t('fm.matchSheet.live.behind', { n: -diff }) : t('fm.matchSheet.live.level')}
+                    </span>
+                    <button type="button" className={chip(false)} onClick={() => setDiff((d) => d + 1)} aria-label={t('fm.matchSheet.live.scored')}>
+                      +
+                    </button>
+                  </div>
+                </div>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" className={chip(tired)} aria-pressed={tired} onClick={() => setTired((v) => !v)}>
+                    {t('fm.matchSheet.when.tired')}
+                  </button>
+                  <button type="button" className={chip(opponentChanged)} aria-pressed={opponentChanged} onClick={() => setOpponentChanged((v) => !v)}>
+                    {t('fm.matchSheet.when.opponentChange')}
+                  </button>
+                </div>
+              </div>
+            )}
+            {isFriendly(s.nextMatch?.competition) ? (
+              <p className="mb-3 rounded-lg bg-orange-clair p-2.5 text-sm text-canard">{t('fm.matchSheet.friendly')}</p>
+            ) : (
+              <div className="mb-3 rounded-lg bg-canard/5 p-2.5 text-sm">
+                {s.nextMatch && (
+                  <p className={`mb-1 ${weight.rotate ? 'text-brun' : 'font-bold text-canard'}`}>
+                    {weight.reason === 'cup' || weight.reason === 'congested' ? t(`fm.matchSheet.weight.${weight.reason}`) : weight.importance === 'high' ? t('fm.matchSheet.weight.high', { competition: s.nextMatch.competition ?? '' }) : null}
+                  </p>
+                )}
+                <p>
+                  <b className="text-canard">{t('fm.matchSheet.rules', { competition: s.nextMatch?.competition ?? t('fm.matchSheet.competition') })}</b>{' '}
+                  {t('fm.matchSheet.subsRule', { count: rules.subs, windows: rules.windows ?? '–' })}
+                </p>
+                {checks.length > 0 && (
+                  <ul className="mt-1 space-y-0.5">
+                    {checks.map((c) => (
+                      <li key={c.id} className={c.status === 'bad' ? 'font-bold text-corail' : c.status === 'ok' ? 'text-eau-fonce' : 'text-brun'}>
+                        {t(`fm.matchSheet.check.${c.id}`, { need: c.need, have: c.have ?? '?' })} · {t(c.status === 'ok' && c.verified ? 'fm.matchSheet.status.okVerified' : `fm.matchSheet.status.${c.status}`)}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {rules.unverified && <p className="mt-1 text-xs text-brun">{t('fm.matchSheet.unverified')}</p>}
+              </div>
+            )}
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <p className="mb-2 text-sm font-bold text-canard">{t('fm.matchSheet.subs')}</p>
+                {subs.length ? (
+                  <ul className="space-y-1.5 text-sm">
+                    {subs.map((c, i) => (
+                      <li
+                        key={c.slot}
+                        className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg ${subState[i] === 'now' ? 'bg-eau/15 p-1.5 ring-1 ring-eau-fonce/40' : subState[i] === 'done' ? 'opacity-50 line-through' : ''}`}
+                      >
+                        {live ? (
+                          <input type="checkbox" className="h-4 w-4 accent-[#8F5400]" checked={subState[i] === 'done'} onChange={() => toggleDone(c.slot)} aria-label={t('fm.matchSheet.live.done')} />
+                        ) : null}
+                        <span className="w-10 shrink-0 font-bold tabular-nums text-eau-fonce">{c.minute}'</span>
+                        <PlayerLink player={c.out} focus="form" />
+                        <span className="text-brun" aria-hidden>
+                          →
+                        </span>
+                        <PlayerLink player={c.in} />
+                        {subState[i] === 'now' && <span className="text-xs font-bold uppercase text-eau-fonce">{t('fm.matchSheet.live.now')}</span>}
+                        <span className="w-full pl-12 text-xs text-brun">{t(`fm.matchSheet.reason.${c.reason}`)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-brun">{t('fm.matchSheet.noSubs')}</p>
+                )}
+              </div>
+              <div>
+                <p className="mb-2 text-sm font-bold text-canard">{t('fm.matchSheet.tweaks')}</p>
+                <dl className="space-y-1.5 text-sm">
+                  {tweaks.map((x) => (
+                    <div key={x.situation} className={live ? (active.includes(x.situation) ? 'rounded-lg bg-eau/15 p-1.5 ring-1 ring-eau-fonce/40' : 'opacity-45') : ''}>
+                      <dt className="font-bold text-canard">
+                        {t(`fm.matchSheet.when.${x.situation}`)}
+                        {live && active.includes(x.situation) && <span className="ml-2 text-xs uppercase text-eau-fonce">{t('fm.matchSheet.live.now')}</span>}
+                      </dt>
+                      <dd className="text-brun">{x.tweaks.length ? x.tweaks.map((k) => t(`fm.matchSheet.tweak.${k}`)).join(' + ') : t('fm.matchSheet.followStaff')}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </div>
+          </div>
+        )}
+    </div>
+  );
+
+  return (
+    <MotionConfig reducedMotion="user">
+    <section className="space-y-4">
+      <MatchHero mode={heroMode} board={board} nm={nm} when={when} sides={sides} nowSubs={nowSubs} nowTweaks={nowTweaks} onDone={toggleDone} go={go} />
+
+      {liveFirst && sheet}
 
       {afterHero}
 
@@ -293,146 +429,204 @@ export function FmMatchCenter({
         </div>
       </div>
 
-      {/* Feuille de match : remplacements prévus et ajustements selon le score. */}
-      {plan && !(sheetOpen || live || !!game || (nm?.inDays != null && nm.inDays <= 1)) && (
-        <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
-          <p className="text-sm">
-            <b className="text-canard">{t('fm.matchSheet.title')}</b>{' '}
-            <span className="text-brun">{t('fm.matchSheet.folded', { subs: subs.length, tweaks: tweaks.length })}</span>
-          </p>
-          <button type="button" className="chip" onClick={() => setSheetOpen(true)}>
-            {t('fm.matchSheet.open')}
-          </button>
-        </div>
-      )}
-      {plan && (sheetOpen || live || !!game || (nm?.inDays != null && nm.inDays <= 1)) && (
-        <div className="card p-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2>{t('fm.matchSheet.title')}</h2>
-            <button type="button" className={chip(live)} aria-pressed={live} onClick={() => setLive((v) => !v)}>
-              {t(live ? 'fm.matchSheet.live.on' : 'fm.matchSheet.live.start')}
-            </button>
-          </div>
-          <p className="mb-3 text-xs text-brun">{t(live ? (fromGame ? 'fm.matchSheet.live.helpGame' : 'fm.matchSheet.live.help') : 'fm.matchSheet.help')}</p>
-          {live && (
-            <div className="mb-3 space-y-2 rounded-lg bg-eau/10 p-3 text-sm">
-              {game && (
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="rounded-full bg-corail px-2 py-0.5 text-xs font-bold uppercase tracking-wide text-white">{t(game.final ? 'fm.matchSheet.live.gameFinal' : 'fm.matchSheet.live.gameLive')}</span>
-                  <span className="font-bold text-canard">
-                    {t(game.side === 'home' ? 'fm.matchSheet.live.vsHome' : 'fm.matchSheet.live.vsAway', { opponent: game.opponent })}
-                  </span>
-                  <span className="font-display text-xl font-semibold tabular-nums text-canard">
-                    {game.goalsFor} - {game.goalsAgainst}
-                  </span>
-                  {!game.final && <span className="tabular-nums text-brun">{game.minute}'</span>}
-                  <button type="button" className={chip(manual)} aria-pressed={manual} onClick={() => setManual((v) => !v)}>
-                    {t('fm.matchSheet.live.manual')}
-                  </button>
-                </div>
-              )}
-              {!fromGame && (
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="flex items-center gap-2 font-bold text-canard">
-                  {t('fm.matchSheet.live.minute')}
-                  <input type="range" min={0} max={95} step={5} value={minute} onChange={(e) => setMinute(Number(e.target.value))} className="w-40 accent-[#8F5400]" />
-                  <span className="w-10 tabular-nums">{minute}'</span>
-                </label>
-                <div className="flex items-center gap-1">
-                  <span className="font-bold text-canard">{t('fm.matchSheet.live.score')}</span>
-                  <button type="button" className={chip(false)} onClick={() => setDiff((d) => d - 1)} aria-label={t('fm.matchSheet.live.conceded')}>
-                    −
-                  </button>
-                  <span className="w-24 text-center font-bold tabular-nums">
-                    {diff > 0 ? t('fm.matchSheet.live.ahead', { n: diff }) : diff < 0 ? t('fm.matchSheet.live.behind', { n: -diff }) : t('fm.matchSheet.live.level')}
-                  </span>
-                  <button type="button" className={chip(false)} onClick={() => setDiff((d) => d + 1)} aria-label={t('fm.matchSheet.live.scored')}>
-                    +
-                  </button>
-                </div>
-              </div>
-              )}
-              <div className="flex flex-wrap gap-2">
-                <button type="button" className={chip(tired)} aria-pressed={tired} onClick={() => setTired((v) => !v)}>
-                  {t('fm.matchSheet.when.tired')}
-                </button>
-                <button type="button" className={chip(opponentChanged)} aria-pressed={opponentChanged} onClick={() => setOpponentChanged((v) => !v)}>
-                  {t('fm.matchSheet.when.opponentChange')}
-                </button>
-              </div>
-            </div>
-          )}
-          {isFriendly(s.nextMatch?.competition) ? (
-            <p className="mb-3 rounded-lg bg-orange-clair p-2.5 text-sm text-canard">{t('fm.matchSheet.friendly')}</p>
-          ) : (
-            <div className="mb-3 rounded-lg bg-canard/5 p-2.5 text-sm">
-              {s.nextMatch && (
-                <p className={`mb-1 ${weight.rotate ? 'text-brun' : 'font-bold text-canard'}`}>
-                  {weight.reason === 'cup' || weight.reason === 'congested' ? t(`fm.matchSheet.weight.${weight.reason}`) : weight.importance === 'high' ? t('fm.matchSheet.weight.high', { competition: s.nextMatch.competition ?? '' }) : null}
-                </p>
-              )}
-              <p>
-                <b className="text-canard">{t('fm.matchSheet.rules', { competition: s.nextMatch?.competition ?? t('fm.matchSheet.competition') })}</b>{' '}
-                {t('fm.matchSheet.subsRule', { count: rules.subs, windows: rules.windows ?? '–' })}
-              </p>
-              {checks.length > 0 && (
-                <ul className="mt-1 space-y-0.5">
-                  {checks.map((c) => (
-                    <li key={c.id} className={c.status === 'bad' ? 'font-bold text-corail' : c.status === 'ok' ? 'text-eau-fonce' : 'text-brun'}>
-                      {t(`fm.matchSheet.check.${c.id}`, { need: c.need, have: c.have ?? '?' })} · {t(c.status === 'ok' && c.verified ? 'fm.matchSheet.status.okVerified' : `fm.matchSheet.status.${c.status}`)}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {rules.unverified && <p className="mt-1 text-xs text-brun">{t('fm.matchSheet.unverified')}</p>}
-            </div>
-          )}
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <p className="mb-2 text-sm font-bold text-canard">{t('fm.matchSheet.subs')}</p>
-              {subs.length ? (
-                <ul className="space-y-1.5 text-sm">
-                  {subs.map((c, i) => (
-                    <li
-                      key={c.slot}
-                      className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg ${subState[i] === 'now' ? 'bg-eau/15 p-1.5 ring-1 ring-eau-fonce/40' : subState[i] === 'done' ? 'opacity-50 line-through' : ''}`}
-                    >
-                      {live ? (
-                        <input type="checkbox" className="h-4 w-4 accent-[#8F5400]" checked={subState[i] === 'done'} onChange={() => toggleDone(c.slot)} aria-label={t('fm.matchSheet.live.done')} />
-                      ) : null}
-                      <span className="w-10 shrink-0 font-bold tabular-nums text-eau-fonce">{c.minute}'</span>
-                      <PlayerLink player={c.out} focus="form" />
-                      <span className="text-brun" aria-hidden>
-                        →
-                      </span>
-                      <PlayerLink player={c.in} />
-                      {subState[i] === 'now' && <span className="text-xs font-bold uppercase text-eau-fonce">{t('fm.matchSheet.live.now')}</span>}
-                      <span className="w-full pl-12 text-xs text-brun">{t(`fm.matchSheet.reason.${c.reason}`)}</span>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-sm text-brun">{t('fm.matchSheet.noSubs')}</p>
-              )}
-            </div>
-            <div>
-              <p className="mb-2 text-sm font-bold text-canard">{t('fm.matchSheet.tweaks')}</p>
-              <dl className="space-y-1.5 text-sm">
-                {tweaks.map((x) => (
-                  <div key={x.situation} className={live ? (active.includes(x.situation) ? 'rounded-lg bg-eau/15 p-1.5 ring-1 ring-eau-fonce/40' : 'opacity-45') : ''}>
-                    <dt className="font-bold text-canard">
-                      {t(`fm.matchSheet.when.${x.situation}`)}
-                      {live && active.includes(x.situation) && <span className="ml-2 text-xs uppercase text-eau-fonce">{t('fm.matchSheet.live.now')}</span>}
-                    </dt>
-                    <dd className="text-brun">{x.tweaks.length ? x.tweaks.map((k) => t(`fm.matchSheet.tweak.${k}`)).join(' + ') : t('fm.matchSheet.followStaff')}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          </div>
-        </div>
-      )}
+      {afterGrid}
+
+      {!liveFirst && sheet}
     </section>
+    </MotionConfig>
   );
 }
 
+
+/** Couleur du résultat final : vert gagné, ambre nul, corail perdu (texte bleu nuit sur l'ambre, jamais blanc). */
+const OUTCOME_PILL = { W: 'bg-eau-fonce text-white', D: 'bg-ambre text-canard', L: 'bg-corail text-white' } as const;
+
+/** Ce que le bandeau affiche pendant le direct ou à la fin du match : score lu par le plugin, du point de vue des deux camps. */
+export interface HeroBoard {
+  home: string;
+  away: string;
+  homeGoals: number;
+  awayGoals: number;
+  minute: number;
+  outcome: 'W' | 'D' | 'L';
+}
+
+/**
+ * Bandeau du haut de l'accueil, qui change avec le moment du match : l'affiche avant le coup d'envoi, le tableau de
+ * score et ce qu'il faut faire maintenant pendant le direct, le résultat une fois le match terminé.
+ */
+export function MatchHero({
+  mode: heroMode,
+  board,
+  nm,
+  when,
+  sides,
+  nowSubs,
+  nowTweaks,
+  onDone: toggleDone,
+  go,
+}: {
+  mode: 'pre' | 'live' | 'final';
+  board: HeroBoard | null;
+  nm: { competition?: string | null; home?: boolean | null; inDays?: number | null; staffView?: string | null } | null | undefined;
+  when: string | null;
+  sides: (string | null | undefined)[];
+  nowSubs: SubChange[];
+  nowTweaks: { situation: MatchSituation; tweaks: MatchTweak[] }[];
+  onDone: (slot: number) => void;
+  go: (view: string) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <>
+      {/* Bandeau du match : avant-match, direct (score, minute, ce qu'il faut faire maintenant) ou match terminé. */}
+      <div className="relative overflow-hidden rounded-2xl bg-canard text-white">
+        <Stadium className={`pointer-events-none absolute inset-y-0 right-0 hidden h-full md:block ${heroMode === 'pre' ? 'w-[55%]' : 'w-full opacity-25'}`} />
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div key={heroMode} className="relative" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25, ease: 'easeOut' }}>
+            {heroMode === 'pre' || !board ? (
+            <div className="relative max-w-xl p-6 md:p-7">
+              {nm ? (
+                <>
+                  <p className="text-xs font-bold uppercase tracking-widest text-orange">
+                    {[when, nm.home != null && t(nm.home ? 'fm.mc.home' : 'fm.mc.away')].filter(Boolean).join(' · ') || t('fm.mc.next')}
+                  </p>
+                  <p className="mt-2 font-display text-3xl font-semibold leading-tight md:text-4xl">
+                    {sides[0]} <span className="text-white/50">–</span> {sides[1]}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold">
+                    {nm.competition && <span className="rounded-full bg-white/10 px-2.5 py-1">{nm.competition}</span>}
+                    {nm.inDays != null && nm.inDays > 1 && <span className="rounded-full bg-white/10 px-2.5 py-1 tabular-nums">J-{nm.inDays}</span>}
+                  </div>
+                  {nm.staffView && <p className="mt-3 max-w-md text-sm italic text-white/75">« {nm.staffView} »</p>}
+                </>
+              ) : (
+                <>
+                  <p className="text-xs font-bold uppercase tracking-widest text-orange">{t('fm.mc.next')}</p>
+                  <p className="mt-2 text-white/70">{t('fm.sum.noMatch')}</p>
+                </>
+              )}
+              {/* Une action principale : l'adversaire (préparer le match vient après, en lien). */}
+              <div className="mt-5 flex flex-wrap items-center gap-2">
+                {nm && (
+                  <button type="button" className="rounded-lg bg-orange px-5 py-2.5 font-bold text-canard hover:brightness-105" onClick={() => go('opponent')}>
+                    {t('fm.mc.seeOpponent')}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className={nm ? 'rounded-lg px-3 py-2 text-sm font-bold text-white/80 hover:bg-white/10 hover:text-white' : 'rounded-lg bg-orange px-5 py-2.5 font-bold text-canard hover:brightness-105'}
+                  onClick={() => go('tactic')}
+                >
+                  {t('fm.mc.prepareMatch')} →
+                </button>
+              </div>
+            </div>
+            ) : (
+              <div className="relative p-6 md:p-7">
+                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-orange">
+                  {heroMode === 'live' && (
+                    <span className="relative flex h-2.5 w-2.5" aria-hidden>
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-corail opacity-75 motion-reduce:animate-none" />
+                      <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-corail" />
+                    </span>
+                  )}
+                  {[t(heroMode === 'live' ? 'fm.mc.hero.live' : 'fm.mc.hero.final'), nm?.competition].filter(Boolean).join(' · ')}
+                </p>
+                <div className="mt-4 grid max-w-3xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-4 md:gap-6">
+                  <p className="text-right font-display text-xl font-semibold leading-tight md:text-3xl">{board.home}</p>
+                  <p className="flex items-center gap-2 font-cond text-5xl font-bold leading-none tabular-nums md:text-7xl" aria-label={`${board.home} ${board.homeGoals} - ${board.awayGoals} ${board.away}`}>
+                    <Goals value={board.homeGoals} />
+                    <span className="text-white/40" aria-hidden>
+                      -
+                    </span>
+                    <Goals value={board.awayGoals} />
+                  </p>
+                  <p className="font-display text-xl font-semibold leading-tight md:text-3xl">{board.away}</p>
+                </div>
+                {heroMode === 'live' ? (
+                  <>
+                    <div className="mt-5 max-w-3xl" aria-hidden>
+                      <div className="flex justify-between text-xs font-bold tabular-nums text-white/60">
+                        <span className="text-orange">{board.minute}'</span>
+                        <span>90'</span>
+                      </div>
+                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
+                        <motion.div
+                          className="h-full rounded-full bg-orange"
+                          initial={false}
+                          animate={{ width: `${Math.min(100, (board.minute / 90) * 100)}%` }}
+                          transition={{ duration: 0.6, ease: 'easeOut' }}
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-5 max-w-3xl rounded-xl bg-white/5 p-4 ring-1 ring-white/10">
+                      <p className="text-xs font-bold uppercase tracking-widest text-white/60">{t('fm.mc.hero.now')}</p>
+                      {nowSubs.length || nowTweaks.length ? (
+                        <ul className="mt-2 space-y-2 text-sm">
+                          <AnimatePresence initial={false}>
+                            {nowSubs.map((c) => (
+                              <motion.li key={`s${c.slot}`} layout initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} className="flex flex-wrap items-center gap-x-2">
+                                <input type="checkbox" className="h-4 w-4 accent-[#FFB547]" checked={false} onChange={() => toggleDone(c.slot)} aria-label={t('fm.matchSheet.live.done')} />
+                                <span className="w-9 shrink-0 font-bold tabular-nums text-orange">{c.minute}'</span>
+                                <b>{last(c.out.name)}</b>
+                                <span className="text-white/50" aria-hidden>
+                                  →
+                                </span>
+                                <b>{last(c.in.name)}</b>
+                                <span className="truncate text-xs text-white/60">{t(`fm.matchSheet.reason.${c.reason}`)}</span>
+                              </motion.li>
+                            ))}
+                            {nowTweaks.map((x) => (
+                              <motion.li key={`t${x.situation}`} layout initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}>
+                                <b>{t(`fm.matchSheet.when.${x.situation}`)}</b>
+                                <span className="text-white/70"> · {x.tweaks.length ? x.tweaks.map((k) => t(`fm.matchSheet.tweak.${k}`)).join(' + ') : t('fm.matchSheet.followStaff')}</span>
+                              </motion.li>
+                            ))}
+                          </AnimatePresence>
+                        </ul>
+                      ) : (
+                        <p className="mt-2 text-sm text-white/70">{t('fm.mc.hero.nothingNow')}</p>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="mt-4 max-w-3xl text-center">
+                    <span className={`inline-block rounded-full px-3 py-1 text-sm font-bold ${OUTCOME_PILL[board.outcome]}`}>{t(`fm.mc.hero.outcome.${board.outcome}`)}</span>
+                  </div>
+                )}
+                <div className="mt-5 flex flex-wrap items-center gap-2">
+                  {heroMode === 'final' && (
+                    <button type="button" className="rounded-lg bg-orange px-5 py-2.5 font-bold text-canard hover:brightness-105" onClick={() => go('results')}>
+                      {t('fm.mc.hero.results')}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('feuille-de-match')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    className={heroMode === 'live' ? 'rounded-lg bg-orange px-5 py-2.5 font-bold text-canard hover:brightness-105' : 'rounded-lg px-3 py-2 text-sm font-bold text-white/80 hover:bg-white/10 hover:text-white'}
+                  >
+                    {t('fm.mc.hero.openSheet')}
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </>
+  );
+}
+
+/** Un score du bandeau en direct : le chiffre glisse quand un but est marqué. */
+function Goals({ value }: { value: number }) {
+  return (
+    <span className="relative inline-flex overflow-hidden">
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span key={value} initial={{ y: '-100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '100%', opacity: 0 }} transition={{ type: 'spring', stiffness: 380, damping: 26 }}>
+          {value}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  );
+}

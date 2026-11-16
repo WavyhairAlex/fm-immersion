@@ -2835,6 +2835,19 @@
         "condition": "condition {{pct}}%",
         "risk": "injury risk",
         "chained": "too many matches in a row"
+      },
+      "hero": {
+        "live": "Live",
+        "final": "Full time",
+        "now": "Do it now",
+        "nothingNow": "Nothing to change for now: stick to the plan.",
+        "openSheet": "Match sheet",
+        "results": "See results",
+        "outcome": {
+          "W": "Win",
+          "D": "Draw",
+          "L": "Defeat"
+        }
       }
     },
     "matchSheet": {
@@ -5617,7 +5630,9 @@
       "noChallenge": "No challenge running.",
       "steps": "{{done}} of {{total}} steps",
       "facesProgress": "Portrait project: {{pct}} %",
-      "facesUpdate": "New faces pack: {{count}} V2 portraits"
+      "facesUpdate": "New faces pack: {{count}} V2 portraits",
+      "story": "Your career story",
+      "also": "Also in this issue"
     },
     "career": {
       "create": "Create my career",
@@ -5666,13 +5681,6 @@
       "open": "FM27 open",
       "closed": "FM27 closed",
       "plugin": "Plugin needs attention"
-    },
-    "board": {
-      "label": "Dashboard",
-      "calm": "Nothing to do here.",
-      "open": "Open",
-      "more": "{{text}} (+{{count}})",
-      "game": "Game and plugin"
     },
     "dev": "{{name}} · in development",
     "connect": {

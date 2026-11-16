@@ -76,7 +76,11 @@ export function GazetteUne({ saveId }: { saveId: string }) {
     enabled: !!issue,
   });
   if (!issue) return null;
-  const title = storyText(t, issue.club, issue.headline).title;
+  const une = storyText(t, issue.club, issue.headline);
+  const title = issue.written?.title || une.title;
+  const lede = issue.written?.article || une.body;
+  // Deux autres brèves du numéro, pour donner envie d'ouvrir la gazette.
+  const others = issue.stories.filter((x) => x !== issue.headline).slice(0, 2).map((x) => storyText(t, issue.club, x).title);
   return (
     <Link to="/gazette" className="card group flex flex-col bg-orange-clair/25 p-5 hover:ring-orange/40" aria-label={`${t('modes.gazette.title')} · ${title}`}>
       <div className="flex items-center gap-3" aria-hidden>
@@ -86,7 +90,21 @@ export function GazetteUne({ saveId }: { saveId: string }) {
       </div>
       <p className="mt-1 text-center text-xs uppercase tracking-widest text-brun">{t('gazette.issue', { number: issue.number })}</p>
       {photo && <img src={photo.src} alt="" className="mt-3 aspect-[16/7] w-full rounded object-cover grayscale" />}
-      <p className="mt-3 flex-1 font-display text-3xl font-semibold leading-tight">{title}</p>
+      <p className="mt-3 font-display text-3xl font-semibold leading-tight">{title}</p>
+      {lede && <p className={`mt-2 text-sm leading-relaxed text-canard/80 ${photo ? 'line-clamp-2' : 'line-clamp-4'}`}>{lede}</p>}
+      {others.length > 0 && (
+        <div className="mt-3 border-t border-canard/20 pt-2">
+          <p className="text-xs font-bold uppercase tracking-widest text-brun">{t('layout.today.also')}</p>
+          <ul className="mt-1 space-y-0.5 text-sm">
+            {others.map((o) => (
+              <li key={o} className="truncate font-display font-semibold">
+                {o}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <span className="flex-1" />
       <span className="mt-3 border-t border-canard/30 pt-2 text-sm font-bold text-orange-fonce group-hover:underline">{t('layout.today.read')} →</span>
     </Link>
   );
