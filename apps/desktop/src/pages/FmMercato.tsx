@@ -6,7 +6,7 @@ import { fmData } from '../lib/data';
 import { useNavigate } from 'react-router-dom';
 import { clubPath } from '../lib/club-nav';
 import { useTacticEngine } from './FmTactic';
-import { LeaveButton, useLeaving } from './FmLeaving';
+import { DepartureChecklist, LeaveButton, useLeaving } from './FmLeaving';
 import { NeedsPanel } from './FmNeeds';
 import { DivisionLevelPanel, ReplacementFinder } from './FmReplacement';
 import { CompatTag, EngineTag, Empty, Kpi, Level, Panel, Pos, Tag, useCoach, useFormat, useNames, type Tone, More, PlayerLink, Chips, ReliabilityLine } from './FmUi';
@@ -792,6 +792,15 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
   // Partants signalés : le mercato planifie sans eux ; un signalement lance la recherche de son remplaçant.
   const { ids: leavingIds, loanIds, marks } = useLeaving();
   const [justMarked, setJustMarked] = useState<string | null>(null);
+  // Clubs intéressés par chaque joueur (suivi lu par le plugin) : repère pour cocher les partants.
+  const interest = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const x of (snap?.players ?? []) as { id: unknown; tracking?: { interestedClubs?: unknown } }[]) {
+      const v = Number(x.tracking?.interestedClubs);
+      if (Number.isFinite(v) && v > 0) m.set(String(x.id), v);
+    }
+    return m;
+  }, [snap]);
   const r = useMemo(() => mercatoAdvice(engine, players, gameDate, coach, history, leavingIds, loanIds), [engine, players, gameDate, coach, history, leavingIds, loanIds]);
   // Onze cible, comme pour les cibles du mercato : sert au remplaçant d'un partant et au niveau de la division.
   const own = useMemo(() => players.filter((p) => !p.injury && Object.keys(p.attributes).length), [players]);
@@ -822,6 +831,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
   return (
     <div className="space-y-4">
       <MercatoPlan r={r} pr={pr} engine={engine} pool={pool} needs={needs?.needs ?? []} fin={fin} gameDate={gameDate} onMarked={setJustMarked} reg={reg} snapshots={history.length} />
+      <DepartureChecklist players={players} gameDate={gameDate} interest={interest} />
       {/* Le reste (jeunes, recherche de remplaçants, niveau de la division…) replié : l'écran tient sur une page. */}
       <details className="group">
         <summary className="cursor-pointer text-sm font-bold text-orange-fonce hover:underline">

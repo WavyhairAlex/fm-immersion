@@ -3243,7 +3243,14 @@
         "wantsOut": "Wants out",
         "loanIn": "On loan with us"
       },
-      "loanFrom": "On loan from {{club}}"
+      "loanFrom": "On loan from {{club}}",
+      "check": {
+        "title_one": "On the way out · {{count}} ticked",
+        "title_other": "On the way out · {{count}} ticked",
+        "help": "Tick the players who have offers or whom you want to sell. FM Immersion then plans without them: the Mercato, “Signings for my tactic” (Targets tab, which opens their position first) and Seasons look for their replacement. Untick if he stays after all. Nothing is sent to the game. The orange figure is the number of interested clubs read from FM27; the plugin does not read the offers received themselves yet.",
+        "interest_one": "{{count}} club interested",
+        "interest_other": "{{count}} clubs interested"
+      }
     },
     "needs": {
       "title": "Positions to sign ({{count}})",
@@ -4261,7 +4268,9 @@
         "score": "Position and meta",
         "gain": "Impact",
         "keys": "Key attributes"
-      }
+      },
+      "leaves": "{{name}} leaving",
+      "replaces": "Position to fill: {{name}} is on the way out."
     },
     "seasons": {
       "intro": "Your whole squad, player by player, at the start of the next three seasons: their role in your chosen tactic, who leaves, which academy player steps up, and what's missing for about {{target}} players with a backup in every slot. Nothing is bought for you.",
