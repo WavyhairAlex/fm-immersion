@@ -7,15 +7,15 @@ import { attrOf, slotFit, type TacticEngine } from './tactic';
  * Recrues pour la tactique choisie : pour un poste du onze de la tactique (rôles avec et sans ballon), les joueurs
  * qui collent à ce poste ET que le moteur de match récompense. Chaque joueur est noté « poste et méta » :
  * moyenne de son adéquation aux deux rôles du créneau (note du jeu, sur 20) et de sa note méta au poste (ce que
- * ses attributs valent dans le moteur, sur 20, voir engine-value.ts). Un gardien n'a pas de note méta : son
- * adéquation seule compte.
+ * ses attributs valent dans le moteur, sur 20, voir engine-value.ts ; pour un gardien,
+ * la note de l'étude Match Lab : agilité, réflexes).
  * La note est comparée à celle du titulaire et de la doublure du poste, notés de la même façon.
  */
 
 export interface SlotNote {
   /** Adéquation aux deux rôles du créneau, sur 20. */
   fit: number | null;
-  /** Note méta au poste du créneau, sur 20 (null pour un gardien ou des attributs non lus). */
+  /** Note méta au poste du créneau, sur 20 (null si les attributs ne sont pas lus). */
   meta: number | null;
   /** Poste et méta : moyenne des deux (une seule connue : elle seule). */
   score: number | null;
@@ -24,7 +24,7 @@ export interface SlotNote {
 /** Note « poste et méta » d'un joueur sur un créneau de la tactique. */
 export function slotNote(engine: TacticEngine, p: FmPlayer, sl: ProjectSlot): SlotNote {
   const fit = slotFit(engine, p, sl);
-  const meta = sl.pos === 'GB' ? null : (engineValue(p, sl.pos)?.meta ?? null);
+  const meta = engineValue(p, sl.pos)?.meta ?? null;
   return { fit, meta, score: fitMetaScore(fit, meta) };
 }
 
