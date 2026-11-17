@@ -643,7 +643,8 @@
       "playtime": "Playing time",
       "builder": "Build",
       "academy": "Academy",
-      "ideal": "My ideal tactic"
+      "ideal": "My ideal tactic",
+      "seasons": "Seasons"
     },
     "home": {
       "todo": "To deal with",
@@ -1895,7 +1896,8 @@
       "staff": "Your coaches' ratings by area: who should handle what, and which free coach would fill a gap.",
       "builder": "Your tactic from scratch: positions and roles in and out of possession, style, and what holds up or doesn't.",
       "academy": "Your reserve and youth teams: overview, decisions to make and best prospects.",
-      "ideal": "Say what you like to play: the app looks for the FM27 tactic closest to it with your squad."
+      "ideal": "Say what you like to play: the app looks for the FM27 tactic closest to it with your squad.",
+      "seasons": "Your eleven over the next three seasons, academy included: who matures, which slot a youngster will hold, when not to buy."
     },
     "nextStep": "Next step: {{view}}",
     "opp": {
@@ -2716,7 +2718,8 @@
       "wages": "Wages",
       "contracts": "Contracts",
       "academy": "Academy",
-      "ideal": "My ideal tactic"
+      "ideal": "My ideal tactic",
+      "seasons": "Seasons"
     },
     "subtabs": {
       "squad": "Players",
@@ -4259,6 +4262,70 @@
         "gain": "Impact",
         "keys": "Key attributes"
       }
+    },
+    "seasons": {
+      "intro": "Your chosen tactic's starting eleven at the start of the next three seasons. Reserve and youth team players count, aged by their progress. Nothing is bought for you: a red slot stays open.",
+      "grid": "The eleven, season by season",
+      "now": "{{season}} (now)",
+      "age": "{{age}}",
+      "ageTeam": "{{age}} · {{team}}",
+      "recruit": "To sign",
+      "tooWeak": "not good enough for the eleven",
+      "leaves": "leaves on {{date}}",
+      "declining": "declining",
+      "takesOver": "takes over",
+      "legend": {
+        "ok": "in place",
+        "youth": "academy player",
+        "ending": "leaving or declining",
+        "recruit": "to sign"
+      },
+      "kpi": {
+        "youth": "Slots held by youth",
+        "youthSub": "academy players starting in {{season}}",
+        "buys": "Signings really needed",
+        "buysNone": "no slot without a solution",
+        "covered": "Signings avoided",
+        "coveredSub": "slots where an academy player takes over",
+        "upside": "Prospects' upside",
+        "upsideSub": "estimated value at 23 of your 5 best prospects, minus their value today",
+        "upsideNone": "read CA/PA (Plugin and settings) to estimate it"
+      },
+      "beforeBuying": "Before you buy",
+      "nothingToBuy": "Your eleven holds for three seasons, with no signing or youngster to bring in.",
+      "wait": {
+        "title": "Wait before buying:",
+        "text": "{{name}} ({{team}}) should hold the slot in {{season}}.",
+        "leaves": "{{name}} leaves on {{date}}: a loan or a stopgap signing is enough until then.",
+        "see": "See in Academy"
+      },
+      "buy": {
+        "title": "Worth buying:",
+        "text": "no academy player reaches the eleven's level here (from {{season}}).",
+        "see": "Signings for my tactic"
+      },
+      "chip": "★ youth",
+      "prospects": "Your prospects",
+      "inXi": "Their place in your eleven",
+      "seeSeasons": "See the squad by season",
+      "noYouth": "No reserve or youth player has been read with attributes yet.",
+      "notYet": "not within 3 seasons",
+      "col": {
+        "player": "Prospect",
+        "pos": "Slot covered",
+        "from": "Starter in",
+        "valueNow": "Value today",
+        "valueAt": "Value at 23",
+        "advice": "Advice"
+      },
+      "advice": {
+        "promote": "Promote to the first team",
+        "extend": "Extend his contract",
+        "loan": "Loan him out to play",
+        "keep": "Keep him, minutes with the youth",
+        "sell": "Sell or release"
+      },
+      "help": "Each season, players are aged (progress measured over your game dates, otherwise an age curve) and recommended departures happen: sales, loans, contracts not extended, players you flagged as leaving. Then each slot of your tactic goes to the best player present, from the first team or the academy. A slot is \"to sign\" when nobody reaches today's starters' level (1.5 points below their median). Value at 23 uses CA and PA read from memory and your squad's values. No arrival is invented."
     }
   },
   "modes": {

@@ -643,7 +643,8 @@
       "playtime": "Temps de jeu",
       "builder": "Construire",
       "academy": "Académie",
-      "ideal": "Ma tactique idéale"
+      "ideal": "Ma tactique idéale",
+      "seasons": "Saisons"
     },
     "home": {
       "todo": "À traiter",
@@ -1895,7 +1896,8 @@
       "staff": "Les notes de tes entraîneurs par domaine : qui doit s'occuper de quoi, et quel entraîneur libre comblerait un manque.",
       "builder": "Ta tactique de zéro : postes et rôles avec et sans ballon, style, et ce qui tient ou coince.",
       "academy": "La réserve et les équipes de jeunes : bilan, décisions à prendre et meilleurs espoirs.",
-      "ideal": "Dis ce que tu aimes jouer : l'appli cherche la tactique FM27 qui s'en approche le plus avec ton effectif."
+      "ideal": "Dis ce que tu aimes jouer : l'appli cherche la tactique FM27 qui s'en approche le plus avec ton effectif.",
+      "seasons": "Ton onze sur les trois prochaines saisons, jeunes du centre compris : qui arrive, quel poste un jeune tiendra, quand ne pas acheter."
     },
     "nextStep": "Étape suivante : {{view}}",
     "opp": {
@@ -2716,7 +2718,8 @@
       "wages": "Salaires",
       "contracts": "Contrats",
       "academy": "Académie",
-      "ideal": "Ma tactique idéale"
+      "ideal": "Ma tactique idéale",
+      "seasons": "Saisons"
     },
     "subtabs": {
       "squad": "Joueurs",
@@ -4259,6 +4262,70 @@
         "gain": "Apport",
         "keys": "Attributs clés"
       }
+    },
+    "seasons": {
+      "intro": "Ton onze de la tactique choisie au début des trois prochaines saisons. Les jeunes de la réserve et des équipes de jeunes sont comptés, vieillis selon leur progression. Rien n'est acheté à ta place : un poste rouge reste à pourvoir.",
+      "grid": "Le onze, saison par saison",
+      "now": "{{season}} (maintenant)",
+      "age": "{{age}} ans",
+      "ageTeam": "{{age}} ans · {{team}}",
+      "recruit": "À recruter",
+      "tooWeak": "trop juste pour le onze",
+      "leaves": "part le {{date}}",
+      "declining": "en baisse",
+      "takesOver": "passe devant",
+      "legend": {
+        "ok": "en place",
+        "youth": "jeune du centre",
+        "ending": "départ ou déclin",
+        "recruit": "à recruter"
+      },
+      "kpi": {
+        "youth": "Postes tenus par un jeune",
+        "youthSub": "jeunes du centre titulaires en {{season}}",
+        "buys": "Achats vraiment utiles",
+        "buysNone": "aucun poste sans solution",
+        "covered": "Achats évités",
+        "coveredSub": "postes où un jeune du centre prend la place",
+        "upside": "Plus-value des espoirs",
+        "upsideSub": "valeur estimée à 23 ans de tes 5 meilleurs espoirs, moins leur valeur aujourd'hui",
+        "upsideNone": "lis le CA/PA (Plugin et réglages) pour l'estimer"
+      },
+      "beforeBuying": "Avant d'acheter",
+      "nothingToBuy": "Ton onze tient sur les trois saisons, sans achat ni jeune à lancer.",
+      "wait": {
+        "title": "Attends avant d'acheter :",
+        "text": "{{name}} ({{team}}) devrait tenir le poste en {{season}}.",
+        "leaves": "{{name}} part le {{date}} : un prêt ou un joueur de transition suffit d'ici là.",
+        "see": "Voir dans l'Académie"
+      },
+      "buy": {
+        "title": "Achat utile :",
+        "text": "aucun jeune du centre n'est au niveau du onze à ce poste (dès {{season}}).",
+        "see": "Recrues pour ma tactique"
+      },
+      "chip": "★ jeune",
+      "prospects": "Tes espoirs",
+      "inXi": "Leur place dans ton onze",
+      "seeSeasons": "Voir l'effectif par saison",
+      "noYouth": "Aucun joueur de la réserve ni des jeunes n'est lu avec ses attributs pour l'instant.",
+      "notYet": "pas dans les 3 saisons",
+      "col": {
+        "player": "Espoir",
+        "pos": "Poste couvert",
+        "from": "Titulaire en",
+        "valueNow": "Valeur aujourd'hui",
+        "valueAt": "Valeur à 23 ans",
+        "advice": "Conseil"
+      },
+      "advice": {
+        "promote": "Monter en équipe première",
+        "extend": "Prolonger son contrat",
+        "loan": "Le prêter pour qu'il joue",
+        "keep": "Le garder, temps de jeu chez les jeunes",
+        "sell": "Vendre ou libérer"
+      },
+      "help": "Chaque saison, les joueurs sont vieillis (progression mesurée sur tes dates de jeu, sinon une courbe d'âge) et les départs conseillés sont faits : ventes, prêts, contrats qu'on ne prolonge pas, partants que tu as signalés. Puis chaque poste de ta tactique revient au meilleur joueur présent, de l'équipe première ou du centre. Un poste est « à recruter » quand personne n'atteint le niveau de tes titulaires d'aujourd'hui (1,5 point sous leur médiane). La valeur à 23 ans part du CA et du PA lus en mémoire et des valeurs de ton effectif. Aucune arrivée n'est inventée."
     }
   },
   "modes": {

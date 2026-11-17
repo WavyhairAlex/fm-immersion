@@ -79,6 +79,7 @@ import { FmStyle } from './FmStyle';
 import { FmBuilder } from './FmBuilder';
 import { FmIdeal } from './FmIdeal';
 import { FmAcademy } from './FmAcademy';
+import { FmSeasons, SeasonInputsContext } from './FmSeasons';
 import { FmTactic, ProjectProvider, ReserveContext, useTacticEngine } from './FmTactic';
 import { FmTargets } from './FmTargets';
 import { FmScouting } from './FmScouting';
@@ -173,6 +174,8 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
       })),
     [all],
   );
+  // Effectif par saison (Saisons, Académie, Recrues pour ma tactique) : mêmes entrées partout.
+  const seasonInputs = useMemo(() => (snapshot ? { players, history, gameDate: snapshot.gameDate, folder } : null), [snapshot, players, history, folder]);
   const lineup = useMemo(() => gameLineup(snapshot?.data), [snapshot?.data]);
   // Schéma joué : le nom de la tactique s'il désigne un schéma connu, sinon les onze postes lus dans le onze du jeu.
   const gameFormation = useMemo(() => {
@@ -214,7 +217,9 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
       case 'loans':
         return <FmLoans snap={snapshot.data} />;
       case 'academy':
-        return <FmAcademy players={players} folder={folder} gameDate={snapshot.gameDate} />;
+        return <FmAcademy players={players} folder={folder} gameDate={snapshot.gameDate} go={go} />;
+      case 'seasons':
+        return <FmSeasons go={go} />;
       case 'numbers':
         return <FmShirts players={players} folder={folder} gameFormation={gameFormation} gameTactic={typeof snapshot.data.tactic?.name === 'string' ? snapshot.data.tactic.name : null} />;
       case 'tactic':
@@ -407,6 +412,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
               <FmSaveScopeContext.Provider value={scope}>
                 <ReserveContext.Provider value={reserve}>
                   <ProjectProvider players={players} folder={folder} gameFormation={gameFormation} lineup={lineup} gameTactic={typeof snapshot.data.tactic?.name === 'string' ? snapshot.data.tactic.name : null}>
+                  <SeasonInputsContext.Provider value={seasonInputs}>
                   <PlayerSheetContext.Provider value={setSheet}>
                     {view === 'home' ? (
                       <>
@@ -448,6 +454,7 @@ export function FmSave({ page }: { page?: 'home' | 'settings' }) {
                       />
                     )}
                   </PlayerSheetContext.Provider>
+                  </SeasonInputsContext.Provider>
                   </ProjectProvider>
                 </ReserveContext.Provider>
               </FmSaveScopeContext.Provider>
