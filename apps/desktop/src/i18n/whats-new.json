@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.237",
+    "date": "2026-11-17",
+    "fr": [
+      "Cibles du mercato : nouveau cadre « Recrues pour ma tactique ». Choisis un poste de ta tactique, et l'appli cherche dans la base du jeu les joueurs qui collent à ses rôles et que le moteur de match récompense (note poste et méta), à la portée de ton club.",
+      "La liste des cibles montre aussi la note méta de chaque joueur au poste où il jouerait."
+    ],
+    "en": [
+      "Mercato targets: new \"Signings for my tactic\" panel. Pick a position in your tactic and the app searches the game database for players who suit its roles and whom the match engine rewards (position and meta rating), within your club's reach.",
+      "The target list also shows each player's meta rating at the position he would play."
+    ]
+  },
+  {
     "version": "0.1.235",
     "date": "2026-11-16",
     "fr": [
