@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.242",
+    "date": "2026-11-17",
+    "fr": [
+      "Entraînement : un bouton « Envoyer la semaine à FM27 » prépare ta semaine conseillée comme un programme du jeu. Dans FM27, tu la choisis dans « Priorité du calendrier » : plus besoin de recopier les séances une par une."
+    ],
+    "en": [
+      "Training: a « Send the week to FM27 » button prepares your suggested week as a game schedule. In FM27, pick it in the calendar priority list: no more copying sessions one by one."
+    ]
+  },
+  {
     "version": "0.1.241",
     "date": "2026-11-17",
     "fr": [
