@@ -4297,7 +4297,10 @@
         "title": "Attends avant d'acheter :",
         "text": "{{name}} ({{team}}) devrait tenir le poste en {{season}}.",
         "leaves": "{{name}} part le {{date}} : un prêt ou un joueur de transition suffit d'ici là.",
-        "see": "Voir dans l'Académie"
+        "see": "Voir dans l'Académie",
+        "lasting": "Et il devrait rester au niveau sur le long terme.",
+        "fair": "Sur le long terme, il restera juste au niveau : à surveiller si ton club progresse.",
+        "stopgap": "Mais seulement un temps : son plafond est sous le niveau du onze, prévois un achat plus tard."
       },
       "buy": {
         "title": "Achat utile :",
@@ -4316,7 +4319,8 @@
         "from": "Titulaire en",
         "valueNow": "Valeur aujourd'hui",
         "valueAt": "Valeur à 23 ans",
-        "advice": "Conseil"
+        "advice": "Conseil",
+        "lasting": "Long terme"
       },
       "advice": {
         "promote": "Monter en équipe première",
@@ -4325,7 +4329,14 @@
         "keep": "Le garder, temps de jeu chez les jeunes",
         "sell": "Vendre ou libérer"
       },
-      "help": "Chaque saison, les joueurs sont vieillis (progression mesurée sur tes dates de jeu, sinon une courbe d'âge) et les départs conseillés sont faits : ventes, prêts, contrats qu'on ne prolonge pas, partants que tu as signalés. Puis chaque poste de ta tactique revient au meilleur joueur présent, de l'équipe première ou du centre. Un poste est « à recruter » quand personne n'atteint le niveau de tes titulaires d'aujourd'hui (1,5 point sous leur médiane). La valeur à 23 ans part du CA et du PA lus en mémoire et des valeurs de ton effectif. Aucune arrivée n'est inventée."
+      "help": "Chaque saison, les joueurs sont vieillis (progression mesurée sur tes dates de jeu, sinon une courbe d'âge) et les départs conseillés sont faits : ventes, prêts, contrats qu'on ne prolonge pas, partants que tu as signalés. Puis chaque poste de ta tactique revient au meilleur joueur présent, de l'équipe première ou du centre. Un poste est « à recruter » quand personne n'atteint le niveau de tes titulaires d'aujourd'hui (1,5 point sous leur médiane). La valeur à 23 ans part du CA et du PA lus en mémoire et des valeurs de ton effectif. Aucune arrivée n'est inventée.",
+      "viability": {
+        "lasting": "Titulaire durable",
+        "fair": "Juste au niveau",
+        "stopgap": "Transition",
+        "estimate": "Estimation sur la seule courbe d'âge : lis le CA/PA (Plugin et réglages) pour tenir compte de son potentiel.",
+        "legend": "Long terme : son niveau au poste vers 27 ans (sur 20), comparé à celui de tes titulaires d'aujourd'hui. Durable : il les dépasse. Juste au niveau : il tient tant que ton club ne monte pas d'un cran. Transition : il bouche le trou un temps, puis il faudra acheter. * : estimation sans CA/PA lus."
+      }
     }
   },
   "modes": {

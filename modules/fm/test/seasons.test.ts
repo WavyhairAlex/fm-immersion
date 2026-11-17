@@ -48,6 +48,18 @@ describe('effectif saison par saison', () => {
     const path = plan.youth.find((y) => y.player.id === '20')!;
     expect(path.pos).toBe('BT');
     expect(path.from).toBe(slot.from);
+    // 17 ans, encore dix ans de progression : il dépasse le niveau des titulaires d'aujourd'hui.
+    expect(path.viability).toBe('lasting');
+    expect(slot.viability).toBe('lasting');
+    expect(path.reliable).toBe(false);
+  });
+
+  it('un jeune déjà proche de son pic qui ne fait que boucher le trou est une solution de transition', () => {
+    const youth = [p(21, 'BT', 10.8, { age: 23, team: 'Malženice II', contractEnd: '2030-06-30' })];
+    const plan = seasonPlan(engine, squad, youth, '2027-02-14', { style: 'possession' }, [], 3)!;
+    const path = plan.youth.find((y) => y.player.id === '21')!;
+    expect(path.pos).toBe('BT');
+    expect(path.viability).toBe('stopgap');
   });
 
   it('sans jeune pour le poste, le départ du titulaire fait un poste à recruter', () => {

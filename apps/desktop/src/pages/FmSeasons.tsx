@@ -1,4 +1,4 @@
-import { seasonPlan, type FmPlayer, type PosCode, type SeasonCell, type SeasonPlan, type SlotOutlook, type SquadAt, type YouthAdvice } from '@fm-immersion/module-fm';
+import { seasonPlan, type FmPlayer, type PosCode, type SeasonCell, type SeasonPlan, type SlotOutlook, type SquadAt, type Viability, type YouthAdvice } from '@fm-immersion/module-fm';
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
@@ -36,6 +36,21 @@ const CELL: Record<SeasonCell['state'], string> = {
   recruit: 'border-2 border-dashed border-corail bg-corail/10',
 };
 
+const VIABILITY_TONE: Record<Viability, Tone> = { lasting: 'good', fair: 'info', stopgap: 'warn' };
+
+/** Tenue sur le long terme : verdict et adéquation attendue au pic (« estimation » sans CA/PA lus). */
+function Lasting({ v, peak, reliable }: { v: Viability | null; peak: number | null; reliable: boolean }) {
+  const { t } = useTranslation();
+  if (!v) return <span className="text-canard/40">–</span>;
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1.5" title={reliable ? undefined : t('fm.seasons.viability.estimate')}>
+      <Tag tone={VIABILITY_TONE[v]}>{t(`fm.seasons.viability.${v}`)}</Tag>
+      <Fit value={peak} />
+      {!reliable && <span className="text-xs text-brun">*</span>}
+    </span>
+  );
+}
+
 const ADVICE_TONE: Record<YouthAdvice, Tone> = { promote: 'good', extend: 'warn', loan: 'info', keep: 'info', sell: 'bad' };
 
 /** Encadré « avant d'acheter » d'un poste : le jeune du centre qui le tiendra, ou un achat utile. */
@@ -49,6 +64,7 @@ export function SlotAdvice({ s, go }: { s: SlotOutlook; go?: (view: string) => v
         <p>
           <b>{t('fm.seasons.wait.title')}</b> <PosBadge pos={s.pos} />{' '}
           {t('fm.seasons.wait.text', { name: s.youth.name, team: s.youthTeam ?? '', season: s.from })}
+          {s.viability ? ` ${t(`fm.seasons.wait.${s.viability}`)}` : ''}
           {s.current && s.currentLeaves ? ` ${t('fm.seasons.wait.leaves', { name: s.current.name, date: f.date(s.currentLeaves) })}` : ''}
         </p>
         {go && (
@@ -79,7 +95,8 @@ export function YouthPaths({ plan, limit = 10 }: { plan: SeasonPlan; limit?: num
   const rows = plan.youth.slice(0, limit);
   if (!rows.length) return <Empty>{t('fm.seasons.noYouth')}</Empty>;
   return (
-    <div className="table-scroll">
+    <>
+      <div className="table-scroll">
       <table className="data-table">
         <thead className="text-left text-canard/70">
           <tr>
@@ -88,6 +105,7 @@ export function YouthPaths({ plan, limit = 10 }: { plan: SeasonPlan; limit?: num
             <th className="py-1 pr-3">{t('fm.seasons.col.from')}</th>
             <th className="py-1 pr-3 text-right">{t('fm.seasons.col.valueNow')}</th>
             <th className="py-1 pr-3 text-right">{t('fm.seasons.col.valueAt')}</th>
+            <th className="py-1 pr-3">{t('fm.seasons.col.lasting')}</th>
             <th className="py-1">{t('fm.seasons.col.advice')}</th>
           </tr>
         </thead>
@@ -101,6 +119,9 @@ export function YouthPaths({ plan, limit = 10 }: { plan: SeasonPlan; limit?: num
               <td className="py-1.5 pr-3">{y.from ?? <span className="text-brun">{t('fm.seasons.notYet')}</span>}</td>
               <td className="py-1.5 pr-3 text-right tabular-nums">{f.money(y.valueNow)}</td>
               <td className="py-1.5 pr-3 text-right font-bold tabular-nums">{y.valueAt != null ? `≈ ${f.money(y.valueAt)}` : '–'}</td>
+              <td className="py-1.5 pr-3">
+                <Lasting v={y.viability} peak={y.peakFit} reliable={y.reliable} />
+              </td>
               <td className="py-1.5">
                 <Tag tone={ADVICE_TONE[y.advice]}>{t(`fm.seasons.advice.${y.advice}`)}</Tag>
               </td>
@@ -108,7 +129,9 @@ export function YouthPaths({ plan, limit = 10 }: { plan: SeasonPlan; limit?: num
           ))}
         </tbody>
       </table>
-    </div>
+      </div>
+      <p className="mt-2 text-xs text-brun">{t('fm.seasons.viability.legend')}</p>
+    </>
   );
 }
 

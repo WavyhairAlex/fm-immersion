@@ -4297,7 +4297,10 @@
         "title": "Wait before buying:",
         "text": "{{name}} ({{team}}) should hold the slot in {{season}}.",
         "leaves": "{{name}} leaves on {{date}}: a loan or a stopgap signing is enough until then.",
-        "see": "See in Academy"
+        "see": "See in Academy",
+        "lasting": "And he should stay good enough in the long run.",
+        "fair": "In the long run he'll be just good enough: keep an eye on it if your club improves.",
+        "stopgap": "But only for a while: his ceiling is below the eleven's level, plan a signing later."
       },
       "buy": {
         "title": "Worth buying:",
@@ -4316,7 +4319,8 @@
         "from": "Starter in",
         "valueNow": "Value today",
         "valueAt": "Value at 23",
-        "advice": "Advice"
+        "advice": "Advice",
+        "lasting": "Long term"
       },
       "advice": {
         "promote": "Promote to the first team",
@@ -4325,7 +4329,14 @@
         "keep": "Keep him, minutes with the youth",
         "sell": "Sell or release"
       },
-      "help": "Each season, players are aged (progress measured over your game dates, otherwise an age curve) and recommended departures happen: sales, loans, contracts not extended, players you flagged as leaving. Then each slot of your tactic goes to the best player present, from the first team or the academy. A slot is \"to sign\" when nobody reaches today's starters' level (1.5 points below their median). Value at 23 uses CA and PA read from memory and your squad's values. No arrival is invented."
+      "help": "Each season, players are aged (progress measured over your game dates, otherwise an age curve) and recommended departures happen: sales, loans, contracts not extended, players you flagged as leaving. Then each slot of your tactic goes to the best player present, from the first team or the academy. A slot is \"to sign\" when nobody reaches today's starters' level (1.5 points below their median). Value at 23 uses CA and PA read from memory and your squad's values. No arrival is invented.",
+      "viability": {
+        "lasting": "Long-term starter",
+        "fair": "Just good enough",
+        "stopgap": "Stopgap",
+        "estimate": "Estimate from the age curve only: read CA/PA (Plugin and settings) to account for his potential.",
+        "legend": "Long term: his level in the slot around 27 (out of 20), compared with today's starters. Long-term: he goes past them. Just good enough: he holds while your club doesn't step up. Stopgap: he fills the gap for a while, then you'll need to buy. *: estimate without CA/PA read."
+      }
     }
   },
   "modes": {

@@ -1,6 +1,7 @@
 import { nextWindows, stayDates } from './evolution';
 import type { FmPlayer } from './player';
 import type { PosCode } from './positions';
+import { projectLevel } from './progress';
 import { bestTactic, shiftPlayer, templatePlan, type CoachPrefs, type ProjectTemplate } from './project';
 import type { SquadAt } from './progress';
 import type { TacticEngine } from './tactic';
@@ -21,6 +22,10 @@ export const RECRUIT_GAP = 1.5;
 export const DECLINE_STEP = 0.3;
 /** Âge auquel on estime la valeur de revente d'un espoir. */
 export const RESALE_AGE = 23;
+/** Âge du pic de carrière, où l'on juge si un jeune reste au niveau du onze sur le long terme. */
+export const PEAK_AGE = 27;
+/** Marge (adéquation sur 20) autour du niveau des titulaires : au-dessus = titulaire durable, en dessous = transition. */
+export const LASTING_MARGIN = 0.5;
 
 export type SeasonCellState = 'ok' | 'youth' | 'ending' | 'recruit';
 
@@ -66,9 +71,17 @@ export interface SlotOutlook {
   current: FmPlayer | null;
   /** Le titulaire actuel part (fin de contrat ou départ conseillé) : date. */
   currentLeaves: string | null;
+  /** Verdict long terme du jeune qui prend le poste. */
+  viability: Viability | null;
 }
 
 export type YouthAdvice = 'promote' | 'loan' | 'keep' | 'extend' | 'sell';
+
+/**
+ * Le jeune tiendra-t-il le poste sur le long terme ? Son adéquation au poste à son pic (27 ans), comparée au niveau des
+ * titulaires d'aujourd'hui : durable (au-dessus), juste (autour), transition (il prend la place un temps, puis sera dépassé).
+ */
+export type Viability = 'lasting' | 'fair' | 'stopgap';
 
 export interface YouthPath {
   player: FmPlayer;
@@ -80,6 +93,11 @@ export interface YouthPath {
   valueAt: number | null;
   valueNow: number | null;
   advice: YouthAdvice;
+  /** Adéquation au poste attendue à son pic et verdict long terme (null s'il ne tient aucun poste dans les saisons regardées). */
+  peakFit: number | null;
+  viability: Viability | null;
+  /** Projection appuyée sur le CA/PA lus en mémoire ; sinon courbe d'âge seule (moins sûr). */
+  reliable: boolean;
 }
 
 export interface SeasonPlan {
@@ -156,7 +174,7 @@ export function seasonPlan(
       const before = prev?.cells[k]?.player;
       const declining = !!p && !!before && before.id === p.id && p.level != null && before.level != null && p.level < before.level - DECLINE_STEP;
       const weak = s.fit == null || (bar != null && s.fit < bar - RECRUIT_GAP);
-      const state: SeasonCellState = !p || (weak && !youth) ? 'recruit' : youth ? 'youth' : leaves || declining ? 'ending' : 'ok';
+      const state: SeasonCellState = !p || weak ? 'recruit' : youth ? 'youth' : leaves || declining ? 'ending' : 'ok';
       return { pos: s.pos, player: p, fit: s.fit, youth, team: p ? (teamOf.get(p.id) ?? null) : null, state, leaves, declining, newcomer: !!prev && !!p && before?.id !== p.id };
     });
     stages.push({ date, label: seasonLabel(date, start), years, cells });
@@ -165,8 +183,8 @@ export function seasonPlan(
   // Bilan par poste : un jeune prend-il la place, ou faut-il acheter ?
   const slots: SlotOutlook[] = (stages[0]?.cells ?? []).map((c0, k) => {
     const col = stages.map((st) => st.cells[k]!);
-    const yi = col.findIndex((c) => c.youth);
-    const lastBuy = col.findIndex((c, i) => c.state === 'recruit' && !col.slice(i + 1).some((x) => x.youth));
+    const yi = col.findIndex((c) => c.state === 'youth');
+    const lastBuy = col.findIndex((c, i) => c.state === 'recruit' && !col.slice(i + 1).some((x) => x.state === 'youth'));
     const verdict: SlotVerdict = yi >= 0 ? 'youth' : lastBuy >= 0 ? 'buy' : 'ok';
     const current = c0.youth ? null : c0.player;
     return {
@@ -179,10 +197,12 @@ export function seasonPlan(
       buyFrom: lastBuy >= 0 ? stages[lastBuy]!.label : null,
       current,
       currentLeaves: current ? (until.get(current.id) ?? null) : null,
+      viability: null,
     };
   });
 
-  // Chaque espoir : poste tenu, saison, valeur à 23 ans, conseil.
+  const last = stages.at(-1);
+  // Chaque espoir : poste tenu, saison, valeur à 23 ans, conseil, tenue sur le long terme.
   const model = valueModel([...list, ...youthList].filter((p) => p.ca != null).map((p) => ({ ca: p.ca!, age: p.age, valueRaw: p.value })));
   const youth: YouthPath[] = youthList.map((p) => {
     const at = slots.find((s) => s.youth?.id === p.id) ?? null;
@@ -209,14 +229,30 @@ export function seasonPlan(
               : age >= 19 && (pot ?? 0) >= 3
                 ? 'loan'
                 : 'keep';
-    return { player: p, team: p.team, pos: at?.pos ?? null, from: at?.from ?? null, valueAt, valueNow: p.value, advice };
+    // Long terme : adéquation à la dernière saison regardée, prolongée jusqu'au pic par la même progression de niveau
+    // (le vieillissement décale tous les attributs d'autant).
+    let peakFit: number | null = null;
+    let viability: Viability | null = null;
+    // Dernière saison où il tient le poste (un jeune déjà repassé derrière à la saison suivante compte comme transition).
+    const held = at ? stages.map((st) => st.cells[at.index]).map((c, j) => (c?.player?.id === p.id ? j : -1)).filter((j) => j >= 0).at(-1) : undefined;
+    if (at && last && held != null) {
+      const st = stages[held]!;
+      const fitLast = st.cells[at.index]!.fit;
+      const lvlLast = projectLevel(p, st.years, history);
+      const lvlPeak = held < stages.length - 1 ? lvlLast : projectLevel(p, Math.max(st.years, PEAK_AGE - age), history);
+      if (fitLast != null && lvlLast != null && lvlPeak != null) {
+        peakFit = Math.max(1, Math.min(20, fitLast + lvlPeak - lvlLast));
+        viability = held < stages.length - 1 ? 'stopgap' : bar == null ? null : peakFit >= bar + LASTING_MARGIN ? 'lasting' : peakFit >= bar - LASTING_MARGIN ? 'fair' : 'stopgap';
+      }
+      at.viability = viability;
+    }
+    return { player: p, team: p.team, pos: at?.pos ?? null, from: at?.from ?? null, valueAt, valueNow: p.value, advice, peakFit, viability, reliable: p.ca != null && p.pa != null };
   });
   const rank = (y: YouthPath) => (y.from ? 0 : 1);
   youth.sort((a, b) => rank(a) - rank(b) || (a.from ?? '').localeCompare(b.from ?? '') || (b.valueAt ?? -1) - (a.valueAt ?? -1) || (a.player.age ?? 99) - (b.player.age ?? 99));
   const valued = youth.filter((y) => y.valueAt != null).sort((a, b) => b.valueAt! - a.valueAt!).slice(0, 5);
   const upside = valued.length ? valued.reduce((s, y) => s + Math.max(0, y.valueAt! - (y.valueNow ?? 0)), 0) : null;
-  const last = stages.at(-1);
-  return { stages, slots, youth, youthHeld: last ? last.cells.filter((c) => c.youth).length : 0, upside };
+  return { stages, slots, youth, youthHeld: last ? last.cells.filter((c) => c.state === 'youth').length : 0, upside };
 }
 
 /** Bilan d'un poste du Mercato : le jeune du centre qui tiendra ce poste, s'il y en a un. */
