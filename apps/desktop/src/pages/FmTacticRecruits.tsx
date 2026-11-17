@@ -24,6 +24,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PosBadge } from './FmFoot';
 import { fmData } from '../lib/data';
+import { SlotAdvice, slotOutlook, useSeasonPlan } from './FmSeasons';
 import { Fit, More, Tag, fitGap, fitPct, useNames, type Tone } from './FmUi';
 
 const VERDICT_TONE: Record<RecruitPickVerdict, Tone> = { starter: 'good', backup: 'info', none: 'warn' };
@@ -49,6 +50,7 @@ export function FmTacticRecruits({
   project,
   players,
   followedTargets,
+  go,
 }: {
   saveId: string;
   gameDate: string;
@@ -58,6 +60,7 @@ export function FmTacticRecruits({
   players: FmPlayer[];
   /** Cibles déjà suivies (avec attributs), candidates elles aussi. */
   followedTargets: Target[];
+  go?: (view: string) => void;
 }) {
   const { t } = useTranslation();
   const names = useNames();
@@ -65,6 +68,12 @@ export function FmTacticRecruits({
   const weakest = useMemo(() => weakestSlot(engine, project), [engine, project]);
   const [idx, setIdx] = useState<number | null>(null);
   const slot: ProjectSlot | null = (idx != null ? project.slots[idx] : null) ?? weakest;
+  // Jeune du centre qui tiendra le poste d'ici deux saisons : on le montre avant toute recrue.
+  const seasons = useSeasonPlan();
+  const youthAt = (sl: ProjectSlot) => {
+    const o = slotOutlook(seasons, project.slots.indexOf(sl), sl.pos);
+    return o?.verdict === 'youth' ? o : null;
+  };
   const [maxAge, setMaxAge] = useState('');
   const [wide, setWide] = useState(false);
   const [all, setAll] = useState(false);
@@ -134,6 +143,7 @@ export function FmTacticRecruits({
           >
             <PosBadge pos={sl.pos} /> {names.role(engine.roles.get(sl.ip))}
             {sl === weakest && <span className="ml-1 text-[11px] font-bold text-corail">{t('fm.tacRecruit.weakest')}</span>}
+            {youthAt(sl) && <span className="ml-1 text-[11px] font-bold text-orange-fonce">{t('fm.seasons.chip')}</span>}
           </button>
         ))}
       </div>
@@ -149,6 +159,11 @@ export function FmTacticRecruits({
         </p>
         <p className="mt-1 text-xs text-brun">{t('fm.tacRecruit.keys', { list: result.keys.map(attr).join(', ') })}</p>
       </div>
+      {youthAt(slot) && (
+        <div className="mt-3">
+          <SlotAdvice s={youthAt(slot)!} go={go} />
+        </div>
+      )}
 
       <div className="mt-3 flex flex-wrap items-end gap-4">
         <label className="block text-xs font-bold text-canard">

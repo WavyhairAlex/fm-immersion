@@ -8,7 +8,7 @@ export type ClubPage = (typeof CLUB_PAGES)[number];
 
 export const PARTS: Record<ClubPage, readonly string[]> = {
   tactic: ['tactic', 'ideal', 'instructions', 'builder', 'opponent', 'depth', 'calendar', 'style', 'effectiveness', 'project', 'training', 'staff'],
-  squad: ['squad', 'playtime', 'dressing', 'progression', 'roles', 'compare', 'numbers', 'loans', 'academy'],
+  squad: ['squad', 'playtime', 'dressing', 'progression', 'roles', 'compare', 'numbers', 'loans', 'academy', 'seasons'],
   results: ['results', 'diagnosis', 'stats', 'analysis'],
   mercato: ['mercato', 'scouting', 'targets', 'finances', 'wages', 'contracts'],
 };
@@ -19,7 +19,7 @@ export const PARTS: Record<ClubPage, readonly string[]> = {
  */
 export const TABS: Record<ClubPage, readonly (readonly string[])[]> = {
   tactic: ['tactic', 'ideal', 'instructions', 'builder', 'opponent', 'calendar', 'training', 'depth', 'style', 'effectiveness', 'project', 'staff'].map((v) => [v]),
-  squad: ['squad', 'academy', 'loans', 'numbers', 'playtime', 'dressing', 'progression', 'roles', 'compare'].map((v) => [v]),
+  squad: ['squad', 'seasons', 'academy', 'loans', 'numbers', 'playtime', 'dressing', 'progression', 'roles', 'compare'].map((v) => [v]),
   results: [['results'], ['diagnosis'], ['stats'], ['analysis']],
   mercato: [['mercato'], ['scouting'], ['targets'], ['finances'], ['wages'], ['contracts']],
 };
@@ -27,11 +27,13 @@ export const TABS: Record<ClubPage, readonly (readonly string[])[]> = {
 /**
  * Refonte « l'essentiel d'abord » (14/11/2026) : au plus trois onglets visibles par écran, les plus utiles ;
  * les autres parties passent dans le menu « Plus » (toujours accessibles, liens et recherche inchangés).
+ * 17/11/2026 : « Saisons » (effectif saison par saison, jeunes du centre compris) prend la place de Progression,
+ * qui passe dans « Plus ».
  * 15/11/2026 : « Ma tactique idéale » prend la place de l'entraînement parmi les onglets visibles de Tactique.
  */
 export const MAIN_TABS: Record<ClubPage, readonly string[]> = {
   tactic: ['tactic', 'ideal', 'opponent'],
-  squad: ['squad', 'progression', 'academy'],
+  squad: ['squad', 'seasons', 'academy'],
   results: ['results', 'diagnosis', 'stats', 'analysis'],
   mercato: ['mercato', 'targets', 'finances'],
 };

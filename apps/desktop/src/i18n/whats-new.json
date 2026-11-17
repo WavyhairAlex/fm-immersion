@@ -1,5 +1,17 @@
 [
   {
+    "version": "0.1.245",
+    "date": "2026-11-17",
+    "fr": [
+      "Nouvel onglet Saisons dans Mon effectif : ton onze sur les trois prochaines saisons, avec les jeunes de la réserve et des U19. Tu vois quel poste un jeune du centre tiendra, et ce qu'il reste vraiment à acheter.",
+      "Dans Recrues pour ma tactique, un poste qu'un jeune du centre tiendra bientôt est signalé : attends avant d'acheter. L'Académie montre pour chaque espoir sa saison de titulaire, sa valeur estimée à 23 ans et un conseil."
+    ],
+    "en": [
+      "New Seasons tab in My squad: your eleven over the next three seasons, with reserve and U19 players. You see which slot an academy player will hold, and what you really need to buy.",
+      "In Signings for my tactic, a slot an academy player will soon hold is flagged: wait before buying. The Academy shows each prospect's first season as a starter, estimated value at 23 and advice."
+    ]
+  },
+  {
     "version": "0.1.244",
     "date": "2026-11-17",
     "fr": [

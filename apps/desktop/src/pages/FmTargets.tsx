@@ -157,6 +157,7 @@ export function FmTargets({
         project={pr}
         players={players}
         followedTargets={all.filter((p) => !p.dismissed && Object.keys(p.attributes).length)}
+        go={go}
       />
       <Panel
         title={t("fm.targets.title", {

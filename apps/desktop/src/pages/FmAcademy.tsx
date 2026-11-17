@@ -1,6 +1,7 @@
 import { academy, buildProject, firstTeamBar, youthTeams, type AcademyAlertKind, type FmPlayer, type YouthStatus } from '@fm-immersion/module-fm';
 import { useContext, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { YouthPaths, useSeasonPlan } from './FmSeasons';
 import { ReserveContext, useTacticEngine } from './FmTactic';
 import { Chips, Empty, Fit, Kpi, Level, More, Panel, PlayerLink, Pos, Tag, useCoach, useFormat, useNames } from './FmUi';
 
@@ -19,7 +20,7 @@ function Stars({ value }: { value: number | null | undefined }) {
  * une décision (espoir au niveau, contrat qui finit, joueur trop âgé pour sa catégorie, place à libérer), les meilleurs
  * espoirs, puis l'effectif de chaque équipe.
  */
-export function FmAcademy({ players, folder, gameDate }: { players: FmPlayer[]; folder: string; gameDate: string }) {
+export function FmAcademy({ players, folder, gameDate, go }: { players: FmPlayer[]; folder: string; gameDate: string; go?: (view: string) => void }) {
   const { t, i18n } = useTranslation();
   const f = useFormat();
   const names = useNames();
@@ -36,6 +37,7 @@ export function FmAcademy({ players, folder, gameDate }: { players: FmPlayer[]; 
   const teams = useMemo(() => (project ? youthTeams(project.plans, bar ?? project.threshold) : []), [project, bar]);
   const view = useMemo(() => academy(teams, gameDate), [teams, gameDate]);
   const [picked, setPicked] = useState<string | null>(null);
+  const seasons = useSeasonPlan();
   const nf1 = new Intl.NumberFormat(i18n.resolvedLanguage, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
   if (!reserve.length)
@@ -98,6 +100,21 @@ export function FmAcademy({ players, folder, gameDate }: { players: FmPlayer[]; 
           <Empty>{t('fm.academy.noAlert')}</Empty>
         )}
       </Panel>
+
+      {seasons && seasons.youth.length > 0 && (
+        <Panel
+          title={t('fm.seasons.inXi')}
+          action={
+            go && (
+              <button type="button" className="btn-secondary !px-2 !py-1 text-xs" onClick={() => go('seasons')}>
+                {t('fm.seasons.seeSeasons')}
+              </button>
+            )
+          }
+        >
+          <YouthPaths plan={seasons} />
+        </Panel>
+      )}
 
       {view.prospects.length > 0 && (
         <Panel title={t('fm.academy.prospects')}>

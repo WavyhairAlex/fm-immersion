@@ -52,6 +52,7 @@ export * from './matchup';
 export * from './match-plan';
 export * from './mercato';
 export * from './evolution';
+export * from './seasons';
 export * from './decisions';
 export * from './compat';
 export * from './plan-grade';
