@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.240",
+    "date": "2026-11-17",
+    "fr": [
+      "Visages : l'appli reconnaît la mise à jour 27.1.0 de FM27, qui ajoute 956 nouveaux visages d'hommes. Un pack de visages fait pour l'ancienne version est refusé avant toute copie, pour ne pas te laisser des carrés blancs : installe le pack à jour proposé dans « Visages »."
+    ],
+    "en": [
+      "Faces: the app now recognises FM27 update 27.1.0, which adds 956 new male faces. A face pack made for the previous version is refused before anything is copied, so you don't end up with white squares: install the up-to-date pack offered in \"Faces\"."
+    ]
+  },
+  {
     "version": "0.1.239",
     "date": "2026-11-17",
     "fr": [
