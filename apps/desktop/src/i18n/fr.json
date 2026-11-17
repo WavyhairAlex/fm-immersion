@@ -850,7 +850,12 @@
       "Reflexes": "Réflexes",
       "RushingOut": "Sorties",
       "TendencyToPunch": "Tendance à boxer",
-      "Throwing": "Relances main"
+      "Throwing": "Relances main",
+      "Consistency": "Régularité",
+      "Dirtiness": "Agressivité déloyale",
+      "ImportantMatches": "Grands matchs",
+      "InjuryProneness": "Fragilité",
+      "Versatility": "Polyvalence"
     },
     "attrGroup": {
       "technical": "Technique",
@@ -3477,6 +3482,13 @@
       "new": "Nouvelle tactique",
       "fromGame": "Partir de ma tactique du jeu",
       "gameName": "Ma tactique du jeu",
+      "importOpen": "Importer depuis le dossier tactics",
+      "importHelp": "Liste les tactiques que tu as exportées dans FM27 (dossier tactics, à côté de games). Le fichier est seulement lu.",
+      "importPick": "Tactique à importer",
+      "importGo": "Importer",
+      "importNone": "Aucune tactique dans ton dossier tactics. Dans FM27, exporte d'abord ta tactique (Tactique, puis Exporter).",
+      "importDone": "« {{name}} » est importée : postes, rôles, mentalité et consignes individuelles. Règle ses consignes d'équipe toi-même, elles ne sont pas encore lues dans le fichier.",
+      "importFailed": "« {{name}} » ne se lit pas comme une tactique (fichier de coups de pied arrêtés seuls, ou format inconnu).",
       "defaultName": "Mon {{form}}",
       "copyName": "{{name}} (copie)",
       "saved": "Tactiques retenues",
@@ -3671,17 +3683,20 @@
       "weaknesses": "Coûte des matchs : {{list}}",
       "belowMin": "Sous le minimum de 6 : {{list}}",
       "heading": "Note méta",
-      "help": "Note méta sur 20 : un joueur à 12 partout a 12, un joueur à 15 partout a 15. Elle dit ce que ses attributs valent pour le moteur de match, pas pour les étoiles du jeu. Ce que ses attributs pèsent vraiment dans le moteur de match de FM27, d'après les tests de la communauté FM-Arena (novembre 2026) : vitesse, accélération et endurance comptent le plus, la détente au-dessus de 12, et il faut au moins 6 en volume de jeu, anticipation, puissance, équilibre, concentration et condition physique. Une tendance tirée d'une seule série de tests, pas la note du jeu : les étoiles restent celles de FM27. Le poids de chaque attribut dépend aussi du poste, d'après les tests de Purity : la détente compte surtout pour un défenseur central ou un attaquant, l'endurance pour un latéral, la finition pour un attaquant. Les milieux centraux et excentrés gardent les poids de toute l'équipe.",
+      "help": "Note méta sur 20 : un joueur à 12 partout a 12, un joueur à 15 partout a 15. Elle dit ce que ses attributs valent pour le moteur de match, pas pour les étoiles du jeu. Ce que ses attributs pèsent vraiment dans le moteur de match de FM27, d'après les tests de la communauté FM-Arena (novembre 2026) : vitesse, accélération et endurance comptent le plus, la détente au-dessus de 12, et il faut au moins 6 en volume de jeu, anticipation, puissance, équilibre, concentration et condition physique. Une tendance tirée d'une seule série de tests, pas la note du jeu : les étoiles restent celles de FM27. Le poids de chaque attribut dépend aussi du poste, d'après les tests de Purity : la détente compte surtout pour un défenseur central ou un attaquant, l'endurance pour un latéral, la finition pour un attaquant. Les milieux centraux et excentrés gardent les poids de toute l'équipe. Deuxième source, FM27 Match Lab (novembre 2026) : le moteur du jeu rejoué hors du jeu sur 50 000 matchs, poste par poste. Quand les deux notes sont proches, tu peux t'y fier davantage ; quand elles s'écartent, c'est souvent un joueur technique, que la première série pénalise et que la seconde juge neutre. Les gardiens ne sont notés que par Match Lab : l'agilité et les réflexes d'abord (ils arrêtent des buts), puis le jeu aérien, l'accélération et la détermination. Les attributs cachés ne sont pas lus.",
       "none": "Rien de marquant.",
-      "gk": "Les gardiens ne sont pas couverts par ces tests.",
       "weighted": "Poids du poste : {{list}} (mesures de Purity, faites avec une seule tactique en 3-4-3).",
       "group": {
         "ST": "attaquant",
         "AM": "milieu offensif ou ailier",
         "WB": "latéral ou piston",
         "CB": "défenseur central",
-        "DM": "milieu défensif"
-      }
+        "DM": "milieu défensif",
+        "GK": "gardien"
+      },
+      "keeper": "Gardien : note tirée de Match Lab seul (agilité et réflexes d'abord, puis jeu aérien, accélération et détermination).",
+      "agree": "Deuxième source (Match Lab) : {{lab}}. Les deux tests concordent.",
+      "disagree": "Deuxième source (Match Lab) : {{lab}}. Les deux tests ne disent pas la même chose : prudence."
     },
     "takers": {
       "title": "Tireurs et capitaine",
@@ -4199,9 +4214,18 @@
       "age_other": "{{count}} ans",
       "help": "FM27 a annoncé l'accord, mais ne l'inscrit dans ton effectif qu'à la signature effective, parfois quelques jours plus tard. D'ici là, il n'entre ni dans les compos ni dans l'analyse."
     },
+    "hidden": {
+      "title": "Attributs cachés",
+      "help": "Lus dans la mémoire de FM27 avec le CA/PA (option « Lire le CA/PA »), le jeu ne les montre pas. D'après les tests de Match Lab (12 800 matchs), aucun ne change le résultat d'un match de façon nette : ils ne comptent pas dans la note méta. L'agressivité déloyale donne des cartons (à 20 : un carton de plus par match) et la fragilité joue sur les blessures au fil de la saison. Pour la fragilité et l'agressivité, plus bas vaut mieux.",
+      "note": {
+        "cards": "Agressivité déloyale élevée : attends-toi à des cartons.",
+        "fragile": "Fragile : surveille sa charge, il se blesse plus souvent.",
+        "bigGames": "Bon dans les grands matchs (léger avantage, pas établi par les tests)."
+      }
+    },
     "tacRecruit": {
       "title": "Recrues pour ma tactique · {{style}} {{form}}",
-      "help": "Choisis un poste de ta tactique : FM Immersion cherche dans la base de FM27 (lecture seule) et dans tes cibles suivies les joueurs qui jouent naturellement à ce poste, et les classe par « poste et méta » : la moyenne de leur adéquation aux deux rôles du poste (avec et sans ballon, note du jeu sur 20) et de leur note méta au poste (ce que leurs attributs valent vraiment dans le moteur de match : vitesse, accélération, endurance…). Un joueur qui colle au rôle mais que le moteur pénalise descend, un profil méta un peu moins coté monte. La recherche part d'un peu sous le CA de ton titulaire et ne garde que les joueurs que ton club peut attirer et payer. Les gardiens n'ont pas de note méta : seule leur adéquation compte.",
+      "help": "Choisis un poste de ta tactique : FM Immersion cherche dans la base de FM27 (lecture seule) et dans tes cibles suivies les joueurs qui jouent naturellement à ce poste, et les classe par « poste et méta » : la moyenne de leur adéquation aux deux rôles du poste (avec et sans ballon, note du jeu sur 20) et de leur note méta au poste (ce que leurs attributs valent vraiment dans le moteur de match : vitesse, accélération, endurance…). Un joueur qui colle au rôle mais que le moteur pénalise descend, un profil méta un peu moins coté monte. La recherche part d'un peu sous le CA de ton titulaire et ne garde que les joueurs que ton club peut attirer et payer. Pour les gardiens, la note méta vient de l'étude Match Lab : agilité et réflexes avant tout.",
       "weakest": "à renforcer",
       "empty": "Personne à ce poste dans ton effectif",
       "oop": "sans ballon : {{role}}",

@@ -17,11 +17,11 @@ describe('recrues pour la tactique', () => {
     expect(n.fit).not.toBeNull();
     expect(n.meta).not.toBeNull();
     expect(n.score).toBeCloseTo((n.fit! + n.meta!) / 2, 5);
-    // Gardien : pas de note méta, l'adéquation seule.
+    // Gardien : note méta de l'étude Match Lab (agilité, réflexes).
     const gb = pr.slots.find((s) => s.pos === 'GB')!;
     const g = slotNote(engine, squad[0]!, gb);
-    expect(g.meta).toBeNull();
-    expect(g.score).toBe(g.fit);
+    expect(g.meta).not.toBeNull();
+    expect(g.score).toBeCloseTo((g.fit! + g.meta!) / 2, 5);
   });
 
   it('le poste le plus faible est celui de l’attaquant à 9', () => {
