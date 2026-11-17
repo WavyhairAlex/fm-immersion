@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.239",
+    "date": "2026-11-17",
+    "fr": [
+      "Mercato : un joueur qui ne performe pas sur la saison (note moyenne nettement sous celle de l'équipe, après au moins 6 matchs) est maintenant proposé à la vente, même titulaire, et on ne te conseille plus de le prolonger. Les jeunes prometteurs ne sont pas concernés."
+    ],
+    "en": [
+      "Mercato: a player who isn't performing this season (average rating clearly below the team's, after at least 6 games) is now suggested for sale, even as a starter, and you're no longer told to extend his contract. Promising youngsters aren't affected."
+    ]
+  },
+  {
     "version": "0.1.237",
     "date": "2026-11-17",
     "fr": [
