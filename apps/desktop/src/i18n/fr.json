@@ -4264,32 +4264,21 @@
       }
     },
     "seasons": {
-      "intro": "Ton onze de la tactique choisie au début des trois prochaines saisons. Les jeunes de la réserve et des équipes de jeunes sont comptés, vieillis selon leur progression. Rien n'est acheté à ta place : un poste rouge reste à pourvoir.",
-      "grid": "Le onze, saison par saison",
+      "intro": "Tout ton effectif, joueur par joueur, au début des trois prochaines saisons : son rôle dans la tactique choisie, qui part, quel jeune du centre monte, et ce qu'il manque pour avoir environ {{target}} joueurs avec une doublure à chaque poste. Rien n'est acheté à ta place.",
+      "grid": "Planificateur d'effectif",
       "now": "{{season}} (maintenant)",
       "age": "{{age}} ans",
       "ageTeam": "{{age}} ans · {{team}}",
       "recruit": "À recruter",
-      "tooWeak": "trop juste pour le onze",
       "leaves": "part le {{date}}",
       "declining": "en baisse",
-      "takesOver": "passe devant",
       "legend": {
-        "ok": "en place",
-        "youth": "jeune du centre",
-        "ending": "départ ou déclin",
-        "recruit": "à recruter"
-      },
-      "kpi": {
-        "youth": "Postes tenus par un jeune",
-        "youthSub": "jeunes du centre titulaires en {{season}}",
-        "buys": "Achats vraiment utiles",
-        "buysNone": "aucun poste sans solution",
-        "covered": "Achats évités",
-        "coveredSub": "postes où un jeune du centre prend la place",
-        "upside": "Plus-value des espoirs",
-        "upsideSub": "valeur estimée à 23 ans de tes 5 meilleurs espoirs, moins leur valeur aujourd'hui",
-        "upsideNone": "lis le CA/PA (Plugin et réglages) pour l'estimer"
+        "starter": "titulaire",
+        "backup": "doublure",
+        "rotation": "rotation ou en trop",
+        "prospect": "espoir du centre",
+        "gone": "parti",
+        "ending": "fin de contrat ou déclin"
       },
       "beforeBuying": "Avant d'acheter",
       "nothingToBuy": "Ton onze tient sur les trois saisons, sans achat ni jeune à lancer.",
@@ -4336,7 +4325,47 @@
         "stopgap": "Transition",
         "estimate": "Estimation sur la seule courbe d'âge : lis le CA/PA (Plugin et réglages) pour tenir compte de son potentiel.",
         "legend": "Long terme : son niveau au poste vers 27 ans (sur 20), comparé à celui de tes titulaires d'aujourd'hui. Durable : il les dépasse. Juste au niveau : il tient tant que ton club ne monte pas d'un cran. Transition : il bouche le trou un temps, puis il faudra acheter. * : estimation sans CA/PA lus."
-      }
+      },
+      "role": {
+        "starter": "Titulaire",
+        "backup": "Doublure",
+        "rotation": "Rotation",
+        "prospect": "Espoir",
+        "gone": "Parti"
+      },
+      "filter": {
+        "all": "Tout l'effectif",
+        "GB": "Gardiens",
+        "DEF": "Défense",
+        "MIL": "Milieu",
+        "ATT": "Attaque",
+        "youth": "Jeunes du centre"
+      },
+      "line": {
+        "GB": "Gardiens",
+        "DEF": "Défense",
+        "MIL": "Milieu",
+        "ATT": "Attaque"
+      },
+      "sum": {
+        "size_one": "{{count}} joueur",
+        "size_other": "{{count}} joueurs",
+        "keepers_one": "{{count}} gardien",
+        "keepers_other": "{{count}} gardiens",
+        "departures_one": "{{count}} départ",
+        "departures_other": "{{count}} départs",
+        "promoted_one": "{{count}} jeune monte",
+        "promoted_other": "{{count}} jeunes montent",
+        "youthNow_one": "{{count}} jeune du centre",
+        "youthNow_other": "{{count}} jeunes du centre",
+        "recruit": "à recruter : {{list}}",
+        "noBackup": "sans doublure : {{list}}",
+        "ok": "Effectif complet, une doublure à chaque poste."
+      },
+      "toSell": "à vendre",
+      "contract": "contrat {{date}}",
+      "recruitStarter": "Titulaire : {{list}}",
+      "recruitBackup": "doublure : {{list}}"
     }
   },
   "modes": {

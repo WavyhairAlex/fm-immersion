@@ -3,9 +3,11 @@
     "version": "0.1.246",
     "date": "2026-11-17",
     "fr": [
+      "L'onglet Saisons devient un vrai planificateur d'effectif : tous tes joueurs, un par ligne, avec leur rôle à chaque saison (titulaire, doublure, rotation, espoir, parti), la taille de l'effectif face aux 25 visés et les postes sans doublure. Filtre par ligne ou sur les jeunes du centre.",
       "Tes espoirs ont maintenant un avis sur le long terme : titulaire durable, juste au niveau, ou solution de transition qu'il faudra remplacer plus tard. Tu le vois dans Saisons, dans l'Académie et avant un achat dans Recrues pour ma tactique."
     ],
     "en": [
+      "The Seasons tab becomes a real squad planner: all your players, one per row, with their role each season (starter, backup, rotation, prospect, gone), squad size against the 25 target and slots without a backup. Filter by line or on academy players.",
       "Your prospects now get a long-term verdict: long-term starter, just good enough, or a stopgap you'll need to replace later. You see it in Seasons, in the Academy and before a signing in Signings for my tactic."
     ]
   },

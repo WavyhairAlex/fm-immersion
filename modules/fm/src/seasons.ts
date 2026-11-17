@@ -1,6 +1,6 @@
 import { nextWindows, stayDates } from './evolution';
 import type { FmPlayer } from './player';
-import type { PosCode } from './positions';
+import { lineOf, type Line, type PosCode } from './positions';
 import { projectLevel } from './progress';
 import { bestTactic, shiftPlayer, templatePlan, type CoachPrefs, type ProjectTemplate } from './project';
 import type { SquadAt } from './progress';
@@ -46,6 +46,52 @@ export interface SeasonCell {
   newcomer: boolean;
 }
 
+/** Taille d'effectif visée : deux joueurs par poste et trois gardiens, environ. */
+export const SQUAD_TARGET = 25;
+/** Un jeune du centre n'entre dans l'effectif comme doublure qu'à moins de 3 points (sur 20) des titulaires. */
+export const BACKUP_GAP = 3;
+
+/** Rôle d'un joueur dans l'effectif à une saison. */
+export type SquadRole = 'starter' | 'backup' | 'rotation' | 'prospect' | 'gone';
+
+export interface SquadEntry {
+  role: SquadRole;
+  /** Poste tenu (titulaire ou doublure), sinon son poste naturel. */
+  pos: PosCode | null;
+  /** Adéquation au poste tenu (sur 20), ou niveau projeté hors du onze. */
+  fit: number | null;
+  /** Part avant la saison suivante (date), baisse de niveau, vente ou prêt conseillés. */
+  leaves: string | null;
+  declining: boolean;
+  /** Départ conseillé par le Mercato (vente, libération, prêt). */
+  sell: boolean;
+  /** Projection de l'âge à cette saison. */
+  age: number | null;
+}
+
+export interface SquadRow {
+  /** Joueur tel qu'aujourd'hui. */
+  player: FmPlayer;
+  youth: boolean;
+  team: string | null;
+  line: Line | null;
+  seasons: SquadEntry[];
+}
+
+export interface SeasonSummary {
+  /** Joueurs de l'effectif (titulaires, doublures, rotation), jeunes montés compris. */
+  size: number;
+  keepers: number;
+  /** Jeunes du centre titulaires ou doublures. */
+  youth: number;
+  departures: number;
+  /** Jeunes qui entrent dans l'effectif à cette saison. */
+  promoted: number;
+  /** Postes sans titulaire au niveau, et postes sans doublure. */
+  recruit: PosCode[];
+  noBackup: PosCode[];
+}
+
 export interface SeasonStage {
   /** Début de la saison (ISO) ; date du jeu pour la saison en cours. */
   date: string;
@@ -53,6 +99,7 @@ export interface SeasonStage {
   label: string;
   years: number;
   cells: SeasonCell[];
+  summary: SeasonSummary;
 }
 
 export type SlotVerdict = 'youth' | 'buy' | 'ok';
@@ -102,6 +149,8 @@ export interface YouthPath {
 
 export interface SeasonPlan {
   stages: SeasonStage[];
+  /** Tout l'effectif joueur par joueur, une entrée par saison (jeunes : seulement ceux qui entrent dans l'effectif). */
+  squad: SquadRow[];
   slots: SlotOutlook[];
   youth: YouthPath[];
   /** Postes tenus par un jeune du centre à la dernière saison regardée. */
@@ -149,13 +198,22 @@ export function seasonPlan(
   if (!tpl) return null;
   const start = coach.seasonStart ?? 8;
   const windows = nextWindows(gameDate, start, seasons * 2);
-  const { until } = stayDates(engine, list, gameDate, coach, history, windows, leavingIds, loanUntil);
+  const { until, report } = stayDates(engine, list, gameDate, coach, history, windows, leavingIds, loanUntil);
   const youthIds = new Set(youthList.map((p) => p.id));
   const teamOf = new Map(youthList.map((p) => [p.id, p.team]));
   const dates = [gameDate.slice(0, 10), ...windows.filter((w) => w.kind === 'summer').map((w) => w.date)].slice(0, seasons);
 
   const stages: SeasonStage[] = [];
   let bar: number | null = null;
+  const origOf = new Map([...list, ...youthList].map((p) => [p.id, p]));
+  const sellIds = new Set((report?.advice ?? []).filter((a) => a.verdict === 'sell' || a.verdict === 'release' || a.verdict === 'loan').map((a) => a.player.id));
+  // Rôle de chaque joueur à chaque saison (rempli dans la boucle).
+  const roles = new Map<string, SquadEntry[]>();
+  const fitAt = (p: FmPlayer, sl: { pos: PosCode; posOOP?: PosCode; ip: string; oop: string }) => {
+    const a = engine.roleFit(p, sl.ip, 'ip', sl.pos);
+    const b = engine.roleFit(p, sl.oop, 'oop', sl.posOOP ?? sl.pos);
+    return a == null ? b : b == null ? a : (a + b) / 2;
+  };
   for (let i = 0; i < dates.length; i++) {
     const date = dates[i]!;
     const next = dates[i + 1] ?? new Date(Date.parse(date) + 365 * DAY).toISOString().slice(0, 10);
@@ -177,8 +235,88 @@ export function seasonPlan(
       const state: SeasonCellState = !p || weak ? 'recruit' : youth ? 'youth' : leaves || declining ? 'ending' : 'ok';
       return { pos: s.pos, player: p, fit: s.fit, youth, team: p ? (teamOf.get(p.id) ?? null) : null, state, leaves, declining, newcomer: !!prev && !!p && before?.id !== p.id };
     });
-    stages.push({ date, label: seasonLabel(date, start), years, cells });
+
+    // Doublures : un joueur par poste, chacun une seule fois, les meilleures adéquations d'abord. Un jeune du centre
+    // n'est doublure que s'il est assez près du niveau des titulaires.
+    const starters = new Set(plan.slots.filter((x) => x.player).map((x) => x.player!.id));
+    const pairs: { k: number; p: FmPlayer; f: number }[] = [];
+    plan.slots.forEach((sl, k) => {
+      for (const p of squad) {
+        if (starters.has(p.id) || !engine.canPlay(p, sl.pos)) continue;
+        const f = fitAt(p, sl);
+        if (f == null) continue;
+        if (youthIds.has(p.id) && bar != null && f < bar - BACKUP_GAP) continue;
+        pairs.push({ k, p, f });
+      }
+    });
+    pairs.sort((a, b) => b.f - a.f);
+    const backup = new Map<number, { p: FmPlayer; f: number }>();
+    const used = new Set<string>();
+    for (const x of pairs) {
+      if (backup.has(x.k) || used.has(x.p.id)) continue;
+      backup.set(x.k, x);
+      used.add(x.p.id);
+    }
+    const shifted = new Map(squad.map((p) => [p.id, p]));
+    const entry = (p: FmPlayer, e: Omit<SquadEntry, 'leaves' | 'declining' | 'sell' | 'age'>): SquadEntry => {
+      const youth = youthIds.has(p.id);
+      const u = until.get(p.id) ?? null;
+      const before = roles.get(p.id)?.[i - 1];
+      const now = shifted.get(p.id)!;
+      // Niveau à la saison précédente, depuis le joueur d'aujourd'hui (celui du onze est déjà vieilli).
+      const lvlBefore = i ? shiftPlayer(origOf.get(p.id) ?? p, stages[i - 1]!.years, history).level : null;
+      return {
+        ...e,
+        leaves: !youth && u && u <= next ? u : null,
+        declining: !!before && before.role !== 'gone' && now.level != null && lvlBefore != null && now.level < lvlBefore - DECLINE_STEP,
+        sell: sellIds.has(p.id),
+        age: now.age,
+      };
+    };
+    const put = (id: string, e: SquadEntry) => {
+      const arr = roles.get(id) ?? [];
+      arr[i] = e;
+      roles.set(id, arr);
+    };
+    plan.slots.forEach((sl, k) => {
+      if (sl.player) put(sl.player.id, entry(sl.player, { role: 'starter', pos: sl.pos, fit: sl.fit }));
+    });
+    for (const [k, x] of backup) put(x.p.id, entry(x.p, { role: 'backup', pos: plan.slots[k]!.pos, fit: x.f }));
+    for (const p of [...list, ...youthList]) {
+      if (roles.get(p.id)?.[i]) continue;
+      // `entry` attend le joueur d'origine ou vieilli : ici, celui d'aujourd'hui.
+      const here = shifted.has(p.id);
+      const role: SquadRole = !here ? 'gone' : youthIds.has(p.id) ? 'prospect' : 'rotation';
+      const sp = shifted.get(p.id);
+      put(p.id, here ? entry(p, { role, pos: p.positions[0] ?? null, fit: sp?.level ?? null }) : { role, pos: null, fit: null, leaves: null, declining: false, sell: false, age: null });
+    }
+    // Bilan de la saison.
+    const inSquad = [...roles.entries()].filter(([, e]) => e[i] && (e[i]!.role === 'starter' || e[i]!.role === 'backup' || e[i]!.role === 'rotation'));
+    const wasIn = (id: string) => {
+      const e = roles.get(id)?.[i - 1];
+      return !!e && (e.role === 'starter' || e.role === 'backup' || e.role === 'rotation');
+    };
+    const summary: SeasonSummary = {
+      size: inSquad.length,
+      keepers: inSquad.filter(([id]) => shifted.get(id)?.positions.includes('GB')).length,
+      youth: inSquad.filter(([id]) => youthIds.has(id)).length,
+      departures: i ? list.filter((p) => roles.get(p.id)?.[i]?.role === 'gone' && roles.get(p.id)?.[i - 1]?.role !== 'gone').length : 0,
+      promoted: inSquad.filter(([id]) => youthIds.has(id) && (i === 0 || !wasIn(id))).length,
+      recruit: cells.filter((c) => c.state === 'recruit').map((c) => c.pos),
+      noBackup: plan.slots.map((sl, k) => (backup.has(k) ? null : sl.pos)).filter((x): x is PosCode => x != null),
+    };
+    stages.push({ date, label: seasonLabel(date, start), years, cells, summary });
   }
+
+  // Lignes de l'effectif : l'équipe première, puis les jeunes qui y entrent au moins une saison.
+  const ORDER: Record<SquadRole, number> = { starter: 0, backup: 1, rotation: 2, prospect: 3, gone: 4 };
+  const squadRows: SquadRow[] = [...list, ...youthList]
+    .map((p) => ({ player: p, youth: youthIds.has(p.id), team: teamOf.get(p.id) ?? null, line: p.positions[0] ? lineOf(p.positions[0]) : p.line, seasons: roles.get(p.id) ?? [] }))
+    .filter((r) => !r.youth || r.seasons.some((e) => e.role === 'starter' || e.role === 'backup'))
+    .sort((a, b) => {
+      const best = (r: SquadRow) => Math.min(...r.seasons.map((e) => ORDER[e.role]));
+      return best(a) - best(b) || ORDER[a.seasons[0]?.role ?? 'gone'] - ORDER[b.seasons[0]?.role ?? 'gone'] || (b.seasons[0]?.fit ?? 0) - (a.seasons[0]?.fit ?? 0);
+    });
 
   // Bilan par poste : un jeune prend-il la place, ou faut-il acheter ?
   const slots: SlotOutlook[] = (stages[0]?.cells ?? []).map((c0, k) => {
@@ -205,7 +343,9 @@ export function seasonPlan(
   // Chaque espoir : poste tenu, saison, valeur à 23 ans, conseil, tenue sur le long terme.
   const model = valueModel([...list, ...youthList].filter((p) => p.ca != null).map((p) => ({ ca: p.ca!, age: p.age, valueRaw: p.value })));
   const youth: YouthPath[] = youthList.map((p) => {
-    const at = slots.find((s) => s.youth?.id === p.id) ?? null;
+    // Poste qu'il tient le plus tôt (un jeune peut prendre un DC puis l'autre).
+    const stageOf = (label: string | null) => stages.findIndex((st) => st.label === label);
+    const at = slots.filter((s) => s.youth?.id === p.id).sort((x, y) => stageOf(x.from) - stageOf(y.from))[0] ?? null;
     const age = p.age ?? 18;
     let valueAt: number | null = null;
     if (p.ca != null && p.pa != null) {
@@ -233,11 +373,13 @@ export function seasonPlan(
     // (le vieillissement décale tous les attributs d'autant).
     let peakFit: number | null = null;
     let viability: Viability | null = null;
-    // Dernière saison où il tient le poste (un jeune déjà repassé derrière à la saison suivante compte comme transition).
-    const held = at ? stages.map((st) => st.cells[at.index]).map((c, j) => (c?.player?.id === p.id ? j : -1)).filter((j) => j >= 0).at(-1) : undefined;
+    // Dernière saison où il est titulaire, quel que soit le créneau (un jeune peut passer d'un DC à l'autre) ; repassé
+    // derrière avant la dernière saison regardée, il compte comme transition.
+    const heldAt = stages.map((st) => st.cells.find((c) => c.player?.id === p.id && c.state === 'youth') ?? null);
+    const held = at ? heldAt.map((c, j) => (c ? j : -1)).filter((j) => j >= 0).at(-1) : undefined;
     if (at && last && held != null) {
       const st = stages[held]!;
-      const fitLast = st.cells[at.index]!.fit;
+      const fitLast = heldAt[held]!.fit;
       const lvlLast = projectLevel(p, st.years, history);
       const lvlPeak = held < stages.length - 1 ? lvlLast : projectLevel(p, Math.max(st.years, PEAK_AGE - age), history);
       if (fitLast != null && lvlLast != null && lvlPeak != null) {
@@ -252,7 +394,7 @@ export function seasonPlan(
   youth.sort((a, b) => rank(a) - rank(b) || (a.from ?? '').localeCompare(b.from ?? '') || (b.valueAt ?? -1) - (a.valueAt ?? -1) || (a.player.age ?? 99) - (b.player.age ?? 99));
   const valued = youth.filter((y) => y.valueAt != null).sort((a, b) => b.valueAt! - a.valueAt!).slice(0, 5);
   const upside = valued.length ? valued.reduce((s, y) => s + Math.max(0, y.valueAt! - (y.valueNow ?? 0)), 0) : null;
-  return { stages, slots, youth, youthHeld: last ? last.cells.filter((c) => c.state === 'youth').length : 0, upside };
+  return { stages, squad: squadRows, slots, youth, youthHeld: last ? last.cells.filter((c) => c.state === 'youth').length : 0, upside };
 }
 
 /** Bilan d'un poste du Mercato : le jeune du centre qui tiendra ce poste, s'il y en a un. */

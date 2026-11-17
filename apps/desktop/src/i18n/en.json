@@ -4264,32 +4264,21 @@
       }
     },
     "seasons": {
-      "intro": "Your chosen tactic's starting eleven at the start of the next three seasons. Reserve and youth team players count, aged by their progress. Nothing is bought for you: a red slot stays open.",
-      "grid": "The eleven, season by season",
+      "intro": "Your whole squad, player by player, at the start of the next three seasons: their role in your chosen tactic, who leaves, which academy player steps up, and what's missing for about {{target}} players with a backup in every slot. Nothing is bought for you.",
+      "grid": "Squad planner",
       "now": "{{season}} (now)",
       "age": "{{age}}",
       "ageTeam": "{{age}} · {{team}}",
       "recruit": "To sign",
-      "tooWeak": "not good enough for the eleven",
       "leaves": "leaves on {{date}}",
       "declining": "declining",
-      "takesOver": "takes over",
       "legend": {
-        "ok": "in place",
-        "youth": "academy player",
-        "ending": "leaving or declining",
-        "recruit": "to sign"
-      },
-      "kpi": {
-        "youth": "Slots held by youth",
-        "youthSub": "academy players starting in {{season}}",
-        "buys": "Signings really needed",
-        "buysNone": "no slot without a solution",
-        "covered": "Signings avoided",
-        "coveredSub": "slots where an academy player takes over",
-        "upside": "Prospects' upside",
-        "upsideSub": "estimated value at 23 of your 5 best prospects, minus their value today",
-        "upsideNone": "read CA/PA (Plugin and settings) to estimate it"
+        "starter": "starter",
+        "backup": "backup",
+        "rotation": "rotation or surplus",
+        "prospect": "academy prospect",
+        "gone": "gone",
+        "ending": "contract ending or declining"
       },
       "beforeBuying": "Before you buy",
       "nothingToBuy": "Your eleven holds for three seasons, with no signing or youngster to bring in.",
@@ -4336,7 +4325,47 @@
         "stopgap": "Stopgap",
         "estimate": "Estimate from the age curve only: read CA/PA (Plugin and settings) to account for his potential.",
         "legend": "Long term: his level in the slot around 27 (out of 20), compared with today's starters. Long-term: he goes past them. Just good enough: he holds while your club doesn't step up. Stopgap: he fills the gap for a while, then you'll need to buy. *: estimate without CA/PA read."
-      }
+      },
+      "role": {
+        "starter": "Starter",
+        "backup": "Backup",
+        "rotation": "Rotation",
+        "prospect": "Prospect",
+        "gone": "Gone"
+      },
+      "filter": {
+        "all": "Whole squad",
+        "GB": "Goalkeepers",
+        "DEF": "Defence",
+        "MIL": "Midfield",
+        "ATT": "Attack",
+        "youth": "Academy"
+      },
+      "line": {
+        "GB": "Goalkeepers",
+        "DEF": "Defence",
+        "MIL": "Midfield",
+        "ATT": "Attack"
+      },
+      "sum": {
+        "size_one": "{{count}} player",
+        "size_other": "{{count}} players",
+        "keepers_one": "{{count}} keeper",
+        "keepers_other": "{{count}} keepers",
+        "departures_one": "{{count}} departure",
+        "departures_other": "{{count}} departures",
+        "promoted_one": "{{count}} youngster steps up",
+        "promoted_other": "{{count}} youngsters step up",
+        "youthNow_one": "{{count}} academy player",
+        "youthNow_other": "{{count}} academy players",
+        "recruit": "to sign: {{list}}",
+        "noBackup": "no backup: {{list}}",
+        "ok": "Full squad, a backup in every slot."
+      },
+      "toSell": "to sell",
+      "contract": "contract {{date}}",
+      "recruitStarter": "Starter: {{list}}",
+      "recruitBackup": "backup: {{list}}"
     }
   },
   "modes": {
