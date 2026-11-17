@@ -1,6 +1,6 @@
 import { boardObjectives } from './club';
 import { coachNews } from './coach-news';
-import { cupRuns, type CupStatus, type CupTie } from './cups';
+import { cupRuns, managerYearAwards, type CupStatus, type CupTie } from './cups';
 import { calendarFixtures } from './fixtures';
 import { figuresForResultIn } from './lastmatch';
 import { normalizePlayer, toNumber, type FmPlayer } from './player';
@@ -44,6 +44,7 @@ export type StoryKind =
   | 'cupOut'
   | 'cupThrough'
   | 'press'
+  | 'award'
   | 'quiet';
 
 export interface GazetteStory {
@@ -262,6 +263,14 @@ export function weekStories(prev: FmSnapshot | null, week: FmSnapshot[], results
     if (told.has(id)) continue;
     told.add(id);
     out.push({ kind: 'coachFuture', weight: COACH_WEIGHT[c.kind], params: { type: c.kind, other: c.other, coach: c.coach, date: c.date } });
+  }
+
+  // Prix d'entraîneur de l'année reçu cette semaine (absent du relevé d'avant) : il fait la une.
+  const known = prev ? managerYearAwards([{ gameDate: prev.gameDate, data: prev }]) : [];
+  for (const a of managerYearAwards(week.map((data) => ({ gameDate: data.gameDate, data })))) {
+    if (known.some((k) => Math.abs(Date.parse(k.date) - Date.parse(a.date)) <= 2 * DAY_MS && (!k.award || !a.award || k.award === a.award))) continue;
+    const coach = text((cur as { custom?: { partie?: Record<string, unknown> } }).custom?.partie?.coachNom);
+    out.push({ kind: 'award', weight: 88, params: { award: a.award, coach, date: a.date } });
   }
 
   const next = (cur as { nextMatch?: Record<string, unknown> }).nextMatch;

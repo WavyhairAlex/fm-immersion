@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { competitionKind, cupFinalsWon, cupRuns, managerAwards, type FmSnapshot, type MatchResult } from '../src';
+import { competitionKind, cupFinalsWon, cupRuns, managerAwards, managerYearAwards, type FmSnapshot, type MatchResult } from '../src';
 
 const CUP = 'Slovnaft Cup';
 const EURO = 'UEFA Europa League';
@@ -112,5 +112,52 @@ describe('entraîneur du mois lu dans la boîte de réception', () => {
 
   it("ignore l'annonce mensuelle seule (prix d'un autre entraîneur)", () => {
     expect(managerAwards([snap('2026-11-01', [['Entraîneur du mois', ANNONCE]])])).toEqual([]);
+  });
+});
+
+describe("entraîneur de l'année lu dans la boîte de réception", () => {
+  const L = (t: string) => `\x01AgAA\x02${t}\x01`;
+  const snap = (gameDate: string, items: [string, string, string?][]) =>
+    ({
+      gameDate,
+      data: {
+        gameDate,
+        club: 'Slutsk',
+        players: [],
+        custom: {
+          partie: Object.fromEntries(
+            items.flatMap(([t, x, age], i) => [[`boite0${i}Titre`, t], [`boite0${i}Texte`, x], ...(age ? [[`boite0${i}Age`, age]] : [])]),
+          ),
+        },
+      } as unknown as FmSnapshot,
+    });
+  const TITRE = "Entraîneur de l'année";
+  const ANNONCE = `Voici des infos concernant le vainqueur ${L("de l'Entraîneur français de l'année")}.`;
+  const BRAVO = `Je pense que ceci devrait vous plaire, il est vraiment sympa de voir ${L('Vitaliy Bunos')} parler de vous de manière aussi élogieuse.`;
+
+  it('compte le prix avec son nom, au jour du message, une seule fois', () => {
+    const a = snap('2027-12-31', [["Joueur de l'année", `Voici des infos concernant le vainqueur ${L("du Joueur de l'année en Biélorussie")}.`], [TITRE, BRAVO, 'Il y a 2 jour(s)'], [TITRE, ANNONCE, 'Il y a 2 jour(s)']]);
+    const b = snap('2028-01-05', [[TITRE, BRAVO, 'Il y a 1 semaine(s)'], [TITRE, ANNONCE]]);
+    expect(managerYearAwards([a, b])).toEqual([{ date: '2027-12-29', award: "Entraîneur français de l'année" }]);
+  });
+
+  it("ignore l'annonce seule (prix d'un autre entraîneur) et le prix du mois", () => {
+    expect(managerYearAwards([snap('2027-12-31', [[TITRE, ANNONCE]])])).toEqual([]);
+    expect(managerYearAwards([snap('2027-06-01', [['Entraîneur du mois', BRAVO]])])).toEqual([]);
+  });
+
+  it('compte deux prix différents la même saison, et un prix sans annonce reste sans nom', () => {
+    const other = `Voici des infos concernant le vainqueur ${L("de l'Entraîneur de l'année en Div. sup. de Biélorussie")}.`;
+    const a = snap('2027-12-01', [[TITRE, BRAVO], [TITRE, other]]);
+    const b = snap('2027-12-31', [[TITRE, BRAVO], [TITRE, ANNONCE]]);
+    expect(managerYearAwards([a, b]).map((x) => x.award)).toEqual(["Entraîneur de l'année en Div. sup. de Biélorussie", "Entraîneur français de l'année"]);
+    expect(managerYearAwards([snap('2027-12-31', [[TITRE, BRAVO]])])).toEqual([{ date: '2027-12-31', award: null }]);
+  });
+
+  it("un ancien bravo resté dans la boîte ne prend pas le prix annoncé plus tard pour un autre", () => {
+    const other = `Voici des infos concernant le vainqueur ${L("de l'Entraîneur de l'année en Div. sup. de Biélorussie")}.`;
+    const a = snap('2027-12-01', [[TITRE, BRAVO], [TITRE, other]]);
+    const b = snap('2027-12-31', [[TITRE, BRAVO, 'Il y a 4 semaine(s)'], [TITRE, ANNONCE]]);
+    expect(managerYearAwards([a, b])).toEqual([{ date: '2027-12-01', award: "Entraîneur de l'année en Div. sup. de Biélorussie" }]);
   });
 });

@@ -18,9 +18,18 @@ const num = (v: string) => {
 export function TrophyCabinet({ spells }: { spells: CareerSpell[] }) {
   const { t } = useTranslation();
   const cabinet = trophyCabinet(spells);
-  if (!cabinet.length) return <p className="mt-2 text-brun">{t('careerPage.noTrophy')}</p>;
+  // Prix d'entraîneur de l'année, rangés après les trophées, avec une médaille.
+  const medals = spells.flatMap((s) => (s.yearAwards ?? []).map((a) => ({ ...a, club: s.club })));
+  if (!cabinet.length && !medals.length) return <p className="mt-2 text-brun">{t('careerPage.noTrophy')}</p>;
   return (
     <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      {medals.map((m) => (
+        <li key={`${m.club}|${m.date}`} className="flex flex-col items-center rounded-2xl bg-gradient-to-b from-orange-clair to-white p-3 text-center ring-1 ring-orange/30">
+          <Medal />
+          <span className="mt-1 text-sm font-bold leading-tight">{m.award ?? t('careerPage.yearAwardDefault')}</span>
+          <span className="mt-0.5 text-xs text-brun">{`${m.date.slice(0, 4)} · ${m.club}`}</span>
+        </li>
+      ))}
       {cabinet.map((c) => (
         <li key={c.competition ?? ''} className="flex flex-col items-center rounded-2xl bg-gradient-to-b from-orange-clair to-white p-3 text-center ring-1 ring-orange/30">
           <Cup big={c.competition === null} />
@@ -30,6 +39,17 @@ export function TrophyCabinet({ spells }: { spells: CareerSpell[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+function Medal() {
+  // Médaille dessinée (pas de visuel du jeu) : ruban bleu nuit, médaille ambre cerclée de brun.
+  return (
+    <svg width={44} height={44} viewBox="0 0 48 48" aria-hidden>
+      <path d="M15 4h7l5 14h-7zM33 4h-7l-5 14h7z" fill="#0F1B2D" />
+      <circle cx="24" cy="31" r="12" fill="#FFB547" stroke="#8F5400" strokeWidth="1.5" />
+      <path d="M24 24l2.1 4.3 4.7.7-3.4 3.3.8 4.7-4.2-2.2-4.2 2.2.8-4.7-3.4-3.3 4.7-.7z" fill="#8F5400" />
+    </svg>
   );
 }
 

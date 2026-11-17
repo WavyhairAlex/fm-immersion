@@ -1,5 +1,5 @@
 import { countryOfLeague, countryOfNationality } from './countries';
-import { managerAwards } from './cups';
+import { managerAwards, managerYearAwards } from './cups';
 import { coachSpells, type ExitReason } from './farewell';
 import { normalizePlayer, toNumber } from './player';
 import { appearanceMatches, officialResults } from './results';
@@ -121,6 +121,8 @@ export interface CareerSpell {
   game: GameRecord | null;
   /** Prix d'entraîneur du mois (mois « 2027-05 », compétition si l'annonce la nomme). */
   awards: { month: string; competition: string | null }[];
+  /** Prix d'entraîneur de l'année (jour du message, nom du prix quand le jeu le donne : « Entraîneur français de l'année »). */
+  yearAwards: { date: string; award: string | null }[];
   bestFinish: number | null;
 }
 
@@ -330,6 +332,7 @@ export function careerOf(history: Entry[], opts: { freeSince?: string | null } =
       untracked,
       trophies,
       awards: managerAwards(sp.entries),
+      yearAwards: managerYearAwards(sp.entries),
       bestFinish: finished.length ? Math.min(...finished) : null,
     };
   });

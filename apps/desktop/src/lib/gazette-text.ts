@@ -116,6 +116,11 @@ export function storyText(t: TFunction, club: string, s: GazetteStory, lang?: st
           : k('body', { quote: p.quote });
       return { title: toned ?? k(`title_${moment}`, { opponent }), body };
     }
+    case 'award': {
+      // Prix d'entraîneur de l'année : le nom donné par le jeu (« Entraîneur français de l'année »), sinon le nom générique.
+      const vars = { coach: str(p.coach) ?? t('breaking.coach'), award: str(p.award) ?? t('careerPage.yearAwardDefault') };
+      return { title: k('title', vars), body: k('body', vars) };
+    }
     case 'injury': {
       const days = Number(p.days);
       return { title: k('title'), body: days > 0 ? k('body', { count: days }) : k('bodyNoDate') };
@@ -276,6 +281,7 @@ const ICON: Record<GazetteStory['kind'], string> = {
   cupOut: '💔',
   cupThrough: '🏆',
   press: '🎙️',
+  award: '🏅',
   quiet: '☕',
 };
 

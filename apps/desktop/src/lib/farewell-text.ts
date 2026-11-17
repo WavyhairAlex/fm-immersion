@@ -24,6 +24,11 @@ export function farewellHeadline(t: TFunction, x: CoachExit, reason: ExitReason,
 }
 
 /** Nom d'un titre : le championnat, ou la coupe gagnée. */
+/** Prix d'entraîneur de l'année en toutes lettres, avec l'année du message : « Entraîneur français de l'année 2027 ». */
+export function yearAwardName(t: TFunction, a: { date: string; award: string | null }): string {
+  return t('careerPage.yearAward', { award: a.award ?? t('careerPage.yearAwardDefault'), year: a.date.slice(0, 4) });
+}
+
 export const trophyName = (t: TFunction, tr: CoachExit['trophies'][number]) => tr.competition ?? t('farewell.league');
 
 /**

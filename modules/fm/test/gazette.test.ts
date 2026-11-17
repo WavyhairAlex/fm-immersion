@@ -158,3 +158,27 @@ describe('gazette de la semaine', () => {
     expect(issues[1]!.headline.kind).toBe('nextMatch');
   });
 });
+
+describe("gazette : prix d'entraîneur de l'année", () => {
+  const L = (t: string) => `\x01AgAA\x02${t}\x01`;
+  const withInbox = (date: string, items: [string, string, string?][]) => {
+    const s = snap(date, [{ id: 'a', min: 0, starts: 0, tg: 0, tc: 0 }]);
+    const partie: Record<string, unknown> = { coachNom: 'Sébastien Menard' };
+    items.forEach(([t, x, age], i) => Object.assign(partie, { [`boite0${i}Titre`]: t, [`boite0${i}Texte`]: x, ...(age ? { [`boite0${i}Age`]: age } : {}) }));
+    (s as unknown as { custom: Record<string, unknown> }).custom.partie = partie;
+    return { gameDate: date, data: s };
+  };
+  const T = "Entraîneur de l'année";
+  const BRAVO = `Je pense que ceci devrait vous plaire, il est vraiment sympa de voir ${L('Vitaliy Bunos')} parler de vous de manière aussi élogieuse.`;
+  const ANNONCE = `Voici des infos concernant le vainqueur ${L("de l'Entraîneur français de l'année")}.`;
+
+  it('fait la une la semaine du prix, pas les semaines suivantes', () => {
+    const issues = gazetteIssues([
+      withInbox('2027-12-22', []),
+      withInbox('2027-12-31', [[T, BRAVO, 'Il y a 2 jour(s)'], [T, ANNONCE, 'Il y a 2 jour(s)']]),
+      withInbox('2028-01-04', [[T, BRAVO, 'Il y a 6 jour(s)'], [T, ANNONCE, 'Il y a 6 jour(s)']]),
+    ]).reverse();
+    expect(issues[1]!.headline).toMatchObject({ kind: 'award', params: { award: "Entraîneur français de l'année", coach: 'Sébastien Menard', date: '2027-12-29' } });
+    expect([issues[2]!.headline, ...issues[2]!.stories].some((s) => s.kind === 'award')).toBe(false);
+  });
+});

@@ -165,3 +165,55 @@ export function managerAwards(entries: { gameDate: string; data: FmSnapshot }[])
   }
   return out;
 }
+
+// Prix de fin de saison (« Entraîneur de l'année », « Entraîneur français de l'année », « Manager of the Year ») :
+// même principe que le prix du mois, un proche s'en réjouit dans un message au même titre. L'annonce du jeu
+// (« Voici des infos concernant le vainqueur de l'Entraîneur français de l'année ») nomme le prix.
+const YEAR_AWARD = /entra[iî]neur\b.*\bde l['’]ann[ée]e|manager of the year/i;
+const AGE_DAYS = /(\d+)\s*(jour|day|semaine|week)/i;
+
+/** Jours écoulés depuis l'arrivée d'un message, d'après son ancienneté écrite par le jeu (0 si en heures ou inconnue). */
+function ageDays(age: string | null): number {
+  const m = age ? AGE_DAYS.exec(age) : null;
+  if (!m) return 0;
+  return Number(m[1]) * (/semaine|week/i.test(m[2]!) ? 7 : 1);
+}
+
+/**
+ * Prix d'entraîneur de l'année reçus par le coach, d'après la boîte de réception : jour du message (relevé moins
+ * son ancienneté) et nom du prix quand une seule annonce le donne ce jour-là (null sinon : « Entraîneur de l'année »).
+ * Un même prix revu dans les relevés suivants ne compte qu'une fois.
+ */
+export function managerYearAwards(entries: { gameDate: string; data: FmSnapshot }[]): { date: string; award: string | null }[] {
+  const out: { date: string; award: string | null }[] = [];
+  for (const e of entries) {
+    const items = inboxOf(e.data).filter((i) => YEAR_AWARD.test(i.title));
+    const praise = items.find((i) => PRAISE_YOU.test(i.body));
+    if (!praise) continue;
+    const names = [
+      ...new Set(
+        items
+          // Annonce du même jour que le message du proche : un ancien bravo resté dans la boîte ne donne pas son nom
+          // au prix d'un autre entraîneur annoncé plus tard.
+          .filter((i) => i !== praise && Math.abs(ageDays(i.age) - ageDays(praise.age)) <= 1)
+          .flatMap((i) => i.links.filter((l) => YEAR_AWARD.test(l)))
+          .map((l) => l.replace(/\.$/, '').trim()),
+      ),
+    ];
+    const award = names.length === 1 ? names[0]! : null;
+    const d = new Date(`${e.gameDate.slice(0, 10)}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - ageDays(praise.age));
+    const date = d.toISOString().slice(0, 10);
+    // Le message reste dans la boîte plusieurs semaines : le même prix (ou un prix sans nom) revu à moins de 200 jours
+    // est le même ; deux prix nommés différemment la même saison comptent chacun.
+    const seen = out.find(
+      (o) => Math.abs(Date.parse(o.date) - Date.parse(date)) < 200 * 86_400_000 && (!o.award || !award || norm(o.award) === norm(award)),
+    );
+    if (seen) {
+      if (!seen.award && award) seen.award = award;
+      continue;
+    }
+    out.push({ date, award });
+  }
+  return out;
+}
