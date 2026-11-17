@@ -48,6 +48,18 @@ describe('effectif saison par saison', () => {
     const path = plan.youth.find((y) => y.player.id === '20')!;
     expect(path.pos).toBe('BT');
     expect(path.from).toBe(slot.from);
+    // 17 ans, encore dix ans de progression : il dépasse le niveau des titulaires d'aujourd'hui.
+    expect(path.viability).toBe('lasting');
+    expect(slot.viability).toBe('lasting');
+    expect(path.reliable).toBe(false);
+  });
+
+  it('un jeune déjà proche de son pic qui ne fait que boucher le trou est une solution de transition', () => {
+    const youth = [p(21, 'BT', 10.8, { age: 23, team: 'Malženice II', contractEnd: '2030-06-30' })];
+    const plan = seasonPlan(engine, squad, youth, '2027-02-14', { style: 'possession' }, [], 3)!;
+    const path = plan.youth.find((y) => y.player.id === '21')!;
+    expect(path.pos).toBe('BT');
+    expect(path.viability).toBe('stopgap');
   });
 
   it('sans jeune pour le poste, le départ du titulaire fait un poste à recruter', () => {
@@ -56,5 +68,25 @@ describe('effectif saison par saison', () => {
     expect(plan.stages[2]!.cells[k]!.state).toBe('recruit');
     expect(plan.slots[k]!.verdict).toBe('buy');
     expect(youthCover(plan, 'BT')).toBeNull();
+  });
+
+  it('suit tout l’effectif : titulaires, doublures, rotation, départs et jeunes qui montent', () => {
+    const full = [...squad, p(12, 'GB', 10), p(13, 'D (C)', 10.5), p(14, 'M (C)', 10.5), p(15, 'GB', 9)];
+    const youth = [p(20, 'BT', 11, { age: 17, team: 'Malženice U19', contractEnd: '2030-06-30' }), p(22, 'M (C)', 5, { age: 16, team: 'Malženice U19' })];
+    const plan = seasonPlan(engine, full, youth, '2027-02-14', { style: 'possession' }, [], 3)!;
+    const row = (id: string) => plan.squad.find((r) => r.player.id === id);
+    expect(row('11')!.seasons[0]!.role).toBe('starter');
+    expect(row('11')!.seasons[2]!.role).toBe('gone');
+    expect(row('12')!.seasons[0]!.role).toBe('backup');
+    expect(row('12')!.seasons[0]!.pos).toBe('GB');
+    // Troisième gardien : en rotation, il compte dans l'effectif.
+    expect(row('15')!.seasons[0]!.role).toBe('rotation');
+    // Le jeune buteur entre dans l'effectif ; le jeune trop faible reste à l'Académie.
+    expect(row('20')!.youth).toBe(true);
+    expect(row('22')).toBeUndefined();
+    const s0 = plan.stages[0]!.summary;
+    expect(s0.keepers).toBe(3);
+    expect(s0.size).toBeGreaterThanOrEqual(15);
+    expect(plan.stages[2]!.summary.departures + plan.stages[1]!.summary.departures).toBeGreaterThanOrEqual(1);
   });
 });
