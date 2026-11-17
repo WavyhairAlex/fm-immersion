@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.247",
+    "date": "2026-11-17",
+    "fr": [
+      "Mercato : nouveau cadre « Sur le départ » avec tout ton effectif à cocher. Coche les joueurs sous offre ou à vendre : le Mercato, Saisons et « Recrues pour ma tactique » planifient sans eux, et la recherche de recrues ouvre d'abord leur poste. Le nombre de clubs intéressés par chaque joueur est affiché."
+    ],
+    "en": [
+      "Mercato: new “On the way out” panel with your whole squad to tick. Tick the players who have offers or are for sale: the Mercato, Seasons and “Signings for my tactic” plan without them, and the signing search opens their position first. The number of clubs interested in each player is shown."
+    ]
+  },
+  {
     "version": "0.1.246",
     "date": "2026-11-17",
     "fr": [

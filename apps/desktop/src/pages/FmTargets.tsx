@@ -21,6 +21,7 @@ import { useFmSaveScope, writeScoped } from "../lib/save-store";
 import { FmDbSearch } from "./FmDbSearch";
 import { useTacticEngine } from "./FmTactic";
 import { FmTacticRecruits } from "./FmTacticRecruits";
+import { useLeaving } from "./FmLeaving";
 import {
   CompatTag,
   EngineTag,
@@ -71,10 +72,19 @@ export function FmTargets({
   const { engine } = useTacticEngine(folder, players);
   const [coach] = useCoach();
   const [filter, setFilter] = useState<Filter>("list");
+  // Joueurs sur le départ (cochés dans Mercato) : la recherche se fait sans eux.
+  const { ids: leavingIds } = useLeaving();
+  const staying = useMemo(() => players.filter((p) => !leavingIds.has(p.id)), [players, leavingIds]);
   const own = useMemo(
-    () => players.filter((p) => !p.injury && Object.keys(p.attributes).length),
-    [players],
+    () => staying.filter((p) => !p.injury && Object.keys(p.attributes).length),
+    [staying],
   );
+  // Postes du onze qu'ils tenaient (même rôle avec et sans ballon) : à remplacer en premier.
+  const departed = useMemo(() => {
+    if (!leavingIds.size) return [];
+    const full = buildProject(engine, players.filter((p) => !p.injury && Object.keys(p.attributes).length), coach);
+    return (full?.slots ?? []).flatMap((sl) => (sl.player && leavingIds.has(sl.player.id) ? [{ pos: sl.pos, ip: sl.ip, oop: sl.oop, player: sl.player }] : []));
+  }, [engine, players, coach, leavingIds]);
   // Finances serrées : une cible au-dessus du budget de transfert est marquée « hors budget » (libre ou prêt sinon).
   const budgetCap = useMemo(() => {
     const fin = clubFinances(snap, players);
@@ -107,14 +117,14 @@ export function FmTargets({
       .map((target) => ({ target, best: null }));
     return [
       ...(pr
-        ? rankTargets(engine, withAttrs, pr, players)
+        ? rankTargets(engine, withAttrs, pr, staying)
         : withAttrs.map((target) => ({ target, best: null }))),
       ...rest,
     ] as {
       target: StoredTarget;
       best: ReturnType<typeof rankTargets>[number]["best"];
     }[];
-  }, [engine, shown, pr, players]);
+  }, [engine, shown, pr, staying]);
 
   const dismiss = useMutation({
     mutationFn: ({ id, on }: { id: string; on: boolean }) =>
@@ -155,7 +165,8 @@ export function FmTargets({
         snap={snap}
         engine={engine}
         project={pr}
-        players={players}
+        players={staying}
+        departed={departed}
         followedTargets={all.filter((p) => !p.dismissed && Object.keys(p.attributes).length)}
         go={go}
       />
@@ -367,7 +378,7 @@ export function FmTargets({
         gameDate={snap.gameDate}
         engine={engine}
         project={pr}
-        players={players}
+        players={staying}
         followed={followed}
       />
     </>
