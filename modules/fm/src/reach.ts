@@ -9,8 +9,9 @@ import type { DbPlayer } from './targets';
  * - salaire : le plus gros salaire de l'effectif. Un joueur ne baisse presque jamais son salaire ; au-delà de
  *   1,25 fois ce plafond c'est difficile, au-delà de 2 fois c'est hors de portée ;
  * - réputation : moyenne des trois meilleures réputations actuelles de l'effectif, ce que le club attire déjà.
- *   Au-delà de 1,25 fois c'est difficile, au-delà de 1,75 fois le joueur ne viendra pas ;
- * - championnat : un joueur d'un championnat nettement plus coté (1,3 fois la réputation du nôtre) rechigne ;
+ *   Plus connu que nos meilleurs joueurs, c'est difficile ; au-delà de 1,35 fois, il refuse même de négocier ;
+ * - championnat : un joueur d'un championnat plus coté (1,15 fois la réputation du nôtre) rechigne, et au-delà de
+ *   1,4 fois il refuse, sauf libre (il n'a plus de club) ou jeune prêté ;
  * - indemnité : sa valeur face au budget de transferts. Libre, en fin de contrat (6 mois ou moins : précontrat)
  *   ou jeune d'un club plus huppé (prêt possible), il ne coûte pas d'indemnité ;
  * - marge salariale : son salaire face à la marge du club (salaire du partant compris). Dépassée, il faut d'abord
@@ -26,9 +27,12 @@ export type ReachWhy = 'free' | 'preContract' | 'loan' | 'listed' | 'wage' | 'wa
 
 export const WAGE_HARD = 1.25;
 export const WAGE_OUT = 2;
-export const REP_HARD = 1.25;
-export const REP_OUT = 1.75;
-export const LEAGUE_HARD = 1.3;
+// Calés sur une partie en Biélorussie (18/11/2026) : avec 1,25 / 1,75 / 1,3, la plupart des recrues proposées
+// refusaient de négocier avec le club.
+export const REP_HARD = 1;
+export const REP_OUT = 1.35;
+export const LEAGUE_HARD = 1.15;
+export const LEAGUE_OUT = 1.4;
 /** Indemnité au-delà de laquelle le board ne suivra pas, en multiple du budget de transferts. */
 export const FEE_OUT = 1.5;
 export const PRECONTRACT_MONTHS = 6;
@@ -104,10 +108,11 @@ export function clubReach(
 }
 
 /** Plafonds à passer à la recherche dans la base : écarte les vedettes avant la limite de résultats. */
-export function reachCaps(club: ClubReach): { maxWageWeekly?: number; maxReputation?: number } {
+export function reachCaps(club: ClubReach): { maxWageWeekly?: number; maxReputation?: number; maxDivisionReputation?: number; loanMaxAge?: number } {
   return {
     maxWageWeekly: club.topWage ? Math.round(club.topWage * WAGE_OUT) : undefined,
     maxReputation: club.reputation ? Math.round(club.reputation * REP_OUT) : undefined,
+    ...(club.divisionReputation ? { maxDivisionReputation: Math.floor(club.divisionReputation * LEAGUE_OUT), loanMaxAge: LOAN_MAX_AGE } : {}),
   };
 }
 
@@ -157,7 +162,7 @@ export function reachOf(c: DbPlayer, club: ClubReach, gameDate: string): Reach {
     const r = rep / club.reputation;
     if (r > REP_HARD) block('reputation', r > REP_OUT);
   }
-  if (!loan && divRatio != null && divRatio > LEAGUE_HARD) block('league', false);
+  if (!loan && divRatio != null && divRatio > LEAGUE_HARD) block('league', divRatio > LEAGUE_OUT);
 
   const level: ReachLevel = out ? 'out' : hard ? 'hard' : fee === 0 ? 'easy' : 'possible';
   return { level, why, fee };

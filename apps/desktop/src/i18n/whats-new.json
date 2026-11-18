@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.250",
+    "date": "2026-11-18",
+    "fr": [
+      "Les recrues proposées dans Mercato et Cibles tiennent mieux compte de la taille de ton club : les joueurs plus connus que tes meilleurs éléments ou venus d'un championnat bien plus coté, qui refusaient de négocier, sont maintenant écartés (tu peux toujours les afficher)."
+    ],
+    "en": [
+      "Recruits suggested in Transfers and Targets now take your club's size into account better: players more famous than your best ones or from a much higher-rated league, who refused to negotiate, are now left out (you can still show them)."
+    ]
+  },
+  {
     "version": "0.1.249",
     "date": "2026-11-18",
     "fr": [
