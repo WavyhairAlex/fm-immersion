@@ -573,7 +573,7 @@ function People({ w }: { w: World }) {
   };
   const finances = lifeFinances(career.spells, life, st.spending.total, game.wages);
   const badge = st.badges.find((b) => !b.done);
-  const awards = career.spells.reduce((n, s) => n + (s.awards?.length ?? 0), 0);
+  const awards = career.spells.reduce((n, s) => n + (s.awards?.length ?? 0) + (s.yearAwards?.length ?? 0), 0);
   const journal = [
     ...st.answered.map((a) => ({ date: a.scene.date, text: x.done(a.scene, a.choice.key), sign: Object.values(choiceEffects(a.choice)).reduce((s, n) => s + (n ?? 0), 0) })),
     ...st.outcomes.map((o) => ({ date: o.date, text: outcomeText(o), sign: o.delta })),

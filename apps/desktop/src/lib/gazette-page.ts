@@ -63,6 +63,7 @@ const ICON: Partial<Record<GazetteStory['kind'], string>> = {
   coachFuture: '🗞️',
   cupOut: '💔',
   cupThrough: '🏆',
+  award: '🏅',
 };
 
 /** Couleur de rubrique d'une brève (pastille et surtitre). */

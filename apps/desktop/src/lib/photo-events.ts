@@ -93,6 +93,8 @@ export function sceneForHeadline(head: Pick<GazetteStory, 'kind' | 'params'>, we
     }
     case 'cupOut':
       return coach('mains_tete');
+    case 'award':
+      return coach('celebration');
     case 'cupThrough':
       return player('une_joueur', p.bestId) ?? coach('celebration');
     case 'injury':

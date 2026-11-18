@@ -4838,6 +4838,10 @@
         "title_humour": "Le coach la joue à l'humour",
         "bodyOutlet_pre": "« {{quote}} », a confié le coach {{outletTo}} avant d’affronter {{opponent}}.",
         "bodyOutlet_post": "« {{quote}} », a confié le coach {{outletTo}} après le match contre {{opponent}}."
+      },
+      "award": {
+        "title": "{{coach}} élu {{award}}",
+        "body": "Le prix récompense la saison de {{club}} et place {{coach}} parmi les meilleurs entraîneurs du moment. Au club, on savoure."
       }
     },
     "discord": {
@@ -4872,7 +4876,8 @@
         "job": "Direction",
         "nextMatch": "À l'affiche",
         "quiet": "Vie du club",
-        "streak": "Série"
+        "streak": "Série",
+        "award": "Distinction"
       },
       "scorers": "Buteurs",
       "motm": "Homme du match",
@@ -6355,7 +6360,9 @@
     "hiddenLabel": "écarté de cette carrière",
     "unhide": "Remettre",
     "fromGame": "Matchs, victoires, nuls, défaites et buts : les chiffres de l'écran Carrière de FM27.",
-    "fromSnapshots": "Chiffres comptés à partir de tes relevés : ouvre FM27 avec le plugin à jour pour avoir ceux du jeu."
+    "fromSnapshots": "Chiffres comptés à partir de tes relevés : ouvre FM27 avec le plugin à jour pour avoir ceux du jeu.",
+    "yearAward": "{{award}} {{year}}",
+    "yearAwardDefault": "Entraîneur de l'année"
   },
   "whatsNew": {
     "kicker": "Mise à jour installée · version {{version}}",
@@ -7387,7 +7394,7 @@
       "savings": "Économies",
       "badge": "Diplôme en cours",
       "badgeNone": "Aucun",
-      "awards": "Entraîneur du mois",
+      "awards": "Distinctions",
       "journal": "Journal du coach",
       "promises": "Promesses en cours",
       "noPromise": "Aucune promesse en cours."

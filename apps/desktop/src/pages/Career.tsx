@@ -12,7 +12,7 @@ import { FmHistoryImport } from './FmSave';
 import { clubLook, rememberClubLooks } from '../lib/club-look';
 import { Crest } from '../components/Crest';
 import { fmData } from '../lib/data';
-import { trophyName } from '../lib/farewell-text';
+import { trophyName, yearAwardName } from '../lib/farewell-text';
 import { ordinal } from '../lib/season-une';
 import { MAP_HEIGHT, MAP_PINS, MAP_SHAPES, MAP_WIDTH } from '../lib/world-map';
 
@@ -274,11 +274,16 @@ function SpellCard({
         </p>
       )}
 
-      {!!(s.trophies.length || s.awards?.length) && (
+      {!!(s.trophies.length || s.awards?.length || s.yearAwards?.length) && (
         <p className="mt-3 flex flex-wrap gap-2">
           {s.trophies.map((tr, i) => (
             <span key={i} className="pill">
               🏆 {trophyName(t, tr)} {tr.season}
+            </span>
+          ))}
+          {(s.yearAwards ?? []).map((a) => (
+            <span key={a.date} className="pill">
+              🏅 {yearAwardName(t, a)}
             </span>
           ))}
           {(s.awards ?? []).map((a) => (
@@ -369,6 +374,7 @@ function clubStats(spells: CareerSpell[], club: string) {
     losses: mine.reduce((a, s) => a + s.total.losses, 0),
     trophies: mine.flatMap((s) => s.trophies),
     awards: mine.flatMap((s) => s.awards ?? []),
+    yearAwards: mine.flatMap((s) => s.yearAwards ?? []),
   };
 }
 
@@ -530,7 +536,7 @@ function WorldMap({ spells }: { spells: CareerSpell[] }) {
         { letter: t('careerPage.mapL'), count: st.losses, color: '#B42E2E' },
       ],
       trophies: st.trophies.map((tr) => `${trophyName(t, tr)} ${tr.season}`),
-      awards: awardLines(st.awards),
+      awards: [...st.yearAwards.map((a) => yearAwardName(t, a)), ...awardLines(st.awards)],
     };
   };
   const statsLine = (club: string) => {

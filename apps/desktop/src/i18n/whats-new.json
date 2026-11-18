@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.249",
+    "date": "2026-11-18",
+    "fr": [
+      "Tes prix d'entraîneur de l'année (par exemple « Entraîneur français de l'année ») sont reconnus : ils rejoignent ta vitrine et ton palmarès dans « Ma carrière », comptent dans tes distinctions de « Ma vie » et font la une de la gazette la semaine où tu les reçois."
+    ],
+    "en": [
+      "Your Manager of the Year awards (for example the French Manager of the Year) are now recognised: they join your trophy cabinet and honours in My career, count in your awards in My life and make the front page of the gazette the week you win them."
+    ]
+  },
+  {
     "version": "0.1.248",
     "date": "2026-11-18",
     "fr": [

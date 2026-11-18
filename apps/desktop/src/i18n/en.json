@@ -4838,6 +4838,10 @@
         "title_humour": "The manager keeps it light",
         "bodyOutlet_pre": "“{{quote}}”, the manager told {{outletTo}} ahead of {{opponent}}.",
         "bodyOutlet_post": "“{{quote}}”, the manager told {{outletTo}} after the {{opponent}} game."
+      },
+      "award": {
+        "title": "{{coach}} named {{award}}",
+        "body": "The award crowns {{club}}'s season and puts {{coach}} among the best managers around. The club is savouring it."
       }
     },
     "discord": {
@@ -4872,7 +4876,8 @@
         "job": "Boardroom",
         "nextMatch": "Coming up",
         "quiet": "Club life",
-        "streak": "Run"
+        "streak": "Run",
+        "award": "Award"
       },
       "scorers": "Scorers",
       "motm": "Player of the match",
@@ -6355,7 +6360,9 @@
     "hiddenLabel": "left out of this career",
     "unhide": "Put back",
     "fromGame": "Matches, wins, draws, losses and goals: the figures from FM27's Career screen.",
-    "fromSnapshots": "Figures counted from your snapshots: open FM27 with the up-to-date plugin to get the game's own."
+    "fromSnapshots": "Figures counted from your snapshots: open FM27 with the up-to-date plugin to get the game's own.",
+    "yearAward": "{{award}} {{year}}",
+    "yearAwardDefault": "Manager of the Year"
   },
   "whatsNew": {
     "kicker": "Update installed · version {{version}}",
@@ -7387,7 +7394,7 @@
       "savings": "Savings",
       "badge": "Badge in progress",
       "badgeNone": "None",
-      "awards": "Manager of the month",
+      "awards": "Awards",
       "journal": "Coach's journal",
       "promises": "Open promises",
       "noPromise": "No open promise."
