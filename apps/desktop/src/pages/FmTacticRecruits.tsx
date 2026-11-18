@@ -51,6 +51,7 @@ export function FmTacticRecruits({
   players,
   followedTargets,
   go,
+  departed,
 }: {
   saveId: string;
   gameDate: string;
@@ -61,13 +62,27 @@ export function FmTacticRecruits({
   /** Cibles déjà suivies (avec attributs), candidates elles aussi. */
   followedTargets: Target[];
   go?: (view: string) => void;
+  /** Postes du onze que tenaient les joueurs sur le départ (poste et rôles du créneau, partant). */
+  departed?: readonly { pos: string; ip: string; oop: string; player: FmPlayer }[];
 }) {
   const { t } = useTranslation();
   const names = useNames();
   const qc = useQueryClient();
   const weakest = useMemo(() => weakestSlot(engine, project), [engine, project]);
   const [idx, setIdx] = useState<number | null>(null);
-  const slot: ProjectSlot | null = (idx != null ? project.slots[idx] : null) ?? weakest;
+  // Créneau du onze qui correspond à chaque partant (même poste et mêmes rôles), index → partant.
+  const leftAt = useMemo(() => {
+    const m = new Map<number, FmPlayer>();
+    for (const d of departed ?? []) {
+      const i = project.slots.findIndex((sl, j) => !m.has(j) && sl.pos === d.pos && sl.ip === d.ip && sl.oop === d.oop);
+      const k = i >= 0 ? i : project.slots.findIndex((sl, j) => !m.has(j) && sl.pos === d.pos);
+      if (k >= 0) m.set(k, d.player);
+    }
+    return m;
+  }, [departed, project]);
+  // Un poste libéré par un départ passe avant le poste le plus faible.
+  const firstDeparted = leftAt.size ? Math.min(...leftAt.keys()) : null;
+  const slot: ProjectSlot | null = (idx != null ? project.slots[idx] : null) ?? (firstDeparted != null ? project.slots[firstDeparted] : null) ?? weakest;
   // Jeune du centre qui tiendra le poste d'ici deux saisons : on le montre avant toute recrue.
   const seasons = useSeasonPlan();
   const youthAt = (sl: ProjectSlot) => {
@@ -142,7 +157,8 @@ export function FmTacticRecruits({
             title={sl.player?.name ?? t('fm.tacRecruit.empty')}
           >
             <PosBadge pos={sl.pos} /> {names.role(engine.roles.get(sl.ip))}
-            {sl === weakest && <span className="ml-1 text-[11px] font-bold text-corail">{t('fm.tacRecruit.weakest')}</span>}
+            {leftAt.get(i) && <span className="ml-1 text-[11px] font-bold text-corail">{t('fm.tacRecruit.leaves', { name: leftAt.get(i)!.name })}</span>}
+            {!leftAt.has(i) && sl === weakest && <span className="ml-1 text-[11px] font-bold text-corail">{t('fm.tacRecruit.weakest')}</span>}
             {youthAt(sl) && <span className="ml-1 text-[11px] font-bold text-orange-fonce">{t('fm.seasons.chip')}</span>}
           </button>
         ))}
@@ -153,6 +169,9 @@ export function FmTacticRecruits({
           <PosBadge pos={slot.pos} /> <b>{names.role(engine.roles.get(slot.ip))}</b>
           {slot.oop !== slot.ip && <span className="text-brun"> · {t('fm.tacRecruit.oop', { role: names.role(engine.roles.get(slot.oop)) })}</span>}
         </p>
+        {leftAt.get(project.slots.indexOf(slot)) && (
+          <p className="mt-1 text-xs font-bold text-corail">{t('fm.tacRecruit.replaces', { name: leftAt.get(project.slots.indexOf(slot))!.name })}</p>
+        )}
         <p className="mt-1 text-xs text-brun">
           {result.starter ? t('fm.tacRecruit.starter', { name: result.starter.player.name, note: note(result.starter) }) : t('fm.tacRecruit.empty')}
           {result.backup && <> · {t('fm.tacRecruit.backup', { name: result.backup.player.name, note: note(result.backup) })}</>}

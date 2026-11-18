@@ -3243,7 +3243,14 @@
         "wantsOut": "Veut partir",
         "loanIn": "Prêté chez nous"
       },
-      "loanFrom": "Prêté par {{club}}"
+      "loanFrom": "Prêté par {{club}}",
+      "check": {
+        "title_one": "Sur le départ · {{count}} coché",
+        "title_other": "Sur le départ · {{count}} cochés",
+        "help": "Coche les joueurs sous offre ou que tu veux vendre. FM Immersion planifie alors sans eux : le Mercato, « Recrues pour ma tactique » (onglet Cibles, qui ouvre d'abord leur poste) et Saisons cherchent leur remplaçant. Décoche s'il reste finalement. Rien n'est envoyé au jeu. Le chiffre orange donne le nombre de clubs intéressés lu dans FM27 ; le plugin ne lit pas encore les offres reçues elles-mêmes.",
+        "interest_one": "{{count}} club intéressé",
+        "interest_other": "{{count}} clubs intéressés"
+      }
     },
     "needs": {
       "title": "Postes à recruter ({{count}})",
@@ -4261,7 +4268,9 @@
         "score": "Poste et méta",
         "gain": "Apport",
         "keys": "Attributs clés"
-      }
+      },
+      "leaves": "{{name}} part",
+      "replaces": "Poste à remplacer : {{name}} est sur le départ."
     },
     "seasons": {
       "intro": "Tout ton effectif, joueur par joueur, au début des trois prochaines saisons : son rôle dans la tactique choisie, qui part, quel jeune du centre monte, et ce qu'il manque pour avoir environ {{target}} joueurs avec une doublure à chaque poste. Rien n'est acheté à ta place.",
