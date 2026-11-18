@@ -69,7 +69,7 @@ function PlanRows({ rows }: { rows: PlanRow[] }) {
  * Le plan du mercato, hiérarchisé : 1) la priorité, en grand, avec l'argent disponible ; 2) les décisions regroupées
  * par type, dans l'ordre où les prendre (une ligne par groupe) ; 3) au clic, chaque joueur ou poste ; le reste est replié.
  */
-function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked, reg, snapshots }: { r: MercatoReport; pr: Project | null; engine: TacticEngine; pool: Target[]; needs: RecruitNeed[]; fin: ClubFinances | null; gameDate: string; onMarked: (id: string) => void; reg: RegistrationContext | null; snapshots: number }) {
+function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked, reg, snapshots, departures }: { r: MercatoReport; pr: Project | null; engine: TacticEngine; pool: Target[]; needs: RecruitNeed[]; fin: ClubFinances | null; gameDate: string; onMarked: (id: string) => void; reg: RegistrationContext | null; snapshots: number; departures?: ReactNode }) {
   // Liste d'inscription : effectif qui reste (les partants signalés n'y sont plus).
   const squad = useMemo(() => r.advice.map((a) => a.player), [r]);
   const regCheck = useMemo(() => (reg ? registrationCheck(squad, (p) => regStatus({ id: p.id, nationality: reg.nationality.get(p.id) }, reg.elig, reg.country), reg.rules) : null), [squad, reg]);
@@ -257,6 +257,9 @@ function MercatoPlan({ r, pr, engine, pool, needs, fin, gameDate, onMarked, reg,
           <span className="font-bold">{t('fm.merc.plan.calmTitle')}</span> <span className="text-brun">{t('fm.merc.plan.calmText')}</span>
         </p>
       )}
+
+      {/* Joueurs sur le départ, à cocher : juste après les décisions, avant les recrues. */}
+      {departures}
 
       {/* 3. Le niveau du onze face à la note visée, et l'argent réparti pour combler l'écart. */}
       {pr && <TeamTarget pr={pr} engine={engine} pool={pool} limits={limits} squad={squad} snapshots={snapshots} blockOf={reg && regCheck ? (p) => signingBlock(regCheck, regStatus(p, reg.elig, reg.country), p.age) : undefined} />}
@@ -830,8 +833,7 @@ export function FmMercato({ saveId, snap, players, folder, gameDate, history }: 
 
   return (
     <div className="space-y-4">
-      <MercatoPlan r={r} pr={pr} engine={engine} pool={pool} needs={needs?.needs ?? []} fin={fin} gameDate={gameDate} onMarked={setJustMarked} reg={reg} snapshots={history.length} />
-      <DepartureChecklist players={players} gameDate={gameDate} interest={interest} />
+      <MercatoPlan r={r} pr={pr} engine={engine} pool={pool} needs={needs?.needs ?? []} fin={fin} gameDate={gameDate} onMarked={setJustMarked} reg={reg} snapshots={history.length} departures={<DepartureChecklist players={players} gameDate={gameDate} interest={interest} />} />
       {/* Le reste (jeunes, recherche de remplaçants, niveau de la division…) replié : l'écran tient sur une page. */}
       <details className="group">
         <summary className="cursor-pointer text-sm font-bold text-orange-fonce hover:underline">
