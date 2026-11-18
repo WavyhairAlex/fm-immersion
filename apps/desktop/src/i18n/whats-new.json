@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.248",
+    "date": "2026-11-18",
+    "fr": [
+      "Mercato : le cadre « Sur le départ », pour cocher les joueurs sous offre, est remonté juste sous « À faire maintenant »."
+    ],
+    "en": [
+      "Mercato: the “On the way out” panel, to tick players with offers, now sits right below “To do now”."
+    ]
+  },
+  {
     "version": "0.1.247",
     "date": "2026-11-17",
     "fr": [
