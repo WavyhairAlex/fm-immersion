@@ -3083,7 +3083,7 @@
       "wide": "Also show players out of reach",
       "hidden_one": "{{count}} player out of reach hidden",
       "hidden_other": "{{count}} players out of reach hidden",
-      "help": "The search only keeps players your club can attract and afford. Benchmarks come from your squad: a wage up to twice your highest wage, a reputation up to 1.75 times that of your three most famous players, a fee within your transfer budget. Free agents, expiring contracts (pre-contract) and youngsters at bigger clubs (loan) cost no fee. FM27 has the final say in negotiations."
+      "help": "The search only keeps players your club can attract and afford. Benchmarks come from your squad: a wage up to twice your highest wage, a reputation up to 1.35 times that of your three most famous players, a home league not much higher-rated than yours, a fee within your transfer budget. Beyond that, players usually refuse to negotiate. Free agents, expiring contracts (pre-contract) and youngsters at bigger clubs (loan) cost no fee. FM27 has the final say in negotiations."
     },
     "repl": {
       "open": "Replacement",

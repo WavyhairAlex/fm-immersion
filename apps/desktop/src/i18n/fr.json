@@ -3083,7 +3083,7 @@
       "wide": "Voir aussi les joueurs hors de portée",
       "hidden_one": "{{count}} joueur hors de portée masqué",
       "hidden_other": "{{count}} joueurs hors de portée masqués",
-      "help": "La recherche ne garde que les joueurs que ton club peut attirer et payer. Repères tirés de ton effectif : un salaire jusqu'à deux fois ton plus gros salaire, une réputation jusqu'à 1,75 fois celle de tes trois joueurs les plus réputés, une indemnité dans ton budget de transferts. Les libres, les fins de contrat (précontrat) et les jeunes de clubs plus huppés (prêt) ne coûtent pas d'indemnité. FM27 a le dernier mot à la négociation."
+      "help": "La recherche ne garde que les joueurs que ton club peut attirer et payer. Repères tirés de ton effectif : un salaire jusqu'à deux fois ton plus gros salaire, une réputation jusqu'à 1,35 fois celle de tes trois joueurs les plus réputés, un championnat d'origine pas beaucoup plus coté que le tien, une indemnité dans ton budget de transferts. Au-delà, le joueur refuse en général de négocier. Les libres, les fins de contrat (précontrat) et les jeunes de clubs plus huppés (prêt) ne coûtent pas d'indemnité. FM27 a le dernier mot à la négociation."
     },
     "repl": {
       "open": "Remplaçant",

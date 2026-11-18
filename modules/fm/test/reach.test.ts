@@ -44,7 +44,7 @@ describe('recrues à la portée du club', () => {
     expect(club.divisionReputation).toBe(100);
     // 5 000 € par mois affichés = 1 000 de base par semaine.
     expect(club.wageRoom).toBeCloseTo(1000);
-    expect(reachCaps(club)).toEqual({ maxWageWeekly: 2000, maxReputation: 3150 });
+    expect(reachCaps(club)).toEqual({ maxWageWeekly: 2000, maxReputation: 2430, maxDivisionReputation: 140, loanMaxAge: 23 });
   });
 
   it('un joueur de son niveau, dans le budget, est possible', () => {
@@ -56,6 +56,15 @@ describe('recrues à la portée du club', () => {
     const r = reachOf(star, club, GAME_DATE);
     expect(r.level).toBe('out');
     expect(r.why).toEqual(expect.arrayContaining(['wage', 'fee', 'reputation', 'league']));
+  });
+
+  it('plus connu que nos meilleurs joueurs ou d’un championnat bien plus coté : il refuse de négocier', () => {
+    expect(reachOf(db({ reputation: [2100, 2100, 1800] }), club, GAME_DATE)).toMatchObject({ level: 'hard', why: ['reputation'] });
+    expect(reachOf(db({ reputation: [2600, 2600, 2000] }), club, GAME_DATE)).toMatchObject({ level: 'out', why: ['reputation'] });
+    expect(reachOf(db({ divisionReputation: 120 }), club, GAME_DATE)).toMatchObject({ level: 'hard', why: ['league'] });
+    expect(reachOf(db({ divisionReputation: 150 }), club, GAME_DATE)).toMatchObject({ level: 'out', why: ['league'] });
+    // En fin de contrat aussi : pas d'indemnité, mais il ne veut pas descendre si bas.
+    expect(reachOf(db({ divisionReputation: 150, contractEnd: '2028-06-30' }), club, GAME_DATE).level).toBe('out');
   });
 
   it('libre ou en fin de contrat : pas d’indemnité', () => {

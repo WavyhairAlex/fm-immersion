@@ -1602,6 +1602,10 @@ pub struct SearchFilter {
     /// Réputation actuelle maximale du joueur (celles que le jeu laisse à 0 ou moins, non lues, sont gardées) :
     /// écarte d'emblée les vedettes qu'un petit club n'attirera pas, avant que la limite de 300 ne les garde.
     pub max_reputation: Option<i16>,
+    /// Réputation maximale de la division : un joueur d'un championnat bien plus coté refuse un petit club.
+    /// Sans effet sur les joueurs libres (sans division) ni sur ceux de `loan_max_age` ans ou moins (prêt possible).
+    pub max_division_reputation: Option<i16>,
+    pub loan_max_age: Option<u16>,
     /// Seulement ces joueurs (identifiants du jeu) : relecture des joueurs suivis. Vide = tous.
     pub ids: Vec<i32>,
     /// Football féminin ou masculin (rempli d'après le club du manager) : on ne propose que des joueurs de la même
@@ -1637,6 +1641,10 @@ impl SearchFilter {
             && matches(&self.division, &p.division)
             && self.min_division_reputation.map_or(true, |m| p.division_reputation.is_some_and(|r| r >= m))
             && self.max_reputation.map_or(true, |m| p.reputation[1] <= 0 || p.reputation[1] <= m)
+            && self.max_division_reputation.map_or(true, |m| {
+                p.division_reputation.map_or(true, |r| r <= m)
+                    || self.loan_max_age.is_some_and(|a| p.age.is_some_and(|age| age <= a))
+            })
     }
 }
 
@@ -2009,6 +2017,11 @@ mod tests {
         assert_eq!(run(&mut db, SearchFilter { max_wage_weekly: Some(4_000), ..Default::default() }), 0);
         // Réputation non lue (0) : le joueur reste, le plafond ne joue que sur une réputation connue.
         assert_eq!(run(&mut db, SearchFilter { max_reputation: Some(1), ..Default::default() }), 1);
+        let cap = |r, a| SearchFilter { max_division_reputation: Some(r), loan_max_age: a, ..Default::default() };
+        assert_eq!(run(&mut db, cap(1, None)), 0);
+        assert_eq!(run(&mut db, cap(i16::MAX, None)), 1);
+        // Assez jeune pour un prêt : gardé malgré le championnat plus coté.
+        assert_eq!(run(&mut db, cap(1, Some(99))), 1);
         assert_eq!(run(&mut db, SearchFilter { free_only: true, ..Default::default() }), 0);
         assert_eq!(run(&mut db, SearchFilter { transfer_listed_only: true, ..Default::default() }), 0);
         let f = |n: &str, d: &str, r| SearchFilter {
