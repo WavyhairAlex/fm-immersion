@@ -40,6 +40,7 @@ namespace UnityEngine.UIElements
         public StyleLength bottom { get => throw null; set => throw null; }
         public StyleLength width { get => throw null; set => throw null; }
         public StyleLength minWidth { get => throw null; set => throw null; }
+        public StyleLength height { get => throw null; set => throw null; }
         public StyleLength minHeight { get => throw null; set => throw null; }
         public StyleLength marginTop { get => throw null; set => throw null; }
         public StyleLength marginBottom { get => throw null; set => throw null; }
@@ -70,6 +71,7 @@ namespace UnityEngine.UIElements
         public StyleEnum<DisplayStyle> display { get => throw null; set => throw null; }
         public StyleEnum<FlexDirection> flexDirection { get => throw null; set => throw null; }
         public StyleFloat flexGrow { get => throw null; set => throw null; }
+        public StyleFloat flexShrink { get => throw null; set => throw null; }
         public StyleEnum<WhiteSpace> whiteSpace { get => throw null; set => throw null; }
         public StyleEnum<FontStyle> unityFontStyleAndWeight { get => throw null; set => throw null; }
         public StyleEnum<TextAnchor> unityTextAlign { get => throw null; set => throw null; }

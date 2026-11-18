@@ -16,6 +16,7 @@ namespace UnityEngine.InputSystem
     {
         public Keyboard(IntPtr pointer) : base(pointer) { }
         public static Keyboard current => throw null;
+        public Controls.KeyControl f7Key => throw null;
         public Controls.KeyControl f8Key => throw null;
     }
 }

@@ -7509,5 +7509,11 @@
       "exit": "Départ de {{club}}",
       "birth": "Naissance de {{name}}"
     }
+  },
+  "ingameToday": {
+    "heading": "Aujourd'hui · FM Immersion",
+    "empty": "Rien d'urgent aujourd'hui, coach.",
+    "close": "Fermer",
+    "hint": "F7 pour ouvrir ou fermer ce panneau."
   }
 }
