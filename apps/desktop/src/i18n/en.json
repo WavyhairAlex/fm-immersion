@@ -7509,5 +7509,11 @@
       "exit": "Leaving {{club}}",
       "birth": "Birth of {{name}}"
     }
+  },
+  "ingameToday": {
+    "heading": "Today · FM Immersion",
+    "empty": "Nothing urgent today, boss.",
+    "close": "Close",
+    "hint": "F7 opens or closes this panel."
   }
 }

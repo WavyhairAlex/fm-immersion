@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.1.254",
+    "date": "2026-11-18",
+    "fr": [
+      "Essai : FM Immersion s'invite dans FM27. Avec le plugin FM27 0.6.5, appuie sur F7 en jeu pour ouvrir le panneau « Aujourd'hui » : le mot de ton adjoint et la une de ta dernière gazette, par-dessus l'écran du jeu. Laisse l'appli ouverte sur ton PC, c'est elle qui le prépare."
+    ],
+    "en": [
+      "Trial: FM Immersion comes into FM27. With FM27 plugin 0.6.5, press F7 in game to open the \"Today\" panel: a word from your assistant and the front page of your latest gazette, over the game screen. Keep the app open on your PC, it prepares the panel."
+    ]
+  },
+  {
     "version": "0.1.253",
     "date": "2026-11-18",
     "fr": [

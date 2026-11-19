@@ -17,6 +17,7 @@ le club et le prochain match via le système de bindings de l'interface du jeu, 
 | `src/Plugin.cs` | Point d'entrée BepInEx, boucle d'instantanés, serveur local facultatif `http://localhost:8727` (sonde, coupé par défaut) |
 | `src/FmBindingReader.cs` | Lecture groupée des bindings (chemins texte, ex. `game.GameCurrentManagerClubTeam/Club/Squad`) |
 | `src/PressWindow.cs` | Conférence de presse FM Immersion affichée par-dessus FM27 (UI Toolkit), réponses écrites pour l'appli |
+| `src/TodayWindow.cs` | Panneau « Aujourd'hui » (F7) : briefing de l'adjoint et une de la gazette, préparés par l'appli |
 | `src/Probe.cs` | Sonde de découverte (`/api/probe`, `/api/properties`, `/api/refprops`) et file du thread principal |
 | `config/chemins.json` | **Données supplémentaires sans recompiler** : chemins lus à chaque instantané (bloc `custom`) |
 
@@ -256,3 +257,9 @@ dans FM Immersion. `SelectionLoop` relit toutes les 10 s les 11 lignes de la com
 (`collecte.compoRapide` donne l'heure). Jamais pendant un match, une lecture complète, ou tant que l'écran Tactique est
 ouvert : le changement arrive une dizaine de secondes après avoir quitté cet écran. Les consignes d'équipe lues par
 `chemins.json` attendent toujours la lecture complète.
+
+**0.6.5** : panneau « Aujourd'hui » (preuve de concept, première étape de FM Immersion dans le jeu). FM Immersion écrit
+`fmimmersion-aujourdhui.json` (format `fmi-aujourdhui/1` : briefing de l'adjoint, une de la dernière gazette, textes déjà
+rédigés) dans le dossier du plugin ; le plugin le relit toutes les 5 s et l'affiche à droite de l'écran, par-dessus le jeu,
+quand le joueur appuie sur **F7** (jamais d'ouverture automatique). Même technique que la conférence (panneau UI Toolkit à
+nous, ordre juste sous la conférence), rien n'est envoyé au jeu. Clé `AujourdhuiEnJeu` (oui par défaut) pour le couper.

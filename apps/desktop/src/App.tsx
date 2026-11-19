@@ -11,6 +11,7 @@ import { useAutoBackups } from './lib/save-backup';
 import { useGazetteAuto } from './lib/gazette-auto';
 import { useLiveDiscord } from './lib/live-discord';
 import { usePressInGame } from './lib/press-ingame';
+import { useTodayInGame } from './lib/today-ingame';
 import { FmSave, SettingsWithoutCareer } from './pages/FmSave';
 import { Overview } from './pages/Overview';
 
@@ -31,6 +32,7 @@ export function App() {
   useGazetteAuto();
   useFmSync();
   usePressInGame();
+  useTodayInGame();
   useGameRequests();
   useAutoBackups();
   return (

@@ -216,10 +216,23 @@ impl Serialize for PressFileError {
 /// Écrit (ou retire, `json` vide) la conférence du moment dans le dossier du plugin. Rien n'est réécrit si le
 /// contenu n'a pas changé (le plugin ne rouvre pas la fenêtre pour rien).
 pub fn write_press(folder: &Path, json: Option<&str>) -> Result<(), PressFileError> {
+    write_overlay(folder, PRESS_FILE, "fmi-presse/1", json)
+}
+
+/// Panneau « Aujourd'hui » affiché dans FM27 (plugin 0.6.5) : briefing de l'adjoint et une de la gazette.
+pub const TODAY_FILE: &str = "fmimmersion-aujourdhui.json";
+
+/// Écrit (ou retire) le panneau « Aujourd'hui » pour le plugin, mêmes garde-fous que la conférence.
+pub fn write_today(folder: &Path, json: Option<&str>) -> Result<(), PressFileError> {
+    write_overlay(folder, TODAY_FILE, "fmi-aujourdhui/1", json)
+}
+
+/// Fichier à nom fixe lu par le plugin : JSON borné, au bon format, écrit de façon atomique, seulement s'il a changé.
+fn write_overlay(folder: &Path, file: &str, format: &str, json: Option<&str>) -> Result<(), PressFileError> {
     if !folder.is_absolute() || !folder.is_dir() {
         return Err(PressFileError::InvalidFolder);
     }
-    let path = folder.join(PRESS_FILE);
+    let path = folder.join(file);
     match json {
         None => match std::fs::remove_file(&path) {
             Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e.into()),
@@ -230,18 +243,23 @@ pub fn write_press(folder: &Path, json: Option<&str>) -> Result<(), PressFileErr
                 return Err(PressFileError::TooLarge);
             }
             let v: serde_json::Value = serde_json::from_str(text).map_err(|e| PressFileError::BadJson(e.to_string()))?;
-            if v.get("format").and_then(|f| f.as_str()) != Some("fmi-presse/1") {
+            if v.get("format").and_then(|f| f.as_str()) != Some(format) {
                 return Err(PressFileError::BadJson("format".into()));
             }
             if std::fs::read_to_string(&path).map(|old| old == text).unwrap_or(false) {
                 return Ok(());
             }
-            let tmp = folder.join(format!("{PRESS_FILE}.tmp"));
+            let tmp = folder.join(format!("{file}.tmp"));
             std::fs::write(&tmp, text)?;
             std::fs::rename(&tmp, &path)?;
             Ok(())
         }
     }
+}
+
+#[tauri::command]
+pub fn fm_write_today(folder: String, json: Option<String>) -> Result<(), PressFileError> {
+    write_today(Path::new(&folder), json.as_deref())
 }
 
 #[tauri::command]
@@ -438,6 +456,20 @@ mod tests {
         write_coach_photo(&dir, None).unwrap();
         assert!(!dir.join(COACH_PHOTO_FILE).exists());
         write_coach_photo(&dir, None).unwrap(); // déjà retirée : pas d'erreur
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn ecrit_le_panneau_aujourdhui_sans_confondre_les_formats() {
+        let dir = std::env::temp_dir().join(format!("fmi-aujourdhui-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let json = r#"{"format":"fmi-aujourdhui/1","key":"s|2026-08-01"}"#;
+        write_today(&dir, Some(json)).unwrap();
+        assert_eq!(std::fs::read_to_string(dir.join(TODAY_FILE)).unwrap(), json);
+        assert!(!dir.join(PRESS_FILE).exists());
+        assert!(matches!(write_today(&dir, Some(r#"{"format":"fmi-presse/1"}"#)), Err(PressFileError::BadJson(_))));
+        write_today(&dir, None).unwrap();
+        assert!(!dir.join(TODAY_FILE).exists());
         std::fs::remove_dir_all(&dir).unwrap();
     }
 
