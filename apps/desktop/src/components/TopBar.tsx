@@ -29,7 +29,7 @@ interface Sub {
 /** Espace ouvert d'après l'adresse. */
 function sectionOf(pathname: string): Section {
   if (pathname.startsWith('/club/')) return pageOf(pathname.slice('/club/'.length)) === 'results' ? 'competitions' : 'club';
-  if (/^\/(gazette|presse|discord|photos)/.test(pathname)) return 'media';
+  if (/^\/(gazette|presse|fil|discord|photos)/.test(pathname)) return 'media';
   if (/^\/(carriere|vie|defis|monde)/.test(pathname)) return 'career';
   if (/^\/(visages|sauvegardes|reglages|parties|nouveautes)/.test(pathname)) return 'game';
   return 'office';
@@ -66,6 +66,7 @@ export function TopBar() {
     media: [
       { to: '/gazette', label: t('layout.navShort.gazette') },
       { to: '/presse', label: t('layout.navShort.press') },
+      { to: '/fil', label: t('layout.navShort.feed') },
       { to: '/discord', label: t('layout.navShort.discord') },
       { to: '/photos', label: t('layout.nav.photos') },
     ],

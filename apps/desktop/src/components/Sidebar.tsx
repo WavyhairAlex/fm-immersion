@@ -44,6 +44,7 @@ const ICONS: Record<string, ReactNode> = {
   ),
   gazette: <path d="M4 4h13v16H6a2 2 0 01-2-2zM17 8h3v10a2 2 0 01-2 2M7 8h7M7 12h7M7 16h4" />,
   discord: <path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z" />,
+  feed: <path d="M10 4L8 20M16 4l-2 16M4 9h16M4 15h16" />,
   challenges: <path d="M7 4h10v5a5 5 0 01-10 0zM4 5h3M17 5h3M12 14v4M8 21h8" />,
   faces: (
     <>
@@ -143,6 +144,7 @@ export function Sidebar() {
         <Item to="/carriere" icon="career" label={t('careerPage.title')} />
         <Item to="/gazette" icon="gazette" label={t('layout.navShort.gazette')} />
         <Item to="/presse" icon="press" label={t('layout.navShort.press')} />
+        <Item to="/fil" icon="feed" label={t('layout.navShort.feed')} />
         <Item to="/discord" icon="discord" label={t('layout.navShort.discord')} />
         <Item to="/defis" icon="challenges" label={t('modes.challenges.title')} />
       </nav>

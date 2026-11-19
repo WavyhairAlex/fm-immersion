@@ -55,6 +55,7 @@ export function App() {
             <Route path="/vie" element={<MyLife />} />
             <Route path="/gazette" element={<Story tab="gazette" />} />
             <Route path="/presse" element={<Story tab="presse" />} />
+            <Route path="/fil" element={<Story tab="fil" />} />
             <Route path="/discord" element={<Story tab="discord" />} />
             <Route path="/defis" element={<Challenges />} />
             <Route path="/monde" element={<Soon mode="world" />} />
