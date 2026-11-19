@@ -5832,7 +5832,8 @@
     "storySub": {
       "gazette": "Le journal de ta carrière, une édition par semaine de jeu.",
       "presse": "Tes réponses aux journalistes, avant les grands matchs et après chaque match officiel.",
-      "discord": "Le direct de tes matchs et les publications dans ton salon Discord."
+      "discord": "Le direct de tes matchs et les publications dans ton salon Discord.",
+      "fil": "Ce que disent les supporters, les journalistes et le club sur les réseaux, d'après ta partie."
     },
     "navShort": {
       "tactic": "Tactique",
@@ -5842,7 +5843,8 @@
       "opponent": "Adversaire",
       "gazette": "Gazette",
       "press": "Presse",
-      "discord": "Live Discord"
+      "discord": "Live Discord",
+      "feed": "Le Fil"
     },
     "groups": {
       "club": "Mon club",
@@ -7515,5 +7517,314 @@
     "empty": "Rien d'urgent aujourd'hui, coach.",
     "close": "Fermer",
     "hint": "F7 pour ouvrir ou fermer ce panneau."
+  },
+  "social": {
+    "title": "Le Fil",
+    "sub": "Ce que disent les supporters, les journalistes et le club sur les réseaux, d'après ta partie.",
+    "empty": "Rien pour l'instant : le fil se remplit avec tes matchs, tes transferts et tes conférences de presse.",
+    "noSave": "Choisis d'abord ta carrière pour voir ce qu'on dit de toi.",
+    "likes": "{{count}} j'aime",
+    "invented": "Comptes et messages inventés par FM Immersion à partir de ta partie. Rien n'est publié nulle part.",
+    "moodTitle": "Humeur des supporters",
+    "mood": {
+      "-2": "Colère",
+      "-1": "Grogne",
+      "0": "Calme",
+      "1": "Confiance",
+      "2": "Euphorie"
+    },
+    "moodText": {
+      "-2": "Les tribunes grondent. Une victoire, vite.",
+      "-1": "Ça râle dans les travées, rien d'irréparable.",
+      "0": "Les supporters attendent de voir.",
+      "1": "Les supporters y croient.",
+      "2": "Tout le monde est derrière toi."
+    },
+    "tags": {
+      "champions": "Champions"
+    },
+    "authors": {
+      "ultra": {
+        "name": "Les Ultras de {{tag}}",
+        "handle": "@ultras_{{handle}}"
+      },
+      "grumpy": {
+        "name": "Le Râleur du virage",
+        "handle": "@raleur_du_virage"
+      },
+      "optimist": {
+        "name": "Toujours positif",
+        "handle": "@positif_{{handle}}"
+      },
+      "veteran": {
+        "name": "Abonné depuis 1987",
+        "handle": "@abonne1987"
+      },
+      "reporter": {
+        "name": "Le Coup Franc",
+        "handle": "@lecoupfranc"
+      },
+      "club": {
+        "name": "{{club}}",
+        "handle": "@{{handle}}_officiel"
+      },
+      "insider": {
+        "name": "Mercato Express",
+        "handle": "@mercato_express"
+      }
+    },
+    "post": {
+      "win": {
+        "club": {
+          "0": "Victoire {{score}} face à {{opponent}} ! Merci pour votre soutien.",
+          "1": "3 points de plus : {{score}} contre {{opponent}}.",
+          "2": "C'est gagné ! {{score}} contre {{opponent}}."
+        },
+        "ultra": {
+          "0": "ON A GAGNÉ ! {{score}} contre {{opponent}}, on chante jusqu'à demain !",
+          "1": "Personne ne nous arrête ! {{score}}, allez allez !",
+          "2": "Les trois points restent chez nous. Fiers de ce maillot."
+        },
+        "ultraScorer": {
+          "0": "{{scorer}} ! {{scorer}} ! Victoire {{score}} contre {{opponent}} !",
+          "1": "Merci {{scorer}}, on t'aime. {{score}} et au lit."
+        },
+        "grumpy": {
+          "0": "Une victoire ne fait pas le printemps. On verra contre une vraie équipe.",
+          "1": "{{score}} contre {{opponent}}… On a gagné, mais quelle souffrance.",
+          "2": "Bien. Maintenant il faut enchaîner, pas faire la fête pendant une semaine."
+        },
+        "optimist": {
+          "0": "Je l'avais dit ! Cette équipe va loin cette saison.",
+          "1": "Quel plaisir ! {{score}}, on monte en puissance.",
+          "2": "Le travail paie. Bravo les gars !"
+        },
+        "optimistScorer": {
+          "0": "{{scorer}} en patron. Cette saison va être belle !"
+        }
+      },
+      "bigWin": {
+        "club": {
+          "0": "Large victoire {{score}} contre {{opponent}} !",
+          "1": "Démonstration : {{score}} face à {{opponent}}."
+        },
+        "ultra": {
+          "0": "{{score}} !!! On les a écrasés, quelle soirée !",
+          "1": "Une leçon de football à {{opponent}}. {{score}}, on rentre heureux."
+        },
+        "ultraScorer": {
+          "0": "{{scorer}} les a rendus fous. {{score}} !"
+        },
+        "veteran": {
+          "0": "Trente ans d'abonnement, et des soirs comme ça, on n'en voit pas tous les ans. {{score}}.",
+          "1": "Ça me rappelle les grandes années. {{score}} contre {{opponent}}, chapeau."
+        },
+        "reporter": {
+          "0": "Démonstration de force : {{score}} contre {{opponent}} ({{competition}}).",
+          "1": "Le club n'a laissé aucune chance à {{opponent}} : {{score}}."
+        },
+        "reporterScorer": {
+          "0": "{{scorer}} homme fort de la large victoire {{score}} contre {{opponent}}."
+        }
+      },
+      "draw": {
+        "club": {
+          "0": "Match nul {{score}} face à {{opponent}}.",
+          "1": "Un point pris contre {{opponent}} ({{score}})."
+        },
+        "optimist": {
+          "0": "Un point, c'est toujours ça. On reste invaincus ce soir !",
+          "1": "Pas notre meilleur match, mais on n'a pas perdu."
+        },
+        "grumpy": {
+          "0": "{{score}} contre {{opponent}}. Encore deux points de perdus.",
+          "1": "On joue pour ne pas perdre. Ça ne suffira pas.",
+          "2": "Un nul de plus. Il faudra m'expliquer le plan de jeu."
+        },
+        "veteran": {
+          "0": "Un nul, ni plus ni moins. Le championnat est long.",
+          "1": "J'en ai vu d'autres. On repart au travail."
+        }
+      },
+      "loss": {
+        "club": {
+          "0": "Défaite {{score}} contre {{opponent}}. On se relève dès le prochain match.",
+          "1": "Revers {{score}} face à {{opponent}}."
+        },
+        "grumpy": {
+          "0": "{{score}}. Qui a préparé ce match ?",
+          "1": "Défaite méritée. Rien n'a marché.",
+          "2": "Encore une soirée gâchée. Quelqu'un a un plan ?"
+        },
+        "optimist": {
+          "0": "Une défaite, ça arrive. On garde la tête haute.",
+          "1": "Pas grave, le prochain match est déjà là. Allez !"
+        },
+        "ultra": {
+          "0": "Dans la défaite aussi, on chante. Toujours derrière vous.",
+          "1": "On ne lâche rien. Rendez-vous au prochain match."
+        }
+      },
+      "heavyLoss": {
+        "club": {
+          "0": "Lourde défaite {{score}} contre {{opponent}}. Toutes nos excuses à nos supporters.",
+          "1": "Soirée difficile : {{score}} face à {{opponent}}."
+        },
+        "grumpy": {
+          "0": "{{score}}. Honteux. Il faut des explications.",
+          "1": "Je n'ai pas de mots. {{score}} contre {{opponent}}…",
+          "2": "On a été humiliés. Le vestiaire doit se regarder dans la glace."
+        },
+        "reporter": {
+          "0": "Gifle pour le club : {{score}} face à {{opponent}}.",
+          "1": "Soirée noire : le club s'effondre {{score}} contre {{opponent}}."
+        },
+        "veteran": {
+          "0": "Ça faisait longtemps que je n'avais pas vu ça. {{score}}. Ça fait mal.",
+          "1": "Les soirs comme ça, on se souvient pourquoi on aime ce club quand même."
+        }
+      },
+      "winStreak": {
+        "reporter": {
+          "0": "{{count}} victoires de suite : le club est sur une belle lancée.",
+          "1": "Rien n'arrête le club : {{count}} succès d'affilée après le {{score}} contre {{opponent}}."
+        }
+      },
+      "badRun": {
+        "grumpy": {
+          "0": "{{count}} matchs sans victoire. Ça commence à faire beaucoup.",
+          "1": "{{count}} matchs sans gagner. Il est temps que ça change.",
+          "2": "Toujours pas de victoire. {{count}} matchs. Je suis fatigué."
+        }
+      },
+      "trophy": {
+        "club": {
+          "0": "{{competition}} : le trophée est à nous ! Merci à tous !",
+          "1": "VAINQUEURS de {{competition}} !"
+        },
+        "ultra": {
+          "0": "CHAMPIONS ! CHAMPIONS ! {{competition}} à la maison !",
+          "1": "On l'a ! {{competition}} ! Cette nuit, personne ne dort !"
+        },
+        "veteran": {
+          "0": "J'ai la larme à l'œil. {{competition}}. Merci, coach.",
+          "1": "Je pourrai dire à mes petits-enfants que j'étais là. {{competition}}."
+        },
+        "reporter": {
+          "0": "Le club remporte {{competition}}. Une première ligne au palmarès de son coach ici.",
+          "1": "Trophée : le club s'adjuge {{competition}}."
+        },
+        "optimist": {
+          "0": "Et ce n'est que le début ! {{competition}} dans la vitrine.",
+          "1": "Premier trophée de la saison, d'autres arrivent !"
+        }
+      },
+      "signing": {
+        "club": {
+          "0": "Bienvenue à {{name}} !",
+          "1": "{{name}} rejoint le club. Bienvenue !"
+        },
+        "insider": {
+          "0": "C'est fait : {{name}} signe au club. Visite médicale passée.",
+          "1": "Exclusif : {{name}} a donné son accord. Here we go."
+        },
+        "ultra": {
+          "0": "Bienvenue {{name}} ! Mouille le maillot et tu seras chez toi.",
+          "1": "{{name}} chez nous ! Le mercato commence bien."
+        },
+        "grumpy": {
+          "0": "{{name}}, {{age}} ans ? On recrute pour la maison de retraite ?",
+          "1": "{{name}}… J'attends de voir. Pas convaincu."
+        }
+      },
+      "exit": {
+        "club": {
+          "0": "Merci {{name}} et bonne continuation.",
+          "1": "{{name}} quitte le club. Merci pour tout."
+        },
+        "veteran": {
+          "0": "Un morceau du club s'en va avec {{name}}. Merci pour les souvenirs.",
+          "1": "Je regretterai {{name}}. Des joueurs comme ça, on en manque."
+        },
+        "grumpy": {
+          "0": "On laisse partir {{name}} ? Et on le remplace par qui ?",
+          "1": "{{name}} parti. Dites-moi qu'il y a un plan."
+        }
+      },
+      "injury": {
+        "club": {
+          "0": "{{name}} est blessé ({{injury}}). Absence estimée : {{weeks}} semaines. Prompt rétablissement !",
+          "1": "Point médical : {{name}} absent environ {{weeks}} semaines."
+        },
+        "grumpy": {
+          "0": "{{name}} out {{weeks}} semaines. Notre saison vient de prendre un coup.",
+          "1": "Et voilà, {{name}} blessé. Le staff médical dort ?"
+        },
+        "optimist": {
+          "0": "Courage {{name}} ! Reviens plus fort.",
+          "1": "L'effectif est assez profond pour tenir sans {{name}}. Prompt rétablissement !"
+        }
+      },
+      "coachLinked": {
+        "insider": {
+          "0": "Le nom de {{name}} circule du côté de {{other}}.",
+          "1": "Selon nos infos, {{other}} suit de près le coach de {{tag}}."
+        },
+        "ultra": {
+          "0": "Coach, reste avec nous ! {{other}} peut attendre.",
+          "1": "{{other}} veut notre coach ? Hors de question !"
+        },
+        "grumpy": {
+          "0": "{{other}} peut le prendre, je l'emballe moi-même."
+        }
+      },
+      "coachTalks": {
+        "insider": {
+          "0": "Contacts avancés entre {{other}} et {{name}}. Dossier chaud.",
+          "1": "{{name}} aurait discuté avec la direction de {{other}}."
+        },
+        "ultra": {
+          "0": "Dites-moi que c'est faux. Coach, ne nous quitte pas !",
+          "1": "Si le coach part, qui reprend le projet ?"
+        },
+        "grumpy": {
+          "0": "Qu'il parte, et vite. On a besoin d'un nouveau souffle."
+        }
+      },
+      "pressBold": {
+        "reporter": {
+          "0": "Le coach avant {{opponent}} : « {{quote}} »",
+          "1": "Déclaration forte du coach : « {{quote}} »"
+        },
+        "ultra": {
+          "0": "Voilà un coach qui a du caractère ! On est avec toi.",
+          "1": "Ça c'est parler ! On va les manger."
+        },
+        "grumpy": {
+          "0": "Beaucoup de paroles. On attend les actes sur le terrain.",
+          "1": "Il parle beaucoup pour un coach qui ne gagne plus."
+        }
+      },
+      "pressHumble": {
+        "reporter": {
+          "0": "Le coach, mesuré : « {{quote}} »",
+          "1": "En conférence, le coach garde les pieds sur terre : « {{quote}} »"
+        },
+        "veteran": {
+          "0": "Un coach qui parle juste. Ça change.",
+          "1": "Humble et lucide. C'est comme ça qu'on construit."
+        }
+      },
+      "pressDodge": {
+        "reporter": {
+          "0": "Le coach esquive : « {{quote}} »",
+          "1": "Pas de réponse claire du coach : « {{quote}} »"
+        },
+        "grumpy": {
+          "0": "Langue de bois. On veut des réponses, coach.",
+          "1": "Encore une conférence pour ne rien dire."
+        }
+      }
+    }
   }
 }

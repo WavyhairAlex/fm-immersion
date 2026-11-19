@@ -14,6 +14,8 @@ import type { FmSnapshot } from './snapshot';
  *   éliminé seulement si aucun match n'est revenu au calendrier 30 jours après le dernier.
  * - Victoire sans match suivant : qualifié en attendant le tirage, ou vainqueur quand la saison est finie et que ce
  *   dernier match tombe dans les trois dernières semaines (les finales se jouent en fin de saison).
+ * - Supercoupe (un seul match, en début de saison) : gagnée dès la victoire. Un nul (tirs au but inconnus) attend le
+ *   message du jeu (`cupFinalsWon`).
  */
 
 export type CupStatus = 'alive' | 'through' | 'out' | 'won' | 'unknown';
@@ -44,6 +46,12 @@ export interface CupRun {
 const DAY_MS = 86_400_000;
 const days = (a: string, b: string) => Math.round((Date.parse(b.slice(0, 10)) - Date.parse(a.slice(0, 10))) / DAY_MS);
 const norm = (s: string) => s.normalize('NFC').trim().toLowerCase();
+
+/** Supercoupe : trophée joué sur un seul match (Trophée des champions, Community Shield, Supierkubok…). */
+export function isSuperCup(name: string | null | undefined): boolean {
+  const n = (name ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return /super\s?(?:cup|coupe|copa|coppa|taca|kubok|kubak|puchar|kupa|pokal|beker)|supi?erkubok|superpuchar|trophee des champions|community shield|supercup/.test(n);
+}
 
 /** Compétition à élimination suivie : coupe nationale ou coupe d'Europe. */
 export function cupKind(name: string | null | undefined): 'cup' | 'europe' | null {
@@ -91,7 +99,8 @@ export function cupRuns(results: MatchResult[], last: FmSnapshot, opts: { season
     const margin = tie.goalsFor - tie.goalsAgainst;
     const quiet = days(tie.date, today) >= 30;
     let status: CupStatus;
-    if (ahead) status = 'alive';
+    if (isSuperCup(competition) && ties.length === 1 && tie.legs === 1 && margin > 0) status = 'won';
+    else if (ahead) status = 'alive';
     else if (ahead == null) status = 'unknown';
     else if (margin > 0)
       status = opts.seasonOver && kind === 'cup' && days(tie.date, opts.seasonEnd ?? today) <= 21 ? 'won' : kind === 'europe' && quiet ? 'out' : 'through';
@@ -124,12 +133,20 @@ const BEAT = /apr[eè]s avoir battu|after (?:beating|defeating)/i;
 const FINAL_FR = /^finale\s+(?:de la |de l['’]|du |des |de |d['’])(.+)$/i;
 const FINAL_EN = /^(?:the\s+)?(.+?)\s+final$/i;
 const FINAL_OF = /^(?:the\s+)?final\s+of\s+(?:the\s+)?(.+)$/i;
+// Trophée annoncé par l'actualité du jeu (« Menard mène X au sommet » : « Profitez bien des compliments à votre égard
+// suite au succès de l'équipe en Supierkubok Belarusi ! »). Vu en jeu le 19/11/2026 pour une Supercoupe ; on ne garde
+// que les coupes (un titre de championnat est compté par le classement final).
+const SUCCESS_FR = /succ[eè]s de l['’]\s*[ée]quipe en (.+?)\s*!?\s*$/im;
+const VICTORY_FR = /men[ée] (?:leur|son|votre) [ée]quipe [àa] la victoire en (.+?)\.?\s*$/im;
 
 /** Coupes gagnées en finale d'après les messages des instantanés (une fois par compétition), avec le jour du relevé. */
 export function cupFinalsWon(entries: { gameDate: string; data: FmSnapshot }[]): { date: string; competition: string }[] {
   const out: { date: string; competition: string }[] = [];
   for (const e of entries)
     for (const item of inboxOf(e.data)) {
+      const told = SUCCESS_FR.exec(item.body)?.[1] ?? VICTORY_FR.exec(item.body)?.[1];
+      const won = told?.trim();
+      if (won && competitionKind(won) === 'cup' && !out.some((o) => norm(o.competition) === norm(won))) out.push({ date: e.gameDate.slice(0, 10), competition: won });
       if (!BEAT.test(item.body)) continue;
       for (const l of item.links) {
         if (/demi|semi|quart|quarter/i.test(l)) continue;

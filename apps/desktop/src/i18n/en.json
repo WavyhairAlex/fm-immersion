@@ -5832,7 +5832,8 @@
     "storySub": {
       "gazette": "Your career's newspaper, one edition per game week.",
       "presse": "Your answers to journalists, before big matches and after every competitive game.",
-      "discord": "Live coverage of your matches and posts in your Discord channel."
+      "discord": "Live coverage of your matches and posts in your Discord channel.",
+      "fil": "What fans, journalists and the club are saying online, based on your save."
     },
     "navShort": {
       "tactic": "Tactics",
@@ -5842,7 +5843,8 @@
       "opponent": "Opponent",
       "gazette": "Gazette",
       "press": "Press",
-      "discord": "Live Discord"
+      "discord": "Live Discord",
+      "feed": "The Feed"
     },
     "groups": {
       "club": "My club",
@@ -7515,5 +7517,314 @@
     "empty": "Nothing urgent today, boss.",
     "close": "Close",
     "hint": "F7 opens or closes this panel."
+  },
+  "social": {
+    "title": "The Feed",
+    "sub": "What fans, journalists and the club are saying online, based on your save.",
+    "empty": "Nothing yet: the feed fills up with your matches, transfers and press conferences.",
+    "noSave": "Pick your career first to see what people are saying about you.",
+    "likes": "{{count}} likes",
+    "invented": "Accounts and posts made up by FM Immersion from your save. Nothing is posted anywhere.",
+    "moodTitle": "Fan mood",
+    "mood": {
+      "-2": "Anger",
+      "-1": "Grumbling",
+      "0": "Calm",
+      "1": "Confident",
+      "2": "Euphoria"
+    },
+    "moodText": {
+      "-2": "The stands are restless. A win, fast.",
+      "-1": "Some grumbling in the stands, nothing that can't be fixed.",
+      "0": "The fans are waiting to see.",
+      "1": "The fans believe.",
+      "2": "Everyone is behind you."
+    },
+    "tags": {
+      "champions": "Champions"
+    },
+    "authors": {
+      "ultra": {
+        "name": "{{tag}} Ultras",
+        "handle": "@ultras_{{handle}}"
+      },
+      "grumpy": {
+        "name": "Moaning in the Stand",
+        "handle": "@moaning_stand"
+      },
+      "optimist": {
+        "name": "Always Positive",
+        "handle": "@positive_{{handle}}"
+      },
+      "veteran": {
+        "name": "Season Ticket Since 1987",
+        "handle": "@ticket1987"
+      },
+      "reporter": {
+        "name": "The Free Kick",
+        "handle": "@thefreekick"
+      },
+      "club": {
+        "name": "{{club}}",
+        "handle": "@{{handle}}_official"
+      },
+      "insider": {
+        "name": "Transfer Express",
+        "handle": "@transfer_express"
+      }
+    },
+    "post": {
+      "win": {
+        "club": {
+          "0": "{{score}} win against {{opponent}}! Thanks for your support.",
+          "1": "Three more points: {{score}} against {{opponent}}.",
+          "2": "Job done! {{score}} against {{opponent}}."
+        },
+        "ultra": {
+          "0": "WE WON! {{score}} against {{opponent}}, we're singing till dawn!",
+          "1": "Nobody stops us! {{score}}, come on!",
+          "2": "Three points stay home. Proud of this shirt."
+        },
+        "ultraScorer": {
+          "0": "{{scorer}}! {{scorer}}! {{score}} win against {{opponent}}!",
+          "1": "Thank you {{scorer}}, we love you. {{score}} and off to bed."
+        },
+        "grumpy": {
+          "0": "One win doesn't make a season. Let's see against a real team.",
+          "1": "{{score}} against {{opponent}}… We won, but what a struggle.",
+          "2": "Fine. Now win the next one instead of partying all week."
+        },
+        "optimist": {
+          "0": "Told you! This team is going places this season.",
+          "1": "What a joy! {{score}}, we're getting stronger.",
+          "2": "Hard work pays off. Well done lads!"
+        },
+        "optimistScorer": {
+          "0": "{{scorer}} running the show. This is going to be a great season!"
+        }
+      },
+      "bigWin": {
+        "club": {
+          "0": "Big {{score}} win against {{opponent}}!",
+          "1": "Statement win: {{score}} against {{opponent}}."
+        },
+        "ultra": {
+          "0": "{{score}}!!! We crushed them, what a night!",
+          "1": "A football lesson for {{opponent}}. {{score}}, we go home happy."
+        },
+        "ultraScorer": {
+          "0": "{{scorer}} drove them mad. {{score}}!"
+        },
+        "veteran": {
+          "0": "Thirty years of season tickets, and you don't get nights like this every year. {{score}}.",
+          "1": "Reminds me of the glory years. {{score}} against {{opponent}}, hats off."
+        },
+        "reporter": {
+          "0": "Show of strength: {{score}} against {{opponent}} ({{competition}}).",
+          "1": "The club gave {{opponent}} no chance: {{score}}."
+        },
+        "reporterScorer": {
+          "0": "{{scorer}} stars in the {{score}} rout of {{opponent}}."
+        }
+      },
+      "draw": {
+        "club": {
+          "0": "{{score}} draw against {{opponent}}.",
+          "1": "A point against {{opponent}} ({{score}})."
+        },
+        "optimist": {
+          "0": "A point is a point. Unbeaten tonight!",
+          "1": "Not our best game, but we didn't lose."
+        },
+        "grumpy": {
+          "0": "{{score}} against {{opponent}}. Two more points dropped.",
+          "1": "We play not to lose. That won't be enough.",
+          "2": "Another draw. Someone explain the game plan to me."
+        },
+        "veteran": {
+          "0": "A draw, no more, no less. It's a long season.",
+          "1": "I've seen worse. Back to work."
+        }
+      },
+      "loss": {
+        "club": {
+          "0": "{{score}} defeat against {{opponent}}. We bounce back next game.",
+          "1": "Setback: {{score}} against {{opponent}}."
+        },
+        "grumpy": {
+          "0": "{{score}}. Who prepared this match?",
+          "1": "Deserved defeat. Nothing worked.",
+          "2": "Another evening ruined. Does anyone have a plan?"
+        },
+        "optimist": {
+          "0": "Defeats happen. Heads up.",
+          "1": "Never mind, the next game is right there. Come on!"
+        },
+        "ultra": {
+          "0": "We sing in defeat too. Always behind you.",
+          "1": "We never give up. See you next game."
+        }
+      },
+      "heavyLoss": {
+        "club": {
+          "0": "Heavy {{score}} defeat against {{opponent}}. Our apologies to our fans.",
+          "1": "Tough night: {{score}} against {{opponent}}."
+        },
+        "grumpy": {
+          "0": "{{score}}. Shameful. We want explanations.",
+          "1": "I have no words. {{score}} against {{opponent}}…",
+          "2": "Humiliated. The dressing room needs a long look in the mirror."
+        },
+        "reporter": {
+          "0": "Slap in the face for the club: {{score}} against {{opponent}}.",
+          "1": "Dark night: the club collapses {{score}} against {{opponent}}."
+        },
+        "veteran": {
+          "0": "Haven't seen that in a long time. {{score}}. It hurts.",
+          "1": "Nights like this remind you why you love this club anyway."
+        }
+      },
+      "winStreak": {
+        "reporter": {
+          "0": "{{count}} wins in a row: the club is on a roll.",
+          "1": "Nothing stops the club: {{count}} straight wins after the {{score}} against {{opponent}}."
+        }
+      },
+      "badRun": {
+        "grumpy": {
+          "0": "{{count}} games without a win. That's getting to be a lot.",
+          "1": "{{count}} games without winning. Time for a change.",
+          "2": "Still no win. {{count}} games. I'm tired."
+        }
+      },
+      "trophy": {
+        "club": {
+          "0": "{{competition}}: the trophy is ours! Thank you all!",
+          "1": "{{competition}} WINNERS!"
+        },
+        "ultra": {
+          "0": "CHAMPIONS! CHAMPIONS! {{competition}} is coming home!",
+          "1": "We did it! {{competition}}! Nobody sleeps tonight!"
+        },
+        "veteran": {
+          "0": "Tears in my eyes. {{competition}}. Thank you, boss.",
+          "1": "I'll tell my grandchildren I was there. {{competition}}."
+        },
+        "reporter": {
+          "0": "The club wins {{competition}}. A first line on the honours list for its manager here.",
+          "1": "Silverware: the club lifts {{competition}}."
+        },
+        "optimist": {
+          "0": "And this is only the start! {{competition}} in the cabinet.",
+          "1": "First trophy of the season, more to come!"
+        }
+      },
+      "signing": {
+        "club": {
+          "0": "Welcome, {{name}}!",
+          "1": "{{name}} joins the club. Welcome!"
+        },
+        "insider": {
+          "0": "Done deal: {{name}} signs for the club. Medical passed.",
+          "1": "Exclusive: {{name}} has agreed terms. Here we go."
+        },
+        "ultra": {
+          "0": "Welcome {{name}}! Sweat for the shirt and you'll be home.",
+          "1": "{{name}} is ours! Great start to the window."
+        },
+        "grumpy": {
+          "0": "{{name}}, {{age}} years old? Are we signing for the retirement home?",
+          "1": "{{name}}… I'll wait and see. Not convinced."
+        }
+      },
+      "exit": {
+        "club": {
+          "0": "Thank you {{name}} and all the best.",
+          "1": "{{name}} leaves the club. Thanks for everything."
+        },
+        "veteran": {
+          "0": "A piece of the club leaves with {{name}}. Thanks for the memories.",
+          "1": "I'll miss {{name}}. We don't have enough players like that."
+        },
+        "grumpy": {
+          "0": "We're letting {{name}} go? And replacing him with whom?",
+          "1": "{{name}} gone. Tell me there's a plan."
+        }
+      },
+      "injury": {
+        "club": {
+          "0": "{{name}} is injured ({{injury}}). Expected out for {{weeks}} weeks. Get well soon!",
+          "1": "Medical update: {{name}} out for about {{weeks}} weeks."
+        },
+        "grumpy": {
+          "0": "{{name}} out for {{weeks}} weeks. Our season just took a hit.",
+          "1": "There we go, {{name}} injured. Is the medical staff asleep?"
+        },
+        "optimist": {
+          "0": "Stay strong {{name}}! Come back stronger.",
+          "1": "The squad is deep enough to cope without {{name}}. Get well soon!"
+        }
+      },
+      "coachLinked": {
+        "insider": {
+          "0": "{{name}}'s name is doing the rounds at {{other}}.",
+          "1": "We hear {{other}} are keeping a close eye on the {{tag}} manager."
+        },
+        "ultra": {
+          "0": "Boss, stay with us! {{other}} can wait.",
+          "1": "{{other}} want our manager? No way!"
+        },
+        "grumpy": {
+          "0": "{{other}} can have him, I'll wrap him up myself."
+        }
+      },
+      "coachTalks": {
+        "insider": {
+          "0": "Advanced talks between {{other}} and {{name}}. Hot story.",
+          "1": "{{name}} reportedly met the {{other}} board."
+        },
+        "ultra": {
+          "0": "Tell me it's not true. Boss, don't leave us!",
+          "1": "If the manager leaves, who takes over the project?"
+        },
+        "grumpy": {
+          "0": "Let him go, and fast. We need fresh air."
+        }
+      },
+      "pressBold": {
+        "reporter": {
+          "0": "The manager ahead of {{opponent}}: “{{quote}}”",
+          "1": "Strong words from the manager: “{{quote}}”"
+        },
+        "ultra": {
+          "0": "Now that's a manager with character! We're with you.",
+          "1": "That's how you talk! We'll eat them alive."
+        },
+        "grumpy": {
+          "0": "Lots of talk. Show us on the pitch.",
+          "1": "Big words for a manager who's stopped winning."
+        }
+      },
+      "pressHumble": {
+        "reporter": {
+          "0": "A measured manager: “{{quote}}”",
+          "1": "The manager keeps his feet on the ground: “{{quote}}”"
+        },
+        "veteran": {
+          "0": "A manager who talks sense. Makes a change.",
+          "1": "Humble and clear-eyed. That's how you build."
+        }
+      },
+      "pressDodge": {
+        "reporter": {
+          "0": "The manager dodges: “{{quote}}”",
+          "1": "No straight answer from the manager: “{{quote}}”"
+        },
+        "grumpy": {
+          "0": "Waffle. We want answers, boss.",
+          "1": "Another press conference saying nothing."
+        }
+      }
+    }
   }
 }

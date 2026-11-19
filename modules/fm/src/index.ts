@@ -105,3 +105,4 @@ export * from './tactic-todo';
 export * from './engine-value';
 export * from './tactic-targets';
 export * from './formations-faced';
+export * from './social';
