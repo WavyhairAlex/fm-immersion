@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { competitionKind, cupFinalsWon, cupRuns, managerAwards, managerYearAwards, type FmSnapshot, type MatchResult } from '../src';
+import { competitionKind, cupFinalsWon, cupRuns, isSuperCup, managerAwards, managerYearAwards, type FmSnapshot, type MatchResult } from '../src';
 
 const CUP = 'Slovnaft Cup';
 const EURO = 'UEFA Europa League';
@@ -56,6 +56,20 @@ describe('parcours en coupe', () => {
     expect(c!.status).toBe('won');
   });
 
+  it('Supercoupe : gagnée dès la victoire, en début de saison', () => {
+    const SUPER = 'Supierkubok Belarusi';
+    expect(cupRuns([res('2028-02-27', SUPER, 'Dinamo Minsk', 2, 1)], snap('2028-02-28', [['2028-03-05', 'Kubok Belarusi', 'Smorgon']]))[0]!.status).toBe('won');
+    // Nul : tirs au but inconnus, on attend le message du jeu.
+    expect(cupRuns([res('2028-02-27', SUPER, 'Dinamo Minsk', 1, 1)], snap('2028-02-28'))[0]!.status).toBe('unknown');
+    expect(cupRuns([res('2028-02-27', SUPER, 'Dinamo Minsk', 0, 1)], snap('2028-02-28'))[0]!.status).toBe('out');
+  });
+
+  it('reconnaît les Supercoupes, pas les coupes', () => {
+    for (const n of ['Supierkubok Belarusi', 'Trophée des Champions', 'FA Community Shield', 'Supercopa de España', 'DFL-Supercup', 'Supercoppa Italiana'])
+      expect(isSuperCup(n)).toBe(true);
+    for (const n of ['Betera Kubok Belarusi', 'Coupe de France', 'FA Cup', 'UEFA Super League']) expect(isSuperCup(n)).toBe(false);
+  });
+
   it('sans calendrier lu : inconnu', () => {
     const s = { club: 'Malženice', gameDate: '2027-10-21', players: [], custom: { equipe: {} } } as unknown as FmSnapshot;
     expect(cupRuns([res('2027-10-20', CUP, 'Žilina', 0, 1)], s)[0]!.status).toBe('unknown');
@@ -74,6 +88,16 @@ describe('finale gagnée lue dans la boîte de réception', () => {
     expect(cupFinalsWon([fr, again, en])).toEqual([
       { date: '2027-05-26', competition: 'Betera Kubok Belarusi' },
       { date: '2027-05-28', competition: 'FA Cup' },
+    ]);
+  });
+
+  it("trophée annoncé par l'actualité du jeu (succès de l'équipe), coupes seulement", () => {
+    const cup = snap('2028-02-28', 'Menard mène Football Club Slutsk-2024 au sommet', "Profitez bien des compliments à votre égard suite au succès de l'équipe en Supierkubok Belarusi !");
+    const fans = snap('2028-02-29', 'Au sommet', "Les fans ont scandé le nom de l'entraîneur, qui a mené leur équipe à la victoire en Betera Kubok Belarusi.");
+    const league = snap('2028-11-20', 'Champion', "Profitez bien des compliments à votre égard suite au succès de l'équipe en Vyšejšaja Liha !");
+    expect(cupFinalsWon([cup, fans, league])).toEqual([
+      { date: '2028-02-28', competition: 'Supierkubok Belarusi' },
+      { date: '2028-02-29', competition: 'Betera Kubok Belarusi' },
     ]);
   });
 

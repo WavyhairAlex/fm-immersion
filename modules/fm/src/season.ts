@@ -1,4 +1,4 @@
-import { cupFinalsWon, cupPending, cupRuns, type CupRun } from './cups';
+import { cupFinalsWon, cupPending, cupRuns, isSuperCup, type CupRun } from './cups';
 import { snapshotFixtures } from './fixtures';
 import { leaguePosition } from './gazette';
 import { normalizePlayer } from './player';
@@ -139,6 +139,8 @@ function exact(r: MatchResult): SeasonMatch | null {
 const sameCup = (a: string, b: string) => {
   const x = a.normalize('NFC').toLowerCase();
   const y = b.normalize('NFC').toLowerCase();
+  // « Supierkubok Belarusi » contient « Kubok Belarusi » : la Supercoupe et la coupe restent deux trophées.
+  if (isSuperCup(a) !== isSuperCup(b)) return false;
   return x === y || x.includes(y) || y.includes(x);
 };
 
