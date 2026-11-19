@@ -25,7 +25,8 @@ public class TodayWindow : MonoBehaviour
 
     internal const string File_ = "fmimmersion-aujourdhui.json";
 
-    static readonly Color Night = new(0.06f, 0.11f, 0.18f, 0.97f);
+    // Opaque : à 0,97 les tuiles du jeu se voyaient à travers (essai en jeu du 19/11/2026).
+    static readonly Color Night = new(0.06f, 0.11f, 0.18f, 1f);
     static readonly Color Amber = new(1f, 0.71f, 0.28f);
     static readonly Color AmberLight = new(1f, 0.92f, 0.78f);
     static readonly Color Ink = new(0.06f, 0.11f, 0.18f);
